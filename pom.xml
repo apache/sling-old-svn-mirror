@@ -35,9 +35,15 @@
     </description>
 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/scheduler</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scheduler
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scheduler
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/scheduler
+        </url>
     </scm>
 
     <build>
