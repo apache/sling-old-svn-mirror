@@ -54,19 +54,24 @@
                         </Bundle-Activator>
                         <Export-Package>
                             org.apache.commons.logging;version=1.3.1,
-                            org.apache.log4j;version=1.2.25,
-                            org.slf4j;version=1.4.0,
+                            org.slf4j;version=1.4.3,
+                            org.osgi.service.cm,
                             org.osgi.service.log
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.log, org.apache.log4j.*,
-                            org.slf4j.*, org.apache.commons.logging.*
+                            !ch.qos.logback.classic.db,
+                            !ch.qos.logback.core.db,
+                            !ch.qos.logback.classic.selector.servlet,
+                            ch.qos.logback.*,
+                            org.apache.commons.logging.impl,
+                            org.apache.sling.log, org.slf4j.helpers,
+                            org.slf4j.impl, org.slf4j.spi
                         </Private-Package>
                         <DynamicImport-Package>
-                            com.sun.jdmk.comm, javax.jms, javax.mail,
-                            javax.mail.internet, javax.management,
-                            javax.naming, javax.xml.parsers,
-                            org.w3c.dom, org.xml.sax
+                            javax.jms, javax.mail, javax.mail.internet,
+                            javax.management, javax.naming,
+                            javax.xml.parsers, org.codehaus.janino,
+                            org.xml.sax, org.xml.sax.helpers
                         </DynamicImport-Package>
                     </instructions>
                 </configuration>
@@ -83,11 +88,27 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl104-over-slf4j</artifactId>
             <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>nlog4j</artifactId>
-            <version>1.2.25</version>
+            <artifactId>slf4j-api</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>0.9.8</version>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>0.9.8</version>
+            <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- OSGi Libraries not included here -->
@@ -98,6 +119,8 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi_R4_compendium</artifactId>
+            <scope>compile</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>
