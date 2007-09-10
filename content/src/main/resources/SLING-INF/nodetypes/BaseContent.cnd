@@ -1,0 +1,36 @@
+//
+//    Copyright 2007 The Apache Software Foundation.
+//    
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at 
+//    
+//    http://www.apache.org/licenses/LICENSE-2.0
+//    
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+<sling = 'http://jackrabbit.apache.org/sling/1.0'>
+<nt='http://www.jcp.org/jcr/nt/1.0'>
+<mix='http://www.jcp.org/jcr/mix/1.0'>
+
+//-----------------------------------------------------------------------------
+// The sling:Content node type defines the base node type for repository stored
+// content. This node type provides for the following functionality:
+//   - The sling:componentId property provides the component ID to be returned
+//     by the Content.getComponentId() method
+//   - It may have child nodes of any type
+//   - It is referenceable such that other nodes may refer to content easily
+//   - The path property required by the Content interface is implemented
+//     using the path of the cq:Content node
+[sling:Content] > nt:base,mix:referenceable
+
+  - sling:componentId (String)
+  	copy
+
+  // allow for any children  
+  + * (nt:base)

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Copyright 2007 The Apache Software Foundation.
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at 
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>1-incubator-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>sling-jackrabbit-server</artifactId>
+    <packaging>bundle</packaging>
+    <version>2.0.0-incubator-SNAPSHOT</version>
+
+    <name>Sling - Jackrabbit Embedded Repository</name>
+    <description>
+        Bundle providing support to embed Jackrabbit Repository
+        instances and publish via RMI and/or JNDI
+    </description>
+
+    <scm>
+        <url>
+            http://svn.day.com/repos/sling/trunk/jackrabbit-server
+        </url>
+        <connection>scm:svn:${scm.url}</connection>
+        <developerConnection>scm:svn:${scm.url}</developerConnection>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Category>
+                            sling,jcr,jackrabbit
+                        </Bundle-Category>
+                        <Bundle-Activator>
+                            org.apache.sling.jcr.server.Activator
+                        </Bundle-Activator>
+                        <!-- 
+                            Export the crx-core package for CRXModule
+                            implementations to have access. It is not intended
+                            for clients to import any of these packages into
+                            their bundles as this export may change without
+                            notice !
+                        -->
+                        <Export-Package>
+                            org.apache.jackrabbit.core;
+                            org.apache.jackrabbit.core.cluster;
+                            org.apache.jackrabbit.core.config;
+                            org.apache.jackrabbit.core.fs;
+                            org.apache.jackrabbit.core.fs.db;
+                            org.apache.jackrabbit.core.fs.local;
+                            org.apache.jackrabbit.core.fs.mem;
+                            org.apache.jackrabbit.core.jndi;
+                            org.apache.jackrabbit.core.jndi.provider;
+                            org.apache.jackrabbit.core.journal;
+                            org.apache.jackrabbit.core.lock;
+                            org.apache.jackrabbit.core.nodetype;
+                            org.apache.jackrabbit.core.nodetype.compact;
+                            org.apache.jackrabbit.core.nodetype.virtual;
+                            org.apache.jackrabbit.core.nodetype.xml;
+                            org.apache.jackrabbit.core.observation;
+                            org.apache.jackrabbit.core.persistence;
+                            org.apache.jackrabbit.core.persistence.bundle;
+                            org.apache.jackrabbit.core.persistence.bundle.util;
+                            org.apache.jackrabbit.core.persistence.db;
+                            org.apache.jackrabbit.core.persistence.mem;
+                            org.apache.jackrabbit.core.persistence.obj;
+                            org.apache.jackrabbit.core.persistence.util;
+                            org.apache.jackrabbit.core.persistence.xml;
+                            org.apache.jackrabbit.core.query;
+                            org.apache.jackrabbit.core.query.lucene;
+                            org.apache.jackrabbit.core.query.lucene.fulltext;
+                            org.apache.jackrabbit.core.query.sql;
+                            org.apache.jackrabbit.core.query.xpath;
+                            org.apache.jackrabbit.core.security;
+                            org.apache.jackrabbit.core.state;
+                            org.apache.jackrabbit.core.state.db;
+                            org.apache.jackrabbit.core.state.mem;
+                            org.apache.jackrabbit.core.state.obj;
+                            org.apache.jackrabbit.core.state.util;
+                            org.apache.jackrabbit.core.state.xml;
+                            org.apache.jackrabbit.core.util;
+                            org.apache.jackrabbit.core.value;
+                            org.apache.jackrabbit.core.version;
+                            org.apache.jackrabbit.core.virtual;
+                            org.apache.jackrabbit.core.xml;
+                            version="1.3.1", javax.transaction.*
+                        </Export-Package>
+                        <Private-Package>
+                            <!-- !org.apache.jackrabbit.*, -->
+                            <!--
+                                issue of split packages between crx-commons
+                                and day-commons-misc. Hence, include com.day.util
+                                here and forget about the rest ....
+                            -->
+                            org.apache.sling.jcr.server.*,
+                            META-INF.services.*,
+
+                            <!-- Jackrabbit Text Extractors -->
+                            org.apache.jackrabbit.extractor,
+
+                            <!-- (server side) rmi packages -->
+                            org.apache.jackrabbit.rmi.*,
+
+                            EDU.oswego.cs.dl.util.concurrent.*,
+                            org.apache.lucene.*, org.apache.derby.*
+                        </Private-Package>
+                        <Import-Package>
+                            org.apache.sling.jcr,
+
+                            org.apache.jackrabbit,
+                            org.apache.jackrabbit.name,
+                            org.apache.jackrabbit.util,
+                            org.apache.jackrabbit.util.name,
+                            org.apache.jackrabbit.uuid,
+                            org.apache.jackrabbit.value,
+
+                            javax.jcr.*,
+
+                            javax.naming.*, javax.xml.*,
+                            javax.security.*,
+                            org.apache.commons.collections.*,
+                            org.apache.jackrabbit.api,
+
+                            org.osgi.framework, org.osgi.service.cm,
+                            org.osgi.service.component,
+                            org.osgi.service.log,
+
+                            org.slf4j, org.xml.sax, org.xml.sax.helpers
+                        </Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+
+                        <!-- Embedd some libraries -->
+                        <Embed-Transitive>true</Embed-Transitive>
+                        <Embed-Dependency>
+                            jackrabbit-jcr-rmi;jackrabbit-core;inline=true
+                        </Embed-Dependency>
+
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>sling-jackrabbit-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-rmi</artifactId>
+            <version>1.3.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-core</artifactId>
+            <version>1.3.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <!-- OSGi Libraries -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_compendium</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>1.1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

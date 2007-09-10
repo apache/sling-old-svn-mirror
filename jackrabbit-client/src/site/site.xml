@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="CRX Repository Accessor">
+    <publishDate format="dd MMM yyyy" />
+    
+    <body>
+        <links>
+            <item name="CRX" href="http://www.day.com/crx" />
+        </links>
+        
+        <head>
+            <meta name="faq" content="CRX OSGi Accessor" />
+        </head>
+        
+        <menu name="Quick Links">
+            <item name="About" href="/about.html" />
+        </menu>
+        
+        ${reports}
+    </body>
+</project>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Copyright 2007 The Apache Software Foundation.
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at 
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling-builder</artifactId>
+    <packaging>pom</packaging>
+    <version>1-incubator-SNAPSHOT</version>
+
+    <name>Sling (Builder)</name>
+    <description>
+        Pseudo project to build the complete Sling project
+    </description>
+
+    <inceptionYear>2007</inceptionYear>
+
+    <prerequisites>
+        <maven>2.0.7</maven>
+    </prerequisites>
+
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://issues.apache.org/jira/browse/SLING</url>
+    </issueManagement>
+
+
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk
+        </developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk</url>
+    </scm>
+
+
+    <!-- List modules to be included in the build here ! -->
+    <modules>
+        <!-- The real Sling Parent Project -->
+        <module>parent</module>
+
+        <!-- JSP Core Support: Compiler and JSP plugin -->
+        <module>jasper-sling</module>
+
+        <!-- Core Plugins -->
+        <module>maven-sling-plugin</module>
+        <module>maven-jcrocm-plugin</module>
+        <module>maven-jspc-plugin</module>
+
+        <module>log</module>
+        <module>assembly</module>
+        <module>mime</module>
+
+        <module>jackrabbit-api</module>
+        <module>jackrabbit-client</module>
+        <module>jackrabbit-server</module>
+        <module>jackrabbit-classloader</module>
+
+        <module>component-api</module>
+        <module>content</module>
+        <module>core</module>
+        <module>cache</module>
+
+        <module>component-standard</module>
+        <module>scripting-core</module>
+        <module>scripting-jsp</module>
+        <module>scripting-jsp-taglib</module>
+
+        <!--
+            <module>obr</module>
+        -->
+
+        <module>webmanager</module>
+
+        <module>sling-app</module>
+        <module>sling-servlet</module>
+        <module>servlet-bridge</module>
+
+        <!-- Build assembly bundles. MUST BE LAST -->
+        <!-- <module>assemblies</module> -->
+    </modules>
+</project>

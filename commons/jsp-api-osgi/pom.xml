@@ -1,0 +1,57 @@
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling.commons</groupId>
+        <artifactId>commons</artifactId>
+        <version>1-SNAPSHOT</version>
+    </parent>
+  
+    <artifactId>jsp-api</artifactId>
+    <version>2.0</version>
+    <packaging>bundle</packaging>
+
+    <name>${pom.artifactId} bundle</name>
+    <description>
+        This bundle simply wraps jsp-api-${pom.version}.jar.
+    </description>
+    
+    <organization> 
+        <name>Apache Felix Project</name> 
+        <url>http://incubator.apache.org/felix/</url> 
+    </organization>
+    
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jsp-api</artifactId>
+            <version>${pom.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                        <Export-Package>
+                            *
+                        </Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
