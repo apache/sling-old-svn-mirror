@@ -569,6 +569,8 @@ public class JobEventHandler
         Session s = null;
         try {
             s = this.createSession();
+            // remove lock token from shared session and add it to current session
+            this.session.removeLockToken(lockToken);
             s.addLockToken(lockToken);
             final Node eventNode = (Node) s.getItem(eventNodePath);
             try {
