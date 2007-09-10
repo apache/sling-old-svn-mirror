@@ -32,23 +32,20 @@ import org.osgi.service.log.LogService;
  */
 public class Activator implements BundleActivator {
 
-    private Log4JManager log4JManager;
+    private LogbackManager logbackManager;
 
     private LogSupport logSupport;
 
     public void start(BundleContext context) throws Exception {
-        log4JManager = new Log4JManager(context);
+        logbackManager = new LogbackManager(context);
 
         logSupport = new LogSupport();
         context.addBundleListener(logSupport);
         context.addFrameworkListener(logSupport);
         context.addServiceListener(logSupport);
 
-        // TODO: to support logging configuration logSupport should be
-        // registered as ManagedService
-
         LogServiceFactory lsf = new LogServiceFactory(logSupport);
-        Dictionary props = new Hashtable();
+        Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Day LogService implementation");
@@ -56,7 +53,7 @@ public class Activator implements BundleActivator {
         context.registerService(LogService.class.getName(), lsf, props);
 
         LogReaderServiceFactory lrsf = new LogReaderServiceFactory(logSupport);
-        props = new Hashtable();
+        props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Day LogReaderService implementation");
@@ -66,6 +63,6 @@ public class Activator implements BundleActivator {
 
     public void stop(BundleContext context) throws Exception {
         logSupport.shutdown();
-        log4JManager.shutdown();
+        logbackManager.shutdown();
     }
 }
