@@ -86,6 +86,9 @@
         <module>scripting-jsp</module>
         <module>scripting-jsp-taglib</module>
 
+		<module>event</module>
+		<module>scheduler</module>
+
         <!--
             <module>obr</module>
         -->
