@@ -37,9 +37,15 @@
     </description>
 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/jackrabbit-api</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-api
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-api
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jackrabbit-api
+        </url>
     </scm>
 
     <build>

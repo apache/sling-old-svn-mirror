@@ -38,17 +38,17 @@
 		Java Classes contained in the project sources
 	</description>
 
-	<scm>
-		<url>
-			http://svn.day.com/repos/sling/trunk/maven-jcrocm-plugin
-		</url>
-		<connection>
-			scm:svn:${scm.url}
-		</connection>
-		<developerConnection>
-			scm:svn:${scm.url}
-		</developerConnection>
-	</scm>
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/maven-jcrocm-plugin
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/maven-jcrocm-plugin
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/maven-jcrocm-plugin
+        </url>
+    </scm>
 
 	<reporting>
 		<plugins>

@@ -37,9 +37,15 @@
     </description>
 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/jackrabbit-classloader</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-classloader
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-classloader
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jackrabbit-classloader
+        </url>
     </scm>
 
     <build>

@@ -39,9 +39,15 @@
     </description>
 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/content</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/content
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/content
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/content
+        </url>
     </scm>
 
     <build>

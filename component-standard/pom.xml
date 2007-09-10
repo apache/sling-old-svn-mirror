@@ -36,11 +36,15 @@
     </description>
 
     <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/component-standard
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/component-standard
+        </developerConnection>
         <url>
-            http://svn.day.com/repos/sling/trunk/component-standard
+            http://svn.apache.org/viewvc/incubator/sling/trunk/component-standard
         </url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
     </scm>
 
     <build>

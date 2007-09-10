@@ -33,9 +33,15 @@
     <description>Support for JSP scripting</description>
 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/scripting-jsp</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting-jsp
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting-jsp
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting-jsp
+        </url>
     </scm>
 
     <build>

@@ -36,11 +36,15 @@
     </description>
 
     <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/maven-sling-plugin
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/maven-sling-plugin
+        </developerConnection>
         <url>
-            http://svn.day.com/repos/sling/trunk/maven-sling-plugin
+            http://svn.apache.org/viewvc/incubator/sling/trunk/maven-sling-plugin
         </url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
     </scm>
 
     <reporting>

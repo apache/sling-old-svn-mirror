@@ -8,7 +8,8 @@
 
     <properties>
         <pkgArtifactId>jackrabbit-text-extractors</pkgArtifactId>
-        <pkgVersion>1.3</pkgVersion>
+        <pkgVersion>1.4</pkgVersion>
+        <pkgSnapshot>-SNAPSHOT</pkgSnapshot> <!-- declare empty for release version -->
         <pomVersion>0002</pomVersion>
         <osgiVersion>${pkgVersion}.0</osgiVersion>
     </properties>
@@ -22,9 +23,15 @@
     </description>
 
     <scm>
-      <connection>scm:svn:http://svn.day.com/repos/sling/trunk/jackrabbit-text-extractors</connection>
-      <developerConnection>scm:svn:http://svn.day.com/repos/sling/trunk/jackrabbit-text-extractors</developerConnection>
-      <url>http://svn.day.com/repos/sling/trunk/jackrabbit-text-extractors</url>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-text-extractors
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-text-extractors
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jackrabbit-text-extractors
+        </url>
     </scm>
      
     <build>
@@ -43,6 +50,8 @@
                             org.apache.jackrabbit.extractor;version=${pkgVersion}
                         </Export-Package>
                         <Private-Package>
+                        	org.apache.jackrabbit.extractor.impl,
+                        	
                             <!--
                                 org.apache.poi.*,
                                 org.pdfbox.*,
@@ -92,24 +101,25 @@
                             org.pdfbox.util, 
 
                             <!-- textmining 0.4 extractors -->
-                            org.textmining.text.extraction.*
+                            org.textmining.text.extraction.*,
+
+                        	org.apache.xerces.*,
+                        	org.cyberneko.*,
+
+							org.apache.xml.*, 
+							org.xml.sax.*,
+
+
+                        	javax.xml.*,
+
+                        	org.w3c.*
                         </Private-Package>
                         <Import-Package>
-                            javax.xml.parsers, javax.xml.transform,
-                            javax.xml.transform.sax,
-
-                            org.apache.xerces.parsers,
-                            org.apache.xerces.xni,
-                            org.apache.xerces.xni.parser,
-                            org.cyberneko.html,
-
-                            org.xml.sax, org.xml.sax.helpers,
-                            
                             org.apache.commons.logging, 
                             org.apache.log4j
                         </Import-Package>
                         <DynamicImport-Package>
-                            javax.swing.text, javax.swing.text.rtf, org.apache.log4j.spi
+                            javax.swing.text, javax.swing.text.rtf, org.apache.log4j.spi, org.apache.xml.resolver, org.apache.xml.resolver.readers
                         </DynamicImport-Package>
                     </instructions>
                 </configuration>
@@ -121,7 +131,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>${pkgArtifactId}</artifactId>
-            <version>${pkgVersion}</version>
+            <version>${pkgVersion}${pkgSnapshot}</version>
         </dependency>
         <dependency>
             <groupId>poi</groupId>
@@ -137,6 +147,23 @@
             <groupId>org.textmining</groupId>
             <artifactId>tm-extractors</artifactId>
             <version>0.4</version>
+        </dependency>
+        
+        <!-- Neko HTML Dependencies for bundle inclusion -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+            <version>1.3.03</version>
+        </dependency>
+        <dependency>
+            <groupId>nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+            <version>0.9.4</version>
         </dependency>
     </dependencies>
 
