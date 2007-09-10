@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Copyright 2007 The Apache Software Foundation.
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at 
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>1-incubator-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>sling-log</artifactId>
+    <version>2.0.0-incubator-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Sling - OSGi LogService Implementation</name>
+    <description>
+        Implementation of the OSGi Compendium Log Service using SLF4J
+        ontop of NLOG4J. Provides SLF4J and Jakarta Commons Logging API.
+    </description>
+
+    <scm>
+        <url>http://svn.day.com/repos/sling/trunk/log</url>
+        <connection>scm:svn:${scm.url}</connection>
+        <developerConnection>scm:svn:${scm.url}</developerConnection>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Activator>
+                            org.apache.sling.log.Activator
+                        </Bundle-Activator>
+                        <Export-Package>
+                            org.apache.commons.logging;version=1.3.1,
+                            org.apache.log4j;version=1.2.25,
+                            org.slf4j;version=1.4.0,
+                            org.osgi.service.log
+                        </Export-Package>
+                        <Private-Package>
+                            org.apache.sling.log, org.apache.log4j.*,
+                            org.slf4j.*, org.apache.commons.logging.*
+                        </Private-Package>
+                        <DynamicImport-Package>
+                            com.sun.jdmk.comm, javax.jms, javax.mail,
+                            javax.mail.internet, javax.management,
+                            javax.naming, javax.xml.parsers,
+                            org.w3c.dom, org.xml.sax
+                        </DynamicImport-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--
+        Core Logging by NLOG4J with built in support for Log4J
+        and redirection of commons logging to SLF4J
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl104-over-slf4j</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>nlog4j</artifactId>
+            <version>1.2.25</version>
+        </dependency>
+
+        <!-- OSGi Libraries not included here -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_compendium</artifactId>
+        </dependency>
+    </dependencies>
+</project>
