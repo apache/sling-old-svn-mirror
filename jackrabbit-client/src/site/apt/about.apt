@@ -1,0 +1,59 @@
+	---
+	CRX Repository Accessor Bundle
+	---
+	Felix Meschberger
+	---
+	September 2006
+	---
+
+Introduction
+
+	The CRX Repository Accessor Bundle provides an implementation of the
+	<<<com.day.crx.provider.RepositorySPI>>> service which accesses CRX
+	Repositories registered in JNDI directories or RMI registries. The actual
+	repository retrieved may either be existing in the same Java VM as the
+	OSGi Framework which launched this bundle or outside the Java VM, in which
+	case the repository is accessed over RMI.
+	
+	
+Provisioning
+
+	This service requires an implementation of the OSGi Declarative Services
+	Specification to be present in the framework. Using this specification,
+	the service is configured to be launched and registered to the OSGi
+	framework service registry as soon as all required dependencies are met.
+	
+	The service descriptor registers the service under the service id
+	<<com.day.crx.osgi.repository.access.RepositorySPI>>.
+
+
+Use and Properties
+
+	Clients do not directly use this service. Instead the
+	<<com.day.crx.provider.RepositoryProvider>>	is used to access a repository
+	which is launched by this provider. If the provider is selected, the
+	repository lookup environment must contain the following property:
+
+	[<<<com.day.crx.osgi.repository.name>>>] The name property serves both as
+		the unique identification of the repository and accessor to the existing
+		repository. Depending on whether the repository is accessed in a JNDI
+		context or a RMI registry, the name must be a valid JNDI name or an
+		RMI URL.
+		
+	In the case of looking up the repository in a JNDI context, the environment
+	map should contain additional properties to access to find the JNDI context
+	from where to get the repository. Namely the following properties will
+	generally be provided:
+	
+	[<<<java.naming.provider.url>>>] The provider specific service URL.
+	
+	[<<<java.naming.factory.initial>>>] The fully qualified name of the context
+		factory.
+	
+	Actually the complete contents of the environment map is used to locate
+	the JNDI <<<InitialContext>>> to access the repository.
+	
+	The accessor <<<RepositorySPI>>> first tries to lookup the repository
+	through JNDI. If this fails, the repository name is used as an RMI URL
+	and the repository is retrieved from the RMI registry. If this also fails,
+	the accessor <<<RepositorySPI>>> cannot provide the repository.

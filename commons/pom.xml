@@ -1,0 +1,27 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>1-SNAPSHOT</version>
+  </parent>
+  
+  <groupId>org.apache.sling.commons</groupId>
+  <artifactId>commons</artifactId>
+  <version>1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  
+  <name>Public Libraries as OSGi Bundles(Parent Project)</name>
+  <description>
+    Bundleized versions of libraries.
+  </description>
+
+  <!-- List modules to be included in the build here ! -->
+  <modules>
+    <module>jsp-api-osgi</module>
+
+    <module>mx4j-osgi</module>
+    <module>mx4j-remote-osgi</module>
+  </modules>
+
+</project>
