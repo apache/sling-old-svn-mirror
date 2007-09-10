@@ -34,11 +34,17 @@
         Standalone Application comprising base bundles and installing
         Sling required bundles on demand
     </description>
-
+ 
     <scm>
-        <url>http://svn.day.com/repos/sling/trunk/sling-app</url>
-        <connection>scm:svn:${scm.url}</connection>
-        <developerConnection>scm:svn:${scm.url}</developerConnection>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling-app
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling-app
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling-app
+        </url>
     </scm>
 
     <build>
