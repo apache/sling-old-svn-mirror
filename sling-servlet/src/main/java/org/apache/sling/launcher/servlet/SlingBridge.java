@@ -56,8 +56,5 @@ public class SlingBridge extends Sling {
             }
             httpServiceActivator = null;
         }
-
-        // shutdown the framework now
-        super.destroy();
     }
 }
