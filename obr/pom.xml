@@ -17,9 +17,15 @@
     </description>
 
     <scm>
-      <connection>scm:svn:http://svn.day.com/repos/sling/trunk/obr</connection>
-      <developerConnection>scm:svn:http://svn.day.com/repos/sling/trunk/obr</developerConnection>
-      <url>http://svn.day.com/repos/sling/trunk/obr</url>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/obr
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/obr
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/obr
+        </url>
     </scm>
      
     <build>
