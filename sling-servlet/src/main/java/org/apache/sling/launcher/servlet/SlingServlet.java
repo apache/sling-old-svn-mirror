@@ -36,6 +36,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.launcher.Logger;
 import org.apache.sling.launcher.ResourceProvider;
 import org.apache.sling.launcher.Sling;
+import org.eclipse.equinox.http.servlet.HttpServiceServlet;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>SlingServlet</code> serves as a basic servlet for Project Sling.
@@ -137,21 +139,10 @@ public class SlingServlet extends GenericServlet {
     public static final String OSGI_FRAMEWORK_BUNDLES = "org.apache.osgi.bundles";
 
     /**
-     * The singleton instance of this class. This is used by the
-     * {@link #registerDelegatee(Servlet)} and
-     * {@link #unregisterDelegatee(Servlet)} methods to register the servlet
-     * delegate which implements the OSGi HttpService.
-     * <p>
-     * This field is managed through the {@link #setInstance(SlingServlet)}
-     * method called by the {@link #init()} and {@link #destroy()} methods.
-     */
-    private static SlingServlet instance;
-
-    /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
      */
-    private Sling sling;
+    private SlingBridge sling;
 
     /**
      * The map of delegatee servlets to which requests are delegated. This map
@@ -165,12 +156,6 @@ public class SlingServlet extends GenericServlet {
     private Servlet delegatee;
 
     /**
-     * Reference counter concurrent of delegatee service calls. Only when this
-     * counter has dropped to zero, can the delegatee servlet be destroyed.
-     */
-    private int delegateeRefCtr;
-
-    /**
      * Initializes this servlet by loading the framework configuration
      * properties, starting the OSGi framework (Apache Felix) and exposing the
      * system bundle context and the <code>Felix</code> instance as servlet
@@ -180,7 +165,6 @@ public class SlingServlet extends GenericServlet {
      */
     public final void init() throws ServletException {
         super.init();
-        setInstance(this);
 
         if (getServletContext().getAttribute(CONTEXT_ATTR_SLING_FRAMEWORK) != null) {
             log("Has this framework already been started ???");
@@ -194,7 +178,7 @@ public class SlingServlet extends GenericServlet {
             Logger logger = new ServletContextLogger(getServletContext());
             ResourceProvider rp = new ServletContextResourceProvider(
                 getServletContext());
-            sling = new Sling(logger, rp, props);
+            sling = new SlingBridge(logger, rp, props);
         } catch (Exception ex) {
             log("Cannot start the OSGi framework", ex);
             throw new UnavailableException("Cannot start the OSGi Framework: "
@@ -203,6 +187,10 @@ public class SlingServlet extends GenericServlet {
 
         // set the context attributes only if all setup has been successfull
         getServletContext().setAttribute(CONTEXT_ATTR_SLING_FRAMEWORK, sling);
+
+        // set up the proxy servlet
+        delegatee = new HttpServiceServlet();
+        delegatee.init(getServletConfig());
 
         log("Servlet " + getServletName() + " initialized");
     }
@@ -226,15 +214,11 @@ public class SlingServlet extends GenericServlet {
             throws ServletException, IOException {
 
         // delegate the request to the registered delegatee servlet
-        Servlet delegatee = acquireDelegateeRef();
+        Servlet delegatee = getDelegatee();
         if (delegatee == null) {
             ((HttpServletResponse) res).sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
-            try {
-                delegatee.service(req, res);
-            } finally {
-                releaseDelegateeRef();
-            }
+            delegatee.service(req, res);
         }
     }
 
@@ -243,6 +227,13 @@ public class SlingServlet extends GenericServlet {
      * delegatee servlet if one is set at all.
      */
     public final void destroy() {
+
+        // destroy the delegatee
+        if (delegatee != null) {
+            delegatee.destroy();
+            delegatee = null;
+        }
+        
         // remove the context attributes immediately
         getServletContext().removeAttribute(CONTEXT_ATTR_SLING_FRAMEWORK);
 
@@ -252,104 +243,12 @@ public class SlingServlet extends GenericServlet {
             sling = null;
         }
 
-        setInstance(null);
-
         // finally call the base class destroy method
         super.destroy();
     }
 
-    // ---------- Delegatee Servlet Support ------------------------------------
-
-    private synchronized static void setInstance(SlingServlet launcherServlet) {
-        if (launcherServlet != null && instance != null) {
-            throw new IllegalStateException("Instance already registered.");
-        }
-
-        instance = launcherServlet;
-    }
-
-    /**
-     * Returns the singleton instance of this class or <code>null</code> if
-     * the singleton instance has not been initialized yet or if it has been
-     * destroyed.
-     * <p>
-     * This method is for internal use only and MUST NOT be used by client
-     * applications and bundles.
-     */
-    public static Servlet getInstance() {
-        return instance;
-    }
-
-    public synchronized static void registerDelegatee(Servlet delegatee) {
-        // dont register if the servlet is shutting down
-        if (instance == null) {
-            return;
-        }
-
-        synchronized (instance) {
-            if (delegatee == null) {
-                throw new NullPointerException("Delegatee must not be null");
-            }
-
-            try {
-                delegatee.init(instance.getServletConfig());
-                instance.delegatee = delegatee;
-            } catch (ServletException se) {
-                instance.getServletContext().log(
-                    "ERROR: Cannot initialize" + " delegatee servlet", se);
-            }
-        }
-    }
-
-    public synchronized static void unregisterDelegatee(Servlet delegatee) {
-        // dont unregister if the servlet is shutting down
-        if (instance == null) {
-            return;
-        }
-
-        synchronized (instance) {
-            // nothing to do if no servlet is registered
-            if (instance.delegatee == null) {
-                return;
-            }
-
-            if (delegatee != instance.delegatee) {
-                throw new IllegalArgumentException(
-                    "Servlet to unregister does not match registered delegatee Servlet");
-            }
-
-            Servlet oldDelegatee = instance.delegatee;
-            instance.delegatee = null;
-            while (instance.delegateeRefCtr > 0) {
-                try {
-                    instance.wait();
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
-            }
-            oldDelegatee.destroy();
-        }
-    }
-
-    private synchronized Servlet acquireDelegateeRef() {
-        if (delegatee != null) {
-            delegateeRefCtr++;
-            return delegatee;
-        }
-
-        return null;
-    }
-
-    private synchronized void releaseDelegateeRef() {
-        // discount delegatee ref, even if delegatee has already been set to
-        // null,
-        // this is the protocol with the unregisterDelegatee method, which
-        // first sets the delegatee to null and then waits for the counter
-        // to drop to zero
-        delegateeRefCtr--;
-
-        // notify threads potentially waiting for the counter to drop to zero
-        notifyAll();
+    Servlet getDelegatee() {
+        return delegatee;
     }
 
     // ---------- Configuration Loading ----------------------------------------
@@ -378,7 +277,7 @@ public class SlingServlet extends GenericServlet {
 
         props.put(
             Sling.PROP_SYSTEM_PACKAGES,
-            ",javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.3,javax.portlet,org.apache.sling.launcher.servlet");
+            ",javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.3,javax.portlet");
 
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");

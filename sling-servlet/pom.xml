@@ -80,29 +80,13 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-base-bundles</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeArtifactIds>
-                                servlet,sling-servlet-bridge
-                            </includeArtifactIds>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.directory}/sling-app/resources/bundles
-                            </outputDirectory>
-                            <stripVersion>true</stripVersion>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>unpack-dependencies</id>
                         <goals>
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                sling-app
+                                sling-app,servlet
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -158,6 +142,14 @@
                                 </include>
                                 <include>jre-*.properties</include>
                             </includes>
+                            <excludes>
+                                <exclude>
+                                    resources/bundles/org.apache.felix.http.jetty.jar
+                                </exclude>
+                                <exclude>
+                                    resources/bundles/org.apache.felix.commons.servlet-api.jar
+                                </exclude>
+                            </excludes>
                         </resource>
                     </webResources>
                 </configuration>
@@ -192,25 +184,18 @@
             <version>2.0.0-incubator-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- The servlet container will have to provide these API classes -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.3</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.eclipse.equinox.http</groupId>
             <artifactId>servlet</artifactId>
             <version>1.0.0.v20070606</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- The servlet container will have to provide these API classes -->
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>sling-servlet-bridge</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.3</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
