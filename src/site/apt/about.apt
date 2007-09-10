@@ -1,0 +1,59 @@
+	---
+	CRX Repository Launcher Bundle
+	---
+	Felix Meschberger
+	---
+	September 2006
+	---
+
+Introduction
+
+	The CRX Repository Launcher Bundle provides an implementation of the
+	<<<com.day.crx.provider.RepositorySPI>>> service which launches embedded
+	CRX Repositories.
+	
+	
+Provisioning
+
+	This service requires an implementation of the OSGi Declarative Services
+	Specification to be present in the framework. Using this specification,
+	the service is configured to be launched and registered to the OSGi
+	framework service registry as soon as all required dependencies are met.
+	
+	The service descriptor registers the service under the service id
+	<<com.day.crx.osgi.repository.launch.RepositorySPI>>.
+
+
+Use and Properties
+
+	Clients do not directly use this service. Instead the
+	<<com.day.crx.provider.RepositoryProvider>>	is used to access a repository
+	which is launched by this provider. If the provider is selected, the
+	repository lookup environment must contain the following properties:
+
+	[<<<com.day.crx.osgi.repository.name>>>] The name property serves both as
+		the unique identification of the repository and the path to the
+		directory in which the repository is started. This is also called the
+		repository home directory.
+		
+		<<This parameter is required.>>
+		
+	[<<<com.day.crx.osgi.repository.config>>>] An URL locating the main repository
+		configuration file, generally <<<repository.xml>>>. This URL must be
+		resolvable within the context of the OSGi framework. Hence it may contain
+		schemes, which are specific to the framework instance.
+		
+		For example, if this bundle is loaded in an OSGi framework instance
+		provided by the Day <OSGi Servlet Launcher> the <<<context:>>> scheme
+		may be used to load the configuration file from the Web Application
+		context in which the framework is running.
+		
+		<<This parameter is required.>>
+
+	[<<<com.day.crx.osgi.repository.license>>>] An URL locating the CRX launcher
+		license file. This file is required to launche a CRX repository. The
+		same requirements regarding the URL scheme apply for this parameter
+		as for the <<<config>>> parameter above.
+		
+		<<This parameter is required.>>
+	
