@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Copyright 2007 The Apache Software Foundation.
+    
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at 
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>1-incubator-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>sling-content-jcr</artifactId>
+    <version>2.0.0-incubator-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>
+        Sling - Content Loading, Mapping and Nodetype Management
+    </name>
+    <description>
+        This bundle provides three kinds of Repository Content related
+        functionality: Node type registration, initial content
+        installation and JCR Mapping.
+    </description>
+
+    <scm>
+        <url>http://svn.day.com/repos/sling/trunk/content</url>
+        <connection>scm:svn:${scm.url}</connection>
+        <developerConnection>scm:svn:${scm.url}</developerConnection>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-sling-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-jcrocm-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.apache.sling.content,
+                            org.apache.sling.content.jcr,
+                            org.apache.jackrabbit.ocm.exception;
+                            org.apache.jackrabbit.ocm.mapper;
+                            org.apache.jackrabbit.ocm.manager;
+                            org.apache.jackrabbit.ocm.manager.atomictypeconverter;
+                            org.apache.jackrabbit.ocm.manager.collectionconverter;
+                            org.apache.jackrabbit.ocm.manager.collectionconverter.impl;
+                            org.apache.jackrabbit.ocm.query;
+                            org.apache.jackrabbit.ocm.version;version=1.4
+                        </Export-Package>
+                        <Private-Package>
+                            org.apache.sling.content.jcr.internal.*,
+                            org.apache.jackrabbit.ocm.lock,
+                            org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl,
+                            org.apache.jackrabbit.ocm.manager.beanconverter,
+                            org.apache.jackrabbit.ocm.manager.beanconverter.impl,
+                            org.apache.jackrabbit.ocm.manager.cache,
+                            org.apache.jackrabbit.ocm.manager.cache.impl,
+                            org.apache.jackrabbit.ocm.manager.impl,
+                            org.apache.jackrabbit.ocm.manager.objectconverter,
+                            org.apache.jackrabbit.ocm.manager.objectconverter.impl,
+                            org.apache.jackrabbit.ocm.mapper.impl,
+                            org.apache.jackrabbit.ocm.mapper.model,
+                            org.apache.jackrabbit.ocm.query.impl,
+                            org.apache.jackrabbit.ocm.reflection,
+                            org.apache.jackrabbit.ocm.repository,
+                            org.kxml2.io, org.xmlpull.v1
+                        </Private-Package>
+                        <Import-Package>
+                            javax.naming; org.apache.commons.digester;
+                            org.apache.jackrabbit.core.jndi;resolution:=optional,*
+                        </Import-Package>
+
+                        <!-- CND for the sling:content node type for BaseContent -->
+                        <Sling-Nodetypes>
+                            SLING-INF/nodetypes/BaseContent.cnd
+                        </Sling-Nodetypes>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>sling-component-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>sling-mime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>sling-jackrabbit-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-ocm</artifactId>
+            <version>1.4-SNAPSHOT</version>
+            <!-- <scope>compile</scope> -->
+        </dependency>
+
+        <dependency>
+            <groupId>net.sf.kxml</groupId>
+            <artifactId>kxml2</artifactId>
+            <version>2.2.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>xmlpull</groupId>
+                    <artifactId>xmlpull</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <!--
+            <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.7.0</version>
+            </dependency>
+            <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            </dependency>
+            <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.0.4</version>
+            </dependency>
+        -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+    </dependencies>
+</project>
