@@ -94,7 +94,6 @@
 
         <module>sling-app</module>
         <module>sling-servlet</module>
-        <module>servlet-bridge</module>
 
         <!-- Build assembly bundles. MUST BE LAST -->
         <!-- <module>assemblies</module> -->
