@@ -18,7 +18,7 @@ package org.apache.sling.mapper;
 import javax.jcr.Session;
 
 import org.apache.sling.component.Content;
-import org.apache.sling.core.RequestData;
+import org.apache.sling.core.impl.RequestData;
 
 
 /**
