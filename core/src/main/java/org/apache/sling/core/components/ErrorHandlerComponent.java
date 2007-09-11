@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.components;
+package org.apache.sling.core.components;
 
 import org.apache.sling.component.Component;
 

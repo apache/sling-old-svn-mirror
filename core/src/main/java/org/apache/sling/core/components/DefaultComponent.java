@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.components;
+package org.apache.sling.core.components;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,6 +34,7 @@ import org.apache.sling.component.Content;
 import org.apache.sling.component.RequestParameter;
 import org.apache.sling.content.ContentManager;
 import org.apache.sling.core.RequestUtil;
+import org.apache.sling.core.components.BaseComponent;
 
 
 /**

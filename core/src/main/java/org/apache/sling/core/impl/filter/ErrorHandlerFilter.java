@@ -26,7 +26,7 @@ import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.ComponentResponseWrapper;
-import org.apache.sling.components.ErrorHandlerComponent;
+import org.apache.sling.core.components.ErrorHandlerComponent;
 import org.apache.sling.core.impl.ContentData;
 import org.apache.sling.core.impl.RequestData;
 import org.slf4j.Logger;
