@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -36,18 +36,18 @@ import org.apache.sling.components.BaseComponent;
  * @scr.property name="service.description"
  *          value="Component to handle nt:resource content"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service 
+ * @scr.service
  */
 public class ResourceComponent extends BaseComponent {
 
     public static final String ID = ResourceComponent.class.getName();
-    
+
     /**
      * The name of the header used to send the last modification date of the
      * resource (value is "Last-Modified").
      */
     private static final String LAST_MODIFIED = "Last-Modified";
-    
+
     /**
      * The name of the header checked for a conditional modification date to
      * compare to the resource's last modification date (value is
@@ -56,12 +56,12 @@ public class ResourceComponent extends BaseComponent {
     private static final String IF_MODIFIED_SINCE = "If-Modified-Since";
 
     {
-        setContentClassName(ResourceContent.class.getName());
-        setComponentId(ID);
+        this.setContentClassName(ResourceContent.class.getName());
+        this.setComponentId(ID);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.Component#createContentInstance()
+    /**
+     * @see org.apache.sling.components.BaseComponent#createContentInstance()
      */
     public Content createContentInstance() {
         return new ResourceContent();
@@ -69,27 +69,26 @@ public class ResourceComponent extends BaseComponent {
 
     // nothing to do
     protected void doInit() {}
-    
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.Component#service(com.day.components.ComponentRequest, com.day.components.ComponentResponse)
+
+    /**
+     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException {
-        
+
         ResourceContent content = (ResourceContent) request.getContent();
 
         // check the last modification time and If-Modified-Since header
         long modifTime = content.getLastModificationTime();
-        if (unmodified(request, modifTime)) {
-            
+        if (this.unmodified(request, modifTime)) {
+
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-            
+
         } else {
-            
+
             response.setContentType(content.getMimeType());
             response.setHeader(LAST_MODIFIED, RequestUtil.toDateString(modifTime));
-         
+
             OutputStream out = response.getOutputStream();
             InputStream ins = null;
             try {
@@ -102,14 +101,14 @@ public class ResourceComponent extends BaseComponent {
                 IOUtils.closeQuietly(ins);
             }
         }
-        
-    }    
-    
+
+    }
+
     /**
      * Returns <code>true</code> if the request has a
      * <code>If-Modified-Since</code> header whose date value is later than
      * the last modification time given as <code>modifTime</code>.
-     * 
+     *
      * @param request The <code>ComponentRequest</code> checked for the
      *            <code>If-Modified-Since</code> header.
      * @param modifTime The last modification time to compare the header to.

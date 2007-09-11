@@ -48,7 +48,7 @@ public class Activator implements BundleActivator {
         Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
-            "Day LogService implementation");
+            "Apache Sling LogService implementation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         context.registerService(LogService.class.getName(), lsf, props);
 
@@ -56,7 +56,7 @@ public class Activator implements BundleActivator {
         props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
-            "Day LogReaderService implementation");
+            "Apache Sling LogReaderService implementation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         context.registerService(LogReaderService.class.getName(), lrsf, props);
     }

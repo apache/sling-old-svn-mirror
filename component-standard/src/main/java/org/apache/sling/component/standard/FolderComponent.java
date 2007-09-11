@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -39,12 +39,12 @@ public class FolderComponent extends BaseComponent {
     public static final String ID = FolderComponent.class.getName();
 
     {
-        setContentClassName(FolderContent.class.getName());
-        setComponentId(ID);
+        this.setContentClassName(FolderContent.class.getName());
+        this.setComponentId(ID);
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.Component#createContentInstance()
+
+    /**
+     * @see org.apache.sling.components.BaseComponent#createContentInstance()
      */
     public Content createContentInstance() {
         return new FolderContent();
@@ -52,15 +52,14 @@ public class FolderComponent extends BaseComponent {
 
     // nothing to do
     protected void doInit() {}
-    
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.Component#service(com.day.components.ComponentRequest, com.day.components.ComponentResponse)
+
+    /**
+     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException {
         FolderContent content = (FolderContent) request.getContent();
-        
+
         response.setContentType("text/html");
         PrintWriter pw = response.getWriter();
         pw.println("<html><head>");
@@ -68,7 +67,7 @@ public class FolderComponent extends BaseComponent {
         pw.println("</head><body bgcolor='white'>");
         pw.println("<h1>Contents of <code>" + content.getPath() + "</code></h1>");
         pw.println("<ul>");
-        
+
         try {
             Enumeration entries = request.getChildren(content);
             while (entries.hasMoreElements()) {
@@ -78,7 +77,7 @@ public class FolderComponent extends BaseComponent {
         } catch (ComponentException ce) {
             // TODO: handle
         }
-        
+
         pw.println("</ul>");
         pw.println("</body></html>");
     }

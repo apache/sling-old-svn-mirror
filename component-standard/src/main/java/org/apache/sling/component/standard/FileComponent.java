@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -26,7 +26,7 @@ import org.apache.sling.components.BaseComponent;
 
 /**
  * The <code>FileComponent</code> TODO
- * 
+ *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
  *          value="Component to handle nt:file content"
@@ -38,15 +38,10 @@ public class FileComponent extends BaseComponent {
     public static final String ID = FileComponent.class.getName();
 
     {
-        setContentClassName(FileContent.class.getName());
-        setComponentId(ID);
+        this.setContentClassName(FileContent.class.getName());
+        this.setComponentId(ID);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.Component#createContentInstance()
-     */
     public Content createContentInstance() {
         return new FileContent();
     }
@@ -55,9 +50,8 @@ public class FileComponent extends BaseComponent {
     protected void doInit() {
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.Component#service(com.day.components.ComponentRequest, com.day.components.ComponentResponse)
+    /**
+     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException, ComponentException {
@@ -65,7 +59,7 @@ public class FileComponent extends BaseComponent {
         // just render the child content
         Content jcrContent = request.getContent("jcr:content");
         if (jcrContent != null) {
-            ComponentRequestDispatcher crd = getComponentContext().getRequestDispatcher(
+            ComponentRequestDispatcher crd = this.getComponentContext().getRequestDispatcher(
                 jcrContent);
             crd.include(request, response);
         } else {
