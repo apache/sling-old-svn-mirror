@@ -48,10 +48,10 @@ import org.apache.sling.component.ComponentSession;
 import org.apache.sling.component.Content;
 import org.apache.sling.component.RequestParameter;
 import org.apache.sling.content.ContentManager;
-import org.apache.sling.content.SelectableContent;
-import org.apache.sling.content.Selector;
 import org.apache.sling.content.jcr.JcrContentManager;
 import org.apache.sling.core.RequestUtil;
+import org.apache.sling.core.content.SelectableContent;
+import org.apache.sling.core.content.Selector;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 
 
