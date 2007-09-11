@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * The quartz based implementation of the scheduler.
  *
  * @scr.component
- * @scr.service interface="org.apache.sling.scheduler.Scheduler"
+ * @scr.service interface="org.apache.sling.core.scheduler.Scheduler"
  * @scr.reference name="job" interface="org.quartz.Job" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
  * @scr.reference name="task" interface="java.lang.Runnable" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
  */
@@ -191,7 +191,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
+     * @see org.apache.sling.core.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
      */
     public void addJob(String name,
                        Object job,
@@ -210,7 +210,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
+     * @see org.apache.sling.core.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
     public void addPeriodicJob(String name, Object job, Map<Object, Object> config, long period, boolean canRunConcurrently)
     throws Exception {
@@ -223,7 +223,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
+     * @see org.apache.sling.core.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
     public void fireJob(Object job, Map<Object, Object> config)
     throws Exception {
@@ -238,7 +238,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
+     * @see org.apache.sling.core.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
     public void fireJobAt(String name, Object job, Map<Object, Object> config, Date date) throws Exception {
         final SimpleTrigger trigger = new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, date);
@@ -246,7 +246,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#removeJob(java.lang.String)
+     * @see org.apache.sling.core.scheduler.Scheduler#removeJob(java.lang.String)
      */
     public void removeJob(String name) throws NoSuchElementException {
         try {
