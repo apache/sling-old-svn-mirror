@@ -506,7 +506,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * seconds. This sends a Version 1 cookie.
      *
      * @param response The
-     *            {@link com.day.cq.delivery.DeliveryHttpServletResponse} on
+     *            {@link DeliveryHttpServletResponse} on
      *            which to send back the cookie.
      * @param name The name of the cookie to send.
      * @param value The value of cookie.
