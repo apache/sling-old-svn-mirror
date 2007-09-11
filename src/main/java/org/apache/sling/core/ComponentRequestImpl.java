@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -65,7 +65,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * This constant is used to call the <code>getLocalAddr</code> method on
      * the request object, which was added in the Servlet API 2.4 and thus might
      * not be available to the Servlet API 2.3.
-     * 
+     *
      * @see #postServlet23Methods
      * @see #callPostServlet23Method(ServletRequest, String)
      */
@@ -76,7 +76,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * This constant is used to call the <code>getLocalName</code> method on
      * the request object, which was added in the Servlet API 2.4 and thus might
      * not be available to the Servlet API 2.3.
-     * 
+     *
      * @see #postServlet23Methods
      * @see #callPostServlet23Method(ServletRequest, String)
      */
@@ -87,7 +87,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * This constant is used to call the <code>getLocalPort</code> method on
      * the request object, which was added in the Servlet API 2.4 and thus might
      * not be available to the Servlet API 2.3.
-     * 
+     *
      * @see #postServlet23Methods
      * @see #callPostServlet23Method(ServletRequest, String)
      */
@@ -98,7 +98,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * This constant is used to call the <code>getRemotePort</code> method on
      * the request object, which was added in the Servlet API 2.4 and thus might
      * not be available to the Servlet API 2.3.
-     * 
+     *
      * @see #postServlet23Methods
      * @see #callPostServlet23Method(ServletRequest, String)
      */
@@ -108,7 +108,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * The map of methods indexed by their name added in the Servlet API 2.4
      * and later and thus not available in Servlet API 2.3 containers. This map
      * is filled on demand as the respective methods are called.
-     * 
+     *
      * @see #callPostServlet23Method(ServletRequest, String)
      */
     private static Map postServlet23Methods = Collections.synchronizedMap(new HashMap());
@@ -120,7 +120,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * container. If that interface does not provide such a method,
      * <code>null</code> is just returned. If calling the method fails for any
      * reason, <code>null</code> is also returned.
-     * 
+     *
      * @param request The <code>ServletRequest</code> object on which the
      *            named method is called. The object is expected to actually
      *            implement the <code>HttpServletRequest</code> interface, but
@@ -128,7 +128,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * @param methodName The name of the method to call. This method must be
      *            defined as a public method taking no arguments in the
      *            <code>HttpServletRequest</code> interface.
-     *            
+     *
      * @return The value returned by calling the method or <code>null</code>
      *         if the named method is not defined in the
      *         <code>HttpServletRequest</code> interface provided by the
@@ -146,7 +146,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
                 return null;
             }
         }
-        
+
         try {
             return method.invoke(request, null);
         } catch (Throwable t) {
@@ -154,84 +154,83 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
             return null;
         }
     }
-    
+
     private final RequestData requestData;
     private ComponentSession session;
     private String remoteUser;
-    
+
     protected ComponentRequestImpl(RequestData requestData) {
         super(requestData.getServletRequest());
         this.requestData = requestData;
     }
-    
+
     /**
      * @return the requestData
      */
     public final RequestData getRequestData() {
-        return requestData;
+        return this.requestData;
     }
 
     ParameterSupport getParameterSupport() {
-        return getRequestData().getParameterSupport();
+        return this.getRequestData().getParameterSupport();
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getAuthType()
+
+    /**
+     * @see javax.servlet.http.HttpServletRequestWrapper#getAuthType()
      */
     public String getAuthType() {
         return null; // getRequest().getAuthType();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getComponentSession()
+    /**
+     * @return
      */
     public ComponentSession getComponentSession() {
-        return getComponentSession(true);
+        return this.getComponentSession(true);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getComponentSession(boolean)
+    /**
+     * @param create
+     * @return
      */
     public ComponentSession getComponentSession(boolean create) {
-        if (session == null) {
+        if (this.session == null) {
             HttpSession session = super.getSession(create);
             if (session != null) {
                 this.session = new ComponentSessionImpl(null, session);
             }
         }
-        return session;
+        return this.session;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getContent()
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getContent()
      */
     public Content getContent() {
-        return getRequestData().getContentData().getContent();
+        return this.getRequestData().getContentData().getContent();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.ComponentContext#getContent(java.lang.String)
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getContent(java.lang.String)
      */
     public Content getContent(String path) throws ComponentException {
         if (!path.startsWith("/")) {
-            path = getContent().getPath() + "/" + path;
+            path = this.getContent().getPath() + "/" + path;
         }
-        
+
         try {
-            return getContentInternal(path);
+            return this.getContentInternal(path);
         } catch (ObjectContentManagerException pe) {
             throw new ComponentException("Cannot map item " + path, pe);
         }
-        
+
     }
-    
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRequestDispatcher(com.day.components.Content)
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getRequestDispatcher(org.apache.sling.component.Content)
      */
     public ComponentRequestDispatcher getRequestDispatcher(Content content) {
-        ContentData cd = getRequestData().getContentData();
+        ContentData cd = this.getRequestData().getContentData();
         if (cd == null) {
             // in case of issue, this may happen, but should, just taking care
             return null;
@@ -240,29 +239,27 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
         ComponentContext ctx = cd.getComponent().getComponentContext();
         return ctx.getRequestDispatcher(content);
     }
-    
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRequestDispatcher(java.lang.String)
+
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getRequestDispatcher(java.lang.String)
      */
     public RequestDispatcher getRequestDispatcher(String path) {
-        ContentData cd = getRequestData().getContentData();
+        ContentData cd = this.getRequestData().getContentData();
         if (cd == null) {
             // in case of issue, this may happen, but should, just taking care
             return null;
         }
-        
+
         ComponentContext ctx = cd.getComponent().getComponentContext();
         return ctx.getRequestDispatcher(path);
     }
-    
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.ComponentContext#getChildren(com.day.components.Content, boolean)
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getChildren(org.apache.sling.component.Content)
      */
     public Enumeration getChildren(Content content) throws ComponentException {
         try {
-            Session session = getRequestData().getSession();
+            Session session = this.getRequestData().getSession();
             final String path = content.getPath();
             Item item = session.getItem(path);
 
@@ -270,23 +267,23 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
             if (!item.isNode()) {
                 throw new ComponentException("Cannot get children of poperty " + path);
             }
-            
+
             final NodeIterator children = ((Node) item).getNodes();
             return new Enumeration() {
                 private Content next;
                 {
-                    next = seek();
+                    this.next = this.seek();
                 }
                 public boolean hasMoreElements() {
-                    return next != null;
+                    return this.next != null;
                 }
                 public Object nextElement() {
-                    if (!hasMoreElements()) {
+                    if (!this.hasMoreElements()) {
                         throw new NoSuchElementException();
                     }
-                    
-                    Content toReturn = next;
-                    next = seek();
+
+                    Content toReturn = this.next;
+                    this.next = this.seek();
                     return toReturn;
                 }
                 private Content seek() {
@@ -294,7 +291,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
                         Node child = children.nextNode();
                         try {
                             String childPath = path + "/" + child.getName();
-                            Content content = getContentInternal(childPath);
+                            Content content = ComponentRequestImpl.this.getContentInternal(childPath);
                             if (content != null) {
                                 return content;
                             }
@@ -306,7 +303,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
                             // TODO: log
                         }
                     }
-                    
+
                     // exhausted nodes, return null
                     return null;
                 }
@@ -315,184 +312,183 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
             throw new ComponentException(re);
         }
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getContextPath()
+
+    /**
+     * @see javax.servlet.http.HttpServletRequestWrapper#getContextPath()
      */
     public String getContextPath() {
-        return getRequestData().getContextPath();
+        return this.getRequestData().getContextPath();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getLocale()
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getLocale()
      */
     public Locale getLocale() {
-        return (getRequestData() != null) ? getRequestData().getLocale() : super.getLocale();
+        return (this.getRequestData() != null) ? this.getRequestData().getLocale() : super.getLocale();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getParameter(java.lang.String)
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getParameter(java.lang.String)
      */
     public String getParameter(String name) {
-        return getParameterSupport().getParameter(name);
+        return this.getParameterSupport().getParameter(name);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getParameterMap()
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getParameterMap()
      */
     public Map getParameterMap() {
-        return getParameterSupport().getParameterMap();
+        return this.getParameterSupport().getParameterMap();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getParameterNames()
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getParameterNames()
      */
     public Enumeration getParameterNames() {
-        return getParameterSupport().getParameterNames();
+        return this.getParameterSupport().getParameterNames();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getParameterValues(java.lang.String)
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getParameterValues(java.lang.String)
      */
     public String[] getParameterValues(String name) {
-        return getParameterSupport().getParameterValues(name);
+        return this.getParameterSupport().getParameterValues(name);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRequestParameter(java.lang.String)
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getRequestParameter(java.lang.String)
      */
     public RequestParameter getRequestParameter(String name) {
-        return getParameterSupport().getRequestParameter(name);
+        return this.getParameterSupport().getRequestParameter(name);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRequestParameters(java.lang.String)
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getRequestParameters(java.lang.String)
      */
     public RequestParameter[] getRequestParameters(String name) {
-        return getParameterSupport().getRequestParameters(name);
+        return this.getParameterSupport().getRequestParameters(name);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRequestParameterMap()
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getRequestParameterMap()
      */
     public Map getRequestParameterMap() {
-        return getParameterSupport().getRequestParameterMap();
+        return this.getParameterSupport().getRequestParameterMap();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getCookie(java.lang.String)
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getCookie(java.lang.String)
      */
     public Cookie getCookie(String name) {
         return RequestUtil.getCookie(this, name);
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRequestURI()
+
+    /**
+     * @see javax.servlet.http.HttpServletRequestWrapper#getRequestURI()
      */
     public String getRequestURI() {
-        return getRequestData().getRequestURI();
+        return this.getRequestData().getRequestURI();
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getSelectorString()
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getSelectorString()
      */
     public String getSelectorString() {
-        return getRequestData().getSelectorString();
+        return this.getRequestData().getSelectorString();
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getSelectors()
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getSelectors()
      */
     public String[] getSelectors() {
-        return getRequestData().getSelectors();
+        return this.getRequestData().getSelectors();
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getSelector(int)
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getSelector(int)
      */
     public String getSelector(int i) {
-        return getRequestData().getSelector(i);
+        return this.getRequestData().getSelector(i);
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getExtension()
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getExtension()
      */
     public String getExtension() {
-        return getRequestData().getExtension();
+        return this.getRequestData().getExtension();
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getSuffix()
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getSuffix()
      */
     public String getSuffix() {
-        return getRequestData().getSuffix();
+        return this.getRequestData().getSuffix();
     }
-    
+
     public String getQueryString() {
-        return getRequestData().getQueryString();
+        return this.getRequestData().getQueryString();
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getRemoteUser()
+
+    /**
+     * @see javax.servlet.http.HttpServletRequestWrapper#getRemoteUser()
      */
     public String getRemoteUser() {
-        if (remoteUser == null) {
-            ContentManager cm = getRequestData().getContentManager();
+        if (this.remoteUser == null) {
+            ContentManager cm = this.getRequestData().getContentManager();
             if (cm instanceof JcrContentManager) {
-                remoteUser = ((JcrContentManager) cm).getSession().getUserID();
+                this.remoteUser = ((JcrContentManager) cm).getSession().getUserID();
             } else {
-                remoteUser = "[unknown]";
+                this.remoteUser = "[unknown]";
             }
         }
-        
-        return remoteUser;
+
+        return this.remoteUser;
     }
 
     public String getLocalAddr() {
-        return (String) callPostServlet23Method(getRequest(), METHOD_GET_LOCAL_ADDR);
+        return (String) callPostServlet23Method(this.getRequest(), METHOD_GET_LOCAL_ADDR);
     }
-    
+
     public String getLocalName() {
-        return (String) callPostServlet23Method(getRequest(), METHOD_GET_LOCAL_NAME);
+        return (String) callPostServlet23Method(this.getRequest(), METHOD_GET_LOCAL_NAME);
     }
-    
+
     public int getLocalPort() {
-        Object result = callPostServlet23Method(getRequest(), METHOD_GET_LOCAL_PORT);
+        Object result = callPostServlet23Method(this.getRequest(), METHOD_GET_LOCAL_PORT);
         if (result instanceof Number) {
             return ((Number) result).intValue();
         }
-        
+
         return -1;
     }
-    
+
     public int getRemotePort() {
-        Object result = callPostServlet23Method(getRequest(), METHOD_GET_REMOTE_PORT);
+        Object result = callPostServlet23Method(this.getRequest(), METHOD_GET_REMOTE_PORT);
         if (result instanceof Number) {
             return ((Number) result).intValue();
         }
-        
+
         return -1;
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getResourceBundle(java.util.Locale)
+
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getResourceBundle(java.util.Locale)
      */
     public ResourceBundle getResourceBundle(Locale locale) {
-        // TODO should use our resource bundle !! 
+        // TODO should use our resource bundle !!
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getResponseContentType()
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getResponseContentType()
      */
     public String getResponseContentType() {
         // TODO Auto-generated method stub
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentRequest#getResponseContentTypes()
+    /**
+     * @see org.apache.sling.component.ComponentRequest#getResponseContentTypes()
      */
     public Enumeration getResponseContentTypes() {
         // TODO Auto-generated method stub
@@ -500,7 +496,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     protected Content getContentInternal(String path) {
-        Content content = getRequestData().getContentManager().load(path);
+        Content content = this.getRequestData().getContentManager().load(path);
         if (content instanceof SelectableContent) {
             SelectableContent selectable = (SelectableContent) content;
             Selector sel = selectable.getSelector();
@@ -511,19 +507,19 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
 
         return content;
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ActionRequest#getInputStream()
+
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getInputStream()
      */
     public ServletInputStream getInputStream() throws IOException {
-        return getRequestData().getInputStream();
+        return this.getRequestData().getInputStream();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ActionRequest#getReader()
+    /**
+     * @see javax.servlet.ServletRequestWrapper#getReader()
      */
     public BufferedReader getReader() throws UnsupportedEncodingException,
             IOException {
-        return getRequestData().getReader();
+        return this.getRequestData().getReader();
     }
 }

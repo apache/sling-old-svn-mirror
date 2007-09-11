@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -31,7 +31,7 @@ import org.apache.sling.locale.LocaleResolver;
 
 /**
  * The <code>LocaleResolverFilter</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%locale.name"
  *      description="%locale.description"
  * @scr.property name="service.description" value="Locale Resolver Filter"
@@ -54,12 +54,8 @@ public class LocaleResolverFilter implements ComponentFilter {
 
     private Locale defaultLocale;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RenderFilter#doFilter(com.day.components.RenderRequest,
-     *      com.day.components.ComponentResponse,
-     *      com.day.components.RenderFilterChain)
+    /**
+     * @see org.apache.sling.component.ComponentFilter#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse, org.apache.sling.component.ComponentFilterChain)
      */
     public void doFilter(ComponentRequest request, ComponentResponse response,
             ComponentFilterChain filterChain) throws IOException,
@@ -70,15 +66,15 @@ public class LocaleResolverFilter implements ComponentFilter {
 
         // get locale from Servlet request or locale resolver
         Locale requestLocale;
-        if (localeResolver == null) {
+        if (this.localeResolver == null) {
             requestLocale = requestData.getServletRequest().getLocale();
         } else {
-            requestLocale = localeResolver.resolveLocale(request);
+            requestLocale = this.localeResolver.resolveLocale(request);
         }
 
         // assert at least default locale
         if (requestLocale == null) {
-            requestLocale = defaultLocale;
+            requestLocale = this.defaultLocale;
         }
 
         requestData.setLocale(requestLocale);
@@ -98,7 +94,7 @@ public class LocaleResolverFilter implements ComponentFilter {
     protected void activate(org.osgi.service.component.ComponentContext context) {
         Dictionary configuration = context.getProperties();
         String localeString = (String) configuration.get(PAR_DEFAULT_LOCALE);
-        defaultLocale = toLocale(localeString);
+        this.defaultLocale = this.toLocale(localeString);
     }
 
     protected void bindLocaleResolver(LocaleResolver localeResolver) {

@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -33,129 +33,129 @@ public class ComponentSessionImpl implements ComponentSession {
 
     private final ComponentContext componentContext;
     private final HttpSession delegatee;
-    
+
     /**
-     * 
+     *
      */
     public ComponentSessionImpl(ComponentContext componentContext, HttpSession delegatee) {
         this.componentContext = componentContext;
         this.delegatee = delegatee;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getAttribute(java.lang.String)
+    /**
+     * @see javax.servlet.http.HttpSession#getAttribute(java.lang.String)
      */
     public Object getAttribute(String name) {
-        return getAttribute(name, COMPONENT_SCOPE);
+        return this.getAttribute(name, COMPONENT_SCOPE);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getAttribute(java.lang.String, int)
+    /**
+     * @see org.apache.sling.component.ComponentSession#getAttribute(java.lang.String, int)
      */
     public Object getAttribute(String name, int scope) {
-        return delegatee.getAttribute(toAttributeName(name, scope));
+        return this.delegatee.getAttribute(this.toAttributeName(name, scope));
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getAttributeNames()
+    /**
+     * @see javax.servlet.http.HttpSession#getAttributeNames()
      */
     public Enumeration getAttributeNames() {
-        return getAttributeNames(COMPONENT_SCOPE);
+        return this.getAttributeNames(COMPONENT_SCOPE);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getAttributeNames(int)
+    /**
+     * @see org.apache.sling.component.ComponentSession#getAttributeNames(int)
      */
     public Enumeration getAttributeNames(final int scope) {
-        return new AttributeNamesEnumeration(delegatee.getAttributeNames(), scope);
+        return new AttributeNamesEnumeration(this.delegatee.getAttributeNames(), scope);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getComponentContext()
+    /**
+     * @see org.apache.sling.component.ComponentSession#getComponentContext()
      */
     public ComponentContext getComponentContext() {
-        return componentContext;
+        return this.componentContext;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getCreationTime()
+    /**
+     * @see javax.servlet.http.HttpSession#getCreationTime()
      */
     public long getCreationTime() {
-        return delegatee.getCreationTime();
+        return this.delegatee.getCreationTime();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getId()
+    /**
+     * @see javax.servlet.http.HttpSession#getId()
      */
     public String getId() {
-        return delegatee.getId();
+        return this.delegatee.getId();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getLastAccessedTime()
+    /**
+     * @see javax.servlet.http.HttpSession#getLastAccessedTime()
      */
     public long getLastAccessedTime() {
-        return delegatee.getLastAccessedTime();
+        return this.delegatee.getLastAccessedTime();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#getMaxInactiveInterval()
+    /**
+     * @see javax.servlet.http.HttpSession#getMaxInactiveInterval()
      */
     public int getMaxInactiveInterval() {
-        return delegatee.getMaxInactiveInterval();
+        return this.delegatee.getMaxInactiveInterval();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#invalidate()
+    /**
+     * @see javax.servlet.http.HttpSession#invalidate()
      */
     public void invalidate() {
-        delegatee.invalidate();
+        this.delegatee.invalidate();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#isNew()
+    /**
+     * @see javax.servlet.http.HttpSession#isNew()
      */
     public boolean isNew() {
-        return delegatee.isNew();
+        return this.delegatee.isNew();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#removeAttribute(java.lang.String)
+    /**
+     * @see javax.servlet.http.HttpSession#removeAttribute(java.lang.String)
      */
     public void removeAttribute(String name) {
-        removeAttribute(name, COMPONENT_SCOPE);
+        this.removeAttribute(name, COMPONENT_SCOPE);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#removeAttribute(java.lang.String, int)
+    /**
+     * @see org.apache.sling.component.ComponentSession#removeAttribute(java.lang.String, int)
      */
     public void removeAttribute(String name, int scope) {
-        delegatee.removeAttribute(toAttributeName(name, scope));
+        this.delegatee.removeAttribute(this.toAttributeName(name, scope));
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#setAttribute(java.lang.String, java.lang.Object)
+    /**
+     * @see javax.servlet.http.HttpSession#setAttribute(java.lang.String, java.lang.Object)
      */
     public void setAttribute(String name, Object value) {
-        setAttribute(name, value, COMPONENT_SCOPE);
+        this.setAttribute(name, value, COMPONENT_SCOPE);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#setAttribute(java.lang.String, java.lang.Object, int)
+    /**
+     * @see org.apache.sling.component.ComponentSession#setAttribute(java.lang.String, java.lang.Object, int)
      */
     public void setAttribute(String name, Object value, int scope) {
-        delegatee.setAttribute(toAttributeName(name, scope), value);
+        this.delegatee.setAttribute(this.toAttributeName(name, scope), value);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentSession#setMaxInactiveInterval(int)
+    /**
+     * @see javax.servlet.http.HttpSession#setMaxInactiveInterval(int)
      */
     public void setMaxInactiveInterval(int interval) {
-        delegatee.setMaxInactiveInterval(interval);
+        this.delegatee.setMaxInactiveInterval(interval);
     }
-    
+
     public ServletContext getServletContext() {
-        return delegatee.getServletContext();
+        return this.delegatee.getServletContext();
     }
 
     public HttpSessionContext getSessionContext() {
@@ -163,32 +163,32 @@ public class ComponentSessionImpl implements ComponentSession {
     }
 
     public Object getValue(String name) {
-        return delegatee.getValue(name);
+        return this.delegatee.getValue(name);
     }
 
     public String[] getValueNames() {
-        return delegatee.getValueNames();
+        return this.delegatee.getValueNames();
     }
 
     public void putValue(String name, Object value) {
-        delegatee.putValue(name, value);
+        this.delegatee.putValue(name, value);
     }
 
     public void removeValue(String name) {
-        delegatee.removeValue(name);
+        this.delegatee.removeValue(name);
     }
 
     //---------- internal -----------------------------------------------------
-    
+
     /**
      * Encodes the atttribute name using the correct scope prefix if the scope
      * is component scope. Otherwise the name is returned unmodified.
-     * 
+     *
      * @param name The attribute name to encode
      * @param scope The scope in which the attribute should be placed. May be
      *      <code>COMPONENT_SCOPE</code> or <code>APPLICATION_SCOPE</code>, any
      *      other value is assuemd to be <code>APPLICATION_SCOPE</code>.
-     *      
+     *
      * @return The encoded name
      */
     private String toAttributeName(String name, int scope) {
@@ -198,48 +198,48 @@ public class ComponentSessionImpl implements ComponentSession {
             // ID is currently always 0, will have to defined somehow ...
             return ComponentSession.COMPONENT_SCOPE_NAMESPACE + "0?" + name;
         }
-        
+
         // otherwise return unmodified
         return name;
     }
-    
+
     private static class AttributeNamesEnumeration implements Enumeration {
         private final Enumeration delegatee;
         private int scope;
         private String nextName;
-        
+
         AttributeNamesEnumeration(Enumeration delegatee, int scope) {
             this.delegatee = delegatee;
             this.scope = scope;
-            this.nextName = seek();
+            this.nextName = this.seek();
         }
 
         public boolean hasMoreElements() {
-            return nextName != null;
+            return this.nextName != null;
         }
 
         public Object nextElement() {
-            if (!hasMoreElements()) {
+            if (!this.hasMoreElements()) {
                 throw new NoSuchElementException();
             }
-            
-            String toReturn = nextName;
-            nextName = seek();
+
+            String toReturn = this.nextName;
+            this.nextName = this.seek();
             return toReturn;
         }
-        
+
         public void remove() {
             throw new UnsupportedOperationException("remove");
         }
-        
+
         private String seek() {
-            while (delegatee.hasMoreElements()) {
-                String nextName = (String) delegatee.nextElement();
-                if (ComponentSessionUtil.decodeScope(nextName) == scope) {
+            while (this.delegatee.hasMoreElements()) {
+                String nextName = (String) this.delegatee.nextElement();
+                if (ComponentSessionUtil.decodeScope(nextName) == this.scope) {
                     return ComponentSessionUtil.decodeAttributeName(nextName);
                 }
             }
-            
+
             // no name found anymore
             return null;
         }

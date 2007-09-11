@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -39,102 +39,102 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
         super(requestData.getServletResponse());
         this.requestData = requestData;
     }
-    
+
     protected ComponentResponseImpl(ComponentResponseImpl response) {
         super(response);
         this.requestData = response.getRequestData();
     }
 
     protected final RequestData getRequestData() {
-        return requestData;
+        return this.requestData;
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#flushBuffer()
+
+    /**
+     * @see javax.servlet.ServletResponseWrapper#flushBuffer()
      */
     public void flushBuffer() throws IOException {
-        getRequestData().getContentData().flushBuffer();
+        this.getRequestData().getContentData().flushBuffer();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getBufferSize()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#getBufferSize()
      */
     public int getBufferSize() {
-        return getRequestData().getContentData().getBufferSize();
+        return this.getRequestData().getContentData().getBufferSize();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getCharacterEncoding()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#getCharacterEncoding()
      */
     public String getCharacterEncoding() {
-        return characterEncoding;
+        return this.characterEncoding;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getContentType()
+    /**
+     * @see org.apache.sling.component.ComponentResponse#getContentType()
      */
     public String getContentType() {
-        return contentType + ";charset=" + characterEncoding;
+        return this.contentType + ";charset=" + this.characterEncoding;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getLocale()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#getLocale()
      */
     public Locale getLocale() {
         // TODO Should use our Locale Resolver and not let the component set the locale, right ??
-        return getResponse().getLocale();
+        return this.getResponse().getLocale();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getNamespace()
+    /**
+     * @see org.apache.sling.component.ComponentResponse#getNamespace()
      */
     public String getNamespace() {
         // TODO Auto-generated method stub
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getOutputStream()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#getOutputStream()
      */
     public ServletOutputStream getOutputStream() throws IOException {
-        return getRequestData().getBufferProvider().getOutputStream();
+        return this.getRequestData().getBufferProvider().getOutputStream();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#getWriter()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#getWriter()
      */
     public PrintWriter getWriter() throws IOException {
-        return getRequestData().getBufferProvider().getWriter();
+        return this.getRequestData().getBufferProvider().getWriter();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#isCommitted()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#isCommitted()
      */
     public boolean isCommitted() {
         // TODO: integrate with our output catcher
-        return getResponse().isCommitted();
+        return this.getResponse().isCommitted();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#reset()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#reset()
      */
     public void reset() {
         // TODO: integrate with our output catcher
-        getResponse().reset();
+        this.getResponse().reset();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#resetBuffer()
+    /**
+     * @see javax.servlet.ServletResponseWrapper#resetBuffer()
      */
     public void resetBuffer() {
-        getRequestData().getContentData().resetBuffer();
+        this.getRequestData().getContentData().resetBuffer();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#setBufferSize(int)
+    /**
+     * @see javax.servlet.ServletResponseWrapper#setBufferSize(int)
      */
     public void setBufferSize(int size) {
-        getRequestData().getContentData().setBufferSize(size);
+        this.getRequestData().getContentData().setBufferSize(size);
     }
 
     public void setCharacterEncoding(String charset) {
@@ -143,16 +143,16 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
             this.characterEncoding = charset;
         }
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.ComponentResponse#setContentType(java.lang.String)
+
+    /**
+     * @see javax.servlet.ServletResponseWrapper#setContentType(java.lang.String)
      */
     public void setContentType(String type) {
         // ignore empty values
         if (type == null || type.length() == 0) {
             return;
         }
-        
+
         if (type.indexOf(';') > 0) {
             Map parsedType = RequestUtil.parserHeader(type);
             if (parsedType.size() == 1) {
@@ -162,13 +162,13 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
                 Map.Entry entry = (Map.Entry) parsedType.entrySet().iterator().next();
                 type = (String) entry.getKey();
                 String charset = (String) ((Map) entry.getValue()).get("charset");
-                setCharacterEncoding(charset);
+                this.setCharacterEncoding(charset);
             }
         }
-        
+
         this.contentType = type;
-        
+
         // set the content type with charset on the underlying response
-        super.setContentType(getContentType());
+        super.setContentType(this.getContentType());
     }
 }

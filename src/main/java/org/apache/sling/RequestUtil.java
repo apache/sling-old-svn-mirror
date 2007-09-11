@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -59,10 +59,10 @@ public class RequestUtil {
      * Returns the <code>ContentManager</code> used by the given
      * <code>request</code>. If the content manager has not been assigned yet
      * to the request, this method returns <code>null</code>.
-     * 
+     *
      * @param request The <code>ComponentRequest</code> whose content manager
      *      is required.
-     *      
+     *
      * @return The <code>ContentManager</code> of the given request or
      *      <code>null</code> if the request has no content manager yet.
      */
@@ -75,11 +75,11 @@ public class RequestUtil {
             return (ContentManager) request.getAttribute(Constants.ATTR_CONTENT_MANAGER);
         }
     }
-    
+
     /**
      * Tries to retrieve the named cookie from the request.
-     * 
-     * @param req The {@link com.day.cq.delivery.DeliveryHttpServletRequest}
+     *
+     * @param req The {@link DeliveryHttpServletRequest}
      *            from which to retrieve the cookie.
      * @param cookieName The name of the cookie to retrieve from the request.
      * @return The requested <code>Cookie</code> or <code>null</code> if the
@@ -128,7 +128,7 @@ public class RequestUtil {
      * <p>
      * If the string cannot be converted to a date, this method throws an
      * <code>IllegalArgumentException</code>.
-     * 
+     *
      * @param name a String specifying the name of the header
      * @return a long value representing the date specified in the header
      *         expressed as the number of milliseconds since January 1, 1970
@@ -180,7 +180,7 @@ public class RequestUtil {
      * Date, of <a href="http://www.faqs.org/rfcs/rfc2616.html">RFC 2616</a>
      * and may thus be used as the value of date header such as
      * <code>Date</code>.
-     * 
+     *
      * @param date The date value to convert to a string
      * @return The string representation of the date and time value.
      */
@@ -192,15 +192,15 @@ public class RequestUtil {
 
     /**
      * Parses a header of the form:
-     * 
+     *
      * <pre>
      *            Header = Token { &quot;,&quot; Token } .
      *            Token = name { &quot;;&quot; Parameter } .
-     *            Paramter = name [ &quot;=&quot; value ] .  
+     *            Paramter = name [ &quot;=&quot; value ] .
      * </pre>
-     * 
+     *
      * "," and ";" are not allowed within name and value
-     * 
+     *
      * @param value
      * @return A Map indexed by the Token names where the values are Map
      *         instances indexed by parameter name
@@ -232,15 +232,15 @@ public class RequestUtil {
 
     /**
      * Parses an <code>Accept-*</code> header of the form:
-     * 
+     *
      * <pre>
      *            Header = Token { &quot;,&quot; Token } .
      *            Token = name { &quot;;&quot; &quot;q&quot; [ &quot;=&quot; value ] } .
-     *            Paramter =  .  
+     *            Paramter =  .
      * </pre>
-     * 
+     *
      * "," and ";" are not allowed within name and value
-     * 
+     *
      * @param value
      * @return A Map indexed by the Token names where the values are
      *         <code>Double</code> instances providing the value of the
@@ -279,10 +279,10 @@ public class RequestUtil {
      * empty, the same path is returned unmodified. If the path is absolute the
      * returned path is also absolute, otherwise if the path is relative the
      * returned path is also relative.
-     * 
+     *
      * @param path The path to normalize.
      * @return The normalized path.
-     * 
+     *
      * @throws IllegalArgumentException If the path cannot be normalized because
      *             relative parent path parts (<code>..</code>) would point
      *             above the first path element of <code>path</code>.
@@ -292,16 +292,16 @@ public class RequestUtil {
         if (path == null || path.length() == 0) {
             return path;
         }
-        
+
         if (path.indexOf("/.") >= 0 || path.indexOf("/.") >= 0) {
             // potiential . and .. path elements
-            
+
             StringBuffer buf = new StringBuffer();
-            
+
             if (path.charAt(0) == '/') {
                 buf.append('/');
             }
-            
+
             StringTokenizer tokener = new StringTokenizer(path, "/");
             while (tokener.hasMoreTokens()) {
                 String token = tokener.nextToken();
@@ -316,37 +316,37 @@ public class RequestUtil {
                     }
                 } else if (".".equals(token)) {
                     // ignore, just continue
-                    
+
                 } else {
-                    
+
                     // add separator if not root
                     if (buf.length() > 1) {
                         buf.append('/');
                     }
-                    
+
                     buf.append(token);
                 }
             }
-            
+
             // use normalized path now
             path = buf.toString();
         }
-        
+
         // return path unmodified
         return path;
     }
-    
+
     /**
      * Utility method returns the parent path of the given <code>path</code>,
      * which is normalized by {@link #normalize(String)} before resolving the
      * parent.
-     *  
+     *
      * @param path The path whose parent is to be returned.
-     * 
+     *
      * @return <code>null</code> if <code>path</code> is the root path (<code>/</code>)
      *      or if <code>path</code> is a single name containing no slash (<code>/</code>)
      *      characters.
-     *      
+     *
      * @throws IllegalArgumentException If the path cannot be normalized by
      *      the {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
@@ -358,7 +358,7 @@ public class RequestUtil {
 
         // normalize path (remove . and ..)
         path = normalize(path);
-        
+
         // if normalized to root, there is no parent
         if ("/".equals(path)) {
             return null;
@@ -370,14 +370,14 @@ public class RequestUtil {
             // no slash in the path
             return null;
         }
-        
+
         return path.substring(0, lastSlash);
     }
-    
+
     /**
      * Utility method returns the name of the given <code>path</code>, which
      * is normalized by {@link #normalize(String)} before resolving the name.
-     * 
+     *
      * @param path The path whose name (the last path element) is to be
      *            returned.
      * @return The empty string if <code>path</code> is the root path (<code>/</code>)
@@ -391,7 +391,7 @@ public class RequestUtil {
         if ("/".equals(path)) {
             return "";
         }
-        
+
         // normalize path (remove . and ..)
         path = normalize(path);
         if ("/".equals(path)) {
@@ -402,7 +402,7 @@ public class RequestUtil {
         int lastSlash = path.lastIndexOf('/');
         return (lastSlash >= 0) ? path.substring(lastSlash) : path;
     }
-    
+
     /**
      * Utility methods returns the parent <code>Content</code> object of the
      * <code>Content</code> of the given <code>request</code>. If the
@@ -415,13 +415,13 @@ public class RequestUtil {
      *    path = getParent(path);
      *    Content parent = (path == null) ? null : request.getContent(path);
      * </pre>
-     *  
+     *
      * @param request The <code>ComponentRequest</code> denoting the content
      *      object whose parent is requested.
-     *      
+     *
      * @return The parent <code>Content</code> object of the request's content
      *      or <code>null</code> if the request's content is the root.
-     *      
+     *
      * @throws ComponentException If accessing the repository to load the content
      *      fails.
      */
