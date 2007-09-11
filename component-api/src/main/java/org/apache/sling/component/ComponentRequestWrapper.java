@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -38,86 +38,86 @@ public class ComponentRequestWrapper extends HttpServletRequestWrapper implement
      * Return the original {@link ComponentRequest} object wrapped by this.
      */
     public ComponentRequest getComponentRequest() {
-        return (ComponentRequest) getRequest();
+        return (ComponentRequest) this.getRequest();
     }
 
-    public Enumeration getChildren(Content content) throws ComponentException {
-        return getComponentRequest().getChildren(content);
+    public Enumeration<Content> getChildren(Content content) throws ComponentException {
+        return this.getComponentRequest().getChildren(content);
     }
 
     public Content getContent() {
-        return getComponentRequest().getContent();
+        return this.getComponentRequest().getContent();
     }
 
     public Content getContent(String path) throws ComponentException {
-        return getComponentRequest().getContent(path);
+        return this.getComponentRequest().getContent(path);
     }
 
     public Cookie getCookie(String name) {
-        return getComponentRequest().getCookie(name);
+        return this.getComponentRequest().getCookie(name);
     }
 
     public String getExtension() {
-        return getComponentRequest().getExtension();
+        return this.getComponentRequest().getExtension();
     }
 
     public String getLocalAddr() {
-        return getComponentRequest().getLocalAddr();
+        return this.getComponentRequest().getLocalAddr();
     }
-    
+
     public String getLocalName() {
-        return getComponentRequest().getLocalName();
+        return this.getComponentRequest().getLocalName();
     }
-    
+
     public int getLocalPort() {
-        return getComponentRequest().getLocalPort();
+        return this.getComponentRequest().getLocalPort();
     }
-    
+
     public ComponentRequestDispatcher getRequestDispatcher(Content content) {
-        return getComponentRequest().getRequestDispatcher(content);
+        return this.getComponentRequest().getRequestDispatcher(content);
     }
 
     public RequestParameter getRequestParameter(String name) {
-        return getComponentRequest().getRequestParameter(name);
+        return this.getComponentRequest().getRequestParameter(name);
     }
 
-    public Map getRequestParameterMap() {
-        return getComponentRequest().getRequestParameterMap();
+    public Map<String, RequestParameter> getRequestParameterMap() {
+        return this.getComponentRequest().getRequestParameterMap();
     }
 
     public int getRemotePort() {
-        return getComponentRequest().getRemotePort();
+        return this.getComponentRequest().getRemotePort();
     }
-    
+
     public RequestParameter[] getRequestParameters(String name) {
-        return getComponentRequest().getRequestParameters(name);
+        return this.getComponentRequest().getRequestParameters(name);
     }
 
     public ResourceBundle getResourceBundle(Locale locale) {
-        return getComponentRequest().getResourceBundle(locale);
+        return this.getComponentRequest().getResourceBundle(locale);
     }
 
     public String getResponseContentType() {
-        return getComponentRequest().getResponseContentType();
+        return this.getComponentRequest().getResponseContentType();
     }
 
-    public Enumeration getResponseContentTypes() {
-        return getComponentRequest().getResponseContentTypes();
+    public Enumeration<String> getResponseContentTypes() {
+        return this.getComponentRequest().getResponseContentTypes();
     }
 
     public String getSelector(int i) {
-        return getComponentRequest().getSelector(i);
+        return this.getComponentRequest().getSelector(i);
     }
 
     public String[] getSelectors() {
-        return getComponentRequest().getSelectors();
+        return this.getComponentRequest().getSelectors();
     }
 
     public String getSelectorString() {
-        return getComponentRequest().getSelectorString();
+        return this.getComponentRequest().getSelectorString();
     }
 
     public String getSuffix() {
-        return getComponentRequest().getSuffix();
+        return this.getComponentRequest().getSuffix();
     }
 }

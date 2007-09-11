@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -80,7 +80,7 @@ public interface ComponentSession extends HttpSession {
      * Returns the object bound with the specified name in this session, or
      * <code>null</code> if no object is bound under the name in the given
      * scope.
-     * 
+     *
      * @param name a string specifying the name of the object
      * @param scope session scope of this attribute
      * @return the object with the specified name
@@ -95,7 +95,7 @@ public interface ComponentSession extends HttpSession {
      * of all the objects bound to this session in the given scope, or an empty
      * <code>Iterator</code> if no attributes are available in the given
      * scope.
-     * 
+     *
      * @param scope session scope of the attribute names
      * @return an <code>Iterator</code> of <code>String</code> objects
      *         specifying the names of all the objects bound to this session, or
@@ -104,13 +104,13 @@ public interface ComponentSession extends HttpSession {
      * @throws IllegalStateException if this method is called on an invalidated
      *             session
      */
-    Enumeration getAttributeNames(int scope);
+    Enumeration<String> getAttributeNames(int scope);
 
     /**
      * Removes the object bound with the specified name and the given scope from
      * this session. If the session does not have an object bound with the
      * specified name, this method does nothing.
-     * 
+     *
      * @param name the name of the object to be removed from this session
      * @param scope session scope of this attribute
      * @throws IllegalStateException if this method is called on a session which
@@ -136,7 +136,7 @@ public interface ComponentSession extends HttpSession {
      * <p>
      * If the value is <code>null</code>, this has the same effect as calling
      * <code>removeAttribute()</code>.
-     * 
+     *
      * @param name the name to which the object is bound; this cannot be
      *            <code>null</code>.
      * @param value the object to be bound
@@ -149,7 +149,7 @@ public interface ComponentSession extends HttpSession {
 
     /**
      * Returns the component context associated with this session.
-     * 
+     *
      * @return the component context
      */
     ComponentContext getComponentContext();
