@@ -56,16 +56,16 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="event.topics" value="org/apache/sling/jcr/ContentEvent/*" private="true"
  * @scr.service interface="org.osgi.service.event.EventHandler"
- * @scr.reference name="repository" interface="org.apache.sling.core.jcr.SlingRepository"
+ * @scr.reference name="repository" interface="org.apache.sling.jcr.SlingRepository"
  */
 public class RepositoryComponentRegistration implements EventListener,
         EventHandler {
 
     /** The node path of a component loaded from the repository */
-    public static final String COMPONENT_PATH = "org.apache.sling.core.components.path";
+    public static final String COMPONENT_PATH = "org.apache.sling.components.path";
 
     /** The fully qualified name of the component class */
-    public static final String COMPONENT_SOURCE = "org.apache.sling.core.components.source";
+    public static final String COMPONENT_SOURCE = "org.apache.sling.components.source";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(RepositoryComponentRegistration.class);

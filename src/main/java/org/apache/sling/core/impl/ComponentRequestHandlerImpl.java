@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="ComponentFilter"
- *                interface="org.apache.sling.core.component.ComponentFilter"
+ *                interface="org.apache.sling.component.ComponentFilter"
  *                cardinality="0..n" policy="dynamic"
  */
 public class ComponentRequestHandlerImpl extends GenericServlet {
@@ -125,7 +125,7 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
         ComponentRequestImpl request = new ComponentRequestImpl(requestData);
         ComponentResponseImpl response = new ComponentResponseImpl(requestData);
 
-        ComponentFilter[] filters = requestFilterChain.getFilters();
+        ComponentFilter[] filters = this.requestFilterChain.getFilters();
         if (filters != null) {
             ComponentFilterChain processor = new RequestComponentFilterChain(
                 this, filters);
@@ -204,7 +204,7 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
         // 2.0 Set Content from mappedURL
         // ContentData contentData = null;
 
-        ComponentFilter filters[] = innerFilterChain.getFilters();
+        ComponentFilter filters[] = this.innerFilterChain.getFilters();
         if (filters != null) {
             ComponentFilterChain processor = new ComponentComponentFilterChain(
                 filters);
@@ -326,10 +326,10 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
                 Object scope = ref.getProperty("filter.scope");
                 if ("component".equals(scope)) {
                     // component rendering filter
-                    innerFilterChain.addFilter(filter, serviceId, order);
+                    this.innerFilterChain.addFilter(filter, serviceId, order);
                 } else {
                     // global filter by default
-                    requestFilterChain.addFilter(filter, serviceId, order);
+                    this.requestFilterChain.addFilter(filter, serviceId, order);
                 }
 
                 // mark success by setting the filter variable to null
@@ -357,10 +357,10 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
         Object scope = ref.getProperty("filter.scope");
         if ("component".equals(scope)) {
             // component rendering filter
-            filter = innerFilterChain.removeFilterById(serviceId);
+            filter = this.innerFilterChain.removeFilterById(serviceId);
         } else {
             // global filter by default
-            filter = requestFilterChain.removeFilterById(serviceId);
+            filter = this.requestFilterChain.removeFilterById(serviceId);
         }
 
         // if a filter has actually been removed, destroy it

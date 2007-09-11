@@ -61,7 +61,7 @@ class CustomLogFormat {
      * <code>response</code> objects according to the log format from which
      * this instance has been created.
      *
-     * @param request The {@link org.apache.sling.core.component.ComponentResponse}
+     * @param request The {@link org.apache.sling.component.ComponentResponse}
      *            used to extract values for the log message.
      * @param response The {@link LoggerResponse} used to extract values for the
      *            log message.

@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -33,7 +33,7 @@ import org.osgi.framework.BundleContext;
  * inserted as the first filter in the request level filter chain and therefore
  * is the first filter called when processing a request and the last filter
  * acting just before the request handling terminates.
- * 
+ *
  * @scr.component immediate="true" label="%request.log.name"
  *                description="%request.log.description"
  * @scr.property name="service.description" value="Request Logger Filter"
@@ -43,7 +43,7 @@ import org.osgi.framework.BundleContext;
  *               private="true"
  * @scr.service
  * @scr.reference name="RequestLoggerService"
- *                interface="org.apache.sling.core.core.impl.log.RequestLoggerService"
+ *                interface="org.apache.sling.core.impl.log.RequestLoggerService"
  *                cardinality="0..n" policy="dynamic"
  */
 public class RequestLoggerFilter implements ComponentFilter {
@@ -149,7 +149,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * No further initialization needed by this instance as the full
      * configuration has already been done by the
      * {@link #activate(org.osgi.service.component.ComponentContext)} method.
-     * 
+     *
      * @param context Not used.
      */
     public void init(ComponentContext context) {
@@ -167,7 +167,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * <li>Records the time of request termination.</li>
      * <li>Calls loggers configured to be used at request exit time.</li>
      * </ol>
-     * 
+     *
      * @param request The <code>ComponentRequest</code> representing the
      *            request input sent from the client.
      * @param response The <code>ComponentResponse</code> representing the
@@ -184,12 +184,12 @@ public class RequestLoggerFilter implements ComponentFilter {
             ComponentException {
 
         LoggerResponse loggerResponse = new LoggerResponse(response,
-            requestCounter++);
+            this.requestCounter++);
 
         // log the request start
-        if (requestEntry != null) {
-            for (int i = 0; i < requestEntry.length; i++) {
-                requestEntry[i].log(request, loggerResponse);
+        if (this.requestEntry != null) {
+            for (int i = 0; i < this.requestEntry.length; i++) {
+                this.requestEntry[i].log(request, loggerResponse);
             }
         }
 
@@ -204,9 +204,9 @@ public class RequestLoggerFilter implements ComponentFilter {
             loggerResponse.requestEnd();
 
             // log the request end
-            if (requestExit != null) {
-                for (int i = 0; i < requestExit.length; i++) {
-                    requestExit[i].log(request, loggerResponse);
+            if (this.requestExit != null) {
+                for (int i = 0; i < this.requestExit.length; i++) {
+                    this.requestExit[i].log(request, loggerResponse);
                 }
             }
         }
@@ -228,7 +228,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * properties. In addition the <code>FileRequestLog</code> class is
      * initialized with the value of the <code>sling.home</code> context
      * property to resolve relative log file names.
-     * 
+     *
      * @param osgiContext The OSGi Component Context providing the configuration
      *            data and access into the system.
      */
@@ -243,7 +243,7 @@ public class RequestLoggerFilter implements ComponentFilter {
         FileRequestLog.init(bundleContext.getProperty("sling.home"));
 
         // reset the request counter
-        requestCounter = 0;
+        this.requestCounter = 0;
 
         // prepare the request loggers if a name is configured and the
         // request loggers are enabled
@@ -254,9 +254,9 @@ public class RequestLoggerFilter implements ComponentFilter {
 
             Object requestLogType = props.get(PROP_REQUEST_LOG_OUTPUT_TYPE);
 
-            requestLogEntry = createRequestLoggerService(bundleContext, true,
+            this.requestLogEntry = this.createRequestLoggerService(bundleContext, true,
                 REQUEST_LOG_ENTRY_FORMAT, requestLogName, requestLogType);
-            requestLogExit = createRequestLoggerService(bundleContext, false,
+            this.requestLogExit = this.createRequestLoggerService(bundleContext, false,
                 REQUEST_LOG_EXIT_FORMAT, requestLogName, requestLogType);
         }
 
@@ -269,14 +269,14 @@ public class RequestLoggerFilter implements ComponentFilter {
 
             Object accessLogType = props.get(PROP_ACCESS_LOG_OUTPUT_TYPE);
 
-            accessLog = createRequestLoggerService(bundleContext, false,
+            this.accessLog = this.createRequestLoggerService(bundleContext, false,
                 ACCESS_LOG_FORMAT, accessLogName, accessLogType);
         }
 
         // finally have the loggers added to the respective lists for later use
-        bindRequestLoggerService(requestLogEntry);
-        bindRequestLoggerService(requestLogExit);
-        bindRequestLoggerService(accessLog);
+        this.bindRequestLoggerService(this.requestLogEntry);
+        this.bindRequestLoggerService(this.requestLogExit);
+        this.bindRequestLoggerService(this.accessLog);
     }
 
     /**
@@ -284,7 +284,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * setup during activation and finally dispose off the
      * <code>FileRequestLog</code> class to make sure all shared writers are
      * closed.
-     * 
+     *
      * @param osgiContext The OSGi Component Context providing the configuration
      *            data and access into the system.
      */
@@ -292,20 +292,20 @@ public class RequestLoggerFilter implements ComponentFilter {
             org.osgi.service.component.ComponentContext osgiContext) {
 
         // remove the loggers if they have been set up
-        if (requestLogEntry != null) {
-            unbindRequestLoggerService(requestLogEntry);
-            requestLogEntry.shutdown();
-            requestLogEntry = null;
+        if (this.requestLogEntry != null) {
+            this.unbindRequestLoggerService(this.requestLogEntry);
+            this.requestLogEntry.shutdown();
+            this.requestLogEntry = null;
         }
-        if (requestLogExit != null) {
-            unbindRequestLoggerService(requestLogExit);
-            requestLogExit.shutdown();
-            requestLogExit = null;
+        if (this.requestLogExit != null) {
+            this.unbindRequestLoggerService(this.requestLogExit);
+            this.requestLogExit.shutdown();
+            this.requestLogExit = null;
         }
-        if (accessLog != null) {
-            unbindRequestLoggerService(accessLog);
-            accessLog.shutdown();
-            accessLog = null;
+        if (this.accessLog != null) {
+            this.unbindRequestLoggerService(this.accessLog);
+            this.accessLog.shutdown();
+            this.accessLog = null;
         }
 
         // hack to ensure all log files are closed
@@ -315,32 +315,32 @@ public class RequestLoggerFilter implements ComponentFilter {
     /**
      * Binds a <code>RequestLoggerService</code> to be used during request
      * filter.
-     * 
+     *
      * @param requestLoggerService The <code>RequestLoggerService</code> to
      *            use.
      */
     protected void bindRequestLoggerService(
             RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
-            requestEntry = addService(requestEntry, requestLoggerService);
+            this.requestEntry = this.addService(this.requestEntry, requestLoggerService);
         } else {
-            requestExit = addService(requestExit, requestLoggerService);
+            this.requestExit = this.addService(this.requestExit, requestLoggerService);
         }
     }
 
     /**
      * Binds a <code>RequestLoggerService</code> to be used during request
      * filter.
-     * 
+     *
      * @param requestLoggerService The <code>RequestLoggerService</code> to
      *            use.
      */
     protected void unbindRequestLoggerService(
             RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
-            requestEntry = removeService(requestEntry, requestLoggerService);
+            this.requestEntry = this.removeService(this.requestEntry, requestLoggerService);
         } else {
-            requestExit = removeService(requestExit, requestLoggerService);
+            this.requestExit = this.removeService(this.requestExit, requestLoggerService);
         }
     }
 
@@ -350,7 +350,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * object from the data which may be handled by the
      * {@link RequestLoggerService#RequestLoggerService(BundleContext, Dictionary)}
      * constructor to set itself up.
-     * 
+     *
      * @param bundleContext The <code>BundleContext</code> used to setup a
      *            <code>ServiceTracker</code> should the output be a
      *            <code>RequestLog</code> service.
@@ -386,7 +386,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * has already been added or not and so may add the the logger multiple
      * times. It is the responsibility of the caller to make sure to not add
      * services multiple times.
-     * 
+     *
      * @param list The list to add the new service to
      * @param requestLoggerService The service to append to the list
      * @param A new list with the added service at the end.
@@ -412,7 +412,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      * equality (comparing the object references) and not calling the
      * <code>equals</code> method. If the last element is being removed from
      * the list, <code>null</code> is returned instead of an empty list.
-     * 
+     *
      * @param list The list from which the service is to be removed.
      * @param requestLoggerService The service to remove.
      * @return The list without the service. This may be the same list if the
