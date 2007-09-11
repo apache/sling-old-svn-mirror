@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.mapper;
+package org.apache.sling.core.mapper;
 
 import javax.jcr.Node;
 
