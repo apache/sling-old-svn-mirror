@@ -49,7 +49,7 @@ import org.osgi.service.event.Event;
  * An event handler handling special job events.
  *
  * @scr.component inherit="true"
- * @scr.service interface="org.apache.sling.core.event.JobStatusProvider"
+ * @scr.service interface="org.apache.sling.event.JobStatusProvider"
  * @scr.property name="event.topics" value="org/apache/sling/event/job"
  *
  */
@@ -93,7 +93,7 @@ public class JobEventHandler
         this.running = true;
         final Thread t = new Thread() {
             public void run() {
-                runInBackground();
+                JobEventHandler.this.runInBackground();
             }
         };
         t.start();
@@ -116,9 +116,9 @@ public class JobEventHandler
                 protected Object run(Node node) throws RepositoryException {
                     final QueryManager qManager = node.getSession().getWorkspace().getQueryManager();
                     final StringBuffer buffer = new StringBuffer("/jcr:root");
-                    buffer.append(repositoryPath);
+                    buffer.append(JobEventHandler.this.repositoryPath);
                     buffer.append("//element(*, ");
-                    buffer.append(getEventNodeType());
+                    buffer.append(JobEventHandler.this.getEventNodeType());
                     buffer.append(") [");
                     buffer.append(EventHelper.NODE_PROPERTY_ACTIVE);
                     buffer.append(" = 'false' and ");
@@ -318,14 +318,14 @@ public class JobEventHandler
 
                 protected Object run(Node node) throws RepositoryException {
                     // if there is a node, we know that there is exactly one node
-                    final Node foundNode = queryJob(jobTopic, jobId);
+                    final Node foundNode = JobEventHandler.this.queryJob(jobTopic, jobId);
                     boolean writeAndSend =false;
                     // if node is not present, we'll write it, lock it and send the event
                     if ( foundNode == null ) {
                         writeAndSend = true;
                     } else {
                         // node is already in repository, let's check the application id
-                        if ( foundNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString().equals(applicationId) ) {
+                        if ( foundNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString().equals(JobEventHandler.this.applicationId) ) {
                             // delete old node (deleting is easier than updating...)
                             foundNode.remove();
                             parentNode.save();
@@ -333,7 +333,7 @@ public class JobEventHandler
                         }
                     }
                     if ( writeAndSend ) {
-                        final Node eventNode = writeEvent(event);
+                        final Node eventNode = JobEventHandler.this.writeEvent(event);
                         return eventNode.lock(false, true);
                     }
                     return null;
