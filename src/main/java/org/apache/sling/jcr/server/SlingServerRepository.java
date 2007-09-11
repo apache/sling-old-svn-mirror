@@ -84,7 +84,7 @@ public class SlingServerRepository extends AbstractSlingRepository
     /**
      * The name of the configuration property defining the file system
      * directory where the repository files are located (value is
-     * "com.day.sling.repository.home").
+     * "home").
      * <p>
      * This parameter is mandatory for this activator to start the repository.
      * 
