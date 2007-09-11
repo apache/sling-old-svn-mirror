@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Apache Sling">
+    <publishDate format="dd MMM yyyy" />
+    
+    <bannerLeft>
+        <name>Apache Sling</name>
+        <src>images/sling_logo.png</src>
+        <href>http://incubator.apache.org/sling</href>
+    </bannerLeft>
+  
+    <bannerRight>
+        <name>Apache Incubator</name>
+        <src>http://incubator.apache.org/images/apache-incubator-logo.png</src>
+        <href>http://incubator.apache.org</href>
+    </bannerRight>
+
+    <body>
+        <menu name="Main">
+            <item name="Overview" href="/index.html" />
+        </menu>
+
+        <menu name="References">
+            <item name="Apache Felix" href="http://felix.apache.org" />
+            <item name="Apache Jackrabbit" href="http://jackrabbit.apache.org" />
+            <item name="OSGi" href="http://www.osgi.org" />
+        </menu>
+
+        ${reports}
+    </body>
+</project>
