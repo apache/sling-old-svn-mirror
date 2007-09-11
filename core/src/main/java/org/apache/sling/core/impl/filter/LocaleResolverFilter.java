@@ -26,7 +26,7 @@ import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.core.impl.RequestData;
-import org.apache.sling.locale.LocaleResolver;
+import org.apache.sling.core.locale.LocaleResolver;
 
 
 /**

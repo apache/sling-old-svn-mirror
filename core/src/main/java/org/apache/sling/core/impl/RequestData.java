@@ -38,7 +38,7 @@ import org.apache.sling.content.ContentManager;
 import org.apache.sling.core.Constants;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
-import org.apache.sling.theme.Theme;
+import org.apache.sling.core.theme.Theme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
