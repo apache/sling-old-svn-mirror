@@ -48,7 +48,7 @@ import org.xmlpull.v1.XmlPullParserException;
  */
 public class PersistenceManagerProviderImpl {
 
-    public static final String MAPPER_BUNDLE_HEADER = "Day-Mappings";
+    public static final String MAPPER_BUNDLE_HEADER = "Sling-Mappings";
 
     /** default log */
     private static final Logger log =
