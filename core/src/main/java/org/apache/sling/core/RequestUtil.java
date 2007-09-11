@@ -205,15 +205,15 @@ public class RequestUtil {
      * @return A Map indexed by the Token names where the values are Map
      *         instances indexed by parameter name
      */
-    public static Map parserHeader(String value) {
-        Map result = new HashMap();
+    public static Map<String, Map<String, String>> parserHeader(String value) {
+        Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
         String[] tokens = value.split(",");
         for (int i = 0; i < tokens.length; i++) {
             String[] parameters = tokens[i].split(";");
             String name = parameters[0].trim();
-            Map parMap;
+            Map<String, String> parMap;
             if (parameters.length > 0) {
-                parMap = new HashMap();
+                parMap = new HashMap<String, String>();
                 for (int j = 1; j < parameters.length; j++) {
                     String[] content = parameters[j].split("=", 2);
                     if (content.length > 1) {
@@ -223,7 +223,7 @@ public class RequestUtil {
                     }
                 }
             } else {
-                parMap = Collections.EMPTY_MAP;
+                parMap = Collections.emptyMap();
             }
             result.put(name, parMap);
         }
@@ -246,8 +246,8 @@ public class RequestUtil {
      *         <code>Double</code> instances providing the value of the
      *         <code>q</code> parameter.
      */
-    public static Map parserAcceptHeader(String value) {
-        Map result = new HashMap();
+    public static Map<String, Double> parserAcceptHeader(String value) {
+        Map<String, Double> result = new HashMap<String, Double>();
         String[] tokens = value.split(",");
         for (int i = 0; i < tokens.length; i++) {
             String[] parameters = tokens[i].split(";");
