@@ -74,6 +74,8 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
 
     private List<ServiceReference> delayedComponentFilters;
 
+    private List<ServiceReference>filterReferences = new ArrayList<ServiceReference>();
+
     /**
      * The server information to report in the {@link #getServerInfo()} method.
      * By default this is just the {@link #PRODUCT_NAME}. The
@@ -294,6 +296,10 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
             this.slingHttpContext.dispose();
         }
 
+        while ( this.filterReferences.size() > 0 ) {
+            this.unbindComponentFilter(this.filterReferences.get(0));
+        }
+
         this.componentContext = null;
         this.bundleContext = null;
 
@@ -334,6 +340,7 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
 
                 // mark success by setting the filter variable to null
                 filter = null;
+                this.filterReferences.add(ref);
             } catch (ComponentException ce) {
                 log.error("ComponentFilter " + "" + " failed to initialize", ce);
             } catch (Throwable t) {
@@ -349,31 +356,36 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
     }
 
     protected void unbindComponentFilter(ServiceReference ref) {
-        // service id
-        Object serviceId = ref.getProperty(Constants.SERVICE_ID);
+        // if bundle context is null, we are already deactivated
+        if ( this.bundleContext != null ) {
+            this.filterReferences.remove(ref);
 
-        // unregister by scope
-        ComponentFilter filter;
-        Object scope = ref.getProperty("filter.scope");
-        if ("component".equals(scope)) {
-            // component rendering filter
-            filter = this.innerFilterChain.removeFilterById(serviceId);
-        } else {
-            // global filter by default
-            filter = this.requestFilterChain.removeFilterById(serviceId);
-        }
+            // service id
+            Object serviceId = ref.getProperty(Constants.SERVICE_ID);
 
-        // if a filter has actually been removed, destroy it
-        if (filter != null) {
-            try {
-                filter.destroy();
-            } catch (Throwable t) {
-                log.error(
-                    "Unexpected problem destroying ComponentFilter " + "", t);
+            // unregister by scope
+            ComponentFilter filter;
+            Object scope = ref.getProperty("filter.scope");
+            if ("component".equals(scope)) {
+                // component rendering filter
+                filter = this.innerFilterChain.removeFilterById(serviceId);
+            } else {
+                // global filter by default
+                filter = this.requestFilterChain.removeFilterById(serviceId);
             }
 
-            // unget the filter service
-            this.bundleContext.ungetService(ref);
+            // if a filter has actually been removed, destroy it
+            if (filter != null) {
+                try {
+                    filter.destroy();
+                } catch (Throwable t) {
+                    log.error(
+                        "Unexpected problem destroying ComponentFilter " + "", t);
+                }
+
+                // unget the filter service
+                this.bundleContext.ungetService(ref);
+            }
         }
     }
 }
