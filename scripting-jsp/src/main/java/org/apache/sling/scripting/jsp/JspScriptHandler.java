@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * @scr.component immediate="false" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
- * @scr.property name="service.vendor" value="Day Management AG" *
+ * @scr.property name="service.vendor" value="The Apache Software Foundation" *
  * @scr.property name="jasper.checkInterval" value="300" type="Integer"
  * @scr.property name="jasper.classdebuginfo" value="true" type="Boolean"
  * @scr.property name="jasper.development" value="true" type="Boolean"
