@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -169,10 +169,10 @@ import javax.servlet.http.HttpServletRequest;
 public interface ComponentRequest extends HttpServletRequest {
 
     //---------- Content Access Methods ---------------------------------------
-    
+
     /**
      * Returns the {@link Content} object on whose behalf the component acts.
-     * 
+     *
      * @return The <code>Content</code> object of this request.
      */
     Content getContent();
@@ -184,7 +184,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * semantics for content paths. For an implementation reading content from a
      * Java Content Repository, the path could be a <code>javax.jcr.Item</code>
      * path from which the content object is loaded.
-     * 
+     *
      * @param path The path to the content object to be loaded. If the path is
      *            relative, i.e. does not start with a slash (<code>/</code>),
      *            the content relative to this request's content is returned.
@@ -196,7 +196,7 @@ public interface ComponentRequest extends HttpServletRequest {
      */
     Content getContent(String path) throws ComponentException;
 
-    
+
     /**
      * Returns an <code>Iterator</code> of {@link Content} objects loaded from
      * the children of the given <code>content</code>.
@@ -206,24 +206,24 @@ public interface ComponentRequest extends HttpServletRequest {
      * reading components from a Java Content Repository, the children could be
      * the {@link Content} objects loaded from child items of the
      * <code>javax.jcr.Item</code> of the given <code>content</code>.
-     * 
+     *
      * @param content The {@link Content content object} whose children are
      *            requested. If <code>null</code> the children of this
      *            request's content (see {@link #getContent()}) are returned.
      * @return
      * @throws ComponentException
      */
-    Enumeration getChildren(Content content) throws ComponentException;
+    Enumeration<Content> getChildren(Content content) throws ComponentException;
 
     //---------- Request URL Information --------------------------------------
-    
+
     /**
      * Returns the extension from the URL or an empty string if the request URL
      * does not contain an extension.
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
-     * 
+     *
      * @return The extension from the request URL.
      */
     String getExtension();
@@ -235,7 +235,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
-     * 
+     *
      * @param i The index of the selector to return.
      * @return The value of the selector if 0 &lt;= i &lt;
      *         <code>getSelectors().length</code> or <code>null</code>
@@ -253,7 +253,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
-     * 
+     *
      * @see #getSelectorString()
      * @see #getSelector(int)
      */
@@ -265,7 +265,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
-     * 
+     *
      * @see #getSelectors()
      * @see #getSelector(int)
      */
@@ -277,7 +277,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
-     * 
+     *
      * @return The suffix part of the request URL.
      */
     String getSuffix();
@@ -295,7 +295,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * If this method is used with a multivalued parameter, the value returned
      * is equal to the first value in the array returned by
      * <code>getRequestParameters</code>.
-     * 
+     *
      * @param name a <code>String</code> specifying the name of the parameter
      * @return a {@link RequestParameter} representing the single value of the
      *         parameter
@@ -311,7 +311,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * {@link RequestParameter} array (<code>RequestParameter[]</code>).
      * <p>
      * If no parameters exist this method returns an empty <code>Map</code>.
-     * 
+     *
      * @return an immutable <code>Map</code> containing parameter names as
      *         keys and parameter values as map values, or an empty
      *         <code>Map</code> if no parameters exist. The keys in the
@@ -326,7 +326,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * parameter does not exist.
      * <p>
      * If the parameter has a single value, the array has a length of 1.
-     * 
+     *
      * @param name a <code>String</code> containing the name of the parameter
      *            the value of which is requested
      * @return an array of {@link RequestParameter} objects containing the
@@ -337,7 +337,7 @@ public interface ComponentRequest extends HttpServletRequest {
     public RequestParameter[] getRequestParameters(String name);
 
     //---------- Request Dispatching ------------------------------------------
-    
+
     /**
      * Returns a {@link ComponentRequestDispatcher} object that acts as a
      * wrapper for the content located at the given path. A
@@ -350,7 +350,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * <p>
      * This method is exactly he same as using
      * {@link ComponentContext#getRequestDispatcher(Content)}.
-     * 
+     *
      * @param content The {@link Content} instance whose response content may be
      *            included by the returned dispatcher.
      * @return a <code>ComponentRequestDispatcher</code> object that acts as a
@@ -361,11 +361,11 @@ public interface ComponentRequest extends HttpServletRequest {
     ComponentRequestDispatcher getRequestDispatcher(Content content);
 
     //--------- Miscellaneous -------------------------------------------------
-    
+
     /**
      * Returns the named cookie from the HTTP request or <code>null</code> if
      * no such cookie exists in the request.
-     * 
+     *
      * @param name The name of the cookie to return.
      * @return The named cookie or <code>null</code> if no such cookie exists.
      */
@@ -375,7 +375,7 @@ public interface ComponentRequest extends HttpServletRequest {
      * Returns the framework preferred content type for the response.
      * <p>
      * The content type only includes the MIME type, not the character set.
-     * 
+     *
      * @return preferred MIME type of the response
      */
     String getResponseContentType();
@@ -386,14 +386,14 @@ public interface ComponentRequest extends HttpServletRequest {
      * first.
      * <p>
      * The content type only includes the MIME type, not the character set.
-     * 
+     *
      * @return ordered list of MIME types for the response
      */
-    Enumeration getResponseContentTypes();
+    Enumeration<String> getResponseContentTypes();
 
     /**
      * Returns the resource bundle for the given locale.
-     * 
+     *
      * @param locale the locale for which to retrieve the resource bundle. If
      *            this is <code>null</code>, the locale returned by
      *            {@link #getLocale()} is used to select the resource bundle.
@@ -403,14 +403,14 @@ public interface ComponentRequest extends HttpServletRequest {
 
     //---------- Provisional API for Servlet 2.4 based containers -------------
     // This API will not be supported for earlier containers
-    
+
     /**
      * Returns the Internet Protocol (IP) address of the interface on which the
      * request was received.
      * <p>
      * This method only returns a valid response if running in a Servlet 2.4
-     * or later container. 
-     * 
+     * or later container.
+     *
      * @return a String containing the IP address on which the request was
      *         received.
      */
@@ -421,8 +421,8 @@ public interface ComponentRequest extends HttpServletRequest {
      * the request was received.
      * <p>
      * This method only returns a valid response if running in a Servlet 2.4
-     * or later container. 
-     * 
+     * or later container.
+     *
      * @return a String containing the host name of the IP on which the request
      *         was received.
      */
@@ -433,21 +433,21 @@ public interface ComponentRequest extends HttpServletRequest {
      * the request was received.
      * <p>
      * This method only returns a valid response if running in a Servlet 2.4
-     * or later container. 
-     * 
+     * or later container.
+     *
      * @return an integer specifying the port number
      */
     int getLocalPort();
-    
+
     /**
      * Returns the Internet Protocol (IP) source port of the client or last
      * proxy that sent the request.
      * <p>
      * This method only returns a valid response if running in a Servlet 2.4
-     * or later container. 
-     * 
+     * or later container.
+     *
      * @return an <code>integer</code> specifying the port number
      */
     int getRemotePort();
-    
+
 }

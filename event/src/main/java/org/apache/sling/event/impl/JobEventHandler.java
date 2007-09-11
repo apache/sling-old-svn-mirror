@@ -529,8 +529,7 @@ public class JobEventHandler
     }
 
     /**
-     * Search all active nodes in the repository.
-     * @return
+     * Load all active jobs from the repository.
      * @throws RepositoryException
      */
     protected void loadJobs() throws RepositoryException {
