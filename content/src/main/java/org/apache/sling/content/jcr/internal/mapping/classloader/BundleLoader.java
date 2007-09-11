@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -24,21 +24,21 @@ import org.osgi.framework.Bundle;
 public class BundleLoader implements Loader {
 
     private Bundle bundle;
-    
+
     BundleLoader(Bundle bundle) {
         this.bundle = bundle;
     }
-    
-    /* (non-Javadoc)
-     * @see com.day.sling.jcr.mapping.internal.classloader.Loader#loadClass(java.lang.String)
+
+    /**
+     * @see org.apache.sling.content.jcr.internal.mapping.classloader.Loader#loadClass(java.lang.String)
      */
     public Class loadClass(String name) throws ClassNotFoundException {
         try {
             // to prevent nasty messages, we check for the class resource
             // before actually accessing the class
             String resource = name.replace('.', '/') + ".class";
-            if (bundle.getResource(resource) != null) {
-                return bundle.loadClass(name);
+            if (this.bundle.getResource(resource) != null) {
+                return this.bundle.loadClass(name);
             }
 
             // fail if the bundle does not have the resource
@@ -50,6 +50,6 @@ public class BundleLoader implements Loader {
     }
 
     public Object getLoader() {
-        return bundle;
+        return this.bundle;
     }
 }

@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -27,7 +27,7 @@ import org.apache.sling.component.ComponentResponse;
 /**
  * The <code>CacheFilter</code> class is a component level filter implementing
  * the caching and caching delivery per component rendering.
- * 
+ *
  * @scr.component immediate="true" inherit="true"
  *      label="%cache.name" description="%cache.description"
  * @scr.property name="service.description"
@@ -39,12 +39,10 @@ import org.apache.sling.component.ComponentResponse;
  */
 public class CacheFilter extends AbstractCacheFilter implements ComponentFilter {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RenderFilter#doFilter(com.day.components.RenderRequest,
-     *      com.day.components.ComponentResponse,
-     *      com.day.components.RenderFilterChain)
+    /**
+     * @see ComponentFilter#doFilter(ComponentRequest, ComponentResponse, ComponentFilterChain),
+     *      ComponentResponse,
+     *      ComponentFilterChain
      */
     public void doFilter(ComponentRequest request, ComponentResponse response,
             ComponentFilterChain filterChain) throws IOException,

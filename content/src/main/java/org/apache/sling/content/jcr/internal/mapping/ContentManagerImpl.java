@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -15,6 +15,7 @@
  */
 package org.apache.sling.content.jcr.internal.mapping;
 
+import java.security.AccessControlException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -52,18 +53,18 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
 
     /**
      * The class used to load repository content into if a mapping cannot be
-     * found for a given existing node. See {@link #load(String)}. 
+     * found for a given existing node. See {@link #load(String)}.
      */
     public static final Class DEFAULT_CONTENT_CLASS = DefaultContent.class;
-    
+
     protected static final String ACTION_READ = "read";
     protected static final String ACTION_CREATE = "add_node,set_property";
     protected static final String ACTION_ADD_NODE = "add_node";
     protected static final String ACTION_SET_PROPERTY = "set_property";
     protected static final String ACTION_REMOVE = "remove";
-    
+
     private PersistenceManagerProviderImpl pmProvider;
-    
+
     private boolean autoSave;
 
     /**
@@ -84,70 +85,60 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
         ObjectConverter objectConverter = new ObjectConverterImpl(mapper,
             typeConverterProvider, new ProxyManagerImpl(), objectCache);
 
-        setObjectConverter(objectConverter);
-        setQueryManager(queryManager);
-        setRequestObjectCache(objectCache);
-        
+        this.setObjectConverter(objectConverter);
+        this.setQueryManager(queryManager);
+        this.setRequestObjectCache(objectCache);
+
         this.pmProvider = pmProvider;
     }
 
     public void logout() {
         // does nothing according to the ContentManager API spec
     }
-    
+
     // ---------- Persistence Support ------------------------------------------
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#setAutoSave(boolean)
+    /**
+     * @see org.apache.sling.content.ContentManager#setAutoSave(boolean)
      */
     public void setAutoSave(boolean autoSave) {
         this.autoSave = autoSave;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#isAutoCommit()
+    /**
+     * @see org.apache.sling.content.ContentManager#isAutoSave()
      */
     public boolean isAutoSave() {
-        return autoSave;
+        return this.autoSave;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.day.sling.jcr.ContentManager#hasPendingChanges()
+    /**
+     * @return
      */
     public boolean hasPendingChanges() {
         try {
-            return getSession().hasPendingChanges();
+            return this.getSession().hasPendingChanges();
         } catch (RepositoryException re) {
             throw new ObjectContentManagerException("Problem checking for pending changes", re);
         }
     }
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#refresh(boolean)
+
+    /**
+     * @see org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl#refresh(boolean)
      */
     public void refresh(boolean keepChanges) {
         try {
-            getSession().refresh(keepChanges);
+            this.getSession().refresh(keepChanges);
         } catch (RepositoryException re) {
             throw new ObjectContentManagerException("Cannot rollback changes", re);
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#copy(com.day.components.Content,
-     *      java.lang.String, boolean)
+    /**
+     * @see org.apache.sling.content.ContentManager#copy(org.apache.sling.component.Content, java.lang.String, boolean)
      */
     public void copy(Content content, String destination, boolean deep) {
-        checkPermission(destination, ACTION_CREATE);
+        this.checkPermission(destination, ACTION_CREATE);
 
         if (deep) {
             // recursively copy directly in the repository
@@ -157,29 +148,26 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
         } else {
-            Content copied = load(content.getPath(), content.getClass());
-            setPath(copied, destination);
-            insert(copied);
+            Content copied = this.load(content.getPath(), content.getClass());
+            this.setPath(copied, destination);
+            this.insert(copied);
         }
-        conditionalSave();
+        this.conditionalSave();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#create(java.lang.String,
-     *      java.lang.Class, java.util.Map)
+    /**
+     * @see org.apache.sling.content.ContentManager#create(java.lang.String, java.lang.Class, java.util.Map)
      */
     public Content create(String path, Class objectClass, Map properties) {
-        checkPermission(path, ACTION_CREATE);
+        this.checkPermission(path, ACTION_CREATE);
 
         try {
             // create content
             Content content = (Content) objectClass.newInstance();
 
             // set the path on the content object
-            setPath(content, path);
-            
+            this.setPath(content, path);
+
             // set initial properties
             if (properties != null) {
                 for (Iterator pi = properties.entrySet().iterator(); pi.hasNext();) {
@@ -191,8 +179,8 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
                 }
             }
 
-            insert(content);
-            conditionalSave();
+            this.insert(content);
+            this.conditionalSave();
             return content;
         } catch (IllegalAccessException iae) {
         } catch (InstantiationException ie) {
@@ -202,26 +190,22 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#delete(com.day.components.Content)
+    /**
+     * @see org.apache.sling.content.ContentManager#delete(org.apache.sling.component.Content)
      */
     public void delete(Content content) {
-        checkPermission(content.getPath(), ACTION_REMOVE);
-        remove(content);
-        conditionalSave();
+        this.checkPermission(content.getPath(), ACTION_REMOVE);
+        this.remove(content);
+        this.conditionalSave();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#delete(java.lang.String)
+    /**
+     * @see org.apache.sling.content.ContentManager#delete(java.lang.String)
      */
     public void delete(String path) {
-        checkPermission(path, ACTION_REMOVE);
-        remove(path);
-        conditionalSave();
+        this.checkPermission(path, ACTION_REMOVE);
+        this.remove(path);
+        this.conditionalSave();
     }
 
     /**
@@ -232,25 +216,25 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
      *
      * @return the <code>Content</code> object loaded from the node or
      *      <code>null</code> if no node exists at the given path.
-     *      
+     *
      * @throws JcrMappingException If an error occurrs loading the node into
      *      a <code>Content</code> object.
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
     public Content load(String path) {
-        if (itemExists(path)) {
+        if (this.itemExists(path)) {
             // load and return (only if content)
             try {
-                Object loaded = getObject(path);
+                Object loaded = this.getObject(path);
                 if (loaded instanceof Content) {
                     return (Content) loaded;
                 }
             } catch (JcrMappingException jme) {
-                
+
                 // fall back to default content
                 try {
-                    Object loaded = getObject(DEFAULT_CONTENT_CLASS, path);
+                    Object loaded = this.getObject(DEFAULT_CONTENT_CLASS, path);
                     if (loaded instanceof Content) {
                         return (Content) loaded;
                     }
@@ -260,52 +244,43 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
                 }
             }
         }
-        
+
         // item does not exist or is no content
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#load(java.lang.String,
-     *      java.lang.Class)
+    /**
+     * @see org.apache.sling.content.ContentManager#load(java.lang.String, java.lang.Class)
      */
     public Content load(String path, Class type) {
-        if (itemExists(path)) {
+        if (this.itemExists(path)) {
             // load and return (only if content)
-            Object loaded = getObject(type, path);
+            Object loaded = this.getObject(type, path);
             if (loaded instanceof Content) {
                 return (Content) loaded;
             }
         }
-        
+
         // item does not exist or is no content
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#move(com.day.components.Content,
-     *      java.lang.String)
+    /**
+     * @see org.apache.sling.content.ContentManager#move(org.apache.sling.component.Content, java.lang.String)
      */
     public void move(Content content, String destination) {
-        move(content.getPath(), destination);
+        this.move(content.getPath(), destination);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#move(java.lang.String,
-     *      java.lang.String)
+    /**
+     * @see org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl#move(java.lang.String, java.lang.String)
      */
     public void move(String source, String destination) {
-        checkPermission(source, ACTION_REMOVE);
-        checkPermission(destination, ACTION_CREATE);
-        
+        this.checkPermission(source, ACTION_REMOVE);
+        this.checkPermission(destination, ACTION_CREATE);
+
         try {
-            getSession().move(source, destination);
+            this.getSession().move(source, destination);
             // } catch (ItemExistsException iee) {
             // } catch (PathNotFoundException pnfe) {
             // } catch (VersionException ve) {
@@ -316,19 +291,16 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
                 + destination, re);
         }
 
-        conditionalSave();
+        this.conditionalSave();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#orderBefore(com.day.components.Content,
-     *      java.lang.String)
+    /**
+     * @see org.apache.sling.content.ContentManager#orderBefore(org.apache.sling.component.Content, java.lang.String)
      */
     public void orderBefore(Content content, String afterName) {
         Node parent;
         try {
-            parent = getSession().getItem(content.getPath()).getParent();
+            parent = this.getSession().getItem(content.getPath()).getParent();
         } catch (RepositoryException re) {
             throw new ObjectContentManagerException("Cannot get parent of "
                 + content.getPath() + " to order content");
@@ -354,62 +326,60 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
                 re);
         }
 
-        conditionalSave();
+        this.conditionalSave();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.sling.jcr.ContentManager#store(com.day.components.Content)
+    /**
+     * @see org.apache.sling.content.ContentManager#store(org.apache.sling.component.Content)
      */
     public void store(Content content) {
-        update(content);
-        conditionalSave();
+        this.update(content);
+        this.conditionalSave();
     }
 
     //---------- JcrContentManager interface ----------------------------------
-    
+
     public Iterator getObjects(String queryExpression, String language) {
         try {
-            Session session = getSession();
+            Session session = this.getSession();
             javax.jcr.query.QueryManager queryManager = session.getWorkspace().getQueryManager();
             Query query = queryManager.createQuery(queryExpression, language);
             final QueryResult queryResult = query.execute();
-            
+
             return new Iterator() {
                 private final NodeIterator results;
                 private Object nextResult;
-                
+
                 {
-                    results = queryResult.getNodes();
-                    seek();
+                    this.results = queryResult.getNodes();
+                    this.seek();
                 }
-                
+
                 public boolean hasNext() {
-                    return nextResult != null;
+                    return this.nextResult != null;
                 }
-                
+
                 public Object next() {
-                    if (nextResult == null) {
+                    if (this.nextResult == null) {
                         throw new NoSuchElementException();
                     }
-                    
-                    Object result = nextResult;
-                    seek();
+
+                    Object result = this.nextResult;
+                    this.seek();
                     return result;
                 }
 
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
-                
+
                 private void seek() {
-                    while (results.hasNext()) {
+                    while (this.results.hasNext()) {
                         try {
-                            Node node = results.nextNode();
-                            Object value = getObject(node.getPath());
+                            Node node = this.results.nextNode();
+                            Object value = ContentManagerImpl.this.getObject(node.getPath());
                             if (value != null) {
-                                nextResult = value;
+                                this.nextResult = value;
                                 return;
                             }
                         } catch (RepositoryException re) {
@@ -420,24 +390,24 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
                             // TODO: log this situation and continue mapping
                         }
                     }
-                    
+
                     // no more results
-                    nextResult = null;
+                    this.nextResult = null;
                 }
             };
-            
+
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new InvalidQueryException(iqe);
         } catch (RepositoryException re) {
             throw new ObjectContentManagerException(re.getMessage(), re);
         }
     }
-    
+
     //---------- implementation helper ----------------------------------------
-    
+
     protected void conditionalSave() {
-        if (isAutoSave()) {
-            save();
+        if (this.isAutoSave()) {
+            this.save();
         }
     }
 
@@ -445,38 +415,38 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
      * Checks whether the item exists and this content manager's session has
      * read access to the item. If the item does not exist, access control is
      * ignored by this method and <code>false</code> is returned.
-     * 
+     *
      * @param path The path to the item to check
      * @return <code>true</code> if the item exists and this content manager's
      *         session has read access. If the item does not exist,
      *         <code>false</code> is returned ignoring access control.
-     *         
+     *
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
     protected boolean itemExists(String path) {
         try {
-            if (pmProvider.itemReallyExists(getSession(), path)) {
-                checkPermission(path, ACTION_READ);
+            if (this.pmProvider.itemReallyExists(this.getSession(), path)) {
+                this.checkPermission(path, ACTION_READ);
                 return true;
             }
-            
+
             return false;
         } catch (RepositoryException re) {
             throw new org.apache.jackrabbit.ocm.exception.RepositoryException(re);
         }
     }
-    
+
     protected void checkPermission(String path, String actions) {
         try {
-            getSession().checkPermission(path, actions);
+            this.getSession().checkPermission(path, actions);
         } catch (RepositoryException re) {
             throw new org.apache.jackrabbit.ocm.exception.RepositoryException(re);
         }
     }
-    
+
     protected void setPath(Content content, String path) {
         ReflectionUtils.setNestedProperty(content, "path", path);
     }
-    
+
 }
