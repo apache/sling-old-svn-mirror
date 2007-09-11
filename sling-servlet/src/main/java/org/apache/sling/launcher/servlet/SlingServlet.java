@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.GenericServlet;
@@ -37,7 +38,7 @@ import org.apache.sling.launcher.Logger;
 import org.apache.sling.launcher.ResourceProvider;
 import org.apache.sling.launcher.Sling;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.ServiceEvent;
 
 /**
  * The <code>SlingServlet</code> serves as a basic servlet for Project Sling.
@@ -108,7 +109,7 @@ public class SlingServlet extends GenericServlet {
      * This context attribute must be used with utmost care ! It is not intended
      * for this value to be used in generall applications of the framework.
      */
-    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.core.framework";
+    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.framework";
 
     /**
      * The name of the configuration property defining the Sling home directory
@@ -149,7 +150,7 @@ public class SlingServlet extends GenericServlet {
      * is managed through the
      * {@link #serviceChanged(ServiceEvent) service listener} based on servlets
      * registered.
-     * 
+     *
      * @see #getDelegatee()
      * @see #ungetDelegatee(Object)
      */
@@ -160,46 +161,46 @@ public class SlingServlet extends GenericServlet {
      * properties, starting the OSGi framework (Apache Felix) and exposing the
      * system bundle context and the <code>Felix</code> instance as servlet
      * context attributes.
-     * 
+     *
      * @throws ServletException if the framework cannot be initialized.
      */
     public final void init() throws ServletException {
         super.init();
 
-        if (getServletContext().getAttribute(CONTEXT_ATTR_SLING_FRAMEWORK) != null) {
-            log("Has this framework already been started ???");
+        if (this.getServletContext().getAttribute(CONTEXT_ATTR_SLING_FRAMEWORK) != null) {
+            this.log("Has this framework already been started ???");
             return;
         }
 
         // read the default parameters
-        Map<String, String> props = loadConfigProperties();
+        Map<String, String> props = this.loadConfigProperties();
 
         try {
-            Logger logger = new ServletContextLogger(getServletContext());
+            Logger logger = new ServletContextLogger(this.getServletContext());
             ResourceProvider rp = new ServletContextResourceProvider(
-                getServletContext());
-            sling = new SlingBridge(logger, rp, props);
+                this.getServletContext());
+            this.sling = new SlingBridge(logger, rp, props);
         } catch (Exception ex) {
-            log("Cannot start the OSGi framework", ex);
+            this.log("Cannot start the OSGi framework", ex);
             throw new UnavailableException("Cannot start the OSGi Framework: "
                 + ex);
         }
 
         // set the context attributes only if all setup has been successfull
-        getServletContext().setAttribute(CONTEXT_ATTR_SLING_FRAMEWORK, sling);
+        this.getServletContext().setAttribute(CONTEXT_ATTR_SLING_FRAMEWORK, this.sling);
 
         // set up the proxy servlet
-        delegatee = new HttpServiceServlet();
-        delegatee.init(getServletConfig());
+        this.delegatee = new HttpServiceServlet();
+        this.delegatee.init(this.getServletConfig());
 
-        log("Servlet " + getServletName() + " initialized");
+        this.log("Servlet " + this.getServletName() + " initialized");
     }
 
     /**
      * Services the request by delegating to the delegatee servlet. If no
      * delegatee servlet is available, a <code>UnavailableException</code> is
      * thrown.
-     * 
+     *
      * @param req the <code>ServletRequest</code> object that contains the
      *            client's request
      * @param res the <code>ServletResponse</code> object that will contain
@@ -214,7 +215,7 @@ public class SlingServlet extends GenericServlet {
             throws ServletException, IOException {
 
         // delegate the request to the registered delegatee servlet
-        Servlet delegatee = getDelegatee();
+        Servlet delegatee = this.getDelegatee();
         if (delegatee == null) {
             ((HttpServletResponse) res).sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
@@ -229,18 +230,18 @@ public class SlingServlet extends GenericServlet {
     public final void destroy() {
 
         // destroy the delegatee
-        if (delegatee != null) {
-            delegatee.destroy();
-            delegatee = null;
+        if (this.delegatee != null) {
+            this.delegatee.destroy();
+            this.delegatee = null;
         }
-        
+
         // remove the context attributes immediately
-        getServletContext().removeAttribute(CONTEXT_ATTR_SLING_FRAMEWORK);
+        this.getServletContext().removeAttribute(CONTEXT_ATTR_SLING_FRAMEWORK);
 
         // shutdown the Felix container
-        if (sling != null) {
-            sling.destroy();
-            sling = null;
+        if (this.sling != null) {
+            this.sling.destroy();
+            this.sling = null;
         }
 
         // finally call the base class destroy method
@@ -248,7 +249,7 @@ public class SlingServlet extends GenericServlet {
     }
 
     Servlet getDelegatee() {
-        return delegatee;
+        return this.delegatee;
     }
 
     // ---------- Configuration Loading ----------------------------------------
@@ -265,7 +266,7 @@ public class SlingServlet extends GenericServlet {
      * The precise file from which to load configuration properties can be set
      * by initializing the "<tt>felix.config.properties</tt>" system
      * property to an arbitrary URL.
-     * 
+     *
      * @return A <tt>Properties</tt> instance or <tt>null</tt> if there was
      *         an error.
      */
@@ -286,17 +287,17 @@ public class SlingServlet extends GenericServlet {
         props.put("sling.include.jcr-client", "jcr-client.properties");
 
         // copy context init parameters
-        Enumeration<?> pe = getServletContext().getInitParameterNames();
+        Enumeration<?> pe = this.getServletContext().getInitParameterNames();
         while (pe.hasMoreElements()) {
             String name = (String) pe.nextElement();
-            props.put(name, getServletContext().getInitParameter(name));
+            props.put(name, this.getServletContext().getInitParameter(name));
         }
 
         // copy servlet init parameters
-        pe = getInitParameterNames();
+        pe = this.getInitParameterNames();
         while (pe.hasMoreElements()) {
             String name = (String) pe.nextElement();
-            props.put(name, getInitParameter(name));
+            props.put(name, this.getInitParameter(name));
         }
 
         return props;
@@ -311,9 +312,9 @@ public class SlingServlet extends GenericServlet {
 
         public void log(String message, Throwable throwable) {
             if (throwable == null) {
-                servletContext.log(message);
+                this.servletContext.log(message);
             } else {
-                servletContext.log(message, throwable);
+                this.servletContext.log(message, throwable);
             }
         }
     }
@@ -341,9 +342,9 @@ public class SlingServlet extends GenericServlet {
                 path = "/" + path;
             }
 
-            Set resources = servletContext.getResourcePaths(path); // unchecked
+            Set resources = this.servletContext.getResourcePaths(path); // unchecked
             if (resources.isEmpty()) {
-                resources = servletContext.getResourcePaths(WEB_INF + path); // unchecked
+                resources = this.servletContext.getResourcePaths(WEB_INF + path); // unchecked
             }
 
             return resources.iterator(); // unchecked
@@ -362,16 +363,16 @@ public class SlingServlet extends GenericServlet {
 
             try {
                 // try direct path
-                URL resource = servletContext.getResource(path);
+                URL resource = this.servletContext.getResource(path);
                 if (resource != null) {
                     return resource;
                 }
 
                 // otherwise try WEB-INF location
-                return servletContext.getResource(WEB_INF + path);
+                return this.servletContext.getResource(WEB_INF + path);
 
             } catch (MalformedURLException mue) {
-                servletContext.log("Failure to get resource " + path, mue);
+                this.servletContext.log("Failure to get resource " + path, mue);
             }
 
             // fall back to no resource found

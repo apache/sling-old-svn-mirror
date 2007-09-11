@@ -52,7 +52,6 @@ import org.slf4j.LoggerFactory;
  * We schedule the job event handler to run in the background and clean up
  * obsolete jobs:
  * @scr.service interface="java.lang.Runnable"
- * @scr.property name="scheduler.name" value="org.apache.sling.core.event.impl.JobEventHandler"
  * @scr.property name="scheduler.period" value="1800" type="Long"
  * @scr.property name="scheduler.concurrent" value="false" type="Boolean"
  */
@@ -167,8 +166,8 @@ public abstract class AbstractRepositoryEventHandler
     protected void createRepositoryPath()
     throws RepositoryException {
         if ( !this.session.itemExists(this.repositoryPath) ) {
-            Node node = session.getRootNode();
-            String path = repositoryPath.substring(1);
+            Node node = this.session.getRootNode();
+            String path = this.repositoryPath.substring(1);
             int pos = path.lastIndexOf('/');
             if ( pos != -1 ) {
                 final StringTokenizer st = new StringTokenizer(path.substring(0, pos), "/");
@@ -183,7 +182,7 @@ public abstract class AbstractRepositoryEventHandler
                 path = path.substring(pos + 1);
             }
             if ( !node.hasNode(path) ) {
-                node.addNode(path, getContainerNodeType());
+                node.addNode(path, this.getContainerNodeType());
                 node.save();
             }
         }

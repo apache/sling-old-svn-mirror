@@ -42,7 +42,7 @@ import org.apache.sling.core.ServiceLocator;
  * @scr.property name="service.description" value="Service Locator Filter"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-3000" type="Integer" private="true"
- * @scr.service interface="org.apache.sling.core.component.ComponentFilter"
+ * @scr.service interface="org.apache.sling.component.ComponentFilter"
  */
 public class ServiceLocatorFilter implements ComponentFilter {
 

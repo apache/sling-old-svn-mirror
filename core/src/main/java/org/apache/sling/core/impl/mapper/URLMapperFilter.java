@@ -61,7 +61,7 @@ import sun.security.krb5.internal.Ticket;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-500" type="Integer" private="true"
- * @scr.service interface="org.apache.sling.core.component.ComponentFilter"
+ * @scr.service interface="org.apache.sling.component.ComponentFilter"
  */
 public class URLMapperFilter implements ComponentFilter, URLMapper {
 

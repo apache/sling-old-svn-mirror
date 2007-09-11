@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -39,13 +39,13 @@ import org.osgi.service.event.EventConstants;
 
 /**
  * The <code>JcrContentHelper</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%content.name"
  *          description="%content.description"
  * @scr.property name="service.description"
  *          value="Sling ContentManagerFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.core.content.jcr.JcrContentManagerFactory"
+ * @scr.service interface="org.apache.sling.content.jcr.JcrContentManagerFactory"
  * @author fmeschbe
  */
 public class JcrContentHelper implements JcrContentManagerFactory,
@@ -62,7 +62,7 @@ public class JcrContentHelper implements JcrContentManagerFactory,
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
     private EventAdmin eventAdmin;
-    
+
     /**
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
@@ -78,7 +78,7 @@ public class JcrContentHelper implements JcrContentManagerFactory,
      * @throws IllegalStateException If this provider is not operational
      */
     public JcrContentManager getContentManager(Session session) {
-        return pmProvider.getContentManager(session);
+        return this.pmProvider.getContentManager(session);
     }
 
     // ---------- BundleListener -----------------------------------------------
@@ -87,7 +87,7 @@ public class JcrContentHelper implements JcrContentManagerFactory,
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     * 
+     *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -97,27 +97,27 @@ public class JcrContentHelper implements JcrContentManagerFactory,
             case BundleEvent.INSTALLED:
                 // register content and types when the bundle content is
                 // available
-                loader.registerBundle(event.getBundle());
+                this.loader.registerBundle(event.getBundle());
                 break;
 
             case BundleEvent.STARTING: // STARTED:
                 // register mappings before the bundle gets activated
-                pmProvider.registerMapperClient(event.getBundle());
+                this.pmProvider.registerMapperClient(event.getBundle());
                 break;
 
             case BundleEvent.STOPPED:
                 // remove mappings after the bundle has stopped
-                pmProvider.unregisterMapperClient(event.getBundle());
+                this.pmProvider.unregisterMapperClient(event.getBundle());
                 break;
 
             case BundleEvent.UNINSTALLED:
-                loader.unregisterBundle(event.getBundle());
+                this.loader.unregisterBundle(event.getBundle());
                 break;
         }
     }
 
     public SlingRepository getRepository() {
-        return repository;
+        return this.repository;
     }
 
     // ---------- Event Dispatching on behalf of the loader and PMProvider -----
@@ -125,7 +125,7 @@ public class JcrContentHelper implements JcrContentManagerFactory,
     public void fireEvent(Bundle sourceBundle, String eventName,
             Map<String, Object> props) {
         // check event admin service, return if not available
-        EventAdmin ea = eventAdmin;
+        EventAdmin ea = this.eventAdmin;
         if (ea == null) {
             return;
         }
@@ -134,7 +134,7 @@ public class JcrContentHelper implements JcrContentManagerFactory,
         Dictionary<String, Object> table = new Hashtable<String, Object>(props);
 
         // service information of this JcrContentHelper service
-        ServiceReference sr = componentContext.getServiceReference();
+        ServiceReference sr = this.componentContext.getServiceReference();
         if (sr != null) {
             table.put(EventConstants.SERVICE, sr);
             table.put(EventConstants.SERVICE_ID,
@@ -162,14 +162,14 @@ public class JcrContentHelper implements JcrContentManagerFactory,
     }
 
     // ---------- Helper -------------------------------------------------------
-    
+
     public String getMimeType(String name) {
         // local copy to not get NPE despite check for null due to concurrent
         // unbind
-        MimeTypeService mts = mimeTypeService;
+        MimeTypeService mts = this.mimeTypeService;
         return (mts != null) ? mts.getMimeType(name) : null;
     }
-    
+
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext componentContext) {
@@ -185,21 +185,21 @@ public class JcrContentHelper implements JcrContentManagerFactory,
             if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
                 // load content for bundles which are neither INSTALLED nor
                 // UNINSTALLED
-                loader.registerBundle(bundles[i]);
+                this.loader.registerBundle(bundles[i]);
             }
 
             if (bundles[i].getState() == Bundle.ACTIVE) {
                 // register active bundles with the mapper client
-                pmProvider.registerMapperClient(bundles[i]);
+                this.pmProvider.registerMapperClient(bundles[i]);
             }
         }
     }
 
     protected void deactivate(ComponentContext oldContext) {
-        componentContext.getBundleContext().removeBundleListener(this);
+        this.componentContext.getBundleContext().removeBundleListener(this);
 
-        pmProvider.dispose();
-        loader.dispose();
-        componentContext = null;
+        this.pmProvider.dispose();
+        this.loader.dispose();
+        this.componentContext = null;
     }
 }

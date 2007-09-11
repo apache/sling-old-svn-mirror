@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -35,6 +35,8 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Map.Entry;
+
+import javax.servlet.ServletException;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
@@ -108,7 +110,7 @@ public class Sling implements BundleActivator {
     /** Pseduo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
 
-    public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.core.launcher.system.packages";
+    public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
     /**
      * The name of the servlet context attribute containing the
@@ -117,7 +119,7 @@ public class Sling implements BundleActivator {
      * This context attribute must be used with utmost care ! It is not intended
      * for this value to be used in generall applications of the framework.
      */
-    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.core.framework";
+    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.framework";
 
     /**
      * The name of the servlet context attribute containing the
@@ -126,7 +128,7 @@ public class Sling implements BundleActivator {
      * This context attribute must be used with utmost care ! It is not intended
      * for this value to be used in generall applications of the framework.
      */
-    public static final String CONTEXT_ATTR_SLING_SYSTEM_BUNDLE_CONTEXT = "org.apache.sling.core.system.bundlecontext";
+    public static final String CONTEXT_ATTR_SLING_SYSTEM_BUNDLE_CONTEXT = "org.apache.sling.system.bundlecontext";
 
     /**
      * The name of the configuration property defining the Sling home directory
@@ -136,7 +138,7 @@ public class Sling implements BundleActivator {
      * <p>
      * The value of this property, if not set as a system property defaults to
      * the <i>sling</i> directory in the current working directory.
-     * 
+     *
      * @see #SLING_HOME_URL
      */
     public static final String SLING_HOME = "sling.home";
@@ -148,7 +150,7 @@ public class Sling implements BundleActivator {
      * The value of this property is assigned the value of
      * <code>new File(${sling.home}).toURI().toString()</code> before
      * resolving the property variables.
-     * 
+     *
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
@@ -208,7 +210,7 @@ public class Sling implements BundleActivator {
      * properties, starting the OSGi framework (Apache Felix) and exposing the
      * system bundle context and the <code>Felix</code> instance as servlet
      * context attributes.
-     * 
+     *
      * @throws ServletException if the framework cannot be initialized.
      */
     public Sling(Logger logger, ResourceProvider resourceProvider,
@@ -217,19 +219,19 @@ public class Sling implements BundleActivator {
         this.logger = (logger != null) ? logger : new SimpleLogger();
         this.resourceProvider = (resourceProvider != null)
                 ? resourceProvider
-                : new ClassLoaderResourceProvider(getClass().getClassLoader());
+                : new ClassLoaderResourceProvider(this.getClass().getClassLoader());
 
         this.logger.log("Sling Starting");
 
         // read the default parameters
-        Map<String, String> props = loadConfigProperties(propOverwrite);
+        Map<String, String> props = this.loadConfigProperties(propOverwrite);
 
         // check for auto-start bundles
-        setInstallBundles(props);
-        setAutoStartBundles(props);
+        this.setInstallBundles(props);
+        this.setAutoStartBundles(props);
 
         // ensure execution environment
-        setExecutionEnvironment(props);
+        this.setExecutionEnvironment(props);
 
         // make sure Felix does not exit the VM when terminating ...
         props.put("felix.embedded.execution", "true");
@@ -243,7 +245,7 @@ public class Sling implements BundleActivator {
         tmpFelix.start();
 
         // only assign field if start succeeds
-        felix = tmpFelix;
+        this.felix = tmpFelix;
 
         // log sucess message
         this.logger.log("Felix (OSGi R4 Framework) started");
@@ -255,11 +257,11 @@ public class Sling implements BundleActivator {
      */
     public final void destroy() {
         // shutdown the Felix container
-        if (felix != null) {
-            logger.log("Shutting down Felix (OSGi R4) container");
-            felix.stopAndWait();
-            logger.log("Felix (OSGi R4) container stopped");
-            felix = null;
+        if (this.felix != null) {
+            this.logger.log("Shutting down Felix (OSGi R4) container");
+            this.felix.stopAndWait();
+            this.logger.log("Felix (OSGi R4) container stopped");
+            this.felix = null;
         }
     }
 
@@ -272,7 +274,7 @@ public class Sling implements BundleActivator {
      * {@link #doStartBundle()} method for implementations to execute more
      * startup tasks. Additionally the <code>context</code> URL protocol
      * handler is registered.
-     * 
+     *
      * @param bundleContext The <code>BundleContext</code> of the system
      *            bundle of the OSGi framework.
      * @throws Exception May be thrown if the {@link #doStartBundle()} throws.
@@ -284,12 +286,12 @@ public class Sling implements BundleActivator {
         Hashtable<String, Object> props = new Hashtable<String, Object>();
         props.put(URLConstants.URL_HANDLER_PROTOCOL, new String[] { "context" });
         ContextProtocolHandler contextHandler = new ContextProtocolHandler(
-            resourceProvider);
+            this.resourceProvider);
         bundleContext.registerService(URLStreamHandlerService.class.getName(),
             contextHandler, props);
 
         // execute optional bundle startup tasks of an extension
-        doStartBundle();
+        this.doStartBundle();
     }
 
     /**
@@ -297,16 +299,16 @@ public class Sling implements BundleActivator {
      * first calls the {@link #doStopBundle()} method method before
      * unregistering as a service listener and ungetting an servlet delegatee if
      * one has been acquired.
-     * 
+     *
      * @param bundleContext The <code>BundleContext</code> of the system
      *            bundle of the OSGi framework.
      */
     public final void stop(BundleContext bundleContext) {
         // execute optional bundle stop tasks of an extension
         try {
-            doStopBundle();
+            this.doStopBundle();
         } catch (Exception e) {
-            logger.log("Unexpected exception caught", e);
+            this.logger.log("Unexpected exception caught", e);
         }
 
         // drop bundle context reference
@@ -327,7 +329,7 @@ public class Sling implements BundleActivator {
      * The precise file from which to load configuration properties can be set
      * by initializing the "<tt>felix.config.properties</tt>" system
      * property to an arbitrary URL.
-     * 
+     *
      * @return A <tt>Properties</tt> instance or <tt>null</tt> if there was
      *         an error.
      */
@@ -339,10 +341,10 @@ public class Sling implements BundleActivator {
         Map<String, String> props = new HashMap<String, String>();
 
         // Read the properties file.
-        load(props, CONFIG_PROPERTIES);
+        this.load(props, CONFIG_PROPERTIES);
 
         // resolve inclusions (and remove property)
-        loadIncludes(props, null);
+        this.loadIncludes(props, null);
 
         // overwrite default properties with initial overwrites
         if (propOverwrite != null) {
@@ -358,7 +360,7 @@ public class Sling implements BundleActivator {
             if (slingHome == null || slingHome.length() == 0) {
                 if (slingHome == null || slingHome.length() == 0) {
                     slingHome = "sling";
-                    logger.log("sling.home is not defined. Using '" + slingHome
+                    this.logger.log("sling.home is not defined. Using '" + slingHome
                         + "'");
                 }
             }
@@ -370,9 +372,9 @@ public class Sling implements BundleActivator {
         slingHome = slingHomeFile.getAbsolutePath();
 
         // overlay with ${sling.home}/sling.properties
-        logger.log("Starting sling in " + slingHome);
+        this.logger.log("Starting sling in " + slingHome);
         File propFile = new File(slingHome, CONFIG_PROPERTIES);
-        load(props, propFile);
+        this.load(props, propFile);
 
         // create a copy of the properties to perform variable substitution
         Map<String, String> origProps = props;
@@ -391,13 +393,13 @@ public class Sling implements BundleActivator {
         }
 
         // resolve inclusions again
-        loadIncludes(props, slingHome);
+        this.loadIncludes(props, slingHome);
 
         // overwrite properties, this is not persisted as such
-        loadPropertiesOverride(props);
+        this.loadPropertiesOverride(props);
 
         // resolve boot delegation and system packages
-        resolve(props, "org.osgi.framework.bootdelegation",
+        this.resolve(props, "org.osgi.framework.bootdelegation",
             "sling.bootdelegation.");
 
         // reset back the sling home property
@@ -420,7 +422,7 @@ public class Sling implements BundleActivator {
             if (value != null && value.startsWith("context:/")) {
                 String path = value.substring("context:/".length() - 1);
 
-                InputStream src = resourceProvider.getResourceAsStream(path);
+                InputStream src = this.resourceProvider.getResourceAsStream(path);
                 if (src != null) {
                     File target = new File(slingHome, path);
                     OutputStream dest = null;
@@ -443,7 +445,7 @@ public class Sling implements BundleActivator {
                         origProps.put(name, "${sling.home}" + path);
 
                     } catch (IOException ioe) {
-                        logger.log("Cannot copy file " + value + " to "
+                        this.logger.log("Cannot copy file " + value + " to "
                             + target, ioe);
                     } finally {
                         if (dest != null) {
@@ -474,7 +476,7 @@ public class Sling implements BundleActivator {
             tmp.putAll(origProps);
             tmp.store(os, "Overlay properties for configuration");
         } catch (Exception ex) {
-            logger.log("Error loading overlay properties from " + propFile, ex);
+            this.logger.log("Error loading overlay properties from " + propFile, ex);
         } finally {
             if (os != null) {
                 try {
@@ -502,7 +504,7 @@ public class Sling implements BundleActivator {
      * name, the value of the property is simply appended to the
      * <code>osgiProp</code>.
      * </ol>
-     * 
+     *
      * @param props The <code>Properties</code> to be scanned.
      * @param osgiProp The name of the property in <code>props</code> to which
      *            any matching property values are appended.
@@ -521,7 +523,7 @@ public class Sling implements BundleActivator {
                         + "class.".length());
                     try {
                         Class.forName(className, true,
-                            getClass().getClassLoader());
+                            this.getClass().getClassLoader());
                     } catch (Throwable t) {
                         // don't really care, but class checking failed, so we
                         // do not add
@@ -572,25 +574,25 @@ public class Sling implements BundleActivator {
             buf.append(autostart);
         }
 
-        listBundles(buf, "resources/corebundles");
-        listBundles(buf, "resources/bundles");
+        this.listBundles(buf, "resources/corebundles");
+        this.listBundles(buf, "resources/bundles");
 
         props.put(propName, buf.toString());
     }
 
     private void listBundles(StringBuffer list, String path) {
-        Iterator<String> res = resourceProvider.getChildren(path);
+        Iterator<String> res = this.resourceProvider.getChildren(path);
         while (res.hasNext()) {
             String name = res.next();
             if (name.endsWith(".jar")) {
-                URL url = resourceProvider.getResource(name);
+                URL url = this.resourceProvider.getResource(name);
                 if (url != null) {
-                    list.append(" ").append(toString(url));
+                    list.append(" ").append(this.toString(url));
                 }
             }
         }
     }
-    
+
     /**
      * Ensures sensible Execution Environment setting. If the
      * <code>org.osgi.framework.executionenvironment</code> property is set in
@@ -598,7 +600,7 @@ public class Sling implements BundleActivator {
      * settings for J2SE-1.2, J2SE-1.3 and J2SE-1.4 are included. If the
      * property is neither set in the configuration properties nor in the system
      * properties, the property is not set.
-     * 
+     *
      * @param props The configuration properties to check and optionally ammend.
      */
     private void setExecutionEnvironment(Map<String, String> props) {
@@ -626,10 +628,10 @@ public class Sling implements BundleActivator {
                 }
             }
 
-            logger.log("Using Execution Environment setting: " + ee);
+            this.logger.log("Using Execution Environment setting: " + ee);
             props.put(Constants.FRAMEWORK_EXECUTIONENVIRONMENT, ee);
         } else {
-            logger.log("Not using Execution Environment setting");
+            this.logger.log("Not using Execution Environment setting");
         }
     }
 
@@ -643,7 +645,7 @@ public class Sling implements BundleActivator {
      * Note: This is a quick solution to a problem with the CQSE servlet
      * container which uses the File.toURL() method to return an URL for a web
      * application contained resource.
-     * 
+     *
      * @param url The <code>URL</code> to convert into a string
      * @return The URL string with any blanks replaced by "%20"
      */
@@ -689,7 +691,7 @@ public class Sling implements BundleActivator {
      * The properties added in this method will not be persisted in the
      * <code>sling.properties</code> file in the <code>sling.home</code>
      * directory.
-     * 
+     *
      * @param properties The <code>Properties</code> object to which custom
      *            properties may be added.
      */
@@ -703,7 +705,7 @@ public class Sling implements BundleActivator {
      * before it is being stopped.
      */
     protected final BundleContext getBundleContext() {
-        return bundleContext;
+        return this.bundleContext;
     }
 
     /**
@@ -712,7 +714,7 @@ public class Sling implements BundleActivator {
      * <p>
      * This implementation does nothing and may be overwritten by extensions
      * requiring additional startup tasks.
-     * 
+     *
      * @throws Exception May be thrown in case of problems.
      */
     protected void doStartBundle() throws Exception {
@@ -754,7 +756,7 @@ public class Sling implements BundleActivator {
      * When the method returns, the <code>sling.include</code> and
      * <code>sling.include.*</code> properties are not contained in the
      * <code>props</code> any more.
-     * 
+     *
      * @param props The <code>Properties</code> containing the
      *            <code>sling.include</code> and <code>sling.include.*</code>
      *            properties. This is also the destination for the new
@@ -788,7 +790,7 @@ public class Sling implements BundleActivator {
             StringTokenizer tokener = new StringTokenizer(include, ",");
             while (tokener.hasMoreTokens()) {
                 String file = tokener.nextToken().trim();
-                InputStream is = resourceProvider.getResourceAsStream(file);
+                InputStream is = this.resourceProvider.getResourceAsStream(file);
                 try {
                     if (is == null && slingHome != null) {
                         File resFile = new File(file);
@@ -802,10 +804,10 @@ public class Sling implements BundleActivator {
                     }
 
                     if (is != null) {
-                        load(props, is);
+                        this.load(props, is);
                     }
                 } catch (IOException ioe) {
-                    logger.log("Error loading config properties from " + file,
+                    this.logger.log("Error loading config properties from " + file,
                         ioe);
                 }
             }
@@ -816,18 +818,18 @@ public class Sling implements BundleActivator {
      * Load properties from the given resource file, which is accessed through
      * the {@link #resourceProvider}. If the resource does not exist, nothing
      * is loaded.
-     * 
+     *
      * @param props The <code>Properties</code> into which the loaded
      *            properties are loaded
      * @param resource The resource from which to load the resources
      */
     private void load(Map<String, String> props, String resource) {
-        InputStream is = resourceProvider.getResourceAsStream(resource);
+        InputStream is = this.resourceProvider.getResourceAsStream(resource);
         if (is != null) {
             try {
-                load(props, is);
+                this.load(props, is);
             } catch (IOException ioe) {
-                logger.log("Error loading config properties from " + resource,
+                this.logger.log("Error loading config properties from " + resource,
                     ioe);
             }
         }
@@ -836,7 +838,7 @@ public class Sling implements BundleActivator {
     /**
      * Load properties from the given file. If the resource cannot be read from
      * (e.g. because it does not exist), nothing is loaded.
-     * 
+     *
      * @param props The <code>Properties</code> into which the loaded
      *            properties are loaded
      * @param file The <code>File</code> to load the properties from
@@ -844,9 +846,9 @@ public class Sling implements BundleActivator {
     private void load(Map<String, String> props, File file) {
         if (file != null && file.canRead()) {
             try {
-                load(props, new FileInputStream(file));
+                this.load(props, new FileInputStream(file));
             } catch (IOException ioe) {
-                logger.log("Error loading config properties from "
+                this.logger.log("Error loading config properties from "
                     + file.getAbsolutePath(), ioe);
             }
         }
@@ -891,7 +893,7 @@ public class Sling implements BundleActivator {
      * Multiple variable placeholders may exist in the specified value as well
      * as nested variable placeholders, which are substituted from inner most to
      * outer most. Configuration properties override system properties.
-     * 
+     *
      * @param val The string on which to perform property substitution.
      * @param currentKey The key of the property being evaluated used to detect
      *            cycles.

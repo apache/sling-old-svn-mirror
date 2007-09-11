@@ -91,7 +91,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * through a session, this is the handler, which iinitially authenticated
      * the user.
      */
-    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.core.auth.authentication_handler";
+    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.core.impl.auth.authentication_handler";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);

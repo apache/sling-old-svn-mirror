@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * The <code>ScriptInfo</code> contains all the configured properties of one
  * single <code>&lt;script /&gt;</code> element of a
  * <code>&lt;template /&gt;</code>
- * 
+ *
  * @ocm.mapped jcrNodeType="sling:Script" implement=""
  */
 public class ScriptImpl implements Comparable, Script {
@@ -65,7 +65,7 @@ public class ScriptImpl implements Comparable, Script {
      * CHANGE IN FUTURE RELEASES WITHOUT ANY ADVANCE NOTICE. USE OF THIS FEATURE
      * IS NEITHER SUPPORTED NOR GENERALLY ENDORSED.</em></strong>
      */
-    private static final String RESTRICTED_METHODS_PROPERTY = "org.apache.sling.core.script.restricted_methods";
+    private static final String RESTRICTED_METHODS_PROPERTY = "org.apache.sling.script.restricted_methods";
 
     /**
      * Special globbing pattern to match all queries. This is the default
@@ -80,7 +80,7 @@ public class ScriptImpl implements Comparable, Script {
     /**
      * Name of the script to call to handle the request. This scriptName is the
      * scriptName of a 'page' which is got from the contentbus.
-     * 
+     *
      * @ocm.field jcrName="sling:name"
      */
     private String scriptName;
@@ -89,7 +89,7 @@ public class ScriptImpl implements Comparable, Script {
      * Type of the script named by m_name. If this information is missing the
      * type of the script is derived from the extension of the script
      * scriptName. This type identifier should not be treated case-sensitive !
-     * 
+     *
      * @ocm.field jcrName="sling:type"
      */
     private String type;
@@ -98,7 +98,7 @@ public class ScriptImpl implements Comparable, Script {
      * Globbing pattern for the page query. This pattern is matched against the
      * query part of a page ruquest to check whether this
      * <code>ScriptInfo</code> may be used to handle the request. *
-     * 
+     *
      * @ocm.field jcrName="sling:glob"
      */
     private String selectors;
@@ -120,7 +120,7 @@ public class ScriptImpl implements Comparable, Script {
      * This set is sorted such that the <code>toString</code> method returns
      * an ordered list of string values such that the {@link #compareTo} method
      * returns a deterministic ordering between two different methods fields.
-     * 
+     *
      * @ocm.collection jcrName="sling:methods"
      *                 elementClassName="java.lang.String"
      *                 collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl"
@@ -187,20 +187,20 @@ public class ScriptImpl implements Comparable, Script {
 
     /**
      * Get the script scriptName
-     * 
+     *
      * @return the script scriptName
      */
     public String getScriptName() {
-        return scriptName;
+        return this.scriptName;
     }
 
     /**
      * Get the type
-     * 
+     *
      * @return the type
      */
     public String getType() {
-        return type;
+        return this.type;
     }
 
     /**
@@ -216,14 +216,14 @@ public class ScriptImpl implements Comparable, Script {
      * <p>
      * If the methods list is <code>null</code> this method matches any method
      * scriptName given else the method must be in the accepted set.
-     * 
+     *
      * @param request The {@link DeliveryHttpServletRequest} containing the
      *            information needed to match this <code>ScriptInfo</code>.
      * @return true if the query matches against the globbing pattern
      */
     public boolean matches(ComponentRequest request) {
-        return matchMethod(request) && matchSelectors(request)
-            && matchExtensions(request) && matchParameters(request);
+        return this.matchMethod(request) && this.matchSelectors(request)
+            && this.matchExtensions(request) && this.matchParameters(request);
     }
 
     // ---------- Comparable interface -----------------------------------------
@@ -294,7 +294,7 @@ public class ScriptImpl implements Comparable, Script {
      * <p>
      * This implementation is consistent with equals as it always returns 0 if
      * the other object equals this.
-     * 
+     *
      * @param o the Object to be compared.
      * @return a negative integer, zero, or a positive integer as this object is
      *         less than, equal to, or greater than the specified object.
@@ -304,7 +304,7 @@ public class ScriptImpl implements Comparable, Script {
     public int compareTo(Object o) {
 
         // check for equality and null
-        if (equals(o)) {
+        if (this.equals(o)) {
             return 0;
         } else if (o == null) {
             throw new ClassCastException("Cannot compare to null");
@@ -317,47 +317,47 @@ public class ScriptImpl implements Comparable, Script {
         }
 
         // if o's class is not a ScriptImpl (not even an extension !)
-        if (getClass() != o.getClass()) {
+        if (this.getClass() != o.getClass()) {
             log.debug("compareTo: Comparing String representation of two"
                 + "different implementations");
-            return toString().compareTo(o.toString());
+            return this.toString().compareTo(o.toString());
         }
 
         // cast to the correct class for further comparisons
         ScriptImpl other = (ScriptImpl) o;
 
         // check for width ordering
-        if (width > other.width) {
+        if (this.width > other.width) {
             // this < o
             return -1;
-        } else if (width < other.width) {
+        } else if (this.width < other.width) {
             // this > o
             return 1;
         }
         // invariant : width are equal
 
         // check for trailing stars
-        if (trailingStars < other.trailingStars) {
+        if (this.trailingStars < other.trailingStars) {
             // this < o
             return -1;
-        } else if (trailingStars > other.trailingStars) {
+        } else if (this.trailingStars > other.trailingStars) {
             // this > o
             return 1;
         }
         // invariant: width and trailingStars are equal
 
         // check for total number of stars
-        if (numStars < other.numStars) {
+        if (this.numStars < other.numStars) {
             // this < o
             return -1;
-        } else if (numStars > other.numStars) {
+        } else if (this.numStars > other.numStars) {
             // this > o
             return 1;
         }
         // invariant : width, trailingStars, and numStars are equal
 
         // compare glob patterns for lexical ordering
-        int globComp = selectors.compareTo(other.selectors);
+        int globComp = this.selectors.compareTo(other.selectors);
         if (globComp != 0) {
             // string order of glob pattern
             return globComp;
@@ -369,7 +369,7 @@ public class ScriptImpl implements Comparable, Script {
             // this < o
             // this.methods != null - because of !equals(other)
             return -1;
-        } else if (methods == null) {
+        } else if (this.methods == null) {
             // this > o
             // other.methods != null - because of !equals(other)
             return 1;
@@ -378,7 +378,7 @@ public class ScriptImpl implements Comparable, Script {
         // and methods are not empty
 
         // check method intersection - only to warn, no ordering influence
-        Set s = new HashSet(methods);
+        Set s = new HashSet(this.methods);
         if (s.retainAll(other.methods)) {
             // leave all in s which are not in other.methods
             // true if some were removed, thus intersection non-empty
@@ -388,7 +388,7 @@ public class ScriptImpl implements Comparable, Script {
         }
 
         // return alphabetical order of toString
-        return methods.toString().compareTo(other.methods.toString());
+        return this.methods.toString().compareTo(other.methods.toString());
     }
 
     // ---------- Object Overwrites -------------------------------------------
@@ -399,8 +399,8 @@ public class ScriptImpl implements Comparable, Script {
      */
     public int hashCode() {
         // methods might be null if all methods apply
-        int methodsHash = (methods == null) ? 0 : methods.hashCode();
-        return 37 * selectors.hashCode() + methodsHash;
+        int methodsHash = (this.methods == null) ? 0 : this.methods.hashCode();
+        return 37 * this.selectors.hashCode() + methodsHash;
     }
 
     /**
@@ -409,7 +409,7 @@ public class ScriptImpl implements Comparable, Script {
      * <code>obj == this</code>) or if both are <code>ScriptImpl</code>
      * objects and the glob pattern and the method sets of both objects are
      * equal.
-     * 
+     *
      * @param obj The <code>Object</code> to compare this object to.
      * @return <code>true</code> if this object is equal to the other object.
      */
@@ -422,11 +422,11 @@ public class ScriptImpl implements Comparable, Script {
             ScriptImpl sii = (ScriptImpl) obj;
 
             // methods may be null if all methods apply
-            boolean methodsEqual = (methods == null)
+            boolean methodsEqual = (this.methods == null)
                     ? sii.methods == null
-                    : methods.equals(sii.methods);
+                    : this.methods.equals(sii.methods);
 
-            return methodsEqual && selectors.equals(sii.selectors);
+            return methodsEqual && this.selectors.equals(sii.selectors);
         } else {
             return false;
         }
@@ -434,28 +434,28 @@ public class ScriptImpl implements Comparable, Script {
 
     /**
      * Returns a string representation of the ScriptInfo object
-     * 
+     *
      * @return a string representation of the ScriptInfo object
      */
     public String toString() {
-        if (stringValue == null) {
+        if (this.stringValue == null) {
             StringBuffer buf = new StringBuffer("ScriptInfo: glob=");
-            buf.append(selectors);
+            buf.append(this.selectors);
             buf.append(", methods=");
-            buf.append(methods);
+            buf.append(this.methods);
             buf.append(", scriptName=");
-            buf.append(scriptName);
+            buf.append(this.scriptName);
             buf.append(", type=");
-            buf.append(type);
+            buf.append(this.type);
 
-            buf.append(", width=").append(width);
-            buf.append(", trailingStars=").append(trailingStars);
-            buf.append(", numStars=").append(numStars);
+            buf.append(", width=").append(this.width);
+            buf.append(", trailingStars=").append(this.trailingStars);
+            buf.append(", numStars=").append(this.numStars);
 
-            stringValue = buf.toString();
+            this.stringValue = buf.toString();
         }
 
-        return stringValue;
+        return this.stringValue;
     }
 
     // ---------- Object Mapping -----------------------------------------------
@@ -478,15 +478,15 @@ public class ScriptImpl implements Comparable, Script {
      * @return the methods
      */
     public List getMethods() {
-        if (DEFAULT_METHODS.equals(methods)) {
+        if (DEFAULT_METHODS.equals(this.methods)) {
             return Collections.EMPTY_LIST;
         }
 
-        if (methods == null) {
+        if (this.methods == null) {
             return Arrays.asList(new Object[] { MATCH_ALL });
         }
 
-        return new ArrayList(methods);
+        return new ArrayList(this.methods);
     }
 
     /**
@@ -497,9 +497,9 @@ public class ScriptImpl implements Comparable, Script {
     }
 
     public List getExtensions() {
-        return (extensions == null)
+        return (this.extensions == null)
                 ? Collections.EMPTY_LIST
-                : Arrays.asList(extensions);
+                : Arrays.asList(this.extensions);
     }
 
     public void setExtensions(List extensions) {
@@ -518,7 +518,7 @@ public class ScriptImpl implements Comparable, Script {
      * @return the selectors
      */
     public String getSelectors() {
-        return selectors;
+        return this.selectors;
     }
 
     /**
@@ -534,30 +534,30 @@ public class ScriptImpl implements Comparable, Script {
 
         // if this is a match all glob, set defaults and return
         if (MATCH_ALL.equals(selectors)) {
-            globParts = null;
-            width = 0;
-            trailingStars = 1;
-            numStars = 1;
+            this.globParts = null;
+            this.width = 0;
+            this.trailingStars = 1;
+            this.numStars = 1;
             return;
         }
 
         // otherwise split and configure
-        width = 0;
-        trailingStars = 0;
-        numStars = 0;
+        this.width = 0;
+        this.trailingStars = 0;
+        this.numStars = 0;
         StringTokenizer tokener = new StringTokenizer(selectors, ".");
         List parts = new ArrayList();
         while (tokener.hasMoreTokens()) {
             String part = tokener.nextToken().trim();
             parts.add(part);
             if (MATCH_ALL.equals(part)) {
-                numStars++;
-                trailingStars++;
+                this.numStars++;
+                this.trailingStars++;
             } else {
-                trailingStars = 0;
+                this.trailingStars = 0;
             }
         }
-        globParts = (String[]) parts.toArray(new String[parts.size()]);
+        this.globParts = (String[]) parts.toArray(new String[parts.size()]);
     }
 
     /**
@@ -565,8 +565,8 @@ public class ScriptImpl implements Comparable, Script {
      */
     public List getParameters() {
         List result = new ArrayList();
-        for (int i = 0; parameters != null && i < parameters.length; i++) {
-            result.add(parameters[i].toString());
+        for (int i = 0; this.parameters != null && i < this.parameters.length; i++) {
+            result.add(this.parameters[i].toString());
         }
         return result;
     }
@@ -610,7 +610,7 @@ public class ScriptImpl implements Comparable, Script {
      * <em>GET</em> and the <em>POST</em> method only. If the list is the
      * empty string, an empty set is returned indicating, that no method names
      * will ever match.
-     * 
+     *
      * @param methodNames The list of method names as specified.
      * @return The method scriptName set, which may be <code>null</code> if
      *         all method names should be matched.
@@ -641,7 +641,7 @@ public class ScriptImpl implements Comparable, Script {
     // TODO
     private boolean matchExtensions(ComponentRequest request) {
         // match if there is no restriction
-        if (extensions == null) {
+        if (this.extensions == null) {
             return true;
         }
 
@@ -653,8 +653,8 @@ public class ScriptImpl implements Comparable, Script {
 
         // otherwise walk the list to compare the request extension
         ext = ext.toLowerCase();
-        for (int i = 0; i < extensions.length; i++) {
-            if (extensions[i].equals(ext)) {
+        for (int i = 0; i < this.extensions.length; i++) {
+            if (this.extensions[i].equals(ext)) {
                 return true;
             }
         }
@@ -672,13 +672,13 @@ public class ScriptImpl implements Comparable, Script {
      * parts and each part is of the selector string matches the respective part
      * of the globbing pattern.
      * </ol>
-     * 
+     *
      * @param request TODO
      * @return true if the selector string matches against the globbing pattern
      */
     private boolean matchSelectors(ComponentRequest request) {
         // if match all, we match regardless of query !
-        if (globParts == null) {
+        if (this.globParts == null) {
             return true;
         }
 
@@ -689,14 +689,14 @@ public class ScriptImpl implements Comparable, Script {
         }
 
         // Match at least the number of parts in the globbing !
-        if (selectors.length < globParts.length) return false;
+        if (selectors.length < this.globParts.length) return false;
 
         // match the glob parts against the selectors, fail if any does not
         // match
-        for (int i = 0; i < globParts.length; i++) {
+        for (int i = 0; i < this.globParts.length; i++) {
             // TODO: Decided whether to use globbings or regular expressions !
             // simple workaround:
-            if (!globParts[i].equals("*") && !globParts[i].equals(selectors[i])) {
+            if (!this.globParts[i].equals("*") && !this.globParts[i].equals(selectors[i])) {
                 return false;
             }
         }
@@ -711,7 +711,7 @@ public class ScriptImpl implements Comparable, Script {
      * names is <code>null</code>.
      * <p>
      * The scriptName match is handled case insensitive.
-     * 
+     *
      * @param method The scriptName of the method to match in the set of
      *            accepted method names.
      * @return <code>true</code> if either the set of accepted names is
@@ -719,7 +719,7 @@ public class ScriptImpl implements Comparable, Script {
      */
     private boolean matchMethod(ComponentRequest request) {
         // no methods to compare
-        if (methods == null) {
+        if (this.methods == null) {
             return true;
         }
 
@@ -731,17 +731,17 @@ public class ScriptImpl implements Comparable, Script {
         }
 
         // check whether the set contains the method
-        return methods.contains(method.toUpperCase());
+        return this.methods.contains(method.toUpperCase());
     }
 
     // TODO
     private boolean matchParameters(ComponentRequest request) {
-        if (parameters == null) {
+        if (this.parameters == null) {
             return true;
         }
 
-        OUTER_LOOP: for (int i = 0; i < parameters.length; i++) {
-            Parameter par = parameters[i];
+        OUTER_LOOP: for (int i = 0; i < this.parameters.length; i++) {
+            Parameter par = this.parameters[i];
             String[] reqPars = request.getParameterValues(par.getName());
 
             if (!par.matches(reqPars)) {
@@ -768,43 +768,43 @@ public class ScriptImpl implements Comparable, Script {
         Parameter(String config) {
             config = config.trim();
             if (config.startsWith("!")) {
-                negate = true;
+                this.negate = true;
                 config = config.substring(1);
             } else {
-                negate = false;
+                this.negate = false;
             }
 
             int eq = config.indexOf('=');
             if (eq < 0) {
-                name = config;
-                exactString = null;
-                regex = null;
+                this.name = config;
+                this.exactString = null;
+                this.regex = null;
 
             } else {
-                name = config.substring(0, eq).trim();
+                this.name = config.substring(0, eq).trim();
                 config = config.substring(eq + 1).trim();
                 if (config.startsWith("/")) {
                     config = config.substring(1);
                     if (config.endsWith("/")) {
                         config = config.substring(0, config.length() - 1);
                     }
-                    exactString = null;
-                    regex = Pattern.compile(config);
+                    this.exactString = null;
+                    this.regex = Pattern.compile(config);
                 } else {
-                    exactString = config;
-                    regex = null;
+                    this.exactString = config;
+                    this.regex = null;
                 }
             }
         }
 
         String getName() {
-            return name;
+            return this.name;
         }
 
         boolean matches(String[] values) {
             // presence check only
-            if (exactString == null && regex == null) {
-                return negate ^ (values == null || values.length == 0);
+            if (this.exactString == null && this.regex == null) {
+                return this.negate ^ (values == null || values.length == 0);
             }
 
             // value check without values fails
@@ -814,9 +814,9 @@ public class ScriptImpl implements Comparable, Script {
             }
 
             // compare parameter values, succeed on first match
-            if (exactString != null) {
+            if (this.exactString != null) {
                 for (int i = 0; i < values.length; i++) {
-                    if (negate ^ exactString.equals(values[i])) {
+                    if (this.negate ^ this.exactString.equals(values[i])) {
                         return true;
                     }
                 }
@@ -827,7 +827,7 @@ public class ScriptImpl implements Comparable, Script {
 
             // regex is not be null here, succeed on first match
             for (int i = 0; i < values.length; i++) {
-                if (negate ^ regex.matcher(values[i]).matches()) {
+                if (this.negate ^ this.regex.matcher(values[i]).matches()) {
                     return true;
                 }
             }
@@ -838,12 +838,12 @@ public class ScriptImpl implements Comparable, Script {
 
         public String toString() {
             StringBuffer buf = new StringBuffer();
-            if (negate) buf.append('!');
-            buf.append(name);
-            if (exactString != null) {
-                buf.append('=').append(exactString);
-            } else if (regex != null) {
-                buf.append("=/").append(regex.pattern()).append('/');
+            if (this.negate) buf.append('!');
+            buf.append(this.name);
+            if (this.exactString != null) {
+                buf.append('=').append(this.exactString);
+            } else if (this.regex != null) {
+                buf.append("=/").append(this.regex.pattern()).append('/');
             }
             return buf.toString();
         }

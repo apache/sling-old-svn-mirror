@@ -33,7 +33,7 @@ import org.apache.sling.component.Content;
  * @scr.property name="service.description"
  *          value="Default Error Handler Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.core.component.Component"
+ * @scr.service interface="org.apache.sling.component.Component"
  */
 public class DefaultErrorHandlerComponent extends BaseComponent implements
         ErrorHandlerComponent {
