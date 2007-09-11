@@ -1,16 +1,17 @@
 /*
- * $Url: $
- * $Id: $
+ * Copyright 2007 The Apache Software Foundation.
  *
- * Copyright 1997-2005 Day Management AG
- * Barfuesserplatz 6, 4001 Basel, Switzerland
- * All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This software is the confidential and proprietary information of
- * Day Management AG, ("Confidential Information"). You shall not
- * disclose such Confidential Information and shall use it only in
- * accordance with the terms of the license agreement you entered into
- * with Day.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.sling.mime.internal;
 
@@ -35,7 +36,7 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>MimeTypeServiceImpl</code> TODO
- * 
+ *
  * @scr.component immediate="false" metatype="false"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
@@ -61,7 +62,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.mime.MimeTypeService#getMimeType(java.lang.String)
      */
     public String getMimeType(String name) {
@@ -72,9 +73,9 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         String ext = name.substring(name.lastIndexOf('.') + 1);
         ext = ext.toLowerCase();
 
-        String type = mimeTab.get(ext);
+        String type = this.mimeTab.get(ext);
         if (type == null) {
-            MimeTypeProvider[] mtp = getMimeTypeProviders();
+            MimeTypeProvider[] mtp = this.getMimeTypeProviders();
             for (int i = 0; type == null && i < mtp.length; i++) {
                 type = mtp[i].getMimeType(ext);
             }
@@ -85,7 +86,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.mime.MimeTypeService#getExtension(java.lang.String)
      */
     public String getExtension(String mimeType) {
@@ -95,10 +96,10 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
         // compare using lowercase only
         mimeType = mimeType.toLowerCase();
-        
-        String ext = extensionMap.get(mimeType);
+
+        String ext = this.extensionMap.get(mimeType);
         if (ext == null) {
-            MimeTypeProvider[] mtp = getMimeTypeProviders();
+            MimeTypeProvider[] mtp = this.getMimeTypeProviders();
             for (int i = 0; ext == null && i < mtp.length; i++) {
                 ext = mtp[i].getExtension(mimeType);
             }
@@ -113,13 +114,13 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         }
 
         mimeType = mimeType.toLowerCase();
-        
+
         String defaultExtension = null;
         for (int i = 0; i < extensions.length; i++) {
             if (extensions[i] != null && extensions[i].length() > 0) {
                 extensions[i] = extensions[i].toLowerCase();
-                
-                mimeTab.put(extensions[i], mimeType);
+
+                this.mimeTab.put(extensions[i], mimeType);
 
                 if (defaultExtension == null) {
                     defaultExtension = extensions[i];
@@ -128,7 +129,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         }
 
         if (defaultExtension != null) {
-            extensionMap.put(mimeType, defaultExtension);
+            this.extensionMap.put(mimeType, defaultExtension);
         }
     }
 
@@ -148,7 +149,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
             if (parts.length > 1) {
                 String[] extensions = new String[parts.length - 1];
                 System.arraycopy(parts, 1, extensions, 0, extensions.length);
-                registerMimeType(parts[0], extensions);
+                this.registerMimeType(parts[0], extensions);
             }
         }
     }
@@ -156,12 +157,12 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     // ---------- internal -----------------------------------------------------
 
     private MimeTypeProvider[] getMimeTypeProviders() {
-        MimeTypeProvider[] list = typeProviders;
+        MimeTypeProvider[] list = this.typeProviders;
 
         if (list == null) {
-            synchronized (typeProviderList) {
-                typeProviders = typeProviderList.toArray(new MimeTypeProvider[typeProviderList.size()]);
-                list = typeProviders;
+            synchronized (this.typeProviderList) {
+                this.typeProviders = this.typeProviderList.toArray(new MimeTypeProvider[this.typeProviderList.size()]);
+                list = this.typeProviders;
             }
         }
 
@@ -174,10 +175,10 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
             InputStream ins = null;
             try {
                 ins = mimes.openStream();
-                registerMimeType(ins);
+                this.registerMimeType(ins);
             } catch (IOException ioe) {
                 // log but don't actually care
-                log(LogService.LOG_WARNING, "An error occurred reading "
+                this.log(LogService.LOG_WARNING, "An error occurred reading "
                     + mimes, ioe);
             } finally {
                 if (ins != null) {
@@ -192,7 +193,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     }
 
     private void log(int level, String message, Throwable t) {
-        LogService log = logService;
+        LogService log = this.logService;
         if (log != null) {
             log.log(level, message, t);
         } else {
@@ -216,7 +217,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         for (int i = 0; i < bundles.length; i++) {
             if ((bundles[i].getState() & (Bundle.RESOLVED | Bundle.STARTING
                 | Bundle.ACTIVE | Bundle.STOPPING)) != 0) {
-                handleBundle(bundles[i]);
+                this.handleBundle(bundles[i]);
             }
         }
     }
@@ -226,16 +227,16 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     }
 
     protected void bindMimeTypeProvider(MimeTypeProvider mimeTypeProvider) {
-        synchronized (typeProviderList) {
-            typeProviderList.add(mimeTypeProvider);
-            typeProviders = null;
+        synchronized (this.typeProviderList) {
+            this.typeProviderList.add(mimeTypeProvider);
+            this.typeProviders = null;
         }
     }
 
     protected void unbindMimeTypeProvider(MimeTypeProvider mimeTypeProvider) {
-        synchronized (typeProviderList) {
-            typeProviderList.remove(mimeTypeProvider);
-            typeProviders = null;
+        synchronized (this.typeProviderList) {
+            this.typeProviderList.remove(mimeTypeProvider);
+            this.typeProviders = null;
         }
     }
 
@@ -243,7 +244,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.RESOLVED) {
-            handleBundle(event.getBundle());
+            this.handleBundle(event.getBundle());
         }
     }
 }

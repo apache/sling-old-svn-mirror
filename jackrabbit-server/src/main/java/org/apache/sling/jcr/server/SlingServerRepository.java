@@ -70,7 +70,7 @@ public class SlingServerRepository extends AbstractSlingRepository
     /**
      * The name of the configuration property defining the URL to the
      * repository configuration file (value is
-     * "com.day.sling.repository.config").
+     * "config").
      * <p>
      * If the configuration file is located in the local file system, the
      * "file:" scheme must still be specified.
