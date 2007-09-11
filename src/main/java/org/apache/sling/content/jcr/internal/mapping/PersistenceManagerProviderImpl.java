@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -49,46 +49,46 @@ import org.xmlpull.v1.XmlPullParserException;
 public class PersistenceManagerProviderImpl {
 
     public static final String MAPPER_BUNDLE_HEADER = "Day-Mappings";
-    
+
     /** default log */
     private static final Logger log =
         LoggerFactory.getLogger(PersistenceManagerProviderImpl.class);
-    
+
     private JcrContentHelper jcrContentHelper;
     private MapperClassLoader mapperClassLoader;
 
     private BundleMapper mapper;
     private ClassDescriptorReader descriptorReader;
     private AtomicTypeConverterProvider converterProvider;
-    private Map adminSessions;
-    
+    private Map<String, Session> adminSessions;
+
     // issued persistence managers indexed by session
-    private Map managers;
+    private Map<Session, JcrContentManager> managers;
     private final Object managersLock = new Object();
-    
+
     private Thread reaper;
-    
+
     public PersistenceManagerProviderImpl(JcrContentHelper jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
 
         // prepare the data converters and query manager
-        converterProvider = new MapperAtomicTypeConverterProvider();
+        this.converterProvider = new MapperAtomicTypeConverterProvider();
 
-        managers = new IdentityHashMap();
+        this.managers = new IdentityHashMap<Session, JcrContentManager>();
 
-        reaper = new Thread("PersistenceManager Reaper") {
+        this.reaper = new Thread("PersistenceManager Reaper") {
             public void run() {
-                while (reaper != null) {
+                while (PersistenceManagerProviderImpl.this.reaper != null) {
                     try {
                         Thread.sleep(60*1000L);
                     } catch (InterruptedException ie) {
                         // don't care
                     }
-                    
-                    synchronized (managersLock) {
-                        if (managers != null) {
-                            for (Iterator mi=managers.keySet().iterator(); mi.hasNext(); ) {
-                                Session session = (Session) mi.next();
+
+                    synchronized (PersistenceManagerProviderImpl.this.managersLock) {
+                        if (PersistenceManagerProviderImpl.this.managers != null) {
+                            for (Iterator<Session> mi=PersistenceManagerProviderImpl.this.managers.keySet().iterator(); mi.hasNext(); ) {
+                                Session session = mi.next();
                                 if (!session.isLive()) {
                                     mi.remove();
                                 }
@@ -98,64 +98,64 @@ public class PersistenceManagerProviderImpl {
                 }
             }
         };
-        
-        adminSessions = new HashMap();
+
+        this.adminSessions = new HashMap<String, Session>();
     }
 
     public synchronized void dispose() {
-        synchronized (managersLock) {
-            if (managers != null) {
-                managers.clear();
-                managers = null;
+        synchronized (this.managersLock) {
+            if (this.managers != null) {
+                this.managers.clear();
+                this.managers = null;
             }
         }
-        
-        if (reaper != null) {
-            Thread thread = reaper;
-            reaper = null;
+
+        if (this.reaper != null) {
+            Thread thread = this.reaper;
+            this.reaper = null;
             thread.interrupt();
         }
-        
-        if (mapperClassLoader != null) {
-            mapperClassLoader.dispose();
-            mapperClassLoader = null;
+
+        if (this.mapperClassLoader != null) {
+            this.mapperClassLoader.dispose();
+            this.mapperClassLoader = null;
         }
-        
-        if (adminSessions != null) {
-            Object[] sessions = adminSessions.values().toArray();
-            adminSessions = null;
+
+        if (this.adminSessions != null) {
+            Object[] sessions = this.adminSessions.values().toArray();
+            this.adminSessions = null;
             for (int i=0; i < sessions.length; i++) {
                 ((Session) sessions[i]).logout();
             }
         }
     }
-    
+
     /**
      * @throws IllegalStateException If this provider is not operational
      */
     public JcrContentManager getContentManager(Session session) {
-        if (managers == null) {
+        if (this.managers == null) {
             throw new IllegalStateException("Already disposed");
         }
-        
-        synchronized (managersLock) {
-            JcrContentManager pm = (JcrContentManager) managers.get(session);
-    
+
+        synchronized (this.managersLock) {
+            JcrContentManager pm = this.managers.get(session);
+
             // create if not existing yet
             if (pm == null) {
                 // ensure namespace mapping for graffito:
-                if (ensureNamespaces(session)) {
+                if (this.ensureNamespaces(session)) {
                     try {
-                        pm = new ContentManagerImpl(this, mapper, converterProvider,
+                        pm = new ContentManagerImpl(this, this.mapper, this.converterProvider,
                             session);
-                        managers.put(session, pm);
+                        this.managers.put(session, pm);
                     } catch (RepositoryException re) {
                         // TODO: do better than that !!
                         throw new org.apache.jackrabbit.ocm.exception.RepositoryException(re);
                     }
                 }
             }
-            
+
             return pm;
         }
     }
@@ -164,8 +164,8 @@ public class PersistenceManagerProviderImpl {
         NamespaceRegistry nsr;
         try {
             nsr = session.getWorkspace().getNamespaceRegistry();
-            ensureNamespace(nsr, Constants.GRAFFITO_NS_PREFIX, Constants.GRAFFITO_NS_URI);
-            ensureNamespace(nsr, Constants.SLING_NS_PREFIX, Constants.SLING_NS_URI);
+            this.ensureNamespace(nsr, Constants.GRAFFITO_NS_PREFIX, Constants.GRAFFITO_NS_URI);
+            this.ensureNamespace(nsr, Constants.SLING_NS_PREFIX, Constants.SLING_NS_URI);
             return true;
         } catch (RepositoryException re) {
             // TODO: log general error, fail
@@ -184,42 +184,42 @@ public class PersistenceManagerProviderImpl {
             // TODO: log No such name space, create
             log.info("Namespace {} does not seem to exist, creating", prefix);
         }
-        
+
         nsr.registerNamespace(prefix, uri);
     }
-    
+
     private ClassDescriptorReader getDescriptorReader() {
-        if (descriptorReader == null) {
+        if (this.descriptorReader == null) {
             ClassDescriptorReader ddr = new ClassDescriptorReader();
 //            ddr.setResolver(null /* TODO resolve URL : graffito-jcr-mapping.dtd */);
 //            ddr.setValidating(false);
-            descriptorReader = ddr;
+            this.descriptorReader = ddr;
         } else {
-            descriptorReader.reset();
+            this.descriptorReader.reset();
         }
-        
-        return descriptorReader;
+
+        return this.descriptorReader;
     }
 
     boolean itemReallyExists(Session clientSession, String path)
             throws RepositoryException {
-        
+
         Session adminSession;
-        synchronized (adminSessions) {
+        synchronized (this.adminSessions) {
             String workSpace = clientSession.getWorkspace().getName();
-            adminSession = (Session) adminSessions.get(workSpace);
+            adminSession = this.adminSessions.get(workSpace);
             if (adminSession == null) {
-                adminSession = jcrContentHelper.getRepository().loginAdministrative(workSpace);
-                adminSessions.put(workSpace, adminSession);
+                adminSession = this.jcrContentHelper.getRepository().loginAdministrative(workSpace);
+                this.adminSessions.put(workSpace, adminSession);
             }
         }
-        
+
         // assume this session has more access rights than the client Session
         return adminSession.itemExists(path);
     }
-    
+
     //---------- Bundle registration and unregistration -----------------------
-    
+
     /**
      * Loads the components of the given bundle. If the bundle has no
      * <i>Service-Component</i> header, this method has no effect. The
@@ -230,55 +230,55 @@ public class PersistenceManagerProviderImpl {
      * found, this method does not load components for the bundle.
      */
     public void registerMapperClient(Bundle bundle) {
-        addBundle(bundle);
+        this.addBundle(bundle);
     }
 
     public void unregisterMapperClient(Bundle bundle) {
-        removeBundle(bundle);
+        this.removeBundle(bundle);
     }
-    
+
     // TODO: New Implementation --------------------------------------
-    
-    private List bundles = new ArrayList();
-    
+
+    private List<Bundle> bundles = new ArrayList<Bundle>();
+
     private synchronized void addBundle(Bundle bundle) {
         // ignore bundle without mappings
         if (bundle.getHeaders().get(MAPPER_BUNDLE_HEADER) == null) {
             return;
         }
 
-        if (bundles.contains(bundle)) {
+        if (this.bundles.contains(bundle)) {
             // ignore existing bundle
             return;
         }
-        
-        bundles.add(bundle);
-        
-        loadMappings();
-        
+
+        this.bundles.add(bundle);
+
+        this.loadMappings();
+
         // fire mapping event
-        fireMappingEvent(bundle, Constants.EVENT_MAPPING_ADDED);
+        this.fireMappingEvent(bundle, Constants.EVENT_MAPPING_ADDED);
     }
-    
+
     private synchronized void removeBundle(Bundle bundle) {
-        if (!bundles.remove(bundle)) {
+        if (!this.bundles.remove(bundle)) {
             // bundle not known
             return;
         }
-        
-        loadMappings();
+
+        this.loadMappings();
 
         // fire mapping event
-        fireMappingEvent(bundle, Constants.EVENT_MAPPING_REMOVED);
+        this.fireMappingEvent(bundle, Constants.EVENT_MAPPING_REMOVED);
     }
-    
+
     private void loadMappings() {
         MapperClassLoader newMapperClassLoader = new MapperClassLoader();
         ReflectionUtils.setClassLoader(newMapperClassLoader);
-        
-        ArrayList urlList = new ArrayList();
-        for (Iterator bi=bundles.iterator(); bi.hasNext(); ) {
-            Bundle bundle = (Bundle) bi.next();
+
+        ArrayList<URL> urlList = new ArrayList<URL>();
+        for (Iterator<Bundle> bi=this.bundles.iterator(); bi.hasNext(); ) {
+            Bundle bundle = bi.next();
 
             String mapperHeader = (String) bundle.getHeaders().get(MAPPER_BUNDLE_HEADER);
             if (mapperHeader == null) {
@@ -289,7 +289,7 @@ public class PersistenceManagerProviderImpl {
             }
 
             newMapperClassLoader.registerBundle(bundle);
-            
+
             StringTokenizer tokener = new StringTokenizer(mapperHeader, ",");
             while (tokener.hasMoreTokens()) {
                 String mapping = tokener.nextToken().trim();
@@ -301,7 +301,7 @@ public class PersistenceManagerProviderImpl {
                 }
             }
         }
-        
+
         // nothing to do if there are not streams
         if (urlList.isEmpty()) {
             return;
@@ -309,7 +309,7 @@ public class PersistenceManagerProviderImpl {
 
         MappingDescriptor md;
         try {
-            ClassDescriptorReader cdr = getDescriptorReader();
+            ClassDescriptorReader cdr = this.getDescriptorReader();
             cdr.parse(urlList);
             md = cdr.getMappingDescriptor();
         } catch (XmlPullParserException xppe) {
@@ -319,29 +319,29 @@ public class PersistenceManagerProviderImpl {
             log.error("Failed reading descriptors", ioe);
             return;
         }
-        
+
         BundleMapper newMapper = new BundleMapper(md);
 
-        synchronized (managersLock) {
+        synchronized (this.managersLock) {
             // dispose off old class loader before using new loader
-            if (mapperClassLoader != null) {
-                mapperClassLoader.dispose();
+            if (this.mapperClassLoader != null) {
+                this.mapperClassLoader.dispose();
             }
-            
-            mapperClassLoader = newMapperClassLoader;
-            mapper = newMapper;
-            
-            managers.clear();
+
+            this.mapperClassLoader = newMapperClassLoader;
+            this.mapper = newMapper;
+
+            this.managers.clear();
         }
     }
-    
+
     private void fireMappingEvent(Bundle sourceBundle, String eventName) {
-        if (mapper != null) {
+        if (this.mapper != null) {
             // only fire, if there is a (new) mapper
             Map<String, Object> props = new HashMap<String, Object>();
-            props.put(Constants.MAPPING_CLASS, mapper.getMappedClasses());
-            props.put(Constants.MAPPING_NODE_TYPE, mapper.getMappedNodeTypes());
-            jcrContentHelper.fireEvent(sourceBundle, eventName, props);
+            props.put(Constants.MAPPING_CLASS, this.mapper.getMappedClasses());
+            props.put(Constants.MAPPING_NODE_TYPE, this.mapper.getMappedNodeTypes());
+            this.jcrContentHelper.fireEvent(sourceBundle, eventName, props);
         }
     }
 }
