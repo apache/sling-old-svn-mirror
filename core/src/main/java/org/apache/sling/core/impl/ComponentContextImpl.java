@@ -102,7 +102,7 @@ public class ComponentContextImpl implements ComponentContext {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentContext#getRequestDispatcher(org.apache.sling.component.Content)
+     * @see org.apache.sling.core.component.ComponentContext#getRequestDispatcher(org.apache.sling.core.component.Content)
      */
     public ComponentRequestDispatcher getRequestDispatcher(Content content) {
         // return no dispatcher if content is null
@@ -240,7 +240,7 @@ public class ComponentContextImpl implements ComponentContext {
         }
 
         /**
-         * @see org.apache.sling.component.ComponentRequestDispatcher#include(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
+         * @see org.apache.sling.core.component.ComponentRequestDispatcher#include(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
          */
         public void include(ComponentRequest request, ComponentResponse response)
                 throws ComponentException, IOException {

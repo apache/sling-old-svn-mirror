@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.sling.RequestLog;
+import org.apache.sling.core.RequestLog;
 
 /**
  * The <code>FileRequestLog</code> class is an implementation of the
@@ -95,15 +95,15 @@ class FileRequestLog implements RequestLog {
         fileName = file.getAbsolutePath();
 
         synchronized (logFiles) {
-            output = (PrintWriter) logFiles.get(fileName);
-            if (output == null) {
+            this.output = (PrintWriter) logFiles.get(fileName);
+            if (this.output == null) {
 
                 // ensure location of the log file
                 file.getParentFile().mkdirs();
 
                 FileWriter fw = new FileWriter(file, true);
-                output = new PrintWriter(fw);
-                logFiles.put(fileName, output);
+                this.output = new PrintWriter(fw);
+                logFiles.put(fileName, this.output);
             }
         }
     }
@@ -111,13 +111,13 @@ class FileRequestLog implements RequestLog {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.core.impl.log.RequestLogSink#log(java.lang.String)
+     * @see org.apache.sling.core.core.impl.log.RequestLogSink#log(java.lang.String)
      */
     public void write(String message) {
         // use a local copy of the reference to not encounter NPE when this
         // log happens to be closed asynchronously while at the same time not
         // requiring synchronization
-        PrintWriter writer = output;
+        PrintWriter writer = this.output;
         if (writer != null) {
             synchronized (writer) {
                 writer.println(message);
@@ -128,6 +128,6 @@ class FileRequestLog implements RequestLog {
 
     public void close() {
         // just drop the reference to the output
-        output = null;
+        this.output = null;
     }
 }

@@ -43,7 +43,7 @@ import org.osgi.framework.BundleContext;
  *               private="true"
  * @scr.service
  * @scr.reference name="RequestLoggerService"
- *                interface="org.apache.sling.core.impl.log.RequestLoggerService"
+ *                interface="org.apache.sling.core.core.impl.log.RequestLoggerService"
  *                cardinality="0..n" policy="dynamic"
  */
 public class RequestLoggerFilter implements ComponentFilter {

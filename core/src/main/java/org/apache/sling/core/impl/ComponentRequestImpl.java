@@ -40,7 +40,6 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpSession;
 
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
-import org.apache.sling.RequestUtil;
 import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
@@ -52,6 +51,7 @@ import org.apache.sling.content.ContentManager;
 import org.apache.sling.content.SelectableContent;
 import org.apache.sling.content.Selector;
 import org.apache.sling.content.jcr.JcrContentManager;
+import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 
 
@@ -204,14 +204,14 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getContent()
+     * @see org.apache.sling.core.component.ComponentRequest#getContent()
      */
     public Content getContent() {
         return this.getRequestData().getContentData().getContent();
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getContent(java.lang.String)
+     * @see org.apache.sling.core.component.ComponentRequest#getContent(java.lang.String)
      */
     public Content getContent(String path) throws ComponentException {
         if (!path.startsWith("/")) {
@@ -227,7 +227,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getRequestDispatcher(org.apache.sling.component.Content)
+     * @see org.apache.sling.core.component.ComponentRequest#getRequestDispatcher(org.apache.sling.core.component.Content)
      */
     public ComponentRequestDispatcher getRequestDispatcher(Content content) {
         ContentData cd = this.getRequestData().getContentData();
@@ -255,7 +255,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getChildren(org.apache.sling.component.Content)
+     * @see org.apache.sling.core.component.ComponentRequest#getChildren(org.apache.sling.core.component.Content)
      */
     public Enumeration getChildren(Content content) throws ComponentException {
         try {
@@ -356,28 +356,28 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getRequestParameter(java.lang.String)
+     * @see org.apache.sling.core.component.ComponentRequest#getRequestParameter(java.lang.String)
      */
     public RequestParameter getRequestParameter(String name) {
         return this.getParameterSupport().getRequestParameter(name);
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getRequestParameters(java.lang.String)
+     * @see org.apache.sling.core.component.ComponentRequest#getRequestParameters(java.lang.String)
      */
     public RequestParameter[] getRequestParameters(String name) {
         return this.getParameterSupport().getRequestParameters(name);
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getRequestParameterMap()
+     * @see org.apache.sling.core.component.ComponentRequest#getRequestParameterMap()
      */
     public Map getRequestParameterMap() {
         return this.getParameterSupport().getRequestParameterMap();
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getCookie(java.lang.String)
+     * @see org.apache.sling.core.component.ComponentRequest#getCookie(java.lang.String)
      */
     public Cookie getCookie(String name) {
         return RequestUtil.getCookie(this, name);
@@ -391,35 +391,35 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getSelectorString()
+     * @see org.apache.sling.core.component.ComponentRequest#getSelectorString()
      */
     public String getSelectorString() {
         return this.getRequestData().getSelectorString();
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getSelectors()
+     * @see org.apache.sling.core.component.ComponentRequest#getSelectors()
      */
     public String[] getSelectors() {
         return this.getRequestData().getSelectors();
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getSelector(int)
+     * @see org.apache.sling.core.component.ComponentRequest#getSelector(int)
      */
     public String getSelector(int i) {
         return this.getRequestData().getSelector(i);
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getExtension()
+     * @see org.apache.sling.core.component.ComponentRequest#getExtension()
      */
     public String getExtension() {
         return this.getRequestData().getExtension();
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getSuffix()
+     * @see org.apache.sling.core.component.ComponentRequest#getSuffix()
      */
     public String getSuffix() {
         return this.getRequestData().getSuffix();
@@ -472,7 +472,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getResourceBundle(java.util.Locale)
+     * @see org.apache.sling.core.component.ComponentRequest#getResourceBundle(java.util.Locale)
      */
     public ResourceBundle getResourceBundle(Locale locale) {
         // TODO should use our resource bundle !!
@@ -480,7 +480,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getResponseContentType()
+     * @see org.apache.sling.core.component.ComponentRequest#getResponseContentType()
      */
     public String getResponseContentType() {
         // TODO Auto-generated method stub
@@ -488,7 +488,7 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
     }
 
     /**
-     * @see org.apache.sling.component.ComponentRequest#getResponseContentTypes()
+     * @see org.apache.sling.core.component.ComponentRequest#getResponseContentTypes()
      */
     public Enumeration getResponseContentTypes() {
         // TODO Auto-generated method stub

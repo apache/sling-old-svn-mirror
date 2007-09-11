@@ -42,28 +42,28 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#get()
+     * @see org.apache.sling.core.component.RequestParameter#get()
      */
     public byte[] get() {
         return this.delegatee.get();
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getContentType()
+     * @see org.apache.sling.core.component.RequestParameter#getContentType()
      */
     public String getContentType() {
         return this.delegatee.getContentType();
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getInputStream()
+     * @see org.apache.sling.core.component.RequestParameter#getInputStream()
      */
     public InputStream getInputStream() throws IOException {
         return this.delegatee.getInputStream();
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getFileName()
+     * @see org.apache.sling.core.component.RequestParameter#getFileName()
      */
     public String getFileName() {
         if (this.encodedFileName == null && this.delegatee.getName() != null) {
@@ -83,14 +83,14 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getSize()
+     * @see org.apache.sling.core.component.RequestParameter#getSize()
      */
     public long getSize() {
         return this.delegatee.getSize();
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getString()
+     * @see org.apache.sling.core.component.RequestParameter#getString()
      */
     public String getString() {
         // only apply encoding in the case of a form field
@@ -115,14 +115,14 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getString(java.lang.String)
+     * @see org.apache.sling.core.component.RequestParameter#getString(java.lang.String)
      */
     public String getString(String enc) throws UnsupportedEncodingException {
         return this.delegatee.getString(enc);
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#isFormField()
+     * @see org.apache.sling.core.component.RequestParameter#isFormField()
      */
     public boolean isFormField() {
         return this.delegatee.isFormField();
