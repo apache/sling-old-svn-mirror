@@ -75,7 +75,7 @@ public class DistributingEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
      */
     protected void deactivate(ComponentContext context) {
         // stop background thread, by adding a job info to wake it up
@@ -90,7 +90,7 @@ public class DistributingEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
      */
     protected void cleanUpRepository() {
         // we create an own session for concurrency issues
@@ -193,7 +193,7 @@ public class DistributingEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#addEventProperties(Node, java.util.Dictionary)
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#addEventProperties(Node, java.util.Dictionary)
      */
     protected void addEventProperties(Node eventNode, Dictionary<String, Object> properties)
     throws RepositoryException {

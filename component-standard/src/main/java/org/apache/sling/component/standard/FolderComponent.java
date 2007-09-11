@@ -23,7 +23,7 @@ import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.Content;
-import org.apache.sling.components.BaseComponent;
+import org.apache.sling.core.components.BaseComponent;
 
 /**
  * The <code>FolderComponent</code> TODO
@@ -44,7 +44,7 @@ public class FolderComponent extends BaseComponent {
     }
 
     /**
-     * @see org.apache.sling.components.BaseComponent#createContentInstance()
+     * @see org.apache.sling.core.components.BaseComponent#createContentInstance()
      */
     public Content createContentInstance() {
         return new FolderContent();
@@ -54,7 +54,7 @@ public class FolderComponent extends BaseComponent {
     protected void doInit() {}
 
     /**
-     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
+     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException {

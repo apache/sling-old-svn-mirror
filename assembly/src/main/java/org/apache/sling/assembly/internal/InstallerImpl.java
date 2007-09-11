@@ -76,7 +76,7 @@ public class InstallerImpl implements Installer {
     }
 
     /**
-     * @see org.apache.sling.assembly.installer.Installer#addBundle(java.lang.String, java.io.InputStream, int)
+     * @see org.apache.sling.core.assembly.installer.Installer#addBundle(java.lang.String, java.io.InputStream, int)
      */
     public void addBundle(String location, InputStream source, int startLevel) {
         this.addBundleDescriptor(new LocalBundleDescriptor(location, source,
@@ -84,7 +84,7 @@ public class InstallerImpl implements Installer {
     }
 
     /**
-     * @see org.apache.sling.assembly.installer.Installer#addBundle(java.lang.String, org.apache.sling.assembly.installer.VersionRange, int)
+     * @see org.apache.sling.core.assembly.installer.Installer#addBundle(java.lang.String, org.apache.sling.core.assembly.installer.VersionRange, int)
      */
     public void addBundle(String symbolicName, VersionRange versionRange,
             int startLevel) {
@@ -93,7 +93,7 @@ public class InstallerImpl implements Installer {
     }
 
     /**
-     * @see org.apache.sling.assembly.installer.Installer#addTemporaryRepository(java.net.URL)
+     * @see org.apache.sling.core.assembly.installer.Installer#addTemporaryRepository(java.net.URL)
      */
     public void addTemporaryRepository(URL url) {
         if (this.repositoryURLs == null) {
@@ -104,7 +104,7 @@ public class InstallerImpl implements Installer {
     }
 
     /**
-     * @see org.apache.sling.assembly.installer.Installer#dispose()
+     * @see org.apache.sling.core.assembly.installer.Installer#dispose()
      */
     public void dispose() {
         if (this.lock != null) {
@@ -126,7 +126,7 @@ public class InstallerImpl implements Installer {
     }
 
     /**
-     * @see org.apache.sling.assembly.installer.Installer#install(boolean)
+     * @see org.apache.sling.core.assembly.installer.Installer#install(boolean)
      */
     public Bundle[] install(boolean start) throws InstallerException {
 
@@ -216,7 +216,7 @@ public class InstallerImpl implements Installer {
     }
 
     /**
-     * @see org.apache.sling.assembly.installer.Installer#setDefaultStartLevel(int)
+     * @see org.apache.sling.core.assembly.installer.Installer#setDefaultStartLevel(int)
      */
     public void setDefaultStartLevel(int startLevel) {
         // TODO Auto-generated method stub

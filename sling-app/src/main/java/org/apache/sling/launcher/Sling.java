@@ -108,7 +108,7 @@ public class Sling implements BundleActivator {
     /** Pseduo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
 
-    public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
+    public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.core.launcher.system.packages";
 
     /**
      * The name of the servlet context attribute containing the
@@ -117,7 +117,7 @@ public class Sling implements BundleActivator {
      * This context attribute must be used with utmost care ! It is not intended
      * for this value to be used in generall applications of the framework.
      */
-    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.framework";
+    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.core.framework";
 
     /**
      * The name of the servlet context attribute containing the
@@ -126,7 +126,7 @@ public class Sling implements BundleActivator {
      * This context attribute must be used with utmost care ! It is not intended
      * for this value to be used in generall applications of the framework.
      */
-    public static final String CONTEXT_ATTR_SLING_SYSTEM_BUNDLE_CONTEXT = "org.apache.sling.system.bundlecontext";
+    public static final String CONTEXT_ATTR_SLING_SYSTEM_BUNDLE_CONTEXT = "org.apache.sling.core.system.bundlecontext";
 
     /**
      * The name of the configuration property defining the Sling home directory

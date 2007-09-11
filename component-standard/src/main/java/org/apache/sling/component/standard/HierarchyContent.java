@@ -15,7 +15,7 @@
  */
 package org.apache.sling.component.standard;
 
-import org.apache.sling.content.SelectableSimpleContent;
+import org.apache.sling.core.content.SelectableSimpleContent;
 
 /**
  * The <code>HierarchyContent</code> class is an abstract base content class

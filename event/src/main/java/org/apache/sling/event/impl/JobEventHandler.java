@@ -49,7 +49,7 @@ import org.osgi.service.event.Event;
  * An event handler handling special job events.
  *
  * @scr.component inherit="true"
- * @scr.service interface="org.apache.sling.event.JobStatusProvider"
+ * @scr.service interface="org.apache.sling.core.event.JobStatusProvider"
  * @scr.property name="event.topics" value="org/apache/sling/event/job"
  *
  */
@@ -241,7 +241,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
      */
     protected void deactivate(ComponentContext context) {
         // stop background thread, by adding a job info to wake it up
@@ -267,14 +267,14 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getContainerNodeType()
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#getContainerNodeType()
      */
     protected String getContainerNodeType() {
         return EventHelper.JOBS_NODE_TYPE;
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getEventNodeType()
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#getEventNodeType()
      */
     protected String getEventNodeType() {
         return EventHelper.JOB_NODE_TYPE;
@@ -447,7 +447,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
+     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
      */
     protected void addNodeProperties(Node eventNode, Event event)
     throws RepositoryException {
@@ -562,7 +562,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, String, boolean)
+     * @see org.apache.sling.core.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, String, boolean)
      */
     public void finishedJob(Event job, String eventNodePath, String lockToken, boolean reschedule) {
         final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
@@ -670,14 +670,14 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String)
+     * @see org.apache.sling.core.event.JobStatusProvider#getCurrentJobs(java.lang.String)
      */
     public Collection<Event> getCurrentJobs(String topic) {
         return this.queryCurrentJobs(topic, true);
     }
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#scheduledJobs(java.lang.String)
+     * @see org.apache.sling.core.event.JobStatusProvider#scheduledJobs(java.lang.String)
      */
     public Collection<Event> scheduledJobs(String topic) {
         return this.queryCurrentJobs(topic, false);

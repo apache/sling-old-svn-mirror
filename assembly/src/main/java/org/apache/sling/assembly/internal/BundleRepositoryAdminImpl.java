@@ -42,7 +42,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.assembly.installer.BundleRepositoryAdmin#addRepository(java.net.URL)
+     * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#addRepository(java.net.URL)
      */
     public void addRepository(URL url) {
         Object lock = installerService.acquireLock(0);
@@ -58,7 +58,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.assembly.installer.BundleRepositoryAdmin#getRepositories()
+     * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getRepositories()
      */
     public Iterator getRepositories() {
         Object lock = installerService.acquireLock(0);
@@ -81,7 +81,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.assembly.installer.BundleRepositoryAdmin#getResources()
+     * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getResources()
      */
     public Iterator getResources() {
         Object lock = installerService.acquireLock(0);
@@ -109,7 +109,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.assembly.installer.BundleRepositoryAdmin#refreshRepositories()
+     * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#refreshRepositories()
      */
     public void refreshRepositories() {
         // note: refreshing is implemented by re-adding the repositories
@@ -127,7 +127,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.assembly.installer.BundleRepositoryAdmin#removeRepository(java.net.URL)
+     * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#removeRepository(java.net.URL)
      */
     public void removeRepository(URL url) {
         Object lock = installerService.acquireLock(0);

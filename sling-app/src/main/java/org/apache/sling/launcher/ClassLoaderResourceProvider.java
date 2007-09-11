@@ -75,7 +75,7 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.sling.launcher.ResourceProvider#getResource(java.lang.String)
+     * @see org.apache.sling.core.launcher.ResourceProvider#getResource(java.lang.String)
      */
     public URL getResource(String path) {
         // ensure path

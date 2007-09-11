@@ -108,7 +108,7 @@ public class SlingServlet extends GenericServlet {
      * This context attribute must be used with utmost care ! It is not intended
      * for this value to be used in generall applications of the framework.
      */
-    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.framework";
+    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.core.framework";
 
     /**
      * The name of the configuration property defining the Sling home directory

@@ -41,9 +41,9 @@ import org.osgi.service.log.LogService;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="MimeTypeProvider"
- *                interface="org.apache.sling.mime.MimeTypeProvider"
+ *                interface="org.apache.sling.core.mime.MimeTypeProvider"
  *                cardinality="0..n" policy="dynamic"
- * @scr.service interface="org.apache.sling.mime.MimeTypeService"
+ * @scr.service interface="org.apache.sling.core.mime.MimeTypeService"
  */
 public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
@@ -63,7 +63,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.mime.MimeTypeService#getMimeType(java.lang.String)
+     * @see org.apache.sling.core.mime.MimeTypeService#getMimeType(java.lang.String)
      */
     public String getMimeType(String name) {
         if (name == null) {
@@ -87,7 +87,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.mime.MimeTypeService#getExtension(java.lang.String)
+     * @see org.apache.sling.core.mime.MimeTypeService#getExtension(java.lang.String)
      */
     public String getExtension(String mimeType) {
         if (mimeType == null) {

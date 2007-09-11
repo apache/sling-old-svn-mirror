@@ -84,9 +84,9 @@ public class Main {
     private static final String[] logLevels = { "FATAL", "ERROR", "WARN",
         "INFO", "DEBUG" };
 
-    private static final String PROP_LOG_LEVEL = "org.apache.sling.log.level";
+    private static final String PROP_LOG_LEVEL = "org.apache.sling.core.log.level";
 
-    private static final String PROP_LOG_FILE = "org.apache.sling.log.file";
+    private static final String PROP_LOG_FILE = "org.apache.sling.core.log.file";
 
     private static final String PROP_PORT = "org.osgi.service.http.port";
 

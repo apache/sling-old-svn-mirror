@@ -74,7 +74,7 @@ public interface ComponentSession extends HttpSession {
     /**
      * The string prefixed to component scoped session attributes
      */
-    static final String COMPONENT_SCOPE_NAMESPACE = "org.apache.sling.component.p.";
+    static final String COMPONENT_SCOPE_NAMESPACE = "org.apache.sling.core.component.p.";
 
     /**
      * Returns the object bound with the specified name in this session, or

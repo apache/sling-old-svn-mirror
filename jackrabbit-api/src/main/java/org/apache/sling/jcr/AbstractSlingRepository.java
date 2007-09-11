@@ -132,7 +132,7 @@ public abstract class AbstractSlingRepository implements SlingRepository {
     }
 
     /**
-     * @see org.apache.sling.jcr.SlingRepository#getDefaultWorkspace()
+     * @see org.apache.sling.core.jcr.SlingRepository#getDefaultWorkspace()
      */
     public String getDefaultWorkspace() {
         return this.defaultWorkspace;
@@ -149,7 +149,7 @@ public abstract class AbstractSlingRepository implements SlingRepository {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.jcr.SessionProvider#getAdministrationSession()
+     * @see org.apache.sling.core.jcr.SessionProvider#getAdministrationSession()
      */
     public Session loginAdministrative(String workspace)
             throws RepositoryException {
@@ -180,7 +180,7 @@ public abstract class AbstractSlingRepository implements SlingRepository {
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.jcr.SlingRepository#login(javax.jcr.Credentials,
+     * @see org.apache.sling.core.jcr.SlingRepository#login(javax.jcr.Credentials,
      *      java.lang.String)
      */
     public Session login(Credentials credentials, String workspace)

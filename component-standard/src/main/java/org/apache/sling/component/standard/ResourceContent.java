@@ -17,7 +17,7 @@ package org.apache.sling.component.standard;
 
 import javax.jcr.Value;
 
-import org.apache.sling.content.SelectableSimpleContent;
+import org.apache.sling.core.content.SelectableSimpleContent;
 
 /**
  * The <code>ResourceContent</code> TODO

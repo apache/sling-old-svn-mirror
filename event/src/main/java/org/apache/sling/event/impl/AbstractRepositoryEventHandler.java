@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * We schedule the job event handler to run in the background and clean up
  * obsolete jobs:
  * @scr.service interface="java.lang.Runnable"
- * @scr.property name="scheduler.name" value="org.apache.sling.event.impl.JobEventHandler"
+ * @scr.property name="scheduler.name" value="org.apache.sling.core.event.impl.JobEventHandler"
  * @scr.property name="scheduler.period" value="1800" type="Long"
  * @scr.property name="scheduler.concurrent" value="false" type="Boolean"
  */
