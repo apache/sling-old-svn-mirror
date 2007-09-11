@@ -35,7 +35,7 @@ import org.osgi.service.log.LogService;
  * The <code>RepositorySPIImpl</code> TODO
  *
  * @scr.component label="%repository.name" description="%repository.description"
- *          factory="org.apache.sling.core.jcr.server.SlingClientRepositoryFactory"
+ *          factory="org.apache.sling.jcr.server.SlingClientRepositoryFactory"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"

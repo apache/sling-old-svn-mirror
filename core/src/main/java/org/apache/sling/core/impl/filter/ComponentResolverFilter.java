@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="filter.scope" value="component" private="true"
  * @scr.property name="filter.order" value="-900" type="Integer" private="true"
  * @scr.service
- * @scr.reference name="Components" interface="org.apache.sling.core.component.Component"
+ * @scr.reference name="Components" interface="org.apache.sling.component.Component"
  *                cardinality="0..n" policy="dynamic"
  */
 public class ComponentResolverFilter extends ComponentBindingFilter {

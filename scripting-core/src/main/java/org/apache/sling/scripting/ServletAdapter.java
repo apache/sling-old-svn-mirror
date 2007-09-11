@@ -43,8 +43,8 @@ import org.apache.sling.component.Content;
  */
 public class ServletAdapter implements Component, ServletConfig {
 
-    public static final String PROP_SERVLET_CLASS = "org.apache.sling.core.scripting.bridge.servlet";
-    public static final String PROP_CONTENT_CLASS = "org.apache.sling.core.scripting.bridge.content";
+    public static final String PROP_SERVLET_CLASS = "org.apache.sling.scripting.bridge.servlet";
+    public static final String PROP_CONTENT_CLASS = "org.apache.sling.scripting.bridge.content";
 
     private ComponentContext componentContext;
     private org.osgi.service.component.ComponentContext osgiComponentContext;
@@ -55,7 +55,7 @@ public class ServletAdapter implements Component, ServletConfig {
      * @see org.apache.sling.core.component.Component#getComponentContext()
      */
     public ComponentContext getComponentContext() {
-        return componentContext;
+        return this.componentContext;
     }
 
     /* (non-Javadoc)
@@ -64,13 +64,13 @@ public class ServletAdapter implements Component, ServletConfig {
     public String getId() {
         // the ID is the fully qualified name of the delegatee servlet class
         try {
-            return getDelegatee().getClass().getName();
+            return this.getDelegatee().getClass().getName();
         } catch (ComponentException ce) {
             // log
         }
 
         // fall back to the property
-        String className = getProperty(PROP_SERVLET_CLASS, null);
+        String className = this.getProperty(PROP_SERVLET_CLASS, null);
         if (className == null) {
             throw new IllegalStateException(
                 "Missing Servlet class name property " + PROP_SERVLET_CLASS);
@@ -82,10 +82,10 @@ public class ServletAdapter implements Component, ServletConfig {
      * @see org.apache.sling.core.component.Component#createContentInstance()
      */
     public Content createContentInstance() {
-        String className = getContentClassName();
+        String className = this.getContentClassName();
         if (className != null) {
             try {
-                return (Content) createInstance(className, Content.class);
+                return (Content) this.createInstance(className, Content.class);
             } catch (ComponentException ce) {
                 // TODO: log
             }
@@ -98,7 +98,7 @@ public class ServletAdapter implements Component, ServletConfig {
      * @see org.apache.sling.core.component.Component#getContentClassName()
      */
     public String getContentClassName() {
-        return getProperty(PROP_CONTENT_CLASS, null);
+        return this.getProperty(PROP_CONTENT_CLASS, null);
     }
 
     /* (non-Javadoc)
@@ -124,7 +124,7 @@ public class ServletAdapter implements Component, ServletConfig {
         this.componentContext = componentContext;
 
         try {
-            getDelegatee().init(this);
+            this.getDelegatee().init(this);
         } catch (ServletException se) {
             Throwable cause = (se.getRootCause() != null) ? se.getRootCause() : se;
             throw new ComponentException(se.getMessage(), cause);
@@ -137,7 +137,7 @@ public class ServletAdapter implements Component, ServletConfig {
     public void service(ComponentRequest request, ComponentResponse response)
             throws ComponentException, IOException {
         try {
-            getDelegatee().service(request, response);
+            this.getDelegatee().service(request, response);
         } catch (ServletException se) {
             Throwable cause = (se.getRootCause() != null) ? se.getRootCause() : se;
             throw new ComponentException(se.getMessage(), cause);
@@ -149,8 +149,8 @@ public class ServletAdapter implements Component, ServletConfig {
      */
     public void destroy() {
         // get a copy of the delegatee and set delegatee null
-        Servlet servlet = delegatee;
-        delegatee = null;
+        Servlet servlet = this.delegatee;
+        this.delegatee = null;
 
         // destroy the servlet if not null
         if (servlet != null) {
@@ -171,7 +171,7 @@ public class ServletAdapter implements Component, ServletConfig {
 
     protected void deactivate(org.osgi.service.component.ComponentContext osgiComponentContext) {
         // ensure servlet has been destroyed
-        destroy();
+        this.destroy();
 
         this.osgiProperties = null;
         this.osgiComponentContext = null;
@@ -180,17 +180,17 @@ public class ServletAdapter implements Component, ServletConfig {
     //---------- internal -----------------------------------------------------
 
     private Servlet getDelegatee() throws ComponentException {
-        if (delegatee == null) {
-            String className = getProperty(PROP_SERVLET_CLASS, null);
+        if (this.delegatee == null) {
+            String className = this.getProperty(PROP_SERVLET_CLASS, null);
             if (className == null) {
                 throw new ComponentException(
                     "Missing Servlet class name property " + PROP_SERVLET_CLASS);
             }
 
-            delegatee = (Servlet) createInstance(className, Servlet.class);
+            this.delegatee = (Servlet) this.createInstance(className, Servlet.class);
         }
 
-        return delegatee;
+        return this.delegatee;
     }
 
     private Object createInstance(String className, Class requiredClass)
@@ -200,11 +200,11 @@ public class ServletAdapter implements Component, ServletConfig {
         Class delegateeClass;
         try {
             // try to load the class through the bundle of the OSGi context
-            if (osgiComponentContext != null) {
-                delegateeClass = osgiComponentContext.getBundleContext().getBundle().loadClass(
+            if (this.osgiComponentContext != null) {
+                delegateeClass = this.osgiComponentContext.getBundleContext().getBundle().loadClass(
                     className);
             } else {
-                delegateeClass = getClass().getClassLoader().loadClass(
+                delegateeClass = this.getClass().getClassLoader().loadClass(
                     className);
             }
         } catch (Throwable t) {
@@ -227,20 +227,20 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     private String getProperty(String propertyName, String defaultValue) {
-        if (osgiProperties != null) {
-            Object value = osgiProperties.get(propertyName);
+        if (this.osgiProperties != null) {
+            Object value = this.osgiProperties.get(propertyName);
             if (value instanceof String) {
                 return (String) value;
             }
         }
 
-        if (componentContext != null) {
-            String value = componentContext.getInitParameter(propertyName);
+        if (this.componentContext != null) {
+            String value = this.componentContext.getInitParameter(propertyName);
             if (value != null) {
                 return value;
             }
 
-            Object valueO = componentContext.getAttribute(propertyName);
+            Object valueO = this.componentContext.getAttribute(propertyName);
             if (valueO instanceof String) {
                 return (String) valueO;
             }
@@ -258,8 +258,8 @@ public class ServletAdapter implements Component, ServletConfig {
      * <code>java.lang.String</code> this method returns <code>null</code>.
      */
     public String getInitParameter(String name) {
-        if (osgiProperties != null) {
-            Object value = osgiProperties.get(name);
+        if (this.osgiProperties != null) {
+            Object value = this.osgiProperties.get(name);
             if (value instanceof String) {
                 return (String) value;
             }
@@ -272,20 +272,20 @@ public class ServletAdapter implements Component, ServletConfig {
      * Returns the names of the keys of the OSGi Component properties.
      */
     public Enumeration getInitParameterNames() {
-        Collection names = (osgiProperties != null)
-                ? Collections.list(osgiProperties.keys())
+        Collection names = (this.osgiProperties != null)
+                ? Collections.list(this.osgiProperties.keys())
                 : Collections.EMPTY_LIST;
         return Collections.enumeration(names);
     }
 
     public ServletContext getServletContext() {
-        return componentContext;
+        return this.componentContext;
     }
 
     /**
      * Returns the {@link #getId() component ID} as the servlet name.
      */
     public String getServletName() {
-        return getId();
+        return this.getId();
     }
 }

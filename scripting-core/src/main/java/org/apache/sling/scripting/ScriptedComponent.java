@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * and
  * {@link #callScript(ComponentRenderer, ComponentRequest, ComponentResponse)}
  * methods.
- * 
+ *
  * @ocm.mapped jcrNodeType="sling:ScriptedComponent" discriminator="false"
  */
 public class ScriptedComponent extends AbstractRepositoryComponent {
@@ -57,7 +57,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
 
     /**
      * @ocm.collection jcrName="sling:scripts" jcrNodeType="sling:ScriptList"
-     *                 elementClassName="org.apache.sling.core.scripting.Script"
+     *                 elementClassName="org.apache.sling.scripting.Script"
      */
     private Script[] scripts;
 
@@ -87,7 +87,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      * the component renderer found in the second step
      * <li>Call the base component if no script can be resolved for the request
      * </ol>
-     * 
+     *
      * @param request The <code>ComponentRequest</code> representing the
      *            request to handle.
      * @param response The <code>ComponentResponse</code> representing the
@@ -104,18 +104,18 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
             throws IOException, ComponentException {
 
         // resolve the script and its renderer
-        Script script = getScript(request);
-        ComponentRenderer cr = getComponentRenderer(script);
+        Script script = this.getScript(request);
+        ComponentRenderer cr = this.getComponentRenderer(script);
 
         if (cr != null) {
 
             // render it if found
-            callScript(cr, request, response);
+            this.callScript(cr, request, response);
 
-        } else if (getSuperComponent() != null) {
+        } else if (this.getSuperComponent() != null) {
 
             // otherwise use super component (if available)
-            getSuperComponent().service(request, response);
+            this.getSuperComponent().service(request, response);
 
         } else {
 
@@ -135,7 +135,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      * found and a base template has been configured, the base template is asked
      * for a script info. If the base template does not have any either,
      * <code>null</code> is returned.
-     * 
+     *
      * @param request The {@link DeliveryHttpServletRequest} for which to find
      *            the match {@link ScriptInfo}.
      * @return the first {@link ScriptInfo} matching the request or
@@ -144,21 +144,21 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     protected Script getScript(ComponentRequest request) {
 
         // check whether we can handle the script
-        for (int i = 0; i < scripts.length && scripts[i] != null; i++) {
-            if (scripts[i].matches(request)) {
-                return scripts[i];
+        for (int i = 0; i < this.scripts.length && this.scripts[i] != null; i++) {
+            if (this.scripts[i].matches(request)) {
+                return this.scripts[i];
             }
         }
 
         // outsch - cannot handle
         log.debug("No scriptinfo for request: {0}, using default", request);
-        return new DefaultScript(getPath());
+        return new DefaultScript(this.getPath());
     }
 
     /**
      * Returns a {@link ComponentRenderer} for the {@link Script} or
      * <code>null</code> if <code>script</code> is <code>null</code>.
-     * 
+     *
      * @param script The {@link Script} for which to return the
      *            {@link ComponentRenderer}
      * @return The component renderer or <code>null</code> of
@@ -193,10 +193,10 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      * <code>null</code>, this method does nothing.
      * <p>
      * Before calling the renderer, this instance is set as the
-     * {@link Util#ATTR_COMPONENT org.apache.sling.core.scripting.component}
+     * {@link Util#ATTR_COMPONENT org.apache.sling.scripting.component}
      * attribute in the request. When the script returns. the former value of
      * the request attribute is reset.
-     * 
+     *
      * @param renderer The {@link ComponentRenderer} to call to handle the
      *            component.
      * @param request The <code>ComponentRequest</code> representing the
@@ -241,7 +241,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     }
 
     public Component getSuperComponent() {
-        return superComponent;
+        return this.superComponent;
     }
 
     // ---------- JCR Mapping support ------------------------------------------
@@ -250,14 +250,14 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
         super.setPath(path);
 
         // default value for the component ID is its path
-        if (getId() == null) {
+        if (this.getId() == null) {
             log.debug("Using path {} as ComponentID", path);
-            setId(path);
+            this.setId(path);
         }
     }
 
     public String getBaseComponentReference() {
-        return baseComponentReference;
+        return this.baseComponentReference;
     }
 
     public void setBaseComponentReference(String baseComponentRef) {
@@ -273,7 +273,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     }
 
     public Collection getScripts() {
-        return Arrays.asList(scripts);
+        return Arrays.asList(this.scripts);
     }
 
     // ---------- Inner class for pseudo default script ------------------------
@@ -285,7 +285,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
         private String scriptName;
 
         DefaultScript(String componentPath) {
-            scriptName = componentPath + DEFAULT_SCRIPT_REL_PATH;
+            this.scriptName = componentPath + DEFAULT_SCRIPT_REL_PATH;
         }
 
         /**
@@ -296,7 +296,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
         }
 
         public String getScriptName() {
-            return scriptName;
+            return this.scriptName;
         }
 
         public boolean matches(ComponentRequest request) {
