@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -26,7 +26,7 @@ import org.apache.sling.component.ComponentExtension;
 
 /**
  * The <code>BaseComponent</code> TODO
- * 
+ *
  * @ocm.mapped jcrNodeType="sling:Component" discriminator="false" extend=""
  */
 public abstract class AbstractRepositoryComponent extends BaseComponent {
@@ -34,20 +34,20 @@ public abstract class AbstractRepositoryComponent extends BaseComponent {
     /** @ocm.field path="true" */
     private String path;
 
-    private Map extensions;
+    private Map<String, ComponentExtension> extensions;
 
     public ComponentExtension getExtension(String name) {
-        return (ComponentExtension) extensions.get(name);
+        return this.extensions.get(name);
     }
 
-    public Enumeration getExtensions() {
-        return new IteratorEnumeration(extensions.values().iterator());
+    public Enumeration<ComponentExtension> getExtensions() {
+        return new IteratorEnumeration(this.extensions.values().iterator());
     }
 
     // ---- mapping support
 
     public String getPath() {
-        return path;
+        return this.path;
     }
 
     public void setPath(String path) {
@@ -75,18 +75,18 @@ public abstract class AbstractRepositoryComponent extends BaseComponent {
      *                 jcrNodeType="sling:ExtensionList"
      *                 elementClassName="org.apache.sling.core.components.extensions.AbstractExtension"
      */
-    public void setExtensionCollection(Collection extensions) {
-        Map extensionMap = new HashMap();
+    public void setExtensionCollection(Collection<ComponentExtension> extensions) {
+        Map<String, ComponentExtension> extensionMap = new HashMap<String, ComponentExtension>();
         if (extensions != null) {
-            for (Iterator ei = extensions.iterator(); ei.hasNext();) {
-                ComponentExtension ce = (ComponentExtension) ei.next();
+            for (Iterator<ComponentExtension> ei = extensions.iterator(); ei.hasNext();) {
+                ComponentExtension ce = ei.next();
                 extensionMap.put(ce.getName(), ce);
             }
         }
         this.extensions = extensionMap;
     }
 
-    public Collection getExtensionCollection() {
-        return extensions.values();
+    public Collection<ComponentExtension> getExtensionCollection() {
+        return this.extensions.values();
     }
 }

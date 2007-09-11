@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -31,53 +31,53 @@ public abstract class BaseComponent implements Component {
     private ComponentContext context;
     private String componentId;
     private String contentClassName;
-    
+
     protected BaseComponent() {
         this(null);
     }
-    
+
     protected BaseComponent(String componentId) {
         // default the component ID to the fully qualified name of the class
         this.componentId = (componentId != null)
                 ? componentId
-                : getClass().getName();
+                : this.getClass().getName();
     }
-    
+
     public String getContentClassName() {
-        return contentClassName;
+        return this.contentClassName;
     }
-    
+
     public Content createContentInstance() {
         // TODO: this aint good :-)
         try {
-            return (Content) Class.forName(getContentClassName(), true, getClass().getClassLoader()).newInstance();
+            return (Content) Class.forName(this.getContentClassName(), true, this.getClass().getClassLoader()).newInstance();
         } catch (Throwable t) {
             // TODO: log error
         }
-        
+
         // fail with null
         return null;
     }
-    
+
     public ComponentExtension getExtension(String name) {
         return null;
     }
-    
-    public Enumeration getExtensions() {
+
+    public Enumeration<ComponentExtension> getExtensions() {
         return Collections.enumeration(Collections.EMPTY_LIST);
     }
 
     public ComponentContext getComponentContext() {
-        return context;
+        return this.context;
     }
-    
+
     public String getId() {
-        return componentId;
+        return this.componentId;
     }
-    
+
     public void init(ComponentContext context) {
         this.context = context;
-        doInit();
+        this.doInit();
     }
 
     public void destroy() {
@@ -85,11 +85,11 @@ public abstract class BaseComponent implements Component {
     }
 
     protected abstract void doInit();
-    
+
     protected void setContentClassName(String contentClassName) {
         this.contentClassName = contentClassName;
     }
-    
+
     protected void setComponentId(String componentId) {
         this.componentId = componentId;
     }
