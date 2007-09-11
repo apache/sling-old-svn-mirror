@@ -45,8 +45,8 @@ import org.apache.sling.content.jcr.JcrContentManagerFactory;
 import org.apache.sling.core.content.SelectableContent;
 import org.apache.sling.core.content.Selector;
 import org.apache.sling.core.impl.RequestData;
-import org.apache.sling.mapper.URLMapper;
-import org.apache.sling.mapper.URLTranslationInfo;
+import org.apache.sling.core.mapper.URLMapper;
+import org.apache.sling.core.mapper.URLTranslationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.theme;
+package org.apache.sling.core.theme;
 
 /**
  * The <code>Theme</code> interface defines the API to define themes (or skins)
