@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -15,7 +15,6 @@
  */
 package org.apache.sling.jcr.internal;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -27,6 +26,8 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+
+import org.apache.sling.jcr.SlingRepository;
 
 /**
  * The <code>SessionPoolManager</code> is an abstract implementation of the
@@ -42,7 +43,7 @@ public class SessionPoolManager {
 
     private Repository repository;
 
-    private Map sessionPools;
+    private Map<String, SessionPool> sessionPools;
 
     /**
      * The maximum number of active sessions per session pool, that is per user.
@@ -63,33 +64,33 @@ public class SessionPoolManager {
             int maxActiveSessionsWait, int maxIdleSessions) {
 
         this.repository = repository;
-        this.sessionPools = new HashMap();
+        this.sessionPools = new HashMap<String, SessionPool>();
 
         // default session pool configuration (actual values will be checked
         // for validity by the SessionPool instances themselves when
         // configuring)
-        poolMaxActiveSessions = maxActiveSessions;
-        poolMaxActiveSessionsWait = maxActiveSessionsWait;
-        poolMaxIdleSessions = maxIdleSessions;
+        this.poolMaxActiveSessions = maxActiveSessions;
+        this.poolMaxActiveSessionsWait = maxActiveSessionsWait;
+        this.poolMaxIdleSessions = maxIdleSessions;
     }
 
     public void dispose() {
-        if (sessionPools != null) {
-            for (Iterator si = sessionPools.values().iterator(); si.hasNext();) {
-                SessionPool pool = (SessionPool) si.next();
+        if (this.sessionPools != null) {
+            for (Iterator<SessionPool> si = this.sessionPools.values().iterator(); si.hasNext();) {
+                SessionPool pool = si.next();
                 pool.dispose();
             }
-            sessionPools.clear();
+            this.sessionPools.clear();
         }
     }
 
     Repository getRepository() {
-        return repository;
+        return this.repository;
     }
-    
+
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.core.jcr.SlingRepository#login(javax.jcr.Credentials,
      *      java.lang.String)
      */
@@ -100,14 +101,14 @@ public class SessionPoolManager {
         // get the session pool for the credentials
         if (credentials instanceof SimpleCredentials) {
             SimpleCredentials simple = (SimpleCredentials) credentials;
-            SessionPool pool = getPool(simple);
+            SessionPool pool = this.getPool(simple);
             if (pool != null) {
                 return pool.acquireSession(simple, workspace);
             }
         }
 
         // direct session, if no pool is available for the credentials
-        return getRepository().login(credentials, workspace);
+        return this.getRepository().login(credentials, workspace);
     }
 
     Session impersonate(Session baseSession, Credentials credentials)
@@ -121,7 +122,7 @@ public class SessionPoolManager {
         }
 
         if (credentials instanceof SimpleCredentials) {
-            SessionPool pool = getPool((SimpleCredentials) credentials);
+            SessionPool pool = this.getPool((SimpleCredentials) credentials);
             if (pool != null) {
                 return pool.acquireSession(baseSession, credentials);
             }
@@ -135,39 +136,16 @@ public class SessionPoolManager {
 
     private SessionPool getPool(SimpleCredentials credentials) {
         String userName = credentials.getUserID();
-        SessionPool pool = (SessionPool) sessionPools.get(userName);
+        SessionPool pool = this.sessionPools.get(userName);
         if (pool == null) {
             // create and configure the new pool
             pool = new SessionPool(this, credentials);
-            pool.setMaxActiveSessions(poolMaxActiveSessions);
-            pool.setMaxActiveSessionsWait(poolMaxActiveSessionsWait);
-            pool.setMaxIdleSessions(poolMaxIdleSessions);
-            sessionPools.put(userName, pool);
+            pool.setMaxActiveSessions(this.poolMaxActiveSessions);
+            pool.setMaxActiveSessionsWait(this.poolMaxActiveSessionsWait);
+            pool.setMaxIdleSessions(this.poolMaxIdleSessions);
+            this.sessionPools.put(userName, pool);
         }
 
         return pool;
-    }
-    
-    private class XYZ implements Comparator {
-        
-        public int compare(Object o1, Object o2) {
-            if (o1 instanceof Comparable) {
-                return ((Comparable) o1).compareTo(o2);
-            }
-            
-            if (o1 instanceof SimpleCredentials && o2 instanceof SimpleCredentials) {
-                SimpleCredentials sc1 = (SimpleCredentials) o1;
-                SimpleCredentials sc2 = (SimpleCredentials) o2;
-                
-                int res = sc1.getUserID().compareTo(sc2.getUserID());
-                if (res != 0) {
-                    return res;
-                }
-                
-                return new String(sc1.getPassword()).compareTo(new String(sc2.getPassword()));
-            }
-            
-            return o1.equals(o2) ? 0 : o1.hashCode() - o2.hashCode();
-        }
     }
 }
