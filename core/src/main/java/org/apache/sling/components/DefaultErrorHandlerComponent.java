@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -27,7 +27,7 @@ import org.apache.sling.component.Content;
 
 /**
  * The <code>DefaultErrorHandlerComponent</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%errhandler.default.name"
  *      description="%errhandler.default.description"
  * @scr.property name="service.description"
@@ -41,8 +41,8 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
     public static final String ID = DefaultErrorHandlerComponent.class.getName();
 
     {
-        setContentClassName(null);
-        setComponentId(ID);
+        this.setContentClassName(null);
+        this.setComponentId(ID);
     }
 
     public Content createContentInstance() {
@@ -51,7 +51,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.components.BaseComponent#doInit()
      */
     protected void doInit() {
@@ -76,11 +76,8 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
         return status == 0;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.Component#render(com.day.components.RenderRequest,
-     *      com.day.components.ComponentResponse)
+    /**
+     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException {
@@ -99,7 +96,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
         }
 
         // start the response message
-        PrintWriter pw = sendIntro(response, statusCode, statusMessage,
+        PrintWriter pw = this.sendIntro(response, statusCode, statusMessage,
             requestUri);
 
         // write the exception message
@@ -107,19 +104,19 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
             Throwable throwable = (Throwable) request.getAttribute("javax.servlet.error.exception");
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
-            printStackTrace(pw, throwable);
+            this.printStackTrace(pw, throwable);
             pw.println("</pre>");
         }
 
         // conclude the response message
-        sendEpilogue(pw);
+        this.sendEpilogue(pw);
     }
 
     /**
      * Returns the stack trace for the root exception in this. If this does not
      * contain exception - as is the case if not handling a thrown exception,
      * the method returned the undefined value.
-     * 
+     *
      * @return The stacktrace for the rootException or the undefined value if
      *         this has no rootException, that is if not handling a thrown
      *         exception.
@@ -178,7 +175,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
      */
     private void sendEpilogue(PrintWriter pw) {
         pw.println("<hr>");
-        pw.println("<address>" + getComponentContext().getServerInfo()
+        pw.println("<address>" + this.getComponentContext().getServerInfo()
             + "</address>");
         pw.println("</body>");
         pw.println("</html>");

@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SessionPool</code> class extends the
- * {@link com.day.cq.jcr.adapter.pool.AbstractPoolingUserMapping} class actually
+ * {@link AbstractPoolingUserMappin} class actually
  * implementing  pooling and reusing sessions with the limits defined by the
  * base class. See {@link #acquireSession(Repository, SimpleCredentials, String)
  * and {@link #acquireSession(Session, String)} for details.
@@ -51,7 +51,7 @@ class SessionPool {
     /**
      * The default upper limit of simultaneously active sessions created by this
      * instance (value is Integer.MAX_VALUE).
-     * 
+     *
      * @see #PARAM_MAX_ACTIVE_SESSIONS
      * @see #setMaxActiveSessions(int)
      * @see #getMaxActiveSessions()
@@ -61,7 +61,7 @@ class SessionPool {
     /**
      * The default maximum time in seconds to wait for the number of active
      * sessions to drop below the maximum.
-     * 
+     *
      * @see #PARAM_MAX_ACTIVE_SESSIONS_WAIT
      * @see #getMaxActiveSessionsWait()
      * @see #setMaxActiveSessionsWait(long)
@@ -71,7 +71,7 @@ class SessionPool {
     /**
      * The default upper limit for the number of idle sessions to keep in the
      * pool (valie is "10").
-     * 
+     *
      * @see #PARAM_MAX_IDLE_SESSIONS
      * @see #setMaxIdleSessions(int)
      * @see #getMaxIdleSessions()
@@ -80,22 +80,22 @@ class SessionPool {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SessionPool.class);
-    
+
     private SessionPoolManager poolManager;
-    
+
     /**
      * The name of the user for which this pool has been created.
      */
     private String userName;
-    
+
     private int[] passData;
-    
+
     /**
      * The session pool. Access to this object must be synchronized to prevent
      * corruption of the data structures.
      */
     private final LinkedList idleSessions;
-    
+
     /**
      * Active sessions issued by this session pool.
      */
@@ -143,7 +143,7 @@ class SessionPool {
      * sessions might be dropped.
      */
     private int poolDropCounter;
-    
+
     /**
      * Flag indicating whether this pool has already been disposed off. If this
      * is <code>true</code>, no sessions will be provided by this pool anymore.
@@ -153,21 +153,21 @@ class SessionPool {
     /**
      * Creates a new instance of this class presetting internal counters
      * and data structures.
-     * 
+     *
      * @param repository The <code>Repository</code> to login to.
      */
     SessionPool(SessionPoolManager poolManager, SimpleCredentials credentials) {
         this.poolManager = poolManager;
         this.userName = credentials.getUserID();
-        this.passData = getPassData(credentials);
+        this.passData = this.getPassData(credentials);
         this.idleSessions = new LinkedList();
         this.activeSessions = new IdentityHashMap();
         this.activeSessionLock = new Object();
-        clearCounters();
+        this.clearCounters();
 
         // explicitly set the default value here, as the setConfig
         // will not set the default if the configured value is <= 0
-        setMaxActiveSessionsWait(DEFAULT_MAX_ACTIVE_SESSIONS_WAIT);
+        this.setMaxActiveSessionsWait(DEFAULT_MAX_ACTIVE_SESSIONS_WAIT);
     }
 
     /**
@@ -177,33 +177,33 @@ class SessionPool {
      */
     void dispose() {
         // stop providing sessions and force logging out released sessions
-        disposed = true;
+        this.disposed = true;
 
-        synchronized (idleSessions) {
+        synchronized (this.idleSessions) {
             // logout all sessions in the pool
-            logoutSessions(idleSessions.iterator());
-            idleSessions.clear();
+            this.logoutSessions(this.idleSessions.iterator());
+            this.idleSessions.clear();
         }
-        
-        synchronized (activeSessions) {
+
+        synchronized (this.activeSessions) {
             // logout all sessions in the pool
-            logoutSessions(activeSessions.values().iterator());
-            activeSessions.clear();
+            this.logoutSessions(this.activeSessions.values().iterator());
+            this.activeSessions.clear();
         }
     }
-    
+
     /**
-     * Returns <code>true</code> if this pool has been disposed off by the 
+     * Returns <code>true</code> if this pool has been disposed off by the
      * {@link #dispose()} method.
      */
     boolean isDisposed() {
-        return disposed;
+        return this.disposed;
     }
-    
+
     SessionPoolManager getPoolManager() {
-        return poolManager;
+        return this.poolManager;
     }
-    
+
     /**
      * Returns a session providing access to the given ContentBus user to the
      * given <code>workSpace</code> of the given <code>repository</code>. The
@@ -255,19 +255,19 @@ class SessionPool {
     Session acquireSession(SimpleCredentials credentials, String workSpace)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
 
-        checkActiveSessions();
+        this.checkActiveSessions();
 
         // only try to get from the pool, if the password matches
-        if (passDataMatch(credentials, passData)) {
-            Session session = getFromPool(workSpace);
+        if (this.passDataMatch(credentials, this.passData)) {
+            Session session = this.getFromPool(workSpace);
             if (session != null) {
                 return session;
             }
         }
 
         // login new session (fails if password has changed but is not valid)
-        Session session = poolManager.getRepository().login(credentials, workSpace);
-        return createPooledSession(session);
+        Session session = this.poolManager.getRepository().login(credentials, workSpace);
+        return this.createPooledSession(session);
     }
 
     /**
@@ -321,15 +321,15 @@ class SessionPool {
     Session acquireSession(Session baseSession, Credentials credentials)
             throws LoginException, RepositoryException {
 
-        checkActiveSessions();
+        this.checkActiveSessions();
 
-        Session session = getFromPool(baseSession.getWorkspace().getName());
+        Session session = this.getFromPool(baseSession.getWorkspace().getName());
         if (session != null) {
             return session;
         }
 
         session = baseSession.impersonate(credentials);
-        return createPooledSession(session);
+        return this.createPooledSession(session);
     }
 
     //---------- JMX ----------------------------------------------------------
@@ -339,9 +339,9 @@ class SessionPool {
      * be <code>null</code> if the owner name of the pool is not known.
      */
     public String getUserName() {
-        return userName;
+        return this.userName;
     }
-    
+
     /**
      * Returns the maximum number of simultaneously active sessions.
      * <p>
@@ -353,7 +353,7 @@ class SessionPool {
      * @see #setMaxActiveSessions(int)
      */
     public int getMaxActiveSessions() {
-        return maxActiveSessions;
+        return this.maxActiveSessions;
     }
 
     /**
@@ -387,7 +387,7 @@ class SessionPool {
      * @see #getMaxIdleSessions()
      */
     public int getMaxIdleSessions() {
-        return maxIdleSessions;
+        return this.maxIdleSessions;
     }
 
     /**
@@ -409,7 +409,7 @@ class SessionPool {
                 ? DEFAULT_MAX_IDLE_SESSIONS
                 : maxIdleSessions;
     }
-    
+
     /**
      * The number of seconds to wait for the number of active sessions to drop
      * below the configured maximum number of active sessions.
@@ -418,7 +418,7 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public int getMaxActiveSessionsWait() {
-        return (int) (maxActiveWait / 1000L);
+        return (int) (this.maxActiveWait / 1000L);
     }
 
     /**
@@ -446,8 +446,8 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public int getNumActiveSessions() {
-        synchronized (activeSessions) {
-            return activeSessions.size();
+        synchronized (this.activeSessions) {
+            return this.activeSessions.size();
         }
     }
 
@@ -458,7 +458,7 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public int getIdleSessions() {
-        return idleSessions.size();
+        return this.idleSessions.size();
     }
 
     /**
@@ -468,7 +468,7 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public int getPoolHitCounter() {
-        return poolHitCounter;
+        return this.poolHitCounter;
     }
 
     /**
@@ -478,7 +478,7 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public int getPoolMissCounter() {
-        return poolMissCounter;
+        return this.poolMissCounter;
     }
 
     /**
@@ -496,7 +496,7 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public int getPoolDropCounter() {
-        return poolDropCounter;
+        return this.poolDropCounter;
     }
 
     /**
@@ -506,9 +506,9 @@ class SessionPool {
      * solely for the purposes of JMX support.
      */
     public void clearCounters() {
-        poolHitCounter = 0;
-        poolMissCounter = 0;
-        poolDropCounter = 0;
+        this.poolHitCounter = 0;
+        this.poolMissCounter = 0;
+        this.poolDropCounter = 0;
     }
 
     //---------- Support for PooledSession
@@ -532,12 +532,12 @@ class SessionPool {
         // due to changed passwords. In this case, the delegate session
         // is not idled but immediately logged out
         boolean forcedLogout;
-        synchronized (activeSessions) {
-            forcedLogout = activeSessions.remove(pooledSession) == null;
+        synchronized (this.activeSessions) {
+            forcedLogout = this.activeSessions.remove(pooledSession) == null;
         }
-        
-        synchronized (activeSessionLock) {
-            activeSessionLock.notifyAll();
+
+        synchronized (this.activeSessionLock) {
+            this.activeSessionLock.notifyAll();
         }
 
         // unwrap the repository session
@@ -545,28 +545,28 @@ class SessionPool {
 
         // cache the session owner for messages and more
         String userId = session.getUserID();
-        
+
         // if the session is to be logged out forcibly
         if (forcedLogout) {
             log.debug("Logging out session {}; password has changed", userId);
             session.logout();
             return;
         }
-        
+
         // if the pool has been disposed off, the session will be logged out
-        if (isDisposed()) {
+        if (this.isDisposed()) {
             log.debug("Logging out session {}; pool has been disposed off",
                 userId);
             session.logout();
             return;
         }
-        
+
         // if the pool is full or the session is already dead, logout and return
         // this results in the session not being added to the pool
-        if (idleSessions.size() >= getMaxIdleSessions() || !session.isLive()) {
+        if (this.idleSessions.size() >= this.getMaxIdleSessions() || !session.isLive()) {
             log.debug("Logging out session {}; pool is full or session is not alive",
                 userId);
-            poolDropCounter++;
+            this.poolDropCounter++;
             session.logout();
             return;
         }
@@ -597,7 +597,7 @@ class SessionPool {
                     session.removeLockToken(lock.getLockToken());
                 }
             }
-            
+
             String[] lockTokens = session.getLockTokens();
             if (lockTokens != null && lockTokens.length > 0) {
                 log.warn("Session still has lock tokens !");
@@ -609,12 +609,12 @@ class SessionPool {
             }
         } catch (RepositoryException re) {
             log.info("Cannot cleanup lockes of session {}, logging out", userId);
-            poolDropCounter++;
+            this.poolDropCounter++;
             session.logout();
             return;
         }
-        
-        
+
+
         // make sure the session has no more registered event listeners which
         // may be notified on changes, and - worse - prevent the objects from
         // being collected
@@ -631,7 +631,7 @@ class SessionPool {
         } catch (RepositoryException re) {
             log.info("Cannot check or unregister event listeners of session " +
                 "{}, logging out", userId);
-            poolDropCounter++;
+            this.poolDropCounter++;
             session.logout();
             return;
         }
@@ -646,19 +646,19 @@ class SessionPool {
         } catch (RepositoryException re) {
             log.info("Cannot check or drop pending changes of session " +
                 "{}, logging out", userId);
-            poolDropCounter++;
+            this.poolDropCounter++;
             session.logout();
             return;
         }
 
         // now the session is "clean" and may be added to the pool
         log.debug("Returning session {} to the pool, now with {} entries",
-            userId, new Integer(idleSessions.size()));
+            userId, new Integer(this.idleSessions.size()));
 
         // add to the pool and notify waiting session acquiry
         //    ==> checkActiveSessions()
-        synchronized (idleSessions) {
-            idleSessions.add(session);
+        synchronized (this.idleSessions) {
+            this.idleSessions.add(session);
         }
     }
 
@@ -671,19 +671,19 @@ class SessionPool {
      * This method knows about the JCR standard <code>Session</code>
      * interfaces and wraps the <code>delegatee</code> in a
      * {@link PooledSession}.
-     * 
+     *
      * @param delegatee The <code>Session</code> to wrap as a pooled session.
      * @see PooledSession
      */
     private PooledSession createPooledSession(Session delegatee) {
 
         PooledSession pooledSession = new PooledSession(this, delegatee);
-        
+
         // keep the pooled session
-        synchronized (activeSessions) {
-            activeSessions.put(pooledSession, delegatee);
+        synchronized (this.activeSessions) {
+            this.activeSessions.put(pooledSession, delegatee);
         }
-        
+
         return pooledSession;
     }
 
@@ -698,7 +698,7 @@ class SessionPool {
      * time or after a notification or an interrupt the number of sessions is
      * not below the maximum number of sessions, a
      * <code>RepositoryException</code> is thrown.
-     * 
+     *
      * @throws TooManySessionsException If the maximum number of active
      *             sessions has been reached and no session was released while
      *             waiting for it.
@@ -706,20 +706,20 @@ class SessionPool {
      */
     private void checkActiveSessions() throws TooManySessionsException {
         // fail if diposed already
-        if (isDisposed()) {
+        if (this.isDisposed()) {
             throw new IllegalStateException("Pool has already been disposed off");
         }
-        
+
         // check whether maxActiveSession is exhausted
-        int maxActiveSessions = getMaxActiveSessions();
-        if (getNumActiveSessions() < maxActiveSessions) {
+        int maxActiveSessions = this.getMaxActiveSessions();
+        if (this.getNumActiveSessions() < maxActiveSessions) {
             return;
         }
 
         // sessions exhausted, wait for sessions to be released
         try {
-            synchronized (activeSessionLock) {
-                activeSessionLock.wait(maxActiveWait);
+            synchronized (this.activeSessionLock) {
+                this.activeSessionLock.wait(this.maxActiveWait);
             }
         } catch (InterruptedException ie) {
             log.debug("Interrupted while waiting for session to " +
@@ -727,8 +727,8 @@ class SessionPool {
         }
 
         // if the number of active sessions has still not dropped, fail
-        if (getNumActiveSessions() >= maxActiveSessions) {
-            throw new TooManySessionsException(getUserName());
+        if (this.getNumActiveSessions() >= maxActiveSessions) {
+            throw new TooManySessionsException(this.getUserName());
         }
     }
 
@@ -761,31 +761,31 @@ class SessionPool {
 
             // get a session from the, return if empty
             Session session;
-            synchronized (idleSessions) {
-                if (idleSessions.isEmpty()) {
+            synchronized (this.idleSessions) {
+                if (this.idleSessions.isEmpty()) {
                     log.debug("getFromPool: No idle session in pool");
-                    poolMissCounter++;
+                    this.poolMissCounter++;
                     return null;
                 }
 
                 // get the first entry from the pool
-                session = (Session) idleSessions.removeFirst();
+                session = (Session) this.idleSessions.removeFirst();
             }
 
             // check the session and the session's workspace
             if (session.isLive()
                     && session.getWorkspace().getName().equals(workSpaceName)) {
-                poolHitCounter++;
-                return createPooledSession(session);
+                this.poolHitCounter++;
+                return this.createPooledSession(session);
             }
 
             // session is not alive anymore or has the wrong workspace name,
             // logout and try next from pool
-            poolDropCounter++;
+            this.poolDropCounter++;
             session.logout();
         }
     }
-    
+
     //---------- internal helper ----------------------------------------------
 
     private void logoutSessions(Iterator sessions) {
@@ -802,21 +802,21 @@ class SessionPool {
             }
         }
     }
-    
+
     private int[] getPassData(SimpleCredentials credentials) {
         char[] passwd = credentials.getPassword();
         if (passwd == null) {
             return null;
         }
-        
+
         int[] passdt = new int[passwd.length];
         for (int i=0; i < passdt.length; i++) {
             passdt[i] = passwd[i];
         }
-        
+
         return passdt;
     }
-    
+
     private boolean passDataMatch(SimpleCredentials credentials, int[] passdt) {
         char[] passwd = credentials.getPassword();
         if (passwd == null) {
@@ -824,17 +824,17 @@ class SessionPool {
         } else if (passdt == null) {
             return false;
         }
-        
+
         if (passwd.length != passdt.length) {
             return false;
         }
-        
+
         for (int i=0; i < passwd.length; i++) {
             if (passwd[i] != passdt[i]) {
                 return false;
             }
         }
-        
+
         return true;
     }
 }
