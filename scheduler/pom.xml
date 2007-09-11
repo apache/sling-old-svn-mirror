@@ -70,11 +70,10 @@
                             org.quartz.*,
                             org.apache.commons.pool.*,
                             org.apache.commons.jocl.*,
-                            org.apache.commons.dbcp.*,
-                            org.apache.commons.logging.*
+                            org.apache.commons.dbcp.*
                         </Private-Package>
                         <DynamicImport-Package>
-                            javax.ejb,org.apache.avalon.framework.logger,org.apache.log
+                            javax.ejb
                         </DynamicImport-Package>
                         <Include-Resource>
                             {maven-resources},
@@ -110,13 +109,8 @@
             <version>1.2.2</version>
         </dependency>
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging-api</artifactId>
-            <version>1.0.4</version>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 </project>
