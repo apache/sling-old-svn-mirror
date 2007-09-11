@@ -90,7 +90,7 @@ public class SessionPoolManager {
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.sling.jcr.SlingRepository#login(javax.jcr.Credentials,
+     * @see org.apache.sling.core.jcr.SlingRepository#login(javax.jcr.Credentials,
      *      java.lang.String)
      */
     public Session login(Credentials credentials, String workspace)
