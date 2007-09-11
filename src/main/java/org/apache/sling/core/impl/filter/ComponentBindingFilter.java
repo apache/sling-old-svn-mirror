@@ -24,7 +24,7 @@ import org.apache.sling.component.Component;
 import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.components.AbstractRepositoryComponent;
+import org.apache.sling.core.components.AbstractRepositoryComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
