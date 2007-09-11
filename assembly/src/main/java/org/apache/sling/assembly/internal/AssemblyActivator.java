@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -55,7 +55,7 @@ public class AssemblyActivator implements BundleActivator, BundleListener {
      * means that all bundles in the framework are checked to see whether any is
      * an Assembly Bundle. Each Assembly Bundle is taken under control by the
      * Assembly Manager.
-     * 
+     *
      * @param context The <code>BundleContext</code> of the starting bundle.
      */
     public void start(BundleContext context) {
@@ -66,14 +66,13 @@ public class AssemblyActivator implements BundleActivator, BundleListener {
         Dictionary props = new Hashtable();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Project Sling Bundle Installler Service");
-        props.put(Constants.SERVICE_VENDOR, "Day Management AG");
         context.registerService(InstallerService.class.getName(),
             installerService, props);
 
         // set up the assembly manager
-        assemblyManager = new AssemblyManager(context, installerService);
+        this.assemblyManager = new AssemblyManager(context, installerService);
         context.addBundleListener(this);
-        assemblyManager.start();
+        this.assemblyManager.start();
     }
 
     /**
@@ -81,14 +80,14 @@ public class AssemblyActivator implements BundleActivator, BundleListener {
      * the Assembly Manager for handling Assembly Bundles. When the Assembly
      * Manager is stopped, all Assembly Bundles remain simple OSGi bundles with
      * no special treatment.
-     * 
+     *
      * @param context The <code>BundleContext</code> of the stopping bundle.
      */
     public void stop(BundleContext context) {
         context.removeBundleListener(this);
 
-        assemblyManager.stop();
-        assemblyManager = null;
+        this.assemblyManager.stop();
+        this.assemblyManager = null;
     }
 
     // ---------- BundleListener -----------------------------------------------
@@ -98,7 +97,7 @@ public class AssemblyActivator implements BundleActivator, BundleListener {
      * state is not an Assembly Bundle, that is the bundle has no
      * <code>Assembly-Bundles</code> header, the event is ignored. Otherwise
      * the event is forwarded to the Assembly Manager.
-     * 
+     *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -110,6 +109,6 @@ public class AssemblyActivator implements BundleActivator, BundleListener {
         }
 
         // handle the bundle
-        assemblyManager.put(event);
+        this.assemblyManager.put(event);
     }
 }

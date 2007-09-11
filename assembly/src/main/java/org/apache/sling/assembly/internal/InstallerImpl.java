@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -70,110 +70,92 @@ public class InstallerImpl implements Installer {
         this.defaultStartLevel = -1; // use StartLevel service default
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.assembly.installer.Installer#addBundle(java.lang.String,
-     *      java.net.URL, int)
-     */
     public void addBundle(String location, URL source, int startLevel) {
-        addBundleDescriptor(new LocalBundleDescriptor(location, source,
+        this.addBundleDescriptor(new LocalBundleDescriptor(location, source,
             startLevel));
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.day.sling.servlet.InstallerService#addBundle(java.lang.String,
-     *      java.io.InputStream, int)
+    /**
+     * @see org.apache.sling.assembly.installer.Installer#addBundle(java.lang.String, java.io.InputStream, int)
      */
     public void addBundle(String location, InputStream source, int startLevel) {
-        addBundleDescriptor(new LocalBundleDescriptor(location, source,
+        this.addBundleDescriptor(new LocalBundleDescriptor(location, source,
             startLevel));
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.day.sling.servlet.InstallerService#addBundle(java.lang.String,
-     *      java.lang.String, int)
+    /**
+     * @see org.apache.sling.assembly.installer.Installer#addBundle(java.lang.String, org.apache.sling.assembly.installer.VersionRange, int)
      */
     public void addBundle(String symbolicName, VersionRange versionRange,
             int startLevel) {
-        addBundleDescriptor(new RepositoryBundleDescriptor(symbolicName,
+        this.addBundleDescriptor(new RepositoryBundleDescriptor(symbolicName,
             versionRange, startLevel));
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.day.sling.servlet.InstallerService#addTemporaryRepository(java.net.URL)
+    /**
+     * @see org.apache.sling.assembly.installer.Installer#addTemporaryRepository(java.net.URL)
      */
     public void addTemporaryRepository(URL url) {
-        if (repositoryURLs == null) {
-            repositoryURLs = new HashSet();
+        if (this.repositoryURLs == null) {
+            this.repositoryURLs = new HashSet();
         }
 
-        repositoryURLs.add(url);
+        this.repositoryURLs.add(url);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.day.sling.servlet.InstallerService#dispose()
+    /**
+     * @see org.apache.sling.assembly.installer.Installer#dispose()
      */
     public void dispose() {
-        if (lock != null) {
+        if (this.lock != null) {
             // controller.releaseLock(lock);
         }
 
-        if (repositoryURLs != null) {
-            repositoryURLs.clear();
-            repositoryURLs = null;
+        if (this.repositoryURLs != null) {
+            this.repositoryURLs.clear();
+            this.repositoryURLs = null;
         }
 
-        if (bundleDescriptors != null) {
-            for (Iterator bi = bundleDescriptors.iterator(); bi.hasNext();) {
+        if (this.bundleDescriptors != null) {
+            for (Iterator bi = this.bundleDescriptors.iterator(); bi.hasNext();) {
                 ((BundleDescriptor) bi.next()).dispose();
                 bi.remove();
             }
-            bundleDescriptors = null;
+            this.bundleDescriptors = null;
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.day.sling.servlet.InstallerService#install(boolean)
+    /**
+     * @see org.apache.sling.assembly.installer.Installer#install(boolean)
      */
     public Bundle[] install(boolean start) throws InstallerException {
 
         // quick check for work
-        if (bundleDescriptors == null || bundleDescriptors.isEmpty()) {
+        if (this.bundleDescriptors == null || this.bundleDescriptors.isEmpty()) {
             return null;
         }
 
         Set addedRepos = null;
 
         try {
-            lock = controller.acquireLock(LOCK_ACQUIRE_TIMEOUT);
+            this.lock = this.controller.acquireLock(LOCK_ACQUIRE_TIMEOUT);
 
-            addedRepos = addRepositories();
+            addedRepos = this.addRepositories();
 
             List installedBundles = new LinkedList();
-            for (Iterator di = bundleDescriptors.iterator(); di.hasNext();) {
+            for (Iterator di = this.bundleDescriptors.iterator(); di.hasNext();) {
                 BundleDescriptor bd = (BundleDescriptor) di.next();
 
                 try {
-                    bd.install(controller, installedBundles);
+                    bd.install(this.controller, installedBundles);
                 } catch (BundleException be) {
-                    controller.log(LogService.LOG_ERROR, be.getMessage());
+                    this.controller.log(LogService.LOG_ERROR, be.getMessage());
                 }
             }
 
             boolean doResolve = false;
             if (doResolve) {
-                RepositoryAdmin ra = controller.getRepositoryAdmin();
+                RepositoryAdmin ra = this.controller.getRepositoryAdmin();
                 if (ra != null) {
                     Resolver r = ra.resolver();
                     System.err.println("Missing Resources:");
@@ -203,7 +185,7 @@ public class InstallerImpl implements Installer {
                     try {
                         bundles[i].start();
                     } catch (BundleException be) {
-                        controller.log(LogService.LOG_WARNING,
+                        this.controller.log(LogService.LOG_WARNING,
                             "Cannot start bundle "
                                 + bundles[i].getSymbolicName() + "(id:"
                                 + bundles[i].getBundleId() + ")", be);
@@ -223,20 +205,18 @@ public class InstallerImpl implements Installer {
         } finally {
 
             // release temporary repositories
-            removeRepositories(addedRepos);
+            this.removeRepositories(addedRepos);
 
             // release the lock, if we have it
-            if (lock != null) {
-                controller.releaseLock(lock);
-                lock = null;
+            if (this.lock != null) {
+                this.controller.releaseLock(this.lock);
+                this.lock = null;
             }
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see com.day.sling.servlet.InstallerService#setDefaultStartLevel(int)
+    /**
+     * @see org.apache.sling.assembly.installer.Installer#setDefaultStartLevel(int)
      */
     public void setDefaultStartLevel(int startLevel) {
         // TODO Auto-generated method stub
@@ -246,27 +226,27 @@ public class InstallerImpl implements Installer {
     // ---------- internal -----------------------------------------------------
 
     private void addBundleDescriptor(BundleDescriptor bundleDescriptor) {
-        if (bundleDescriptors == null) {
-            bundleDescriptors = new LinkedList();
+        if (this.bundleDescriptors == null) {
+            this.bundleDescriptors = new LinkedList();
         }
 
-        bundleDescriptors.add(bundleDescriptor);
+        this.bundleDescriptors.add(bundleDescriptor);
     }
 
     private Set addRepositories() {
         // nothing to do if there are no URLs
-        if (repositoryURLs == null || repositoryURLs.isEmpty()) {
+        if (this.repositoryURLs == null || this.repositoryURLs.isEmpty()) {
             return null;
         }
 
         // check for the Repository Admin Service
-        RepositoryAdmin ra = controller.getRepositoryAdmin();
+        RepositoryAdmin ra = this.controller.getRepositoryAdmin();
         if (ra == null) {
             return null;
         }
 
         // remove all URLs from the set, which allready are defined
-        Set tmp = new HashSet(repositoryURLs);
+        Set tmp = new HashSet(this.repositoryURLs);
         Repository[] repos = ra.listRepositories();
         for (int i = 0; repos != null && i < repos.length; i++) {
             if (tmp.contains(repos[i].getURL())) {
@@ -290,7 +270,7 @@ public class InstallerImpl implements Installer {
     }
 
     private void removeRepositories(Set urls) {
-        RepositoryAdmin ra = controller.getRepositoryAdmin();
+        RepositoryAdmin ra = this.controller.getRepositoryAdmin();
         if (ra != null && urls != null) {
             for (Iterator ui = urls.iterator(); ui.hasNext();) {
                 ra.removeRepository((URL) ui.next());
@@ -308,7 +288,7 @@ public class InstallerImpl implements Installer {
         }
 
         public int getStartLevel() {
-            return startLevel;
+            return this.startLevel;
         }
 
         public void dispose() {
@@ -321,12 +301,12 @@ public class InstallerImpl implements Installer {
                 Bundle bundle) {
             StartLevel sl = controller.getStartLevel();
             if (sl != null) {
-                if (startLevel <= 0) {
+                if (this.startLevel <= 0) {
                     // startLevel = getDefaultStartLevel();
                 }
 
-                if (startLevel > 0) {
-                    sl.setBundleStartLevel(bundle, startLevel);
+                if (this.startLevel > 0) {
+                    sl.setBundleStartLevel(bundle, this.startLevel);
                 }
             }
         }
@@ -360,18 +340,18 @@ public class InstallerImpl implements Installer {
         public void install(InstallerServiceImpl controller,
                 List installedBundles) throws BundleException {
 
-            if (source == null) {
+            if (this.source == null) {
                 try {
-                    source = sourceURL.openStream();
+                    this.source = this.sourceURL.openStream();
                 } catch (IOException ioe) {
                     throw new BundleException(
-                        "Cannot open bundle stream from URL " + sourceURL, ioe);
+                        "Cannot open bundle stream from URL " + this.sourceURL, ioe);
                 }
             }
 
             Bundle bundle = controller.getBundleContext().installBundle(
-                location, source);
-            setStartLevel(controller, bundle);
+                this.location, this.source);
+            this.setStartLevel(controller, bundle);
 
             installedBundles.add(bundle);
         }
@@ -379,18 +359,18 @@ public class InstallerImpl implements Installer {
         public void dispose() {
             super.dispose();
 
-            if (source != null) {
+            if (this.source != null) {
                 try {
-                    source.close();
+                    this.source.close();
                 } catch (IOException ignore) {
                     // ignore
                 }
-                source = null;
+                this.source = null;
             }
         }
 
         public String toString() {
-            return "LocalBundle: " + location;
+            return "LocalBundle: " + this.location;
         }
     }
 
@@ -431,23 +411,23 @@ public class InstallerImpl implements Installer {
             RepositoryAdmin ra = controller.getRepositoryAdmin();
             if (ra == null) {
                 throw new BundleException("Cannot install bundle "
-                    + symbolicName + ": Missing RepositoryAdmin Service");
+                    + this.symbolicName + ": Missing RepositoryAdmin Service");
             }
 
             String filter;
-            if (versionRange == null
-                || (versionRange.getHigh() == null && versionRange.getLow().equals(
+            if (this.versionRange == null
+                || (this.versionRange.getHigh() == null && this.versionRange.getLow().equals(
                     Version.emptyVersion))) {
-                filter = "(symbolicName=" + symbolicName + ")";
+                filter = "(symbolicName=" + this.symbolicName + ")";
             } else {
-                filter = "(&(symbolicName=" + symbolicName + ")"
-                    + versionRange.getFilter() + ")";
+                filter = "(&(symbolicName=" + this.symbolicName + ")"
+                    + this.versionRange.getFilter() + ")";
             }
 
             Resource[] res = ra.discoverResources(filter);
             if (res == null || res.length == 0) {
-                throw new BundleException("Bundle " + symbolicName
-                    + " (version " + versionRange
+                throw new BundleException("Bundle " + this.symbolicName
+                    + " (version " + this.versionRange
                     + ") not found in the Bundle Repository");
             }
 
@@ -470,7 +450,7 @@ public class InstallerImpl implements Installer {
 
             if (!resolver.resolve()) {
                 StringBuffer msg = new StringBuffer("Cannot install bundle "
-                    + symbolicName + " (version " + versionRange
+                    + this.symbolicName + " (version " + this.versionRange
                     + ") due to missing requirements:");
                 Requirement[] unsatisfied = resolver.getUnsatisfiedRequirements();
                 for (int j = 0; j < unsatisfied.length; j++) {
@@ -485,14 +465,14 @@ public class InstallerImpl implements Installer {
             // after deployment, find the bundles
             Bundle[] bundles = controller.getBundleContext().getBundles();
             List bundleList = new ArrayList();
-            getBundles(bundleList, bundles, resolver.getAddedResources());
-            getBundles(bundleList, bundles, resolver.getRequiredResources());
-            getBundles(bundleList, bundles, resolver.getOptionalResources());
+            this.getBundles(bundleList, bundles, resolver.getAddedResources());
+            this.getBundles(bundleList, bundles, resolver.getRequiredResources());
+            this.getBundles(bundleList, bundles, resolver.getOptionalResources());
             bundles = (Bundle[]) bundleList.toArray(new Bundle[bundleList.size()]);
 
             for (Iterator bi = bundleList.iterator(); bi.hasNext();) {
                 Bundle bundle = (Bundle) bi.next();
-                setStartLevel(controller, bundle);
+                this.setStartLevel(controller, bundle);
                 installedBundles.add(bundle);
             }
         }
@@ -522,7 +502,7 @@ public class InstallerImpl implements Installer {
         }
 
         public String toString() {
-            return "RepositoryBundle: " + symbolicName + " (version:" + versionRange + ")";
+            return "RepositoryBundle: " + this.symbolicName + " (version:" + this.versionRange + ")";
         }
     }
 }
