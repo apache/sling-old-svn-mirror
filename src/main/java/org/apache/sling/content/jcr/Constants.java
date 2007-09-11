@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -41,15 +41,15 @@ public interface Constants {
 
     /**
      * The topic root for events published by this bundle (value is
-     * "com/day/sling/content/jcr/ContentEvent"). Event consumers should
-     * register to "com/day/sling/content/jcr/ContentEvent/*" to receive all
+     * "org/apache/sling/content/jcr/ContentEvent"). Event consumers should
+     * register to "org/apache/sling/content/jcr/ContentEvent/*" to receive all
      * events from this bundle.
      */
-    static final String CONTENT_EVENT = "com/day/sling/content/jcr/ContentEvent";
+    static final String CONTENT_EVENT = "org/apache/sling/content/jcr/ContentEvent";
 
     /**
      * The name of the event sent after new Object Mappings have been registered
-     * (value is "com/day/sling/content/jcr/ContentEvent/MAPPED"). This name is
+     * (value is "org/apache/sling/content/jcr/ContentEvent/MAPPED"). This name is
      * appended to the {@link #CONTENT_EVENT root topic} to create the event
      * topic.
      * <p>
@@ -60,7 +60,7 @@ public interface Constants {
 
     /**
      * The name of the event sent after Object Mappings have been unregistered
-     * (value is "com/day/sling/content/jcr/ContentEvent/UNMAPPED"). This name
+     * (value is "org/apache/sling/content/jcr/ContentEvent/UNMAPPED"). This name
      * is appended to the {@link #CONTENT_EVENT root topic} to create the event
      * topic.
      * <p>
