@@ -24,7 +24,7 @@ import org.apache.sling.component.Component;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.components.AbstractRepositoryComponent;
+import org.apache.sling.core.components.AbstractRepositoryComponent;
 import org.apache.sling.scripting.core.ScriptManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
 
     /**
      * @ocm.collection jcrName="sling:scripts" jcrNodeType="sling:ScriptList"
-     *                 elementClassName="org.apache.sling.scripting.Script"
+     *                 elementClassName="org.apache.sling.core.scripting.Script"
      */
     private Script[] scripts;
 
@@ -193,7 +193,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      * <code>null</code>, this method does nothing.
      * <p>
      * Before calling the renderer, this instance is set as the
-     * {@link Util#ATTR_COMPONENT org.apache.sling.scripting.component}
+     * {@link Util#ATTR_COMPONENT org.apache.sling.core.scripting.component}
      * attribute in the request. When the script returns. the former value of
      * the request attribute is reset.
      * 

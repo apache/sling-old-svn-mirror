@@ -99,14 +99,14 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     // ---------- Persistence Support ------------------------------------------
 
     /**
-     * @see org.apache.sling.content.ContentManager#setAutoSave(boolean)
+     * @see org.apache.sling.core.content.ContentManager#setAutoSave(boolean)
      */
     public void setAutoSave(boolean autoSave) {
         this.autoSave = autoSave;
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#isAutoSave()
+     * @see org.apache.sling.core.content.ContentManager#isAutoSave()
      */
     public boolean isAutoSave() {
         return this.autoSave;
@@ -135,7 +135,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#copy(org.apache.sling.component.Content, java.lang.String, boolean)
+     * @see org.apache.sling.core.content.ContentManager#copy(org.apache.sling.core.component.Content, java.lang.String, boolean)
      */
     public void copy(Content content, String destination, boolean deep) {
         this.checkPermission(destination, ACTION_CREATE);
@@ -156,7 +156,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#create(java.lang.String, java.lang.Class, java.util.Map)
+     * @see org.apache.sling.core.content.ContentManager#create(java.lang.String, java.lang.Class, java.util.Map)
      */
     public Content create(String path, Class objectClass, Map properties) {
         this.checkPermission(path, ACTION_CREATE);
@@ -191,7 +191,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#delete(org.apache.sling.component.Content)
+     * @see org.apache.sling.core.content.ContentManager#delete(org.apache.sling.core.component.Content)
      */
     public void delete(Content content) {
         this.checkPermission(content.getPath(), ACTION_REMOVE);
@@ -200,7 +200,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#delete(java.lang.String)
+     * @see org.apache.sling.core.content.ContentManager#delete(java.lang.String)
      */
     public void delete(String path) {
         this.checkPermission(path, ACTION_REMOVE);
@@ -250,7 +250,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#load(java.lang.String, java.lang.Class)
+     * @see org.apache.sling.core.content.ContentManager#load(java.lang.String, java.lang.Class)
      */
     public Content load(String path, Class type) {
         if (this.itemExists(path)) {
@@ -266,7 +266,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#move(org.apache.sling.component.Content, java.lang.String)
+     * @see org.apache.sling.core.content.ContentManager#move(org.apache.sling.core.component.Content, java.lang.String)
      */
     public void move(Content content, String destination) {
         this.move(content.getPath(), destination);
@@ -295,7 +295,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#orderBefore(org.apache.sling.component.Content, java.lang.String)
+     * @see org.apache.sling.core.content.ContentManager#orderBefore(org.apache.sling.core.component.Content, java.lang.String)
      */
     public void orderBefore(Content content, String afterName) {
         Node parent;
@@ -330,7 +330,7 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.content.ContentManager#store(org.apache.sling.component.Content)
+     * @see org.apache.sling.core.content.ContentManager#store(org.apache.sling.core.component.Content)
      */
     public void store(Content content) {
         this.update(content);

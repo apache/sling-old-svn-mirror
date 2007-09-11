@@ -43,8 +43,8 @@ import org.apache.sling.component.Content;
  */
 public class ServletAdapter implements Component, ServletConfig {
 
-    public static final String PROP_SERVLET_CLASS = "org.apache.sling.scripting.bridge.servlet";
-    public static final String PROP_CONTENT_CLASS = "org.apache.sling.scripting.bridge.content";
+    public static final String PROP_SERVLET_CLASS = "org.apache.sling.core.scripting.bridge.servlet";
+    public static final String PROP_CONTENT_CLASS = "org.apache.sling.core.scripting.bridge.content";
 
     private ComponentContext componentContext;
     private org.osgi.service.component.ComponentContext osgiComponentContext;
@@ -52,14 +52,14 @@ public class ServletAdapter implements Component, ServletConfig {
     private Servlet delegatee;
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#getComponentContext()
+     * @see org.apache.sling.core.component.Component#getComponentContext()
      */
     public ComponentContext getComponentContext() {
         return componentContext;
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#getId()
+     * @see org.apache.sling.core.component.Component#getId()
      */
     public String getId() {
         // the ID is the fully qualified name of the delegatee servlet class
@@ -79,7 +79,7 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#createContentInstance()
+     * @see org.apache.sling.core.component.Component#createContentInstance()
      */
     public Content createContentInstance() {
         String className = getContentClassName();
@@ -95,14 +95,14 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#getContentClassName()
+     * @see org.apache.sling.core.component.Component#getContentClassName()
      */
     public String getContentClassName() {
         return getProperty(PROP_CONTENT_CLASS, null);
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#getExtension(java.lang.String)
+     * @see org.apache.sling.core.component.Component#getExtension(java.lang.String)
      */
     public ComponentExtension getExtension(String arg0) {
         // this class has no extensions by default
@@ -110,7 +110,7 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#getExtensions()
+     * @see org.apache.sling.core.component.Component#getExtensions()
      */
     public Enumeration getExtensions() {
         // this class has no extensions by default
@@ -118,7 +118,7 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#init(org.apache.sling.component.ComponentContext)
+     * @see org.apache.sling.core.component.Component#init(org.apache.sling.core.component.ComponentContext)
      */
     public void init(ComponentContext componentContext) throws ComponentException {
         this.componentContext = componentContext;
@@ -132,7 +132,7 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
+     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws ComponentException, IOException {
@@ -145,7 +145,7 @@ public class ServletAdapter implements Component, ServletConfig {
     }
 
     /* (non-Javadoc)
-     * @see org.apache.sling.component.Component#destroy()
+     * @see org.apache.sling.core.component.Component#destroy()
      */
     public void destroy() {
         // get a copy of the delegatee and set delegatee null

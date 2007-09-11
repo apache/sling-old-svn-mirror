@@ -23,7 +23,7 @@ import org.apache.sling.component.Content;
  * The <code>ContentManager</code> interface is a generic interface to manage
  * <code>Content</code> objects through some OCM mapping layer.
  *
- * @see org.apache.sling.content.jcr.JcrContentManager
+ * @see org.apache.sling.core.content.jcr.JcrContentManager
  */
 public interface ContentManager {
 

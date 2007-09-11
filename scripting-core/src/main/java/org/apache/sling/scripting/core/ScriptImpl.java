@@ -65,7 +65,7 @@ public class ScriptImpl implements Comparable, Script {
      * CHANGE IN FUTURE RELEASES WITHOUT ANY ADVANCE NOTICE. USE OF THIS FEATURE
      * IS NEITHER SUPPORTED NOR GENERALLY ENDORSED.</em></strong>
      */
-    private static final String RESTRICTED_METHODS_PROPERTY = "org.apache.sling.script.restricted_methods";
+    private static final String RESTRICTED_METHODS_PROPERTY = "org.apache.sling.core.script.restricted_methods";
 
     /**
      * Special globbing pattern to match all queries. This is the default

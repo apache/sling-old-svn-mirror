@@ -45,7 +45,7 @@ import org.osgi.service.event.EventConstants;
  * @scr.property name="service.description"
  *          value="Sling ContentManagerFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.content.jcr.JcrContentManagerFactory"
+ * @scr.service interface="org.apache.sling.core.content.jcr.JcrContentManagerFactory"
  * @author fmeschbe
  */
 public class JcrContentHelper implements JcrContentManagerFactory,

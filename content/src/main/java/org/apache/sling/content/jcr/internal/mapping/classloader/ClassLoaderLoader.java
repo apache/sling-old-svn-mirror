@@ -27,7 +27,7 @@ public class ClassLoaderLoader implements Loader {
     }
 
     /**
-     * @see org.apache.sling.content.jcr.internal.mapping.classloader.Loader#loadClass(java.lang.String)
+     * @see org.apache.sling.core.content.jcr.internal.mapping.classloader.Loader#loadClass(java.lang.String)
      */
     public Class loadClass(String name) throws ClassNotFoundException {
         return this.classLoader.loadClass(name);

@@ -26,7 +26,7 @@ import org.apache.sling.component.ComponentRequest;
  * The <code>AbstractCacheFilter</code> TODO
  *
  * @scr.reference name="CacheService"
- *                interface="org.apache.sling.cache.CacheService"
+ *                interface="org.apache.sling.core.cache.CacheService"
  *                cardinality="0..n" policy="dynamic"
  */
 abstract class AbstractCacheFilter {

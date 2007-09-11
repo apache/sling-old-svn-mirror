@@ -30,7 +30,7 @@ import org.osgi.service.component.ComponentContext;
  * @scr.property name="service.description" value="Sling ScriptManager"
  * @scr.property name="service.vendor" value="Apache Software Foundation"
  * @scr.reference name="ScriptHandler"
- *                interface="org.apache.sling.scripting.ScriptHandler"
+ *                interface="org.apache.sling.core.scripting.ScriptHandler"
  *                cardinality="0..n" policy="dynamic"
  */
 public class ScriptManager {

@@ -19,9 +19,9 @@ import org.apache.sling.component.ComponentRequest;
 
 public class Util {
 
-    public static final String ATTR_COMPONENT = "org.apache.sling.scripting.component";
-    public static final String ATTR_RENDER_REQUEST = "org.apache.sling.scripting.render_request";
-    public static final String ATTR_RENDER_RESPONSE = "org.apache.sling.scripting.render_response";
+    public static final String ATTR_COMPONENT = "org.apache.sling.core.scripting.component";
+    public static final String ATTR_RENDER_REQUEST = "org.apache.sling.core.scripting.render_request";
+    public static final String ATTR_RENDER_RESPONSE = "org.apache.sling.core.scripting.render_response";
 
     public static Object replaceAttribute(ComponentRequest request, String attrName, Object value) {
         // get the old value

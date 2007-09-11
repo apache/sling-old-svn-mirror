@@ -37,7 +37,7 @@ public class ComponentResponseWrapper extends HttpServletResponseWrapper impleme
 
     /**
      * @return
-     * @see org.apache.sling.component.ComponentResponse#getContentType()
+     * @see org.apache.sling.core.component.ComponentResponse#getContentType()
      */
     public String getContentType() {
         return getComponentResponse().getContentType();
@@ -45,7 +45,7 @@ public class ComponentResponseWrapper extends HttpServletResponseWrapper impleme
 
     /**
      * @return
-     * @see org.apache.sling.component.ComponentResponse#getNamespace()
+     * @see org.apache.sling.core.component.ComponentResponse#getNamespace()
      */
     public String getNamespace() {
         return getComponentResponse().getNamespace();
