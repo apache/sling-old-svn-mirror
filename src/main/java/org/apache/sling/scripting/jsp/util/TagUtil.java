@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -22,7 +22,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.ServletResponseWrapper;
 import javax.servlet.jsp.PageContext;
 
-import org.apache.sling.Constants;
+import org.apache.sling.core.Constants;
 import org.apache.sling.component.Component;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
@@ -43,7 +43,7 @@ public final class TagUtil {
     /**
      * Log an INFO message to the given logger with context information from
      * the <code>pageContext</code>.
-     * 
+     *
      * @param log The SLF4J <code>Logger</code> to use for writing the message.
      * @param pageContext The JSP page context providing contextual information
      *      for the log message.
@@ -60,7 +60,7 @@ public final class TagUtil {
         if (t instanceof ServletException) {
             t = getRootCause((ServletException) t);
         }
-        
+
         // ensure message, return if neither message nor exception
         if (message == null) {
             if (t == null) {
@@ -68,11 +68,11 @@ public final class TagUtil {
             }
             message = t.getMessage();
         }
-        
+
         log.info("Problem on page {}: {}", new Object[] {
             pageContext.getPage(), message }, t);
     }
-    
+
     /**
      * Unwrap a component exception to get the true root cause of an exception
      */
@@ -98,7 +98,7 @@ public final class TagUtil {
                 throw new IllegalStateException("request wrong class");
             }
         }
-        
+
         return (ComponentRequest) req;
     }
 
@@ -111,7 +111,7 @@ public final class TagUtil {
                 throw new IllegalStateException("response wrong class");
             }
         }
-        
+
         return (ComponentResponse) req;
     }
 
