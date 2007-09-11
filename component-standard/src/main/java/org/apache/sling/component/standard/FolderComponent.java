@@ -69,9 +69,9 @@ public class FolderComponent extends BaseComponent {
         pw.println("<ul>");
 
         try {
-            Enumeration entries = request.getChildren(content);
+            Enumeration<Content> entries = request.getChildren(content);
             while (entries.hasMoreElements()) {
-                Content entry = (Content) entries.nextElement();
+                Content entry = entries.nextElement();
                 pw.println("<li>" + entry.getPath() + "</li>");
             }
         } catch (ComponentException ce) {
