@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -41,7 +41,7 @@ import org.osgi.service.log.LogService;
  * Extensions of this class will have to declare the following
  * <code>scr.property</code> tags to have them declared automatically in the
  * respective component and metatype definitions by the maven-sling-plugin:
- * 
+ *
  * <pre>
  *  scr.property value=&quot;default&quot; name=&quot;defaultWorkspace&quot;
  *  scr.property value=&quot;anonymous&quot; name=&quot;anonymous.name&quot;
@@ -115,29 +115,27 @@ public abstract class AbstractSlingRepository implements SlingRepository {
 
     protected final SessionPoolManager getPoolManager()
             throws RepositoryException {
-        if (poolManager == null) {
-            Dictionary properties = componentContext.getProperties();
-            int maxActiveSessions = getIntProperty(properties,
+        if (this.poolManager == null) {
+            Dictionary properties = this.componentContext.getProperties();
+            int maxActiveSessions = this.getIntProperty(properties,
                 PARAM_MAX_ACTIVE_SESSIONS);
-            int maxIdleSessions = getIntProperty(properties,
+            int maxIdleSessions = this.getIntProperty(properties,
                 PARAM_MAX_IDLE_SESSIONS);
-            int maxActiveSessionsWait = getIntProperty(properties,
+            int maxActiveSessionsWait = this.getIntProperty(properties,
                 PARAM_MAX_ACTIVE_SESSIONS_WAIT);
 
-            poolManager = new SessionPoolManager(getDelegatee(),
+            this.poolManager = new SessionPoolManager(this.getDelegatee(),
                 maxActiveSessions, maxActiveSessionsWait, maxIdleSessions);
         }
 
-        return poolManager;
+        return this.poolManager;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.jcr.repository.SessionProvider#getDefaultWorkspace()
+    /**
+     * @see org.apache.sling.jcr.SlingRepository#getDefaultWorkspace()
      */
     public String getDefaultWorkspace() {
-        return defaultWorkspace;
+        return this.defaultWorkspace;
     }
 
     /**
@@ -145,43 +143,43 @@ public abstract class AbstractSlingRepository implements SlingRepository {
      * result of calling {@link #login}
      */
     public Session login() throws LoginException, RepositoryException {
-        return login(null, null);
+        return this.login(null, null);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.jcr.SessionProvider#getAdministrationSession()
      */
     public Session loginAdministrative(String workspace)
             throws RepositoryException {
-        SimpleCredentials sc = new SimpleCredentials(adminUser, adminPass);
-        return login(sc, workspace);
+        SimpleCredentials sc = new SimpleCredentials(this.adminUser, this.adminPass);
+        return this.login(sc, workspace);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#login(javax.jcr.Credentials)
      */
     public Session login(Credentials credentials) throws LoginException,
             RepositoryException {
-        return login(credentials, null);
+        return this.login(credentials, null);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#login(java.lang.String)
      */
     public Session login(String workspace) throws LoginException,
             NoSuchWorkspaceException, RepositoryException {
-        return login(null, workspace);
+        return this.login(null, workspace);
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.jcr.SlingRepository#login(javax.jcr.Credentials,
      *      java.lang.String)
      */
@@ -190,28 +188,28 @@ public abstract class AbstractSlingRepository implements SlingRepository {
             RepositoryException {
 
         // if already stopped, don't retrieve a session
-        if (componentContext == null || getDelegatee() == null) {
+        if (this.componentContext == null || this.getDelegatee() == null) {
             throw new RepositoryException("Sling Repository not ready");
         }
 
         if (credentials == null) {
-            credentials = new SimpleCredentials(anonUser, anonPass);
+            credentials = new SimpleCredentials(this.anonUser, this.anonPass);
         }
 
         // check the workspace
         if (workspace == null) {
-            workspace = getDefaultWorkspace();
+            workspace = this.getDefaultWorkspace();
         }
 
         try {
-            return getPoolManager().login(credentials, workspace);
+            return this.getPoolManager().login(credentials, workspace);
         } catch (NoSuchWorkspaceException nswe) {
             // if the desired workspace is the default workspace, try to create
-            if (workspace.equals(getDefaultWorkspace())
-                && createWorkspace(workspace)) {
-                return getPoolManager().login(credentials, workspace);
+            if (workspace.equals(this.getDefaultWorkspace())
+                && this.createWorkspace(workspace)) {
+                return this.getPoolManager().login(credentials, workspace);
             }
-            
+
             // otherwise (any workspace) or if workspace creation fails
             // just forward the original exception
             throw nswe;
@@ -220,14 +218,14 @@ public abstract class AbstractSlingRepository implements SlingRepository {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#getDescriptor(java.lang.String)
      */
     public String getDescriptor(String name) {
         try {
-            return getDelegatee().getDescriptor(name);
+            return this.getDelegatee().getDescriptor(name);
         } catch (RepositoryException re) {
-            log(LogService.LOG_ERROR, "Repository not available", re);
+            this.log(LogService.LOG_ERROR, "Repository not available", re);
         }
 
         return null;
@@ -235,14 +233,14 @@ public abstract class AbstractSlingRepository implements SlingRepository {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#getDescriptorKeys()
      */
     public String[] getDescriptorKeys() {
         try {
-            return getDelegatee().getDescriptorKeys();
+            return this.getDelegatee().getDescriptorKeys();
         } catch (RepositoryException re) {
-            log(LogService.LOG_ERROR, "Repository not available", re);
+            this.log(LogService.LOG_ERROR, "Repository not available", re);
         }
 
         return new String[0];
@@ -253,20 +251,20 @@ public abstract class AbstractSlingRepository implements SlingRepository {
     protected abstract LogService getLog();
 
     protected void log(int level, String message) {
-        log(level, message, null);
+        this.log(level, message, null);
     }
 
     protected void log(int level, String message, Throwable t) {
-        LogService log = getLog();
+        LogService log = this.getLog();
         if (log != null) {
-            log.log(componentContext.getServiceReference(), level, message, t);
+            log.log(this.componentContext.getServiceReference(), level, message, t);
         }
     }
 
     // --------- SCR integration -----------------------------------------------
 
     protected ComponentContext getComponentContext() {
-        return componentContext;
+        return this.componentContext;
     }
 
     /**
@@ -277,29 +275,29 @@ public abstract class AbstractSlingRepository implements SlingRepository {
         this.componentContext = componentContext;
 
         Dictionary properties = componentContext.getProperties();
-        defaultWorkspace = getProperty(properties, PROPERTY_DEFAULT_WORKSPACE,
+        this.defaultWorkspace = this.getProperty(properties, PROPERTY_DEFAULT_WORKSPACE,
             DEFAULT_WORKSPACE);
 
-        anonUser = getProperty(properties, PROPERTY_ANONYMOUS_USER,
+        this.anonUser = this.getProperty(properties, PROPERTY_ANONYMOUS_USER,
             DEFAULT_ANONYMOUS_USER);
-        anonPass = getProperty(properties, PROPERTY_ANONYMOUS_PASS,
+        this.anonPass = this.getProperty(properties, PROPERTY_ANONYMOUS_PASS,
             DEFAULT_ANONYMOUS_PASS).toCharArray();
 
-        adminUser = getProperty(properties, PROPERTY_ADMIN_USER,
+        this.adminUser = this.getProperty(properties, PROPERTY_ADMIN_USER,
             DEFAULT_ADMIN_USER);
-        adminPass = getProperty(properties, PROPERTY_ADMIN_PASS,
+        this.adminPass = this.getProperty(properties, PROPERTY_ADMIN_PASS,
             DEFAULT_ADMIN_PASS).toCharArray();
     }
 
     /**
      * This method must be called if overwritten by implementations !!
-     * 
+     *
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
-        if (poolManager != null) {
-            poolManager.dispose();
-            poolManager = null;
+        if (this.poolManager != null) {
+            this.poolManager.dispose();
+            this.poolManager = null;
         }
 
         this.componentContext = null;
@@ -329,24 +327,24 @@ public abstract class AbstractSlingRepository implements SlingRepository {
     }
 
     private boolean createWorkspace(String workspace) {
-        log(LogService.LOG_INFO, "login: Requested workspace " + workspace
+        this.log(LogService.LOG_INFO, "login: Requested workspace " + workspace
             + " does not exist, trying to create");
 
         Session tmpSession = null;
         try {
-            SimpleCredentials sc = new SimpleCredentials(adminUser, adminPass);
-            tmpSession = getDelegatee().login(sc);
+            SimpleCredentials sc = new SimpleCredentials(this.adminUser, this.adminPass);
+            tmpSession = this.getDelegatee().login(sc);
             Workspace defaultWs = tmpSession.getWorkspace();
             if (defaultWs instanceof JackrabbitWorkspace) {
                 ((JackrabbitWorkspace) defaultWs).createWorkspace(workspace);
                 return true;
             }
-            
+
             // not Jackrabbit
-            log(LogService.LOG_ERROR, "login: Cannot create requested workspace "
+            this.log(LogService.LOG_ERROR, "login: Cannot create requested workspace "
                 + workspace + ": Jackrabbit is required");
         } catch (Throwable t) {
-            log(LogService.LOG_ERROR, "login: Cannot create requested workspace "
+            this.log(LogService.LOG_ERROR, "login: Cannot create requested workspace "
                 + workspace, t);
         } finally {
             if (tmpSession != null) {
