@@ -61,12 +61,11 @@ public class ScriptImpl implements Comparable, Script {
      * an empty value, this in fact forces all script infos to have mandatory
      * <em>Method</em> property settings, elso no requests will ever be
      * handled.
-     * <p> <<strong><em>NOTE: THIS IS UNDOCUMENTED INTERMEDIATE BEHAVIOUR AND MAY
+     * <p><strong><em>NOTE: THIS IS UNDOCUMENTED INTERMEDIATE BEHAVIOUR AND MAY
      * CHANGE IN FUTURE RELEASES WITHOUT ANY ADVANCE NOTICE. USE OF THIS FEATURE
-     * IS NEITHER SUPPORTED NOR GENERALLY ENDORSED BY DAY SOFTWARE,
-     * INC.</em></strong>
+     * IS NEITHER SUPPORTED NOR GENERALLY ENDORSED.</em></strong>
      */
-    private static final String RESTRICTED_METHODS_PROPERTY = "com.day.sling.script.restricted_methods";
+    private static final String RESTRICTED_METHODS_PROPERTY = "org.apache.sling.script.restricted_methods";
 
     /**
      * Special globbing pattern to match all queries. This is the default

@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -30,8 +30,11 @@ import org.apache.sling.component.ComponentResponse;
  */
 public abstract class HttpServletAdapter implements ComponentRenderer {
 
-    /* (non-Javadoc)
-     * @see org.apache.sling.scripting.ComponentRenderer#render(com.day.components.RenderRequest, com.day.components.RenderResponse)
+    /**
+     * @param request
+     * @param response
+     * @throws IOException
+     * @throws ServletException
      */
     protected abstract void service(HttpServletRequest request, HttpServletResponse response)
         throws IOException, ServletException;
@@ -39,12 +42,12 @@ public abstract class HttpServletAdapter implements ComponentRenderer {
 
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException, ComponentException {
-        
+
         Object oldRequest = Util.replaceAttribute(request, Util.ATTR_RENDER_REQUEST, request);
         Object oldResponse = Util.replaceAttribute(request, Util.ATTR_RENDER_RESPONSE, response);
 
         try {
-            service(request, response);
+            this.service(request, response);
         } catch (IOException ioe) {
             // forward
             throw ioe;

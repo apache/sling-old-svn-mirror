@@ -37,7 +37,7 @@ import org.osgi.service.log.LogService;
  * @scr.component label="%repository.name" description="%repository.description"
  *          factory="org.apache.sling.jcr.server.SlingClientRepositoryFactory"
  *
- * @scr.property name="service.vendor" value="The Apache Software FoundationG"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
  *      value="Factory for non-embedded JCR Repository Instances"
  *
