@@ -68,19 +68,21 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            !org.apache.sling.core,
-                            !org.apache.sling.core.*, org.apache.sling,
-                            org.apache.sling.auth,
-                            org.apache.sling.components,
-                            org.apache.sling.components.extensions,
-                            org.apache.sling.content,
-                            org.apache.sling.filter,
-                            org.apache.sling.locale,
-                            org.apache.sling.mapper,
-                            org.apache.sling.theme
+                            !org.apache.sling.core.impl,
+                            !org.apache.sling.core.impl.*,
+                            org.apache.sling.core,
+                            org.apache.sling.core.auth,
+                            org.apache.sling.core.components,
+                            org.apache.sling.core.components.extensions,
+                            org.apache.sling.core.content,
+                            org.apache.sling.core.filter,
+                            org.apache.sling.core.locale,
+                            org.apache.sling.core.mapper,
+                            org.apache.sling.core.theme
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.core,org.apache.sling.core.*
+                            org.apache.sling.core.impl,
+                            org.apache.sling.core.impl.*
                         </Private-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/command.cnd,SLING-INF/nodetypes/component.cnd,SLING-INF/nodetypes/selection.cnd
