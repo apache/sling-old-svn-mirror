@@ -1,0 +1,94 @@
+    ---
+    Welcome to Sling
+    ---
+    Felix Meschberger
+    ---
+    September 2007
+    ---
+
+
+
+Introduction
+
+    Sling is a Web application framework based on REST principles that provides
+    easy development of content-oriented applications. Sling uses a JCR
+    repository, such as Apache Jackrabbit, as its data store. Sling emerged as
+    an internal project of Day Management AG and has been contributed to the
+    Apache Software Foundation. These pages constitute a first set of
+    documentation of Sling.
+    
+    These pages are currently under construction, so please come back now and
+    then, over the next few days, to see what is going on here. Discussion
+    should be directed to the Apache Sling development list
+    (sling-dev at incubator.apache.org).
+
+*--+
+| <<NOTE>>: Sling has just entered the Incubator and you may already get the source from the {{{source-repository.html}SVN repository}}. Unfortunately the mailing lists have not been setup yet, so you may not register yet.|
+*--+
+
+
+Contents
+
+    Documentation is currently available inside the Jackrabbit Wiki at
+    {{http://wiki.apache.org/jackrabbit/ApacheSling}}:
+
+   * {{{http://wiki.apache.org/jackrabbit/SlingProposal}Draft proposal to submit Sling to the Incubator}}
+   
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingUseCases}Some Use Cases for Sling}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/ComponentAPI}The Component API underlying Sling}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingArchitecture}Architecture of Sling}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingAssembly}Assembly: Bundling Bundles}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingInitialStartup}Initial Provisioning and Startup}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingConfiguration}Configuring Sling}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingLogging}Logging}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingContent}Content Loading and Nodetype Support}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingRequestProcessing}HTTP Request Processing}}
+
+
+
+Guides
+
+
+    In addition to this more descriptive and referential documentation, a
+    series of user and developer guides are provided here:
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingGuideInstall}Installing and Upgrading Bundles}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingGuideDefaultMappings}Default Content Mapping and Request Rendering}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingGuideRequestDispatching}Dispatching requests in Sling Applications}}
+
+   * {{{http://wiki.apache.org/jackrabbit/ApacheSling/SlingGuideRequestParameters}Request Parameter Handling in Sling}}
+
+
+
+References
+
+
+* OSGi
+
+    Sling is implemented as a series of {{{http://www.osgi.org}OSGi}}
+    Bundles and makes extensive use of the OSGi functionality, such as
+    lifecycle management and the service layer. In addition, Sling requires
+    several OSGi compendium services to be available, such as the Log Service,
+    Http Service, Configuration Admin Service, Metatype Service, and
+    Declarative Services.
+
+* Apache Felix
+
+    While Sling does not require a specific OSGi framework
+    implementation to run in, Sling is being developed using
+    {{{http://felix.apache.org}Apache Felix}} as the OSGi framework
+    implementation. It has not been tested yet, but it is expected that Sling
+    also operates perfectly inside other OSGi frameworks such as
+    {{{http://www.eclipse.org/equinox}Equinox}} and
+    {{{http://www.knopflerfish.org}Knopflerfish}}.
+
