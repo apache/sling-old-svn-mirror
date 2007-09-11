@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -17,6 +17,7 @@ package org.apache.sling.launcher.main;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.sling.launcher.Sling;
 import org.osgi.framework.BundleException;
@@ -84,9 +85,9 @@ public class Main {
     private static final String[] logLevels = { "FATAL", "ERROR", "WARN",
         "INFO", "DEBUG" };
 
-    private static final String PROP_LOG_LEVEL = "org.apache.sling.core.log.level";
+    private static final String PROP_LOG_LEVEL = "org.apache.sling.log.level";
 
-    private static final String PROP_LOG_FILE = "org.apache.sling.core.log.file";
+    private static final String PROP_LOG_FILE = "org.apache.sling.log.file";
 
     private static final String PROP_PORT = "org.osgi.service.http.port";
 
@@ -139,8 +140,8 @@ public class Main {
         }
 
         public void run() {
-            if (sling != null) {
-                sling.destroy();
+            if (this.sling != null) {
+                this.sling.destroy();
             }
         }
     }
