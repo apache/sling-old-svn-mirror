@@ -27,7 +27,6 @@ import javax.jcr.SimpleCredentials;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.auth.AuthenticationHandler;
 import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentFilter;
@@ -35,6 +34,7 @@ import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.core.RequestUtil;
+import org.apache.sling.core.auth.AuthenticationHandler;
 import org.apache.sling.core.impl.RequestData;
 import org.apache.sling.jcr.SlingRepository;
 import org.apache.sling.jcr.TooManySessionsException;
