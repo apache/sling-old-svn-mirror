@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.core.log;
+package org.apache.sling.core.impl.log;
 
 import junit.framework.TestCase;
-
 
 /**
  * The <code>CustomLogFormatTest</code> class tests the
@@ -25,16 +24,16 @@ import junit.framework.TestCase;
 public class CustomLogFormatTest extends TestCase {
 
     public void testCase0() {
-        testCase0Helper("%t [%R] -> %m %U%q %H");
-        testCase0Helper("%{Content-Type}i");
-        testCase0Helper("%400t");
-        testCase0Helper("%!400t");
-        testCase0Helper("%300,400t");
-        testCase0Helper("%!300,400t");
-        testCase0Helper("%!300,400{Content-Type}i");
-        testCase0Helper("xyz %Dms");
+        this.testCase0Helper("%t [%R] -> %m %U%q %H");
+        this.testCase0Helper("%{Content-Type}i");
+        this.testCase0Helper("%400t");
+        this.testCase0Helper("%!400t");
+        this.testCase0Helper("%300,400t");
+        this.testCase0Helper("%!300,400t");
+        this.testCase0Helper("%!300,400{Content-Type}i");
+        this.testCase0Helper("xyz %Dms");
     }
-    
+
     private void testCase0Helper(String format) {
         CustomLogFormat clf = new CustomLogFormat(format);
         String format2 = clf.toString();
@@ -42,7 +41,7 @@ public class CustomLogFormatTest extends TestCase {
     }
 
     public void testHeaderEscape() {
-        
+
         // single whitespace character
         assertEquals("\\n", CustomLogFormat.HeaderParameter.escape("\n"));
         assertEquals("\\r", CustomLogFormat.HeaderParameter.escape("\r"));
@@ -53,16 +52,16 @@ public class CustomLogFormatTest extends TestCase {
         // single special character
         assertEquals("\\\\", CustomLogFormat.HeaderParameter.escape("\\"));
         assertEquals("\\\"", CustomLogFormat.HeaderParameter.escape("\""));
-        
+
         // plain word
         assertEquals("This is a plain word", CustomLogFormat.HeaderParameter.escape("This is a plain word"));
 
         // embedded whitespace special
         assertEquals("This is a\\nplain word", CustomLogFormat.HeaderParameter.escape("This is a\nplain word"));
-        
+
         // embedded non-printable
         assertEquals("Das isch \\u00e4n Umlut", CustomLogFormat.HeaderParameter.escape("Das isch \u00e4n Umlut"));
         assertEquals("This is a special character \\u1234", CustomLogFormat.HeaderParameter.escape("This is a special character \u1234"));
     }
-    
+
 }
