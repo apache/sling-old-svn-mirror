@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * The <code>SessionPool</code> class extends the
  * {@link AbstractPoolingUserMappin} class actually
  * implementing  pooling and reusing sessions with the limits defined by the
- * base class. See {@link #acquireSession(Repository, SimpleCredentials, String)
+ * base class. See {@link #acquireSession(Repository, SimpleCredentials, String)}
  * and {@link #acquireSession(Session, String)} for details.
  */
 class SessionPool {
@@ -94,12 +94,12 @@ class SessionPool {
      * The session pool. Access to this object must be synchronized to prevent
      * corruption of the data structures.
      */
-    private final LinkedList idleSessions;
+    private final LinkedList<Session> idleSessions;
 
     /**
      * Active sessions issued by this session pool.
      */
-    private final IdentityHashMap activeSessions;
+    private final IdentityHashMap<PooledSession, Session> activeSessions;
 
     /**
      * The maximum number of active sessions for this mapping.
@@ -160,8 +160,8 @@ class SessionPool {
         this.poolManager = poolManager;
         this.userName = credentials.getUserID();
         this.passData = this.getPassData(credentials);
-        this.idleSessions = new LinkedList();
-        this.activeSessions = new IdentityHashMap();
+        this.idleSessions = new LinkedList<Session>();
+        this.activeSessions = new IdentityHashMap<PooledSession, Session>();
         this.activeSessionLock = new Object();
         this.clearCounters();
 
@@ -608,7 +608,11 @@ class SessionPool {
                 }
             }
         } catch (RepositoryException re) {
-            log.info("Cannot cleanup lockes of session {}, logging out", userId);
+            if ( log.isDebugEnabled() ) {
+                log.debug("Cannot cleanup lockes of session " + userId + ", logging out", re);
+            } else {
+                log.info("Cannot cleanup lockes of session {}, logging out", userId);
+            }
             this.poolDropCounter++;
             session.logout();
             return;
@@ -769,7 +773,7 @@ class SessionPool {
                 }
 
                 // get the first entry from the pool
-                session = (Session) this.idleSessions.removeFirst();
+                session = this.idleSessions.removeFirst();
             }
 
             // check the session and the session's workspace
@@ -788,10 +792,10 @@ class SessionPool {
 
     //---------- internal helper ----------------------------------------------
 
-    private void logoutSessions(Iterator sessions) {
+    private void logoutSessions(Iterator<Session> sessions) {
         // logout all sessions in the pool
         while (sessions.hasNext()) {
-            Session session = (Session) sessions.next();
+            Session session = sessions.next();
             try {
                 if (session.isLive()) {
                     session.logout();
