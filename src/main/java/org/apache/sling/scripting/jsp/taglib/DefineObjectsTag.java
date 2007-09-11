@@ -56,7 +56,7 @@ public class DefineObjectsTag extends TagSupport {
     /**
      * Default name of the Java type for the scripting variable referencing the
      * current <code>Content</code> object (value is
-     * "com.day.components.Content").
+     * "org.apache.sling.components.Content").
      */
     public static final String DEFAULT_CONTENT_CLASS = Content.class.getName();
 
