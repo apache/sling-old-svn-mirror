@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -52,82 +52,57 @@ public class ComponentContextImpl implements ComponentContext {
         this.requestHandler = requestHandler;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getAttribute(java.lang.String)
+    /**
+     * @see javax.servlet.ServletContext#getAttribute(java.lang.String)
      */
     public Object getAttribute(String name) {
-        return getServletContext().getAttribute(name);
+        return this.getServletContext().getAttribute(name);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getAttributeNames()
+    /**
+     * @see javax.servlet.ServletContext#getAttributeNames()
      */
     public Enumeration getAttributeNames() {
-        return getServletContext().getAttributeNames();
+        return this.getServletContext().getAttributeNames();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getInitParameter(java.lang.String)
+    /**
+     * @see javax.servlet.ServletContext#getInitParameter(java.lang.String)
      */
     public String getInitParameter(String name) {
-        return getServletContext().getInitParameter(name);
+        return this.getServletContext().getInitParameter(name);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getInitParameterNames()
+    /**
+     * @see javax.servlet.ServletContext#getInitParameterNames()
      */
     public Enumeration getInitParameterNames() {
-        return getServletContext().getInitParameterNames();
+        return this.getServletContext().getInitParameterNames();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getMajorVersion()
+    /**
+     * @see javax.servlet.ServletContext#getMajorVersion()
      */
     public int getMajorVersion() {
-        return getServletContext().getMajorVersion();
+        return this.getServletContext().getMajorVersion();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getMimeType(java.lang.String)
+    /**
+     * @see javax.servlet.ServletContext#getMimeType(java.lang.String)
      */
     public String getMimeType(String file) {
-        return getServletContext().getMimeType(file);
+        return this.getServletContext().getMimeType(file);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getMinorVersion()
+    /**
+     * @see javax.servlet.ServletContext#getMinorVersion()
      */
     public int getMinorVersion() {
-        return getServletContext().getMinorVersion();
+        return this.getServletContext().getMinorVersion();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getComponentContextName
-     */
-    public String getComponentContextName() {
-        return getServletContext().getServletContextName();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#getRequestDispatcher(com.day.components.Content)
+    /**
+     * @see org.apache.sling.component.ComponentContext#getRequestDispatcher(org.apache.sling.component.Content)
      */
     public ComponentRequestDispatcher getRequestDispatcher(Content content) {
         // return no dispatcher if content is null
@@ -135,10 +110,10 @@ public class ComponentContextImpl implements ComponentContext {
             log.error("getRequestDispatcher: No content, cannot create request dispatcher");
             return null;
         }
-        
+
         return new ComponentRequestDispatcherImpl(content);
     }
-    
+
     public RequestDispatcher getRequestDispatcher(String path) {
         // return no dispatcher if content is null
         if (path == null) {
@@ -153,12 +128,12 @@ public class ComponentContextImpl implements ComponentContext {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     public InputStream getResourceAsStream(String path) {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     public Set getResourcePaths(String arg0) {
         // TODO Auto-generated method stub
         return null;
@@ -169,75 +144,70 @@ public class ComponentContextImpl implements ComponentContext {
      * @see javax.servlet.ServletContext#getServerInfo()
      */
     public String getServerInfo() {
-        return requestHandler.getServerInfo();
+        return this.requestHandler.getServerInfo();
     }
 
     public void log(String message, Throwable throwable) {
         log.error(message, throwable);
     }
-    
+
     public void log(String msg) {
         log.info(msg);
     }
-    
+
     public void log(Exception exception, String msg) {
-        log(msg, exception);
-    }
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#removeAttribute(java.lang.String)
-     */
-    public void removeAttribute(String name) {
-        getServletContext().removeAttribute(name);
+        this.log(msg, exception);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.ComponentContext#setAttribute(java.lang.String,
-     *      java.lang.Object)
+    /**
+     * @see javax.servlet.ServletContext#removeAttribute(java.lang.String)
+     */
+    public void removeAttribute(String name) {
+        this.getServletContext().removeAttribute(name);
+    }
+
+    /**
+     * @see javax.servlet.ServletContext#setAttribute(java.lang.String, java.lang.Object)
      */
     public void setAttribute(String name, Object object) {
-        getServletContext().removeAttribute(name);
+        this.getServletContext().removeAttribute(name);
     }
 
     private ServletContext getServletContext() {
-        return requestHandler.getServletContext();
+        return this.requestHandler.getServletContext();
     }
 
     public ServletContext getContext(String uripath) {
         // check whether to return ComponentContext ??
-        return getServletContext().getContext(uripath);
+        return this.getServletContext().getContext(uripath);
     }
 
     public RequestDispatcher getNamedDispatcher(String name) {
-        return getServletContext().getNamedDispatcher(name);
+        return this.getServletContext().getNamedDispatcher(name);
     }
 
     public String getRealPath(String path) {
-        return getServletContext().getRealPath(path);
+        return this.getServletContext().getRealPath(path);
     }
 
     public Servlet getServlet(String name) throws ServletException {
-        return getServletContext().getServlet(name);
+        return this.getServletContext().getServlet(name);
     }
 
     public String getServletContextName() {
-        return getServletContext().getServletContextName();
+        return this.getServletContext().getServletContextName();
     }
 
     public Enumeration getServletNames() {
-        return getServletContext().getServletNames();
+        return this.getServletContext().getServletNames();
     }
 
     public Enumeration getServlets() {
-        return getServletContext().getServlets();
+        return this.getServletContext().getServlets();
     }
 
     //---------- Inner class --------------------------------------------------
-    
+
     private class ComponentRequestDispatcherImpl implements
             ComponentRequestDispatcher {
 
@@ -248,7 +218,7 @@ public class ComponentContextImpl implements ComponentContext {
             this.content = content;
             this.path = content.getPath();
         }
-        
+
         private ComponentRequestDispatcherImpl(String path) {
             this.content = null;
             this.path = path;
@@ -257,59 +227,56 @@ public class ComponentContextImpl implements ComponentContext {
         public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException {
             // TODO Auto-generated method stub
             if (request instanceof ComponentRequest && response instanceof ComponentResponse) {
-                include((ComponentRequest) request,
+                this.include((ComponentRequest) request,
                     (ComponentResponse) response);
             } else {
                 // TODO, use servlet container dispatcher !!
             }
         }
-        
+
         public void forward(ServletRequest request, ServletResponse response) throws ServletException, IOException {
             // TODO Auto-generated method stub
             // TODO, use servlet container dispatcher !!
         }
-      
-        /*
-         * (non-Javadoc)
-         * 
-         * @see com.day.components.ComponentRequestDispatcher#include(com.day.components.RenderRequest,
-         *      com.day.components.ComponentResponse)
+
+        /**
+         * @see org.apache.sling.component.ComponentRequestDispatcher#include(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
          */
         public void include(ComponentRequest request, ComponentResponse response)
                 throws ComponentException, IOException {
 
             // if content is null, try to resolve it using the path
-            Content target; 
-            if (content != null) {
-                target = content;
+            Content target;
+            if (this.content != null) {
+                target = this.content;
             } else {
                 // this may throw an exception in case loading fails, which is
                 // ok here, if no content is available at that path null is
                 // return, which results in using the servlet container
-                String absPath = getAbsolutePath(request, path);
+                String absPath = this.getAbsolutePath(request, this.path);
                 target = request.getContent(absPath);
             }
-            
+
             if (target != null) {
-                requestHandler.includeContent(request, response, target);
+                ComponentContextImpl.this.requestHandler.includeContent(request, response, target);
             } else {
-                requestHandler.includeServlet(request, response, path);
+                ComponentContextImpl.this.requestHandler.includeServlet(request, response, this.path);
             }
         }
-        
+
         private String getAbsolutePath(ComponentRequest request, String path) {
             // path is already absolute
             if (path.startsWith("/")) {
                 return path;
             }
-            
+
             // get parent of current request
             String uri = request.getContent().getPath();
-            int lastSlash = uri.lastIndexOf('/'); 
-            if (lastSlash >= 0) { 
+            int lastSlash = uri.lastIndexOf('/');
+            if (lastSlash >= 0) {
                 uri = uri.substring(0, lastSlash);
             }
-            
+
             // append relative path to parent
             return uri + '/' + path;
         }

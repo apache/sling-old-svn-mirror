@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ComponentResolverFilter</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%resolver.name"
  *      description="%resolver.description"
  * @scr.property name="service.description" value="Component Resolver Filter"
@@ -52,22 +52,18 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(ComponentResolverFilter.class);
-    
+
     /**
      * @scr.property values.1="/apps/components" values.2="/libs/components"
      *               label="%resolver.path.name"
      *               description="%resolver.path.description"
      */
     public static final String PROP_PATH = "path";
-    
+
     private String[] path;
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RenderFilter#doFilter(com.day.components.RenderRequest,
-     *      com.day.components.ComponentResponse,
-     *      com.day.components.RenderFilterChain)
+
+    /**
+     * @see org.apache.sling.component.ComponentFilter#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse, org.apache.sling.component.ComponentFilterChain)
      */
     public void doFilter(ComponentRequest request, ComponentResponse response,
             ComponentFilterChain filterChain) throws IOException,
@@ -79,9 +75,9 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
             // 2.3 check Component
             Content content = contentData.getContent();
             String path = content.getPath();
-            Component component = resolveComponent(content);
+            Component component = this.resolveComponent(content);
             if (component != null) {
-                
+
                 String compId = component.getId();
                 log.debug("Using Component {} for {}", compId, path);
                 contentData.setComponent(component);
@@ -93,49 +89,49 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
             log.error("ComponentResolver: No Content data in request {}",
                 request.getRequestURI());
         }
-        
+
         response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot handle");
     }
 
     protected boolean accept(Component component) {
         return !(component instanceof ErrorHandlerComponent);
     }
-    
+
     private Component resolveComponent(Content content) {
         // get the component id
         String compId = content.getComponentId();
-        
+
         // if none, try the path of the content as its component id,
         // this allows direct addressing of components
         if (compId == null) {
             log.debug("resolveComponent: Content {} has no componentid, trying path", content.getPath());
             compId = content.getPath();
         }
-        
-        Component component = getComponent(compId);
+
+        Component component = this.getComponent(compId);
         if (component != null) {
             return component;
         }
-        
+
         // if the component ID might be a realtive path name, check with path
         if (!compId.startsWith("/")) {
 
             // apply any path prefixes
-            if (path != null) {
-                
+            if (this.path != null) {
+
                 // might be a type name with namespace
                 String relId = compId.replace(':', '/');
-                
-                for (int i=0; i < path.length; i++) {
-                    String checkid = path[i] + relId;
-                    component = getComponent(checkid);
+
+                for (int i=0; i < this.path.length; i++) {
+                    String checkid = this.path[i] + relId;
+                    component = this.getComponent(checkid);
                     if (component != null) {
                         return component;
                     }
                 }
-                
+
             }
-            
+
         } else {
             // absolute path name: remove leading slash for further checks
             compId = compId.substring(1);
@@ -145,14 +141,14 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
         // to dots to get a potentially fully qualified class name
         // again, this allows direct addressing of components
         compId = compId.replace('/', '.');
-        component = getComponent(compId);
+        component = this.getComponent(compId);
         if (component != null) {
             return component;
         }
-        
+
         // next we try a class name mapping convention of the content class
         compId = content.getClass().getName();
-        component = getComponent(compId);
+        component = this.getComponent(compId);
         if (component != null) {
             return component;
         }
@@ -160,7 +156,7 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
         // check whether we have Content suffix to remove
         if (compId.endsWith("Content")) {
             compId = compId.substring(0, compId.length()-"Content".length());
-            component = getComponent(compId);
+            component = this.getComponent(compId);
             if (component != null) {
                 return component;
             }
@@ -168,13 +164,13 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
 
         // add "Component" suffix and check again
         compId += "Component";
-        component = getComponent(compId);
+        component = this.getComponent(compId);
         if (component != null) {
             return component;
         }
 
         // use default component
-        component = getComponent(DefaultComponent.ID);
+        component = this.getComponent(DefaultComponent.ID);
         if (component != null) {
             return component;
         }
@@ -183,27 +179,27 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
         log.error("resolveComponent: Could not resolve a component for {}", content.getPath());
         return null;
     }
-    
+
     //---------- SCR Integration ----------------------------------------------
-    
+
     protected void activate(ComponentContext context) {
         Dictionary props = context.getProperties();
-        
+
         Object pathObject = props.get(PROP_PATH);
         if (pathObject instanceof String[]) {
-            path = (String[]) pathObject;
-            for (int i=0; i < path.length; i++) {
+            this.path = (String[]) pathObject;
+            for (int i=0; i < this.path.length; i++) {
                 // ensure leading slash
-                if (!path[i].startsWith("/")) {
-                    path[i] = "/" + path[i];
+                if (!this.path[i].startsWith("/")) {
+                    this.path[i] = "/" + this.path[i];
                 }
                 // ensure trailing slash
-                if (!path[i].endsWith("/")) {
-                    path[i] += "/";
+                if (!this.path[i].endsWith("/")) {
+                    this.path[i] += "/";
                 }
             }
         } else {
-            path = null;
+            this.path = null;
         }
     }
 }

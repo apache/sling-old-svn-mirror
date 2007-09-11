@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -41,6 +41,8 @@ import org.apache.sling.jcr.TooManySessionsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sun.security.krb5.internal.Ticket;
+
 
 /**
  * The <code>AuthenticationFilter</code> class is the default implementation
@@ -71,7 +73,7 @@ import org.slf4j.LoggerFactory;
  * sessions, a separate thread scans the session list for expired sessions
  * removing any one the thread finds. Currently the cleanup routine runs at and
  * interval twice as big as the time-to-life value.
- * 
+ *
  * @scr.component immediate="true" label="%auth.name"
  *          description="%auth.description"
  * @scr.property name="service.description"
@@ -89,7 +91,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * through a session, this is the handler, which iinitially authenticated
      * the user.
      */
-    public static final String REQUEST_ATTRIBUTE_HANDLER = "com.day.cq.delivery.auth.authentication_handler";
+    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.auth.authentication_handler";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
@@ -108,7 +110,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * @scr.property value="false" type="Boolean"
      */
     public static final String PAR_ANONYMOUS_ALLOWED = "auth.annonymous";
-    
+
     /** The default impersonation parameter name */
     private static final String DEFAULT_IMPERSONATION_PARAMETER = "sudo";
 
@@ -117,7 +119,7 @@ public class AuthenticationFilter implements ComponentFilter {
 
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = false;
-    
+
     /**
      * @scr.reference
      */
@@ -131,14 +133,14 @@ public class AuthenticationFilter implements ComponentFilter {
 
     /** Cache control flag */
     private boolean cacheControl;
-    
+
     /** Whether access without credentials is allowed */
     boolean anonymousAllowed;
 
     /**
      * The map of {@link AuthenticationHandler} implementations indexed by
      * configured name of the handler.
-     * 
+     *
      * @scr.reference cardinality="0..n" policy="dynamic"
      */
     private AuthenticationHandler[] handlers = new AuthenticationHandler[0];
@@ -153,28 +155,28 @@ public class AuthenticationFilter implements ComponentFilter {
      * The number of {@link AuthPackage} elements in the {@link #packages} list.
      */
     // private int numPackages;
-   
+
     // ----------- AbstractCoreFilter ------------------------------------------
-   
+
     public void doFilter(ComponentRequest request, ComponentResponse response,
             ComponentFilterChain filterChain) throws IOException,
             ComponentException {
-        Session session = authenticate(request, response);
+        Session session = this.authenticate(request, response);
         if (session != null) {
             try {
                 // set the session (throws if no request data is available)
                 RequestData.getRequestData(request).setSession(session);
-        
+
                 // continue processing
                 filterChain.doFilter(request, response);
-                
+
             } catch (AccessControlException ace) {
-                
+
                 // try to request authentication fail, if not possible
-                if (!requestAuthentication(request, response)) {
-                    sendFailure(response);
+                if (!this.requestAuthentication(request, response)) {
+                    this.sendFailure(response);
                 }
-                
+
             } finally {
                 // make sure the session is closed after processing !!
                 session.logout();
@@ -189,73 +191,73 @@ public class AuthenticationFilter implements ComponentFilter {
 
     protected void activate(org.osgi.service.component.ComponentContext context) {
         Dictionary configuration = context.getProperties();
-        
+
         String newCookie = (String) configuration.get(PAR_IMPERSONATION_COOKIE_NAME);
         if (newCookie == null || newCookie.length() == 0) {
             newCookie = DEFAULT_IMPERSONATION_COOKIE;
         }
-        if (!newCookie.equals(sudoCookieName)) {
+        if (!newCookie.equals(this.sudoCookieName)) {
             log.info("Setting new cookie name for impersonation {} (was {})",
-                newCookie, sudoCookieName);
-            sudoCookieName = newCookie;
+                newCookie, this.sudoCookieName);
+            this.sudoCookieName = newCookie;
         }
 
         String newPar = (String) configuration.get(PAR_IMPERSONATION_PAR_NAME);
         if (newPar == null || newPar.length() == 0) {
             newPar = DEFAULT_IMPERSONATION_PARAMETER;
         }
-        if (!newPar.equals(sudoParameterName)) {
+        if (!newPar.equals(this.sudoParameterName)) {
             log.info(
                 "Setting new parameter name for impersonation {} (was {})",
-                newPar, sudoParameterName);
-            sudoParameterName = newPar;
+                newPar, this.sudoParameterName);
+            this.sudoParameterName = newPar;
         }
-        
+
         Object flag = configuration.get(PAR_ANONYMOUS_ALLOWED);
         if (flag instanceof Boolean) {
-            anonymousAllowed = ((Boolean) flag).booleanValue();
+            this.anonymousAllowed = ((Boolean) flag).booleanValue();
         } else {
-            anonymousAllowed = DEFAULT_ANONYMOUS_ALLOWED;
+            this.anonymousAllowed = DEFAULT_ANONYMOUS_ALLOWED;
         }
     }
-    
+
     protected void bindRepository(SlingRepository repository) {
         this.repository = repository;
     }
-    
+
     protected void unbindRepository(SlingRepository repository) {
         this.repository = null;
     }
-    
+
     protected void bindAuthenticationHandler(
             AuthenticationHandler authenticationHandler) {
         // ensure not in the list yet
-        for (int i = 0; i < handlers.length; i++) {
-            if (handlers[i] == authenticationHandler) {
+        for (int i = 0; i < this.handlers.length; i++) {
+            if (this.handlers[i] == authenticationHandler) {
                 // already in the list, ignore this time
                 return;
             }
         }
 
-        AuthenticationHandler[] newHandlers = new AuthenticationHandler[handlers.length + 1];
-        System.arraycopy(handlers, 0, newHandlers, 0, handlers.length);
-        newHandlers[handlers.length] = authenticationHandler;
-        handlers = newHandlers;
+        AuthenticationHandler[] newHandlers = new AuthenticationHandler[this.handlers.length + 1];
+        System.arraycopy(this.handlers, 0, newHandlers, 0, this.handlers.length);
+        newHandlers[this.handlers.length] = authenticationHandler;
+        this.handlers = newHandlers;
     }
 
     protected void unbindAuthenticationHandler(
             AuthenticationHandler authenticationHandler) {
-        for (int i = 0; i < handlers.length; i++) {
-            if (handlers[i] == authenticationHandler) {
+        for (int i = 0; i < this.handlers.length; i++) {
+            if (this.handlers[i] == authenticationHandler) {
                 // remove this handler
-                AuthenticationHandler[] newHandlers = new AuthenticationHandler[handlers.length - 1];
+                AuthenticationHandler[] newHandlers = new AuthenticationHandler[this.handlers.length - 1];
 
-                if (i > 0) System.arraycopy(handlers, 0, newHandlers, 0, i);
+                if (i > 0) System.arraycopy(this.handlers, 0, newHandlers, 0, i);
                 if (i < newHandlers.length)
-                    System.arraycopy(handlers, i + 1, newHandlers, i,
+                    System.arraycopy(this.handlers, i + 1, newHandlers, i,
                         newHandlers.length - i);
 
-                handlers = newHandlers;
+                this.handlers = newHandlers;
             }
         }
     }
@@ -276,7 +278,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * <p>
      * If sessions are enabled the returned ticket may be impersonated, that is
      * for another user than the one who has authenticated.
-     * 
+     *
      * @param req The request object containing the information for the
      *            authentication.
      * @param res The response object which may be used to send the information
@@ -291,10 +293,10 @@ public class AuthenticationFilter implements ComponentFilter {
     private Session authenticate(ComponentRequest req, ComponentResponse res) {
 
         // 0. Get package for request and be anonymous if none configured
-        AuthenticationHandler handler = getAuthHandler(req);
+        AuthenticationHandler handler = this.getAuthHandler(req);
         if (handler == null) {
             log.debug("authenticate: no authentication needed, anonymous access");
-            return getAnonymousSession(req, res);
+            return this.getAnonymousSession(req, res);
         }
 
         // 1. Check request login session - only if we have sessions
@@ -313,16 +315,16 @@ public class AuthenticationFilter implements ComponentFilter {
         } else if (creds == null) {
 
             log.debug("authenticate: no credentials in the request, anonymous");
-            return getAnonymousSession(req, res);
+            return this.getAnonymousSession(req, res);
 
         } else {
             // try to connect
             try {
                 log.debug("authenticate: credentials, trying to get a ticket");
-                Session session = repository.login(creds, null);
+                Session session = this.repository.login(creds, null);
 
                 // handle impersonation
-                session = handleImpersonation(req, res, session);
+                session = this.handleImpersonation(req, res, session);
 
                 return session;
 
@@ -337,7 +339,7 @@ public class AuthenticationFilter implements ComponentFilter {
             // request authentication information and send 403 (Forbidden)
             // if the handle cannot request authentication information.
             if (!handler.requestAuthentication(req, res)) {
-                sendFailure(res);
+                this.sendFailure(res);
             }
 
             // end request
@@ -354,7 +356,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * <p>
      * Any response sent by the handler is also handled by the error handler
      * infrastructure.
-     * 
+     *
      * @param req The request object
      * @param res The response object to which to send the request
      * @return true if the information could be requested or false, if the
@@ -362,7 +364,7 @@ public class AuthenticationFilter implements ComponentFilter {
      */
     public boolean requestAuthentication(ComponentRequest req, ComponentResponse res) {
 
-        AuthenticationHandler handler = getAuthHandler(req);
+        AuthenticationHandler handler = this.getAuthHandler(req);
         if (handler != null) {
             log.debug("requestAuthentication: requesting authentication using "
                 + "handler: {0}", handler);
@@ -377,7 +379,7 @@ public class AuthenticationFilter implements ComponentFilter {
     // ---------- internal ----------------------------------------------------
 
     private AuthenticationHandler getAuthHandler(ComponentRequest req) {
-        AuthenticationHandler[] local = handlers;
+        AuthenticationHandler[] local = this.handlers;
         for (int i = 0; i < local.length; i++) {
             if (local[i].handles(req)) {
                 return local[i];
@@ -409,9 +411,9 @@ public class AuthenticationFilter implements ComponentFilter {
     // TODO
     private Session getAnonymousSession(ComponentRequest req, ComponentResponse res) {
         // login anonymously, log the exact cause in case of failure
-        if (anonymousAllowed) {
+        if (this.anonymousAllowed) {
             try {
-                return repository.login();
+                return this.repository.login();
             } catch (TooManySessionsException se) {
                 log.error("getAnonymousSession: Too many anonymous users active", se);
             } catch (LoginException le) {
@@ -422,10 +424,10 @@ public class AuthenticationFilter implements ComponentFilter {
         } else {
             log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
         }
-        
+
         // request authentication now, and fail if not possible
-        if (!requestAuthentication(req, res)) {
-            sendFailure(res);
+        if (!this.requestAuthentication(req, res)) {
+            this.sendFailure(res);
         }
 
         // fallback to no session
@@ -444,7 +446,7 @@ public class AuthenticationFilter implements ComponentFilter {
 
     /**
      * Tries to instantiate a handler from the given handler configuration.
-     * 
+     *
      * @param defaultPackage The name of the package for the handler class if
      *            the class name is not a fully qualified class name.
      * @param className The name of the class. If this is not fully qualified,
@@ -502,7 +504,7 @@ public class AuthenticationFilter implements ComponentFilter {
     /**
      * Sends the session cookie for the name session with the given age in
      * seconds. This sends a Version 1 cookie.
-     * 
+     *
      * @param response The
      *            {@link com.day.cq.delivery.DeliveryHttpServletResponse} on
      *            which to send back the cookie.
@@ -529,7 +531,7 @@ public class AuthenticationFilter implements ComponentFilter {
         response.addCookie(cookie);
 
         // Tell a potential proxy server that this cookie is uncacheable
-        if (cacheControl) {
+        if (this.cacheControl) {
             response.addHeader("Cache-Control", "no-cache=\"Set-Cookie\"");
         }
     }
@@ -545,10 +547,10 @@ public class AuthenticationFilter implements ComponentFilter {
      * place for this request. Else the parameter is assumed to contain the
      * handle of a user page acceptable for the {@link Ticket#impersonate}
      * method.
-     * 
+     *
      * @param req The {@link DeliveryHttpServletRequest} optionally containing
      *            the sudo parameter.
-     * @param res The {@link com.day.cq.delivery.DeliveryHttpServletResponse} to
+     * @param res The {@link DeliveryHttpServletResponse} to
      *            send the impersonation cookie.
      * @param ticket The real {@link Ticket} to optionally replace with an
      *            impersonated ticket.
@@ -563,7 +565,7 @@ public class AuthenticationFilter implements ComponentFilter {
             Session session) throws LoginException, RepositoryException {
 
         // the current state of impersonation
-        Cookie sudoCookie = RequestUtil.getCookie(req, sudoCookieName);
+        Cookie sudoCookie = RequestUtil.getCookie(req, this.sudoCookieName);
         String currentSudo = (sudoCookie == null)
                 ? null
                 : sudoCookie.getValue();
@@ -574,7 +576,7 @@ public class AuthenticationFilter implements ComponentFilter {
          * altogether (also from the session); or the handle of a user page to
          * impersonate as that user (if possible)
          */
-        String sudo = req.getParameter(sudoParameterName);
+        String sudo = req.getParameter(this.sudoParameterName);
         if (sudo == null || sudo.length() == 0) {
             sudo = currentSudo;
         } else if ("-".equals(sudo)) {
@@ -595,14 +597,14 @@ public class AuthenticationFilter implements ComponentFilter {
                 // active due to cookie setting
 
                 // clear impersonation
-                sendCookie(res, sudoCookieName, "", 0, req.getContextPath());
+                this.sendCookie(res, this.sudoCookieName, "", 0, req.getContextPath());
 
             } else if (currentSudo == null || !currentSudo.equals(sudo)) {
                 // Parameter set to a name. As the cookie is not set yet
                 // or is set to another name, send the cookie with current sudo
 
                 // (re-)set impersonation
-                sendCookie(res, sudoCookieName, sudo, -1, req.getContextPath());
+                this.sendCookie(res, this.sudoCookieName, sudo, -1, req.getContextPath());
             }
         }
 

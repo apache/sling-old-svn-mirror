@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -30,7 +30,7 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
     private String encodedFileName;
 
     /**
-     * 
+     *
      */
     MultipartRequestParameter(FileItem delegatee) {
         super(null);
@@ -38,81 +38,69 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
     }
 
     void dispose() {
-        delegatee.delete();
+        this.delegatee.delete();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#get()
+    /**
+     * @see org.apache.sling.component.RequestParameter#get()
      */
     public byte[] get() {
-        return delegatee.get();
+        return this.delegatee.get();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#getContentType()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getContentType()
      */
     public String getContentType() {
-        return delegatee.getContentType();
+        return this.delegatee.getContentType();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#getInputStream()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getInputStream()
      */
     public InputStream getInputStream() throws IOException {
-        return delegatee.getInputStream();
+        return this.delegatee.getInputStream();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#getName()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getFileName()
      */
     public String getFileName() {
-        if (encodedFileName == null && delegatee.getName() != null) {
-            String tmpFileName = delegatee.getName();
-            if (getEncoding() != null) {
+        if (this.encodedFileName == null && this.delegatee.getName() != null) {
+            String tmpFileName = this.delegatee.getName();
+            if (this.getEncoding() != null) {
                 try {
                     byte[] rawName = tmpFileName.getBytes(Util.ENCODING_DIRECT);
-                    tmpFileName = new String(rawName, getEncoding());
+                    tmpFileName = new String(rawName, this.getEncoding());
                 } catch (UnsupportedEncodingException uee) {
                     // might log, but actually don't care
                 }
             }
-            encodedFileName = tmpFileName;
+            this.encodedFileName = tmpFileName;
         }
-        
-        return encodedFileName;
+
+        return this.encodedFileName;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#getSize()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getSize()
      */
     public long getSize() {
-        return delegatee.getSize();
+        return this.delegatee.getSize();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#getString()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getString()
      */
     public String getString() {
         // only apply encoding in the case of a form field
-        if (isFormField()) {
-            return getEncodedString();
+        if (this.isFormField()) {
+            return this.getEncodedString();
         }
-        
-        return delegatee.getString();
+
+        return this.delegatee.getString();
     }
-    
+
     protected String decode(byte[] data, String encoding) {
         if (encoding != null) {
             try {
@@ -121,34 +109,30 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
                 // TODO: handle
             }
         }
-        
+
         // if there is no encoding, or an illegal encoding, use platform default
         return new String(data);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#getString(java.lang.String)
+    /**
+     * @see org.apache.sling.component.RequestParameter#getString(java.lang.String)
      */
     public String getString(String enc) throws UnsupportedEncodingException {
-        return delegatee.getString(enc);
+        return this.delegatee.getString(enc);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.day.components.RequestParameter#isFormField()
+    /**
+     * @see org.apache.sling.component.RequestParameter#isFormField()
      */
     public boolean isFormField() {
-        return delegatee.isFormField();
+        return this.delegatee.isFormField();
     }
-    
+
     public String toString() {
-        if (isFormField()) {
-            return getString();
+        if (this.isFormField()) {
+            return this.getString();
         }
-        
-        return "File: " + getFileName() + " (" + getSize() + " bytes)";
+
+        return "File: " + this.getFileName() + " (" + this.getSize() + " bytes)";
     }
 }

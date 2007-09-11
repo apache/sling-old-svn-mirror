@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -26,80 +26,80 @@ import java.net.URLDecoder;
 public class EncodedRequestParameter extends AbstractEncodedParameter {
 
     private byte[] content;
-    
+
     EncodedRequestParameter(String encoding) {
         super(encoding);
         this.content = Util.NO_CONTENT;
     }
-    
+
     void setContent(byte[] content) {
         this.content = content;
-        super.setEncoding(getEncoding());
-    }
-    
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#get()
-     */
-    public byte[] get() {
-        return content;
+        super.setEncoding(this.getEncoding());
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#getContentType()
+    /**
+     * @see org.apache.sling.component.RequestParameter#get()
+     */
+    public byte[] get() {
+        return this.content;
+    }
+
+    /**
+     * @see org.apache.sling.component.RequestParameter#getContentType()
      */
     public String getContentType() {
         // none known for www-form-encoded parameters
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#getInputStream()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getInputStream()
      */
     public InputStream getInputStream() {
-        return new ByteArrayInputStream(get());
+        return new ByteArrayInputStream(this.get());
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#getName()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getFileName()
      */
     public String getFileName() {
         // no original file name
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#getSize()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getSize()
      */
     public long getSize() {
-        return get().length;
+        return this.get().length;
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#getString()
+    /**
+     * @see org.apache.sling.component.RequestParameter#getString()
      */
     public String getString() {
-        return getEncodedString();
+        return this.getEncodedString();
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#getString(java.lang.String)
+    /**
+     * @see org.apache.sling.component.RequestParameter#getString(java.lang.String)
      */
     public String getString(String encoding) throws UnsupportedEncodingException {
-        return new String(get(), encoding);
+        return new String(this.get(), encoding);
     }
 
-    /* (non-Javadoc)
-     * @see com.day.components.RequestParameter#isFormField()
+    /**
+     * @see org.apache.sling.component.RequestParameter#isFormField()
      */
     public boolean isFormField() {
         // www-form-encoded are always form fields
         return true;
     }
-    
+
     public String toString() {
-        return getString();
+        return this.getString();
     }
-    
+
     protected String decode(byte[] data, String encoding) {
         if (encoding != null) {
             try {

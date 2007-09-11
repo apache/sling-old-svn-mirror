@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -33,7 +33,7 @@ public interface ErrorHandlerComponent extends Component {
     public static final String ERROR_EXCEPTION = "javax.servlet.error.exception";
     public static final String ERROR_REQUEST_URI = "javax.servlet.error.request_uri";
     public static final String ERROR_SERVLET_NAME = "javax.servlet.error.servlet_name";
-    public static final String ERROR_COMPONENT_ID = "com.day.components.error.componentId";
+    public static final String ERROR_COMPONENT_ID = "org.apache.components.error.componentId";
 
     /**
      * Returns <code>true</code> if this error handler can handle the given
@@ -47,9 +47,9 @@ public interface ErrorHandlerComponent extends Component {
      * component is registered for the exact class, the Component Framework
      * will follow the super class hierarchy of the throwable to ultimately find
      * a handler.
-     * 
+     *
      * @param throwable The fully qualified name of the class to check.
-     * 
+     *
      * @return <code>true</code> if this handler can handle excactly this class.
      */
     boolean canHandle(String throwable);
@@ -72,7 +72,7 @@ public interface ErrorHandlerComponent extends Component {
      * <li>Status zero. This is a last resort and should be responded to with
      *      <code>true</code> only by handlers which take any status code.
      * </ol>
-     * 
+     *
      * @param status The HTTP status code to check.
      */
     boolean canHandle(int status);

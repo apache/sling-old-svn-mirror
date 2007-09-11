@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * @scr.component immediate="true" label="%registry.name" description="%registry.description"
  * @scr.property name="service.description" value="Registration Support for Repository Based Components"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="event.topics" value="com/day/sling/jcr/ContentEvent/*" private="true"
+ * @scr.property name="event.topics" value="org/apache/sling/jcr/ContentEvent/*" private="true"
  * @scr.service interface="org.osgi.service.event.EventHandler"
  * @scr.reference name="repository" interface="org.apache.sling.jcr.SlingRepository"
  */
@@ -62,10 +62,10 @@ public class RepositoryComponentRegistration implements EventListener,
         EventHandler {
 
     /** The node path of a component loaded from the repository */
-    public static final String COMPONENT_PATH = "com.day.components.path";
+    public static final String COMPONENT_PATH = "org.apache.sling.components.path";
 
     /** The fully qualified name of the component class */
-    public static final String COMPONENT_SOURCE = "com.day.components.source";
+    public static final String COMPONENT_SOURCE = "org.apache.sling.components.source";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(RepositoryComponentRegistration.class);
@@ -97,7 +97,7 @@ public class RepositoryComponentRegistration implements EventListener,
                 try {
                     String path = event.getPath();
 
-                    if (registeredComponents.containsKey(path)) {
+                    if (this.registeredComponents.containsKey(path)) {
                         if (event.getType() == Event.NODE_ADDED) {
                             Object state = states.get(path);
                             if (state == STATE_REMOVED) {
@@ -134,7 +134,7 @@ public class RepositoryComponentRegistration implements EventListener,
                         }
 
                         if (cPath != null) {
-                            if (registeredComponents.containsKey(cPath)) {
+                            if (this.registeredComponents.containsKey(cPath)) {
                                 states.put(cPath, STATE_UPDATED);
                             } else {
                                 states.put(cPath, STATE_ADDED);
@@ -175,7 +175,7 @@ public class RepositoryComponentRegistration implements EventListener,
             }
 
             // try to register COmponents
-            JcrContentManager cMgr = getContentManager();
+            JcrContentManager cMgr = this.getContentManager();
             for (Iterator ei = states.entrySet().iterator(); ei.hasNext();) {
                 Map.Entry entry = (Map.Entry) ei.next();
                 String path = (String) entry.getKey();
@@ -183,7 +183,7 @@ public class RepositoryComponentRegistration implements EventListener,
                 // unregister if removed or updated
                 if (entry.getValue() == STATE_REMOVED
                     || entry.getValue() == STATE_UPDATED) {
-                    ServiceRegistration sr = (ServiceRegistration) registeredComponents.remove(path);
+                    ServiceRegistration sr = (ServiceRegistration) this.registeredComponents.remove(path);
                     if (sr != null) {
                         sr.unregister();
                     }
@@ -214,12 +214,12 @@ public class RepositoryComponentRegistration implements EventListener,
 
                     Dictionary props = new Hashtable();
                     props.put(Constants.SERVICE_PID, component.getId());
-                    props.put(COMPONENT_SOURCE, getClass().getName());
+                    props.put(COMPONENT_SOURCE, this.getClass().getName());
                     props.put(COMPONENT_PATH, component.getPath());
 
-                    ServiceRegistration sr = componentContext.getBundleContext().registerService(
+                    ServiceRegistration sr = this.componentContext.getBundleContext().registerService(
                         Component.class.getName(), component, props);
-                    registeredComponents.put(component.getPath(), sr);
+                    this.registeredComponents.put(component.getPath(), sr);
                 }
             }
         }
@@ -230,7 +230,7 @@ public class RepositoryComponentRegistration implements EventListener,
     public void handleEvent(final org.osgi.service.event.Event event) {
         new Thread() {
             public void run() {
-                handleEventInternal(event);
+                RepositoryComponentRegistration.this.handleEventInternal(event);
             }
         }.start();
     }
@@ -238,7 +238,7 @@ public class RepositoryComponentRegistration implements EventListener,
     private void handleEventInternal(org.osgi.service.event.Event event) {
         if (org.apache.sling.content.jcr.Constants.EVENT_MAPPING_ADDED.equals(event.getTopic())) {
             // rerun registration
-            registerComponents();
+            this.registerComponents();
 
         } else if (org.apache.sling.content.jcr.Constants.EVENT_MAPPING_REMOVED.equals(event.getTopic())) {
             // remove components whose class is not in the mapped class set
@@ -248,7 +248,7 @@ public class RepositoryComponentRegistration implements EventListener,
                     : new HashSet(Arrays.asList(values));
 
             synchronized ( this.registeredComponents ) {
-                for (Iterator ri = registeredComponents.values().iterator(); ri.hasNext();) {
+                for (Iterator ri = this.registeredComponents.values().iterator(); ri.hasNext();) {
                     ServiceRegistration sr = (ServiceRegistration) ri.next();
                     String className = (String) sr.getReference().getProperty(
                         COMPONENT_SOURCE);
@@ -272,10 +272,10 @@ public class RepositoryComponentRegistration implements EventListener,
     protected void activate(ComponentContext componentContext) {
         this.componentContext = componentContext;
 
-        registerComponents();
+        this.registerComponents();
 
         try {
-            session.getWorkspace().getObservationManager().addEventListener(
+            this.session.getWorkspace().getObservationManager().addEventListener(
                 this,
                 Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED
                     | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED, "/",
@@ -287,28 +287,28 @@ public class RepositoryComponentRegistration implements EventListener,
 
     protected void deactivate(ComponentContext componentContext) {
         try {
-            session.getWorkspace().getObservationManager().removeEventListener(
+            this.session.getWorkspace().getObservationManager().removeEventListener(
                 this);
         } catch (RepositoryException re) {
             log.error("Cannot unregister RepositoryComponentRegistration as observation listener");
         }
 
-        unregisterComponents();
+        this.unregisterComponents();
 
-        dropSession();
+        this.dropSession();
         this.componentContext = null;
     }
 
     protected void bindRepository(SlingRepository repository) {
         try {
-            session = repository.loginAdministrative(null);
+            this.session = repository.loginAdministrative(null);
         } catch (RepositoryException re) {
             log.error("Cannot get Repository Session", re);
         }
     }
 
     protected void unbindRepository(SlingRepository repository) {
-        dropSession();
+        this.dropSession();
     }
 
     protected void bindContentManagerFactory(
@@ -324,7 +324,7 @@ public class RepositoryComponentRegistration implements EventListener,
     // ---------- internal -----------------------------------------------------
 
     private void registerComponents() {
-        JcrContentManager cMgr = getContentManager();
+        JcrContentManager cMgr = this.getContentManager();
         Filter filter = cMgr.getQueryManager().createFilter(
             AbstractRepositoryComponent.class);
         Query query = cMgr.getQueryManager().createQuery(filter);
@@ -341,7 +341,7 @@ public class RepositoryComponentRegistration implements EventListener,
                 AbstractRepositoryComponent component = (AbstractRepositoryComponent) componentObject;
 
                 // prevent double registration of the same component
-                if (registeredComponents.containsKey(component.getPath())) {
+                if (this.registeredComponents.containsKey(component.getPath())) {
                     log.debug("Component {} is already registered",
                         component.getPath());
                     continue;
@@ -349,12 +349,12 @@ public class RepositoryComponentRegistration implements EventListener,
 
                 Dictionary props = new Hashtable();
                 props.put(Constants.SERVICE_PID, component.getId());
-                props.put(COMPONENT_SOURCE, getClass().getName());
+                props.put(COMPONENT_SOURCE, this.getClass().getName());
                 props.put(COMPONENT_PATH, component.getPath());
 
-                ServiceRegistration sr = componentContext.getBundleContext().registerService(
+                ServiceRegistration sr = this.componentContext.getBundleContext().registerService(
                     Component.class.getName(), component, props);
-                registeredComponents.put(component.getPath(), sr);
+                this.registeredComponents.put(component.getPath(), sr);
             }
         }
     }
@@ -362,8 +362,8 @@ public class RepositoryComponentRegistration implements EventListener,
     private void unregisterComponents() {
         final Map components;
         synchronized ( this.registeredComponents ) {
-            components = new HashMap(registeredComponents);
-            registeredComponents.clear();
+            components = new HashMap(this.registeredComponents);
+            this.registeredComponents.clear();
         }
         for (Iterator ci = components.values().iterator(); ci.hasNext();) {
             ServiceRegistration sr = (ServiceRegistration) ci.next();
@@ -379,17 +379,17 @@ public class RepositoryComponentRegistration implements EventListener,
     }
 
     private JcrContentManager getContentManager() {
-        if (contentManagerFactory == null) {
+        if (this.contentManagerFactory == null) {
             throw new IllegalStateException(
                 "Cannot get Content Manager Factory");
         }
-        return contentManagerFactory.getContentManager(session);
+        return this.contentManagerFactory.getContentManager(this.session);
     }
 
     private synchronized void dropSession() {
-        if (session != null) {
-            session.logout();
-            session = null;
+        if (this.session != null) {
+            this.session.logout();
+            this.session = null;
         }
     }
 }
