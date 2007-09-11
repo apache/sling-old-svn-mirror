@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -79,45 +79,45 @@ public interface Component {
      * @return the ID of this component.
      */
     String getId();
-    
+
     /**
      * Returns the fully qualified name of the Java class which implements the
      * data container for this component.
-     * 
+     *
      * @return The fully qualified name of the class implementing the data
      *         container of this component.
      */
     String getContentClassName();
-    
+
     /**
      * Returns the extension of this component with the given <code>name</code>.
      * If no such extension is known to the component, <code>null</code> is
      * returned.
-     * 
+     *
      * @param name The name of the component extension to return.
-     * 
+     *
      * @return The named {@link ComponentExtension} or <code>null</code> if no
      *      extension with the given name is known to this component.
-     *      
+     *
      * @throws IllegalArgumentException if <code>name</code> is <code>null</code>.
      */
     ComponentExtension getExtension(String name);
-    
+
     /**
      * Returns an <code>Enumeration</code> on all {@link ComponentExtension extensions}
      * known to this component. If this component has no extensions, an empty
      * <code>Enumeration</code> is returned.
-     * 
+     *
      * @return An <code>Enumeration</code> on all extensions known to this component.
      */
-    Enumeration getExtensions();
+    Enumeration<ComponentExtension> getExtensions();
 
     /**
      * This method returns a clean instance of the content class which may then
      * be used to fill content and store it in the repository. The instance
      * returned will already be properly setup such that its getComponent method
      * returns this Component instance.
-     * 
+     *
      * @return A prepared content instance...
      */
     Content createContentInstance();
@@ -125,18 +125,18 @@ public interface Component {
     /**
      * Returns the {@link ComponentContext} with which this component has been
      * initialized.
-     * 
+     *
      * @return The <code>ComponentContext</code> of this component
      */
     ComponentContext getComponentContext();
-    
+
     /**
      * This method is called when the Component is first loaded. Only when this
      * method terminates normally, will the Component be able to handle requests.
-     * 
+     *
      * @param context The {@link ComponentContext context} in which the component
      *      will be operating.
-     * 
+     *
      * @throws ComponentException May be thrown if initialization fails.
      */
     void init(ComponentContext context) throws ComponentException;
@@ -148,7 +148,7 @@ public interface Component {
      * requested by the client. However it is strongly recommended to properly
      * separate business logic (that is content modification) and response
      * rendering.
-     * 
+     *
      * @throws ComponentException If an error occurrs while handling the
      *             component action
      * @throws IOException If an error occurrs writing the response
