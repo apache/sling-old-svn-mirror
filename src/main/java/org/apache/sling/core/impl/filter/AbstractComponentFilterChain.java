@@ -34,7 +34,7 @@ public abstract class AbstractComponentFilterChain implements ComponentFilterCha
     }
 
     /**
-     * @see org.apache.sling.component.ComponentFilterChain#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
+     * @see org.apache.sling.core.component.ComponentFilterChain#doFilter(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
      */
     public void doFilter(ComponentRequest request, ComponentResponse response)
             throws IOException, ComponentException {

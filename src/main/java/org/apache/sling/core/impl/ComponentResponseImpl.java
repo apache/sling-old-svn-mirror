@@ -23,8 +23,8 @@ import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-import org.apache.sling.RequestUtil;
 import org.apache.sling.component.ComponentResponse;
+import org.apache.sling.core.RequestUtil;
 
 /**
  * The <code>ComponentResponseImpl</code> TODO
@@ -71,7 +71,7 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
     }
 
     /**
-     * @see org.apache.sling.component.ComponentResponse#getContentType()
+     * @see org.apache.sling.core.component.ComponentResponse#getContentType()
      */
     public String getContentType() {
         return this.contentType + ";charset=" + this.characterEncoding;
@@ -86,7 +86,7 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
     }
 
     /**
-     * @see org.apache.sling.component.ComponentResponse#getNamespace()
+     * @see org.apache.sling.core.component.ComponentResponse#getNamespace()
      */
     public String getNamespace() {
         // TODO Auto-generated method stub

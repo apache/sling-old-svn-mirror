@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="filter.scope" value="component" private="true"
  * @scr.property name="filter.order" value="-900" type="Integer" private="true"
  * @scr.service
- * @scr.reference name="Components" interface="org.apache.sling.component.Component"
+ * @scr.reference name="Components" interface="org.apache.sling.core.component.Component"
  *                cardinality="0..n" policy="dynamic"
  */
 public class ComponentResolverFilter extends ComponentBindingFilter {
@@ -63,7 +63,7 @@ public class ComponentResolverFilter extends ComponentBindingFilter {
     private String[] path;
 
     /**
-     * @see org.apache.sling.component.ComponentFilter#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse, org.apache.sling.component.ComponentFilterChain)
+     * @see org.apache.sling.core.component.ComponentFilter#doFilter(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse, org.apache.sling.core.component.ComponentFilterChain)
      */
     public void doFilter(ComponentRequest request, ComponentResponse response,
             ComponentFilterChain filterChain) throws IOException,

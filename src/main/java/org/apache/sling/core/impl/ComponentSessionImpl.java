@@ -50,7 +50,7 @@ public class ComponentSessionImpl implements ComponentSession {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentSession#getAttribute(java.lang.String, int)
+     * @see org.apache.sling.core.component.ComponentSession#getAttribute(java.lang.String, int)
      */
     public Object getAttribute(String name, int scope) {
         return this.delegatee.getAttribute(this.toAttributeName(name, scope));
@@ -64,14 +64,14 @@ public class ComponentSessionImpl implements ComponentSession {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentSession#getAttributeNames(int)
+     * @see org.apache.sling.core.component.ComponentSession#getAttributeNames(int)
      */
     public Enumeration getAttributeNames(final int scope) {
         return new AttributeNamesEnumeration(this.delegatee.getAttributeNames(), scope);
     }
 
     /**
-     * @see org.apache.sling.component.ComponentSession#getComponentContext()
+     * @see org.apache.sling.core.component.ComponentSession#getComponentContext()
      */
     public ComponentContext getComponentContext() {
         return this.componentContext;
@@ -127,7 +127,7 @@ public class ComponentSessionImpl implements ComponentSession {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentSession#removeAttribute(java.lang.String, int)
+     * @see org.apache.sling.core.component.ComponentSession#removeAttribute(java.lang.String, int)
      */
     public void removeAttribute(String name, int scope) {
         this.delegatee.removeAttribute(this.toAttributeName(name, scope));
@@ -141,7 +141,7 @@ public class ComponentSessionImpl implements ComponentSession {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentSession#setAttribute(java.lang.String, java.lang.Object, int)
+     * @see org.apache.sling.core.component.ComponentSession#setAttribute(java.lang.String, java.lang.Object, int)
      */
     public void setAttribute(String name, Object value, int scope) {
         this.delegatee.setAttribute(this.toAttributeName(name, scope), value);

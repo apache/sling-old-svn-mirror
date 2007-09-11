@@ -33,7 +33,7 @@ import org.apache.sling.component.Content;
  * @scr.property name="service.description"
  *          value="Default Error Handler Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.component.Component"
+ * @scr.service interface="org.apache.sling.core.component.Component"
  */
 public class DefaultErrorHandlerComponent extends BaseComponent implements
         ErrorHandlerComponent {
@@ -52,7 +52,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
     /*
      * (non-Javadoc)
      *
-     * @see org.apache.sling.components.BaseComponent#doInit()
+     * @see org.apache.sling.core.components.BaseComponent#doInit()
      */
     protected void doInit() {
     }
@@ -77,7 +77,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
     }
 
     /**
-     * @see org.apache.sling.component.Component#service(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse)
+     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException {

@@ -18,8 +18,8 @@ package org.apache.sling.core.impl.log;
 import java.io.IOException;
 import java.util.Dictionary;
 
-import org.apache.sling.RequestLog;
 import org.apache.sling.component.ComponentRequest;
+import org.apache.sling.core.RequestLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
@@ -28,11 +28,11 @@ import org.osgi.service.component.ComponentContext;
  * configuration to register loggers for the {@link RequestLoggerFilter}.
  *
  * @scr.component label="%request.log.service.name" description="%request.log.service.description"
- *                factory="org.apache.sling.core.impl.log.RequestLoggerService"
+ *                factory="org.apache.sling.core.core.impl.log.RequestLoggerService"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
  *                value="Factory for configuration based request/access loggers"
- * @scr.service interface="org.apache.sling.core.impl.log.RequestLoggerService"
+ * @scr.service interface="org.apache.sling.core.core.impl.log.RequestLoggerService"
  */
 public class RequestLoggerService {
 
@@ -70,20 +70,20 @@ public class RequestLoggerService {
     }
 
     RequestLoggerService(BundleContext bundleContext, Dictionary configuration) {
-        setup(bundleContext, configuration);
+        this.setup(bundleContext, configuration);
     }
 
     void setup(BundleContext bundleContext, Dictionary configuration) {
         // whether to log on request entry or request exit
         Object onEntryObject = configuration.get(PARAM_ON_ENTRY);
-        onEntry = (onEntryObject instanceof Boolean)
+        this.onEntry = (onEntryObject instanceof Boolean)
                 ? ((Boolean) onEntryObject).booleanValue()
                 : false;
 
         // shared or private CustomLogFormat
         Object format = configuration.get(PARAM_FORMAT);
         if (format != null) {
-            logFormat = new CustomLogFormat(format.toString());
+            this.logFormat = new CustomLogFormat(format.toString());
         }
 
         // where to log to
@@ -93,37 +93,37 @@ public class RequestLoggerService {
             int outputType = (outputTypeObject instanceof Number)
                     ? ((Number) outputTypeObject).intValue()
                     : OUTPUT_TYPE_LOGGER;
-            log = getLog(bundleContext, output.toString(), outputType);
+            this.log = this.getLog(bundleContext, output.toString(), outputType);
         }
     }
 
     void shutdown() {
-        if (log != null) {
-            log.close();
-            log = null;
+        if (this.log != null) {
+            this.log.close();
+            this.log = null;
         }
 
-        logFormat = null;
+        this.logFormat = null;
     }
 
     void log(ComponentRequest request, LoggerResponse response) {
-        if (log != null && logFormat != null) {
-            log.write(logFormat.format(request, response));
+        if (this.log != null && this.logFormat != null) {
+            this.log.write(this.logFormat.format(request, response));
         }
     }
 
     boolean isOnEntry() {
-        return onEntry;
+        return this.onEntry;
     }
 
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
-        setup(context.getBundleContext(), context.getProperties());
+        this.setup(context.getBundleContext(), context.getProperties());
     }
 
     protected void deactivate(ComponentContext context) {
-        shutdown();
+        this.shutdown();
     }
 
     private RequestLog getLog(BundleContext bundleContext, String output,

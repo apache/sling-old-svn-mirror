@@ -27,9 +27,9 @@ import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 
-import org.apache.sling.RequestUtil;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.ComponentResponseWrapper;
+import org.apache.sling.core.RequestUtil;
 
 /**
  * The <code>LoggerResponse</code> class is a

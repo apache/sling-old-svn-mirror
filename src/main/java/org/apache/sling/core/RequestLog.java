@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling;
+package org.apache.sling.core;
 
 /**
  * The <code>RequestLog</code> interface defines the API to be implemented by

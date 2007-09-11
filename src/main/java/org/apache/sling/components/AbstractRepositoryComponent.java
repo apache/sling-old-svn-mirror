@@ -73,7 +73,7 @@ public abstract class AbstractRepositoryComponent extends BaseComponent {
      * @param extensions
      * @ocm.collection jcrName="sling:extensions"
      *                 jcrNodeType="sling:ExtensionList"
-     *                 elementClassName="org.apache.sling.components.extensions.AbstractExtension"
+     *                 elementClassName="org.apache.sling.core.components.extensions.AbstractExtension"
      */
     public void setExtensionCollection(Collection extensions) {
         Map extensionMap = new HashMap();

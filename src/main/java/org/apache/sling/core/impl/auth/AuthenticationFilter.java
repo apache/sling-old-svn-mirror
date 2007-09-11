@@ -27,7 +27,6 @@ import javax.jcr.SimpleCredentials;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.RequestUtil;
 import org.apache.sling.auth.AuthenticationHandler;
 import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
@@ -35,6 +34,7 @@ import org.apache.sling.component.ComponentFilter;
 import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
+import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.RequestData;
 import org.apache.sling.jcr.SlingRepository;
 import org.apache.sling.jcr.TooManySessionsException;
@@ -91,7 +91,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * through a session, this is the handler, which iinitially authenticated
      * the user.
      */
-    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.auth.authentication_handler";
+    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.core.auth.authentication_handler";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);

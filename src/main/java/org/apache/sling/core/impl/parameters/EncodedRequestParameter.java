@@ -38,14 +38,14 @@ public class EncodedRequestParameter extends AbstractEncodedParameter {
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#get()
+     * @see org.apache.sling.core.component.RequestParameter#get()
      */
     public byte[] get() {
         return this.content;
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getContentType()
+     * @see org.apache.sling.core.component.RequestParameter#getContentType()
      */
     public String getContentType() {
         // none known for www-form-encoded parameters
@@ -53,14 +53,14 @@ public class EncodedRequestParameter extends AbstractEncodedParameter {
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getInputStream()
+     * @see org.apache.sling.core.component.RequestParameter#getInputStream()
      */
     public InputStream getInputStream() {
         return new ByteArrayInputStream(this.get());
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getFileName()
+     * @see org.apache.sling.core.component.RequestParameter#getFileName()
      */
     public String getFileName() {
         // no original file name
@@ -68,28 +68,28 @@ public class EncodedRequestParameter extends AbstractEncodedParameter {
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getSize()
+     * @see org.apache.sling.core.component.RequestParameter#getSize()
      */
     public long getSize() {
         return this.get().length;
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getString()
+     * @see org.apache.sling.core.component.RequestParameter#getString()
      */
     public String getString() {
         return this.getEncodedString();
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#getString(java.lang.String)
+     * @see org.apache.sling.core.component.RequestParameter#getString(java.lang.String)
      */
     public String getString(String encoding) throws UnsupportedEncodingException {
         return new String(this.get(), encoding);
     }
 
     /**
-     * @see org.apache.sling.component.RequestParameter#isFormField()
+     * @see org.apache.sling.core.component.RequestParameter#isFormField()
      */
     public boolean isFormField() {
         // www-form-encoded are always form fields

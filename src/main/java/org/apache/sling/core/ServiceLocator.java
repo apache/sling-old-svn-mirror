@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling;
+package org.apache.sling.core;
 
 import org.osgi.framework.InvalidSyntaxException;
 
@@ -24,7 +24,7 @@ import org.osgi.framework.InvalidSyntaxException;
 public interface ServiceLocator {
 
     /** The name of the request attribute holding the service locator. */
-    String REQUEST_ATTRIBUTE_NAME = "org.apache.sling.ServiceLocator";
+    String REQUEST_ATTRIBUTE_NAME = "org.apache.sling.core.ServiceLocator";
 
     /**
      * Lookup and return the service from the service registry.
