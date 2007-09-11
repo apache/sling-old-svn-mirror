@@ -31,7 +31,7 @@ import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.Content;
 import org.apache.sling.content.ContentManager;
-import org.apache.sling.core.RequestData;
+import org.apache.sling.core.impl.RequestData;
 
 
 public class RequestUtil {
