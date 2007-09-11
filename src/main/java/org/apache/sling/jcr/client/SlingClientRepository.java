@@ -1,10 +1,10 @@
 /*
  * Copyright 2007 The Apache Software Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
+ * You may obtain a copy of the License at
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -33,16 +33,16 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>RepositorySPIImpl</code> TODO
- * 
+ *
  * @scr.component label="%repository.name" description="%repository.description"
- *          factory="com.day.sling.jcr.server.SlingClientRepositoryFactory"
- * 
+ *          factory="org.apache.sling.jcr.server.SlingClientRepositoryFactory"
+ *
  * @scr.property name="service.vendor" value="The Apache Software FoundationG"
  * @scr.property name="service.description"
  *      value="Factory for non-embedded JCR Repository Instances"
- *      
+ *
  * @scr.service
- * 
+ *
  * @scr.property value="default" name="defaultWorkspace"
  * @scr.property value="anonymous" name="anonymous.name"
  * @scr.property value="anonymous" name="anonymous.password"
@@ -51,7 +51,7 @@ import org.osgi.service.log.LogService;
  * @scr.property value="-1" type="Integer" name="pool.maxActive"
  * @scr.property value="10" type="Integer" name="pool.maxIdle"
  * @scr.property value="1" type="Integer" name="pool.maxActiveWait"
- * 
+ *
  * @scr.property name="java.naming.factory.initial"
  *               value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"
  * @scr.property name="java.naming.provider.url" value="http://incubator.apache.org/sling"
@@ -70,23 +70,23 @@ public class SlingClientRepository extends AbstractSlingRepository
     private LogService log;
 
     private Repository delegatee;
-    
+
     //---------- AbstractSlingRepository methods ------------------------------
-    
+
     protected Repository getDelegatee() throws RepositoryException {
-        if (delegatee == null) {
-            delegatee = getRepository();
+        if (this.delegatee == null) {
+            this.delegatee = this.getRepository();
         }
-        
-        return delegatee;
+
+        return this.delegatee;
     }
-    
+
     protected LogService getLog() {
-        return log;
+        return this.log;
     }
-    
+
     //---------- SCR integration ----------------------------------------------
-    
+
     // set logger
     protected void bindLogService(LogService log) {
         this.log = log;
@@ -96,23 +96,23 @@ public class SlingClientRepository extends AbstractSlingRepository
     protected void unbindLogService(LogService log) {
         this.log = null;
     }
-    
+
     //---------- Repository Publication ---------------------------------------
-    
+
     private Repository getRepository() throws RepositoryException {
 
-        Dictionary environment = getComponentContext().getProperties();
-        
+        Dictionary environment = this.getComponentContext().getProperties();
+
         String repoName = (String) environment.get(REPOSITORY_NAME);
         if (repoName == null) {
             throw new RepositoryException("Missing property 'name'");
         }
 
         // try JNDI
-        Hashtable jndiContext = fromDictionary(environment);
+        Hashtable jndiContext = this.fromDictionary(environment);
         ClassLoader old = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
             InitialContext initialContext = new InitialContext(jndiContext);
             Object repoObject = initialContext.lookup(repoName);
             if (repoObject instanceof Repository) {
@@ -124,7 +124,7 @@ public class SlingClientRepository extends AbstractSlingRepository
                 return laf.getRepository(remoteRepo);
             }
         } catch (Throwable t) {
-            getLog().log(LogService.LOG_INFO, "Problem checking JNDI for " + repoName, t);
+            this.getLog().log(LogService.LOG_INFO, "Problem checking JNDI for " + repoName, t);
         } finally {
             Thread.currentThread().setContextClassLoader(old);
         }
@@ -133,16 +133,16 @@ public class SlingClientRepository extends AbstractSlingRepository
             ClientRepositoryFactory crf = new ClientRepositoryFactory();
             return crf.getRepository(repoName);
         } catch (Throwable t) {
-            getLog().log(LogService.LOG_INFO, "Problem checking RMI for " + repoName, t);
+            this.getLog().log(LogService.LOG_INFO, "Problem checking RMI for " + repoName, t);
         }
 
         // finally there is no way to find a repository
         throw new RepositoryException("Cannot find repository " + repoName);
     }
-    
-    
+
+
     //---------- internal -----------------------------------------------------
-    
+
     private Hashtable fromDictionary(Dictionary source) {
         Hashtable table = new Hashtable();
         for (Enumeration ke=source.keys(); ke.hasMoreElements(); ) {
