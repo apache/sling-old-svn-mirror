@@ -28,7 +28,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.Constants;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentRequestWrapper;
@@ -36,6 +35,7 @@ import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.ComponentResponseWrapper;
 import org.apache.sling.component.Content;
 import org.apache.sling.content.ContentManager;
+import org.apache.sling.core.Constants;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.theme.Theme;
@@ -537,7 +537,7 @@ public class RequestData implements BufferProvider {
     // ---------- Parameter support -------------------------------------------
 
     ServletInputStream getInputStream() throws IOException {
-        if (parameterSupport != null && parameterSupport.requestDataUsed()) {
+        if (this.parameterSupport != null && this.parameterSupport.requestDataUsed()) {
             throw new IllegalStateException("Request Data has already been read");
         }
 
@@ -546,7 +546,7 @@ public class RequestData implements BufferProvider {
     }
 
     BufferedReader getReader() throws UnsupportedEncodingException, IOException {
-        if (parameterSupport != null && parameterSupport.requestDataUsed()) {
+        if (this.parameterSupport != null && this.parameterSupport.requestDataUsed()) {
             throw new IllegalStateException("Request Data has already been read");
         }
 
@@ -555,10 +555,10 @@ public class RequestData implements BufferProvider {
     }
 
     ParameterSupport getParameterSupport() {
-        if (parameterSupport == null) {
-            parameterSupport = new ParameterSupport(this /* getServletRequest() */);
+        if (this.parameterSupport == null) {
+            this.parameterSupport = new ParameterSupport(this /* getServletRequest() */);
         }
 
-        return parameterSupport;
+        return this.parameterSupport;
     }
 }

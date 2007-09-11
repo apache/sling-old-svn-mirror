@@ -15,7 +15,7 @@
  */
 package org.apache.sling.core.impl.log;
 
-import org.apache.sling.RequestLog;
+import org.apache.sling.core.RequestLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.util.tracker.ServiceTracker;
@@ -30,7 +30,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * log services to send log messages to. Such services are selected as follows:
  * <ol>
  * <li>The service must be registered with service interface
- * <code>org.apache.sling.RequestLog</code>.</li>
+ * <code>org.apache.sling.core.RequestLog</code>.</li>
  * <li>The service must be registered with a service property
  * <code>requestlog.name</code> (defined in the
  * {@link RequestLog#REQUEST_LOG_NAME} constant whose value (or one of its
@@ -75,7 +75,7 @@ class RequestLogServiceFacade implements RequestLog {
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.sling.RequestLog#write(java.lang.String)
+     * @see org.apache.sling.core.RequestLog#write(java.lang.String)
      */
     public void write(String message) {
 

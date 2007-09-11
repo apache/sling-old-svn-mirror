@@ -15,7 +15,7 @@
  */
 package org.apache.sling.core.impl.log;
 
-import org.apache.sling.RequestLog;
+import org.apache.sling.core.RequestLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ class LoggerRequestLog implements RequestLog {
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.sling.core.impl.log.RequestLog#log(java.lang.String)
+     * @see org.apache.sling.core.core.impl.log.RequestLog#log(java.lang.String)
      */
     public void write(String message) {
         logger.info(message);

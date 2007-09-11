@@ -26,8 +26,6 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletOutputStream;
 
-import org.apache.sling.Constants;
-import org.apache.sling.RequestUtil;
 import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentFilter;
@@ -35,6 +33,8 @@ import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.ComponentResponseWrapper;
+import org.apache.sling.core.Constants;
+import org.apache.sling.core.RequestUtil;
 
 
 /**

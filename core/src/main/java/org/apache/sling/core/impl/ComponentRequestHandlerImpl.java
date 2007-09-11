@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="ComponentFilter"
- *                interface="org.apache.sling.component.ComponentFilter"
+ *                interface="org.apache.sling.core.component.ComponentFilter"
  *                cardinality="0..n" policy="dynamic"
  */
 public class ComponentRequestHandlerImpl extends GenericServlet {

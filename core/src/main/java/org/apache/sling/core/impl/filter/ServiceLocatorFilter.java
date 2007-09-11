@@ -32,7 +32,7 @@ import org.apache.sling.component.ComponentFilter;
 import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.ServiceLocator;
+import org.apache.sling.core.ServiceLocator;
 
 /**
  * The <code>ServiceLocatorFilter</code> adds the service locator to the request
@@ -42,7 +42,7 @@ import org.apache.sling.ServiceLocator;
  * @scr.property name="service.description" value="Service Locator Filter"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-3000" type="Integer" private="true"
- * @scr.service interface="org.apache.sling.component.ComponentFilter"
+ * @scr.service interface="org.apache.sling.core.component.ComponentFilter"
  */
 public class ServiceLocatorFilter implements ComponentFilter {
 
@@ -58,7 +58,7 @@ public class ServiceLocatorFilter implements ComponentFilter {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentFilter#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse, org.apache.sling.component.ComponentFilterChain)
+     * @see org.apache.sling.core.component.ComponentFilter#doFilter(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse, org.apache.sling.core.component.ComponentFilterChain)
      */
     public void doFilter(ComponentRequest request,
                          ComponentResponse response,
@@ -76,14 +76,14 @@ public class ServiceLocatorFilter implements ComponentFilter {
     }
 
     /**
-     * @see org.apache.sling.component.ComponentFilter#init(org.apache.sling.component.ComponentContext)
+     * @see org.apache.sling.core.component.ComponentFilter#init(org.apache.sling.core.component.ComponentContext)
      */
     public void init(ComponentContext context) {
         // nothing to do
     }
 
     /**
-     * @see org.apache.sling.component.ComponentFilter#destroy()
+     * @see org.apache.sling.core.component.ComponentFilter#destroy()
      */
     public void destroy() {
         // nothing to do
@@ -107,7 +107,7 @@ public class ServiceLocatorFilter implements ComponentFilter {
         }
 
         /**
-         * @see org.apache.sling.ServiceLocator#getService(java.lang.String, java.lang.String)
+         * @see org.apache.sling.core.ServiceLocator#getService(java.lang.String, java.lang.String)
          */
         public Object[] getService(String serviceName, String filter) throws InvalidSyntaxException {
             final ServiceReference[] refs = this.bundleContext.getServiceReferences(serviceName, filter);
@@ -129,7 +129,7 @@ public class ServiceLocatorFilter implements ComponentFilter {
         }
 
         /**
-         * @see org.apache.sling.ServiceLocator#getService(java.lang.String)
+         * @see org.apache.sling.core.ServiceLocator#getService(java.lang.String)
          */
         public Object getService(String serviceName) {
             Object service = this.services.get(serviceName);
