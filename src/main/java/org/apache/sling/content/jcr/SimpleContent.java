@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.content.jcr;
 
@@ -27,14 +30,14 @@ import org.apache.sling.component.Content;
  * This class is defined with a content mapping for the <code>nt:base</code>
  * node type (the root node type) mapping the path of the node to the
  * {@link #getPath() path} field.
- * 
+ *
  * @ocm.mapped jcrNodeType="nt:base" discriminator="false"
  */
 public abstract class SimpleContent implements Content {
 
     /**
      * The path of the node to which this instance belongs
-     * 
+     *
      * @ocm.field path="true"
      */
     private String path;
@@ -47,7 +50,7 @@ public abstract class SimpleContent implements Content {
      * Doing so may render content loading and storing instable.
      */
     public String getPath() {
-        return path;
+        return this.path;
     }
 
     /**
@@ -57,7 +60,7 @@ public abstract class SimpleContent implements Content {
      * This method is not part of the public API of this class and therefore not
      * intended to be used by client code or extending classes. It is handled
      * internally by the Content Management functionality.
-     * 
+     *
      * @param path The path of the node from which this instance has been
      *            loaded.
      */
