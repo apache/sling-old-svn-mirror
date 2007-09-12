@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,13 +36,13 @@ import org.osgi.framework.ServiceRegistration;
 /**
  * The <code>DummyBundleContext</code> is used for the resolution of bundles
  * from the local repository to create a subset repository for download.
- * 
+ *
  * @author fmeschbe
  */
 class DummyBundleContext implements BundleContext {
 
     private BundleContext delegatee;
-    
+
     private Map properties;
 
     DummyBundleContext(BundleContext delegatee) {
@@ -50,76 +51,76 @@ class DummyBundleContext implements BundleContext {
     }
 
     public Filter createFilter(String arg0) throws InvalidSyntaxException {
-        return delegatee.createFilter(arg0);
+        return this.delegatee.createFilter(arg0);
     }
 
     public ServiceReference[] getAllServiceReferences(String arg0, String arg1)
             throws InvalidSyntaxException {
-        return delegatee.getAllServiceReferences(arg0, arg1);
+        return this.delegatee.getAllServiceReferences(arg0, arg1);
     }
 
     public Bundle getBundle() {
-        return delegatee.getBundle();
+        return this.delegatee.getBundle();
     }
 
     public Bundle getBundle(long id) {
-        return (id == 0) ? delegatee.getBundle(id) : null;
+        return (id == 0) ? this.delegatee.getBundle(id) : null;
     }
 
     public Bundle[] getBundles() {
-        return new Bundle[]{ delegatee.getBundle(0) };
+        return new Bundle[]{ this.delegatee.getBundle(0) };
     }
 
     public File getDataFile(String arg0) {
-        return delegatee.getDataFile(arg0);
+        return this.delegatee.getDataFile(arg0);
     }
 
     void setProperty(String name, String value) {
-        properties.put(name, value);
+        this.properties.put(name, value);
     }
-    
+
     public String getProperty(String name) {
-        if (properties.containsKey(name)) {
-            return String.valueOf(properties.get(name));
+        if (this.properties.containsKey(name)) {
+            return String.valueOf(this.properties.get(name));
         }
-        
-        return delegatee.getProperty(name);
+
+        return this.delegatee.getProperty(name);
     }
 
     public Object getService(ServiceReference arg0) {
-        return delegatee.getService(arg0);
+        return this.delegatee.getService(arg0);
     }
 
     public ServiceReference getServiceReference(String arg0) {
-        return delegatee.getServiceReference(arg0);
+        return this.delegatee.getServiceReference(arg0);
     }
 
     public ServiceReference[] getServiceReferences(String arg0, String arg1)
             throws InvalidSyntaxException {
-        return delegatee.getServiceReferences(arg0, arg1);
+        return this.delegatee.getServiceReferences(arg0, arg1);
     }
 
     public Bundle installBundle(String arg0, InputStream arg1)
             throws BundleException {
-        return delegatee.installBundle(arg0, arg1);
+        return this.delegatee.installBundle(arg0, arg1);
     }
 
     public Bundle installBundle(String arg0) throws BundleException {
-        return delegatee.installBundle(arg0);
+        return this.delegatee.installBundle(arg0);
     }
 
     public ServiceRegistration registerService(String arg0, Object arg1,
             Dictionary arg2) {
-        return delegatee.registerService(arg0, arg1, arg2);
+        return this.delegatee.registerService(arg0, arg1, arg2);
     }
 
     public ServiceRegistration registerService(String[] arg0, Object arg1,
             Dictionary arg2) {
-        return delegatee.registerService(arg0, arg1, arg2);
+        return this.delegatee.registerService(arg0, arg1, arg2);
     }
 
     public boolean ungetService(ServiceReference arg0) {
-        return delegatee.ungetService(arg0);
+        return this.delegatee.ungetService(arg0);
     }
 
 

@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -76,7 +77,7 @@ abstract class AbstractRegistrationSupport {
      * Performs additional activation tasks. This method is called by the
      * {@link #activate(ComponentContext)} method and is intended for internal
      * setup, such as acquiring the registry.
-     * 
+     *
      * @return Whether the activation succeeded or not. If <code>true</code>
      *         is returned, activation succeeded and any repositories which have
      *         been bound before the component was activated are now actually
@@ -111,7 +112,7 @@ abstract class AbstractRegistrationSupport {
      * <p>
      * This method may safely assume that it is only called on or after
      * activation of this component on or before the component deactivation.
-     * 
+     *
      * @param name The name under which the repository is to be registered.
      * @param repository The <code>javax.jcr.Repository</code> to register.
      * @return Returns an object which is later given as the <code>data</code>
@@ -134,7 +135,7 @@ abstract class AbstractRegistrationSupport {
      * <p>
      * This method may safely assume that it is only called on or after
      * activation of this component on or before the component deactivation.
-     * 
+     *
      * @param name The name under which the repository is to be registered.
      * @param data The data object returned by the
      *            {@link #bindRepositoryInternal(String, ServiceReference)}
@@ -152,13 +153,13 @@ abstract class AbstractRegistrationSupport {
      * fully operational.
      */
     protected ComponentContext getComponentContext() {
-        return componentContext;
+        return this.componentContext;
     }
 
     /**
      * Logs a message with optional <code>Throwable</code> stack trace to the
      * log service or <code>stderr</code> if no log service is available.
-     * 
+     *
      * @param level The <code>LogService</code> level at which to log the
      *            message.
      * @param message The message to log, this should of course not be
@@ -183,7 +184,7 @@ abstract class AbstractRegistrationSupport {
      * Returns the <code>name</code> property from the service properties or
      * <code>null</code> if no such property exists or the property is an
      * empty string.
-     * 
+     *
      * @param reference The <code>ServiceReference</code> whose
      *            <code>name</code> property is to be returned.
      * @return The non-empty name property or <code>null</code>.
@@ -191,7 +192,7 @@ abstract class AbstractRegistrationSupport {
     protected String getName(ServiceReference reference) {
         String name = (String) reference.getProperty(SlingServerRepository.REPOSITORY_REGISTRATION_NAME);
         if (name == null || name.length() == 0) {
-            log.log(LogService.LOG_DEBUG,
+            this.log.log(LogService.LOG_DEBUG,
                 "registerRepository: Repository not to be registered");
             return null;
         }
@@ -213,20 +214,20 @@ abstract class AbstractRegistrationSupport {
      * If {@link #doActivate()} returns <code>false</code>, the repositories
      * already bound are not actually registered, but this component is
      * disabled.
-     * 
+     *
      * @param componentContext The OSGi <code>ComponentContext</code> of this
      *      component.
      */
     protected void activate(ComponentContext componentContext) {
-        synchronized (registryLock) {
+        synchronized (this.registryLock) {
             this.componentContext = componentContext;
 
-            if (doActivate()) {
+            if (this.doActivate()) {
                 // register all repositories in the tmp map
-                for (Iterator ri = repositoryRegistrationBacklog.entrySet().iterator(); ri.hasNext();) {
+                for (Iterator ri = this.repositoryRegistrationBacklog.entrySet().iterator(); ri.hasNext();) {
                     Map.Entry entry = (Map.Entry) ri.next();
 
-                    bindRepositoryInternal((String) entry.getKey(),
+                    this.bindRepositoryInternal((String) entry.getKey(),
                         (ServiceReference) entry.getValue());
 
                     ri.remove();
@@ -235,7 +236,7 @@ abstract class AbstractRegistrationSupport {
                 // disable this component
                 String name = (String) componentContext.getProperties().get(
                     ComponentConstants.COMPONENT_NAME);
-                getComponentContext().disableComponent(name);
+                this.getComponentContext().disableComponent(name);
             }
         }
     }
@@ -248,24 +249,24 @@ abstract class AbstractRegistrationSupport {
      * <li>Call {@link #doDeactivate()}
      * <li>Clear the OSGi ComponentContext field
      * </ol>
-     * 
+     *
      * @param componentContext The OSGi <code>ComponentContext</code> of this
      *            component.
      */
     protected void deactivate(ComponentContext context) {
 
-        synchronized (registryLock) {
+        synchronized (this.registryLock) {
 
             // unregister all repositories in the tmp map
-            for (Iterator ri = registeredRepositories.entrySet().iterator(); ri.hasNext();) {
+            for (Iterator ri = this.registeredRepositories.entrySet().iterator(); ri.hasNext();) {
                 Map.Entry entry = (Map.Entry) ri.next();
 
-                unbindRepository((String) entry.getKey(), entry.getValue());
+                this.unbindRepository((String) entry.getKey(), entry.getValue());
 
                 ri.remove();
             }
 
-            doDeactivate();
+            this.doDeactivate();
 
             this.componentContext = null;
         }
@@ -275,24 +276,24 @@ abstract class AbstractRegistrationSupport {
      * Registers the repository identified by the OSGi service reference under
      * the name set as service property. If the repository service has not
      * name property, the repository is not registered.
-     * 
+     *
      * @param reference The <code>ServiceReference</code> representing the
      *      repository to register.
      */
     protected void bindRepository(ServiceReference reference) {
-        String name = getName(reference);
+        String name = this.getName(reference);
 
         if (name != null) {
-            synchronized (registryLock) {
-                if (componentContext == null) {
+            synchronized (this.registryLock) {
+                if (this.componentContext == null) {
                     // no context to register with, delay ??
-                    repositoryRegistrationBacklog.put(name, reference);
+                    this.repositoryRegistrationBacklog.put(name, reference);
                 } else {
-                    bindRepositoryInternal(name, reference);
+                    this.bindRepositoryInternal(name, reference);
                 }
             }
         } else {
-            log(LogService.LOG_INFO, "Service "
+            this.log(LogService.LOG_INFO, "Service "
                 + reference.getProperty(Constants.SERVICE_ID)
                 + " has no name property, not registering", null);
         }
@@ -303,31 +304,31 @@ abstract class AbstractRegistrationSupport {
      * the name set as service property. If the repository service has no
      * name property, the repository is assumed not be registered and nothing
      * needs to be done.
-     * 
+     *
      * @param reference The <code>ServiceReference</code> representing the
      *      repository to unregister.
      */
     protected void unbindRepository(ServiceReference reference) {
-        String name = getName(reference);
+        String name = this.getName(reference);
         if (name != null) {
 
-            synchronized (registryLock) {
+            synchronized (this.registryLock) {
                 // unbind the repository
-                Object data = registeredRepositories.remove(name);
+                Object data = this.registeredRepositories.remove(name);
                 if (data != null) {
-                    unbindRepository(name, data);
+                    this.unbindRepository(name, data);
                 }
 
                 // ensure unregistered from internal and temporary map
-                repositoryRegistrationBacklog.remove(name);
+                this.repositoryRegistrationBacklog.remove(name);
 
                 // make sure we have no reference to the service
-                if (componentContext != null) {
-                    componentContext.getBundleContext().ungetService(reference);
+                if (this.componentContext != null) {
+                    this.componentContext.getBundleContext().ungetService(reference);
                 }
             }
         } else {
-            log(LogService.LOG_DEBUG, "Service "
+            this.log(LogService.LOG_DEBUG, "Service "
                 + reference.getProperty(Constants.SERVICE_ID)
                 + " has no name property, nothing to unregister", null);
         }
@@ -342,7 +343,7 @@ abstract class AbstractRegistrationSupport {
     protected void unbindLog(LogService log) {
         this.log = null;
     }
-    
+
     //---------- internal -----------------------------------------------------
 
     /**
@@ -352,11 +353,11 @@ abstract class AbstractRegistrationSupport {
      * {@link #bindRepository(String, Repository)} method.
      */
     private void bindRepositoryInternal(String name, ServiceReference reference) {
-        Repository repository = (Repository) getComponentContext().getBundleContext().getService(
+        Repository repository = (Repository) this.getComponentContext().getBundleContext().getService(
             reference);
-        Object data = bindRepository(name, repository);
+        Object data = this.bindRepository(name, repository);
         if (data != null) {
-            registeredRepositories.put(name, data);
+            this.registeredRepositories.put(name, data);
         }
     }
 

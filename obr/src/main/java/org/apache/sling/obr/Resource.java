@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,7 +59,7 @@ class Resource implements Serializable, Comparable {
 
     private URL resourceURL;
     private String name;
-    
+
     private String id;
     private String presentationName;
     private String symbolicName;
@@ -73,16 +74,16 @@ class Resource implements Serializable, Comparable {
     private String license;
     private String source;
     private SortedSet categories;
-    
+
     private SortedMap capabilities;
     private SortedMap requirements;
-    
+
     private BundleSpec[] bundleSpecs;
-    
+
     static Resource create(File file) throws IOException {
         return create(file.toURL());
     }
-    
+
     static Resource create(URL file) throws IOException {
         JarInputStream jar = null;
         try {
@@ -98,16 +99,16 @@ class Resource implements Serializable, Comparable {
             IOUtils.closeQuietly(jar);
         }
     }
-    
+
     private Resource(URL resourceURL, Attributes attrs, long size)
             throws IOException {
-        
-        capabilities = new TreeMap();
-        requirements = new TreeMap();
+
+        this.capabilities = new TreeMap();
+        this.requirements = new TreeMap();
 
         this.resourceURL = resourceURL;
-        this.name = getName(resourceURL.getPath());
-        
+        this.name = this.getName(resourceURL.getPath());
+
         this.presentationName = attrs.getValue(Constants.BUNDLE_NAME);
         this.symbolicName = attrs.getValue(Constants.BUNDLE_SYMBOLICNAME);
         this.uri = attrs.getValue(Constants.BUNDLE_UPDATELOCATION);
@@ -121,19 +122,19 @@ class Resource implements Serializable, Comparable {
         this.license = attrs.getValue("Bundle-LicenseURL");
         this.source = attrs.getValue("Bundle-SourceURL");
         String categoryString = attrs.getValue(Constants.BUNDLE_CATEGORY);
-        
+
         // require symbolicName
-        if (symbolicName == null || symbolicName.length() == 0) {
+        if (this.symbolicName == null || this.symbolicName.length() == 0) {
             throw new IOException("Missing Bundle-SymbolicName, not a valid Bundle");
         }
-        
+
         // default version valu
-        if (version == null || version.length() == 0) {
-            version = "0.0.0";
+        if (this.version == null || this.version.length() == 0) {
+            this.version = "0.0.0";
         }
-        
+
         // default value for the id
-        this.id = symbolicName + ":" + version;
+        this.id = this.symbolicName + ":" + this.version;
 
         this.categories = new TreeSet();
         if (categoryString != null) {
@@ -145,75 +146,75 @@ class Resource implements Serializable, Comparable {
                 }
             }
         }
-        
-        addCapability(new BundleCapability(attrs));
 
-        addExportedServices(attrs.getValue(Constants.EXPORT_SERVICE));
-        addExportedPackages(attrs.getValue(Constants.EXPORT_PACKAGE));
-        addImportedServices(attrs.getValue(Constants.IMPORT_SERVICE));
-        addImportedPackages(attrs.getValue(Constants.IMPORT_PACKAGE));
-        
+        this.addCapability(new BundleCapability(attrs));
+
+        this.addExportedServices(attrs.getValue(Constants.EXPORT_SERVICE));
+        this.addExportedPackages(attrs.getValue(Constants.EXPORT_PACKAGE));
+        this.addImportedServices(attrs.getValue(Constants.IMPORT_SERVICE));
+        this.addImportedPackages(attrs.getValue(Constants.IMPORT_PACKAGE));
+
         // parse bundle specifications of Assembly Bundle
-        addBundleSpecs(attrs.getValue(ASSEMBLY_BUNDLES));
+        this.addBundleSpecs(attrs.getValue(ASSEMBLY_BUNDLES));
     }
-    
+
     void addCapability(Capability capability) {
-        addToMapList(capabilities, capability.getName(), capability);
+        this.addToMapList(this.capabilities, capability.getName(), capability);
     }
 
     Iterator getCapabilities() {
-        return getMapListIterator(capabilities);
+        return this.getMapListIterator(this.capabilities);
     }
-    
+
     void addRequirement(Requirement requirement) {
-        addToMapList(requirements, requirement.getName(), requirement);
+        this.addToMapList(this.requirements, requirement.getName(), requirement);
     }
-    
+
     Iterator getRequirements() {
-        return getMapListIterator(requirements);
+        return this.getMapListIterator(this.requirements);
     }
-    
+
     SortedSet getCategories() {
-        return categories;
+        return this.categories;
     }
-    
+
     BundleSpec[] getBundleSpecs() {
-        return bundleSpecs;
+        return this.bundleSpecs;
     }
-    
+
     /**
      * @return the contact
      */
     String getContact() {
-        return contact;
+        return this.contact;
     }
 
     /**
      * @return the copyright
      */
     String getCopyright() {
-        return copyright;
+        return this.copyright;
     }
 
     /**
      * @return the description
      */
     String getDescription() {
-        return description;
+        return this.description;
     }
 
     /**
      * @return the documentation
      */
     String getDocumentation() {
-        return documentation;
+        return this.documentation;
     }
 
     /**
      * @return the id
      */
     String getId() {
-        return id;
+        return this.id;
     }
 
     /**
@@ -223,49 +224,49 @@ class Resource implements Serializable, Comparable {
    void setId(String id) {
         this.id = id;
     }
-    
+
     /**
      * @return the license
      */
     String getLicense() {
-        return license;
+        return this.license;
     }
 
     /**
      * @return the presentationName
      */
     String getPresentationName() {
-        return presentationName;
+        return this.presentationName;
     }
 
     /**
      * @return the size
      */
     long getSize() {
-        return size;
+        return this.size;
     }
 
     /**
      * @return the source
      */
     String getSource() {
-        return source;
+        return this.source;
     }
 
     /**
      * @return the symbolicName
      */
     String getSymbolicName() {
-        return symbolicName;
+        return this.symbolicName;
     }
 
     /**
      * @return the uri
      */
     String getUri() {
-        return uri;
+        return this.uri;
     }
-    
+
     /**
      * Sets the uri
      * @param uri
@@ -278,28 +279,28 @@ class Resource implements Serializable, Comparable {
      * @return the vendor
      */
     String getVendor() {
-        return vendor;
+        return this.vendor;
     }
 
     /**
      * @return the version
      */
     String getVersion() {
-        return version;
+        return this.version;
     }
 
     /**
      * @return the URL location of the bundle file
      */
     URL getResourceURL() {
-        return resourceURL;
+        return this.resourceURL;
     }
-    
+
     /**
      * @return the name part of the bundle file URL location
      */
     String getResourceName() {
-     return name;
+     return this.name;
     }
 
     /**
@@ -307,7 +308,7 @@ class Resource implements Serializable, Comparable {
      * @throws IOException If an error occurrs opening the stream.
      */
     void spool(OutputStream out) throws IOException {
-        URLConnection conn = getResourceURL().openConnection();
+        URLConnection conn = this.getResourceURL().openConnection();
         InputStream ins = null;
         try {
             ins = conn.getInputStream();
@@ -316,91 +317,91 @@ class Resource implements Serializable, Comparable {
             IOUtils.closeQuietly(ins);
         }
     }
-    
+
     //---------- Serializable interface ---------------------------------------
-    
+
     public void serialize(PrintWriter out, String indent) {
         out.print(indent);
         out.print("<resource");
-        
-        printAttribute(out, "id", id);
-        printAttribute(out, "presentationname", presentationName);
-        printAttribute(out, "symbolicname", symbolicName);
-        printAttribute(out, "uri", uri);
-        printAttribute(out, "version", version);
+
+        this.printAttribute(out, "id", this.id);
+        this.printAttribute(out, "presentationname", this.presentationName);
+        this.printAttribute(out, "symbolicname", this.symbolicName);
+        this.printAttribute(out, "uri", this.uri);
+        this.printAttribute(out, "version", this.version);
         out.println('>');
-        
+
         String childIndent = indent + " ";
-        printElement(out, childIndent, "description", description);
-        printElement(out, childIndent, "size", String.valueOf(size));
-        printElement(out, childIndent, "documentation", documentation);
-        printElement(out, childIndent, "copyright", copyright);
-        printElement(out, childIndent, "vendor", vendor);
-        printElement(out, childIndent, "contact", contact);
-        printElement(out, childIndent, "license", license);
-        printElement(out, childIndent, "source", source);
-        
-        for (Iterator ci=getCategories().iterator(); ci.hasNext(); ) {
+        this.printElement(out, childIndent, "description", this.description);
+        this.printElement(out, childIndent, "size", String.valueOf(this.size));
+        this.printElement(out, childIndent, "documentation", this.documentation);
+        this.printElement(out, childIndent, "copyright", this.copyright);
+        this.printElement(out, childIndent, "vendor", this.vendor);
+        this.printElement(out, childIndent, "contact", this.contact);
+        this.printElement(out, childIndent, "license", this.license);
+        this.printElement(out, childIndent, "source", this.source);
+
+        for (Iterator ci=this.getCategories().iterator(); ci.hasNext(); ) {
             String cat = (String) ci.next();
             out.print("<category");
-            printAttribute(out, "id", cat);
+            this.printAttribute(out, "id", cat);
             out.println("/>");
         }
-        
-        printMap(out, childIndent, capabilities);
-        printMap(out, childIndent, requirements);
-        
+
+        this.printMap(out, childIndent, this.capabilities);
+        this.printMap(out, childIndent, this.requirements);
+
         out.print(indent);
         out.println("</resource>");
     }
-    
+
     //---------- Comparable interface -----------------------------------------
-    
+
     /**
      * @throws ClassCastException if <code>obj</code> is not <code>Resource</code>
      */
     public int compareTo(Object obj) {
-        if (equals(obj)) {
+        if (this.equals(obj)) {
             return 0;
         }
-        
+
         Resource other = (Resource) obj;
-        if (getSymbolicName().equals(other.getSymbolicName())) {
+        if (this.getSymbolicName().equals(other.getSymbolicName())) {
             // compare version
-            Version thisVersion = new Version(getVersion());
+            Version thisVersion = new Version(this.getVersion());
             Version otherVersion = new Version(other.getVersion());
             return thisVersion.compareTo(otherVersion);
         }
-        
-        return getSymbolicName().compareTo(other.getSymbolicName());
+
+        return this.getSymbolicName().compareTo(other.getSymbolicName());
     }
-    
+
     //---------- Object overwrite ---------------------------------------------
 
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
         }
-        
+
         if (obj instanceof Resource) {
             Resource other = (Resource) obj;
-            return getSymbolicName().equals(other.getSymbolicName())
-                && getVersion().equals(other.getVersion());
+            return this.getSymbolicName().equals(other.getSymbolicName())
+                && this.getVersion().equals(other.getVersion());
         }
-        
+
         return false;
     }
-    
+
     public int hashCode() {
-        return getSymbolicName().hashCode() * 33 + getVersion().hashCode() * 17;
+        return this.getSymbolicName().hashCode() * 33 + this.getVersion().hashCode() * 17;
     }
-    
+
     public String toString() {
-        return getSymbolicName() + " - " + getVersion();
+        return this.getSymbolicName() + " - " + this.getVersion();
     }
-    
+
     //---------- internal -----------------------------------------------------
-    
+
     // helper
     private String getName(String path) {
         int lastSlash = path.lastIndexOf('/');
@@ -409,18 +410,18 @@ class Resource implements Serializable, Comparable {
         }
         return path;
     }
-    
+
     private void addExportedServices(String exportService) {
         if (exportService == null || exportService.length() == 0) {
             return;
         }
     }
-    
+
     private void addExportedPackages(String exportPackage) {
         if (exportPackage == null || exportPackage.length() == 0) {
             return;
         }
-        
+
 //        R4Package[] pkgs = ManifestParser.parseImportExportHeader(exportPackage);
 //        for (int i=0; i < pkgs.length; i++) {
 //            // <capability name="package">
@@ -435,10 +436,10 @@ class Resource implements Serializable, Comparable {
             // <p n="package" v="org.apache.felix.upnp.extra.controller"/>
             // <p n="version" t="version" v="1.0.0"/>
             // </capability>
-            addCapability(new PackageCapability((Map.Entry) pi.next()));
+            this.addCapability(new PackageCapability((Map.Entry) pi.next()));
         }
     }
-    
+
     private void addImportedServices(String importService) {
         if (importService == null || importService.length() == 0) {
             return;
@@ -470,10 +471,10 @@ class Resource implements Serializable, Comparable {
             //    optional="false">
             //  Import package org.xml.sax
             // </require>
-            addRequirement(new PackageRequirement((Map.Entry) pi.next()));
+            this.addRequirement(new PackageRequirement((Map.Entry) pi.next()));
         }
     }
-    
+
     private void addToMapList(Map map, String name, Object value) {
         List current = (List) map.get(name);
         if (current == null) {
@@ -482,11 +483,11 @@ class Resource implements Serializable, Comparable {
         }
         current.add(value);
     }
-    
+
     private void addBundleSpecs(String spec) {
         if (spec == null) {
             // this is not expected ...
-            bundleSpecs = new BundleSpec[0];
+            this.bundleSpecs = new BundleSpec[0];
         } else {
             spec = spec.trim();
             List specs = new ArrayList();
@@ -515,7 +516,7 @@ class Resource implements Serializable, Comparable {
             if (start < spec.length()) {
                 specs.add(new BundleSpec(spec.substring(start)));
             }
-            bundleSpecs = (BundleSpec[]) specs.toArray(new BundleSpec[specs.size()]);
+            this.bundleSpecs = (BundleSpec[]) specs.toArray(new BundleSpec[specs.size()]);
         }
     }
 
@@ -524,45 +525,45 @@ class Resource implements Serializable, Comparable {
             private Iterator mapIter;
             private Iterator listIter;
             private Object next;
-            
+
             {
-                mapIter = map.values().iterator();
-                next = seek();
+                this.mapIter = map.values().iterator();
+                this.next = this.seek();
             }
-            
+
             public boolean hasNext() {
-                return next != null;
+                return this.next != null;
             }
-            
+
             public Object next() {
-                if (next == null) {
+                if (this.next == null) {
                     throw new NoSuchElementException("next");
                 }
-                
-                Object toReturn = next;
-                next = seek();
+
+                Object toReturn = this.next;
+                this.next = this.seek();
                 return toReturn;
             }
-            
+
             private Object seek() {
-                while (listIter == null || !listIter.hasNext()) {
-                    if (mapIter.hasNext()) {
-                        List nextlist = (List) mapIter.next();
-                        listIter = nextlist.iterator();
+                while (this.listIter == null || !this.listIter.hasNext()) {
+                    if (this.mapIter.hasNext()) {
+                        List nextlist = (List) this.mapIter.next();
+                        this.listIter = nextlist.iterator();
                     } else {
                         return null;
                     }
                 }
-                
-                return listIter.next();
+
+                return this.listIter.next();
             }
-            
+
             public void remove() {
                 throw new UnsupportedOperationException("remove");
             }
         };
     }
-    
+
     private void printAttribute(PrintWriter out, String name, String value) {
         if (value != null) {
             out.print(' ');
@@ -572,7 +573,7 @@ class Resource implements Serializable, Comparable {
             out.print('"');
         }
     }
-    
+
     private void printElement(PrintWriter out, String indent, String name, String value) {
         if (value != null) {
             out.print(indent);
@@ -585,9 +586,9 @@ class Resource implements Serializable, Comparable {
             out.println('>');
         }
     }
-    
+
     private void printMap(PrintWriter out, String indent, Map map) {
-        for (Iterator mi=getMapListIterator(map); mi.hasNext(); ) {
+        for (Iterator mi=this.getMapListIterator(map); mi.hasNext(); ) {
             Serializable ser = (Serializable) mi.next();
             ser.serialize(out, indent);
         }
