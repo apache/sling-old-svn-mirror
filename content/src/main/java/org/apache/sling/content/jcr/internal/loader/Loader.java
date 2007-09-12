@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.content.jcr.internal.loader;
 
@@ -76,39 +79,39 @@ public class Loader {
     }
 
     public void dispose() {
-        xmlReader = null;
-        jsonReader = null;
-        delayedReferences = null;
-        if (delayedBundles != null) {
-            delayedBundles.clear();
-            delayedBundles = null;
+        this.xmlReader = null;
+        this.jsonReader = null;
+        this.delayedReferences = null;
+        if (this.delayedBundles != null) {
+            this.delayedBundles.clear();
+            this.delayedBundles = null;
         }
-        jcrContentHelper = null;
+        this.jcrContentHelper = null;
     }
 
     public void registerBundle(Bundle bundle) {
-        if (registerBundleInternal(bundle)) {
+        if (this.registerBundleInternal(bundle)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
-            for (int i=delayedBundles.size(); i > 0 && currentSize != delayedBundles.size() && !delayedBundles.isEmpty(); i--) {
-                for (Iterator<Bundle> di=delayedBundles.iterator(); di.hasNext(); ) {
+            for (int i=this.delayedBundles.size(); i > 0 && currentSize != this.delayedBundles.size() && !this.delayedBundles.isEmpty(); i--) {
+                for (Iterator<Bundle> di=this.delayedBundles.iterator(); di.hasNext(); ) {
                     Bundle delayed = di.next();
-                    if (registerBundleInternal(delayed)) {
+                    if (this.registerBundleInternal(delayed)) {
                         di.remove();
                     }
                 }
-                currentSize = delayedBundles.size();
+                currentSize = this.delayedBundles.size();
             }
         } else {
             // add to delayed bundles
-            delayedBundles.add(bundle);
+            this.delayedBundles.add(bundle);
         }
     }
 
     private boolean registerBundleInternal (Bundle bundle) {
         try {
-            if (registerNodeTypes(bundle)) {
-                installContent(bundle);
+            if (this.registerNodeTypes(bundle)) {
+                this.installContent(bundle);
                 return true;
             }
         } catch (RepositoryException re) {
@@ -120,11 +123,11 @@ public class Loader {
     }
 
     public void unregisterBundle(Bundle bundle) {
-        uninstallContent(bundle);
+        this.uninstallContent(bundle);
     }
 
     public void checkNodeType(ClassDescriptor classDescriptor) throws RepositoryException {
-        Session session = getSession();
+        Session session = this.getSession();
         try {
             String nodeType = classDescriptor.getJcrNodeType();
             if (nodeType == null || nodeType.length() == 0) {
@@ -144,7 +147,7 @@ public class Loader {
             return;
 
         } finally {
-            ungetSession(session);
+            this.ungetSession(session);
         }
     }
 
@@ -165,7 +168,7 @@ public class Loader {
         }
 
         boolean success = true;
-        Session session = getSession();
+        Session session = this.getSession();
         try {
             StringTokenizer tokener = new StringTokenizer(typesHeader, ",");
             while (tokener.hasMoreTokens()) {
@@ -205,7 +208,7 @@ public class Loader {
                 }
             }
         } finally {
-            ungetSession(session);
+            this.ungetSession(session);
         }
 
         return success;
@@ -218,14 +221,14 @@ public class Loader {
             return;
         }
 
-        Session session = getSession();
+        Session session = this.getSession();
 
         try {
             log.debug("Installing Initial Content of Bundle {}", bundle.getSymbolicName());
             StringTokenizer tokener = new StringTokenizer(root, ",");
             while (tokener.hasMoreTokens()) {
                 String path = tokener.nextToken().trim();
-                install(bundle, path, session.getRootNode());
+                this.install(bundle, path, session.getRootNode());
             }
 
             // persist modifications now
@@ -242,7 +245,7 @@ public class Loader {
             }
 
             // logout the session for now
-            ungetSession(session);
+            this.ungetSession(session);
         }
 
     }
@@ -261,7 +264,7 @@ public class Loader {
             if (entry.endsWith("/")) {
                 // dir, check for node descriptor , else create dir
                 String base = entry.substring(0, entry.length()-1);
-                String name = getName(base);
+                String name = this.getName(base);
 
                 Node node = null;
                 URL nodeDescriptor = bundle.getEntry(base + EXT_XML);
@@ -273,15 +276,15 @@ public class Loader {
                 // otherwise call crateFolder, which creates an nt:folder or
                 // returns an existing node (created by a descriptor)
                 if (nodeDescriptor != null && !ignoreEntry.contains(nodeDescriptor)) {
-                    node = createNode(parent, name, nodeDescriptor);
+                    node = this.createNode(parent, name, nodeDescriptor);
                     ignoreEntry.add(nodeDescriptor);
                 } else {
-                    node = createFolder(parent, name);
+                    node = this.createFolder(parent, name);
                 }
 
                 // walk down the line
                 if (node != null) {
-                    install(bundle, entry, node);
+                    this.install(bundle, entry, node);
                 }
 
             } else {
@@ -294,7 +297,7 @@ public class Loader {
 
                 // install if it is a descriptor
                 if (entry.endsWith(EXT_XML) || entry.endsWith(EXT_JSON)) {
-                    if (createNode(parent, getName(entry), file) != null) {
+                    if (this.createNode(parent, this.getName(entry), file) != null) {
                         ignoreEntry.add(file);
                         continue;
                     }
@@ -302,7 +305,7 @@ public class Loader {
 
                 // otherwise just place as file
                 try {
-                    createFile(parent, file);
+                    this.createFile(parent, file);
                 } catch (IOException ioe) {
                     log.warn("Cannot create file node for {}", file, ioe);
                 }
@@ -324,9 +327,9 @@ public class Loader {
         try {
             NodeReader nodeReader;
             if (nodeXML.getPath().toLowerCase().endsWith(".xml")) {
-                nodeReader = getXmlReader();
+                nodeReader = this.getXmlReader();
             } else if (nodeXML.getPath().toLowerCase().endsWith(".json")) {
-                nodeReader = getJsonReader();
+                nodeReader = this.getJsonReader();
             } else {
                 // cannot find out the type
                 return null;
@@ -345,7 +348,7 @@ public class Loader {
                 clNode.setName(name.substring(0, name.lastIndexOf('.')));
             }
 
-            return createNode(parent, clNode);
+            return this.createNode(parent, clNode);
         } catch (RepositoryException re) {
             throw re;
         } catch (Throwable t) {
@@ -387,7 +390,7 @@ public class Loader {
                 } else if (type == PropertyType.REFERENCE) {
                     // need to resolve the reference
                     String propPath = node.getPath() + "/" + prop.getName();
-                    String uuid = getUUID(node.getSession(), propPath, prop.getValue());
+                    String uuid = this.getUUID(node.getSession(), propPath, prop.getValue());
                     if (uuid != null) {
                         node.setProperty(prop.getName(), uuid, type);
                     }
@@ -399,17 +402,17 @@ public class Loader {
 
         if (clNode.getChildren() != null) {
             for (org.apache.sling.content.jcr.internal.loader.Node child : clNode.getChildren()) {
-                createNode(node, child);
+                this.createNode(node, child);
             }
         }
 
-        resolveReferences(node);
+        this.resolveReferences(node);
 
         return node;
     }
 
     private void createFile(Node parent, URL source) throws IOException, RepositoryException {
-        String name = getName(source.getPath());
+        String name = this.getName(source.getPath());
         if (parent.hasNode(name)) {
             return;
         }
@@ -420,7 +423,7 @@ public class Loader {
         InputStream data = conn.getInputStream();
 
         if (type == null) {
-            type = jcrContentHelper.getMimeType(name);
+            type = this.jcrContentHelper.getMimeType(name);
             if (type == null) {
                 type = "application/octet-stream";
             }
@@ -444,10 +447,10 @@ public class Loader {
             }
         } else {
             // not existing yet, keep for delayed setting
-            List<String> current = delayedReferences.get(referencePath);
+            List<String> current = this.delayedReferences.get(referencePath);
             if (current == null) {
                 current = new ArrayList<String>();
-                delayedReferences.put(referencePath, current);
+                this.delayedReferences.put(referencePath, current);
             }
             current.add(propPath);
         }
@@ -457,7 +460,7 @@ public class Loader {
     }
 
     private void resolveReferences(Node node) throws RepositoryException {
-        List<String> props = delayedReferences.remove(node.getPath());
+        List<String> props = this.delayedReferences.remove(node.getPath());
         if (props == null || props.size() == 0) {
             return;
         }
@@ -471,8 +474,8 @@ public class Loader {
         String uuid = node.getUUID();
 
         for (String property : props) {
-            String name = getName(property);
-            Node parentNode = getParentNode(session, property);
+            String name = this.getName(property);
+            Node parentNode = this.getParentNode(session, property);
             if (parentNode != null) {
                 parentNode.setProperty(name, uuid, PropertyType.REFERENCE);
             }
@@ -551,26 +554,26 @@ public class Loader {
     }
 
     private XmlReader getXmlReader() throws IOException {
-        if (xmlReader == null) {
+        if (this.xmlReader == null) {
             try {
-                xmlReader = new XmlReader();
+                this.xmlReader = new XmlReader();
             } catch (Throwable t) {
                 throw (IOException) new IOException(t.getMessage()).initCause(t);
             }
         }
 
-        return xmlReader;
+        return this.xmlReader;
     }
 
     private JsonReader getJsonReader() {
-        if (jsonReader == null) {
-            jsonReader = new JsonReader();
+        if (this.jsonReader == null) {
+            this.jsonReader = new JsonReader();
         }
-        return jsonReader;
+        return this.jsonReader;
     }
 
     private Session getSession() throws RepositoryException {
-        return jcrContentHelper.getRepository().loginAdministrative(null);
+        return this.jcrContentHelper.getRepository().loginAdministrative(null);
     }
 
     private void ungetSession(Session session) {

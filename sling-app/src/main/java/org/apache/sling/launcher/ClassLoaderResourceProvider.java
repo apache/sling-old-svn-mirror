@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,14 +39,14 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
     public ClassLoaderResourceProvider(ClassLoader classLoader) {
         this.classLoader = (classLoader != null)
                 ? classLoader
-                : getClass().getClassLoader();
+                : this.getClass().getClassLoader();
     }
 
     @Override
     public Iterator<String> getChildren(String path) {
         List<String> children;
 
-        URL url = classLoader.getResource(Sling.CONFIG_PROPERTIES);
+        URL url = this.classLoader.getResource(Sling.CONFIG_PROPERTIES);
         if (url != null) {
             Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+$");
 
@@ -74,7 +75,7 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.core.launcher.ResourceProvider#getResource(java.lang.String)
      */
     public URL getResource(String path) {
@@ -88,7 +89,7 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
             path = path.substring(1);
         }
 
-        return (classLoader != null) ? classLoader.getResource(path) : null;
+        return (this.classLoader != null) ? this.classLoader.getResource(path) : null;
     }
 
 }

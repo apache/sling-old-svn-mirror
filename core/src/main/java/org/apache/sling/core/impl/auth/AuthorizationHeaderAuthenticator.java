@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.auth;
 
@@ -37,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * authorization steps based on the Authorization header of the HTTP request.
  * This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
- * 
+ *
  * @scr.component immediate="false" label="%auth.http.name"
  *                description="%auth.http.description"
  * @scr.property name="service.description"
@@ -104,7 +107,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      * the request may be for an included servlet, in which case the values for
      * some URI specific values are contained in javax.servlet.include.* request
      * attributes.
-     * 
+     *
      * @param request The request object containing the information for the
      *            authentication.
      * @param response The response object which may be used to send the
@@ -117,7 +120,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      */
     public Credentials authenticate(ComponentRequest request,
             ComponentResponse response) {
-        return extractAuthentication(request);
+        return this.extractAuthentication(request);
     }
 
     /**
@@ -128,7 +131,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      * <p>
      * Returns <code>true</code> if the response could successfully be sent to
      * the client. Otherwise <code>false</code> is returned.
-     * 
+     *
      * @param request The request object
      * @param response The response object to which to send the request
      * @param addInfo Additional information string from the configuration. This
@@ -147,7 +150,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
         }
 
         response.setHeader(HEADER_WWW_AUTHENTICATE,
-            AUTHENTICATION_SCHEME_BASIC + " realm=\"" + realm + "\"");
+            AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"");
 
         try {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -169,9 +172,9 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
         if (newRealm == null || newRealm.length() == 0) {
             newRealm = DEFAULT_REALM;
         }
-        if (!newRealm.equals(realm)) {
-            log.info("Setting new realm name {} (was {})", newRealm, realm);
-            realm = newRealm;
+        if (!newRealm.equals(this.realm)) {
+            log.info("Setting new realm name {} (was {})", newRealm, this.realm);
+            this.realm = newRealm;
         }
     }
 

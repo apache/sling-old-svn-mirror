@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,16 +38,16 @@ public class ContextConnection extends URLConnection {
      * are delegated.
      */
     private final ResourceProvider classLoader;
-    
+
     /**
      * The delegatee <code>URLConnection</code> to which some of the method
-     * calls are forwarded. 
+     * calls are forwarded.
      */
     private URLConnection delegatee;
-    
+
     /**
      * Creates an instance of this context connection.
-     * 
+     *
      * @param url The original URL whose path part is used to address the
      *      resource from the servlet context.
      * @param context The <code>ServletContext</code> to which requests for
@@ -62,20 +63,20 @@ public class ContextConnection extends URLConnection {
      * respective resource URL.
      * <p>
      * If this instance has already been connected, this method has no effect.
-     * 
+     *
      * @throws IOException If the URL path does not address an existing resource
      *      in the servlet context or if opening the connection to that resource
      *      fails.
      */
     public void connect() throws IOException {
-        if (!connected) {
-            URL contextURL = classLoader.getResource(url.getPath());
+        if (!this.connected) {
+            URL contextURL = this.classLoader.getResource(this.url.getPath());
             if (contextURL == null) {
-                throw new IOException("Resource " + url.getPath() + " does not exist");
+                throw new IOException("Resource " + this.url.getPath() + " does not exist");
             }
-    
-            delegatee = contextURL.openConnection();
-            connected = true;
+
+            this.delegatee = contextURL.openConnection();
+            this.connected = true;
         }
     }
 
@@ -84,7 +85,7 @@ public class ContextConnection extends URLConnection {
      * not been connected yet.
      */
     public int getContentLength() {
-        return (delegatee == null) ? -1 : delegatee.getContentLength();
+        return (this.delegatee == null) ? -1 : this.delegatee.getContentLength();
     }
 
     /**
@@ -92,19 +93,19 @@ public class ContextConnection extends URLConnection {
      * if this connection has not been connected yet.
      */
     public String getContentType() {
-        return (delegatee == null) ? null : delegatee.getContentType();
+        return (this.delegatee == null) ? null : this.delegatee.getContentType();
     }
 
     /**
      * Returns a <code>InputStream</code> on the resource. If this connection
      * is not connected yet, the conneciton is opened.
-     * 
+     *
      * @throws IOException may be thrown if an error occurrs opening the
      *      connection or accessing the content as an <code>InputStream</code>.
      */
     public InputStream getInputStream() throws IOException {
-        connect();
-        return delegatee.getInputStream();
+        this.connect();
+        return this.delegatee.getInputStream();
     }
 
     /**
@@ -112,6 +113,6 @@ public class ContextConnection extends URLConnection {
      * connection has not been connected yet.
      */
     public long getLastModified() {
-        return (delegatee == null) ? 0 : delegatee.getLastModified();
+        return (this.delegatee == null) ? 0 : this.delegatee.getLastModified();
     }
 }

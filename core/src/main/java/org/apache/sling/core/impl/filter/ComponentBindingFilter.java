@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.filter;
 
@@ -33,7 +36,7 @@ abstract class ComponentBindingFilter implements ComponentFilter {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(ComponentBindingFilter.class);
-    
+
     private ComponentContext componentContext;
     private Map components;
     private LinkedHashMap pendingComponents;
@@ -41,21 +44,21 @@ abstract class ComponentBindingFilter implements ComponentFilter {
     public synchronized void init(ComponentContext context) {
         this.componentContext = context;
         this.components = new HashMap();
-        
-        if (pendingComponents != null) {
-            LinkedHashMap pc = pendingComponents;
-            pendingComponents = null;
-            
+
+        if (this.pendingComponents != null) {
+            LinkedHashMap pc = this.pendingComponents;
+            this.pendingComponents = null;
+
             for (Iterator pi=pc.values().iterator(); pi.hasNext(); ) {
                 Component component = (Component) pi.next();
-                
+
                 // initalize the component
                 try {
-                    component.init(componentContext);
-            
+                    component.init(this.componentContext);
+
                     // only register it internally, if initialization succeeds
                     log.debug("addComponent: Adding componnent {}", component.getId());
-                    insert(components, component.getId(), component);
+                    this.insert(this.components, component.getId(), component);
                 } catch (ComponentException ce) {
                     log.error("Component " + component.getId() + " failed to initialize", ce);
                 } catch (Throwable t) {
@@ -71,25 +74,25 @@ abstract class ComponentBindingFilter implements ComponentFilter {
     }
 
     protected Component getComponent(String id) {
-        return (Component) components.get(id);
+        return (Component) this.components.get(id);
     }
-    
+
     protected Iterator getComponents() {
-        return components.values().iterator();
+        return this.components.values().iterator();
     }
-    
+
     protected abstract boolean accept(Component component);
-    
+
     protected synchronized void bindComponent(Component component) {
-        if (accept(component)) {
-            if (componentContext != null) {
+        if (this.accept(component)) {
+            if (this.componentContext != null) {
                 // initalize the component
                 try {
-                    component.init(componentContext);
-            
+                    component.init(this.componentContext);
+
                     // only register it internally, if initialization succeeds
                     log.debug("addComponent: Adding componnent {}", component.getId());
-                    update(component.getId(), component);
+                    this.update(component.getId(), component);
                 } catch (ComponentException ce) {
                     log.error("Component " + component.getId() + " failed to initialize", ce);
                 } catch (Throwable t) {
@@ -97,19 +100,19 @@ abstract class ComponentBindingFilter implements ComponentFilter {
                 }
             } else {
                 // no context yet
-                if (pendingComponents == null) {
-                    pendingComponents = new LinkedHashMap();
+                if (this.pendingComponents == null) {
+                    this.pendingComponents = new LinkedHashMap();
                 }
-                pendingComponents.put(component.getId(), component);
+                this.pendingComponents.put(component.getId(), component);
             }
         }
     }
 
     protected synchronized void unbindComponent(Component component) {
-        if (accept(component)) {
+        if (this.accept(component)) {
             // check whether the component is an unintialized one
-            if (pendingComponents != null) {
-                if (pendingComponents.remove(component.getId()) != null) {
+            if (this.pendingComponents != null) {
+                if (this.pendingComponents.remove(component.getId()) != null) {
                     log.debug(
                         "unbindComponent: Component {} pending initialization unbound",
                         component.getId());
@@ -119,8 +122,8 @@ abstract class ComponentBindingFilter implements ComponentFilter {
 
             // only try "removing" if we are active (initialized and not
             // destroyed)
-            if (componentContext != null
-                && update(component.getId(), null) != null) {
+            if (this.componentContext != null
+                && this.update(component.getId(), null) != null) {
                 log.debug("removeComponent: Component {} removed",
                     component.getId());
 
@@ -137,29 +140,29 @@ abstract class ComponentBindingFilter implements ComponentFilter {
     }
 
     /**
-     * 
+     *
      * <p>
      * This is synchronized to prevent paralell update of the store thus enabling
      * the loss of updates.
-     * 
+     *
      * @param componentId
      * @param component
      * @return
      */
     private Component update(String componentId, Component component) {
         // create new working map as a copy of the old
-        Map newStore = new HashMap(components);
+        Map newStore = new HashMap(this.components);
 
         // replace the component actually
-        Component replaced = insert(newStore, componentId, component);
+        Component replaced = this.insert(newStore, componentId, component);
 
         // put new store in action now
-        components = newStore;
-        
+        this.components = newStore;
+
         // return the removed or replaced Component (may be null)
         return replaced;
     }
-    
+
     private Component insert(Map components, String componentId, Component component) {
         // add or remove component
         Component replaced;

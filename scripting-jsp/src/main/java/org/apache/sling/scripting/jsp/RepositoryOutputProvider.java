@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,75 +47,75 @@ class RepositoryOutputProvider implements OutputProvider {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(RepositoryOutputProvider.class);
-    
+
     private final SlingRepository repository;
-    
+
     // shared session for read access
     private Session session;
-    
+
     // private session for write access
     private Session privateSession;
-    
+
     // the workspace to access here, null for SlingRepository default
     private String workspace;
 
     private Lock privateSessionLock = new Lock();
-    
+
     // the maximum time in milliseconds to wait for the private session to
     // be released if locked
     private long privateSessionTimeout = 5 * 1000L;
-    
+
     // the maximum number of times to retry getting the private session
     // when the timeout expired but the session could not be got
     private int privateSessionRetry = 100;
-    
+
     RepositoryOutputProvider(SlingRepository repository) {
         this.repository = repository;
     }
-    
+
     String getWorkspace() {
-        return workspace;
+        return this.workspace;
     }
-    
+
     void setWorkspace(String workspace) {
         this.workspace = workspace;
 
-        closeSessions();
+        this.closeSessions();
     }
-    
+
     long getPrivateSessionTimeout() {
-        return privateSessionTimeout;
+        return this.privateSessionTimeout;
     }
-    
+
     void setPrivateSessionTimeout(long privateSessionTimeout) {
         this.privateSessionTimeout = privateSessionTimeout;
     }
-    
+
     int getPrivateSessionRetry() {
-        return privateSessionRetry;
+        return this.privateSessionRetry;
     }
-    
+
     // nothing if privateSessionRetry is smaller than +1
     void setPrivateSessionRetry(int privateSessionRetry) {
         if (privateSessionRetry > 0) {
             this.privateSessionRetry = privateSessionRetry;
         }
     }
-    
+
     void dispose() {
-        closeSessions();
+        this.closeSessions();
     }
-    
+
     //---------- OutputProvider interface -------------------------------------
-    
+
     /* (non-Javadoc)
      * @see org.apache.jasper.OutputProvider#delete(java.lang.String)
      */
     public boolean delete(String fileName) {
         Node parentNode = null;
         try {
-            fileName = cleanPath(fileName);
-            Session session = getPrivateSession();
+            fileName = this.cleanPath(fileName);
+            Session session = this.getPrivateSession();
             if (session.itemExists(fileName)) {
                 Item fileItem = session.getItem(fileName);
                 parentNode = fileItem.getParent();
@@ -126,9 +127,9 @@ class RepositoryOutputProvider implements OutputProvider {
             log.error("Cannot remove " + fileName, re);
         } finally {
             checkNode(parentNode, fileName);
-            ungetPrivateSession();
+            this.ungetPrivateSession();
         }
-        
+
         // fall back to false if item does not exist or in case of error
         return false;
     }
@@ -139,19 +140,19 @@ class RepositoryOutputProvider implements OutputProvider {
     public InputStream getInputStream(String fileName)
             throws FileNotFoundException, IOException {
         try {
-            fileName = cleanPath(fileName);
-            Session session = getSession();
+            fileName = this.cleanPath(fileName);
+            Session session = this.getSession();
             if (!session.itemExists(fileName)) {
                 throw new FileNotFoundException("Item " + fileName + " does not exist");
             }
-            
+
             Item item = session.getItem(fileName);
             while (item.isNode()) {
                 // follow the primary item trail
                 Node node = (Node) item;
                 item = node.getPrimaryItem();
             }
-            
+
             Property prop = (Property) item;
             if (prop.getDefinition().isMultiple()) {
                 Value[] values = prop.getValues();
@@ -162,11 +163,11 @@ class RepositoryOutputProvider implements OutputProvider {
                 log.debug("getInputStream: Stream from first value of multi values");
                 return values[0].getStream();
             }
-            
-            
+
+
             log.debug("getInputStream: Stream from single value property ");
             return prop.getStream();
-            
+
         } catch (ItemNotFoundException infe) {
             throw new FileNotFoundException("Item " + fileName
                 + " does not resolve to a property");
@@ -180,7 +181,7 @@ class RepositoryOutputProvider implements OutputProvider {
      * @see org.apache.jasper.OutputProvider#getOutputStream(java.lang.String)
      */
     public OutputStream getOutputStream(String fileName) {
-        fileName = cleanPath(fileName);
+        fileName = this.cleanPath(fileName);
         return new RepositoryOutputStream(this, fileName);
     }
 
@@ -189,18 +190,18 @@ class RepositoryOutputProvider implements OutputProvider {
      */
     public boolean rename(String oldFileName, String newFileName) {
         try {
-            oldFileName = cleanPath(oldFileName);
-            newFileName = cleanPath(newFileName);
-            
-            Session session = getPrivateSession();
+            oldFileName = this.cleanPath(oldFileName);
+            newFileName = this.cleanPath(newFileName);
+
+            Session session = this.getPrivateSession();
             session.getWorkspace().move(oldFileName, newFileName);
             return true;
         } catch (RepositoryException re) {
             log.error("Cannot rename " + oldFileName + " to " + newFileName, re);
         } finally {
-            ungetPrivateSession();
+            this.ungetPrivateSession();
         }
-        
+
         // fallback to false in case of error or non-existence of oldFileName
         return false;
     }
@@ -208,10 +209,10 @@ class RepositoryOutputProvider implements OutputProvider {
     public boolean mkdirs(String path) {
         Node parentNode = null;
         try {
-            Session session = getPrivateSession();
+            Session session = this.getPrivateSession();
 
             // quick test
-            path = cleanPath(path);
+            path = this.cleanPath(path);
             if (session.itemExists(path) && session.getItem(path).isNode()) {
                 return false;
             }
@@ -231,27 +232,27 @@ class RepositoryOutputProvider implements OutputProvider {
                     current = current.addNode(names[i], "nt:folder");
                 }
             }
-            
+
             if (parentNode != null) {
                 parentNode.save();
                 return true;
             }
-            
+
         } catch (RepositoryException re) {
             log.error("Cannot create folder path " + path, re);
         } finally {
             checkNode(parentNode, path);
-            ungetPrivateSession();
+            this.ungetPrivateSession();
         }
-        
+
         // false in case of error or no need to create
         return false;
     }
-    
+
     public long lastModified(String fileName) {
         try {
-            fileName = cleanPath(fileName);
-            Session session = getSession();
+            fileName = this.cleanPath(fileName);
+            Session session = this.getSession();
             if (session.itemExists(fileName)) {
                 Item item = session.getItem(fileName);
                 Node resource;
@@ -272,11 +273,11 @@ class RepositoryOutputProvider implements OutputProvider {
                         fileName);
                     resource = item.getParent();
                 }
-                
+
                 if (resource.hasProperty("jcr:lastModified")) {
                     return resource.getProperty("jcr:lastModified").getLong();
                 }
-                
+
                 // cannot decide on last modification time, use current system time
                 log.info("Cannot get {} property for {}, using current system time",
                     "jcr:lastModified", fileName);
@@ -285,17 +286,17 @@ class RepositoryOutputProvider implements OutputProvider {
         } catch (RepositoryException re) {
             log.error("Cannot get last modification time for " + fileName, re);
         }
-        
+
         // fallback to "non-existant" in case of problems
         return -1;
     }
-  
+
     //---------- Helper Methods for JspServletContext -------------------------
-    
+
     /* package */ URL getURL(String path) throws MalformedURLException {
         try {
-            if (getSession().itemExists(path)) {
-                return URLFactory.createURL(getSession(), path);
+            if (this.getSession().itemExists(path)) {
+                return URLFactory.createURL(this.getSession(), path);
             }
             log.debug("getURL: {} does not address an item", path);
         } catch (MalformedURLException mue) {
@@ -304,64 +305,64 @@ class RepositoryOutputProvider implements OutputProvider {
         } catch (Exception e) {
             log.warn("Cannot get URL for " + path, e);
         }
-        
+
         return null;
     }
-    
+
     /* package */ Set getResourcePaths(String path) {
         log.error("getResourcePaths({}): Not yet implemented", path);
         return null;
     }
-    
+
     //---------- internal -----------------------------------------------------
-    
+
     private Session getSession() throws RepositoryException {
-        if (session == null) {
-            session = repository.loginAdministrative(getWorkspace());
+        if (this.session == null) {
+            this.session = this.repository.loginAdministrative(this.getWorkspace());
         }
-        return session;
+        return this.session;
     }
-    
+
     private Session getPrivateSession() throws RepositoryException {
-        for (int retries = getPrivateSessionRetry(); retries > 0; retries--) {
-            if (privateSessionLock.tryAcquire(getPrivateSessionTimeout())) {
-                if (privateSession == null) {
-                    privateSession = repository.loginAdministrative(getWorkspace());
+        for (int retries = this.getPrivateSessionRetry(); retries > 0; retries--) {
+            if (this.privateSessionLock.tryAcquire(this.getPrivateSessionTimeout())) {
+                if (this.privateSession == null) {
+                    this.privateSession = this.repository.loginAdministrative(this.getWorkspace());
                 }
-                return privateSession;
+                return this.privateSession;
             }
         }
-        
+
         throw new RepositoryException("Cannot get private session, timed out waiting to acquire the lock");
     }
-    
+
     private void ungetPrivateSession() {
         try {
-            Session session = privateSession;
+            Session session = this.privateSession;
             if (session != null && session.isLive() && session.hasPendingChanges()) {
                 session.refresh(false);
             }
         } catch (RepositoryException re) {
             log.error("Cannot check private session for pending changes or rollback changes", re);
         }
-        
-        privateSessionLock.release();
+
+        this.privateSessionLock.release();
     }
-    
+
     private void closeSessions() {
-        Session oldSession = session;
-        session = null;
+        Session oldSession = this.session;
+        this.session = null;
         if (oldSession != null && oldSession.isLive()) {
             oldSession.logout();
         }
 
-        oldSession = privateSession;
-        privateSession = null;
+        oldSession = this.privateSession;
+        this.privateSession = null;
         if (oldSession != null && oldSession.isLive()) {
             oldSession.logout();
         }
     }
-    
+
     private static void checkNode(Node node, String path) {
         if (node != null && node.isModified()) {
             try {
@@ -372,41 +373,41 @@ class RepositoryOutputProvider implements OutputProvider {
             }
         }
     }
-    
+
     private String cleanPath(String path) {
         // replace backslash by slash
         path = path.replace('\\', '/');
-        
+
         // cut off trailing slash
         while (path.endsWith("/")) {
             path = path.substring(0, path.length()-1);
         }
-        
+
         return path;
     }
-    
+
     private static class RepositoryOutputStream extends ByteArrayOutputStream {
-        
+
         private final RepositoryOutputProvider repositoryOutputProvider;
         private final String fileName;
-        
+
         RepositoryOutputStream(
                 RepositoryOutputProvider repositoryOutputProvider,
                 String fileName) {
             this.repositoryOutputProvider = repositoryOutputProvider;
             this.fileName = fileName;
         }
-        
+
         public void close() throws IOException {
             super.close();
-            
+
             Node parentNode = null;
             try {
-                Session session = repositoryOutputProvider.getPrivateSession();
+                Session session = this.repositoryOutputProvider.getPrivateSession();
                 Node fileNode = null;
                 Node contentNode = null;
-                if (session.itemExists(fileName)) {
-                    Item item = session.getItem(fileName);
+                if (session.itemExists(this.fileName)) {
+                    Item item = session.getItem(this.fileName);
                     if (item.isNode()) {
                         Node node = item.isNode() ? (Node) item : item.getParent();
                         if ("jcr:content".equals(node.getName())) {
@@ -430,37 +431,37 @@ class RepositoryOutputProvider implements OutputProvider {
                         item.remove();
                     }
                 } else {
-                    int lastSlash = fileName.lastIndexOf('/');
+                    int lastSlash = this.fileName.lastIndexOf('/');
                     if (lastSlash <= 0) {
                         parentNode = session.getRootNode();
                     } else {
-                        Item parent = session.getItem(fileName.substring(0, lastSlash));
+                        Item parent = session.getItem(this.fileName.substring(0, lastSlash));
                         if (!parent.isNode()) {
                             // TODO: fail
                         }
                         parentNode = (Node) parent;
                     }
-                    String name = fileName.substring(lastSlash + 1);
+                    String name = this.fileName.substring(lastSlash + 1);
                     fileNode = parentNode.addNode(name, "nt:file");
                 }
-                
+
                 // if we have a file node, create the contentNode
                 if (fileNode != null) {
                     contentNode = fileNode.addNode("jcr:content", "nt:resource");
                 }
-                
+
                 contentNode.setProperty("jcr:lastModified", System.currentTimeMillis());
-                contentNode.setProperty("jcr:data", new ByteArrayInputStream(buf, 0, size()));
+                contentNode.setProperty("jcr:data", new ByteArrayInputStream(this.buf, 0, this.size()));
                 contentNode.setProperty("jcr:mimeType", "application/octet-stream");
-                
+
                 parentNode.save();
             } catch (RepositoryException re) {
-                log.error("Cannot write file " + fileName, re);
-                throw new IOException("Cannot write file " + fileName
+                log.error("Cannot write file " + this.fileName, re);
+                throw new IOException("Cannot write file " + this.fileName
                     + ", reason: " + re.toString());
             } finally {
-                checkNode(parentNode, fileName);
-                repositoryOutputProvider.ungetPrivateSession();
+                checkNode(parentNode, this.fileName);
+                this.repositoryOutputProvider.ungetPrivateSession();
             }
         }
     }

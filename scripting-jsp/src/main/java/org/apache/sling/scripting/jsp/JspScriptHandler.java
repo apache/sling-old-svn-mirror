@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The JSP engine (a.k.a Jasper).
- * 
+ *
  * @scr.component immediate="false" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
@@ -98,7 +99,7 @@ public class JspScriptHandler implements ScriptHandler {
     // protected JspRuntimeContext getRuntimeContext() {
     // return rctxt;
     // }
-    //    
+    //
     // /**
     // * Returns the number of JSPs for which JspServletWrappers exist, i.e.,
     // * the number of JSPs that have been loaded into the webapp with which
@@ -139,12 +140,12 @@ public class JspScriptHandler implements ScriptHandler {
 
     public ComponentRenderer getComponentRenderer(Component component,
             String scriptName) {
-        return getJspWrapperAdapter(component, scriptName).getServletAdapter();
+        return this.getJspWrapperAdapter(component, scriptName).getServletAdapter();
     }
 
     private JspServletWrapperAdapter getJspWrapperAdapter(Component component,
             String scriptName) {
-        JspComponentContext jcc = getJspRuntimeContext(component);
+        JspComponentContext jcc = this.getJspRuntimeContext(component);
         JspRuntimeContext rctxt = jcc.getRctxt();
         JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
         if (wrapper == null) {
@@ -182,7 +183,7 @@ public class JspScriptHandler implements ScriptHandler {
         this.componentContext = componentContext;
         this.tldLocationsCache = new TldLocationsCacheSupport(
             componentContext.getBundleContext());
-        this.outputProvider = new RepositoryOutputProvider(repository);
+        this.outputProvider = new RepositoryOutputProvider(this.repository);
         this.componentJspRuntimeContexts = new HashMap();
     }
 
@@ -191,19 +192,19 @@ public class JspScriptHandler implements ScriptHandler {
             log.debug("JspScriptHandler.deactivate()");
         }
 
-        for (Iterator ci = componentJspRuntimeContexts.values().iterator(); ci.hasNext();) {
+        for (Iterator ci = this.componentJspRuntimeContexts.values().iterator(); ci.hasNext();) {
             JspComponentContext jcc = (JspComponentContext) ci.next();
             jcc.getRctxt().setOutputProvider(null);
             jcc.getRctxt().destroy();
             ci.remove();
         }
 
-        if (tldLocationsCache != null) {
-            tldLocationsCache.shutdown(componentContext.getBundleContext());
-            tldLocationsCache = null;
+        if (this.tldLocationsCache != null) {
+            this.tldLocationsCache.shutdown(componentContext.getBundleContext());
+            this.tldLocationsCache = null;
         }
 
-        outputProvider.dispose();
+        this.outputProvider.dispose();
         this.componentContext = null;
     }
 
@@ -226,19 +227,19 @@ public class JspScriptHandler implements ScriptHandler {
 
     protected void unbindRepositoryClassLoaderProvider(
             RepositoryClassLoaderProvider repositoryClassLoaderProvider) {
-        if (jspClassLoader != null) {
-            repositoryClassLoaderProvider.ungetClassLoader(jspClassLoader);
-            jspClassLoader = null;
+        if (this.jspClassLoader != null) {
+            repositoryClassLoaderProvider.ungetClassLoader(this.jspClassLoader);
+            this.jspClassLoader = null;
         }
     }
 
     // ---------- Internal -----------------------------------------------------
 
     private JspComponentContext getJspRuntimeContext(Component component) {
-        JspComponentContext rctxt = (JspComponentContext) componentJspRuntimeContexts.get(component.getId());
+        JspComponentContext rctxt = (JspComponentContext) this.componentJspRuntimeContexts.get(component.getId());
         if (rctxt == null) {
             rctxt = new JspComponentContext(component);
-            componentJspRuntimeContexts.put(component.getId(), rctxt);
+            this.componentJspRuntimeContexts.put(component.getId(), rctxt);
         }
 
         return rctxt;
@@ -255,24 +256,24 @@ public class JspScriptHandler implements ScriptHandler {
         private final JspRuntimeContext rctxt;
 
         JspComponentContext(Component component) {
-            servletContext = new JspServletContext(
-                component.getComponentContext(), tldLocationsCache,
-                outputProvider);
-            servletConfig = new JspServletConfig(servletContext);
+            this.servletContext = new JspServletContext(
+                component.getComponentContext(), JspScriptHandler.this.tldLocationsCache,
+                JspScriptHandler.this.outputProvider);
+            this.servletConfig = new JspServletConfig(this.servletContext);
 
             // return options which use the jspClassLoader
-            TldLocationsCache tlc = tldLocationsCache.getTldLocationsCache(servletContext);
-            options = new JspServletOptions(servletConfig, outputProvider,
-                jspClassLoader, tlc);
+            TldLocationsCache tlc = JspScriptHandler.this.tldLocationsCache.getTldLocationsCache(this.servletContext);
+            this.options = new JspServletOptions(this.servletConfig, JspScriptHandler.this.outputProvider,
+                JspScriptHandler.this.jspClassLoader, tlc);
 
             // set the current class loader as the thread context loader for
             // the setup of the JspRuntimeContext
             ClassLoader old = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(jspClassLoader);
+            Thread.currentThread().setContextClassLoader(JspScriptHandler.this.jspClassLoader);
 
             try {
                 // Initialize the JSP Runtime Context
-                rctxt = new JspRuntimeContext(servletContext, options);
+                this.rctxt = new JspRuntimeContext(this.servletContext, this.options);
 
             } finally {
                 // make sure the context loader is reset after setting up the
@@ -281,29 +282,29 @@ public class JspScriptHandler implements ScriptHandler {
             }
 
             // by default access the repository
-            rctxt.setOutputProvider(outputProvider);
+            this.rctxt.setOutputProvider(JspScriptHandler.this.outputProvider);
 
             if (log.isDebugEnabled()) {
                 log.debug("Scratch dir for the JSP engine is: {}",
-                    options.getScratchDir().toString());
+                    this.options.getScratchDir().toString());
                 log.debug("IMPORTANT: Do not modify the generated servlets");
             }
         }
 
         public ServletConfig getServletConfig() {
-            return servletConfig;
+            return this.servletConfig;
         }
 
         public ServletContext getServletContext() {
-            return servletContext;
+            return this.servletContext;
         }
 
         public Options getOptions() {
-            return options;
+            return this.options;
         }
 
         public JspRuntimeContext getRctxt() {
-            return rctxt;
+            return this.rctxt;
         }
     }
 
@@ -315,46 +316,46 @@ public class JspScriptHandler implements ScriptHandler {
 
         JspServletConfig(ServletContext servletContext) {
             this.servletContext = servletContext;
-            
-            Dictionary props = componentContext.getProperties();
-            
+
+            Dictionary props = JspScriptHandler.this.componentContext.getProperties();
+
             // set the servlet name
-            servletName = (String) props.get(Constants.SERVICE_DESCRIPTION);
-            if (servletName == null) {
-                servletName = "JSP Script Handler";
+            this.servletName = (String) props.get(Constants.SERVICE_DESCRIPTION);
+            if (this.servletName == null) {
+                this.servletName = "JSP Script Handler";
             }
 
             // copy the "jasper." properties
-            properties = new Properties();
+            this.properties = new Properties();
             for (Enumeration ke = props.keys(); ke.hasMoreElements();) {
                 String key = (String) ke.nextElement();
                 if (key.startsWith("jasper.")) {
-                    properties.put(key.substring("jasper.".length()),
+                    this.properties.put(key.substring("jasper.".length()),
                         String.valueOf(props.get(key)));
                 }
             }
-            
+
         }
 
         public String getInitParameter(String name) {
-            Object prop = getProperties().get(name);
+            Object prop = this.getProperties().get(name);
             return (prop == null) ? null : String.valueOf(prop);
         }
 
         public Enumeration getInitParameterNames() {
-            return getProperties().keys();
+            return this.getProperties().keys();
         }
 
         public ServletContext getServletContext() {
-            return servletContext;
+            return this.servletContext;
         }
 
         public String getServletName() {
-            return servletName;
+            return this.servletName;
         }
 
         private Dictionary getProperties() {
-            return properties;
+            return this.properties;
         }
     }
 }

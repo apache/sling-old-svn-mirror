@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.jcr.internal;
 
@@ -83,7 +86,7 @@ class PooledSession implements Session {
      * Returns the {@link SessionPool} to which this session belongs.
      */
     protected SessionPool getSessionPool() {
-        return sessionPool;
+        return this.sessionPool;
     }
 
     /**
@@ -91,9 +94,9 @@ class PooledSession implements Session {
      * and {@link #impersonate(Credentials)} are delegated.
      */
     protected Session getSession() {
-        return delegatee;
+        return this.delegatee;
     }
-    
+
     //---------- Session interface --------------------------------------------
 
     /**
@@ -101,112 +104,112 @@ class PooledSession implements Session {
      * attached.
      */
     public void logout() {
-        getSessionPool().release(this);
+        this.getSessionPool().release(this);
     }
 
     /** @inheritDoc */
     public void addLockToken(String lt) {
-        getSession().addLockToken(lt);
+        this.getSession().addLockToken(lt);
     }
 
     /** @inheritDoc */
     public void checkPermission(String absPath, String actions) throws AccessControlException, RepositoryException {
-        getSession().checkPermission(absPath, actions);
+        this.getSession().checkPermission(absPath, actions);
     }
 
     /** @inheritDoc */
     public void exportDocumentView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws PathNotFoundException, SAXException, RepositoryException {
-        getSession().exportDocumentView(absPath, contentHandler, skipBinary, noRecurse);
+        this.getSession().exportDocumentView(absPath, contentHandler, skipBinary, noRecurse);
     }
 
     /** @inheritDoc */
     public void exportDocumentView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
-        getSession().exportDocumentView(absPath, out, skipBinary, noRecurse);
+        this.getSession().exportDocumentView(absPath, out, skipBinary, noRecurse);
     }
 
     /** @inheritDoc */
     public void exportSystemView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws PathNotFoundException, SAXException, RepositoryException {
-        getSession().exportSystemView(absPath, contentHandler, skipBinary, noRecurse);
+        this.getSession().exportSystemView(absPath, contentHandler, skipBinary, noRecurse);
     }
 
     /** @inheritDoc */
     public void exportSystemView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
-        getSession().exportSystemView(absPath, out, skipBinary, noRecurse);
+        this.getSession().exportSystemView(absPath, out, skipBinary, noRecurse);
     }
 
     /** @inheritDoc */
     public Object getAttribute(String name) {
-        return getSession().getAttribute(name);
+        return this.getSession().getAttribute(name);
     }
 
     /** @inheritDoc */
     public String[] getAttributeNames() {
-        return getSession().getAttributeNames();
+        return this.getSession().getAttributeNames();
     }
 
     /** @inheritDoc */
     public ContentHandler getImportContentHandler(String parentAbsPath, int uuidBehavior) throws PathNotFoundException, ConstraintViolationException, VersionException, LockException, RepositoryException {
-        return getSession().getImportContentHandler(parentAbsPath, uuidBehavior);
+        return this.getSession().getImportContentHandler(parentAbsPath, uuidBehavior);
     }
 
     /** @inheritDoc */
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
-        return getSession().getItem(absPath);
+        return this.getSession().getItem(absPath);
     }
 
     /** @inheritDoc */
     public String[] getLockTokens() {
-        return getSession().getLockTokens();
+        return this.getSession().getLockTokens();
     }
 
     /** @inheritDoc */
     public String getNamespacePrefix(String uri) throws NamespaceException, RepositoryException {
-        return getSession().getNamespacePrefix(uri);
+        return this.getSession().getNamespacePrefix(uri);
     }
 
     /** @inheritDoc */
     public String[] getNamespacePrefixes() throws RepositoryException {
-        return getSession().getNamespacePrefixes();
+        return this.getSession().getNamespacePrefixes();
     }
 
     /** @inheritDoc */
     public String getNamespaceURI(String prefix) throws NamespaceException, RepositoryException {
-        return getSession().getNamespaceURI(prefix);
+        return this.getSession().getNamespaceURI(prefix);
     }
 
     /** @inheritDoc */
     public Node getNodeByUUID(String uuid) throws ItemNotFoundException, RepositoryException {
-        return getSession().getNodeByUUID(uuid);
+        return this.getSession().getNodeByUUID(uuid);
     }
 
     /** @inheritDoc */
     public Repository getRepository() {
-        return getSession().getRepository();
+        return this.getSession().getRepository();
     }
 
     /** @inheritDoc */
     public Node getRootNode() throws RepositoryException {
-        return getSession().getRootNode();
+        return this.getSession().getRootNode();
     }
 
     /** @inheritDoc */
     public String getUserID() {
-        return getSession().getUserID();
+        return this.getSession().getUserID();
     }
 
     /** @inheritDoc */
     public ValueFactory getValueFactory() throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getSession().getValueFactory();
+        return this.getSession().getValueFactory();
     }
 
     /** @inheritDoc */
     public Workspace getWorkspace() {
-        return getSession().getWorkspace();
+        return this.getSession().getWorkspace();
     }
 
     /** @inheritDoc */
     public boolean hasPendingChanges() throws RepositoryException {
-        return getSession().hasPendingChanges();
+        return this.getSession().hasPendingChanges();
     }
 
     /**
@@ -214,46 +217,46 @@ class PooledSession implements Session {
      * impersonated session thus returning a pooled session.
      */
     public Session impersonate(Credentials credentials) throws LoginException, RepositoryException {
-        return getSessionPool().getPoolManager().impersonate(getSession(), credentials);
+        return this.getSessionPool().getPoolManager().impersonate(this.getSession(), credentials);
     }
-    
+
     /** @inheritDoc */
     public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) throws IOException, PathNotFoundException, ItemExistsException, ConstraintViolationException, VersionException, InvalidSerializedDataException, LockException, RepositoryException {
-        getSession().importXML(parentAbsPath, in, uuidBehavior);
+        this.getSession().importXML(parentAbsPath, in, uuidBehavior);
     }
 
     /** @inheritDoc */
     public boolean isLive() {
-        return getSession().isLive();
+        return this.getSession().isLive();
     }
 
     /** @inheritDoc */
     public boolean itemExists(String absPath) throws RepositoryException {
-        return getSession().itemExists(absPath);
+        return this.getSession().itemExists(absPath);
     }
 
     /** @inheritDoc */
     public void move(String srcAbsPath, String destAbsPath) throws ItemExistsException, PathNotFoundException, VersionException, ConstraintViolationException, LockException, RepositoryException {
-        getSession().move(srcAbsPath, destAbsPath);
+        this.getSession().move(srcAbsPath, destAbsPath);
     }
 
     /** @inheritDoc */
     public void refresh(boolean keepChanges) throws RepositoryException {
-        getSession().refresh(keepChanges);
+        this.getSession().refresh(keepChanges);
     }
 
     /** @inheritDoc */
     public void removeLockToken(String lt) {
-        getSession().removeLockToken(lt);
+        this.getSession().removeLockToken(lt);
     }
 
     /** @inheritDoc */
     public void save() throws AccessDeniedException, ItemExistsException, ConstraintViolationException, InvalidItemStateException, VersionException, LockException, NoSuchNodeTypeException, RepositoryException {
-        getSession().save();
+        this.getSession().save();
     }
 
     /** @inheritDoc */
     public void setNamespacePrefix(String prefix, String uri) throws NamespaceException, RepositoryException {
-        getSession().setNamespacePrefix(prefix, uri);
+        this.getSession().setNamespacePrefix(prefix, uri);
     }
 }

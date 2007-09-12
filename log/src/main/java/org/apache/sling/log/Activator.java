@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,14 +38,14 @@ public class Activator implements BundleActivator {
     private LogSupport logSupport;
 
     public void start(BundleContext context) throws Exception {
-        logbackManager = new LogbackManager(context);
+        this.logbackManager = new LogbackManager(context);
 
-        logSupport = new LogSupport();
-        context.addBundleListener(logSupport);
-        context.addFrameworkListener(logSupport);
-        context.addServiceListener(logSupport);
+        this.logSupport = new LogSupport();
+        context.addBundleListener(this.logSupport);
+        context.addFrameworkListener(this.logSupport);
+        context.addServiceListener(this.logSupport);
 
-        LogServiceFactory lsf = new LogServiceFactory(logSupport);
+        LogServiceFactory lsf = new LogServiceFactory(this.logSupport);
         Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
@@ -52,7 +53,7 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         context.registerService(LogService.class.getName(), lsf, props);
 
-        LogReaderServiceFactory lrsf = new LogReaderServiceFactory(logSupport);
+        LogReaderServiceFactory lrsf = new LogReaderServiceFactory(this.logSupport);
         props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
@@ -62,7 +63,7 @@ public class Activator implements BundleActivator {
     }
 
     public void stop(BundleContext context) throws Exception {
-        logSupport.shutdown();
-        logbackManager.shutdown();
+        this.logSupport.shutdown();
+        this.logbackManager.shutdown();
     }
 }

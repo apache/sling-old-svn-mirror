@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.content.jcr;
 
@@ -156,7 +159,7 @@ import org.apache.sling.component.Content;
  * <td>BOOLEAN</td>
  * </tr>
  * </table>
- * 
+ *
  * @ocm.mapped discriminator="false" extend=""
  */
 public class DefaultContent extends HashMap implements Content {
@@ -217,8 +220,8 @@ public class DefaultContent extends HashMap implements Content {
      * property exists.
      */
     public String getComponentId() {
-        Object id = get(COMPONENT_ID_PROPERTY);
-        return (id != null) ? String.valueOf(id) : getPrimaryType();
+        Object id = this.get(COMPONENT_ID_PROPERTY);
+        return (id != null) ? String.valueOf(id) : this.getPrimaryType();
     }
 
     /**
@@ -227,7 +230,7 @@ public class DefaultContent extends HashMap implements Content {
      * For the special property <code>properties</code> the
      * {@link #getProperties()} method is called to return a copy of this map
      * instead of looking in the map itself.
-     * 
+     *
      * @param key The index of the property to return.
      * @return the indicated property or <code>null</code> if the map does not
      *         contain it.
@@ -237,7 +240,7 @@ public class DefaultContent extends HashMap implements Content {
         // due to an inconsistency in the BeanUtils 1.5 through 1.7.0
         // versions. Version 1.7.1 will fix this again, though ...
         if (FIELD_PROPERTIES.equals(key)) {
-            return getProperties();
+            return this.getProperties();
         }
 
         return super.get(key);
@@ -250,7 +253,7 @@ public class DefaultContent extends HashMap implements Content {
      * {@link #setProperties(ManagedHashMap)} method is called to insert all
      * elements of the <code>value</code> which must be a <code>Map</code>
      * into this map.
-     * 
+     *
      * @param key The index of the property to set
      * @param value The value of the property to set.
      * @return The former value of the property or <code>null</code> if the
@@ -264,8 +267,8 @@ public class DefaultContent extends HashMap implements Content {
         // due to an inconsistency in the BeanUtils 1.5 through 1.7.0
         // versions. Version 1.7.1 will fix this again, though ...
         if (FIELD_PROPERTIES.equals(key)) {
-            Object old = getProperties();
-            setProperties((ManagedHashMap) value);
+            Object old = this.getProperties();
+            this.setProperties((ManagedHashMap) value);
             return old;
         }
 
@@ -283,12 +286,12 @@ public class DefaultContent extends HashMap implements Content {
 
     /**
      * Sets the path of this <code>Content</code> object.
-     * 
+     *
      * @ocm.field path="true"
      */
     public void setPath(String path) {
         if (path != null) {
-            put(FIELD_PATH, path);
+            this.put(FIELD_PATH, path);
         }
     }
 
@@ -296,7 +299,7 @@ public class DefaultContent extends HashMap implements Content {
      * Returns the path of this <code>Content</code> object.
      */
     public String getPath() {
-        return (String) get(FIELD_PATH);
+        return (String) this.get(FIELD_PATH);
     }
 
     /**
@@ -305,13 +308,13 @@ public class DefaultContent extends HashMap implements Content {
      * <p>
      * This method copies the properties of the <code>contents</code> map into
      * this map instance.
-     * 
+     *
      * @ocm.collection jcrName="*"
      *                 collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl"
      */
     public void setProperties(ManagedHashMap contents) {
         if (contents != null) {
-            putAll(contents);
+            this.putAll(contents);
         }
     }
 
@@ -340,12 +343,12 @@ public class DefaultContent extends HashMap implements Content {
      * <p>
      * This method should only be called by the Graffito Mapper to set the type
      * read from the node.
-     * 
+     *
      * @ocm.field jcrName="jcr:primaryType" autoUpdate="false"
      *            autoInsert="false"
      */
     public void setPrimaryType(String type) {
-        put(FIELD_PRIMARY_TYPE, type);
+        this.put(FIELD_PRIMARY_TYPE, type);
     }
 
     /**
@@ -353,7 +356,7 @@ public class DefaultContent extends HashMap implements Content {
      * for new objects.
      */
     public String getPrimaryType() {
-        return (String) get(FIELD_PRIMARY_TYPE);
+        return (String) this.get(FIELD_PRIMARY_TYPE);
     }
 
     /**
@@ -361,7 +364,7 @@ public class DefaultContent extends HashMap implements Content {
      * <p>
      * This method should only be called by the Graffito Mapper to set the types
      * read from the node.
-     * 
+     *
      * @ocm.collection jcrName="jcr:mixinTypes"
      *                 elementClassName="java.lang.String"
      *                 collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl"
@@ -369,7 +372,7 @@ public class DefaultContent extends HashMap implements Content {
      */
     public void setMixinTypes(ArrayList mixinTypes) {
         if (mixinTypes != null) {
-            put(FIELD_MIXIN_TYPES, new ArrayList(mixinTypes));
+            this.put(FIELD_MIXIN_TYPES, new ArrayList(mixinTypes));
         }
     }
 
@@ -379,7 +382,7 @@ public class DefaultContent extends HashMap implements Content {
      * types.
      */
     public ArrayList getMixinTypes() {
-        List types = (List) get(FIELD_MIXIN_TYPES);
+        List types = (List) this.get(FIELD_MIXIN_TYPES);
         return (types != null) ? new ArrayList(types) : null;
     }
 }

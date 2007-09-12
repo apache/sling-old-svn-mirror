@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.component;
 
@@ -27,7 +30,7 @@ public class ComponentSessionUtil {
      * Returns the attribute name of an attribute in the
      * <code>COMPONENT_SCOPE</code>. If the attribute is in the
      * <code>APPLICATION_SCOPE</code> it returns the attribute name unchanged.
-     * 
+     *
      * @param name a string specifying the name of the encoded component session
      *            attribute
      * @return the decoded attribute name
@@ -51,7 +54,7 @@ public class ComponentSessionUtil {
      * <li><code>ComponentSession.APPLICATION_SCOPE</code></li>
      * <li><code>ComponentSession.COMPONENT_SCOPE</code></li>
      * </ul>
-     * 
+     *
      * @param name a string specifying the name of the encoded component
      *            attribute
      * @return the decoded attribute scope
