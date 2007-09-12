@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,7 +49,7 @@ public class JspComponentResponseWrapper extends ComponentResponseWrapper {
      * page context calling the <code>PageContext.getOut()</code> method. The
      * delegatee <code>RenderResponse</code> is retrieved from the page
      * context by calling the {@link TagUtil#getResponse(PageContext)} method.
-     * 
+     *
      * @param pageContext The <code>PageContext</code> to use to get the
      *            original output stream and the delegatee response.
      * @see TagUtil#getResponse(PageContext)
@@ -57,14 +58,14 @@ public class JspComponentResponseWrapper extends ComponentResponseWrapper {
         super(TagUtil.getResponse(pageContext));
 
         this.jspWriter = pageContext.getOut();
-        this.printWriter = new PrintWriter(jspWriter);
+        this.printWriter = new PrintWriter(this.jspWriter);
     }
 
     /**
      * Returns the writer for this response wrapper.
      */
     public PrintWriter getWriter() {
-        return printWriter;
+        return this.printWriter;
     }
 
     /**
@@ -81,7 +82,7 @@ public class JspComponentResponseWrapper extends ComponentResponseWrapper {
      */
     public void resetBuffer() {
         try {
-            jspWriter.clearBuffer();
+            this.jspWriter.clearBuffer();
         } catch (IOException ignore) {
             // don't care
         }

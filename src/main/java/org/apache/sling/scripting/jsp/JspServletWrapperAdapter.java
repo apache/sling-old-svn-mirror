@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +39,7 @@ import org.apache.sling.scripting.HttpServletAdapter;
 public class JspServletWrapperAdapter extends JspServletWrapper {
 
     private HttpServletAdapter httpServletAdapter;
-    
+
     JspServletWrapperAdapter(ServletConfig config, Options options,
         String jspUri, boolean isErrorPage, JspRuntimeContext rctxt)
             throws JasperException {
@@ -46,11 +47,11 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
     }
 
     HttpServletAdapter getServletAdapter() {
-        if (httpServletAdapter == null) {
-            httpServletAdapter = new JspHttpServletAdapter();
+        if (this.httpServletAdapter == null) {
+            this.httpServletAdapter = new JspHttpServletAdapter();
         }
-        
-        return httpServletAdapter;
+
+        return this.httpServletAdapter;
     }
 
     private class JspHttpServletAdapter extends HttpServletAdapter {
@@ -59,7 +60,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
                 HttpServletResponse response) throws IOException,
                 ServletException {
             JspServletWrapperAdapter.this.service(request, response,
-                preCompile(request));
+                this.preCompile(request));
         }
 
         /**
@@ -71,7 +72,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
          * a servlet the opportunity to call
          * <code>request.setCharacterEncoding()</code> first.
          * </p>
-         * 
+         *
          * @param request The servlet requset we are processing
          * @exception ServletException if an invalid parameter value for the
          *                <code>jsp_precompile</code> parameter name is
