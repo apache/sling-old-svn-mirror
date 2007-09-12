@@ -586,18 +586,23 @@ class SessionPool {
             while (ni.hasNext()) {
                 Node node = ni.nextNode();
                 String path = node.getPath();
-                Lock lock = node.getLock();
-                if (lock.getLockToken() == null) {
+                try {
+                    final Lock lock = node.getLock();
+                    if (lock.getLockToken() == null) {
+                        log.debug("Ignoring lock on {} held by {}, not held by this session",
+                            path, userId);
+                    } else if (lock.isSessionScoped()) {
+                        log.info("Unlocking session-scoped lock on {} held by {}",
+                            path, userId);
+                        node.unlock();
+                    } else {
+                        log.warn("Dropping lock token of permanent lock on {} held by {}",
+                            path, userId);
+                        session.removeLockToken(lock.getLockToken());
+                    }
+                } catch (RepositoryException re) {
                     log.debug("Ignoring lock on {} held by {}, not held by this session",
-                        path, userId);
-                } else if (lock.isSessionScoped()) {
-                    log.info("Unlocking session-scoped lock on {} held by {}",
-                        path, userId);
-                    node.unlock();
-                } else {
-                    log.warn("Dropping lock token of permanent lock on {} held by {}",
-                        path, userId);
-                    session.removeLockToken(lock.getLockToken());
+                            path, userId);
                 }
             }
 
