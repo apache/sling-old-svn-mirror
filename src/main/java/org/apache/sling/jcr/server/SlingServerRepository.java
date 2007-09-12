@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,16 +39,16 @@ import org.osgi.service.log.LogService;
 
 /**
  * The <code>RepositorySPIImpl</code> TODO
- * 
+ *
  * @scr.component label="%repository.name" description="%repository.description"
  *          factory="org.apache.sling.jcr.server.SlingServerRepositoryFactory"
- * 
+ *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
  *      value="Factory for embeded Jackrabbit Repository Instances"
- *      
+ *
  * @scr.service
- * 
+ *
  * @scr.property value="default" name="defaultWorkspace"
  * @scr.property value="anonymous" name="anonymous.name"
  * @scr.property value="anonymous" name="anonymous.password"
@@ -56,7 +57,7 @@ import org.osgi.service.log.LogService;
  * @scr.property value="-1" type="Integer" name="pool.maxActive"
  * @scr.property value="10" type="Integer" name="pool.maxIdle"
  * @scr.property value="1" type="Integer" name="pool.maxActiveWait"
- * 
+ *
  * @author fmeschbe
  */
 public class SlingServerRepository extends AbstractSlingRepository
@@ -76,7 +77,7 @@ public class SlingServerRepository extends AbstractSlingRepository
      * "file:" scheme must still be specified.
      * <p>
      * This parameter is mandatory for this activator to start the repository.
-     * 
+     *
      * @scr.property value=""
      */
     public static final String REPOSITORY_CONFIG_URL = "config";
@@ -87,7 +88,7 @@ public class SlingServerRepository extends AbstractSlingRepository
      * "home").
      * <p>
      * This parameter is mandatory for this activator to start the repository.
-     * 
+     *
      * @scr.property value=""
      */
     public static final String REPOSITORY_HOME_DIR = "home";
@@ -103,54 +104,54 @@ public class SlingServerRepository extends AbstractSlingRepository
     private LogService log;
 
     private RepositoryImpl delegatee;
-    
+
     //---------- AbstractSlingRepository methods ------------------------------
-    
+
     protected Repository getDelegatee() throws RepositoryException {
-        if (delegatee == null) {
+        if (this.delegatee == null) {
             try {
-                delegatee = (RepositoryImpl) getRepository();
+                this.delegatee = (RepositoryImpl) this.getRepository();
             } catch (IOException ioe) {
                 throw new RepositoryException(ioe.getMessage(), ioe);
             }
         }
-        
-        return delegatee;
+
+        return this.delegatee;
     }
-    
+
     protected LogService getLog() {
-        return log;
+        return this.log;
     }
-    
+
     //---------- SCR integration ----------------------------------------------
-    
+
     // activate this service
     protected void activate(ComponentContext componentContext) throws Exception {
         // set up the base class (session pooling etc)
         super.activate(componentContext);
-        
+
         // setup the repository from descriptor
         Object autoStart = componentContext.getProperties().get(PROPERTY_REPOSITORY_AUTOSTART);
         if (autoStart instanceof Boolean && ((Boolean) autoStart).booleanValue()) {
             // have the exception thrown go up the chain ...
-            getDelegatee();
+            this.getDelegatee();
         }
     }
-    
+
     // deactivate this service
     protected void deactivate(ComponentContext componentContext) {
-        if (delegatee != null) {
+        if (this.delegatee != null) {
             try {
-                delegatee.shutdown();
+                this.delegatee.shutdown();
             } catch (Throwable t) {
-                log(LogService.LOG_ERROR, "Unexpected problem shutting down repository", t);
+                this.log(LogService.LOG_ERROR, "Unexpected problem shutting down repository", t);
             }
         }
-        
+
         // deactivate the base class (session pooling etc.)
         super.deactivate(componentContext);
     }
-    
+
     // set logger
     protected void bindLogService(LogService log) {
         this.log = log;
@@ -160,18 +161,18 @@ public class SlingServerRepository extends AbstractSlingRepository
     protected void unbindLogService(LogService log) {
         this.log = null;
     }
-    
+
     //---------- Repository Publication ---------------------------------------
-    
+
     private Repository getRepository() throws RepositoryException, IOException {
 
-        Dictionary environment = getComponentContext().getProperties();
-        
+        Dictionary environment = this.getComponentContext().getProperties();
+
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
         String home = (String) environment.get(REPOSITORY_HOME_DIR);
 
         InputStream ins = null;
-        
+
         // check whether the URL is a file path
         File configFile = new File(configURLObj);
         if (configFile.canRead()) {
@@ -180,7 +181,7 @@ public class SlingServerRepository extends AbstractSlingRepository
             URL configURL = new URL(configURLObj);
             ins = configURL.openStream();
         }
-        
+
         try {
             RepositoryConfig crc = RepositoryConfig.create(ins, home);
             return RepositoryImpl.create(crc);
@@ -194,31 +195,31 @@ public class SlingServerRepository extends AbstractSlingRepository
             }
         }
     }
-    
-    
+
+
     //---------- Helper -------------------------------------------------------
-    
-    static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException, IOException { 
+
+    static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException, IOException {
         if (destFile.canRead()) {
             // nothing to do, file exists
             return;
         }
-        
+
         // copy from property
         URL entryURL = bundle.getEntry(entryPath);
         if (entryURL == null) {
             throw new FileNotFoundException(entryPath);
         }
-        
+
         // check for a file property
         InputStream source = entryURL.openStream();
-        
+
         OutputStream dest = null;
         try {
 
             // ensure path to parent folder of licFile
             destFile.getParentFile().mkdirs();
-            
+
             dest = new FileOutputStream(destFile);
             byte[] buf = new byte[2048];
             int rd;
@@ -234,7 +235,7 @@ public class SlingServerRepository extends AbstractSlingRepository
                 } catch (IOException ignore) {
                 }
             }
-            
+
             // licSource is not null
             try {
                 source.close();

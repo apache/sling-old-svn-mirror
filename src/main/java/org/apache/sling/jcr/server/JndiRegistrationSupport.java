@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +41,7 @@ import org.osgi.service.log.LogService;
  * Note: Currently, only these two properties are declared to be configurable,
  * in the future a mechanism should be devised to support declaration of more
  * properties.
- * 
+ *
  * @scr.component immediate="true" label="%jndi.name"
  *                description="%jndi.description"
  * @scr.reference name="Repository" interface="javax.jcr.Repository"
@@ -58,13 +59,13 @@ import org.osgi.service.log.LogService;
  * @scr.property name="service.description" value="JNDI Repository Registration"
  */
 public class JndiRegistrationSupport extends AbstractRegistrationSupport {
-    
+
     private Context jndiContext;
-    
+
     // ---------- SCR intergration ---------------------------------------------
 
     protected boolean doActivate() {
-        Dictionary props = getComponentContext().getProperties();
+        Dictionary props = this.getComponentContext().getProperties();
         Properties env = new Properties();
         for (Enumeration pe = props.keys(); pe.hasMoreElements();) {
             String key = (String) pe.nextElement();
@@ -75,15 +76,15 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
 
         try {
             // create the JNDI context for registration
-            jndiContext = createInitialContext(env);
+            this.jndiContext = this.createInitialContext(env);
 
-            log(LogService.LOG_INFO, "Using JNDI context "
-                + jndiContext.getEnvironment() + " to register repositories",
+            this.log(LogService.LOG_INFO, "Using JNDI context "
+                + this.jndiContext.getEnvironment() + " to register repositories",
                 null);
 
             return true;
         } catch (NamingException ne) {
-            log(
+            this.log(
                 LogService.LOG_ERROR,
                 "Problem setting up JNDI initial context, repositories will not be registered. Reason: "
                     + ne.getMessage(), null);
@@ -94,14 +95,14 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
     }
 
     protected void doDeactivate() {
-        if (jndiContext != null) {
+        if (this.jndiContext != null) {
             try {
-                jndiContext.close();
+                this.jndiContext.close();
             } catch (NamingException ne) {
-                log(LogService.LOG_INFO, "Problem closing JNDI context", ne);
+                this.log(LogService.LOG_INFO, "Problem closing JNDI context", ne);
             }
 
-            jndiContext = null;
+            this.jndiContext = null;
         }
     }
 
@@ -124,17 +125,17 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
             throw (NamingException) pae.getCause();
         }
     }
-    
+
     protected Object bindRepository(String name, Repository repository) {
 
-        if (jndiContext != null) {
+        if (this.jndiContext != null) {
             try {
-                jndiContext.bind(name, repository);
-                log(LogService.LOG_INFO, "Repository bound to JNDI as " + name,
+                this.jndiContext.bind(name, repository);
+                this.log(LogService.LOG_INFO, "Repository bound to JNDI as " + name,
                     null);
                 return repository;
             } catch (NamingException ne) {
-                log(LogService.LOG_ERROR, "Failed to register repository " + name, ne);
+                this.log(LogService.LOG_ERROR, "Failed to register repository " + name, ne);
             }
         }
 
@@ -143,13 +144,13 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
     }
 
     protected void unbindRepository(String name, Object data) {
-        if (jndiContext != null) {
+        if (this.jndiContext != null) {
             try {
-                jndiContext.unbind(name);
-                log(LogService.LOG_INFO, "Repository " + name
+                this.jndiContext.unbind(name);
+                this.log(LogService.LOG_INFO, "Repository " + name
                     + " unbound from JNDI", null);
             } catch (NamingException ne) {
-                log(LogService.LOG_ERROR, "Problem unregistering repository "
+                this.log(LogService.LOG_ERROR, "Problem unregistering repository "
                     + name, ne);
             }
         }
