@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +38,7 @@ import org.osgi.service.log.LogService;
  * <p>
  * Note: Currently only registries in this Java VM are supported. In the future
  * support for external registries may be added.
- * 
+ *
  * @scr.component immediate="true" label="%rmi.name"
  *                description="%rmi.description"
  * @scr.reference name="Repository" interface="javax.jcr.Repository"
@@ -57,7 +58,7 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
     public static final String PROP_REGISTRY_PORT = "port";
 
     private int registryPort;
-    
+
     /** The private RMI registry, only defined if possible */
     private Registry registry;
     private boolean registryIsPrivate;
@@ -71,27 +72,27 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
      * the port is zero or not a number, the default port (1099) is assumed.
      */
     protected boolean doActivate() {
-        
-        Object portProp = getComponentContext().getProperties().get(PROP_REGISTRY_PORT);
-        registryPort = (portProp instanceof Number)
+
+        Object portProp = this.getComponentContext().getProperties().get(PROP_REGISTRY_PORT);
+        this.registryPort = (portProp instanceof Number)
                 ? ((Number) portProp).intValue()
                 : 0;
-        
+
         // ensure correct value
-        if (registryPort < 0) {
-            log(LogService.LOG_WARNING, "RMI registry disabled (no or negative RMI port configured)", null);
+        if (this.registryPort < 0) {
+            this.log(LogService.LOG_WARNING, "RMI registry disabled (no or negative RMI port configured)", null);
             return false;
-        } else if (registryPort == 0) {
-            registryPort = Registry.REGISTRY_PORT;
-        } else if (registryPort == 0 || registryPort > 0xffff) {
-            log(LogService.LOG_WARNING, "Illegal RMI registry port number " + registryPort + ", disabling RMI registry", null);
+        } else if (this.registryPort == 0) {
+            this.registryPort = Registry.REGISTRY_PORT;
+        } else if (this.registryPort == 0 || this.registryPort > 0xffff) {
+            this.log(LogService.LOG_WARNING, "Illegal RMI registry port number " + this.registryPort + ", disabling RMI registry", null);
             return false;
         }
-        
-        log(LogService.LOG_INFO, "Using RMI Registry port " + registryPort, null);
+
+        this.log(LogService.LOG_INFO, "Using RMI Registry port " + this.registryPort, null);
         return true;
     }
-    
+
     /**
      * If a private registry has been acquired this method unexports the
      * registry object to free the RMI registry OID for later use.
@@ -99,18 +100,18 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
     protected void doDeactivate() {
         // if we have a private RMI registry, unexport it here to free
         // the RMI registry OID
-        if (registry != null && registryIsPrivate) {
+        if (this.registry != null && this.registryIsPrivate) {
             try {
-                UnicastRemoteObject.unexportObject(registry, true);
-                log(LogService.LOG_INFO, "Unexported private RMI Registry at "
-                    + registryPort, null);
+                UnicastRemoteObject.unexportObject(this.registry, true);
+                this.log(LogService.LOG_INFO, "Unexported private RMI Registry at "
+                    + this.registryPort, null);
             } catch (NoSuchObjectException nsoe) {
                 // not expected, but don't really care either
-                log(LogService.LOG_INFO, "Cannot unexport private RMI Registry reference",
+                this.log(LogService.LOG_INFO, "Cannot unexport private RMI Registry reference",
                     nsoe);
             }
         }
-        registry = null;
+        this.registry = null;
     }
 
     protected Object bindRepository(String name, Repository repository) {
@@ -128,32 +129,32 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
      * Tries to create a private registry at the configured port. If this fails
      * (for example because a registry already exists in the VM, a registry
      * stub for the port is returned. This latter stub may or may not connect
-     * to a real registry, which may only be found out, when trying to 
+     * to a real registry, which may only be found out, when trying to
      * register repositories.
      */
     private Registry getPrivateRegistry() {
-        if (registry == null) {
+        if (this.registry == null) {
             try {
                 // no, so try to create first
-                registry = LocateRegistry.createRegistry(registryPort);
-                registryIsPrivate = true;
-                log(LogService.LOG_INFO, "Using private RMI Registry at "
-                    + registryPort, null);
-                
+                this.registry = LocateRegistry.createRegistry(this.registryPort);
+                this.registryIsPrivate = true;
+                this.log(LogService.LOG_INFO, "Using private RMI Registry at "
+                    + this.registryPort, null);
+
             } catch (RemoteException re) {
                 // creating failed, check whether there is already one
-                log(LogService.LOG_INFO,
+                this.log(LogService.LOG_INFO,
                     "Cannot create private registry, trying existing registry at "
-                        + registryPort + ", reason: " + re.toString(), null);
-                
+                        + this.registryPort + ", reason: " + re.toString(), null);
+
                 try {
-                    registry = LocateRegistry.getRegistry(registryPort);
-                    registryIsPrivate = false;
-                    log(LogService.LOG_INFO, "Trying existing registry at "
-                        + registryPort, null);
-                    
+                    this.registry = LocateRegistry.getRegistry(this.registryPort);
+                    this.registryIsPrivate = false;
+                    this.log(LogService.LOG_INFO, "Trying existing registry at "
+                        + this.registryPort, null);
+
                 } catch (RemoteException pre) {
-                    log(
+                    this.log(
                         LogService.LOG_ERROR,
                         "Cannot get existing registry, will not register repositories on RMI",
                         pre);
@@ -161,28 +162,28 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
             }
         }
 
-        return registry;
+        return this.registry;
     }
-    
+
     //---------- Inner Class --------------------------------------------------
-    
+
     private class RmiRegistration {
-        
+
         private String rmiName;
         private Remote rmiRepository;
-        
+
         RmiRegistration(String rmiName, Repository repository) {
-            register(rmiName, repository);
+            this.register(rmiName, repository);
         }
-        
+
         public String getRmiName() {
-            return rmiName;
+            return this.rmiName;
         }
-        
+
         public Remote getRmiRepository() {
-            return rmiRepository;
+            return this.rmiRepository;
         }
-        
+
         public String getRmiURL() {
             String host;
             try {
@@ -190,60 +191,60 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
             } catch (IOException ignore) {
                 host = "localhost";
             }
-            return "//" + host + ":" + registryPort + "/" + getRmiName();
+            return "//" + host + ":" + RmiRegistrationSupport.this.registryPort + "/" + this.getRmiName();
         }
-        
+
         private void register(String rmiName, Repository repository) {
             System.setProperty("java.rmi.server.useCodebaseOnly", "true");
 
             // try to create remote repository and keep it to ensure it is
             // unexported in the unregister() method
             try {
-                rmiRepository = new ServerAdapterFactory().getRemoteRepository(repository);
+                this.rmiRepository = new ServerAdapterFactory().getRemoteRepository(repository);
             } catch (RemoteException e) {
-                log(LogService.LOG_ERROR, "Unable to create remote repository.", e);
+                RmiRegistrationSupport.this.log(LogService.LOG_ERROR, "Unable to create remote repository.", e);
                 return;
             } catch (Exception e) {
-                log(LogService.LOG_ERROR, "Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
+                RmiRegistrationSupport.this.log(LogService.LOG_ERROR, "Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
                 return;
             }
 
             try {
                 // check whether we have a private registry already
-                Registry registry = getPrivateRegistry();
+                Registry registry = RmiRegistrationSupport.this.getPrivateRegistry();
                 if (registry != null) {
-                    registry.bind(rmiName, rmiRepository);
+                    registry.bind(rmiName, this.rmiRepository);
                     this.rmiName = rmiName;
-                    log(LogService.LOG_INFO, "Repository bound to " + getRmiURL(), null);
+                    RmiRegistrationSupport.this.log(LogService.LOG_INFO, "Repository bound to " + this.getRmiURL(), null);
                 }
-                
+
             } catch (NoSuchObjectException nsoe) {
                 // the registry does not really exist
-                log(LogService.LOG_WARNING, "Cannot contact RMI registry at "
-                    + registryPort + ", repository not registered", null);
+                RmiRegistrationSupport.this.log(LogService.LOG_WARNING, "Cannot contact RMI registry at "
+                    + RmiRegistrationSupport.this.registryPort + ", repository not registered", null);
             } catch (Exception e) {
-                log(LogService.LOG_ERROR, "Unable to bind repository via RMI.", e);
+                RmiRegistrationSupport.this.log(LogService.LOG_ERROR, "Unable to bind repository via RMI.", e);
             }
         }
-        
+
         public void unregister() {
             // unregister repository
-            if (rmiName != null) {
+            if (this.rmiName != null) {
                 try {
-                    getPrivateRegistry().unbind(rmiName);
-                    log(LogService.LOG_INFO, "Repository unbound from " + getRmiURL(), null);
+                    RmiRegistrationSupport.this.getPrivateRegistry().unbind(this.rmiName);
+                    RmiRegistrationSupport.this.log(LogService.LOG_INFO, "Repository unbound from " + this.getRmiURL(), null);
                 } catch (Exception e) {
-                    log(LogService.LOG_ERROR, "Error while unbinding repository from JNDI: " + e, null);
+                    RmiRegistrationSupport.this.log(LogService.LOG_ERROR, "Error while unbinding repository from JNDI: " + e, null);
                 }
             }
 
             // drop strong reference to remote repository
-            if (rmiRepository != null) {
+            if (this.rmiRepository != null) {
                 try {
-                    UnicastRemoteObject.unexportObject(rmiRepository, true);
+                    UnicastRemoteObject.unexportObject(this.rmiRepository, true);
                 } catch (NoSuchObjectException nsoe) {
                     // not expected, but don't really care either
-                    log(LogService.LOG_INFO, "Cannot unexport remote Repository reference", nsoe);
+                    RmiRegistrationSupport.this.log(LogService.LOG_INFO, "Cannot unexport remote Repository reference", nsoe);
                 }
             }
         }

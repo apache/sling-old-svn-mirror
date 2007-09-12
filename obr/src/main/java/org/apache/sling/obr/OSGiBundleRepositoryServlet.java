@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,7 +59,7 @@ import org.osgi.service.obr.Resolver;
 
 /**
  * The <code>OSGiBundleRepositoryServlet</code> TODO
- * 
+ *
  * @scr.component immediate="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="OSGi Bundle Repository (OBR)"
@@ -70,10 +71,10 @@ import org.osgi.service.obr.Resolver;
 public class OSGiBundleRepositoryServlet extends HttpServlet {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 7512543420493538557L;
-    
+
     /**
      * Names of bundles, which are always included in downloaded repositories.
      */
@@ -101,7 +102,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
     private String webManagerRoot;
 
     public void init() throws ServletException {
-        String location = getServletConfig().getInitParameter("obrLocation");
+        String location = this.getServletConfig().getInitParameter("obrLocation");
         if (location == null || location.length() == 0) {
             location = "obr";
         }
@@ -109,13 +110,13 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         // ensure absolute path
         File locFile = new File(location);
         if (!locFile.isAbsolute()) {
-            String parent = ctx.getBundleContext().getProperty("sling.home");
+            String parent = this.ctx.getBundleContext().getProperty("sling.home");
             if (parent == null || parent.length() == 0) {
                 parent = System.getProperty("user.dir");
             }
             locFile = new File(parent, location).getAbsoluteFile();
         }
-        
+
         if (locFile.exists()) {
             if (!locFile.isDirectory()) {
                 throw new ServletException("Repository Location "
@@ -130,9 +131,9 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         }
 
         try {
-            String defaultRepoName = getServletConfig().getInitParameter(
+            String defaultRepoName = this.getServletConfig().getInitParameter(
                 "obrName");
-            repository = new Repository(defaultRepoName, locFile);
+            this.repository = new Repository(defaultRepoName, locFile);
         } catch (IOException ioe) {
             throw new ServletException("Cannot load repository properties", ioe);
         }
@@ -142,33 +143,33 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
             throws IOException {
         // send repository.xml if requested
         if (req.getRequestURI().endsWith("/repository.xml")) {
-            printRepositoryXML(req, resp);
+            this.printRepositoryXML(req, resp);
             return;
         }
 
         // check whether dumping the repository is requested
         if (req.getRequestURI().endsWith("/repository.zip")) {
-            dumpRepository(req.getParameterValues("bundle"), resp);
+            this.dumpRepository(req.getParameterValues("bundle"), resp);
             return;
         }
-        
+
         // check whether a bundle is requested
-        String bundle = getName(req.getRequestURI());
+        String bundle = this.getName(req.getRequestURI());
         try {
-            Resource resource = repository.getResource(bundle);
+            Resource resource = this.repository.getResource(bundle);
             if (resource == null) {
                 // TODO: log resource not found
                 // throw to prevent returning, is this correct ??
                 throw new IOException("Bundle " + bundle
                     + " not known to this repository");
             } else if (req.getParameter("info") != null) {
-                dumpInfo(resp, req.getRequestURI(), resource);
+                this.dumpInfo(resp, req.getRequestURI(), resource);
                 // resp.sendRedirect(getParent(req.getRequestURI()));
             } else if (req.getParameter("remove") != null) {
-                repository.removeResource(bundle);
-                resp.sendRedirect(getParent(req.getRequestURI()));
+                this.repository.removeResource(bundle);
+                resp.sendRedirect(this.getParent(req.getRequestURI()));
             } else {
-                spoolBundle(resp, resource);
+                this.spoolBundle(resp, resource);
             }
             return;
         } catch (IOException ioe) {
@@ -176,7 +177,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         }
 
         // list the known bundles and present the form
-        listBundles(req, resp);
+        this.listBundles(req, resp);
     }
 
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -184,7 +185,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
 
         // check whether dumping the repository is requested
         if (req.getRequestURI().endsWith("/repository.zip")) {
-            dumpRepository(req.getParameterValues("bundle"), resp);
+            this.dumpRepository(req.getParameterValues("bundle"), resp);
             resp.sendRedirect(req.getRequestURI());
             return;
         }
@@ -223,7 +224,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
 
             if (bundleStream != null && bundleLocation != null) {
                 try {
-                    repository.addResource(bundleStream);
+                    this.repository.addResource(bundleStream);
                 } catch (IOException ioe) {
                     resp.sendError(500, "Cannot register file "
                         + bundleLocation + ". Reason: " + ioe.getMessage());
@@ -261,9 +262,9 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
 
     private void listBundles(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
-        String category = getParameter(req, "category", Repository.CATEGORY_ALL_BUNDLES);
-        
-        String regexp = getParameter(req, "regexp", "");
+        String category = this.getParameter(req, "category", Repository.CATEGORY_ALL_BUNDLES);
+
+        String regexp = this.getParameter(req, "regexp", "");
         Pattern pattern = null;
         if (regexp.length() > 0) {
             try {
@@ -283,34 +284,34 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         }
 
         // set cookies
-        setCookie(resp, "category", category);
-        setCookie(resp, "regexp", regexp);
-        
-        PrintWriter pw = head(resp);
+        this.setCookie(resp, "category", category);
+        this.setCookie(resp, "regexp", regexp);
+
+        PrintWriter pw = this.head(resp);
 
         pw.print("<h1>Welcome to the OSGi Bundle Repository ");
-        pw.print(repository.getName());
+        pw.print(this.repository.getName());
         pw.println("</h1>");
 
         pw.print("<p>This repository was last updated: ");
-        pw.println(new Date(repository.getLastModified()));
-        
-        
+        pw.println(new Date(this.repository.getLastModified()));
+
+
         pw.println("<hr />");
         pw.println("<h2>Tasks</h2>");
 
         pw.println("<table border='0' width='100%'>");
-        
+
         pw.print("<tr><td nowrap>Repository Descriptor</td>");
         pw.print("<td width='99%'><a href='");
-        pw.print(getRelativeURI(req, "repository.xml"));
+        pw.print(this.getRelativeURI(req, "repository.xml"));
         pw.print("'>");
         pw.print("repository.xml");
         pw.println("</a></td></tr>");
 
         pw.print("<tr><td nowrap>Repository Download (complete)</td>");
         pw.print("<td width='99%'><a href='");
-        pw.print(getRelativeURI(req, "repository.zip"));
+        pw.print(this.getRelativeURI(req, "repository.zip"));
         pw.print("'>");
         pw.print("repository.zip");
         pw.println("</a></td><tr>");
@@ -323,7 +324,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         pw.println("</td></tr>");
 
         pw.println("</table>");
-        
+
         pw.println("<hr />");
 
         pw.println("<form name='selection'>");
@@ -334,7 +335,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
             + regexp + "'>");
         pw.println("&nbsp;&nbsp;|&nbsp;&nbsp;");
         pw.println("By Category: <select name='category' onChange='form.submit();'>");
-        Iterator categories = repository.getBundleCategories(null).iterator();
+        Iterator categories = this.repository.getBundleCategories(null).iterator();
         while (categories.hasNext()) {
             Object cat = categories.next();
             String selected = category.equals(cat) ? "selected" : "";
@@ -351,14 +352,14 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         pw.println("</table>");
         pw.println("</form>");
 
-        
-        pw.print("<form name='selectiveDump' method='post' action='" + getRelativeURI(req, "repository.zip") + "'>");
+
+        pw.print("<form name='selectiveDump' method='post' action='" + this.getRelativeURI(req, "repository.zip") + "'>");
 
         pw.println("<center>");
         pw.println("<table width='80%' border='1' cellspacing='0' cellpadding='3'>");
 
         boolean haveBundles = false;
-        Iterator bi = repository.getResourcesByCategory(category);
+        Iterator bi = this.repository.getResourcesByCategory(category);
         while (bi.hasNext()) {
             Resource res = (Resource) bi.next();
 
@@ -368,8 +369,8 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
                 continue;
             }
 
-            String uri = getRelativeURI(req, res.getResourceName());
-            dumpRow(pw, "<input name='bundle' type='checkbox' value='"
+            String uri = this.getRelativeURI(req, res.getResourceName());
+            this.dumpRow(pw, "<input name='bundle' type='checkbox' value='"
                 + res.getResourceName() + "'></td><td><a href='" + uri
                 + "?info=info" + "'>" + res + "</a>", "<a href='" + uri
                 + "?remove=remove" + "'>remove</a>");
@@ -387,50 +388,50 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
                 msg.append("' and ");
             }
             msg.append("which has Category " + category);
-            dumpRow(pw, msg.toString(), null);
+            this.dumpRow(pw, msg.toString(), null);
         }
 
         pw.println("</table>");
         pw.println("</center>");
-        
+
         pw.println("</form>");
 
-        foot(pw);
+        this.foot(pw);
     }
 
     private void printRepositoryXML(HttpServletRequest req,
             HttpServletResponse resp) throws IOException {
-        
+
         // resource URI prefix
         String uriPrefix = "";
         if (req.getParameter("relative") == null) {
-            uriPrefix = getParent(req.getRequestURL().toString()) + "/";
+            uriPrefix = this.getParent(req.getRequestURL().toString()) + "/";
         }
-        
+
         resp.setContentType("text/xml; charset=UTF-8");
-        printRepositoryXML(resp.getWriter(), uriPrefix, null);
+        this.printRepositoryXML(resp.getWriter(), uriPrefix, null);
     }
-    
+
     private void dumpRepository(String[] bundleNames, HttpServletResponse resp) throws IOException {
-        
-        Set selectedBundles = getSelectedBundles(bundleNames);
-        
+
+        Set selectedBundles = this.getSelectedBundles(bundleNames);
+
         resp.setContentType("application/zip");
         ZipOutputStream jos = null;
         try {
             jos = new ZipOutputStream(resp.getOutputStream());
-            
+
             // spool the repository.xml
             ZipEntry entry = new ZipEntry("repository.xml");
             jos.putNextEntry(entry);
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(jos, "UTF-8"));
-            printRepositoryXML(pw, "", selectedBundles);
+            this.printRepositoryXML(pw, "", selectedBundles);
             pw.flush();
             jos.closeEntry();
-            
-            for (Iterator ri = repository.getResourcesById(); ri.hasNext();) {
+
+            for (Iterator ri = this.repository.getResourcesById(); ri.hasNext();) {
                 Resource res = (Resource) ri.next();
-                
+
                 // spool the resource out if selected or global dump
                 String resourceName = res.getResourceName();
                 if (selectedBundles == null
@@ -446,18 +447,18 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
             IOUtils.closeQuietly(jos);
         }
     }
-    
+
     private void printRepositoryXML(PrintWriter pw, String uriPrefix, Set selectedBundles) {
-        
+
         // <repository lastmodified="20060817025624.330" name="Untitled">
         pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         pw.print  ("<repository lastmodified=\"");
-        pw.print  (repository.getLastModifiedFormatted());
+        pw.print  (this.repository.getLastModifiedFormatted());
         pw.print  ("\" name=\"");
-        pw.print  (repository.getName());
+        pw.print  (this.repository.getName());
         pw.println("\">");
 
-        for (Iterator ri = repository.getResourcesById(); ri.hasNext();) {
+        for (Iterator ri = this.repository.getResourcesById(); ri.hasNext();) {
             Resource res = (Resource) ri.next();
             String resourceName = res.getResourceName();
             if (selectedBundles == null
@@ -472,8 +473,8 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
     }
 
     private void dumpInfo(HttpServletResponse resp, String uri, Resource res) throws IOException {
-        PrintWriter pw = head(resp);
-        
+        PrintWriter pw = this.head(resp);
+
         /**
          * Name Apache Commons Codec Identity org.apache.commons.codec -
          * 1.3.0.N20060628-1351 Download Download Apache Commons Codec
@@ -504,18 +505,18 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         pw.println("<h1>Resource " + ident + "</h1>");
         pw.println("<center>");
         pw.println("<table width='80%' border='1' cellspacing='0' cellpadding='3'>");
-        dumpRow(pw, "Name", res.getPresentationName());
-        dumpRow(pw, "Identity", ident);
-        dumpRow(pw, "Download", "<a href='"+uri+"'>"+res.getResourceName()+"</a>");
-        dumpRow(pw, "Repository", "<a href='"+getParent(uri)+"'>"+repository.getName()+"</a>");
+        this.dumpRow(pw, "Name", res.getPresentationName());
+        this.dumpRow(pw, "Identity", ident);
+        this.dumpRow(pw, "Download", "<a href='"+uri+"'>"+res.getResourceName()+"</a>");
+        this.dumpRow(pw, "Repository", "<a href='"+this.getParent(uri)+"'>"+this.repository.getName()+"</a>");
 
-        dumpRow(pw, "Description", res.getDescription());
-        dumpRow(pw, "Copyright", res.getCopyright());
-        dumpRow(pw, "Documentation", res.getDocumentation());
-        dumpRow(pw, "Source URL", res.getSource());
-        dumpRow(pw, "Size", String.valueOf(res.getSize()));
-        dumpRow(pw, "Categories", String.valueOf(res.getCategories()));
-        
+        this.dumpRow(pw, "Description", res.getDescription());
+        this.dumpRow(pw, "Copyright", res.getCopyright());
+        this.dumpRow(pw, "Documentation", res.getDocumentation());
+        this.dumpRow(pw, "Source URL", res.getSource());
+        this.dumpRow(pw, "Size", String.valueOf(res.getSize()));
+        this.dumpRow(pw, "Categories", String.valueOf(res.getCategories()));
+
         String label = "Capabilities";
         for (Iterator ci=res.getCapabilities(); ci.hasNext(); ) {
             Object capObj = ci.next();
@@ -525,7 +526,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
                 buf.append(cap.getPackageName());
                 buf.append("; version=");
                 buf.append(cap.getVersion());
-                dumpRow(pw, label, buf.toString());
+                this.dumpRow(pw, label, buf.toString());
             } else if (capObj instanceof BundleCapability) {
                 BundleCapability cap = (BundleCapability) capObj;
                 StringBuffer buf = new StringBuffer(cap.getName());
@@ -533,11 +534,11 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
                 buf.append("; presentationname=").append(cap.getPresentationName());
                 buf.append("; symbolicname=").append(cap.getSymbolicName());
                 buf.append("; version=").append(cap.getVersion());
-                dumpRow(pw, label, buf.toString());
+                this.dumpRow(pw, label, buf.toString());
             }
             label = null;
         }
-        
+
         label = "Requirements";
         for (Iterator ci=res.getRequirements(); ci.hasNext(); ) {
             Object reqObj = ci.next();
@@ -549,11 +550,11 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
                     buf.append("; resolution:=optional");
                 }
                 buf.append("; version=").append(req.getVersionRange());
-                dumpRow(pw, label, buf.toString());
+                this.dumpRow(pw, label, buf.toString());
             }
             label = null;
         }
-        
+
         label = "Bundle Ref";
         BundleSpec[] specs = res.getBundleSpecs();
         for (int i=0; specs != null && i < specs.length; i++) {
@@ -564,15 +565,15 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
             if (spec.getEntry() != null) {
                 buf.append("; embeddedEntry=").append(spec.getEntry());
             }
-            dumpRow(pw, label, buf.toString());
-            
+            this.dumpRow(pw, label, buf.toString());
+
             label = null;
         }
-        
+
         pw.println("</table>");
         pw.println("</center>");
 
-        foot(pw);
+        this.foot(pw);
     }
 
     private void dumpRow(PrintWriter pw, String name, String value) {
@@ -651,11 +652,11 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         if (value != null) {
             return value;
         }
-        
+
         // fall back to default
         return defaultValue;
     }
-    
+
     private void setCookie(HttpServletResponse res, String name, String value) {
         // make the value URL safe
         try {
@@ -663,40 +664,40 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         } catch (UnsupportedEncodingException uee) {
             // not really !!
         }
-        
+
         Cookie cookie = new Cookie(name, value);
         cookie.setMaxAge(-1);
         res.addCookie(cookie);
     }
-    
+
     // ---------- Logging ------------------------------------------------------
 
     private void debug(String message) {
-        log(LogService.LOG_DEBUG, message);
+        this.log(LogService.LOG_DEBUG, message);
     }
 
     private void info(String message) {
-        log(LogService.LOG_INFO, message);
+        this.log(LogService.LOG_INFO, message);
     }
 
     private void warn(String message) {
-        log(LogService.LOG_WARNING, message);
+        this.log(LogService.LOG_WARNING, message);
     }
 
     private void error(String message) {
-        log(LogService.LOG_ERROR, message);
+        this.log(LogService.LOG_ERROR, message);
     }
 
     private void log(int level, String message) {
-        if (log != null) {
-            log.log(ref, level, message);
+        if (this.log != null) {
+            this.log.log(this.ref, level, message);
         }
     }
 
     //---------- internal -----------------------------------------------------
-    
+
     private Set getSelectedBundles(String[] bundleNames) throws IOException {
-        
+
         // no selection, export everything
         if (bundleNames == null || bundleNames.length == 0) {
             return null;
@@ -706,39 +707,39 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         File repoFile = null;
         OutputStream out = null;
         try {
-            
+
             // dump complete repository XML to be able to resolve
             repoFile = File.createTempFile("repository.", ".xml");
             out = new FileOutputStream(repoFile);
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
-            printRepositoryXML(pw, "", null);
+            this.printRepositoryXML(pw, "", null);
             pw.close();
 
             // prepare the repository resolver
-            DummyBundleContext bc = new DummyBundleContext(ctx.getBundleContext());
+            DummyBundleContext bc = new DummyBundleContext(this.ctx.getBundleContext());
             bc.setProperty(RepositoryAdminImpl.REPOSITORY_URL_PROP,
                 repoFile.toURI().toURL().toExternalForm());
             RepositoryAdmin ra = new RepositoryAdminImpl(bc);
             Set resources = new HashSet();
-            
+
             // add the servlet container bundles first
             for (int i = 0; i < REQUIRED_BUNDLES.length; i++) {
                 String filter = "(symbolicName=" + REQUIRED_BUNDLES[i]
                     + ")";
-                resolveResource(ra, filter, resources);
+                this.resolveResource(ra, filter, resources);
             }
 
             // find all resources in the repository
             for (int i=0; i < bundleNames.length; i++) {
-                Resource res = repository.getResource(bundleNames[i]);
+                Resource res = this.repository.getResource(bundleNames[i]);
                 if (res != null) {
                     VersionRange vr = new VersionRange(res.getVersion());
                     String filter = "(&(symbolicName=" + res.getSymbolicName()
                         + ")" + vr.getFilter() + ")";
-                    resolveResource(ra, filter, resources);
+                    this.resolveResource(ra, filter, resources);
                 }
             }
-            
+
             // prepare the resolver
             Resolver resolver = ra.resolver();
             for (Iterator ri=resources.iterator(); ri.hasNext(); ) {
@@ -749,20 +750,20 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
             if (!resolver.resolve()) {
                 // TODO: dump why
             }
-            
+
             HashSet bundles = new HashSet();
             org.osgi.service.obr.Resource[] list = resolver.getAddedResources();
             for (int i=0; list != null && i < list.length; i++) {
-                bundles.add(getName(list[i].getURL().getPath()));
+                bundles.add(this.getName(list[i].getURL().getPath()));
             }
-            
+
             list = resolver.getRequiredResources();
             for (int i=0; list != null && i < list.length; i++) {
-                bundles.add(getName(list[i].getURL().getPath()));
+                bundles.add(this.getName(list[i].getURL().getPath()));
             }
-            
+
             return bundles;
-            
+
         } finally {
             if (out != null) {
                 try {
@@ -770,60 +771,60 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
                 } catch (IOException ignore) {
                 }
             }
-            
+
             // only in case of an error !!
             if (repoFile != null) {
                 repoFile.delete();
             }
         }
     }
-    
+
     private void resolveResource(RepositoryAdmin ra, String filter,
             Set resources) {
         org.osgi.service.obr.Resource[] list = ra.discoverResources(filter);
         for (int j = 0; list != null && j < list.length; j++) {
             if (resources.add(list[j])) {
-                String name = getName(list[j].getURL().getPath());
-                Resource res = repository.getResource(name);
+                String name = this.getName(list[j].getURL().getPath());
+                Resource res = this.repository.getResource(name);
                 if (res != null) {
                     BundleSpec[] specs = res.getBundleSpecs();
                     for (int s = 0; specs != null && s < specs.length; s++) {
-                        resolveResource(ra, specs[s].toFilter(), resources);
+                        this.resolveResource(ra, specs[s].toFilter(), resources);
                     }
                 }
             }
         }
     }
-    
+
     // ---------- SCR Management Support ---------------------------------------
 
     protected void activate(ComponentContext context) {
-        ctx = context;
-        ref = context.getServiceReference();
+        this.ctx = context;
+        this.ref = context.getServiceReference();
 
         // get the web manager root path
         Object wmr = context.getProperties().get("manager.root");
-        webManagerRoot = (wmr instanceof String) ? (String) wmr : null;
-        if (webManagerRoot == null) {
-            webManagerRoot = "/";
-        } else if (!webManagerRoot.startsWith("/")) {
-            webManagerRoot = "/" + webManagerRoot;
+        this.webManagerRoot = (wmr instanceof String) ? (String) wmr : null;
+        if (this.webManagerRoot == null) {
+            this.webManagerRoot = "/";
+        } else if (!this.webManagerRoot.startsWith("/")) {
+            this.webManagerRoot = "/" + this.webManagerRoot;
         }
 
         // register the servlet and resources
         try {
-            HttpContext httpContext = httpService.createDefaultHttpContext();
-            httpService.registerServlet(webManagerRoot, this,
+            HttpContext httpContext = this.httpService.createDefaultHttpContext();
+            this.httpService.registerServlet(this.webManagerRoot, this,
                 context.getProperties(), httpContext);
         } catch (Exception e) {
             // TODO: handle
         }
 
-        error("Service Active");
+        this.error("Service Active");
     }
 
     protected void deactivate(ComponentContext context) {
-        httpService.unregister(webManagerRoot);
+        this.httpService.unregister(this.webManagerRoot);
     }
 
     protected void bindLogService(LogService log) {

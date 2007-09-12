@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +52,7 @@ import org.osgi.framework.Version;
  * The <code>Repository</code> represents the collection of all bundles in the
  * repository. It is initialized with the location of the bundle store and may
  * be accessed by different accessors.
- * 
+ *
  * @author fmeschbe
  * @version $Rev:25139 $, $Date:2007-02-12 16:37:26 +0100 (Mo, 12 Feb 2007) $
  */
@@ -115,36 +116,36 @@ public class Repository {
         this.repoLocation = repoLocation;
         this.repoPropertiesFile = new File(repoLocation, REPO_PROPERTIES);
 
-        loadProperties();
-        needReload = true;
+        this.loadProperties();
+        this.needReload = true;
     }
 
     public String getName() {
-        return repoName;
+        return this.repoName;
     }
 
     public long getLastModified() {
-        return repoLastModified;
+        return this.repoLastModified;
     }
 
     public String getLastModifiedFormatted() {
-        return REPO_DATE_FORMAT.format(new Date(getLastModified()));
+        return REPO_DATE_FORMAT.format(new Date(this.getLastModified()));
     }
 
     public void addResource(InputStream bundleStream) throws IOException {
         File bundle = null;
         try {
             // spool the bundle (throw if invalid)
-            bundle = spoolModified(bundleStream);
+            bundle = this.spoolModified(bundleStream);
 
             // Check bundle by trying to read the manifest, throws in
             // case of problems, never returns null
             Resource.create(bundle);
 
-            bundles.add(bundle.toURI().toString());
-            needReload = true;
+            this.bundles.add(bundle.toURI().toString());
+            this.needReload = true;
 
-            saveProperties();
+            this.saveProperties();
         } catch (IOException ioe) {
             // bundle seems invalid, remove the file
             if (bundle != null) {
@@ -155,14 +156,14 @@ public class Repository {
     }
 
     public Resource getResource(String bundleName) {
-        ensureLoaded();
+        this.ensureLoaded();
 
         // try the bundleName as resource file name first
-        Resource res = (Resource) resourcesByFileName.get(bundleName);
-        
+        Resource res = (Resource) this.resourcesByFileName.get(bundleName);
+
         // not found, assume a bundle symbolic name
         if (res == null) {
-            for (Iterator ri = getResourcesById(); ri.hasNext();) {
+            for (Iterator ri = this.getResourcesById(); ri.hasNext();) {
                 Resource testRes = (Resource) ri.next();
                 if (bundleName.equals(testRes.getSymbolicName())) {
                     if (res == null
@@ -172,20 +173,20 @@ public class Repository {
                 }
             }
         }
-        
+
         // return what we found (best match or nothing at all)
         return res;
     }
 
     public Iterator getResourcesById() {
-        ensureLoaded();
-        return resources.iterator();
+        this.ensureLoaded();
+        return this.resources.iterator();
     }
 
     public Iterator getResourcesByCategory(String categoryName) {
-        ensureLoaded();
+        this.ensureLoaded();
 
-        Set resources = (Set) resourcesByCategory.get(categoryName);
+        Set resources = (Set) this.resourcesByCategory.get(categoryName);
         if (resources != null) {
             return resources.iterator();
         }
@@ -193,26 +194,26 @@ public class Repository {
     }
 
     public void removeResource(String bundleName) throws IOException {
-        needReload = true;
-        File bundleFile = new File(repoLocation, bundleName);
-        bundles.remove(bundleFile.toURI().toString());
+        this.needReload = true;
+        File bundleFile = new File(this.repoLocation, bundleName);
+        this.bundles.remove(bundleFile.toURI().toString());
         bundleFile.delete();
-        saveProperties();
+        this.saveProperties();
     }
 
     /**
      * Returns a sorted list of all categories to which the bundles stored in
      * this repository belong. This list also contains the special category
      * {@link #CATEGORY_ALL_BUNDLES}.
-     * 
+     *
      * @param comparator The <code>Comparator</code> to use to sort the bundle
      *            list. If <code>null</code> the natural ordering is used.
      * @return The sorted list of bundle categories of the bundles.
      */
     public List getBundleCategories(Comparator comparator) {
-        ensureLoaded();
+        this.ensureLoaded();
 
-        List list = new ArrayList(resourcesByCategory.keySet());
+        List list = new ArrayList(this.resourcesByCategory.keySet());
         if (comparator != null) {
             Collections.sort(list, comparator);
         }
@@ -220,16 +221,16 @@ public class Repository {
     }
 
     private void ensureLoaded() {
-        if (!needReload) {
+        if (!this.needReload) {
             return;
         }
 
         // load the resources
-        resources = new ArrayList();
-        resourcesByFileName = new TreeMap();
-        resourcesByCategory = new TreeMap();
+        this.resources = new ArrayList();
+        this.resourcesByFileName = new TreeMap();
+        this.resourcesByCategory = new TreeMap();
 
-        Iterator bi = bundles.iterator();
+        Iterator bi = this.bundles.iterator();
         for (int id = 0; bi.hasNext(); id++) {
             String mapping = (String) bi.next();
             try {
@@ -237,15 +238,15 @@ public class Repository {
                 Resource res = Resource.create(bundle);
                 res.setId(String.valueOf(id));
 
-                resources.add(res);
-                resourcesByFileName.put(res.getResourceName(), res);
+                this.resources.add(res);
+                this.resourcesByFileName.put(res.getResourceName(), res);
 
-                registerResourceByCategory(CATEGORY_ALL_BUNDLES, res);
+                this.registerResourceByCategory(CATEGORY_ALL_BUNDLES, res);
                 if (res.getCategories().isEmpty()) {
-                    registerResourceByCategory(CATEGORY_NONE, res);
+                    this.registerResourceByCategory(CATEGORY_NONE, res);
                 } else {
                     for (Iterator ci = res.getCategories().iterator(); ci.hasNext();) {
-                        registerResourceByCategory(ci.next(), res);
+                        this.registerResourceByCategory(ci.next(), res);
                     }
                 }
 
@@ -257,24 +258,24 @@ public class Repository {
         }
 
         // prevent further "reloads" until change
-        needReload = false;
+        this.needReload = false;
     }
 
     private void registerResourceByCategory(Object category, Resource res) {
-        SortedSet resources = (SortedSet) resourcesByCategory.get(category);
+        SortedSet resources = (SortedSet) this.resourcesByCategory.get(category);
         if (resources == null) {
             resources = new TreeSet();
-            resourcesByCategory.put(category, resources);
+            this.resourcesByCategory.put(category, resources);
         }
         resources.add(res);
     }
 
     private void loadProperties() throws IOException {
         Properties props = new Properties();
-        if (repoPropertiesFile.exists()) {
+        if (this.repoPropertiesFile.exists()) {
             InputStream ins = null;
             try {
-                ins = new FileInputStream(repoPropertiesFile);
+                ins = new FileInputStream(this.repoPropertiesFile);
                 props.load(ins);
             } finally {
                 if (ins != null) {
@@ -285,7 +286,7 @@ public class Repository {
                     }
                 }
             }
-            repoLastModified = repoPropertiesFile.lastModified();
+            this.repoLastModified = this.repoPropertiesFile.lastModified();
         }
 
         TreeSet bundles = new TreeSet();
@@ -301,7 +302,7 @@ public class Repository {
         String repoName = props.getProperty(PROP_REPO_NAME);
         if (repoName == null) {
             // save the properties immediately with the default repository Name
-            saveProperties();
+            this.saveProperties();
         } else {
             // use the configured name as the repository Name
             this.repoName = repoName;
@@ -311,8 +312,8 @@ public class Repository {
     private void saveProperties() throws IOException {
         // prepare the properties to write
         Properties props = new Properties();
-        props.setProperty(PROP_REPO_NAME, repoName);
-        Iterator bi = bundles.iterator();
+        props.setProperty(PROP_REPO_NAME, this.repoName);
+        Iterator bi = this.bundles.iterator();
         for (int i = 0; bi.hasNext(); i++) {
             props.setProperty(PROP_PREFIX_BUNDLE + i, (String) bi.next());
         }
@@ -320,7 +321,7 @@ public class Repository {
         // write the properties
         OutputStream out = null;
         try {
-            out = new FileOutputStream(repoPropertiesFile);
+            out = new FileOutputStream(this.repoPropertiesFile);
             props.store(out, null);
         } finally {
             if (out != null) {
@@ -333,7 +334,7 @@ public class Repository {
         }
 
         // update the last modified value
-        repoLastModified = repoPropertiesFile.lastModified();
+        this.repoLastModified = this.repoPropertiesFile.lastModified();
     }
 
     static void spool(InputStream ins, OutputStream out) throws IOException {
@@ -374,7 +375,7 @@ public class Repository {
             manifest.getMainAttributes().putValue("Bundle-Version", version);
         }
 
-        File bundle = new File(repoLocation, symbolicName + "-" + v + ".jar");
+        File bundle = new File(this.repoLocation, symbolicName + "-" + v + ".jar");
         OutputStream out = null;
         try {
             out = new FileOutputStream(bundle);

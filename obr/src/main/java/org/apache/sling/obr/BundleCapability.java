@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,16 +27,16 @@ class BundleCapability extends Capability {
     private String presentationName;
     private String symbolicName;
     private String version;
-    
+
     BundleCapability(Attributes attrs) {
         super("bundle");
-        
-        manifestVersion = attrs.getValue(Constants.BUNDLE_MANIFESTVERSION);
-        presentationName = attrs.getValue(Constants.BUNDLE_NAME);
-        symbolicName = attrs.getValue(Constants.BUNDLE_SYMBOLICNAME);
-        version = attrs.getValue(Constants.BUNDLE_VERSION);
+
+        this.manifestVersion = attrs.getValue(Constants.BUNDLE_MANIFESTVERSION);
+        this.presentationName = attrs.getValue(Constants.BUNDLE_NAME);
+        this.symbolicName = attrs.getValue(Constants.BUNDLE_SYMBOLICNAME);
+        this.version = attrs.getValue(Constants.BUNDLE_VERSION);
     }
-    
+
     public void serialize(PrintWriter out, String indent) {
         // <capability name="bundle">
         // <p n="manifestversion" v="1"/>
@@ -45,10 +46,10 @@ class BundleCapability extends Capability {
         // </capability>
         out.print(indent);
         out.println("<capability name=\"bundle\">");
-        printP(out, indent, "manifestversion", null, manifestVersion);
-        printP(out, indent, "presentationname", null, presentationName);
-        printP(out, indent, "symbolicname", null, symbolicName);
-        printP(out, indent, "version", "version", version);
+        this.printP(out, indent, "manifestversion", null, this.manifestVersion);
+        this.printP(out, indent, "presentationname", null, this.presentationName);
+        this.printP(out, indent, "symbolicname", null, this.symbolicName);
+        this.printP(out, indent, "version", "version", this.version);
         out.print(indent);
         out.println("</capability>");
     }
@@ -57,28 +58,28 @@ class BundleCapability extends Capability {
      * @return the manifestVersion
      */
     String getManifestVersion() {
-        return manifestVersion;
+        return this.manifestVersion;
     }
 
     /**
      * @return the presentationName
      */
     String getPresentationName() {
-        return presentationName;
+        return this.presentationName;
     }
 
     /**
      * @return the symbolicName
      */
     String getSymbolicName() {
-        return symbolicName;
+        return this.symbolicName;
     }
 
     /**
      * @return the version
      */
     String getVersion() {
-        return version;
+        return this.version;
     }
-    
+
 }
