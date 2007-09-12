@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +52,7 @@ public class VersionRange {
 
     /**
      * Creates an instance of this class with the given low and high limits.
-     * 
+     *
      * @param low The lower limit of the version range. If <code>null</code>
      *      the default version is used.
      * @param isLowInclusive Whether the low version is included in the
@@ -64,16 +65,16 @@ public class VersionRange {
      */
     public VersionRange(Version low, boolean isLowInclusive, Version high,
             boolean isHighInclusive) {
-        m_low = (low == null) ? Version.emptyVersion : low;
-        m_isLowInclusive = isLowInclusive;
-        m_high = high;
-        m_isHighInclusive = isHighInclusive;
+        this.m_low = (low == null) ? Version.emptyVersion : low;
+        this.m_isLowInclusive = isLowInclusive;
+        this.m_high = high;
+        this.m_isHighInclusive = isHighInclusive;
     }
 
     /**
      * Creates an instance of this class from the <code>range</code> version
      * range specification.
-     * 
+     *
      * @param range The version range specification string according to section
      *            3.2.5, Version Ranges, of the OSGi Service Platform R4
      *            specification.
@@ -81,20 +82,20 @@ public class VersionRange {
     public VersionRange(String range) {
         // Check if the version is an interval.
         if (range == null || range.indexOf(',') < 0) {
-            m_low = Version.parseVersion(range);
-            m_isLowInclusive = true;
-            m_high = null;
-            m_isHighInclusive = false;
+            this.m_low = Version.parseVersion(range);
+            this.m_isLowInclusive = true;
+            this.m_high = null;
+            this.m_isHighInclusive = false;
         } else {
             String s = range.substring(1, range.length() - 1);
             String vlo = s.substring(0, s.indexOf(','));
             String vhi = s.substring(s.indexOf(',') + 1, s.length());
 
-            m_low = new Version(vlo);
-            m_isLowInclusive = range.charAt(0) == '[';
-            m_high = new Version(vhi);
-            m_isHighInclusive = range.charAt(range.length() - 1) == ']';
-            m_isHighInclusive = false;
+            this.m_low = new Version(vlo);
+            this.m_isLowInclusive = range.charAt(0) == '[';
+            this.m_high = new Version(vhi);
+            this.m_isHighInclusive = range.charAt(range.length() - 1) == ']';
+            this.m_isHighInclusive = false;
         }
     }
 
@@ -102,7 +103,7 @@ public class VersionRange {
      * Returns the lower bound of the version range.
      */
     public Version getLow() {
-        return m_low;
+        return this.m_low;
     }
 
     /**
@@ -110,7 +111,7 @@ public class VersionRange {
      * acceptable.
      */
     public boolean isLowInclusive() {
-        return m_isLowInclusive;
+        return this.m_isLowInclusive;
     }
 
     /**
@@ -118,7 +119,7 @@ public class VersionRange {
      * the version range is unbounded.
      */
     public Version getHigh() {
-        return m_high;
+        return this.m_high;
     }
 
     /**
@@ -126,50 +127,50 @@ public class VersionRange {
      * acceptable.
      */
     public boolean isHighInclusive() {
-        return m_isHighInclusive;
+        return this.m_isHighInclusive;
     }
 
     /**
      * Returns <code>true</code> if the <code>version</code> is within this
      * version range.
-     * 
+     *
      * @param version The <code>Version</code> to check.
      * @return <code>true</code>if the <code>version</code> is within this
      *         version range.
      */
     public boolean isInRange(Version version) {
         // We might not have an upper end to the range.
-        if (m_high == null) {
-            return (version.compareTo(m_low) >= 0);
-        } else if (isLowInclusive() && isHighInclusive()) {
-            return (version.compareTo(m_low) >= 0)
-                && (version.compareTo(m_high) <= 0);
-        } else if (isHighInclusive()) {
-            return (version.compareTo(m_low) > 0)
-                && (version.compareTo(m_high) <= 0);
-        } else if (isLowInclusive()) {
-            return (version.compareTo(m_low) >= 0)
-                && (version.compareTo(m_high) < 0);
+        if (this.m_high == null) {
+            return (version.compareTo(this.m_low) >= 0);
+        } else if (this.isLowInclusive() && this.isHighInclusive()) {
+            return (version.compareTo(this.m_low) >= 0)
+                && (version.compareTo(this.m_high) <= 0);
+        } else if (this.isHighInclusive()) {
+            return (version.compareTo(this.m_low) > 0)
+                && (version.compareTo(this.m_high) <= 0);
+        } else if (this.isLowInclusive()) {
+            return (version.compareTo(this.m_low) >= 0)
+                && (version.compareTo(this.m_high) < 0);
         }
-        return (version.compareTo(m_low) > 0)
-            && (version.compareTo(m_high) < 0);
+        return (version.compareTo(this.m_low) > 0)
+            && (version.compareTo(this.m_high) < 0);
     }
 
     /**
      * Returns this version range as an LDAP filter.
      */
     public String getFilter() {
-        if (m_high == null) {
-            return getComparisonFilter(m_low, ">", isLowInclusive());
+        if (this.m_high == null) {
+            return this.getComparisonFilter(this.m_low, ">", this.isLowInclusive());
         }
 
-        return "(&" + getComparisonFilter(m_low, ">", isLowInclusive())
-            + getComparisonFilter(m_high, "<", isHighInclusive()) + ")";
+        return "(&" + this.getComparisonFilter(this.m_low, ">", this.isLowInclusive())
+            + this.getComparisonFilter(this.m_high, "<", this.isHighInclusive()) + ")";
     }
 
     /**
      * Creates a comparison filter for the given operation and bound version.
-     * 
+     *
      * @param v The version value to compare to.
      * @param op The operation to apply. This is '>' or '<'.
      * @param inclusive <code>true</code> if an inclusive comparison filter is
@@ -188,17 +189,17 @@ public class VersionRange {
      */
     public String toString() {
         // return single version if there is no upper bound
-        if (getHigh() == null) {
-            return getLow().toString();
+        if (this.getHigh() == null) {
+            return this.getLow().toString();
         }
-        
+
         // return proper range string
         StringBuffer buf = new StringBuffer();
-        buf.append(isLowInclusive() ? '[' : '(');
-        buf.append(getLow());
+        buf.append(this.isLowInclusive() ? '[' : '(');
+        buf.append(this.getLow());
         buf.append(',');
-        buf.append(getHigh());
-        buf.append(isHighInclusive() ? ']' : ')');
+        buf.append(this.getHigh());
+        buf.append(this.isHighInclusive() ? ']' : ')');
         return buf.toString();
     }
 }

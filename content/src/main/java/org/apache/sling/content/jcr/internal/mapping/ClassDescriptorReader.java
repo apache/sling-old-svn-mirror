@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.content.jcr.internal.mapping;
 
@@ -42,7 +45,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * The <code>ClassDescriptorReader</code> TODO
- * 
+ *
  * Use:
  * 1. Instantiatate
  * 2. Multiply call {@link #parse(InputStream)}
@@ -53,56 +56,56 @@ public class ClassDescriptorReader {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(ClassDescriptorReader.class);
-    
+
     private static final int STATE_NULL = 0;
     private static final int STATE_MAPPING = 2;
     private static final int STATE_CLASS = 3;
     private static final int STATE_DESCRIPTOR = 4;
-    
+
     private KXmlParser parser;
-    
+
     private int state = STATE_NULL;
-    
+
     private MappingDescriptor descriptors;
     boolean verified;
     private ClassDescriptor currentClassDescriptor;
-    
+
     public ClassDescriptorReader() {
-        parser = new KXmlParser();
-        reset();
+        this.parser = new KXmlParser();
+        this.reset();
     }
-    
+
     public void reset() {
-        descriptors = new MappingDescriptor();
-        verified = false;
+        this.descriptors = new MappingDescriptor();
+        this.verified = false;
     }
-    
+
     /**
      * @throws IllegalStateException If no descriptors are available
      * @throws XmlPullParserException If an error occurrs validating the descriptors
      * @return
      */
     public MappingDescriptor getMappingDescriptor() throws XmlPullParserException {
-        verify();
-        return descriptors;
+        this.verify();
+        return this.descriptors;
     }
-    
+
     public void parse(List urlList) throws IOException, XmlPullParserException {
         for (Iterator ui=urlList.iterator(); ui.hasNext(); ) {
             URL url = (URL) ui.next();
             InputStream ins = null;
             try {
                 ins = url.openStream();
-                parser.setProperty("http://xmlpull.org/v1/doc/properties.html#location", url);
-                parse(ins);
+                this.parser.setProperty("http://xmlpull.org/v1/doc/properties.html#location", url);
+                this.parse(ins);
             } finally {
                 IOUtils.closeQuietly(ins);
             }
         }
     }
-    
+
     /**
-     * 
+     *
      * @param ins
      * @throws IOException
      * @throws XmlPullParserException
@@ -112,105 +115,105 @@ public class ClassDescriptorReader {
      */
     public void parse(InputStream ins) throws IOException, XmlPullParserException {
 
-        if (verified) {
+        if (this.verified) {
             throw new IllegalStateException("Please reset before parsing");
         }
-        
+
         // set the parser input, use null encoding to force detection with <?xml?>
-        parser.setInput(ins, null);
-        state = STATE_NULL;
-        
-        int eventType = parser.getEventType();
+        this.parser.setInput(ins, null);
+        this.state = STATE_NULL;
+
+        int eventType = this.parser.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
-                switch (state) {
+                switch (this.state) {
                     case STATE_NULL:
-                        if (!"graffito-jcr".equals(parser.getName())) {
-                            throw unexpectedElement();
+                        if (!"graffito-jcr".equals(this.parser.getName())) {
+                            throw this.unexpectedElement();
                         }
-                        descriptors.setPackage(getOptionalAttribute("package"));
-                        currentClassDescriptor = null;
-                        state = STATE_MAPPING;
+                        this.descriptors.setPackage(this.getOptionalAttribute("package"));
+                        this.currentClassDescriptor = null;
+                        this.state = STATE_MAPPING;
                         break;
-                        
+
                     case STATE_MAPPING:
-                        if (!"class-descriptor".equals(parser.getName())) {
-                            throw unexpectedElement();
+                        if (!"class-descriptor".equals(this.parser.getName())) {
+                            throw this.unexpectedElement();
                         }
-                        currentClassDescriptor = parseClassDescriptor();
-                        state = STATE_CLASS;
+                        this.currentClassDescriptor = this.parseClassDescriptor();
+                        this.state = STATE_CLASS;
                         break;
 
                     case STATE_CLASS:
-                        if ("implement-descriptor".equals(parser.getName())) {
-                            currentClassDescriptor.addImplementDescriptor(parseImplementDescriptor());
-                        } else if ("field-descriptor".equals(parser.getName())) {
-                            currentClassDescriptor.addFieldDescriptor(parseFieldDescriptor());
-                        } else if ("bean-descriptor".equals(parser.getName())) {
-                            currentClassDescriptor.addBeanDescriptor(parseBeanDescriptor());
-                        } else if ("collection-descriptor".equals(parser.getName())) {
-                            currentClassDescriptor.addCollectionDescriptor(parseCollectionDescriptor());
+                        if ("implement-descriptor".equals(this.parser.getName())) {
+                            this.currentClassDescriptor.addImplementDescriptor(this.parseImplementDescriptor());
+                        } else if ("field-descriptor".equals(this.parser.getName())) {
+                            this.currentClassDescriptor.addFieldDescriptor(this.parseFieldDescriptor());
+                        } else if ("bean-descriptor".equals(this.parser.getName())) {
+                            this.currentClassDescriptor.addBeanDescriptor(this.parseBeanDescriptor());
+                        } else if ("collection-descriptor".equals(this.parser.getName())) {
+                            this.currentClassDescriptor.addCollectionDescriptor(this.parseCollectionDescriptor());
                         } else {
-                            throw unexpectedElement();
+                            throw this.unexpectedElement();
                         }
-                        state = STATE_DESCRIPTOR;
+                        this.state = STATE_DESCRIPTOR;
                         break;
-                        
+
                     case STATE_DESCRIPTOR:
                         // single descriptors are empty, fail
-                        throw unexpectedElement();
+                        throw this.unexpectedElement();
 
                     default:
                         // don't care
                 }
-                
+
             } else if (eventType == XmlPullParser.END_TAG) {
-                switch (state) {
+                switch (this.state) {
                     case STATE_NULL:
                         // do not expected an end tag in this state...
                         break;
-                        
+
                     case STATE_MAPPING:
-                        if (!"graffito-jcr".equals(parser.getName())) {
-                            throw unexpectedElement();
+                        if (!"graffito-jcr".equals(this.parser.getName())) {
+                            throw this.unexpectedElement();
                         }
-                        
-                        state = STATE_NULL;
+
+                        this.state = STATE_NULL;
                         break;
 
                     case STATE_CLASS:
-                        if (!"class-descriptor".equals(parser.getName())) {
-                            throw unexpectedElement();
+                        if (!"class-descriptor".equals(this.parser.getName())) {
+                            throw this.unexpectedElement();
                         }
 
-                        descriptors.addClassDescriptor(currentClassDescriptor);
-                        
-                        state = STATE_MAPPING;
+                        this.descriptors.addClassDescriptor(this.currentClassDescriptor);
+
+                        this.state = STATE_MAPPING;
                         break;
-                        
+
                     case STATE_DESCRIPTOR:
-                        if (!"implement-descriptor".equals(parser.getName())
-                                && !"field-descriptor".equals(parser.getName())
-                                && !"bean-descriptor".equals(parser.getName())
-                                && ! "collection-descriptor".equals(parser.getName())) {
-                            throw unexpectedElement();
+                        if (!"implement-descriptor".equals(this.parser.getName())
+                                && !"field-descriptor".equals(this.parser.getName())
+                                && !"bean-descriptor".equals(this.parser.getName())
+                                && ! "collection-descriptor".equals(this.parser.getName())) {
+                            throw this.unexpectedElement();
                         }
-                        
-                        state = STATE_CLASS;
+
+                        this.state = STATE_CLASS;
                         break;
 
                     default:
                         // don't care
                 }
             }
-            
-            eventType = parser.next();
+
+            eventType = this.parser.next();
         }
     }
-    
+
     private ClassDescriptor parseClassDescriptor() throws XmlPullParserException {
         ClassDescriptor fd = new ClassDescriptor();
-        
+
         /*
          * className CDATA #REQUIRED
          * jcrNodeType CDATA #IMPLIED
@@ -221,36 +224,36 @@ public class ClassDescriptorReader {
          * interface (true|false) "false"
          * discriminator (true|false) "true"
          */
-        
-        fd.setClassName(getRequiredAttribute("className"));
-        fd.setJcrNodeType(getOptionalAttribute("jcrNodeType"));
-        fd.setJcrSuperTypes(getOptionalAttribute("jcrSuperTypes"));
-        fd.setJcrMixinTypes(getOptionalAttribute("jcrMixinTypes", (String[]) null));
-        
-        fd.setExtend(getOptionalAttribute("extend"));
-        
-        fd.setAbstract(getOptionalAttribute("abstract", false));
-        fd.setInterface(getOptionalAttribute("interface", false));
-        fd.setDiscriminator(getOptionalAttribute("discriminator", true));
-        
+
+        fd.setClassName(this.getRequiredAttribute("className"));
+        fd.setJcrNodeType(this.getOptionalAttribute("jcrNodeType"));
+        fd.setJcrSuperTypes(this.getOptionalAttribute("jcrSuperTypes"));
+        fd.setJcrMixinTypes(this.getOptionalAttribute("jcrMixinTypes", (String[]) null));
+
+        fd.setExtend(this.getOptionalAttribute("extend"));
+
+        fd.setAbstract(this.getOptionalAttribute("abstract", false));
+        fd.setInterface(this.getOptionalAttribute("interface", false));
+        fd.setDiscriminator(this.getOptionalAttribute("discriminator", true));
+
         return fd;
     }
-    
+
     private ImplementDescriptor parseImplementDescriptor() throws XmlPullParserException {
         ImplementDescriptor fd = new ImplementDescriptor();
-        
+
         /*
          * interfaceName CDATA #REQUIRED
          */
-        
-        fd.setInterfaceName(getRequiredAttribute("interfaceName"));
-        
+
+        fd.setInterfaceName(this.getRequiredAttribute("interfaceName"));
+
         return fd;
     }
-    
+
     private FieldDescriptor parseFieldDescriptor() throws XmlPullParserException {
         FieldDescriptor fd = new FieldDescriptor();
-        
+
         /*
          *  fieldName CDATA #REQUIRED
          *  fieldType CDATA #IMPLIED
@@ -264,27 +267,27 @@ public class ClassDescriptorReader {
          *  jcrProtected (true | false) "false"
          *  jcrMultiple (true | false) "false"
          */
-        
-        fd.setFieldName(getRequiredAttribute("fieldName"));
-        fd.setFieldType(getOptionalAttribute("fieldType"));
-        fd.setJcrName(getOptionalAttribute("jcrName", fd.getFieldName()));
-        
-        fd.setId(getOptionalAttribute("id", false));
-        fd.setPath(getOptionalAttribute("path", false));
-        
-        fd.setJcrType(getOptionalAttribute("jcrType"));
-        fd.setJcrAutoCreated(getOptionalAttribute("jcrAutoCreated", false));
-        fd.setJcrMandatory(getOptionalAttribute("jcrMandatory", false));
-        fd.setJcrOnParentVersion(getOptionalAttribute("jcrOnParentVersion", "COPY"));
-        fd.setJcrProtected(getOptionalAttribute("jcrProtected", false));
-        fd.setJcrMultiple(getOptionalAttribute("jcrMultiple", false));
-        
+
+        fd.setFieldName(this.getRequiredAttribute("fieldName"));
+        fd.setFieldType(this.getOptionalAttribute("fieldType"));
+        fd.setJcrName(this.getOptionalAttribute("jcrName", fd.getFieldName()));
+
+        fd.setId(this.getOptionalAttribute("id", false));
+        fd.setPath(this.getOptionalAttribute("path", false));
+
+        fd.setJcrType(this.getOptionalAttribute("jcrType"));
+        fd.setJcrAutoCreated(this.getOptionalAttribute("jcrAutoCreated", false));
+        fd.setJcrMandatory(this.getOptionalAttribute("jcrMandatory", false));
+        fd.setJcrOnParentVersion(this.getOptionalAttribute("jcrOnParentVersion", "COPY"));
+        fd.setJcrProtected(this.getOptionalAttribute("jcrProtected", false));
+        fd.setJcrMultiple(this.getOptionalAttribute("jcrMultiple", false));
+
         return fd;
     }
-    
+
     private BeanDescriptor parseBeanDescriptor() throws XmlPullParserException {
         BeanDescriptor fd = new BeanDescriptor();
-        
+
         /*
          * fieldName CDATA #REQUIRED
          * jcrName CDATA #IMPLIED
@@ -298,33 +301,33 @@ public class ClassDescriptorReader {
          * jcrMandatory (true | false) "false"
          * jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) "COPY"
          * jcrProtected (true | false) "false"
-         * jcrSameNameSiblings (true | false) "false"         
+         * jcrSameNameSiblings (true | false) "false"
          */
-        
-        fd.setFieldName(getRequiredAttribute("fieldName"));
-        fd.setJcrName(getOptionalAttribute("jcrName", fd.getFieldName()));
-        fd.setProxy(getOptionalAttribute("proxy", false));
-        
-        fd.setAutoRetrieve(getOptionalAttribute("autoRetrieve", true));
-        fd.setAutoUpdate(getOptionalAttribute("autoUpdate", true));
-        fd.setAutoInsert(getOptionalAttribute("autoInsert", true));
-        
-        fd.setJcrNodeType(getOptionalAttribute("jcrNodeType"));
-        fd.setJcrAutoCreated(getOptionalAttribute("jcrAutoCreated", false));
-        fd.setJcrMandatory(getOptionalAttribute("jcrMandatory", false));
-        fd.setJcrOnParentVersion(getOptionalAttribute("jcrOnParentVersion", "COPY"));
-        fd.setJcrProtected(getOptionalAttribute("jcrProtected", false));
-        fd.setJcrSameNameSiblings(getOptionalAttribute("jcrSameNameSiblings", false));
-        
-        fd.setJcrType(getOptionalAttribute("jcrType"));
-        fd.setJcrMultiple(getOptionalAttribute("jcrMultiple", false));
+
+        fd.setFieldName(this.getRequiredAttribute("fieldName"));
+        fd.setJcrName(this.getOptionalAttribute("jcrName", fd.getFieldName()));
+        fd.setProxy(this.getOptionalAttribute("proxy", false));
+
+        fd.setAutoRetrieve(this.getOptionalAttribute("autoRetrieve", true));
+        fd.setAutoUpdate(this.getOptionalAttribute("autoUpdate", true));
+        fd.setAutoInsert(this.getOptionalAttribute("autoInsert", true));
+
+        fd.setJcrNodeType(this.getOptionalAttribute("jcrNodeType"));
+        fd.setJcrAutoCreated(this.getOptionalAttribute("jcrAutoCreated", false));
+        fd.setJcrMandatory(this.getOptionalAttribute("jcrMandatory", false));
+        fd.setJcrOnParentVersion(this.getOptionalAttribute("jcrOnParentVersion", "COPY"));
+        fd.setJcrProtected(this.getOptionalAttribute("jcrProtected", false));
+        fd.setJcrSameNameSiblings(this.getOptionalAttribute("jcrSameNameSiblings", false));
+
+        fd.setJcrType(this.getOptionalAttribute("jcrType"));
+        fd.setJcrMultiple(this.getOptionalAttribute("jcrMultiple", false));
 
         return fd;
     }
-    
+
     private CollectionDescriptor parseCollectionDescriptor() throws XmlPullParserException {
         CollectionDescriptor fd = new CollectionDescriptor();
-        
+
         /*
          * fieldName CDATA #REQUIRED
          * jcrName CDATA #IMPLIED
@@ -340,108 +343,108 @@ public class ClassDescriptorReader {
          * jcrMandatory (true | false) "false"
          * jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) "COPY"
          * jcrProtected (true | false) "false"
-         * jcrSameNameSiblings (true | false) "false"  
+         * jcrSameNameSiblings (true | false) "false"
          */
-        
-        fd.setFieldName(getRequiredAttribute("fieldName"));
-        fd.setJcrName(getOptionalAttribute("jcrName", fd.getFieldName()));
-        fd.setProxy(getOptionalAttribute("proxy", false));
-        
-        fd.setAutoRetrieve(getOptionalAttribute("autoRetrieve", true));
-        fd.setAutoUpdate(getOptionalAttribute("autoUpdate", true));
-        fd.setAutoInsert(getOptionalAttribute("autoInsert", true));
-        
-        fd.setElementClassName(getRequiredAttribute("elementClassName"));
-        fd.setCollectionClassName(getOptionalAttribute("collectionClassName"));
-        fd.setCollectionConverter(getOptionalAttribute("collectionConverter"));
-        
-        fd.setJcrNodeType(getOptionalAttribute("jcrNodeType"));
-        fd.setJcrAutoCreated(getOptionalAttribute("jcrAutoCreated", false));
-        fd.setJcrMandatory(getOptionalAttribute("jcrMandatory", false));
-        fd.setJcrOnParentVersion(getOptionalAttribute("jcrOnParentVersion", "COPY"));
-        fd.setJcrProtected(getOptionalAttribute("jcrProtected", false));
-        fd.setJcrSameNameSiblings(getOptionalAttribute("jcrSameNameSiblings", false));
-        
-        fd.setJcrType(getOptionalAttribute("jcrType"));
-        fd.setJcrMultiple(getOptionalAttribute("jcrMultiple", false));
-        
+
+        fd.setFieldName(this.getRequiredAttribute("fieldName"));
+        fd.setJcrName(this.getOptionalAttribute("jcrName", fd.getFieldName()));
+        fd.setProxy(this.getOptionalAttribute("proxy", false));
+
+        fd.setAutoRetrieve(this.getOptionalAttribute("autoRetrieve", true));
+        fd.setAutoUpdate(this.getOptionalAttribute("autoUpdate", true));
+        fd.setAutoInsert(this.getOptionalAttribute("autoInsert", true));
+
+        fd.setElementClassName(this.getRequiredAttribute("elementClassName"));
+        fd.setCollectionClassName(this.getOptionalAttribute("collectionClassName"));
+        fd.setCollectionConverter(this.getOptionalAttribute("collectionConverter"));
+
+        fd.setJcrNodeType(this.getOptionalAttribute("jcrNodeType"));
+        fd.setJcrAutoCreated(this.getOptionalAttribute("jcrAutoCreated", false));
+        fd.setJcrMandatory(this.getOptionalAttribute("jcrMandatory", false));
+        fd.setJcrOnParentVersion(this.getOptionalAttribute("jcrOnParentVersion", "COPY"));
+        fd.setJcrProtected(this.getOptionalAttribute("jcrProtected", false));
+        fd.setJcrSameNameSiblings(this.getOptionalAttribute("jcrSameNameSiblings", false));
+
+        fd.setJcrType(this.getOptionalAttribute("jcrType"));
+        fd.setJcrMultiple(this.getOptionalAttribute("jcrMultiple", false));
+
         return fd;
     }
-    
+
     //---------- Attribute access helper --------------------------------------
-    
+
     private String getRequiredAttribute(String attrName) throws XmlPullParserException {
-        String attrVal = parser.getAttributeValue(null, attrName);
+        String attrVal = this.parser.getAttributeValue(null, attrName);
         if (attrVal != null) {
             return attrVal;
         }
-        
+
         // fail if value is missing
-        throw missingAttribute(attrName);
+        throw this.missingAttribute(attrName);
     }
-    
+
     private String getOptionalAttribute(String attrName) {
-        return getOptionalAttribute(attrName, (String) null);
+        return this.getOptionalAttribute(attrName, (String) null);
     }
-    
+
     private String getOptionalAttribute(String attrName, String defaultValue) {
-        String attrVal = parser.getAttributeValue(null, attrName);
+        String attrVal = this.parser.getAttributeValue(null, attrName);
         return (attrVal != null) ? attrVal : defaultValue;
     }
-    
+
     private String[] getOptionalAttribute(String attrName, String[] defaultValue) {
-        String attrVal = parser.getAttributeValue(null, attrName);
+        String attrVal = this.parser.getAttributeValue(null, attrName);
         return (attrVal != null) ? attrVal.split(",") : defaultValue;
     }
-    
+
     private boolean getOptionalAttribute(String attrName, boolean defaultValue) {
-        String attrVal = parser.getAttributeValue(null, attrName);
+        String attrVal = this.parser.getAttributeValue(null, attrName);
         return (attrVal != null) ? "true".equalsIgnoreCase(attrVal) : defaultValue;
     }
-    
+
     //---------- Error Handling support ---------------------------------------
-    
+
     private XmlPullParserException missingAttribute(String attrName) {
-        String message = "Missing Attribute " + attrName + " in element " + parser.getName();
-        return new XmlPullParserException(message, parser, null);
+        String message = "Missing Attribute " + attrName + " in element " + this.parser.getName();
+        return new XmlPullParserException(message, this.parser, null);
     }
-    
+
     private XmlPullParserException unexpectedElement() {
-        String message = "Illegal Element " + parser.getName();
-        return new XmlPullParserException(message, parser, null);
+        String message = "Illegal Element " + this.parser.getName();
+        return new XmlPullParserException(message, this.parser, null);
     }
-    
+
     //---------- Verification of the mapping descriptors ----------------------
-    
+
     private void verify() throws XmlPullParserException {
         // nothing to do anymore
-        if (verified) {
+        if (this.verified) {
             return;
         }
 
-        if (descriptors == null) {
+        if (this.descriptors == null) {
             throw new IllegalStateException("Nothing has been read yet");
         }
 
         List errors = new ArrayList();
         List rootClassDescriptors = new ArrayList();
-        errors = solveReferences(errors, rootClassDescriptors);
-        errors = validateDescriptors(errors, rootClassDescriptors);
+        errors = this.solveReferences(errors, rootClassDescriptors);
+        errors = this.validateDescriptors(errors, rootClassDescriptors);
 
         if (!errors.isEmpty()) {
             throw new XmlPullParserException("Mapping files contain errors."
-                + getErrorMessage(errors));
+                + this.getErrorMessage(errors));
         }
     }
 
     private List solveReferences(List errors, List rootClassDescriptors) {
         Set toRemove = new HashSet();
-        for (Iterator it = descriptors.getClassDescriptorsByClassName().entrySet().iterator(); it.hasNext();) {
+        for (Iterator it = this.descriptors.getClassDescriptorsByClassName().entrySet().iterator(); it.hasNext();) {
             Map.Entry entry = (Map.Entry) it.next();
             ClassDescriptor cd = (ClassDescriptor) entry.getValue();
 
             if (null != cd.getExtend() && !"".equals(cd.getExtend())) {
-                ClassDescriptor superClassDescriptor = descriptors.getClassDescriptorByName(cd.getExtend());
+                ClassDescriptor superClassDescriptor = this.descriptors.getClassDescriptorByName(cd.getExtend());
 
                 if (superClassDescriptor == null) {
                     log.warn("Dropping class {}: Base class {} not registered", cd.getClassName(), cd.getExtend());
@@ -462,7 +465,7 @@ public class ClassDescriptorReader {
             if (interfaces.size() > 0) {
                 for (Iterator iterator = interfaces.iterator(); iterator.hasNext();) {
                     String interfaceName = (String) iterator.next();
-                    ClassDescriptor interfaceClassDescriptor = descriptors.getClassDescriptorByName(interfaceName);
+                    ClassDescriptor interfaceClassDescriptor = this.descriptors.getClassDescriptorByName(interfaceName);
 
                     if (interfaceClassDescriptor == null) {
                         log.warn("Dropping class {}: Interface class {} not registered", cd.getClassName(), interfaceName);
@@ -486,7 +489,7 @@ public class ClassDescriptorReader {
             log.info("Removing dropped classes from map");
             for (Iterator ci=toRemove.iterator(); ci.hasNext(); ) {
                 ClassDescriptor cd = (ClassDescriptor) ci.next();
-                dropClassDescriptor(cd);
+                this.dropClassDescriptor(cd);
             }
         }
         return errors;
@@ -494,21 +497,21 @@ public class ClassDescriptorReader {
 
     private void dropClassDescriptor(ClassDescriptor cd) {
         // remove descriptor
-        descriptors.getClassDescriptorsByClassName().remove(cd.getClassName());
-        descriptors.getClassDescriptorsByNodeType().remove(cd.getJcrNodeType());
-        
+        this.descriptors.getClassDescriptorsByClassName().remove(cd.getClassName());
+        this.descriptors.getClassDescriptorsByNodeType().remove(cd.getJcrNodeType());
+
         if (cd.hasDescendants()) {
             for (Iterator di=cd.getDescendantClassDescriptors().iterator(); di.hasNext(); ) {
                 ClassDescriptor desc = (ClassDescriptor) di.next();
                 log.warn("Dropping class {}: Depends on non-resolvable class {}", desc.getClassName(), cd.getClassName());
-                dropClassDescriptor(desc);
+                this.dropClassDescriptor(desc);
             }
         }
     }
-    
+
     /**
      * Validate all class descriptors.
-     * This method validates the toplevel ancestors and after the descendants. 
+     * This method validates the toplevel ancestors and after the descendants.
      * Otherwise, we can have invalid settings in the class descriptors
      * @param errors all errors found during the validation process
      * @param classDescriptors the ancestor classdescriptors
@@ -520,7 +523,7 @@ public class ClassDescriptorReader {
             try {
                 classDescriptor.afterPropertiesSet();
                 if (classDescriptor.hasDescendants()) {
-                    errors = validateDescriptors(errors,
+                    errors = this.validateDescriptors(errors,
                         classDescriptor.getDescendantClassDescriptors());
                 }
             } catch (JcrMappingException jme) {
@@ -531,9 +534,9 @@ public class ClassDescriptorReader {
             }
         }
         return errors;
-    }    
-    
-    
+    }
+
+
     private String getErrorMessage(List errors) {
         final String lineSep = System.getProperty("line.separator");
         StringBuffer buf = new StringBuffer();
@@ -542,7 +545,7 @@ public class ClassDescriptorReader {
         }
 
         return buf.toString();
-    }    
-    
+    }
+
 
 }

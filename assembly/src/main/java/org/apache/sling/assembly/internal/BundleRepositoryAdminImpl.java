@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,13 +46,13 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#addRepository(java.net.URL)
      */
     public void addRepository(URL url) {
-        Object lock = installerService.acquireLock(0);
+        Object lock = this.installerService.acquireLock(0);
         try {
-            getRepositoryAdmin().addRepository(url);
+            this.getRepositoryAdmin().addRepository(url);
         } catch (Exception e) {
             // TODO: log
         } finally {
-            installerService.releaseLock(lock);
+            this.installerService.releaseLock(lock);
         }
     }
 
@@ -61,9 +62,9 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getRepositories()
      */
     public Iterator getRepositories() {
-        Object lock = installerService.acquireLock(0);
+        Object lock = this.installerService.acquireLock(0);
         try {
-            Repository[] repos = getRepositoryAdmin().listRepositories();
+            Repository[] repos = this.getRepositoryAdmin().listRepositories();
             if (repos == null || repos.length == 0) {
                 return Collections.EMPTY_LIST.iterator();
             }
@@ -74,7 +75,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
             }
             return urlSet.iterator();
         } finally {
-            installerService.releaseLock(lock);
+            this.installerService.releaseLock(lock);
         }
     }
 
@@ -84,9 +85,9 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getResources()
      */
     public Iterator getResources() {
-        Object lock = installerService.acquireLock(0);
+        Object lock = this.installerService.acquireLock(0);
         try {
-            Repository[] repos = getRepositoryAdmin().listRepositories();
+            Repository[] repos = this.getRepositoryAdmin().listRepositories();
             if (repos == null || repos.length == 0) {
                 return Collections.EMPTY_LIST.iterator();
             }
@@ -102,7 +103,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
             }
             return resSet.iterator();
         } finally {
-            installerService.releaseLock(lock);
+            this.installerService.releaseLock(lock);
         }
     }
 
@@ -113,14 +114,14 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      */
     public void refreshRepositories() {
         // note: refreshing is implemented by re-adding the repositories
-        Object lock = installerService.acquireLock(0);
+        Object lock = this.installerService.acquireLock(0);
         try {
-            Repository[] repos = getRepositoryAdmin().listRepositories();
+            Repository[] repos = this.getRepositoryAdmin().listRepositories();
             for (int i = 0; repos != null && i < repos.length; i++) {
-                addRepository(repos[i].getURL());
+                this.addRepository(repos[i].getURL());
             }
         } finally {
-            installerService.releaseLock(lock);
+            this.installerService.releaseLock(lock);
         }
     }
 
@@ -130,18 +131,18 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#removeRepository(java.net.URL)
      */
     public void removeRepository(URL url) {
-        Object lock = installerService.acquireLock(0);
+        Object lock = this.installerService.acquireLock(0);
         try {
-            getRepositoryAdmin().removeRepository(url);
+            this.getRepositoryAdmin().removeRepository(url);
         } finally {
-            installerService.releaseLock(lock);
+            this.installerService.releaseLock(lock);
         }
     }
 
     // ---------- internal class -----------------------------------------------
 
     private RepositoryAdmin getRepositoryAdmin() {
-        return installerService.getRepositoryAdmin();
+        return this.installerService.getRepositoryAdmin();
     }
 
     // ---------- internal classes ---------------------------------------------
@@ -156,19 +157,19 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
         }
 
         public String getPresentationName() {
-            return delegatee.getPresentationName();
+            return this.delegatee.getPresentationName();
         }
 
         public String getSymbolicName() {
-            return delegatee.getSymbolicName();
+            return this.delegatee.getSymbolicName();
         }
 
         public Version getVersion() {
-            return delegatee.getVersion();
+            return this.delegatee.getVersion();
         }
 
         public String[] getCategories() {
-            return delegatee.getCategories();
+            return this.delegatee.getCategories();
         }
 
         // ---------- Comparable -----------------------------------------------
@@ -181,11 +182,11 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
             // ClassCastException is allowed to be thrown here
             ResourceImpl other = (ResourceImpl) obj;
 
-            if (getSymbolicName().equals(other.getSymbolicName())) {
-                return getVersion().compareTo(other.getVersion());
+            if (this.getSymbolicName().equals(other.getSymbolicName())) {
+                return this.getVersion().compareTo(other.getVersion());
             }
 
-            return getSymbolicName().compareTo(other.getSymbolicName());
+            return this.getSymbolicName().compareTo(other.getSymbolicName());
         }
 
         // ---------- Object overwrite -----------------------------------------
@@ -197,15 +198,15 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
 
             if (obj instanceof ResourceImpl) {
                 ResourceImpl other = (ResourceImpl) obj;
-                return getSymbolicName().equals(other.getSymbolicName())
-                    && getVersion().equals(other.getVersion());
+                return this.getSymbolicName().equals(other.getSymbolicName())
+                    && this.getVersion().equals(other.getVersion());
             }
 
             return false;
         }
 
         public int hashCode() {
-            return getSymbolicName().hashCode() * 17 + getVersion().hashCode()
+            return this.getSymbolicName().hashCode() * 17 + this.getVersion().hashCode()
                 * 33;
         }
     }
@@ -220,15 +221,15 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
         }
 
         public String getName() {
-            return delegatee.getName();
+            return this.delegatee.getName();
         }
 
         public long getLastModified() {
-            return delegatee.getLastModified();
+            return this.delegatee.getLastModified();
         }
 
         public URL getURL() {
-            return delegatee.getURL();
+            return this.delegatee.getURL();
         }
 
         // ---------- Comparable -----------------------------------------------
@@ -241,11 +242,11 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
             // ClassCastException is allowed to be thrown here
             RepositoryImpl other = (RepositoryImpl) obj;
 
-            if (getName().equals(other.getName())) {
-                return getURL().toString().compareTo(other.getURL().toString());
+            if (this.getName().equals(other.getName())) {
+                return this.getURL().toString().compareTo(other.getURL().toString());
             }
 
-            return getName().compareTo(other.getName());
+            return this.getName().compareTo(other.getName());
         }
 
         // ---------- Object overwrite -----------------------------------------
@@ -257,14 +258,14 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
 
             if (obj instanceof RepositoryImpl) {
                 RepositoryImpl other = (RepositoryImpl) obj;
-                return getURL().equals(other.getURL());
+                return this.getURL().equals(other.getURL());
             }
 
             return false;
         }
 
         public int hashCode() {
-            return getURL().hashCode();
+            return this.getURL().hashCode();
         }
     }
 }

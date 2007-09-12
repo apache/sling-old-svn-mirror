@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.jcr.classloader.internal;
 
@@ -33,14 +36,14 @@ class RepositoryClassLoaderFacade extends ClassLoader {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
-    
+
     private RepositoryClassLoaderProviderImpl classLoaderProvider;
     private ClassLoader parent;
     private String sessionOwner;
     private Session session;
     private String[] classPath;
     private DynamicRepositoryClassLoader delegate;
-    
+
     /**
      * The reference counter. If not greater than zero, there are this
      * number of (assumed) life references.
@@ -56,7 +59,7 @@ class RepositoryClassLoaderFacade extends ClassLoader {
             String sessionOwner,
             String[] classPath) {
         super(null); // no parent class loader, we delegate to repository class loaders
-        
+
         this.classLoaderProvider = classLoaderProvider;
         this.parent = parent;
         this.classPath = classPath;
@@ -65,68 +68,68 @@ class RepositoryClassLoaderFacade extends ClassLoader {
 
     public void addPath(String path) {
         // create new class path
-        String[] newClassPath = new String[classPath.length+1];
-        System.arraycopy(classPath, 0, newClassPath, 0, classPath.length);
-        newClassPath[classPath.length] = path;
-        classPath = newClassPath;
-        
+        String[] newClassPath = new String[this.classPath.length+1];
+        System.arraycopy(this.classPath, 0, newClassPath, 0, this.classPath.length);
+        newClassPath[this.classPath.length] = path;
+        this.classPath = newClassPath;
+
         // destroy the delegate and have a new one created
-        if (delegate != null) {
-            DynamicRepositoryClassLoader oldLoader = delegate;
-            delegate = null;
+        if (this.delegate != null) {
+            DynamicRepositoryClassLoader oldLoader = this.delegate;
+            this.delegate = null;
             oldLoader.destroy();
         }
     }
-    
+
     public String[] getClassPath() {
-        return (String[]) classPath.clone();
+        return this.classPath.clone();
     }
-    
+
     protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
         try {
-            return getDelegateClassLoader().loadClass(name);
+            return this.getDelegateClassLoader().loadClass(name);
         } catch (RepositoryException re) {
             log.error("Cannot get repository class loader to load class " + name, re);
             throw new ClassNotFoundException(name);
         }
     }
-    
+
     public URL getResource(String name) {
         try {
-            return getDelegateClassLoader().getResource(name);
+            return this.getDelegateClassLoader().getResource(name);
         } catch (RepositoryException re) {
             log.error("Cannot get repository class loader to get resource " + name, re);
             return null;
         }
     }
-    
+
     protected Enumeration findResources(String name) throws IOException {
         try {
-            return getDelegateClassLoader().getResources(name);
+            return this.getDelegateClassLoader().getResources(name);
         } catch (RepositoryException re) {
             throw (IOException) new IOException("Cannot lookup " + name).initCause(re);
         }
     }
-    
+
     //---------- Reference counting support -----------------------------------
-    
+
     /* package */ void destroy() {
-        if (delegate != null) {
-            delegate.destroy();
-            delegate = null;
+        if (this.delegate != null) {
+            this.delegate.destroy();
+            this.delegate = null;
         }
 
-        if (session != null) {
-            session.logout();
-            session = null;
+        if (this.session != null) {
+            this.session.logout();
+            this.session = null;
         }
     }
-    
+
     /**
      * Increases the reference counter of this class loader.
      */
     /* package */void ref() {
-        refCtr++;
+        this.refCtr++;
     }
 
     /**
@@ -135,7 +138,7 @@ class RepositoryClassLoaderFacade extends ClassLoader {
      * already been destroyed by calling the {@link #destroy()} method.
      */
     /* package */void deref() {
-        refCtr--;
+        this.refCtr--;
 
         // destroy if the loader should be destroyed and no refs exist
 //        if (refCtr <= 0 /* && destroyed */ ) {
@@ -144,39 +147,39 @@ class RepositoryClassLoaderFacade extends ClassLoader {
     }
 
     //---------- internal -----------------------------------------------------
-    
+
     private Session getSession() throws RepositoryException {
         // check current session
-        if (session != null) {
-            if (session.isLive()) {
-                return session;
+        if (this.session != null) {
+            if (this.session.isLive()) {
+                return this.session;
             }
-        
+
             // drop delegate
-            if (delegate != null) {
-                delegate.destroy();
-                delegate = null;
+            if (this.delegate != null) {
+                this.delegate.destroy();
+                this.delegate = null;
             }
-            
+
             // current session is not live anymore, drop
-            session.logout();
-            session = null;
+            this.session.logout();
+            this.session = null;
         }
-        
+
         // no session currently, acquire and return
-        session = classLoaderProvider.getSession(sessionOwner);
-        return session;
+        this.session = this.classLoaderProvider.getSession(this.sessionOwner);
+        return this.session;
     }
 
     private ClassLoader getDelegateClassLoader() throws RepositoryException {
-        if (delegate != null) {
-            if (delegate.isDirty()) {
-                delegate = delegate.reinstantiate(getSession(), parent);
+        if (this.delegate != null) {
+            if (this.delegate.isDirty()) {
+                this.delegate = this.delegate.reinstantiate(this.getSession(), this.parent);
             }
         } else {
-            delegate = new DynamicRepositoryClassLoader(getSession(), classPath, parent);
+            this.delegate = new DynamicRepositoryClassLoader(this.getSession(), this.classPath, this.parent);
         }
-        
-        return delegate;
+
+        return this.delegate;
     }
 }

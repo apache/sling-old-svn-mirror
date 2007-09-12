@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.parameters;
 
@@ -37,19 +40,19 @@ class Util {
 
     // ISO-8859-1 mapps all characters 0..255 to \u0000..\u00ff directly
     public static final String ENCODING_DIRECT = "ISO-8859-1";
-    
+
     // Default query (and www-form-encoded) parameter encoding as per
     // HTML spec.
     // see http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
     public static final String ENCODING_DEFAULT = "UTF-8";
-    
+
     public static final byte[] NO_CONTENT = new byte[0];
-    
+
     static String toIdentityEncodedString(byte[] data) {
         if (data == null) {
             return null;
         }
-        
+
         char[] characters = new char[data.length];
         for (int i = 0; i < characters.length; i++) {
             characters[i] = (char) (data[i] & 0xff);
@@ -61,7 +64,7 @@ class Util {
         if (string == null) {
             return NO_CONTENT;
         }
-        
+
         byte[] data = new byte[string.length()];
         for (int i = 0; i < data.length; i++) {
             data[i] = (byte) (string.charAt(i) & 0xff);
@@ -128,11 +131,11 @@ class Util {
         parameterMap.addParameter(name, erp);
         return erp;
     }
-    
+
     static void fixEncoding(ParameterMap parameterMap) {
         // default the encoding to ISO-8859-1 (aka direct, 1:1 encoding)
         String formEncoding = ENCODING_DIRECT;
-        
+
         // check whether a FormEncoding parameter overwrites this default
         RequestParameter[] feParm = (RequestParameter[]) parameterMap.get(PARAMETER_FORMENCODING);
         if (feParm != null) {
@@ -162,7 +165,7 @@ class Util {
             for (int i = 0; i < params.length; i++) {
                 if (params[i] instanceof AbstractEncodedParameter) {
                     AbstractEncodedParameter param = (AbstractEncodedParameter) params[i];
-    
+
                     // fix encoding if different
                     if (param.getEncoding() == null) {
                         param.setEncoding(formEncoding);
@@ -181,7 +184,7 @@ class Util {
                 }
             }
         }
-        
+
         // apply mappings of deinternationalized names
         if (!renameMap.isEmpty()) {
             for (Iterator ri=renameMap.entrySet().iterator(); ri.hasNext(); ) {

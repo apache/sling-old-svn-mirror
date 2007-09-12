@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,7 +35,7 @@ public class LogServiceFactory implements ServiceFactory {
     /**
      * Initializes the logging system with settings from some startup properties
      * before the real configuration is read after ContentBus bootstrap.
-     * 
+     *
      * @param properties The startup properties to initialize the logging system
      *            with.
      */
@@ -62,7 +63,7 @@ public class LogServiceFactory implements ServiceFactory {
          * Initializes the logging system with settings from some startup
          * properties before the real configuration is read after ContentBus
          * bootstrap.
-         * 
+         *
          * @param properties The startup properties to initialize the logging
          *            system with.
          */
@@ -74,23 +75,23 @@ public class LogServiceFactory implements ServiceFactory {
         // ---------------------------------------------------
 
         public void log(int level, String message) {
-            log(null, level, message, null);
+            this.log(null, level, message, null);
         }
 
         public void log(int level, String message, Throwable exception) {
-            log(null, level, message, exception);
+            this.log(null, level, message, exception);
         }
 
         public void log(ServiceReference sr, int level, String message) {
-            log(sr, level, message, null);
+            this.log(sr, level, message, null);
         }
 
         public void log(ServiceReference sr, int level, String message,
                 Throwable exception) {
             // simply fire a log event
-            LogEntry entry = new LogEntryImpl(bundle, sr, level, message,
+            LogEntry entry = new LogEntryImpl(this.bundle, sr, level, message,
                 exception);
-            logSupport.fireLogEvent(entry);
+            LogServiceFactory.this.logSupport.fireLogEvent(entry);
         }
     }
 

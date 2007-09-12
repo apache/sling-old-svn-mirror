@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,7 +50,7 @@ public interface CacheService {
      * This method flushes any cache entry whose dependency list contains this
      * handle. Previous releases only flushed the cache entries whose request
      * URIs mapped to the geiven handle.
-     * 
+     *
      * @param handle The handle of the <code>Page</code> whose cache entries
      *            should be removed or <code>null</code> to remove all entries
      *            from the cache.
@@ -59,7 +60,7 @@ public interface CacheService {
     /**
      * Returns a list of request URI strings leading to cache entries, which
      * depend on the page addressed by the given <code>handle</code>.
-     * 
+     *
      * @param pageHandle The handle of the page whose dependent cache entry
      *            request URIs should be returned.
      * @return The list of cache entry URLs depending on the given handle. If an

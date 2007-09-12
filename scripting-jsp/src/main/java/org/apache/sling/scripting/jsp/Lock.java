@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,15 +42,15 @@ final class Lock {
      * @exception InterruptedException if the thread was interrupted
      */
     public synchronized final void acquire() throws InterruptedException {
-        if (owner != Thread.currentThread()) {
-            while (owner != null) {
-                wait();
+        if (this.owner != Thread.currentThread()) {
+            while (this.owner != null) {
+                this.wait();
             }
-            owner = Thread.currentThread();
+            this.owner = Thread.currentThread();
         }
-        locks++;
+        this.locks++;
     }
-    
+
     /**
      * Releases the lock. Marks the lock as free if this was the last lock
      * that was held on this object.
@@ -58,7 +59,7 @@ final class Lock {
      */
     public synchronized final boolean release() {
         // if not locked (owned) return immediately
-        if (owner == null) {
+        if (this.owner == null) {
             return true;
         }
 
@@ -66,10 +67,10 @@ final class Lock {
         // drops to zero (or below). Notify waiting users of the lock and
         // return that the lock is free now - may of course already have been
         // acquired in the meantime by another thread
-        if (--locks <= 0) {
-            owner = null;
-            locks = 0;
-            notifyAll();
+        if (--this.locks <= 0) {
+            this.owner = null;
+            this.locks = 0;
+            this.notifyAll();
             return true;
         }
 
@@ -85,46 +86,46 @@ final class Lock {
      *         otherwise <code>false</code>
      */
     public synchronized final boolean tryAcquire() {
-        return tryAcquire(-1);
+        return this.tryAcquire(-1);
     }
 
     /**
      * Tries to obtain the lock within the given timeout in milliseconds.
      * Returns independent of whether the lock could be acquired or not.
-     *         
+     *
      * @param timeout The maximum number of milliseconds for the lock to become
      *      available. If this number is less than or equal to zero, the method
      *      does not wait for the lock to be free and immediately returns
      *      <code>false</code>.
-     *      
+     *
      * @return <code>true</code> if the lock could be obtained,
      *         otherwise <code>false</code>
      */
     public synchronized final boolean tryAcquire(long timeout) {
-        if (owner != Thread.currentThread()) {
-            
+        if (this.owner != Thread.currentThread()) {
+
             // the lock is owned, wait and check again once
-            if (owner != null) {
-                
+            if (this.owner != null) {
+
                 // simply wait for the designated amount of time
                 if (timeout > 0) {
                     try {
-                        wait(timeout);
+                        this.wait(timeout);
                     } catch (InterruptedException ie) {
                         // interrupted waiting, don't care and continue
                     }
                 }
-                
+
                 // if still (or again) owned after timeout or signal, fail
-                if (owner != null) {
-                    return false; 
+                if (this.owner != null) {
+                    return false;
                 }
             }
-            
+
             // otherwise acquire the lock now
-            owner = Thread.currentThread();
+            this.owner = Thread.currentThread();
         }
-        locks++;
+        this.locks++;
         return true;
     }
 
@@ -135,8 +136,8 @@ final class Lock {
     public synchronized final void waitUntilReleased()
         throws InterruptedException {
 
-        while (owner != null) {
-            wait();
+        while (this.owner != null) {
+            this.wait();
         }
     }
 
@@ -149,7 +150,7 @@ final class Lock {
      * {@link #tryAcquire()} or {@link #waitUntilReleased()}.
      */
     public synchronized String getOwner() {
-        return (owner == null) ? null : owner.getName();
+        return (this.owner == null) ? null : this.owner.getName();
     }
 
     /**
@@ -161,7 +162,7 @@ final class Lock {
      * {@link #tryAcquire()} or {@link #waitUntilReleased()}.
      */
     public synchronized int getNumLocks() {
-        return locks;
+        return this.locks;
     }
 
     /**
@@ -170,10 +171,10 @@ final class Lock {
      * the lock.
      */
     public synchronized String toString() {
-        if (owner == null) {
+        if (this.owner == null) {
             return "Lock: unlocked";
         }
 
-        return "Lock: locked " + locks + " times by " + owner;
+        return "Lock: locked " + this.locks + " times by " + this.owner;
     }
 }

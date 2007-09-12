@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -81,7 +82,7 @@ class Assembly {
      * {@link #EMBEDDED_BUNDLE_EXTENSION}.
      */
     public static final String ASSEMBLY_BUNDLEREPOSITORY_EMBEDDED = "embedded";
-    
+
     /**
      * The value if the {@link #ASSEMBLY_BUNDLEREPOSITORY} manifest header
      * indicating the bundles to be installed are to be retrieved through
@@ -163,7 +164,7 @@ class Assembly {
     /**
      * Creates an instance of this class reresenting the Assembly Bundle backed
      * by the given OSGi <code>bundle</code>.
-     * 
+     *
      * @param manager The {@link AssemblyManager} taking care of this assembly.
      * @param bundle The OSGi <code>Bundle</code> representing this Assembly
      *            Bundle.
@@ -186,12 +187,12 @@ class Assembly {
      * <p>
      * After this method completes successfully, the assembly is in
      * {@link #STATE_INSTALLED}.
-     * 
+     *
      * @throws IllegalStateException If this Asssembly Bundle has already been
      *             uninstalled.
      */
     void install() {
-        ensureInstalledBundles();
+        this.ensureInstalledBundles();
     }
 
     /**
@@ -216,12 +217,12 @@ class Assembly {
      * <p>
      * After this method completes successfully, the assembly is in
      * {@link #STATE_STARTED}.
-     * 
+     *
      * @throws IllegalStateException If this Asssembly Bundle has already been
      *             uninstalled.
      */
     void start() {
-        ensureStarted();
+        this.ensureStarted();
     }
 
     /**
@@ -235,12 +236,12 @@ class Assembly {
      * <p>
      * After this method completes successfully, the assembly is in
      * {@link #STATE_RESOLVED}.
-     * 
+     *
      * @throws IllegalStateException If this Asssembly Bundle has already been
      *             uninstalled.
      */
     void stop() {
-        ensureStopped();
+        this.ensureStopped();
     }
 
     /**
@@ -254,7 +255,7 @@ class Assembly {
      * {@link #STATE_UNINSTALLED}.
      */
     void uninstall() {
-        ensureUninstalled();
+        this.ensureUninstalled();
     }
 
     /**
@@ -276,12 +277,12 @@ class Assembly {
      * <p>
      * This method is not yet implemented.
      * <p>
-     * 
+     *
      * @throws IllegalStateException If this Asssembly Bundle has already been
      *             uninstalled.
      */
     void update() {
-        checkUninstalled();
+        this.checkUninstalled();
 
         // TODO:
         // - get new bundle specs
@@ -298,14 +299,14 @@ class Assembly {
      * Assembly Bundle as the hash code of this assembly.
      */
     public int hashCode() {
-        return (int) bundle.getBundleId();
+        return (int) this.bundle.getBundleId();
     }
 
     /**
      * Returns <code>true</code> if <code>obj</code> is this assembly or if
      * <code>obj</code> is an assembly backed by the same OSGi
      * <code>Bundle</code>.
-     * 
+     *
      * @param obj The object to compare this assembly to.
      */
     public boolean equals(Object obj) {
@@ -314,7 +315,7 @@ class Assembly {
         }
 
         if (obj instanceof Assembly) {
-            return bundle.getBundleId() == ((Assembly) obj).bundle.getBundleId();
+            return this.bundle.getBundleId() == ((Assembly) obj).bundle.getBundleId();
         }
 
         return false;
@@ -325,19 +326,19 @@ class Assembly {
      * symbolic name and bundle location.
      */
     public String toString() {
-        return "Assembly " + bundle.getSymbolicName() + "/"
-            + bundle.getLocation();
+        return "Assembly " + this.bundle.getSymbolicName() + "/"
+            + this.bundle.getLocation();
     }
 
     // ---------- internal -----------------------------------------------------
 
     private BundleSpec[] getBundleSpecs() {
-        if (bundleSpecs == null) {
+        if (this.bundleSpecs == null) {
             // parse header
-            String spec = (String) bundle.getHeaders().get(ASSEMBLY_BUNDLES);
+            String spec = (String) this.bundle.getHeaders().get(ASSEMBLY_BUNDLES);
             if (spec == null) {
                 // this is not expected ...
-                bundleSpecs = new BundleSpec[0];
+                this.bundleSpecs = new BundleSpec[0];
             } else {
                 spec = spec.trim();
                 List specs = new ArrayList();
@@ -366,48 +367,48 @@ class Assembly {
                 if (start < spec.length()) {
                     specs.add(new BundleSpec(spec.substring(start)));
                 }
-                bundleSpecs = (BundleSpec[]) specs.toArray(new BundleSpec[specs.size()]);
+                this.bundleSpecs = (BundleSpec[]) specs.toArray(new BundleSpec[specs.size()]);
             }
         }
 
-        return bundleSpecs;
+        return this.bundleSpecs;
     }
 
     /**
      * Checks whether this assembly is in {@link #STATE_UNINSTALLED} or not.
-     * 
+     *
      * @throws IllegalStateException If this assembly is in the uninstalled
      *             state.
      */
     private void checkUninstalled() {
-        if (state == STATE_UNINSTALLED) {
+        if (this.state == STATE_UNINSTALLED) {
             throw new IllegalStateException("Assembly "
-                + bundle.getSymbolicName() + " is uninstalled");
+                + this.bundle.getSymbolicName() + " is uninstalled");
         }
     }
 
     private void ensureInstalledBundles() {
         // do nothing if already installed, throw if uninstalled
-        checkUninstalled();
-        if (state >= STATE_INSTALLED) {
+        this.checkUninstalled();
+        if (this.state >= STATE_INSTALLED) {
             return;
         }
 
         Map resources = new HashMap();
 
-        Map bundles = getBundles();
-        BundleSpec[] bundleSpecs = getBundleSpecs();
+        Map bundles = this.getBundles();
+        BundleSpec[] bundleSpecs = this.getBundleSpecs();
         for (int i = 0; i < bundleSpecs.length; i++) {
             String loc = bundleSpecs[i].getCommonLocation();
             if (bundles.get(loc) == null) {
-                InstalledBundle ib = manager.getInstalledBundle(loc);
+                InstalledBundle ib = this.manager.getInstalledBundle(loc);
                 if (ib != null) {
                     ib.addReferent(this);
                 } else {
                     // find bundle
-                    Bundle bundle = findBundle(loc);
+                    Bundle bundle = this.findBundle(loc);
                     if (bundle == null) {
-                        bundle = findBundle(bundleSpecs[i].getObrLocation());
+                        bundle = this.findBundle(bundleSpecs[i].getObrLocation());
                     }
                     if (bundle != null) {
                         // check version
@@ -416,14 +417,14 @@ class Assembly {
                         Version v = Version.parseVersion(version);
                         if (!bundleSpecs[i].getVersion().isInRange(v)) {
                             // TODO: have to "reinstall" or "update"
-                            manager.log(LogService.LOG_WARNING, "Bundle "
+                            this.manager.log(LogService.LOG_WARNING, "Bundle "
                                 + bundle.getSymbolicName()
                                 + " has wrong version " + version
                                 + ", expected: " + v);
                         }
                         // claim to be the installer
                         ib = new InstalledBundle(bundleSpecs[i], bundle, this);
-                        manager.putInstalledBundle(loc, ib);
+                        this.manager.putInstalledBundle(loc, ib);
                     } else {
                         resources.put(bundleSpecs[i].getSymbolicName(), bundleSpecs[i]);
                     }
@@ -438,26 +439,26 @@ class Assembly {
 
         // assume all bundles have already been installed, nothing to do
         if (!resources.isEmpty()) {
-            
-            Installer installer = manager.getInstaller();
 
-            addTemporaryRepositories(installer);
+            Installer installer = this.manager.getInstaller();
+
+            this.addTemporaryRepositories(installer);
 
             for (Iterator ei = resources.values().iterator(); ei.hasNext();) {
                 BundleSpec bundleSpec = (BundleSpec) ei.next();
-                bundleSpec.install(bundle, installer);
+                bundleSpec.install(this.bundle, installer);
             }
 
             Bundle[] installedBundles;
             try {
                 installedBundles = installer.install(false);
             } catch (InstallerException ie) {
-                manager.log(LogService.LOG_ERROR, "Failed to install bundles", ie);
+                this.manager.log(LogService.LOG_ERROR, "Failed to install bundles", ie);
                 installedBundles = null;
             } finally {
                 installer.dispose();
             }
-            
+
             // loop through the bundles to find the ones, we have to start as
             // they are indirect dependencies
             for (int i=0; installedBundles != null && i < installedBundles.length; i++) {
@@ -465,46 +466,46 @@ class Assembly {
                 if (bs != null) {
                     // declared bundle, register internally
                     InstalledBundle ib = new InstalledBundle(bs, installedBundles[i], this);
-                    manager.putInstalledBundle(bs.getCommonLocation(), ib);
-                    getBundles().put(bs.getCommonLocation(), ib);
+                    this.manager.putInstalledBundle(bs.getCommonLocation(), ib);
+                    this.getBundles().put(bs.getCommonLocation(), ib);
                 } else {
                     // automatically installed dependency, start here
                     try {
                         installedBundles[i].start();
                     } catch (BundleException be) {
-                        manager.log(LogService.LOG_ERROR, "Failed to start bundle "
+                        this.manager.log(LogService.LOG_ERROR, "Failed to start bundle "
                             + installedBundles[i].getSymbolicName(), be);
                     }
                 }
             }
         }
-        
+
         // mark as installed now
-        state = STATE_INSTALLED;
+        this.state = STATE_INSTALLED;
     }
 
     private void ensureStarted() {
         // do nothing if already started
-        if (state >= STATE_STARTED) {
+        if (this.state >= STATE_STARTED) {
             return;
         }
 
         // make sure we are installed and resolved
-        ensureInstalledBundles();
+        this.ensureInstalledBundles();
 
         // now make sure the bundles are marked started
-        for (Iterator ii = getBundles().values().iterator(); ii.hasNext();) {
+        for (Iterator ii = this.getBundles().values().iterator(); ii.hasNext();) {
             InstalledBundle ib = (InstalledBundle) ii.next();
             if (ib.getBundleSpec().isLinked()) {
                 Bundle bundle = ib.getBundle();
                 if (bundle.getState() == Bundle.UNINSTALLED) {
-                    manager.log(LogService.LOG_ERROR, "Cannot start bundle "
+                    this.manager.log(LogService.LOG_ERROR, "Cannot start bundle "
                         + bundle.getSymbolicName() + ", already uninstalled");
                 } else {
                     try {
                         bundle.start();
                     } catch (BundleException be) {
-                        manager.log(LogService.LOG_ERROR,
+                        this.manager.log(LogService.LOG_ERROR,
                             "Failed to start bundle "
                                 + bundle.getSymbolicName(), be);
                     }
@@ -512,32 +513,32 @@ class Assembly {
             }
         }
 
-        state = STATE_STARTED;
+        this.state = STATE_STARTED;
     }
 
     private void ensureStopped() {
         // make sure this is not unsinstalled
-        checkUninstalled();
+        this.checkUninstalled();
 
         // already stopped (or never started)
-        if (state < STATE_STARTED) {
+        if (this.state < STATE_STARTED) {
             return;
         }
 
         // now make sure the bundles are marked started
-        for (Iterator ii = getBundles().values().iterator(); ii.hasNext();) {
+        for (Iterator ii = this.getBundles().values().iterator(); ii.hasNext();) {
             InstalledBundle ib = (InstalledBundle) ii.next();
             if (ib.getBundleSpec().isLinked()) {
                 Bundle bundle = ib.getBundle();
 
                 if (bundle.getState() == Bundle.UNINSTALLED) {
-                    manager.log(LogService.LOG_INFO, "Bundle "
+                    this.manager.log(LogService.LOG_INFO, "Bundle "
                         + bundle.getSymbolicName() + " already uninstalled");
                 } else {
                     try {
                         bundle.stop();
                     } catch (BundleException be) {
-                        manager.log(
+                        this.manager.log(
                             LogService.LOG_ERROR,
                             "Failed to stop bundle " + bundle.getSymbolicName(),
                             be);
@@ -546,17 +547,17 @@ class Assembly {
             }
         }
 
-        state = STATE_INSTALLED;
+        this.state = STATE_INSTALLED;
     }
 
     private void ensureUninstalled() {
         // already uninstalled
-        if (state == STATE_UNINSTALLED) {
+        if (this.state == STATE_UNINSTALLED) {
             return;
         }
 
         // directly uninstall, not needed to go by stopped/unresolved
-        for (Iterator bi = getBundles().values().iterator(); bi.hasNext();) {
+        for (Iterator bi = this.getBundles().values().iterator(); bi.hasNext();) {
             InstalledBundle ib = (InstalledBundle) bi.next();
 
             ib.removeReferent(this);
@@ -564,29 +565,29 @@ class Assembly {
 
             if (!ib.isReferredTo()) {
                 if (ib.getBundle().getState() == Bundle.UNINSTALLED) {
-                    manager.log(LogService.LOG_INFO, "Bundle "
+                    this.manager.log(LogService.LOG_INFO, "Bundle "
                         + ib.getBundle().getSymbolicName()
                         + " already uninstalled");
                 } else {
                     try {
                         ib.getBundle().uninstall();
                     } catch (BundleException be) {
-                        manager.log(LogService.LOG_ERROR,
+                        this.manager.log(LogService.LOG_ERROR,
                             "Failed to uninstall bundle "
                                 + ib.getBundle().getSymbolicName(), be);
                     }
                 }
 
                 // remove from the manager
-                manager.removeInstalledBundle(ib.getBundleSpec().getCommonLocation());
+                this.manager.removeInstalledBundle(ib.getBundleSpec().getCommonLocation());
             }
         }
 
-        state = STATE_UNINSTALLED;
+        this.state = STATE_UNINSTALLED;
     }
 
     private void addTemporaryRepositories(Installer installer) {
-        String obrList = (String) bundle.getHeaders().get(ASSEMBLY_BUNDLEREPOSITORY);
+        String obrList = (String) this.bundle.getHeaders().get(ASSEMBLY_BUNDLEREPOSITORY);
         if (obrList != null && obrList.length() > 0
                 && !ASSEMBLY_BUNDLEREPOSITORY_OBR.equals(obrList)
                 && !ASSEMBLY_BUNDLEREPOSITORY_EMBEDDED.equals(obrList)) {
@@ -597,7 +598,7 @@ class Assembly {
                     try {
                         installer.addTemporaryRepository(new URL(token));
                     } catch (Exception mue) {
-                        manager.log(LogService.LOG_WARNING, "Invalid URL "
+                        this.manager.log(LogService.LOG_WARNING, "Invalid URL "
                             + obrList + ", trying without");
                     }
                 }
@@ -606,15 +607,15 @@ class Assembly {
     }
 
     private Map getBundles() {
-        if (bundles == null) {
-            bundles = new HashMap();
+        if (this.bundles == null) {
+            this.bundles = new HashMap();
         }
 
-        return bundles;
+        return this.bundles;
     }
 
     private Bundle[] getInstalledBundles() {
-        Map bundles = getBundles();
+        Map bundles = this.getBundles();
         Bundle[] installedBundles = new Bundle[bundles.size()];
         int i = 0;
         for (Iterator bi = bundles.values().iterator(); bi.hasNext();) {
@@ -624,7 +625,7 @@ class Assembly {
     }
 
     private Bundle findBundle(String loc) {
-        Bundle[] bundles = manager.getBundleContext().getBundles();
+        Bundle[] bundles = this.manager.getBundleContext().getBundles();
         for (int i = 0; i < bundles.length; i++) {
             if (bundles[i].getLocation().startsWith(loc)) {
                 return bundles[i];

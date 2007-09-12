@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,16 +30,16 @@ import org.osgi.framework.Bundle;
  * in the Assembly Bundle's <code>Assembly-Bundles</code> manifest header.
  * This header is specified to be formatted according to the following
  * productions:
- * 
+ *
  * <pre>
  *                  AssemblyBundles = &quot;Assembly-Bundles:&quot; BundleList .
  *                  BundleList = BundleSpec { &quot;,&quot; BundleSpec } .
  *                  BundleSpec = SymbolicName { &quot;;&quot; Parameter } .
  *                  Parameter = ParameterName &quot;=&quot; ParameterValue .
  *                  ParameterName = &quot;version&quot; | &quot;startlevel&quot; | &quot;linked&quot; .
- *                  ParameterValue = // depending on ParameterName 
+ *                  ParameterValue = // depending on ParameterName
  * </pre>
- * 
+ *
  * <p>
  * Note that the <code>ParameterValue</code> must be eclosed in double-quotes
  * if the value contains a comma or semi-colon.
@@ -121,7 +122,7 @@ class BundleSpec {
      * <code>null</code> the bundle will be installed from an OSGi repository.
      */
     private String entry;
-    
+
     /**
      * Whether the bundle is started and stopped when the Assembly Bundle is
      * started and stopped. Default value is <code>true</code>.
@@ -140,7 +141,7 @@ class BundleSpec {
      * Creates an instance of this class setting fields from the
      * <code>bundleSpec</code> string as specified with the
      * <code>BundleSpec</code> production above.
-     * 
+     *
      * @param bundleSpec The bundle specification string as defined above.
      * @throws IllegalArgumentException If the <code>bundleSpec</code> is
      *             empty or the symbolic name is not a valid symbolic name.
@@ -154,7 +155,7 @@ class BundleSpec {
                 + bundleSpec);
         }
 
-        symbolicName = checkSymbolicName(tokener.nextToken().trim());
+        this.symbolicName = this.checkSymbolicName(tokener.nextToken().trim());
 
         while (tokener.hasMoreTokens()) {
             String parm = tokener.nextToken().trim();
@@ -165,10 +166,10 @@ class BundleSpec {
             }
 
             String name = parm.substring(0, eq);
-            String value = unquote(parm.substring(eq + 1));
+            String value = this.unquote(parm.substring(eq + 1));
 
             if ("version".equals(name)) {
-                version = new VersionRange(value);
+                this.version = new VersionRange(value);
 
             } else if ("startlevel".equals(name)) {
                 try {
@@ -181,9 +182,9 @@ class BundleSpec {
                 }
 
             } else if ("entry".equals(name)) {
-                entry = value;
+                this.entry = value;
             } else if ("linked".equals(name)) {
-                linked = Boolean.valueOf(value).booleanValue();
+                this.linked = Boolean.valueOf(value).booleanValue();
             }
         }
     }
@@ -192,14 +193,14 @@ class BundleSpec {
      * Returns the symbolic name of this bundle specification.
      */
     public String getSymbolicName() {
-        return symbolicName;
+        return this.symbolicName;
     }
 
     /**
      * Returns the version requirement of this bundle specification.
      */
     public VersionRange getVersion() {
-        return version;
+        return this.version;
     }
 
     /**
@@ -207,7 +208,7 @@ class BundleSpec {
      * bundle start level from the StartLevel service.
      */
     public int getStartLevel() {
-        return startLevel;
+        return this.startLevel;
     }
 
     /**
@@ -215,16 +216,16 @@ class BundleSpec {
      * empty, the bundle is to be installed from an OSGi Bundle Repository.
      */
     public String getEntry() {
-        return entry;
+        return this.entry;
     }
-    
+
     /**
      * Returns <code>true</code> if the bundle is to be started and stopped
      * when the Assembly Bundle to which the bundle belongs is started and
      * stopped.
      */
     public boolean isLinked() {
-        return linked;
+        return this.linked;
     }
 
     /**
@@ -234,15 +235,15 @@ class BundleSpec {
      * <p>
      * This common loction is appended an installation timestamp to create a
      * truly unique location name.
-     * 
+     *
      * @return The bundle location URL prefix
      */
     public String getCommonLocation() {
-        if (commonLocation == null) {
-            commonLocation = LOCATION_SCHEME + getSymbolicName() + "/";
+        if (this.commonLocation == null) {
+            this.commonLocation = LOCATION_SCHEME + this.getSymbolicName() + "/";
         }
 
-        return commonLocation;
+        return this.commonLocation;
     }
 
     /**
@@ -250,12 +251,12 @@ class BundleSpec {
      * Felix Bundle Repository bundle. All bundles installed through the Felix
      * Bunlde Repository bundle from an OSGi Bundle Repository are given a
      * location starting with this OBR location.
-     * 
+     *
      * @return The bundle location URL prefix for bundles installed from an OSGi
      *         bundle repository by the Felix Bundle Repository bundle.
      */
     public String getObrLocation() {
-        return LOCATION_SCHEME_OBR + getSymbolicName() + "/";
+        return LOCATION_SCHEME_OBR + this.getSymbolicName() + "/";
     }
 
     /**
@@ -264,20 +265,20 @@ class BundleSpec {
      * <code>null</code> or the <code>assemblyBundle</code> contains no such
      * entry, the bundle is to be installed from the repository. Otherwise, the
      * bundle data will be extracted from the <code>assemblyBundle</code>.
-     * 
+     *
      * @param assemblyBundle The <code>Bundle</code> providing the bundle
      *      data for this bundle to install.
      * @param installer The {@link Installer} to which this bundle is added
      *      for installation.
      */
     void install(Bundle assemblyBundle, Installer installer) {
-        if (getEntry() != null && getEntry().length() > 0) {
+        if (this.getEntry() != null && this.getEntry().length() > 0) {
             // try installation from assembly bundle
-            URL bundleEntry = assemblyBundle.getEntry(getEntry());
+            URL bundleEntry = assemblyBundle.getEntry(this.getEntry());
             if (bundleEntry != null) {
-                String location = getCommonLocation()
+                String location = this.getCommonLocation()
                     + System.currentTimeMillis();
-                installer.addBundle(location, bundleEntry, getStartLevel());
+                installer.addBundle(location, bundleEntry, this.getStartLevel());
                 return;
 
                 // } else {
@@ -288,9 +289,9 @@ class BundleSpec {
         }
 
         // fall back to installation from OBR
-        installer.addBundle(getSymbolicName(), getVersion(), getStartLevel());
+        installer.addBundle(this.getSymbolicName(), this.getVersion(), this.getStartLevel());
     }
-    
+
     /**
      * Returns an LDAP filter according to the Filter Syntax specified in
      * section 3.2.6 of the OSGi Service Platform R4 specification. The filter
@@ -299,12 +300,12 @@ class BundleSpec {
      * Bundle Repository.
      */
     public String toFilter() {
-        if (version == null || VersionRange.DEFAULT.equals(version)) {
-            return "(symbolicname=" + getSymbolicName() + ")";
+        if (this.version == null || VersionRange.DEFAULT.equals(this.version)) {
+            return "(symbolicname=" + this.getSymbolicName() + ")";
         }
 
-        return "(&(symbolicname=" + getSymbolicName() + ")"
-            + getVersion().getFilter() + ")";
+        return "(&(symbolicname=" + this.getSymbolicName() + ")"
+            + this.getVersion().getFilter() + ")";
     }
 
     /**
@@ -312,13 +313,13 @@ class BundleSpec {
      * name and the version specification.
      */
     public String toString() {
-        return "Bundle " + getSymbolicName() + ", " + version;
+        return "Bundle " + this.getSymbolicName() + ", " + this.version;
     }
 
     /**
      * Checks whether the <code>symbolicName</code> is not empty and conforms
      * to the {@link #SYMBOLICNAME symbolic name regular expression}.
-     * 
+     *
      * @param symbolicName The symbolic name to check.
      * @return The valid symbolic name.
      * @throws IllegalArgumentException If the symbolic name is not valid.
@@ -341,9 +342,9 @@ class BundleSpec {
      * Removes any leading and trailing double-quotes from the
      * <code>value</code> and returns the modified (or unmodified if no
      * double-quotes had to be removed) value.
-     * 
+     *
      * @param value The value to unquote.
-     * 
+     *
      * @return The unquoted value.
      */
     private String unquote(String value) {

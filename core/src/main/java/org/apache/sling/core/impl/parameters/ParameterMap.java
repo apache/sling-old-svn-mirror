@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.parameters;
 
@@ -37,32 +40,32 @@ class ParameterMap implements Map {
     }
 
     void renameParameter(Object oldName, Object newName) {
-        Object params = delegatee.remove(oldName);
-        delegatee.put(newName, params);
+        Object params = this.delegatee.remove(oldName);
+        this.delegatee.put(newName, params);
     }
-    
+
     void addParameter(Object name, RequestParameter parameter) {
-        Object current = get(name);
+        Object current = this.get(name);
         if (current == null) {
-            delegatee.put(name, new RequestParameter[] { parameter });
+            this.delegatee.put(name, new RequestParameter[] { parameter });
         } else {
             RequestParameter[] ppo = (RequestParameter[]) current;
             RequestParameter[] ppn = new RequestParameter[ppo.length+1];
             System.arraycopy(ppo, 0, ppn, 0, ppo.length);
             ppn[ppo.length] = parameter;
 
-            delegatee.put(name, ppn);
+            this.delegatee.put(name, ppn);
         }
     }
 
     void setParameters(Object name, Object parameters) {
-        delegatee.put(name, parameters);
+        this.delegatee.put(name, parameters);
     }
 
     Map getStringParameterMap() {
-        if (stringParameterMap == null) {
+        if (this.stringParameterMap == null) {
             Map pm = new HashMap();
-            for (Iterator pi = entrySet().iterator(); pi.hasNext();) {
+            for (Iterator pi = this.entrySet().iterator(); pi.hasNext();) {
                 Map.Entry ppmEntry = (Map.Entry) pi.next();
                 RequestParameter[] pps = (RequestParameter[]) ppmEntry.getValue();
                 String[] ps = new String[pps.length];
@@ -71,11 +74,11 @@ class ParameterMap implements Map {
                 }
                 pm.put(ppmEntry.getKey(), ps);
             }
-            stringParameterMap = Collections.unmodifiableMap(pm);
+            this.stringParameterMap = Collections.unmodifiableMap(pm);
         }
-        return stringParameterMap;
+        return this.stringParameterMap;
     }
-    
+
     // ---------- Stanard Map interface ----------------------------------------
 
     /**
@@ -84,7 +87,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#containsKey(java.lang.Object)
      */
     public boolean containsKey(Object key) {
-        return delegatee.containsKey(key);
+        return this.delegatee.containsKey(key);
     }
 
     /**
@@ -93,7 +96,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#containsValue(java.lang.Object)
      */
     public boolean containsValue(Object value) {
-        return delegatee.containsValue(value);
+        return this.delegatee.containsValue(value);
     }
 
     /**
@@ -101,7 +104,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#entrySet()
      */
     public Set entrySet() {
-        return delegatee.entrySet();
+        return this.delegatee.entrySet();
     }
 
     /**
@@ -110,7 +113,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#get(java.lang.Object)
      */
     public Object get(Object key) {
-        return delegatee.get(key);
+        return this.delegatee.get(key);
     }
 
     /**
@@ -118,7 +121,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#isEmpty()
      */
     public boolean isEmpty() {
-        return delegatee.isEmpty();
+        return this.delegatee.isEmpty();
     }
 
     /**
@@ -126,7 +129,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#keySet()
      */
     public Set keySet() {
-        return delegatee.keySet();
+        return this.delegatee.keySet();
     }
 
     /**
@@ -134,7 +137,7 @@ class ParameterMap implements Map {
      * @see java.util.Map#size()
      */
     public int size() {
-        return delegatee.size();
+        return this.delegatee.size();
     }
 
     /**
@@ -142,14 +145,14 @@ class ParameterMap implements Map {
      * @see java.util.Map#values()
      */
     public Collection values() {
-        return delegatee.values();
+        return this.delegatee.values();
     }
 
     // ---------- Prohibited Write Access --------------------------------------
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Map#clear()
      */
     public void clear() {
@@ -158,7 +161,7 @@ class ParameterMap implements Map {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
     public Object put(Object key, Object value) {
@@ -167,7 +170,7 @@ class ParameterMap implements Map {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Map#putAll(java.util.Map)
      */
     public void putAll(Map t) {
@@ -176,7 +179,7 @@ class ParameterMap implements Map {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.util.Map#remove(java.lang.Object)
      */
     public Object remove(Object key) {

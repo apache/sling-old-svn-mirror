@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -109,7 +110,7 @@ public class AssemblyManager implements Runnable {
      * Creates the Assembly Manager using the <code>BundleContext</code> to
      * access foreign service from the framework. To activate the Assembly
      * Manager, the {@link #start()} method must be called.
-     * 
+     *
      * @param context The <code>BundleContext</code> of the bundle to which
      *            this Assembly Manager belongs.
      */
@@ -117,9 +118,9 @@ public class AssemblyManager implements Runnable {
         this.context = context;
         this.installerService = installerService;
 
-        startLevelTracker = new ServiceTracker(context,
+        this.startLevelTracker = new ServiceTracker(context,
             StartLevel.class.getName(), null);
-        logServiceTracker = new ServiceTracker(context,
+        this.logServiceTracker = new ServiceTracker(context,
             LogService.class.getName(), null);
     }
 
@@ -129,13 +130,13 @@ public class AssemblyManager implements Runnable {
      * bundle events.
      */
     void start() {
-        startLevelTracker.open();
-        logServiceTracker.open();
+        this.startLevelTracker.open();
+        this.logServiceTracker.open();
 
         // block queue while we fill it with initial events
-        synchronized (queue) {
+        synchronized (this.queue) {
             // handle existing bundles
-            Bundle[] bundles = context.getBundles();
+            Bundle[] bundles = this.context.getBundles();
             for (int i = 0; i < bundles.length; i++) {
                 Bundle bundle = bundles[i];
 
@@ -146,28 +147,28 @@ public class AssemblyManager implements Runnable {
 
                 switch (bundle.getState()) {
                     case Bundle.INSTALLED:
-                        put(new BundleEvent(BundleEvent.INSTALLED, bundle));
+                        this.put(new BundleEvent(BundleEvent.INSTALLED, bundle));
                         break;
 
                     case Bundle.RESOLVED:
-                        put(new BundleEvent(BundleEvent.RESOLVED, bundle));
+                        this.put(new BundleEvent(BundleEvent.RESOLVED, bundle));
                         break;
 
                     case Bundle.ACTIVE:
-                        put(new BundleEvent(BundleEvent.STARTED, bundle));
+                        this.put(new BundleEvent(BundleEvent.STARTED, bundle));
                         break;
 
                     case Bundle.UNINSTALLED:
-                        put(new BundleEvent(BundleEvent.UNINSTALLED, bundle));
+                        this.put(new BundleEvent(BundleEvent.UNINSTALLED, bundle));
                         break;
                 }
             }
         }
 
         // queue is unblocked now, start the thread now
-        if (queueHandler == null) {
-            queueHandler = new Thread(this, "AssemblyManager Queue Handler");
-            queueHandler.start();
+        if (this.queueHandler == null) {
+            this.queueHandler = new Thread(this, "AssemblyManager Queue Handler");
+            this.queueHandler.start();
         }
     }
 
@@ -177,29 +178,29 @@ public class AssemblyManager implements Runnable {
      */
     void stop() {
         // not started, don't do anything
-        if (queueHandler == null) {
+        if (this.queueHandler == null) {
             return;
         }
 
         // Append a pseudo event terminating the event handling loop
-        put(new BundleEvent(TERMINATION_EVENT, context.getBundle()));
+        this.put(new BundleEvent(TERMINATION_EVENT, this.context.getBundle()));
 
         try {
             // wait at most 10 seconds for the thread to terminate
-            queueHandler.join(10L * 1000L);
+            this.queueHandler.join(10L * 1000L);
         } catch (InterruptedException ie) {
-            log(LogService.LOG_DEBUG,
+            this.log(LogService.LOG_DEBUG,
                 "Interrupted waiting for queue handler to terminate", ie);
         }
 
-        if (queueHandler.isAlive()) {
-            log(LogService.LOG_ERROR, "Queue handler is still alive !");
+        if (this.queueHandler.isAlive()) {
+            this.log(LogService.LOG_ERROR, "Queue handler is still alive !");
         }
 
-        queueHandler = null;
+        this.queueHandler = null;
 
-        startLevelTracker.close();
-        logServiceTracker.close();
+        this.startLevelTracker.close();
+        this.logServiceTracker.close();
     }
 
     // ---------- Runnable -----------------------------------------------------
@@ -210,7 +211,7 @@ public class AssemblyManager implements Runnable {
      */
     public void run() {
         for (;;) {
-            BundleEvent event = take();
+            BundleEvent event = this.take();
 
             // terminate thread if no event or event has no bundle
             if (event.getType() == TERMINATION_EVENT) {
@@ -219,14 +220,14 @@ public class AssemblyManager implements Runnable {
 
             // handle the event
             try {
-                handleEvent(event.getType(), event.getBundle());
+                this.handleEvent(event.getType(), event.getBundle());
             } catch (IllegalStateException ise) {
                 // bundle has already been uninstalled
-                log(LogService.LOG_ERROR, "Cannot handle event: "
+                this.log(LogService.LOG_ERROR, "Cannot handle event: "
                     + ise.getMessage());
             } catch (Throwable t) {
                 // unexpected !
-                log(LogService.LOG_ERROR, "Problem handling event "
+                this.log(LogService.LOG_ERROR, "Problem handling event "
                     + event.getType() + " for bundle "
                     + event.getBundle().getSymbolicName(), t);
             }
@@ -245,9 +246,9 @@ public class AssemblyManager implements Runnable {
      */
     void put(BundleEvent event) {
         if (event != null) {
-            synchronized (queue) {
-                queue.addLast(event);
-                queue.notifyAll();
+            synchronized (this.queue) {
+                this.queue.addLast(event);
+                this.queue.notifyAll();
             }
         }
     }
@@ -260,16 +261,16 @@ public class AssemblyManager implements Runnable {
      * This method is only used internally by the {@link #run()} method.
      */
     private BundleEvent take() {
-        synchronized (queue) {
-            while (queue.isEmpty()) {
+        synchronized (this.queue) {
+            while (this.queue.isEmpty()) {
                 try {
-                    queue.wait();
+                    this.queue.wait();
                 } catch (InterruptedException ie) {
                     // ignore
                 }
             }
 
-            return (BundleEvent) queue.removeFirst();
+            return (BundleEvent) this.queue.removeFirst();
         }
     }
 
@@ -283,20 +284,20 @@ public class AssemblyManager implements Runnable {
         // handle the bundle
         switch (type) {
             case BundleEvent.INSTALLED:
-                getOrCreateAssembly(bundle).install();
+                this.getOrCreateAssembly(bundle).install();
                 break;
             case BundleEvent.STARTED:
-                getOrCreateAssembly(bundle).start();
+                this.getOrCreateAssembly(bundle).start();
                 break;
             case BundleEvent.STOPPED:
-                getOrCreateAssembly(bundle).stop();
+                this.getOrCreateAssembly(bundle).stop();
                 break;
             case BundleEvent.UNINSTALLED:
-                getOrCreateAssembly(bundle).uninstall();
-                removeAssembly(bundle);
+                this.getOrCreateAssembly(bundle).uninstall();
+                this.removeAssembly(bundle);
                 break;
             case BundleEvent.UPDATED:
-                getOrCreateAssembly(bundle).update();
+                this.getOrCreateAssembly(bundle).update();
                 break;
             default:
                 // don't care
@@ -308,25 +309,25 @@ public class AssemblyManager implements Runnable {
     // ---------- InstalledBundle registry -------------------------------------
 
     InstalledBundle putInstalledBundle(String key, InstalledBundle bundle) {
-        return (InstalledBundle) installedBundles.put(key, bundle);
+        return (InstalledBundle) this.installedBundles.put(key, bundle);
     }
 
     InstalledBundle getInstalledBundle(String key) {
-        return (InstalledBundle) installedBundles.get(key);
+        return (InstalledBundle) this.installedBundles.get(key);
     }
 
     InstalledBundle removeInstalledBundle(String key) {
-        return (InstalledBundle) installedBundles.remove(key);
+        return (InstalledBundle) this.installedBundles.remove(key);
     }
 
     // ---------- internal helpers ---------------------------------------------
 
     void log(int level, String message) {
-        log(level, message, null);
+        this.log(level, message, null);
     }
 
     void log(int level, String message, Throwable exception) {
-        LogService log = (LogService) logServiceTracker.getService();
+        LogService log = (LogService) this.logServiceTracker.getService();
         if (log == null) {
             String prefix = new Date() + " ";
             if (level >= 0 && level < LOG_FLAGS.length) {
@@ -354,23 +355,23 @@ public class AssemblyManager implements Runnable {
     // ---------- internal helpers ---------------------------------------------
 
     private Assembly getOrCreateAssembly(Bundle bundle) {
-        Assembly assembly = (Assembly) assemblies.get(bundle.getLocation());
+        Assembly assembly = (Assembly) this.assemblies.get(bundle.getLocation());
         if (assembly == null) {
             assembly = new Assembly(this, bundle);
-            assemblies.put(bundle.getLocation(), assembly);
+            this.assemblies.put(bundle.getLocation(), assembly);
         }
         return assembly;
     }
 
     private void removeAssembly(Bundle bundle) {
-        assemblies.remove(bundle.getLocation());
+        this.assemblies.remove(bundle.getLocation());
     }
 
     /**
      * Returns the <code>BundleContext</code> of the Assembly Manager bundle.
      */
     BundleContext getBundleContext() {
-        return context;
+        return this.context;
     }
 
     /**
@@ -378,7 +379,7 @@ public class AssemblyManager implements Runnable {
      * is available.
      */
     StartLevel getStartLevel() {
-        return (StartLevel) startLevelTracker.getService();
+        return (StartLevel) this.startLevelTracker.getService();
     }
 
     /**
@@ -386,6 +387,6 @@ public class AssemblyManager implements Runnable {
      * installer returned is not thread safe.
      */
     Installer getInstaller() {
-        return installerService.getInstaller();
+        return this.installerService.getInstaller();
     }
 }

@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.mapper;
 
@@ -75,13 +78,13 @@ public class Mapping {
     public Mapping(String from, String to) {
         this(from, to, Mapping.BOTH);
     }
-    
+
     Mapping(String[] parts) {
         this.from = parts[0];
         this.to = parts[2];
-        this.fromLength = from.length();
-        this.toLength = to.length();
-        
+        this.fromLength = this.from.length();
+        this.toLength = this.to.length();
+
         this.direction = ">".equals(parts[1])
                 ? Mapping.INBOUND
                 : ("<".equals(parts[1]) ? Mapping.OUTBOUND : Mapping.BOTH);
@@ -102,8 +105,8 @@ public class Mapping {
      *         or {@link #mapsInwards} returns <code>false</code>.
      */
     public String mapUri(String uriPath) {
-        return (mapsInwards() && uriPath.startsWith(to))
-                  ? from + uriPath.substring(toLength)
+        return (this.mapsInwards() && uriPath.startsWith(this.to))
+                  ? this.from + uriPath.substring(this.toLength)
                   : null;
     }
 
@@ -122,8 +125,8 @@ public class Mapping {
      *         or {@link #mapsOutwards} returns <code>false</code>.
      */
     public String mapHandle(String handle) {
-        return (mapsOutwards() && handle.startsWith(from))
-                    ? to + handle.substring(fromLength)
+        return (this.mapsOutwards() && handle.startsWith(this.from))
+                    ? this.to + handle.substring(this.fromLength)
                     : null;
     }
 
@@ -133,7 +136,7 @@ public class Mapping {
      *         <code>false</code> otherwise
      */
     public boolean mapsInwards() {
-        return (direction & Mapping.INBOUND) > 0;
+        return (this.direction & Mapping.INBOUND) > 0;
     }
 
     /**
@@ -142,7 +145,7 @@ public class Mapping {
      *         <code>false</code> otherwise
      */
     public boolean mapsOutwards() {
-        return (direction & Mapping.OUTBOUND) > 0;
+        return (this.direction & Mapping.OUTBOUND) > 0;
     }
 
 

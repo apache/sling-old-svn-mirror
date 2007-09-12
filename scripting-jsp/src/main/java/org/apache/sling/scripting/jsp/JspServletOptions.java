@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,366 +32,366 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class to hold all init parameters specific to the JSP engine. 
+ * A class to hold all init parameters specific to the JSP engine.
  */
 public class JspServletOptions implements Options {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspServletOptions.class);
-    
+
     /** Default source and target VM version (value is "1.4"). */
     private static final String DEFAULT_VM_VERSION = "1.4";
-    
+
     private Properties settings = new Properties();
-    
+
     /**
      * Is Jasper being used in development mode?
      */
     private boolean development = true;
-    
+
     /**
      * Should Ant fork its java compiles of JSP pages.
      */
     public boolean fork = true;
-    
+
     /**
      * Do you want to keep the generated Java files around?
      */
     private boolean keepGenerated = true;
-    
+
     /**
      * Should white spaces between directives or actions be trimmed?
      */
     private boolean trimSpaces = false;
-    
+
     /**
      * Determines whether tag handler pooling is enabled.
      */
     private boolean isPoolingEnabled = true;
-    
+
     /**
      * Do you want support for "mapped" files? This will generate
      * servlet that has a print statement per line of the JSP file.
      * This seems like a really nice feature to have for debugging.
      */
     private boolean mappedFile = true;
-    
+
     /**
      * Do you want stack traces and such displayed in the client's
      * browser? If this is false, such messages go to the standard
-     * error or a log file if the standard error is redirected. 
+     * error or a log file if the standard error is redirected.
      */
     private boolean sendErrorToClient = false;
-    
+
     /**
      * Do we want to include debugging information in the class file?
      */
     private boolean classDebugInfo = true;
-    
+
     /**
      * Background compile thread check interval in seconds.
      */
     private int checkInterval = 0;
-    
+
     /**
      * Is the generation of SMAP info for JSR45 debuggin suppressed?
      */
     private boolean isSmapSuppressed = false;
-    
+
     /**
      * Should SMAP info for JSR45 debugging be dumped to a file?
      */
     private boolean isSmapDumped = false;
-    
+
     /**
      * Are Text strings to be generated as char arrays?
      */
     private boolean genStringAsCharArray = false;
-    
+
     private boolean errorOnUseBeanInvalidClassAttribute = true;
-    
+
     /**
      * I want to see my generated servlets. Which directory are they
      * in?
      */
     private String scratchDir;
-    
+
     /**
      * Need to have this as is for versions 4 and 5 of IE. Can be set from
      * the initParams so if it changes in the future all that is needed is
      * to have a jsp initParam of type ieClassId="<value>"
      */
     private String ieClassId = "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93";
-    
+
     /**
      * What classpath should I use while compiling generated servlets?
      */
     private String classpath = null;
-    
+
     /**
      * Compiler to use.
      */
     private String compiler = null;
-    
+
     /**
      * Compiler target VM.
      */
     private String compilerTargetVM = DEFAULT_VM_VERSION;
-    
+
     /**
      * The compiler source VM.
      */
     private String compilerSourceVM = DEFAULT_VM_VERSION;
-    
+
     /**
      * Cache for the TLD locations
      */
     private TldLocationsCache tldLocationsCache = null;
-    
+
     /**
      * Jsp config information
      */
     private JspConfig jspConfig = null;
-    
+
     /**
      * TagPluginManager
      */
     private TagPluginManager tagPluginManager = null;
-    
+
     /**
      * Java platform encoding to generate the JSP
      * page servlet.
      */
     private String javaEncoding = "UTF8";
-    
+
     /**
      * Modification test interval.
      */
     private int modificationTestInterval = -1;
-    
+
     /**
      * The class loader to use to compile and load JSP files
      */
     private ClassLoader jspClassLoader;
-    
+
     /**
      * Is generation of X-Powered-By response header enabled/disabled?
      */
     private boolean xpoweredBy;
-    
+
     public String getProperty(String name ) {
-        return settings.getProperty( name );
+        return this.settings.getProperty( name );
     }
-    
+
     public void setProperty(String name, String value ) {
-        if (name != null && value != null){ 
-            settings.setProperty( name, value );
+        if (name != null && value != null){
+            this.settings.setProperty( name, value );
         }
     }
-    
+
     /**
      * Are we keeping generated code around?
      */
     public boolean getKeepGenerated() {
-        return keepGenerated;
+        return this.keepGenerated;
     }
-    
+
     /**
      * Should white spaces between directives or actions be trimmed?
      */
     public boolean getTrimSpaces() {
-        return trimSpaces;
+        return this.trimSpaces;
     }
-    
+
     public boolean isPoolingEnabled() {
-        return isPoolingEnabled;
+        return this.isPoolingEnabled;
     }
-    
+
     /**
      * Are we supporting HTML mapped servlets?
      */
     public boolean getMappedFile() {
-        return mappedFile;
+        return this.mappedFile;
     }
-    
+
     /**
      * Should errors be sent to client or thrown into stderr?
      */
     public boolean getSendErrorToClient() {
-        return sendErrorToClient;
+        return this.sendErrorToClient;
     }
-    
+
     /**
      * Should class files be compiled with debug information?
      */
     public boolean getClassDebugInfo() {
-        return classDebugInfo;
+        return this.classDebugInfo;
     }
-    
+
     /**
      * Background JSP compile thread check intervall
      */
     public int getCheckInterval() {
-        return checkInterval;
+        return this.checkInterval;
     }
-    
+
     /**
      * Modification test interval.
      */
     public int getModificationTestInterval() {
-        return modificationTestInterval;
+        return this.modificationTestInterval;
     }
-    
+
     /**
      * Is Jasper being used in development mode?
      */
     public boolean getDevelopment() {
-        return development;
+        return this.development;
     }
-    
+
     /**
      * Is the generation of SMAP info for JSR45 debuggin suppressed?
      */
     public boolean isSmapSuppressed() {
-        return isSmapSuppressed;
+        return this.isSmapSuppressed;
     }
-    
+
     /**
      * Should SMAP info for JSR45 debugging be dumped to a file?
      */
     public boolean isSmapDumped() {
-        return isSmapDumped;
+        return this.isSmapDumped;
     }
-    
+
     /**
      * Are Text strings to be generated as char arrays?
      */
     public boolean genStringAsCharArray() {
         return this.genStringAsCharArray;
     }
-    
+
     /**
-     * Class ID for use in the plugin tag when the browser is IE. 
+     * Class ID for use in the plugin tag when the browser is IE.
      */
     public String getIeClassId() {
-        return ieClassId;
+        return this.ieClassId;
     }
-    
+
     /**
      * What is my scratch dir?
      */
     public String getScratchDir() {
-        return scratchDir;
+        return this.scratchDir;
     }
-    
+
     /**
      * What classpath should I use while compiling the servlets
      * generated from JSP files?
      */
     public String getClassPath() {
-        return classpath;
+        return this.classpath;
     }
-    
+
     /**
      * Return <code>null</code> to force use of the <code>JasperLoader</code>.
      */
     public ClassLoader getJspClassLoader() {
-        return jspClassLoader;
+        return this.jspClassLoader;
     }
-    
+
     /**
      * Is generation of X-Powered-By response header enabled/disabled?
      */
     public boolean isXpoweredBy() {
-        return xpoweredBy;
+        return this.xpoweredBy;
     }
-    
+
     /**
      * Compiler to use.
      */
     public String getCompiler() {
-        return compiler;
+        return this.compiler;
     }
-    
+
     /**
      * @see Options#getCompilerTargetVM
      */
     public String getCompilerTargetVM() {
-        return compilerTargetVM;
+        return this.compilerTargetVM;
     }
-    
+
     /**
      * @see Options#getCompilerSourceVM
      */
     public String getCompilerSourceVM() {
-        return compilerSourceVM;
+        return this.compilerSourceVM;
     }
-    
+
     public boolean getErrorOnUseBeanInvalidClassAttribute() {
-        return errorOnUseBeanInvalidClassAttribute;
+        return this.errorOnUseBeanInvalidClassAttribute;
     }
-    
+
     public void setErrorOnUseBeanInvalidClassAttribute(boolean b) {
-        errorOnUseBeanInvalidClassAttribute = b;
+        this.errorOnUseBeanInvalidClassAttribute = b;
     }
-    
+
     public TldLocationsCache getTldLocationsCache() {
-        return tldLocationsCache;
+        return this.tldLocationsCache;
     }
-    
+
     public void setTldLocationsCache( TldLocationsCache tldC ) {
-        tldLocationsCache = tldC;
+        this.tldLocationsCache = tldC;
     }
-    
+
     public String getJavaEncoding() {
-        return javaEncoding;
+        return this.javaEncoding;
     }
-    
+
     public boolean getFork() {
-        return fork;
+        return this.fork;
     }
-    
+
     public JspConfig getJspConfig() {
-        return jspConfig;
+        return this.jspConfig;
     }
-    
+
     public TagPluginManager getTagPluginManager() {
-        return tagPluginManager;
+        return this.tagPluginManager;
     }
-    
+
     public boolean isCaching() {
         return false;
     }
-    
+
     public Map getCache() {
         return null;
     }
 
     /**
      * Create an JspServletOptions object using data available from
-     * ServletConfig and ServletContext. 
+     * ServletConfig and ServletContext.
      */
     public JspServletOptions(ServletConfig config,
             OutputProvider outputProvider, ClassLoader jspClassLoader,
             TldLocationsCache tldLocationsCache) {
-        
+
         this.jspClassLoader = jspClassLoader;
-        
+
         // JVM version numbers default to 1.4
-        compilerSourceVM = DEFAULT_VM_VERSION;
-        compilerTargetVM = DEFAULT_VM_VERSION;
-        
+        this.compilerSourceVM = DEFAULT_VM_VERSION;
+        this.compilerTargetVM = DEFAULT_VM_VERSION;
+
         Enumeration enumeration=config.getInitParameterNames();
         while( enumeration.hasMoreElements() ) {
             String k=(String)enumeration.nextElement();
             String v=config.getInitParameter( k );
-            setProperty( k, v);
+            this.setProperty( k, v);
         }
-        
+
         // quick hack
 //        String validating=config.getInitParameter( "validating");
 //        if( "false".equals( validating )) ParserUtils.validating=false;
-        
+
         String keepgen = config.getInitParameter("keepgenerated");
         if (keepgen != null) {
             if (keepgen.equalsIgnoreCase("true")) {
@@ -403,24 +404,24 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
-        
-        String trimsp = config.getInitParameter("trimSpaces"); 
+
+
+        String trimsp = config.getInitParameter("trimSpaces");
         if (trimsp != null) {
             if (trimsp.equalsIgnoreCase("true")) {
-                trimSpaces = true;
+                this.trimSpaces = true;
             } else if (trimsp.equalsIgnoreCase("false")) {
-                trimSpaces = false;
+                this.trimSpaces = false;
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.trimspaces"));
                 }
             }
         }
-        
+
         this.isPoolingEnabled = true;
         String poolingEnabledParam
-        = config.getInitParameter("enablePooling"); 
+        = config.getInitParameter("enablePooling");
         if (poolingEnabledParam != null
                 && !poolingEnabledParam.equalsIgnoreCase("true")) {
             if (poolingEnabledParam.equalsIgnoreCase("false")) {
@@ -428,11 +429,11 @@ public class JspServletOptions implements Options {
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.enablePooling"));
-                }		       	   
+                }
             }
         }
-        
-        String mapFile = config.getInitParameter("mappedfile"); 
+
+        String mapFile = config.getInitParameter("mappedfile");
         if (mapFile != null) {
             if (mapFile.equalsIgnoreCase("true")) {
                 this.mappedFile = true;
@@ -444,7 +445,7 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         String senderr = config.getInitParameter("sendErrToClient");
         if (senderr != null) {
             if (senderr.equalsIgnoreCase("true")) {
@@ -457,7 +458,7 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         String debugInfo = config.getInitParameter("classdebuginfo");
         if (debugInfo != null) {
             if (debugInfo.equalsIgnoreCase("true")) {
@@ -470,7 +471,7 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         String checkInterval = config.getInitParameter("checkInterval");
         if (checkInterval != null) {
             try {
@@ -487,7 +488,7 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         String modificationTestInterval = config.getInitParameter("modificationTestInterval");
         if (modificationTestInterval != null) {
             try {
@@ -498,7 +499,7 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         String development = config.getInitParameter("development");
         if (development != null) {
             if (development.equalsIgnoreCase("true")) {
@@ -511,89 +512,89 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         String suppressSmap = config.getInitParameter("suppressSmap");
         if (suppressSmap != null) {
             if (suppressSmap.equalsIgnoreCase("true")) {
-                isSmapSuppressed = true;
+                this.isSmapSuppressed = true;
             } else if (suppressSmap.equalsIgnoreCase("false")) {
-                isSmapSuppressed = false;
+                this.isSmapSuppressed = false;
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.suppressSmap"));
                 }
             }
         }
-        
+
         String dumpSmap = config.getInitParameter("dumpSmap");
         if (dumpSmap != null) {
             if (dumpSmap.equalsIgnoreCase("true")) {
-                isSmapDumped = true;
+                this.isSmapDumped = true;
             } else if (dumpSmap.equalsIgnoreCase("false")) {
-                isSmapDumped = false;
+                this.isSmapDumped = false;
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.dumpSmap"));
                 }
             }
         }
-        
+
         String genCharArray = config.getInitParameter("genStrAsCharArray");
         if (genCharArray != null) {
             if (genCharArray.equalsIgnoreCase("true")) {
-                genStringAsCharArray = true;
+                this.genStringAsCharArray = true;
             } else if (genCharArray.equalsIgnoreCase("false")) {
-                genStringAsCharArray = false;
+                this.genStringAsCharArray = false;
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.genchararray"));
                 }
             }
         }
-        
+
         String errBeanClass =
             config.getInitParameter("errorOnUseBeanInvalidClassAttribute");
         if (errBeanClass != null) {
             if (errBeanClass.equalsIgnoreCase("true")) {
-                errorOnUseBeanInvalidClassAttribute = true;
+                this.errorOnUseBeanInvalidClassAttribute = true;
             } else if (errBeanClass.equalsIgnoreCase("false")) {
-                errorOnUseBeanInvalidClassAttribute = false;
+                this.errorOnUseBeanInvalidClassAttribute = false;
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn(Localizer.getMessage("jsp.warning.errBean"));
                 }
             }
         }
-        
+
         String ieClassId = config.getInitParameter("ieClassId");
         if (ieClassId != null)
             this.ieClassId = ieClassId;
-        
+
         String classpath = config.getInitParameter("classpath");
         if (classpath != null)
             this.classpath = classpath;
 
         String dir = config.getInitParameter("scratchdir");
         this.scratchDir = (dir != null) ? dir : "/classes";
-        outputProvider.mkdirs(scratchDir);
+        outputProvider.mkdirs(this.scratchDir);
 
         this.compiler = config.getInitParameter("compiler");
-        
+
         String compilerTargetVM = config.getInitParameter("compilerTargetVM");
         if(compilerTargetVM != null) {
             this.compilerTargetVM = compilerTargetVM;
         }
-        
+
         String compilerSourceVM = config.getInitParameter("compilerSourceVM");
         if(compilerSourceVM != null) {
             this.compilerSourceVM = compilerSourceVM;
         }
-        
+
         String javaEncoding = config.getInitParameter("javaEncoding");
         if (javaEncoding != null) {
             this.javaEncoding = javaEncoding;
         }
-        
+
         String fork = config.getInitParameter("fork");
         if (fork != null) {
             if (fork.equalsIgnoreCase("true")) {
@@ -606,8 +607,8 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
-        String xpoweredBy = config.getInitParameter("xpoweredBy"); 
+
+        String xpoweredBy = config.getInitParameter("xpoweredBy");
         if (xpoweredBy != null) {
             if (xpoweredBy.equalsIgnoreCase("true")) {
                 this.xpoweredBy = true;
@@ -619,19 +620,19 @@ public class JspServletOptions implements Options {
                 }
             }
         }
-        
+
         // Setup the global Tag Libraries location cache for this
         // web-application.
         this.tldLocationsCache = (tldLocationsCache != null)
                 ? tldLocationsCache
                 : new TldLocationsCache(config.getServletContext());
-        
+
         // Setup the jsp config info for this web app.
-        jspConfig = new JspConfig(config.getServletContext());
-        
+        this.jspConfig = new JspConfig(config.getServletContext());
+
         // Create a Tag plugin instance
-        tagPluginManager = new TagPluginManager(config.getServletContext());
+        this.tagPluginManager = new TagPluginManager(config.getServletContext());
     }
-    
+
 }
 

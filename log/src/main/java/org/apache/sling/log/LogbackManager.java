@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -84,19 +85,19 @@ public class LogbackManager implements ManagedService {
 
         // the base for relative path names
         String root = context.getProperty("sling.home");
-        rootDir = new File((root == null) ? "" : root).getAbsoluteFile();
+        this.rootDir = new File((root == null) ? "" : root).getAbsoluteFile();
 
         // set initial default configuration
-        configureLogback(new ConfigProperties() {
+        this.configureLogback(new ConfigProperties() {
             public String getProperty(String name) {
                 return context.getProperty(name);
             }
         });
 
         // get our own logger
-        log = LoggerFactory.getLogger(LogServiceFactory.class);
+        this.log = LoggerFactory.getLogger(LogServiceFactory.class);
 
-        log.info("LogbackManager: Logging set up from context");
+        this.log.info("LogbackManager: Logging set up from context");
 
         // register for official configuration now
         Dictionary<String, String> props = new Hashtable<String, String>();
@@ -105,14 +106,14 @@ public class LogbackManager implements ManagedService {
             "LogbackManager Configuration Admin support");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-        logbackConfigurable = context.registerService(
+        this.logbackConfigurable = context.registerService(
             ManagedService.class.getName(), this, props);
     }
 
     /* package */void shutdown() {
-        if (logbackConfigurable != null) {
-            logbackConfigurable.unregister();
-            logbackConfigurable = null;
+        if (this.logbackConfigurable != null) {
+            this.logbackConfigurable.unregister();
+            this.logbackConfigurable = null;
         }
 
         // shutdown the log manager
@@ -124,13 +125,13 @@ public class LogbackManager implements ManagedService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
      */
     @SuppressWarnings("unchecked")
     public void updated(final Dictionary properties) { // unchecked
         if (properties != null) {
-            configureLogback(new ConfigProperties() {
+            this.configureLogback(new ConfigProperties() {
                 public String getProperty(String name) {
                     return (String) properties.get(name);
                 }
@@ -156,11 +157,11 @@ public class LogbackManager implements ManagedService {
         try {
             configuration.doConfigure(configLocation);
         } catch (Throwable t) {
-            log.error("reconfigure: Cannot configure from {}", configLocation);
+            this.log.error("reconfigure: Cannot configure from {}", configLocation);
             // well then, fall back to simple configuration
         }
 
-        log.info("reconfigure: Logging reconfigured from ", configLocation);
+        this.log.info("reconfigure: Logging reconfigured from ", configLocation);
     }
 
     void reconfigure(String data) {
@@ -216,7 +217,7 @@ public class LogbackManager implements ManagedService {
      * initial configuration. <p/> Sets up the initial Logback properties for
      * the logging support until the real logging configuration file can be read
      * from the ContentBus.
-     * 
+     *
      * @param properties The <code>Properties</code> containing the initial
      *            configuration.
      * @throws NullPointerException if <code>properties</code> is
@@ -272,7 +273,7 @@ public class LogbackManager implements ManagedService {
             // ensure absolute path
             File logFile = new File(logFileName);
             if (!logFile.isAbsolute()) {
-                logFile = new File(rootDir, logFileName);
+                logFile = new File(this.rootDir, logFileName);
                 logFileName = logFile.getAbsolutePath();
             }
 

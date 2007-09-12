@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.content.jcr.internal.loader;
 
@@ -52,14 +55,14 @@ public class XmlReader implements NodeReader {
     private KXmlParser xmlParser;
 
     XmlReader() {
-        xmlParser = new KXmlParser();
+        this.xmlParser = new KXmlParser();
     }
 
     // ---------- XML content access -------------------------------------------
 
     public synchronized Node parse(InputStream ins) throws IOException {
         try {
-            return parseInternal(ins);
+            return this.parseInternal(ins);
         } catch (XmlPullParserException xppe) {
             throw (IOException) new IOException(xppe.getMessage()).initCause(xppe);
         }
@@ -76,14 +79,14 @@ public class XmlReader implements NodeReader {
 
         // set the parser input, use null encoding to force detection with
         // <?xml?>
-        xmlParser.setInput(ins, null);
+        this.xmlParser.setInput(ins, null);
 
-        int eventType = xmlParser.getEventType();
+        int eventType = this.xmlParser.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
 
                 elements.add(currentElement);
-                currentElement = xmlParser.getName();
+                currentElement = this.xmlParser.getName();
 
                 if (ELEM_PROPERTY.equals(currentElement)) {
                     currentProperty = new Property();
@@ -94,7 +97,7 @@ public class XmlReader implements NodeReader {
 
             } else if (eventType == XmlPullParser.END_TAG) {
 
-                String qName = xmlParser.getName();
+                String qName = this.xmlParser.getName();
                 String content = contentBuffer.toString().trim();
                 contentBuffer.delete(0, contentBuffer.length());
 
@@ -140,10 +143,10 @@ public class XmlReader implements NodeReader {
                 currentElement = elements.removeLast();
 
             } else if (eventType == XmlPullParser.TEXT) {
-                contentBuffer.append(xmlParser.getText());
+                contentBuffer.append(this.xmlParser.getText());
             }
 
-            eventType = xmlParser.next();
+            eventType = this.xmlParser.next();
         }
 
         return currentNode;

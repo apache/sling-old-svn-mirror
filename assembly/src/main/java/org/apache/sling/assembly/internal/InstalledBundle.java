@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,7 +64,7 @@ public class InstalledBundle {
     /**
      * Creates an instance of this class for the given bundle specification,
      * bundle and owner Assembly Bundle.
-     * 
+     *
      * @param bundleSpec The {@link BundleSpec} leading to the installation of
      *            this installed bundle.
      * @param bundle The OSGi <code>Bundle</code> instance represented by this
@@ -81,7 +82,7 @@ public class InstalledBundle {
      * Returns the {@link BundleSpec} of this installed bundle.
      */
     BundleSpec getBundleSpec() {
-        return bundleSpec;
+        return this.bundleSpec;
     }
 
     /**
@@ -89,46 +90,46 @@ public class InstalledBundle {
      * bundle.
      */
     Bundle getBundle() {
-        return bundle;
+        return this.bundle;
     }
 
     /**
      * Adds an {@link Assembly Assembly Bundle} to the set of Assembly Bundles
      * referring to this installed bundle.
-     * 
+     *
      * @param referent The {@link Assembly Assembly Bundle} to add.
      */
     void addReferent(Assembly referent) {
-        if (installer != referent) {
-            if (referents == null) {
-                referents = new HashSet();
+        if (this.installer != referent) {
+            if (this.referents == null) {
+                this.referents = new HashSet();
             }
-            referents.add(referent);
+            this.referents.add(referent);
         }
     }
 
     /**
      * Removes a {@link Assembly Assembly Bundle} from the set of Assembly
      * Bundles referring to this installed bundle.
-     * 
+     *
      * @param referent The {@link Assembly Assembly Bundle} to remove.
      */
     void removeReferent(Assembly referent) {
-        if (installer == referent) {
-            if (referents != null) {
-                Iterator ri = referents.iterator();
-                installer = (Assembly) ri.next();
+        if (this.installer == referent) {
+            if (this.referents != null) {
+                Iterator ri = this.referents.iterator();
+                this.installer = (Assembly) ri.next();
                 ri.remove();
             } else {
-                installer = null;
+                this.installer = null;
             }
         } else {
-            referents.remove(referent);
+            this.referents.remove(referent);
         }
 
         // if there are not more referents, remove the set
-        if (referents != null && referents.isEmpty()) {
-            referents = null;
+        if (this.referents != null && this.referents.isEmpty()) {
+            this.referents = null;
         }
     }
 
@@ -137,7 +138,7 @@ public class InstalledBundle {
      * {@link Assembly Assembly Bundle} still refers to this installed bundle.
      */
     boolean isReferredTo() {
-        return installer != null;
+        return this.installer != null;
     }
 
     // ---------- Object overwrites --------------------------------------------
@@ -147,14 +148,14 @@ public class InstalledBundle {
      * installed OSGi bundle as the hash code of this installed bundle.
      */
     public int hashCode() {
-        return (int) bundle.getBundleId();
+        return (int) this.bundle.getBundleId();
     }
 
     /**
      * Returns <code>true</code> if <code>obj</code> is this installed
      * bundle or if <code>obj</code> is an installed bundle referring to the
      * same OSGi <code>Bundle</code>.
-     * 
+     *
      * @param obj The object to compare this installed bundle to.
      */
     public boolean equals(Object obj) {
@@ -163,7 +164,7 @@ public class InstalledBundle {
         }
 
         if (obj instanceof InstalledBundle) {
-            return bundle.getBundleId() == ((InstalledBundle) obj).bundle.getBundleId();
+            return this.bundle.getBundleId() == ((InstalledBundle) obj).bundle.getBundleId();
         }
 
         return false;
@@ -174,7 +175,7 @@ public class InstalledBundle {
      * the bundle symbolic name and bundle location.
      */
     public String toString() {
-        return "Installed Bundle " + bundle.getSymbolicName() + "/"
-            + bundle.getLocation();
+        return "Installed Bundle " + this.bundle.getSymbolicName() + "/"
+            + this.bundle.getLocation();
     }
 }

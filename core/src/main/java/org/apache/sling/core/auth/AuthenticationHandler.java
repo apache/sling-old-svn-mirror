@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.auth;
 
@@ -66,7 +69,7 @@ public interface AuthenticationHandler {
      * <p>
      * The method must not request credential information from the client, if
      * they are not found in the request.
-     * 
+     *
      * @param request The request object containing the information for the
      *            authentication.
      * @param response The response object which may be used to send the
@@ -90,7 +93,7 @@ public interface AuthenticationHandler {
      * <p>
      * Any response sent by the handler though the <code>sendError</code>
      * method is also handled by the error handler infrastructure.
-     * 
+     *
      * @param request The request object.
      * @param response The response object to which to send the request.
      * @param addInfo Additional information string from the configuration. This
