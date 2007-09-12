@@ -141,6 +141,11 @@ public class SlingServlet extends GenericServlet {
     public static final String OSGI_FRAMEWORK_BUNDLES = "org.apache.osgi.bundles";
 
     /**
+     * The name of the configuration property defining the obr repository.
+     */
+    public static final String OBR_REPOSITORY_URL = "obr.repository.url";
+
+    /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
      */
@@ -288,19 +293,30 @@ public class SlingServlet extends GenericServlet {
         props.put("sling.include.jcr-client", "jcr-client.properties");
 
         // copy context init parameters
-        Enumeration<?> pe = this.getServletContext().getInitParameterNames();
+        Enumeration<String> pe = this.getServletContext().getInitParameterNames();
         while (pe.hasMoreElements()) {
-            String name = (String) pe.nextElement();
+            String name = pe.nextElement();
             props.put(name, this.getServletContext().getInitParameter(name));
         }
 
         // copy servlet init parameters
         pe = this.getInitParameterNames();
         while (pe.hasMoreElements()) {
-            String name = (String) pe.nextElement();
+            String name = pe.nextElement();
             props.put(name, this.getInitParameter(name));
         }
 
+        // if the specified obr location is not a url and starts with a '/', we
+        // assume that this location is inside the webapp and create the correct full url
+        final String repoLocation = props.get(OBR_REPOSITORY_URL);
+        if ( repoLocation != null && repoLocation.indexOf(":/") < 1 && repoLocation.startsWith("/")) {
+            try {
+                final URL url = this.getServletContext().getResource(repoLocation);
+                props.put(OBR_REPOSITORY_URL, url.toExternalForm());
+            } catch (MalformedURLException e) {
+                // if an exception occurs, we ignore it
+            }
+        }
         return props;
     }
 
