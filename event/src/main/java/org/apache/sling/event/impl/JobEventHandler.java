@@ -193,7 +193,9 @@ public class JobEventHandler
                                     eventNode.refresh(true);
                                     if ( eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
                                         unlock = false;
-                                        this.processJob(info.event, eventNode, lock.getLockToken());
+                                        final String lockToken = lock.getLockToken();
+                                        this.processJob(info.event, eventNode, lockToken);
+                                        this.session.removeLockToken(lockToken);
                                     } else {
                                         eventNode.unlock();
                                     }
@@ -568,8 +570,7 @@ public class JobEventHandler
         Session s = null;
         try {
             s = this.createSession();
-            // remove lock token from shared session and add it to current session
-            this.session.removeLockToken(lockToken);
+            // add lock token to current session
             s.addLockToken(lockToken);
             final Node eventNode = (Node) s.getItem(eventNodePath);
             try {
