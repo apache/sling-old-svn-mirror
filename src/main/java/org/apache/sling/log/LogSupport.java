@@ -1,11 +1,12 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,56 +64,56 @@ public class LogSupport implements BundleListener, ServiceListener,
     }
 
     /* package */void shutdown() {
-        synchronized (lock) {
-            listeners = null;
+        synchronized (this.lock) {
+            this.listeners = null;
         }
     }
 
     // ---------- LogReaderService interface -----------------------------------
 
     /* package */void addLogListener(Bundle bundle, LogListener listener) {
-        synchronized (lock) {
+        synchronized (this.lock) {
             LogListenerProxy llp = new LogListenerProxy(bundle, listener);
-            if (listeners == null) {
-                listeners = new LogListenerProxy[] { llp };
-            } else if (getListener(listener) < 0) {
-                LogListenerProxy[] newListeners = new LogListenerProxy[listeners.length + 1];
-                System.arraycopy(listeners, 0, newListeners, 0,
-                    listeners.length);
-                newListeners[listeners.length] = llp;
-                listeners = newListeners;
+            if (this.listeners == null) {
+                this.listeners = new LogListenerProxy[] { llp };
+            } else if (this.getListener(listener) < 0) {
+                LogListenerProxy[] newListeners = new LogListenerProxy[this.listeners.length + 1];
+                System.arraycopy(this.listeners, 0, newListeners, 0,
+                    this.listeners.length);
+                newListeners[this.listeners.length] = llp;
+                this.listeners = newListeners;
             }
         }
     }
 
     /* package */void removeLogListener(LogListener listener) {
-        synchronized (lock) {
+        synchronized (this.lock) {
             // no listeners registered, nothing to do
-            if (listeners == null) {
+            if (this.listeners == null) {
                 return;
             }
 
             // listener is not registered, nothing to do
-            int idx = getListener(listener);
+            int idx = this.getListener(listener);
             if (idx < 0) {
                 return;
             }
 
-            LogListenerProxy[] newListeners = new LogListenerProxy[listeners.length - 1];
+            LogListenerProxy[] newListeners = new LogListenerProxy[this.listeners.length - 1];
             if (idx > 0) {
-                System.arraycopy(listeners, 0, newListeners, 0, idx);
+                System.arraycopy(this.listeners, 0, newListeners, 0, idx);
             }
-            if (idx < listeners.length) {
-                System.arraycopy(listeners, idx + 1, newListeners, 0,
+            if (idx < this.listeners.length) {
+                System.arraycopy(this.listeners, idx + 1, newListeners, 0,
                     newListeners.length - idx);
             }
-            listeners = newListeners;
+            this.listeners = newListeners;
         }
     }
 
     /* package */void removeLogListeners(Bundle bundle) {
         // grab an immediate copy of the array
-        LogListenerProxy[] current = getListeners();
+        LogListenerProxy[] current = this.getListeners();
         if (current == null) {
             return;
         }
@@ -120,15 +121,15 @@ public class LogSupport implements BundleListener, ServiceListener,
         // check for listeners by bundle
         for (int i = 0; i < current.length; i++) {
             if (current[i].hasBundle(bundle)) {
-                removeLogListener(current[i]);
+                this.removeLogListener(current[i]);
             }
         }
     }
 
     private int getListener(LogListener listener) {
-        if (listeners != null) {
-            for (int i = 0; i < listeners.length; i++) {
-                if (listeners[i].isSame(listener)) {
+        if (this.listeners != null) {
+            for (int i = 0; i < this.listeners.length; i++) {
+                if (this.listeners[i].isSame(listener)) {
                     return i;
                 }
             }
@@ -139,8 +140,8 @@ public class LogSupport implements BundleListener, ServiceListener,
     }
 
     private LogListenerProxy[] getListeners() {
-        synchronized (lock) {
-            return listeners;
+        synchronized (this.lock) {
+            return this.listeners;
         }
     }
 
@@ -155,16 +156,16 @@ public class LogSupport implements BundleListener, ServiceListener,
     };
 
     /* package */Enumeration getLog() {
-        return EMPTY;
+        return this.EMPTY;
     }
 
     // ---------- Firing a log event -------------------------------------------
 
     /* package */void fireLogEvent(LogEntry entry) {
-        logOut(entry);
+        this.logOut(entry);
 
         // grab an immediate copy of the array
-        LogListener[] current = getListeners();
+        LogListener[] current = this.getListeners();
         if (current == null) {
             return;
         }
@@ -189,7 +190,7 @@ public class LogSupport implements BundleListener, ServiceListener,
             case BundleEvent.STOPPED:
                 // this is special, as we have to fix the listener list for
                 // stopped bundles
-                removeLogListeners(event.getBundle());
+                this.removeLogListeners(event.getBundle());
                 message = "BundleEvent STOPPED";
                 break;
             case BundleEvent.UPDATED:
@@ -210,7 +211,7 @@ public class LogSupport implements BundleListener, ServiceListener,
 
         LogEntry entry = new LogEntryImpl(event.getBundle(), null,
             LogService.LOG_INFO, message, null);
-        fireLogEvent(entry);
+        this.fireLogEvent(entry);
     }
 
     // ---------- ServiceListener ----------------------------------------------
@@ -241,7 +242,7 @@ public class LogSupport implements BundleListener, ServiceListener,
         LogEntry entry = new LogEntryImpl(
             event.getServiceReference().getBundle(),
             event.getServiceReference(), level, message, null);
-        fireLogEvent(entry);
+        this.fireLogEvent(entry);
     }
 
     // ---------- FrameworkListener --------------------------------------------
@@ -301,7 +302,7 @@ public class LogSupport implements BundleListener, ServiceListener,
 
         LogEntry entry = new LogEntryImpl(event.getBundle(), null, level,
             message, exception);
-        fireLogEvent(entry);
+        this.fireLogEvent(entry);
     }
 
     // ---------- Effective logging --------------------------------------------
@@ -310,14 +311,14 @@ public class LogSupport implements BundleListener, ServiceListener,
 
     private Logger getLogger(Bundle bundle) {
         Long bundleId = new Long((bundle == null) ? 0 : bundle.getBundleId());
-        Logger log = (Logger) loggers.get(bundleId);
+        Logger log = (Logger) this.loggers.get(bundleId);
         if (log == null) {
             // TODO: use systembundle for bundle==null
             String name = (bundle == null)
                     ? Constants.SYSTEM_BUNDLE_SYMBOLICNAME
                     : bundle.getSymbolicName();
             log = LoggerFactory.getLogger(name);
-            loggers.put(bundleId, log);
+            this.loggers.put(bundleId, log);
         }
         return log;
     }
@@ -327,7 +328,7 @@ public class LogSupport implements BundleListener, ServiceListener,
         // level, String message, Throwable exception) {
 
         // get the logger for the bundle
-        Logger log = getLogger(logEntry.getBundle());
+        Logger log = this.getLogger(logEntry.getBundle());
 
         StringBuffer msg = new StringBuffer();
 
@@ -388,13 +389,13 @@ public class LogSupport implements BundleListener, ServiceListener,
         }
 
         public void logged(LogEntry entry) {
-            if ((bundle.getState() & runningBundle) != 0) {
-                delegatee.logged(entry);
+            if ((this.bundle.getState() & this.runningBundle) != 0) {
+                this.delegatee.logged(entry);
             }
         }
 
         /* package */boolean isSame(LogListener listener) {
-            return listener == delegatee || listener == this;
+            return listener == this.delegatee || listener == this;
         }
 
         /* package */boolean hasBundle(Bundle bundle) {
