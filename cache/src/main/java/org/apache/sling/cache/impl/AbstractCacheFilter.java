@@ -32,7 +32,7 @@ import org.apache.sling.component.ComponentRequest;
  */
 abstract class AbstractCacheFilter {
 
-    List cacheServices;
+    List<CacheService> cacheServices;
 
     protected CacheService getBurstCacheService(ComponentRequest request) {
         // return a cache service willing to handle burst caching for the request
@@ -48,7 +48,7 @@ abstract class AbstractCacheFilter {
 
     protected void bindCacheService(CacheService cacheService) {
         if (this.cacheServices == null) {
-            this.cacheServices = new ArrayList();
+            this.cacheServices = new ArrayList<CacheService>();
         }
         this.cacheServices.add(cacheService);
     }

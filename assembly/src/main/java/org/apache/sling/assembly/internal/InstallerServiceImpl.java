@@ -60,8 +60,6 @@ public class InstallerServiceImpl implements InstallerService,
     // the currently issued lock - might need a way to unlock !!
     private Object lock;
 
-    private boolean installationComplete;
-
     InstallerServiceImpl(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         bundleContext.addFrameworkListener(this);
@@ -164,7 +162,7 @@ public class InstallerServiceImpl implements InstallerService,
 
             // build a list of tokens
             // we use this to ignore delims inside a quote
-            final List tokens = new ArrayList();
+            final List<String> tokens = new ArrayList<String>();
             String prefix = null;
             final StringTokenizer bundles = new StringTokenizer(bundleList, ",");
             while ( bundles.hasMoreTokens() ) {
@@ -202,9 +200,9 @@ public class InstallerServiceImpl implements InstallerService,
                     prefix = null;
                 }
             }
-            final Iterator i = tokens.iterator();
+            final Iterator<String> i = tokens.iterator();
             while ( i.hasNext() ) {
-                final String bundleToken = (String)i.next();
+                final String bundleToken = i.next();
                 int colon = bundleToken.indexOf(':');
                 String name = (colon >= 0) ? bundleToken.substring(0, colon) : bundleToken;
                 // ignore entry if name is empty
