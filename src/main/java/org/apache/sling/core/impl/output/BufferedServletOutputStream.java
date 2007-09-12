@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.output;
 
@@ -38,7 +41,7 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
     /* default logger */
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(BufferedServletOutputStream.class);
-    
+
     /** The wrapped <code>ServletOutputStream</code> */
     protected OutputStream delegatee;
 
@@ -64,7 +67,7 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
     public BufferedServletOutputStream(OutputStream delegatee, int bufferSize) {
         this.delegatee = delegatee;
         this.offset = 0;
-        setBufferSize(bufferSize);
+        this.setBufferSize(bufferSize);
     }
 
     //---------- buffer handling -----------------------------------------------
@@ -80,7 +83,7 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
     public void setBufferSize(int bufferSize) {
 
         // check buffer requirements
-        if (offset != 0) {
+        if (this.offset != 0) {
             throw new IllegalStateException("Buffer not empty");
         }
 
@@ -102,7 +105,7 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
      * @return the size of the buffer
      */
     public int getBufferSize() {
-        return bufferSize;
+        return this.bufferSize;
     }
 
     /**
@@ -119,13 +122,13 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
      *      occurrs flushing the buffer.
      */
     public void flushBuffer() throws IOException {
-        assertOpen();
+        this.assertOpen();
 
         // write the buffer
-        if (buffer != null) {
-            if (offset > 0) {
-                log.debug("flush: Flushing {0} bytes", String.valueOf(offset));
-                delegatee.write(buffer, 0, offset);
+        if (this.buffer != null) {
+            if (this.offset > 0) {
+                log.debug("flush: Flushing {0} bytes", String.valueOf(this.offset));
+                this.delegatee.write(this.buffer, 0, this.offset);
             } else {
                 log.debug("flush: Empty buffer");
             }
@@ -133,7 +136,7 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
             log.debug("write: No buffer to flush due to disabled buffering");
         }
 
-        offset = 0;
+        this.offset = 0;
     }
 
     //---------- ServletOutputStream overwrites --------------------------------
@@ -151,8 +154,8 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
      * @exception  IOException  if an I/O error occurs.
      */
     public void flush() throws IOException {
-        flushBuffer();
-        delegatee.flush();
+        this.flushBuffer();
+        this.delegatee.flush();
     }
 
     /**
@@ -166,12 +169,12 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
      * @exception  IOException  if an I/O error occurs.
      */
     public void close() throws IOException {
-        if (!closed) {
-        	flushBuffer();
-            delegatee.close();
+        if (!this.closed) {
+        	this.flushBuffer();
+            this.delegatee.close();
 
-            setBufferSize(0);
-            closed = true;
+            this.setBufferSize(0);
+            this.closed = true;
         }
     }
 
@@ -193,17 +196,17 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
     public void write(int b) throws IOException {
 
         // assert stream is not closed
-        assertOpen();
+        this.assertOpen();
 
-        if (buffer == null) {
+        if (this.buffer == null) {
             log.debug("write: Direct writing due to disabled buffering");
-            delegatee.write(b);
+            this.delegatee.write(b);
         } else {
-            if (offset >= bufferSize) {
+            if (this.offset >= this.bufferSize) {
                 log.debug("write: Buffer full, flushing first");
-                flushBuffer();
+                this.flushBuffer();
             }
-            buffer[offset++] = (byte) b;
+            this.buffer[this.offset++] = (byte) b;
         }
     }
 
@@ -237,35 +240,35 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
      */
     public void write(byte b[], int off, int len) throws IOException {
         // assert stream is not closed
-        assertOpen();
+        this.assertOpen();
 
-        if (buffer == null) {
+        if (this.buffer == null) {
             log.debug("write: Direct writing due to disabled buffering");
-            delegatee.write(b, off, len);
+            this.delegatee.write(b, off, len);
         } else {
 
             // copy all buffer parts bigger than the current space
-            while (offset + len - 1 >= bufferSize) {
+            while (this.offset + len - 1 >= this.bufferSize) {
 
                 // write the first portion to the buffer to flush
-                int space = bufferSize - offset;
-                System.arraycopy(b, off, buffer, offset, space);
+                int space = this.bufferSize - this.offset;
+                System.arraycopy(b, off, this.buffer, this.offset, space);
                 off += space;
                 len -= space;
 
                 log.debug("write: {0} bytes written, flush buffer",
                         String.valueOf(space));
 
-                offset = bufferSize;
-                flushBuffer();
+                this.offset = this.bufferSize;
+                this.flushBuffer();
             }
 
             // copy rest of the data
             if (len > 0) {
                 log.debug("write: Writing {0} bytes to the buffer",
                         String.valueOf(len));
-                System.arraycopy(b, off, buffer, offset, len);
-                offset += len;
+                System.arraycopy(b, off, this.buffer, this.offset, len);
+                this.offset += len;
             }
         }
     }
@@ -278,7 +281,7 @@ public class BufferedServletOutputStream extends ServletOutputStream implements 
      * @throws IOException if the stream is already closed.
      */
     private void assertOpen() throws IOException {
-        if (closed) {
+        if (this.closed) {
             throw new IOException("Stream already closed");
         }
     }

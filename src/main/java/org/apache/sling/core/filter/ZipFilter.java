@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.filter;
 
@@ -91,7 +94,7 @@ public class ZipFilter implements ComponentFilter {
         }
 
         // get settings
-        enc = getEncoding(enc);
+        enc = this.getEncoding(enc);
         if ("gzip".equals(enc) || "x-gzip".equals(enc)) {
             // mark the response encoded
             response.setHeader("Content-Encoding", enc);
@@ -146,7 +149,7 @@ public class ZipFilter implements ComponentFilter {
      * output stream using GZip or Zip algorithm depending on the constructor
      * flag <code>deflate</code>.
      * <p>
-     * This wrapper is only 
+     * This wrapper is only
      */
     private static class DeflaterComponentResponse extends ComponentResponseWrapper {
 
@@ -162,87 +165,87 @@ public class ZipFilter implements ComponentFilter {
         }
 
         public ServletOutputStream getOutputStream() throws IOException {
-            if (stream != null) {
-                return stream;
-            } else if (writer != null) {
+            if (this.stream != null) {
+                return this.stream;
+            } else if (this.writer != null) {
                 throw new IllegalStateException(
                     "Writer has already been obtained");
             }
 
-            stream = new DeflaterServletOutputStream(getDeflaterOutputStream());
-            return stream;
+            this.stream = new DeflaterServletOutputStream(this.getDeflaterOutputStream());
+            return this.stream;
         }
 
         public PrintWriter getWriter() throws IOException {
-            if (writer != null) {
-                return writer;
-            } else if (stream != null) {
+            if (this.writer != null) {
+                return this.writer;
+            } else if (this.stream != null) {
                 throw new IllegalStateException(
                     "OutputStream has already been obtained");
             }
 
-            DeflaterOutputStream base = getDeflaterOutputStream();
-            String enc = getCharacterEncoding();
-            writer = new PrintWriter(new OutputStreamWriter(base, enc));
-            return writer;
+            DeflaterOutputStream base = this.getDeflaterOutputStream();
+            String enc = this.getCharacterEncoding();
+            this.writer = new PrintWriter(new OutputStreamWriter(base, enc));
+            return this.writer;
         }
 
         public void flushBuffer() throws IOException {
-            if (writer != null) {
-                writer.flush();
-            } else if (stream != null) {
-                stream.flush();
+            if (this.writer != null) {
+                this.writer.flush();
+            } else if (this.stream != null) {
+                this.stream.flush();
             }
 
             super.flushBuffer();
         }
 
         void finish() throws IOException {
-            if (writer != null) {
-                writer.flush();
-            } else if (stream != null) {
-                stream.getDeflaterStream().finish();
+            if (this.writer != null) {
+                this.writer.flush();
+            } else if (this.stream != null) {
+                this.stream.getDeflaterStream().finish();
             }
         }
 
         protected DeflaterOutputStream getDeflaterOutputStream()
                 throws IOException {
             OutputStream base = super.getOutputStream();
-            return deflate
+            return this.deflate
                     ? new DeflaterOutputStream(base)
                     : new GZIPOutputStream(base);
         }
-        
+
         private static class DeflaterServletOutputStream extends ServletOutputStream {
 
             private DeflaterOutputStream deflaterStream;
-            
+
             DeflaterServletOutputStream(DeflaterOutputStream deflaterStream) {
                 this.deflaterStream = deflaterStream;
             }
 
             DeflaterOutputStream getDeflaterStream() {
-                return deflaterStream;
+                return this.deflaterStream;
             }
-            
+
             public void write(int b) throws IOException {
-                deflaterStream.write(b);
+                this.deflaterStream.write(b);
             }
-            
+
             public void write(byte[] b) throws IOException {
-                deflaterStream.write(b);
+                this.deflaterStream.write(b);
             }
-            
+
             public void write(byte[] b, int off, int len) throws IOException {
-                deflaterStream.write(b, off, len);
+                this.deflaterStream.write(b, off, len);
             }
-            
+
             public void flush() throws IOException {
-                deflaterStream.flush();
+                this.deflaterStream.flush();
             }
-            
+
             public void close() throws IOException {
-                deflaterStream.close();
+                this.deflaterStream.close();
             }
         }
     }

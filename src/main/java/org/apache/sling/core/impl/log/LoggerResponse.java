@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.log;
 
@@ -44,46 +47,46 @@ class LoggerResponse extends ComponentResponseWrapper {
 
     // the content type header name
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
-    
+
     // the content length header name
     private static final String HEADER_CONTENT_LENGTH = "Content-Length";
 
     // TODO: more content related headers, namely Content-Language should
     // probably be supported
-    
+
     // the request counter
     private int requestId;
-    
+
     // the system time in ms when the request entered the system, this is
     // the time this instance was created
     private long requestStart;
-    
+
     // the system time in ms when the request exited the system, this is
-    // the time of the call to the requestEnd() method 
+    // the time of the call to the requestEnd() method
     private long requestEnd;
-    
-    // the output stream wrapper providing the transferred byte count 
+
+    // the output stream wrapper providing the transferred byte count
     private LoggerResponseOutputStream out;
-    
-    // the print writer wrapper providing the transferred character count 
+
+    // the print writer wrapper providing the transferred character count
     private LoggerResponseWriter writer;
-    
+
     // the caches status
     private int status = SC_OK;
 
     // the cookies set during the request, indexed by cookie name
     private Map cookies;
-    
+
     // the headers set during the request, indexed by lower-case header
     // name, value is string for single-valued and list for multi-valued
     // headers
     private Map headers;
-    
+
     /**
      * Creates an instance of this response wrapper setting the request counter
      * and the time of request start returned by {@link #getRequestStart()} and
      * which is used to calculate the request duration.
-     * 
+     *
      * @param delegatee The <code>ComponentResponse</code> wrapped by this
      *            wrapper.
      * @param requestId The request counter value to report by
@@ -91,7 +94,7 @@ class LoggerResponse extends ComponentResponseWrapper {
      */
     LoggerResponse(ComponentResponse delegatee, int requestId) {
         super(delegatee);
-        
+
         this.requestId = requestId;
         this.requestStart = System.currentTimeMillis();
     }
@@ -102,51 +105,51 @@ class LoggerResponse extends ComponentResponseWrapper {
      * and which is used to calculate the request duration.
      */
     void requestEnd() {
-        requestEnd = System.currentTimeMillis();
+        this.requestEnd = System.currentTimeMillis();
     }
 
     //---------- Retrieving response information ------------------------------
-    
+
     int getRequestId() {
-        return requestId;
+        return this.requestId;
     }
-    
+
     long getRequestStart() {
-        return requestStart;
+        return this.requestStart;
     }
-    
+
     long getRequestEnd() {
-        return requestEnd;
+        return this.requestEnd;
     }
-    
+
     long getRequestDuration() {
-        return requestEnd - requestStart;
+        return this.requestEnd - this.requestStart;
     }
-    
+
     int getStatus() {
-        return status;
+        return this.status;
     }
-    
+
     int getCount() {
-        if (out != null) {
-            return out.getCount();
-        } else if (writer != null) {
-            return writer.getCount();
+        if (this.out != null) {
+            return this.out.getCount();
+        } else if (this.writer != null) {
+            return this.writer.getCount();
         }
-        
+
         // otherwise return zero
         return 0;
     }
 
     Cookie getCookie(String name) {
-        return (cookies != null) ? (Cookie) cookies.get(name) : null;
+        return (this.cookies != null) ? (Cookie) this.cookies.get(name) : null;
     }
-    
+
     String getHeaders(String name) {
         // normalize header name to lower case to support case-insensitive headers
         name = name.toLowerCase();
 
-        Object header = (headers != null) ? headers.get(name) : null;
+        Object header = (this.headers != null) ? this.headers.get(name) : null;
         if (header == null) {
             return null;
         } else if (header instanceof String) {
@@ -162,81 +165,81 @@ class LoggerResponse extends ComponentResponseWrapper {
             return headerBuf.toString();
         }
     }
-    
+
     //---------- Standard Response overwrites ---------------------------------
- 
+
     public ServletOutputStream getOutputStream() throws IOException {
-        if (out == null) {
+        if (this.out == null) {
             ServletOutputStream sos = super.getOutputStream();
-            out = new LoggerResponseOutputStream(sos);
+            this.out = new LoggerResponseOutputStream(sos);
         }
-        return out;
+        return this.out;
     }
-    
+
     public PrintWriter getWriter() throws IOException {
-        if (writer == null) {
+        if (this.writer == null) {
             PrintWriter pw = super.getWriter();
-            writer = new LoggerResponseWriter(pw);
+            this.writer = new LoggerResponseWriter(pw);
         }
-        return writer;
+        return this.writer;
     }
-    
+
     public void addCookie(Cookie cookie) {
-        
+
         // register the cookie for later use
-        if (cookies == null) {
-            cookies = new HashMap();
+        if (this.cookies == null) {
+            this.cookies = new HashMap();
         }
-        cookies.put(cookie.getName(), cookie);
-        
+        this.cookies.put(cookie.getName(), cookie);
+
         super.addCookie(cookie);
     }
-    
+
     public void addDateHeader(String name, long date) {
-        registerHeader(name, RequestUtil.toDateString(date), true);
+        this.registerHeader(name, RequestUtil.toDateString(date), true);
         super.addDateHeader(name, date);
     }
-    
+
     public void addHeader(String name, String value) {
-        registerHeader(name, value, true);
+        this.registerHeader(name, value, true);
         super.addHeader(name, value);
     }
-    
+
     public void addIntHeader(String name, int value) {
-        registerHeader(name, String.valueOf(value), true);
+        this.registerHeader(name, String.valueOf(value), true);
         super.addIntHeader(name, value);
     }
-    
+
     public void setContentLength(int len) {
-        registerHeader(HEADER_CONTENT_LENGTH, String.valueOf(len), false);
+        this.registerHeader(HEADER_CONTENT_LENGTH, String.valueOf(len), false);
         super.setContentLength(len);
     }
-    
+
     public void setContentType(String type) {
-        registerHeader(HEADER_CONTENT_TYPE, type, false);
+        this.registerHeader(HEADER_CONTENT_TYPE, type, false);
         super.setContentType(type);
     }
-    
+
     public void setDateHeader(String name, long date) {
-        registerHeader(name, RequestUtil.toDateString(date), false);
+        this.registerHeader(name, RequestUtil.toDateString(date), false);
         super.setDateHeader(name, date);
     }
-    
+
     public void setHeader(String name, String value) {
-        registerHeader(name, value, false);
+        this.registerHeader(name, value, false);
         super.setHeader(name, value);
     }
-    
+
     public void setIntHeader(String name, int value) {
-        registerHeader(name, String.valueOf(value), false);
-        setHeader(name, String.valueOf(value));
+        this.registerHeader(name, String.valueOf(value), false);
+        this.setHeader(name, String.valueOf(value));
     }
-    
+
     public void setLocale(Locale loc) {
         // TODO: Might want to register the Content-Language header
         super.setLocale(loc);
     }
-    
+
     public void setStatus(int status) {
         this.status = status;
         super.setStatus(status);
@@ -256,13 +259,13 @@ class LoggerResponse extends ComponentResponseWrapper {
         this.status = status;
         super.sendError(status, message);
     }
-    
+
     //--------- Helper Methods ------------------------------------------------
-    
+
     /**
      * Stores the name header-value pair in the header map. The name is
      * converted to lower-case before using it as an index in the map.
-     * 
+     *
      * @param name The name of the header to register
      * @param value The value of the header to register
      * @param add If <code>true</code> the header value is added to the list
@@ -271,104 +274,104 @@ class LoggerResponse extends ComponentResponseWrapper {
      */
     private void registerHeader(String name, String value, boolean add) {
         // ensure the headers map
-        if (headers == null) {
-            headers = new HashMap();
+        if (this.headers == null) {
+            this.headers = new HashMap();
         }
 
         // normalize header name to lower case to support case-insensitive headers
         name = name.toLowerCase();
 
         // retrieve the current contents if adding, otherwise assume no current
-        Object current = add ? headers.get(name) : null;
-        
+        Object current = add ? this.headers.get(name) : null;
+
         if (current == null) {
             // set the single value (forced if !add)
-            headers.put(name, value);
-            
+            this.headers.put(name, value);
+
         } else if (current instanceof String) {
             // create list if a single value is already set
             List list = new ArrayList();
             list.add(current);
             list.add(value);
-            headers.put(name, list);
-            
+            this.headers.put(name, list);
+
         } else {
             // append to the list of more than one already set
             ((List) current).add(value);
         }
     }
-    
+
     // byte transfer counting ServletOutputStream
     private static class LoggerResponseOutputStream extends ServletOutputStream {
         private ServletOutputStream delegatee;
         private int count;
-        
+
         LoggerResponseOutputStream(ServletOutputStream delegatee) {
             this.delegatee = delegatee;
         }
-        
+
         public int getCount() {
-            return count;
+            return this.count;
         }
-        
+
         public void write(int b) throws IOException {
-            delegatee.write(b);
-            count++;
+            this.delegatee.write(b);
+            this.count++;
         }
-        
+
         public void write(byte[] b) throws IOException {
-            delegatee.write(b);
-            count += b.length;
+            this.delegatee.write(b);
+            this.count += b.length;
         }
-        
+
         public void write(byte[] b, int off, int len) throws IOException {
-            delegatee.write(b, off, len);
-            count += len;
+            this.delegatee.write(b, off, len);
+            this.count += len;
         }
-        
+
         public void flush() throws IOException {
-            delegatee.flush();
+            this.delegatee.flush();
         }
-        
+
         public void close() throws IOException {
-            delegatee.close();
+            this.delegatee.close();
         }
     }
-    
+
     // character transfer counting PrintWriter
     private static class LoggerResponseWriter extends PrintWriter {
 
         private static final int LINE_SEPARATOR_LENGTH =
             System.getProperty("line.separator").length();
-        
+
         private int count;
-        
+
         LoggerResponseWriter(PrintWriter delegatee) {
             super(delegatee);
         }
-        
+
         public int getCount() {
-            return count;
+            return this.count;
         }
-        
+
         public void write(int c) {
             super.write(c);
-            count++;
+            this.count++;
         }
-        
+
         public void write(char[] buf, int off, int len) {
             super.write(buf, off, len);
-            count += len;
+            this.count += len;
         }
-        
+
         public void write(String s, int off, int len) {
             super.write(s, off, len);
-            count += len;
+            this.count += len;
         }
-        
+
         public void println() {
             super.println();
-            count += LINE_SEPARATOR_LENGTH;
+            this.count += LINE_SEPARATOR_LENGTH;
         }
     }
 }

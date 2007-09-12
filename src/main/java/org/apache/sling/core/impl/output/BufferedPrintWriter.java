@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.output;
 
@@ -108,7 +111,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
 
         // set the buffer
         this.offset = 0;
-        setBufferSize(bufferSize);
+        this.setBufferSize(bufferSize);
     }
 
     /**
@@ -156,7 +159,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
     public void setBufferSize(int bufferSize) {
 
         // check buffer requirements
-        if (offset != 0) {
+        if (this.offset != 0) {
             throw new IllegalStateException("Buffer not empty");
         }
 
@@ -178,7 +181,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      * @return the size of the buffer
      */
     public int getBufferSize() {
-        return bufferSize;
+        return this.bufferSize;
     }
 
     /**
@@ -194,17 +197,17 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      * Writes the contents of the buffer to the wrapped writer.
      */
     public void flushBuffer() {
-        if (isClosed()) {
+        if (this.isClosed()) {
             log.info("flush: PrintWriter already closed. No Flushing");
-            setError();
+            this.setError();
             return;
         }
 
         // write the buffer
-        if (buffer != null) {
-            if (offset > 0) {
-                log.debug("flush: Flushing {0} characters", String.valueOf(offset));
-                super.write(buffer, 0, offset);
+        if (this.buffer != null) {
+            if (this.offset > 0) {
+                log.debug("flush: Flushing {0} characters", String.valueOf(this.offset));
+                super.write(this.buffer, 0, this.offset);
             } else {
                 log.debug("flush: Empty buffer");
             }
@@ -213,7 +216,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
         }
 
         // reset buffer offset to start writing at the beginning
-        offset = 0;
+        this.offset = 0;
     }
 
     //---------- PrintWriter overwrites ----------------------------------------
@@ -238,7 +241,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
          *  ( the servlet writer has to be checked, because this one eats
          *    all io exceptions trying to write to the client )
          */
-        return trouble || super.checkError();
+        return this.trouble || super.checkError();
     }
 
     /** Indicate that an error has occurred. */
@@ -253,10 +256,10 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      */
     public void flush() {
         // flush the buffer to the destination
-        flushBuffer();
+        this.flushBuffer();
 
         // flush the destination if not closed already
-        if (!isClosed()) {
+        if (!this.isClosed()) {
             super.flush();
         }
     }
@@ -266,19 +269,19 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      * writer.
      */
     public void close() {
-        if (!isClosed()) {
+        if (!this.isClosed()) {
 
             // only write buffer, leave to wrapped to flush upon close
-            flushBuffer();
+            this.flushBuffer();
 
             // close the writer and release wrapped writer
             super.close();
 
             // remove the buffer space alltogether
-            setBufferSize(0);
+            this.setBufferSize(0);
 
             // set the destination to the servlet writer to prevent possible NPE
-            closed = true;
+            this.closed = true;
         }
     }
 
@@ -289,25 +292,25 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      * @param c The character to write to the buffer.
      */
     public void write(int c) {
-        if (isClosed()) {
+        if (this.isClosed()) {
             log.info("write: PrintWriter already closed. No Writing");
-            setError();
+            this.setError();
             return;
         }
 
-        if (buffer == null) {
+        if (this.buffer == null) {
 
             // checks for open stream itself
             log.debug("write: Direct writing due to disabled buffering");
             super.write(c);
 
         } else {
-            if (offset >= bufferSize) {
+            if (this.offset >= this.bufferSize) {
                 log.debug("write: Buffer full, flushing first");
-                flushBuffer();
+                this.flushBuffer();
             }
 
-            buffer[offset++] = (char) c;
+            this.buffer[this.offset++] = (char) c;
         }
     }
 
@@ -329,23 +332,23 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      *      array <code>buf</code>.
      */
     public void write(char buf[], int off, int len) {
-        if (isClosed()) {
+        if (this.isClosed()) {
             log.info("write: PrintWriter already closed. No Writing");
-            setError();
+            this.setError();
             return;
         }
 
-        if (buffer == null) {
+        if (this.buffer == null) {
             // checks for open stream itself
             log.debug("write: Direct writing due to disabled buffering");
             super.write(buf, off, len);
         } else {
             // copy all buffer parts bigger than the current space
-            while (offset + len - 1 >= bufferSize) {
+            while (this.offset + len - 1 >= this.bufferSize) {
 
                 // write the first portion to the buffer to flush
-                int space = bufferSize - offset;
-                System.arraycopy(buf, off, buffer, offset, space);
+                int space = this.bufferSize - this.offset;
+                System.arraycopy(buf, off, this.buffer, this.offset, space);
                 off += space;
                 len -= space;
 
@@ -353,16 +356,16 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
                         String.valueOf(space));
 
                 // flush buffer and reset offset to 0
-                offset = bufferSize;
-                flushBuffer();
+                this.offset = this.bufferSize;
+                this.flushBuffer();
             }
 
             // copy rest of the data
             if (len > 0) {
                 log.debug("write: Writing {0} characters to the buffer",
                         String.valueOf(len));
-                System.arraycopy(buf, off, buffer, offset, len);
-                offset += len;
+                System.arraycopy(buf, off, this.buffer, this.offset, len);
+                this.offset += len;
             }
         }
     }
@@ -386,9 +389,9 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      */
     public void write(String s, int off, int len) {
 
-        if (isClosed()) {
+        if (this.isClosed()) {
             log.info("write: PrintWriter already closed. No Writing");
-            setError();
+            this.setError();
             return;
         }
 
@@ -399,17 +402,17 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
          * allocation which would be needed using the String.toCharArray method.
          */
 
-        if (buffer == null) {
+        if (this.buffer == null) {
             // checks for open stream itself
             log.debug("write: Direct writing due to disabled buffering");
             super.write(s, off, len);
         } else {
             // copy all buffer parts bigger than the current space
-            while (offset + len -1 >= bufferSize) {
+            while (this.offset + len -1 >= this.bufferSize) {
 
                 // write the first portion to the buffer to flush
-                int space = bufferSize - offset;
-                s.getChars(off, off+space, buffer, offset);
+                int space = this.bufferSize - this.offset;
+                s.getChars(off, off+space, this.buffer, this.offset);
                 off += space;
                 len -= space;
 
@@ -417,16 +420,16 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
                         String.valueOf(space));
 
                 // flush buffer and reset offset to 0
-                offset = bufferSize;
-                flushBuffer();
+                this.offset = this.bufferSize;
+                this.flushBuffer();
             }
 
             // copy rest of the data
             if (len > 0) {
                 log.debug("write: Writing {0} characters to the buffer",
                         String.valueOf(len));
-                s.getChars(off, off+len, buffer, offset);
-                offset += len;
+                s.getChars(off, off+len, this.buffer, this.offset);
+                this.offset += len;
             }
         }
     }
@@ -442,7 +445,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      */
     public void println() {
         // write the line separator
-        write(lineSeparator);
+        this.write(lineSeparator);
     }
 
     /**
@@ -451,6 +454,6 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      * @return <code>true</code> if this writer has been closed.
      */
     private boolean isClosed() {
-        return closed;
+        return this.closed;
     }
 }

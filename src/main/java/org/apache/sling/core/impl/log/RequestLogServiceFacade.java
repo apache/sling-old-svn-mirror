@@ -1,17 +1,20 @@
 /*
- * Copyright 2007 The Apache Software Foundation.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.core.impl.log;
 
@@ -54,7 +57,7 @@ class RequestLogServiceFacade implements RequestLog {
     /**
      * Creates an instance of this facade class calling request log services
      * with the given <code>serviceName</code>.
-     * 
+     *
      * @param context The <code>BundleContext</code> used to acquire the
      *            request log services.
      * @param serviceName The name of the services used for logging. This value
@@ -65,27 +68,27 @@ class RequestLogServiceFacade implements RequestLog {
         String filter = "(&(" + Constants.OBJECTCLASS + "="
             + RequestLog.class.getName() + ")(" + RequestLog.REQUEST_LOG_NAME
             + "=" + serviceName + "))";
-        requestLogTracker = new ServiceTracker(context, filter, null);
-        requestLogTracker.open();
+        this.requestLogTracker = new ServiceTracker(context, filter, null);
+        this.requestLogTracker.open();
 
         // use negative initial tracking count to force acquiry of services
-        trackingCount = -1;
+        this.trackingCount = -1;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.sling.core.RequestLog#write(java.lang.String)
      */
     public void write(String message) {
 
         // acquire the current logger list
-        Object[] tmpLoggers = loggers;
+        Object[] tmpLoggers = this.loggers;
 
         // if services have been added/removed reacquire from the tracker
-        if (trackingCount != requestLogTracker.getTrackingCount()) {
-            tmpLoggers = requestLogTracker.getServices();
-            loggers = tmpLoggers;
+        if (this.trackingCount != this.requestLogTracker.getTrackingCount()) {
+            tmpLoggers = this.requestLogTracker.getServices();
+            this.loggers = tmpLoggers;
         }
 
         // finally call the loggers with the message
@@ -98,10 +101,10 @@ class RequestLogServiceFacade implements RequestLog {
 
     public void close() {
         // drop the service references and reinitialize tracking counter
-        loggers = null;
-        trackingCount = -1;
+        this.loggers = null;
+        this.trackingCount = -1;
 
         // terminate using the RequestLog service(s)
-        requestLogTracker.close();
+        this.requestLogTracker.close();
     }
 }
