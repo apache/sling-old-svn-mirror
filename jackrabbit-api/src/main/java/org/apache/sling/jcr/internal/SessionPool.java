@@ -579,6 +579,9 @@ class SessionPool {
         // unlocking them, we could use the search, however ???
         try {
             QueryManager qm = session.getWorkspace().getQueryManager();
+            // FIXME - this search searches for all locks for the user of the session
+            //         so if the user has more than one session, locks from other
+            //         sessions will be delivered as well.
             Query q = qm.createQuery(
                 "/jcr:root//element(*,mix:lockable)[@jcr:lockOwner='"
                     + session.getUserID() + "']", Query.XPATH);
