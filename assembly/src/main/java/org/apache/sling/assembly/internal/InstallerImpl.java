@@ -56,11 +56,9 @@ public class InstallerImpl implements Installer {
 
     private InstallerServiceImpl controller;
 
-    private Set repositoryURLs;
+    private Set<URL> repositoryURLs;
 
-    private int defaultStartLevel;
-
-    private List bundleDescriptors;
+    private List<BundleDescriptor> bundleDescriptors;
 
     private Object lock;
 
@@ -68,7 +66,6 @@ public class InstallerImpl implements Installer {
         this.controller = controller;
 
         this.repositoryURLs = null; // no added repositories
-        this.defaultStartLevel = -1; // use StartLevel service default
     }
 
     public void addBundle(String location, URL source, int startLevel) {
@@ -98,7 +95,7 @@ public class InstallerImpl implements Installer {
      */
     public void addTemporaryRepository(URL url) {
         if (this.repositoryURLs == null) {
-            this.repositoryURLs = new HashSet();
+            this.repositoryURLs = new HashSet<URL>();
         }
 
         this.repositoryURLs.add(url);
@@ -118,8 +115,8 @@ public class InstallerImpl implements Installer {
         }
 
         if (this.bundleDescriptors != null) {
-            for (Iterator bi = this.bundleDescriptors.iterator(); bi.hasNext();) {
-                ((BundleDescriptor) bi.next()).dispose();
+            for (Iterator<BundleDescriptor> bi = this.bundleDescriptors.iterator(); bi.hasNext();) {
+                (bi.next()).dispose();
                 bi.remove();
             }
             this.bundleDescriptors = null;
@@ -136,16 +133,16 @@ public class InstallerImpl implements Installer {
             return null;
         }
 
-        Set addedRepos = null;
+        Set<URL> addedRepos = null;
 
         try {
             this.lock = this.controller.acquireLock(LOCK_ACQUIRE_TIMEOUT);
 
             addedRepos = this.addRepositories();
 
-            List installedBundles = new LinkedList();
-            for (Iterator di = this.bundleDescriptors.iterator(); di.hasNext();) {
-                BundleDescriptor bd = (BundleDescriptor) di.next();
+            List<Bundle> installedBundles = new LinkedList<Bundle>();
+            for (Iterator<BundleDescriptor> di = this.bundleDescriptors.iterator(); di.hasNext();) {
+                BundleDescriptor bd = di.next();
 
                 try {
                     bd.install(this.controller, installedBundles);
@@ -179,7 +176,7 @@ public class InstallerImpl implements Installer {
                 }
             }
 
-            Bundle[] bundles = (Bundle[]) installedBundles.toArray(new Bundle[installedBundles.size()]);
+            Bundle[] bundles = installedBundles.toArray(new Bundle[installedBundles.size()]);
 
             if (start) {
                 for (int i = 0; i < bundles.length; i++) {
@@ -228,13 +225,13 @@ public class InstallerImpl implements Installer {
 
     private void addBundleDescriptor(BundleDescriptor bundleDescriptor) {
         if (this.bundleDescriptors == null) {
-            this.bundleDescriptors = new LinkedList();
+            this.bundleDescriptors = new LinkedList<BundleDescriptor>();
         }
 
         this.bundleDescriptors.add(bundleDescriptor);
     }
 
-    private Set addRepositories() {
+    private Set<URL> addRepositories() {
         // nothing to do if there are no URLs
         if (this.repositoryURLs == null || this.repositoryURLs.isEmpty()) {
             return null;
@@ -247,7 +244,7 @@ public class InstallerImpl implements Installer {
         }
 
         // remove all URLs from the set, which allready are defined
-        Set tmp = new HashSet(this.repositoryURLs);
+        Set<URL> tmp = new HashSet<URL>(this.repositoryURLs);
         Repository[] repos = ra.listRepositories();
         for (int i = 0; repos != null && i < repos.length; i++) {
             if (tmp.contains(repos[i].getURL())) {
@@ -256,8 +253,8 @@ public class InstallerImpl implements Installer {
         }
 
         // register all URLs with the repository admin service
-        for (Iterator ui = tmp.iterator(); ui.hasNext();) {
-            URL url = (URL) ui.next();
+        for (Iterator<URL> ui = tmp.iterator(); ui.hasNext();) {
+            URL url = ui.next();
             try {
                 ra.addRepository(url);
             } catch (Exception e) {
@@ -270,11 +267,11 @@ public class InstallerImpl implements Installer {
         return tmp.isEmpty() ? null : tmp;
     }
 
-    private void removeRepositories(Set urls) {
+    private void removeRepositories(Set<URL> urls) {
         RepositoryAdmin ra = this.controller.getRepositoryAdmin();
         if (ra != null && urls != null) {
-            for (Iterator ui = urls.iterator(); ui.hasNext();) {
-                ra.removeRepository((URL) ui.next());
+            for (Iterator<URL> ui = urls.iterator(); ui.hasNext();) {
+                ra.removeRepository(ui.next());
             }
         }
     }
@@ -296,7 +293,7 @@ public class InstallerImpl implements Installer {
         }
 
         public abstract void install(InstallerServiceImpl controller,
-                List installedBundles) throws BundleException;
+                List<Bundle> installedBundles) throws BundleException;
 
         protected void setStartLevel(InstallerServiceImpl controller,
                 Bundle bundle) {
@@ -339,7 +336,7 @@ public class InstallerImpl implements Installer {
         }
 
         public void install(InstallerServiceImpl controller,
-                List installedBundles) throws BundleException {
+                List<Bundle> installedBundles) throws BundleException {
 
             if (this.source == null) {
                 try {
@@ -408,7 +405,7 @@ public class InstallerImpl implements Installer {
         }
 
         public void install(InstallerServiceImpl controller,
-                List installedBundles) throws BundleException {
+                List<Bundle> installedBundles) throws BundleException {
             RepositoryAdmin ra = controller.getRepositoryAdmin();
             if (ra == null) {
                 throw new BundleException("Cannot install bundle "
@@ -464,21 +461,20 @@ public class InstallerImpl implements Installer {
             resolver.deploy(false);
 
             // after deployment, find the bundles
-            Bundle[] bundles = controller.getBundleContext().getBundles();
-            List bundleList = new ArrayList();
+            final Bundle[] bundles = controller.getBundleContext().getBundles();
+            List<Bundle> bundleList = new ArrayList<Bundle>();
             this.getBundles(bundleList, bundles, resolver.getAddedResources());
             this.getBundles(bundleList, bundles, resolver.getRequiredResources());
             this.getBundles(bundleList, bundles, resolver.getOptionalResources());
-            bundles = (Bundle[]) bundleList.toArray(new Bundle[bundleList.size()]);
 
-            for (Iterator bi = bundleList.iterator(); bi.hasNext();) {
-                Bundle bundle = (Bundle) bi.next();
+            for (Iterator<Bundle> bi = bundleList.iterator(); bi.hasNext();) {
+                Bundle bundle = bi.next();
                 this.setStartLevel(controller, bundle);
                 installedBundles.add(bundle);
             }
         }
 
-        private void getBundles(List bundleList, Bundle[] bundles,
+        private void getBundles(List<Bundle> bundleList, final Bundle[] bundles,
                 Resource[] res) {
             if (res == null || res.length == 0) {
                 return;

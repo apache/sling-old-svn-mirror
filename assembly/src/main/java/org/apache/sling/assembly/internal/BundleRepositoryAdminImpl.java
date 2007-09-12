@@ -84,7 +84,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      *
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getResources()
      */
-    public Iterator getResources() {
+    public Iterator<org.apache.sling.assembly.installer.Resource> getResources() {
         Object lock = this.installerService.acquireLock(0);
         try {
             Repository[] repos = this.getRepositoryAdmin().listRepositories();
@@ -92,11 +92,11 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
                 return Collections.EMPTY_LIST.iterator();
             }
 
-            SortedSet resSet = new TreeSet();
+            SortedSet<org.apache.sling.assembly.installer.Resource> resSet = new TreeSet<org.apache.sling.assembly.installer.Resource>();
             for (int i = 0; i < repos.length; i++) {
                 Resource[] resources = repos[i].getResources();
-                if (resources.length > 0) {
-                    for (int j = 0; resources != null && j < resources.length; j++) {
+                if (resources != null) {
+                    for (int j = 0; j < resources.length; j++) {
                         resSet.add(new ResourceImpl(resources[j]));
                     }
                 }

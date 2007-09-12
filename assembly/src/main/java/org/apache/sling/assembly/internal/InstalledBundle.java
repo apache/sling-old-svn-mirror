@@ -59,7 +59,7 @@ public class InstalledBundle {
      * bundle. This is <code>null</code> if there is only one Assembly Bundle
      * referring to this installed bundle.
      */
-    private Set referents;
+    private Set<Assembly> referents;
 
     /**
      * Creates an instance of this class for the given bundle specification,
@@ -102,7 +102,7 @@ public class InstalledBundle {
     void addReferent(Assembly referent) {
         if (this.installer != referent) {
             if (this.referents == null) {
-                this.referents = new HashSet();
+                this.referents = new HashSet<Assembly>();
             }
             this.referents.add(referent);
         }
@@ -117,8 +117,8 @@ public class InstalledBundle {
     void removeReferent(Assembly referent) {
         if (this.installer == referent) {
             if (this.referents != null) {
-                Iterator ri = this.referents.iterator();
-                this.installer = (Assembly) ri.next();
+                Iterator<Assembly> ri = this.referents.iterator();
+                this.installer = ri.next();
                 ri.remove();
             } else {
                 this.installer = null;

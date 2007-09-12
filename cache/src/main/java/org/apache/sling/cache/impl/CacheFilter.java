@@ -41,9 +41,7 @@ import org.apache.sling.component.ComponentResponse;
 public class CacheFilter extends AbstractCacheFilter implements ComponentFilter {
 
     /**
-     * @see ComponentFilter#doFilter(ComponentRequest, ComponentResponse, ComponentFilterChain),
-     *      ComponentResponse,
-     *      ComponentFilterChain
+     * @see org.apache.sling.component.ComponentFilter#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse, org.apache.sling.component.ComponentFilterChain)
      */
     public void doFilter(ComponentRequest request, ComponentResponse response,
             ComponentFilterChain filterChain) throws IOException,
