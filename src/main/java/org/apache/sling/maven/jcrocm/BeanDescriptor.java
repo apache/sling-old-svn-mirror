@@ -36,7 +36,7 @@ import com.thoughtworks.qdox.model.JavaMethod;
  *       autoUpdate (true|false) &quot;true&quot;
  *       autoInsert (true|false) &quot;true&quot;  
  *       converter CDATA #IMPLIED
- *       jcrNodeType CDATA #IMPLIED
+ *       jcrType CDATA #IMPLIED
  *       jcrAutoCreated (true | false) &quot;false&quot;   
  *       jcrMandatory (true | false) &quot;false&quot;
  *       jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) &quot;COPY&quot;
