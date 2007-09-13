@@ -53,8 +53,6 @@ public class FieldDescriptor extends AbstractItemDescriptor {
 
     public static final String ELEMENT_FIELD_DESCRIPTOR = "field-descriptor";
 
-    public static final String FIELD_TYPE = "fieldType";
-
     public static final String ID = "id";
 
     public static final String PATH = "path";
@@ -70,8 +68,6 @@ public class FieldDescriptor extends AbstractItemDescriptor {
     public static final String JCR_TYPE = "jcrType";
 
     public static final String JCR_MULTIPLE = "jcrMultiple";
-
-    private String fieldType;
 
     private boolean isId;
 
@@ -96,14 +92,7 @@ public class FieldDescriptor extends AbstractItemDescriptor {
             return null;
         }
 
-        // field type is explicitly declared or Java field type
-        String fieldType = tag.getNamedParameter(FIELD_TYPE);
-        if (fieldType == null) {
-            fieldType = field.getType().getJavaClass().getFullyQualifiedName();
-        }
-        
-        return new FieldDescriptor(log, tag, field.getName(),
-            fieldType);
+        return new FieldDescriptor(log, tag, field.getName());
     }
 
     static FieldDescriptor fromMethod(Log log, JavaMethod method) {
@@ -120,25 +109,11 @@ public class FieldDescriptor extends AbstractItemDescriptor {
             fieldName = getFieldFromMethod(method);
         }
 
-        // field type is explicitly declared or parameter or return value
-        String fieldType = tag.getNamedParameter(FIELD_TYPE);
-        if (fieldType == null) {
-            if (method.getParameters() != null
-                && method.getParameters().length == 1) {
-                fieldType = method.getParameters()[0].getType().getJavaClass().getFullyQualifiedName();
-            } else if (method.getReturns() != null) {
-                fieldType = method.getReturns().getJavaClass().getFullyQualifiedName();
-            }
-        }
-
-        return new FieldDescriptor(log, tag, fieldName, fieldType);
+        return new FieldDescriptor(log, tag, fieldName);
     }
 
-    private FieldDescriptor(Log log, DocletTag tag, String fieldName,
-            String fieldType) {
+    private FieldDescriptor(Log log, DocletTag tag, String fieldName) {
         super(log, tag, fieldName);
-
-        this.fieldType = fieldType;
 
         isId = Boolean.valueOf(tag.getNamedParameter(ID)).booleanValue();
         isPath = Boolean.valueOf(tag.getNamedParameter(PATH)).booleanValue();
@@ -161,7 +136,6 @@ public class FieldDescriptor extends AbstractItemDescriptor {
 
         super.generate(xmlWriter);
 
-        xmlWriter.printAttribute(FIELD_TYPE, fieldType);
         xmlWriter.printAttribute(ID, isId);
         xmlWriter.printAttribute(PATH, isPath);
         xmlWriter.printAttribute(UUID, isUuid);
