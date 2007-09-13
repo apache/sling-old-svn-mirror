@@ -129,7 +129,7 @@ public class Loader {
     public void checkNodeType(ClassDescriptor classDescriptor) throws RepositoryException {
         Session session = this.getSession();
         try {
-            String nodeType = classDescriptor.getJcrNodeType();
+            String nodeType = classDescriptor.getJcrType();
             if (nodeType == null || nodeType.length() == 0) {
                 return;
             }
