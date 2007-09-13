@@ -216,7 +216,7 @@ public class ClassDescriptorReader {
 
         /*
          * className CDATA #REQUIRED
-         * jcrNodeType CDATA #IMPLIED
+         * jcrType CDATA #IMPLIED
          * jcrSuperTypes CDATA #IMPLIED
          * jcrMixinTypes CDATA #IMPLIED
          * extend CDATA #IMPLIED
@@ -226,7 +226,7 @@ public class ClassDescriptorReader {
          */
 
         fd.setClassName(this.getRequiredAttribute("className"));
-        fd.setJcrNodeType(this.getOptionalAttribute("jcrNodeType"));
+        fd.setJcrType(this.getOptionalAttribute("jcrType"));
         fd.setJcrSuperTypes(this.getOptionalAttribute("jcrSuperTypes"));
         fd.setJcrMixinTypes(this.getOptionalAttribute("jcrMixinTypes", (String[]) null));
 
@@ -256,7 +256,6 @@ public class ClassDescriptorReader {
 
         /*
          *  fieldName CDATA #REQUIRED
-         *  fieldType CDATA #IMPLIED
          *  jcrName CDATA #IMPLIED
          *  id (true | false) "false"
          *  path (true | false) "false"
@@ -269,7 +268,6 @@ public class ClassDescriptorReader {
          */
 
         fd.setFieldName(this.getRequiredAttribute("fieldName"));
-        fd.setFieldType(this.getOptionalAttribute("fieldType"));
         fd.setJcrName(this.getOptionalAttribute("jcrName", fd.getFieldName()));
 
         fd.setId(this.getOptionalAttribute("id", false));
@@ -296,7 +294,7 @@ public class ClassDescriptorReader {
          * autoUpdate (true|false) "true"
          * autoInsert (true|false) "true"
          * converter CDATA #IMPLIED
-         * jcrNodeType CDATA #IMPLIED
+         * jcrType CDATA #IMPLIED
          * jcrAutoCreated (true | false) "false"
          * jcrMandatory (true | false) "false"
          * jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) "COPY"
@@ -312,14 +310,13 @@ public class ClassDescriptorReader {
         fd.setAutoUpdate(this.getOptionalAttribute("autoUpdate", true));
         fd.setAutoInsert(this.getOptionalAttribute("autoInsert", true));
 
-        fd.setJcrNodeType(this.getOptionalAttribute("jcrNodeType"));
+        fd.setJcrType(this.getOptionalAttribute("jcrType"));
         fd.setJcrAutoCreated(this.getOptionalAttribute("jcrAutoCreated", false));
         fd.setJcrMandatory(this.getOptionalAttribute("jcrMandatory", false));
         fd.setJcrOnParentVersion(this.getOptionalAttribute("jcrOnParentVersion", "COPY"));
         fd.setJcrProtected(this.getOptionalAttribute("jcrProtected", false));
         fd.setJcrSameNameSiblings(this.getOptionalAttribute("jcrSameNameSiblings", false));
 
-        fd.setJcrType(this.getOptionalAttribute("jcrType"));
         fd.setJcrMultiple(this.getOptionalAttribute("jcrMultiple", false));
 
         return fd;
@@ -338,7 +335,7 @@ public class ClassDescriptorReader {
          * elementClassName CDATA #REQUIRED
          * collectionClassName CDATA #IMPLIED
          * collectionConverter CDATA #IMPLIED
-         * jcrNodeType CDATA #IMPLIED
+         * jcrType CDATA #IMPLIED
          * jcrAutoCreated (true | false) "false"
          * jcrMandatory (true | false) "false"
          * jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) "COPY"
@@ -358,7 +355,6 @@ public class ClassDescriptorReader {
         fd.setCollectionClassName(this.getOptionalAttribute("collectionClassName"));
         fd.setCollectionConverter(this.getOptionalAttribute("collectionConverter"));
 
-        fd.setJcrNodeType(this.getOptionalAttribute("jcrNodeType"));
         fd.setJcrAutoCreated(this.getOptionalAttribute("jcrAutoCreated", false));
         fd.setJcrMandatory(this.getOptionalAttribute("jcrMandatory", false));
         fd.setJcrOnParentVersion(this.getOptionalAttribute("jcrOnParentVersion", "COPY"));
@@ -498,7 +494,7 @@ public class ClassDescriptorReader {
     private void dropClassDescriptor(ClassDescriptor cd) {
         // remove descriptor
         this.descriptors.getClassDescriptorsByClassName().remove(cd.getClassName());
-        this.descriptors.getClassDescriptorsByNodeType().remove(cd.getJcrNodeType());
+        this.descriptors.getClassDescriptorsByNodeType().remove(cd.getJcrType());
 
         if (cd.hasDescendants()) {
             for (Iterator di=cd.getDescendantClassDescriptors().iterator(); di.hasNext(); ) {
