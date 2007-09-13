@@ -38,7 +38,7 @@ import com.thoughtworks.qdox.model.JavaMethod;
  *      elementClassName CDATA #IMPLIED
  *      collectionClassName CDATA #IMPLIED
  *      collectionConverter CDATA #IMPLIED
- *      jcrNodeType CDATA #IMPLIED
+ *      jcrType CDATA #IMPLIED
  *      jcrAutoCreated (true | false) &quot;false&quot;   
  *      jcrMandatory (true | false) &quot;false&quot;
  *      jcrOnParentVersion (COPY | VERSION | INITIALIZE | COMPUTE | IGNORE | ABORT) &quot;COPY&quot;

@@ -36,7 +36,7 @@ import com.thoughtworks.qdox.model.JavaClass;
  * <pre>
  *  &lt;!ATTLIST class-descriptor
  *      className CDATA #REQUIRED
- *      jcrNodeType CDATA #IMPLIED
+ *      jcrType CDATA #IMPLIED
  *      jcrSuperTypes CDATA #IMPLIED
  *      jcrMixinTypes CDATA #IMPLIED
  *      extend CDATA #IMPLIED
@@ -63,7 +63,7 @@ public class ClassDescriptor extends AbstractDescriptorElement {
 
     public static final String CLASS_NAME = "className";
 
-    public static final String JCR_NODE_TYPE = "jcrNodeType";
+    public static final String JCR_TYPE = "jcrType";
 
     public static final String JCR_SUPER_TYPES = "jcrSuperTypes";
 
@@ -85,7 +85,7 @@ public class ClassDescriptor extends AbstractDescriptorElement {
 
     private String className;
 
-    private String jcrNodeType;
+    private String jcrType;
 
     private String jcrSuperTypes;
 
@@ -155,7 +155,7 @@ public class ClassDescriptor extends AbstractDescriptorElement {
             }
         }
 
-        cd.jcrNodeType = tag.getNamedParameter(JCR_NODE_TYPE);
+        cd.jcrType = tag.getNamedParameter(JCR_TYPE);
         cd.jcrSuperTypes = tag.getNamedParameter(JCR_SUPER_TYPES);
         cd.jcrMixinTypes = tag.getNamedParameter(JCR_MIXIN_TYPES);
 
@@ -194,7 +194,7 @@ public class ClassDescriptor extends AbstractDescriptorElement {
 
         xmlWriter.printElementStart(ELEMENT_CLASS_DESCRIPTOR, true);
         xmlWriter.printAttribute(CLASS_NAME, className);
-        xmlWriter.printAttribute(JCR_NODE_TYPE, jcrNodeType);
+        xmlWriter.printAttribute(JCR_TYPE, jcrType);
         xmlWriter.printAttribute(JCR_SUPER_TYPES, jcrSuperTypes);
         xmlWriter.printAttribute(JCR_MIXIN_TYPES, jcrMixinTypes);
         xmlWriter.printAttribute(EXTEND, extend);

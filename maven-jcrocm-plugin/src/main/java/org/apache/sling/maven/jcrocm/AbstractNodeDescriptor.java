@@ -34,7 +34,7 @@ public class AbstractNodeDescriptor extends AbstractItemDescriptor {
 
     public static final String AUTO_INSERT = "autoInsert";
 
-    public static final String JCR_NODE_TYPE = "jcrNodeType";
+    public static final String JCR_TYPE = "jcrType";
 
     public static final String JCR_SAME_NAME_SIBBLINGS = "jcrSameNameSiblings";
 
@@ -46,7 +46,7 @@ public class AbstractNodeDescriptor extends AbstractItemDescriptor {
 
     private boolean isAutoInsert = true;
 
-    private String jcrNodeType;
+    private String jcrType;
 
     private boolean isJcrSameNameSibblings;
 
@@ -57,7 +57,7 @@ public class AbstractNodeDescriptor extends AbstractItemDescriptor {
     public AbstractNodeDescriptor(Log log, DocletTag tag, String fieldName) {
         super(log, tag, fieldName);
 
-        jcrNodeType = tag.getNamedParameter(JCR_NODE_TYPE);
+        jcrType = tag.getNamedParameter(JCR_TYPE);
         isJcrSameNameSibblings = Boolean.valueOf(
             tag.getNamedParameter(JCR_SAME_NAME_SIBBLINGS)).booleanValue();
 
@@ -79,7 +79,7 @@ public class AbstractNodeDescriptor extends AbstractItemDescriptor {
     void generate(XMLWriter xmlWriter) {
         super.generate(xmlWriter);
 
-        xmlWriter.printAttribute(JCR_NODE_TYPE, jcrNodeType);
+        xmlWriter.printAttribute(JCR_TYPE, jcrType);
         xmlWriter.printAttribute(JCR_SAME_NAME_SIBBLINGS,
             isJcrSameNameSibblings);
 
