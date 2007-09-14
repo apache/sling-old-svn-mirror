@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * The <code>RequestEvent</code> class provides the contents of a request
- * event sent to the methods of the {@link RequestEventListener2} interface.
+ * event sent to the methods of the {@link RequestEventListener} interface.
  */
 public class RequestEvent {
 
@@ -47,7 +47,7 @@ public class RequestEvent {
     }
 
     /**
-     * Returns the {@link DeliveryHttpServletRequest request} object pertaining
+     * Returns the {@link HttpServletRequest request} object pertaining
      * to the HTTP request represented by this event.
      * <p>
      * This property is available for all events.
@@ -58,7 +58,7 @@ public class RequestEvent {
 
 
     /**
-     * Returns the {@link DeliveryHttpServletResponse response} object
+     * Returns the {@link HttpServletResponse response} object
      * pertaining to the HTTP request represented by this event.
      * <p>
      * This property is available for all events.
