@@ -312,7 +312,10 @@ public class SlingServlet extends GenericServlet {
         if ( repoLocation != null && repoLocation.indexOf(":/") < 1 && repoLocation.startsWith("/")) {
             try {
                 final URL url = this.getServletContext().getResource(repoLocation);
-                props.put(OBR_REPOSITORY_URL, url.toExternalForm());
+                // only if we get back a resource url, we update it
+                if ( url != null ) {
+                    props.put(OBR_REPOSITORY_URL, url.toExternalForm());
+                }
             } catch (MalformedURLException e) {
                 // if an exception occurs, we ignore it
             }
