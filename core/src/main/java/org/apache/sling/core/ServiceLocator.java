@@ -21,8 +21,16 @@ package org.apache.sling.core;
 import org.osgi.framework.InvalidSyntaxException;
 
 /**
- * <code>ServiceLocator</code>... The service locator is the gateway to all
- * registered components. It is made available through a request attribute.
+ * <code>ServiceLocator</code>
+ *
+ * The service locator is the gateway to all
+ * registered components. It is made available through the request attribute
+ * {@link #REQUEST_ATTRIBUTE_NAME}.
+ * The service locator should only be used in code which is not managed through
+ * OSGi like JSPs or Java classes that are not registered as services.
+ *
+ * The services looked up through the service locator are only valid within the
+ * current request!
  */
 public interface ServiceLocator {
 

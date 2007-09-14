@@ -21,9 +21,7 @@ package org.apache.sling.core;
 import java.util.EventListener;
 
 /**
- * The <code>RequestEventListener2</code> class replaces the
- * {@link org.apache.sling.core.RequestEventListener} interface replacing the
- * original argument list with the {@link RequestEvent}.
+ * The <code>RequestEventListener</code>
  */
 public interface RequestEventListener extends EventListener {
 
