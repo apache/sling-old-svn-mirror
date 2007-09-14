@@ -72,7 +72,7 @@
                     <reportSet>
                         <reports>
                             <report>project-team</report>
-                            <!-- not yet <report>mailing-list</report> -->
+                            <report>mailing-list</report>
                             <!-- not yet <report>cim</report> -->
                             <report>issue-tracking</report>
                             <report>license</report>
