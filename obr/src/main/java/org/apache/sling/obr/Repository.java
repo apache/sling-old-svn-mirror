@@ -129,7 +129,9 @@ public class Repository {
     }
 
     public String getLastModifiedFormatted() {
-        return REPO_DATE_FORMAT.format(new Date(this.getLastModified()));
+        synchronized (REPO_DATE_FORMAT) {
+            return REPO_DATE_FORMAT.format(new Date(this.getLastModified()));
+        }
     }
 
     public void addResource(InputStream bundleStream) throws IOException {
@@ -364,14 +366,12 @@ public class Repository {
         String version = manifest.getMainAttributes().getValue("Bundle-Version");
         Version v = Version.parseVersion(version);
         if (v.getQualifier().indexOf("SNAPSHOT") >= 0) {
-            version = v.getMajor()
-                + "."
-                + v.getMinor()
-                + "."
-                + v.getMicro()
-                + "."
-                + v.getQualifier().replaceAll("SNAPSHOT",
-                    DATE_FORMAT.format(new Date()));
+            String tStamp;
+            synchronized (DATE_FORMAT) {
+                tStamp = DATE_FORMAT.format(new Date());
+            }
+            version = v.getMajor() + "." + v.getMinor() + "." + v.getMicro()
+                + "." + v.getQualifier().replaceAll("SNAPSHOT", tStamp);
             manifest.getMainAttributes().putValue("Bundle-Version", version);
         }
 
