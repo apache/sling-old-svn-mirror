@@ -359,11 +359,9 @@ public class Sling implements BundleActivator {
             // no system property, ensure default setting
             slingHome = props.get(SLING_HOME);
             if (slingHome == null || slingHome.length() == 0) {
-                if (slingHome == null || slingHome.length() == 0) {
-                    slingHome = "sling";
-                    this.logger.log("sling.home is not defined. Using '" + slingHome
-                        + "'");
-                }
+                slingHome = "sling";
+                this.logger.log("sling.home is not defined. Using '" + slingHome
+                    + "'");
             }
         }
 
