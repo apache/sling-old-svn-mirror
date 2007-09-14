@@ -20,6 +20,7 @@ package org.apache.sling.maven.bundlesupport;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
@@ -123,6 +124,7 @@ public class BundleInstallMojo extends AbstractMojo {
 	    // don't do anything, if this step is to be skipped
 	    if (skip) {
 	        getLog().debug("Skipping bundle installation as instructed");
+	        return;
 	    }
 
         // only upload if packaging as an osgi-bundle
@@ -174,6 +176,9 @@ public class BundleInstallMojo extends AbstractMojo {
                 getLog().error(
                     "Install failed, cause: " + HttpStatus.getStatusText(status));
             }
+        } catch (ConnectException ce) {
+            getLog().info("Install on " + targetURL + " failed, cause: " + ce.getMessage());
+            getLog().debug(ce); // dump on debug
         } catch (Exception ex) {
             getLog().error(ex.getClass().getName() + " " + ex.getMessage());
             ex.printStackTrace();
