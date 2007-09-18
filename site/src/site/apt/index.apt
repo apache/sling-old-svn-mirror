@@ -22,15 +22,13 @@ Introduction
     should be directed to the Apache Sling development list
     (sling-dev at incubator.apache.org).
 
-*--+
-| <<NOTE>>: Sling has just entered the Incubator and you may already get the source from the {{{source-repository.html}SVN repository}}. Unfortunately the mailing lists have not been setup yet, so you may not register yet.|
-*--+
 
 
 Contents
 
     Documentation is currently available inside the Jackrabbit Wiki at
-    {{http://wiki.apache.org/jackrabbit/ApacheSling}}:
+    {{http://wiki.apache.org/jackrabbit/ApacheSling}} and is being transferred
+    to the new {{{http://cwiki.apache.org/SLING/}Sling Wiki}}:
 
    * {{{http://wiki.apache.org/jackrabbit/SlingProposal}Draft proposal to submit Sling to the Incubator}}
    
