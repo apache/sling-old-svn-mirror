@@ -37,8 +37,8 @@
     </description>
     
     <organization> 
-        <name>Apache Felix Project</name> 
-        <url>http://incubator.apache.org/felix/</url> 
+        <name>Apache Sling Project</name> 
+        <url>http://incubator.apache.org/sling/</url> 
     </organization>
     
     <dependencies>
