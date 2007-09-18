@@ -27,6 +27,7 @@
       <version>1-incubator-SNAPSHOT</version>
     </parent>
   
+    <groupId>org.apache.sling.commons</groupId>
     <artifactId>jsp-api</artifactId>
     <version>2.0</version>
     <packaging>bundle</packaging>
