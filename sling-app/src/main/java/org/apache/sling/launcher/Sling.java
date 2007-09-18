@@ -35,6 +35,7 @@ import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.Map.Entry;
 
 import javax.servlet.ServletException;
@@ -155,7 +156,21 @@ public class Sling implements BundleActivator {
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
+    
+    /**
+     * The name of the framework property containing the identifier of the
+     * running Sling instance (value is "sling.id"). This value of this property
+     * is managed by this class and cannot be overwritten by the configuration
+     * file(s).
+     */
+    public static final String SLING_ID = "sling.id";
 
+    /**
+     * The name of the file used to persist the value of the
+     * {@link #SLING_ID Sling instance identifier} (value is "sling.id").
+     */
+    public static final String SLING_ID_FILE = SLING_ID;
+    
     /**
      * The name of the configuration property defining a properties file
      * defining a list of bundles, which are installed into the framework when
@@ -222,7 +237,7 @@ public class Sling implements BundleActivator {
                 ? resourceProvider
                 : new ClassLoaderResourceProvider(this.getClass().getClassLoader());
 
-        this.logger.log("Sling Starting");
+        this.logger.log("Starting Sling");
 
         // read the default parameters
         Map<String, String> props = this.loadConfigProperties(propOverwrite);
@@ -233,6 +248,9 @@ public class Sling implements BundleActivator {
 
         // ensure execution environment
         this.setExecutionEnvironment(props);
+        
+        // ensure the instance ID
+        props.put(SLING_ID, getInstanceId(props));
 
         // make sure Felix does not exit the VM when terminating ...
         props.put("felix.embedded.execution", "true");
@@ -249,7 +267,7 @@ public class Sling implements BundleActivator {
         this.felix = tmpFelix;
 
         // log sucess message
-        this.logger.log("Felix (OSGi R4 Framework) started");
+        this.logger.log("Sling Instance " + props.get(SLING_ID) + " started");
     }
 
     /**
@@ -258,11 +276,12 @@ public class Sling implements BundleActivator {
      */
     public final void destroy() {
         // shutdown the Felix container
-        if (this.felix != null) {
-            this.logger.log("Shutting down Felix (OSGi R4) container");
-            this.felix.stopAndWait();
-            this.logger.log("Felix (OSGi R4) container stopped");
-            this.felix = null;
+        if (felix != null) {
+            String label = "Sling Instance " + felix.getBundleContext().getProperty(SLING_ID);
+            logger.log("Shutting down " + label);
+            felix.stopAndWait();
+            logger.log(label + " stopped");
+            felix = null;
         }
     }
 
@@ -635,6 +654,68 @@ public class Sling implements BundleActivator {
     }
 
     /**
+     * Returns the Sling Instance Identifier. The value is read from the
+     * <code>${sling.home}/sling.id</code> file if existing and valid.
+     * Otherwise a new id is created as a random UUID and then stored in the
+     * file.
+     * 
+     * @return the Sling Instance Identifier
+     */
+    private String getInstanceId(Map<String, String> props) {
+        String slingId = null;
+
+        // try to read the id from the id file first
+        File idFile = new File(props.get(SLING_HOME), SLING_ID_FILE);
+        if (idFile.exists() && idFile.length() >= 36) {
+            FileInputStream fin = null;
+            try {
+                fin = new FileInputStream(idFile);
+                byte[] rawBytes = new byte[36];
+                if (fin.read(rawBytes) == 36) {
+                    String rawString = new String(rawBytes, "ISO-8859-1");
+                    
+                    // roundtrip to ensure correct format of UUID value
+                    slingId = UUID.fromString(rawString).toString(); 
+                }
+            } catch (Throwable t) {
+                logger.log("Failed reading UUID from id file " + idFile + ", creating new id", t);
+            } finally {
+                if (fin != null) {
+                    try {
+                        fin.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+        }
+        
+        // no sling id yet or failure to read file: create an id and store
+        if (slingId == null) {
+            slingId = UUID.randomUUID().toString();
+            
+            idFile.delete();
+            idFile.getParentFile().mkdirs();
+            FileOutputStream fout = null;
+            try {
+                fout = new FileOutputStream(idFile);
+                fout.write(slingId.getBytes("ISO-8859-1"));
+                fout.flush();
+            } catch (Throwable t) {
+                logger.log("Failed writing UUID to id file " + idFile, t);
+            } finally {
+                if (fout != null) {
+                    try {
+                        fout.close();
+                    } catch (IOException ignore) {
+                    }
+                }
+            }
+        }
+        
+        return slingId;
+    }
+
+    /**
      * Convert the URL into a string. If the URL string contains blank spaces,
      * which may happen if the <code>File.toURL()</code> method is used on
      * files whose path contains blank spaces, this method replaces the blank
@@ -793,7 +874,7 @@ public class Sling implements BundleActivator {
                 try {
                     if (is == null && slingHome != null) {
                         File resFile = new File(file);
-                        if (!resFile.isAbsolute() ) {
+                        if (!resFile.isAbsolute()  && slingHome != null) {
                             resFile = new File(slingHome, file);
                         }
                         if (resFile.canRead()) {
