@@ -35,6 +35,7 @@
     <body>
         <menu name="Main">
             <item name="Overview" href="/index.html" />
+            <item name="Wiki" href="http://cwiki.apache.org/SLING/" />
         </menu>
 
         <menu name="References">
