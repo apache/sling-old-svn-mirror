@@ -221,7 +221,7 @@ public class Resource implements Serializable, Comparable {
      * Sets the id
      * @param id
      */
-   void setId(String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -271,7 +271,7 @@ public class Resource implements Serializable, Comparable {
      * Sets the uri
      * @param uri
      */
-    void setUri(String uri) {
+    public void setUri(String uri) {
         this.uri = uri;
     }
 
