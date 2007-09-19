@@ -18,13 +18,6 @@
  */
 package org.apache.sling.event.impl;
 
-import java.util.UUID;
-
-import org.osgi.service.prefs.BackingStoreException;
-import org.osgi.service.prefs.Preferences;
-import org.osgi.service.prefs.PreferencesService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Helper class defining some constants and providing support for identifying nodes in a cluster.
@@ -44,32 +37,4 @@ public abstract class EventHelper {
     public static final String EVENT_NODE_TYPE = "event:Event";
     public static final String JOBS_NODE_TYPE = "event:Jobs";
     public static final String JOB_NODE_TYPE = "event:Job";
-
-    public static final String APPLICATION_ID_PREFERENCE = "event.application.id";
-
-    /** Default log. */
-    protected static final Logger logger = LoggerFactory.getLogger(EventHelper.class);
-
-    public static synchronized String getApplicationId(PreferencesService service) {
-        final Preferences prefs = service.getSystemPreferences();
-        String appId = prefs.get(APPLICATION_ID_PREFERENCE,  null);
-        if ( appId == null ) {
-            final UUID uuid = UUID.randomUUID();
-            appId = uuid.toString();
-            if ( logger.isInfoEnabled() ) {
-                logger.info("Generating new application id " + appId);
-            }
-            prefs.put(APPLICATION_ID_PREFERENCE, appId);
-            try {
-                prefs.flush();
-            } catch (BackingStoreException e) {
-                // FIXME - we ignore this for now
-                logger.error("Exception during storing of preferences.", e);
-            }
-        }
-        if ( logger.isInfoEnabled() ) {
-            logger.info("Using application id " + appId);
-        }
-        return appId;
-    }
 }

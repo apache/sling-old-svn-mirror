@@ -40,7 +40,6 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
-import org.osgi.service.prefs.PreferencesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,9 +69,6 @@ public abstract class AbstractRepositoryEventHandler
     /** @scr.reference */
     protected EventAdmin eventAdmin;
 
-    /** @scr.reference */
-    protected PreferencesService preferences;
-
     /** Our application id. */
     protected String applicationId;
 
@@ -92,7 +88,8 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void activate(final ComponentContext context)
     throws RepositoryException {
-        this.applicationId = EventHelper.getApplicationId(this.preferences);
+        // FIXME - We should rather use a provided constant for the sling id
+        this.applicationId = context.getBundleContext().getProperty("sling.id");
         this.cleanupPeriod = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
         this.startSession();
     }
