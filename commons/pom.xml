@@ -21,12 +21,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>1-SNAPSHOT</version>
+    <version>1-incubator-SNAPSHOT</version>
   </parent>
   
   <groupId>org.apache.sling.commons</groupId>
   <artifactId>commons</artifactId>
-  <version>1-SNAPSHOT</version>
+  <version>1-incubator-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <name>Public Libraries as OSGi Bundles(Parent Project)</name>
