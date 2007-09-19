@@ -80,11 +80,11 @@ public class Resource implements Serializable, Comparable {
 
     private BundleSpec[] bundleSpecs;
 
-    static Resource create(File file) throws IOException {
+    public static Resource create(File file) throws IOException {
         return create(file.toURL());
     }
 
-    static Resource create(URL file) throws IOException {
+    public static Resource create(URL file) throws IOException {
         JarInputStream jar = null;
         try {
             URLConnection conn = file.openConnection();
@@ -162,7 +162,7 @@ public class Resource implements Serializable, Comparable {
         this.addToMapList(this.capabilities, capability.getName(), capability);
     }
 
-    Iterator getCapabilities() {
+    public Iterator getCapabilities() {
         return this.getMapListIterator(this.capabilities);
     }
 
@@ -170,50 +170,50 @@ public class Resource implements Serializable, Comparable {
         this.addToMapList(this.requirements, requirement.getName(), requirement);
     }
 
-    Iterator getRequirements() {
+    public Iterator getRequirements() {
         return this.getMapListIterator(this.requirements);
     }
 
-    SortedSet getCategories() {
+    public SortedSet getCategories() {
         return this.categories;
     }
 
-    BundleSpec[] getBundleSpecs() {
+    public BundleSpec[] getBundleSpecs() {
         return this.bundleSpecs;
     }
 
     /**
      * @return the contact
      */
-    String getContact() {
+    public String getContact() {
         return this.contact;
     }
 
     /**
      * @return the copyright
      */
-    String getCopyright() {
+    public String getCopyright() {
         return this.copyright;
     }
 
     /**
      * @return the description
      */
-    String getDescription() {
+    public String getDescription() {
         return this.description;
     }
 
     /**
      * @return the documentation
      */
-    String getDocumentation() {
+    public String getDocumentation() {
         return this.documentation;
     }
 
     /**
      * @return the id
      */
-    String getId() {
+    public String getId() {
         return this.id;
     }
 
@@ -228,42 +228,42 @@ public class Resource implements Serializable, Comparable {
     /**
      * @return the license
      */
-    String getLicense() {
+    public String getLicense() {
         return this.license;
     }
 
     /**
      * @return the presentationName
      */
-    String getPresentationName() {
+    public String getPresentationName() {
         return this.presentationName;
     }
 
     /**
      * @return the size
      */
-    long getSize() {
+    public long getSize() {
         return this.size;
     }
 
     /**
      * @return the source
      */
-    String getSource() {
+    public String getSource() {
         return this.source;
     }
 
     /**
      * @return the symbolicName
      */
-    String getSymbolicName() {
+    public String getSymbolicName() {
         return this.symbolicName;
     }
 
     /**
      * @return the uri
      */
-    String getUri() {
+    public String getUri() {
         return this.uri;
     }
 
@@ -278,28 +278,28 @@ public class Resource implements Serializable, Comparable {
     /**
      * @return the vendor
      */
-    String getVendor() {
+    public String getVendor() {
         return this.vendor;
     }
 
     /**
      * @return the version
      */
-    String getVersion() {
+    public String getVersion() {
         return this.version;
     }
 
     /**
      * @return the URL location of the bundle file
      */
-    URL getResourceURL() {
+    public URL getResourceURL() {
         return this.resourceURL;
     }
 
     /**
      * @return the name part of the bundle file URL location
      */
-    String getResourceName() {
+    public String getResourceName() {
      return this.name;
     }
 
@@ -307,7 +307,7 @@ public class Resource implements Serializable, Comparable {
      * Returns an <code>InputStream</code> on the resource bundle file
      * @throws IOException If an error occurrs opening the stream.
      */
-    void spool(OutputStream out) throws IOException {
+    public void spool(OutputStream out) throws IOException {
         URLConnection conn = this.getResourceURL().openConnection();
         InputStream ins = null;
         try {
