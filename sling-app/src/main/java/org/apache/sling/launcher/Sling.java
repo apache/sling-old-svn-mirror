@@ -874,7 +874,7 @@ public class Sling implements BundleActivator {
                 try {
                     if (is == null && slingHome != null) {
                         File resFile = new File(file);
-                        if (!resFile.isAbsolute()  && slingHome != null) {
+                        if (!resFile.isAbsolute()) {
                             resFile = new File(slingHome, file);
                         }
                         if (resFile.canRead()) {
