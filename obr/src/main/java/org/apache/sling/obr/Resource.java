@@ -48,7 +48,7 @@ import aQute.lib.osgi.Analyzer;
  * @author fmeschbe
  * @version $Rev$, $Date: 2007-07-02 16:13:58 +0200 (Mon, 02 Jul 2007) $
  */
-class Resource implements Serializable, Comparable {
+public class Resource implements Serializable, Comparable {
 
     /**
      * The name of the bundle manifest header providing the specification(s) of
@@ -73,7 +73,7 @@ class Resource implements Serializable, Comparable {
     private String contact;
     private String license;
     private String source;
-    private SortedSet categories;
+    private SortedSet<String> categories;
 
     private SortedMap capabilities;
     private SortedMap requirements;
@@ -136,7 +136,7 @@ class Resource implements Serializable, Comparable {
         // default value for the id
         this.id = this.symbolicName + ":" + this.version;
 
-        this.categories = new TreeSet();
+        this.categories = new TreeSet<String>();
         if (categoryString != null) {
             String[] catList = categoryString.split(",");
             for (int i=0; catList != null && i < catList.length; i++) {
