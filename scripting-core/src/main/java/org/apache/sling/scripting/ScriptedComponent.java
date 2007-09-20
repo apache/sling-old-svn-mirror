@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * {@link #callScript(ComponentRenderer, ComponentRequest, ComponentResponse)}
  * methods.
  *
- * @ocm.mapped jcrNodeType="sling:ScriptedComponent" discriminator="false"
+ * @ocm.mapped jcrType="sling:ScriptedComponent" discriminator="false"
  */
 public class ScriptedComponent extends AbstractRepositoryComponent {
 
@@ -57,7 +57,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     private Component superComponent;
 
     /**
-     * @ocm.collection jcrName="sling:scripts" jcrNodeType="sling:ScriptList"
+     * @ocm.collection jcrName="sling:scripts" jcrType="sling:ScriptList"
      *                 elementClassName="org.apache.sling.scripting.Script"
      */
     private Script[] scripts;

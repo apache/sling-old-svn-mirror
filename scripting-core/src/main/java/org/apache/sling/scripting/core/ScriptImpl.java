@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * single <code>&lt;script /&gt;</code> element of a
  * <code>&lt;template /&gt;</code>
  *
- * @ocm.mapped jcrNodeType="sling:Script" implement=""
+ * @ocm.mapped jcrType="sling:Script" implement=""
  */
 public class ScriptImpl implements Comparable, Script {
 
