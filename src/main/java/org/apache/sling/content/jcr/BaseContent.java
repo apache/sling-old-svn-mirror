@@ -34,7 +34,7 @@ package org.apache.sling.content.jcr;
  * <code>Content</code> interface, it is still marked <i>abstract</i> as on
  * its own this class has no use.
  *
- * @ocm.mapped jcrNodeType="sling:Content" discriminator="false"
+ * @ocm.mapped jcrType="sling:Content" discriminator="false"
  */
 public abstract class BaseContent extends SimpleContent {
 
