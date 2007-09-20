@@ -26,7 +26,7 @@ import org.apache.sling.content.jcr.BaseContent;
  * {@link SelectableContent} interface hence supporting selection as defined by
  * the Sling core bundle.
  *
- * @ocm.mapped jcrNodeType="sling:SelectableContent" discriminator="false"
+ * @ocm.mapped jcrType="sling:SelectableContent" discriminator="false"
  */
 public abstract class SelectableBaseContent extends BaseContent implements
         SelectableContent {

@@ -23,7 +23,7 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap
 /**
  * The <code>GenericContent</code> TODO
  *
- * @ocm.mapped jcrNodeType="nt:unstructured" discriminator="true"
+ * @ocm.mapped jcrType="nt:unstructured" discriminator="true"
  */
 public class GenericContent extends SelectableBaseContent {
 
