@@ -40,10 +40,7 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
-import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
-import org.apache.sling.content.jcr.NodeTypeLoader;
 import org.apache.sling.content.jcr.internal.JcrContentHelper;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
@@ -56,7 +53,6 @@ import org.slf4j.LoggerFactory;
 public class Loader {
 
     public static final String CONTENT_HEADER = "Sling-Initial-Content";
-    public static final String NODETYPES_BUNDLE_HEADER = "Sling-Nodetypes";
 
     public static final String EXT_XML = ".xml";
     public static final String EXT_JSON = ".json";
@@ -110,10 +106,8 @@ public class Loader {
 
     private boolean registerBundleInternal (Bundle bundle) {
         try {
-            if (this.registerNodeTypes(bundle)) {
-                this.installContent(bundle);
-                return true;
-            }
+            this.installContent(bundle);
+            return true;
         } catch (RepositoryException re) {
             log.error("Cannot load initial content for bundle {}: {}",
                 bundle.getSymbolicName(), re);
@@ -126,93 +120,7 @@ public class Loader {
         this.uninstallContent(bundle);
     }
 
-    public void checkNodeType(ClassDescriptor classDescriptor) throws RepositoryException {
-        Session session = this.getSession();
-        try {
-            String nodeType = classDescriptor.getJcrType();
-            if (nodeType == null || nodeType.length() == 0) {
-                return;
-            }
-
-            try {
-                session.getWorkspace().getNodeTypeManager().getNodeType(nodeType);
-                return;
-            } catch (NoSuchNodeTypeException nsnte) {
-                // have to register
-                log.debug("Node Type {} is not registered yet", nodeType);
-            }
-
-            // TODO: create and later register it
-            log.error("Nodetype {} is missing, but Session cannot be used to register", nodeType);
-            return;
-
-        } finally {
-            this.ungetSession(session);
-        }
-    }
-
-    public void registerNodeTypes(List<?> nodeTypes) throws RepositoryException {
-        // TODO
-    }
-
     //---------- internal -----------------------------------------------------
-
-    private boolean registerNodeTypes(Bundle bundle) throws RepositoryException {
-        // TODO: define header referring to mapper files
-        String typesHeader = (String) bundle.getHeaders().get(NODETYPES_BUNDLE_HEADER);
-        if (typesHeader == null) {
-            // no components in the bundle, return with success
-            log.debug("registerNodeTypes: Bundle {} has no nodetypes",
-                bundle.getSymbolicName());
-            return true;
-        }
-
-        boolean success = true;
-        Session session = this.getSession();
-        try {
-            StringTokenizer tokener = new StringTokenizer(typesHeader, ",");
-            while (tokener.hasMoreTokens()) {
-                String nodeTypeFile = tokener.nextToken().trim();
-
-                URL mappingURL = bundle.getEntry(nodeTypeFile);
-                if (mappingURL == null) {
-                    log.warn("Mapping {} not found in bundle {}", nodeTypeFile, bundle.getSymbolicName());
-                    continue;
-                }
-
-                InputStream ins = null;
-                try {
-                    // laod the descriptors
-                    ins = mappingURL.openStream();
-                    NodeTypeLoader.registerNodeType(session, ins);
-                } catch (IOException ioe) {
-                    success = false;
-//                    log.error("Cannot read node types " + nodeTypeFile
-//                        + " from bundle " + bundle.getSymbolicName(), ioe);
-                    log.warn("Cannot read node types {} from bundle {}: {}",
-                        new Object[]{ nodeTypeFile, bundle.getSymbolicName(), ioe });
-                } catch (Exception e) {
-                    success = false;
-//                    log.error("Error loading node types " + nodeTypeFile
-//                        + " from bundle " + bundle.getSymbolicName(), e);
-                    log.error("Error loading node types {} from bundle {}: {}",
-                        new Object[]{ nodeTypeFile, bundle.getSymbolicName(), e });
-                } finally {
-                    if (ins != null) {
-                        try {
-                            ins.close();
-                        } catch (IOException ioe) {
-                            // ignore
-                        }
-                    }
-                }
-            }
-        } finally {
-            this.ungetSession(session);
-        }
-
-        return success;
-    }
 
     private void installContent(Bundle bundle) throws RepositoryException {
         String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
