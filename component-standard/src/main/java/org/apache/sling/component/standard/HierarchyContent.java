@@ -23,7 +23,7 @@ import org.apache.sling.core.content.SelectableSimpleContent;
  * for content loaded from nodes of (extensions of) node type
  * <code>nt:HierarchyNode</code>.
  *
- * @ocm.mapped jcrNodeType="nt:hierarchyNode" discriminator="false"
+ * @ocm.mapped jcrType="nt:hierarchyNode" discriminator="false"
  */
 public abstract class HierarchyContent extends SelectableSimpleContent {
 
