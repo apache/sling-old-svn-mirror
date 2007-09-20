@@ -33,11 +33,11 @@
     <packaging>bundle</packaging>
 
     <name>
-        Sling - Content Loading, Mapping and Nodetype Management
+        Sling - Content Loading and Mapping Management
     </name>
     <description>
-        This bundle provides three kinds of Repository Content related
-        functionality: Node type registration, initial content
+        This bundle provides two kinds of Repository Content related
+        functionality: Initial content
         installation and JCR Mapping.
     </description>
 
