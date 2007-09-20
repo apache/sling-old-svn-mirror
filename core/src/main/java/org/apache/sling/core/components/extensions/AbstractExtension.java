@@ -23,7 +23,7 @@ import org.apache.sling.component.ComponentExtension;
 /**
  * The <code>AbstractExtension</code> TODO
  *
- * @ocm.mapped jcrNodeType="sling:Extension" abstract="true" interfaces=""
+ * @ocm.mapped jcrType="sling:Extension" abstract="true" interfaces=""
  */
 public abstract class AbstractExtension implements ComponentExtension {
 

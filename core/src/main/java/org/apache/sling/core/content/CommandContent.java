@@ -22,7 +22,7 @@ package org.apache.sling.core.content;
  * The <code>CommandContent</code> is a simple marker content object, which
  * allows implementation of simple command components
  *
- * @ocm.mapped jcrNodeType="sling:Command" discriminator="false"
+ * @ocm.mapped jcrType="sling:Command" discriminator="false"
  */
 public class CommandContent extends SelectableBaseContent {
 
