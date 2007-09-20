@@ -31,7 +31,7 @@ import org.apache.sling.component.Content;
  * node type (the root node type) mapping the path of the node to the
  * {@link #getPath() path} field.
  *
- * @ocm.mapped jcrNodeType="nt:base" discriminator="false"
+ * @ocm.mapped jcrType="nt:base" discriminator="false"
  */
 public abstract class SimpleContent implements Content {
 
