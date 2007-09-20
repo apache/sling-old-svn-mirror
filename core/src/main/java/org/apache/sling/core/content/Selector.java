@@ -25,7 +25,7 @@ import org.apache.sling.component.Content;
  * The <code>Selector</code> interface defines the API to be implemented to
  * select content.
  *
- * @ocm.mapped jcrNodeType="sling:Selector" discriminator="false"
+ * @ocm.mapped jcrType="sling:Selector" discriminator="false"
  */
 public interface Selector {
 

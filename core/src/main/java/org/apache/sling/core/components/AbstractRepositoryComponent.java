@@ -30,7 +30,7 @@ import org.apache.sling.component.ComponentExtension;
 /**
  * The <code>BaseComponent</code> TODO
  *
- * @ocm.mapped jcrNodeType="sling:Component" discriminator="false" extend=""
+ * @ocm.mapped jcrType="sling:Component" discriminator="false" extend=""
  */
 public abstract class AbstractRepositoryComponent extends BaseComponent {
 
@@ -75,7 +75,7 @@ public abstract class AbstractRepositoryComponent extends BaseComponent {
     /**
      * @param extensions
      * @ocm.collection jcrName="sling:extensions"
-     *                 jcrNodeType="sling:ExtensionList"
+     *                 jcrType="sling:ExtensionList"
      *                 elementClassName="org.apache.sling.core.components.extensions.AbstractExtension"
      */
     public void setExtensionCollection(Collection<ComponentExtension> extensions) {
