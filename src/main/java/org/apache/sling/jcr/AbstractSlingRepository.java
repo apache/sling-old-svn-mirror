@@ -31,6 +31,10 @@ import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.sling.jcr.internal.SessionPoolManager;
+import org.apache.sling.jcr.internal.loader.Loader;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
@@ -56,7 +60,8 @@ import org.osgi.service.log.LogService;
  *  scr.property value=&quot;256&quot; type=&quot;Integer&quot; name=&quot;pool.maxActiveWait&quot;
  * </pre>
  */
-public abstract class AbstractSlingRepository implements SlingRepository {
+public abstract class AbstractSlingRepository
+    implements SlingRepository, SynchronousBundleListener {
 
     public static final String PROPERTY_DEFAULT_WORKSPACE = "defaultWorkspace";
 
@@ -110,6 +115,8 @@ public abstract class AbstractSlingRepository implements SlingRepository {
     private char[] adminPass;
 
     private SessionPoolManager poolManager;
+
+    private Loader loader;
 
     protected AbstractSlingRepository() {
     }
@@ -290,6 +297,20 @@ public abstract class AbstractSlingRepository implements SlingRepository {
             DEFAULT_ADMIN_USER);
         this.adminPass = this.getProperty(properties, PROPERTY_ADMIN_PASS,
             DEFAULT_ADMIN_PASS).toCharArray();
+
+        this.loader = new Loader(this);
+
+        componentContext.getBundleContext().addBundleListener(this);
+
+        // TODO: Consider running this in the background !!
+        Bundle[] bundles = componentContext.getBundleContext().getBundles();
+        for (int i = 0; i < bundles.length; i++) {
+            if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+                // load content for bundles which are neither INSTALLED nor
+                // UNINSTALLED
+                this.loader.registerBundle(bundles[i]);
+            }
+        }
     }
 
     /**
@@ -302,8 +323,35 @@ public abstract class AbstractSlingRepository implements SlingRepository {
             this.poolManager.dispose();
             this.poolManager = null;
         }
+        if ( this.loader != null ) {
+            this.loader.dispose();
+            this.loader = null;
+        }
 
         this.componentContext = null;
+    }
+
+    /**
+     * Loads and unloads any components provided by the bundle whose state
+     * changed. If the bundle has been started, the components are loaded. If
+     * the bundle is about to stop, the components are unloaded.
+     *
+     * @param event The <code>BundleEvent</code> representing the bundle state
+     *            change.
+     */
+    public void bundleChanged(BundleEvent event) {
+        // TODO: This is synchronous - take care to not block the system !!
+        switch (event.getType()) {
+            case BundleEvent.INSTALLED:
+                // register content and types when the bundle content is
+                // available
+                this.loader.registerBundle(event.getBundle());
+                break;
+
+            case BundleEvent.UNINSTALLED:
+                this.loader.unregisterBundle(event.getBundle());
+                break;
+        }
     }
 
     // ---------- internal -----------------------------------------------------
