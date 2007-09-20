@@ -19,7 +19,7 @@ package org.apache.sling.component.standard;
 /**
  * The <code>FolderContent</code> TODO
  *
- * @ocm.mapped jcrNodeType="nt:folder" discriminator="false"
+ * @ocm.mapped jcrType="nt:folder" discriminator="false"
  */
 public class FolderContent extends HierarchyContent {
 

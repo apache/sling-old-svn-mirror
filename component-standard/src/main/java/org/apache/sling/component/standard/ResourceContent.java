@@ -23,7 +23,7 @@ import org.apache.sling.core.content.SelectableSimpleContent;
 /**
  * The <code>ResourceContent</code> TODO
  *
- * @ocm.mapped jcrNodeType="nt:resource" discriminator="false"
+ * @ocm.mapped jcrType="nt:resource" discriminator="false"
  */
 public class ResourceContent extends SelectableSimpleContent {
 

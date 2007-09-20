@@ -21,7 +21,7 @@ package org.apache.sling.component.standard;
  * repository and as such has no more direct content data as the
  * {@link HierarchyContent}.
  *
- * @ocm.mapped jcrNodeType="nt:file" discriminator="false"
+ * @ocm.mapped jcrType="nt:file" discriminator="false"
  */
 public class FileContent extends HierarchyContent {
 
