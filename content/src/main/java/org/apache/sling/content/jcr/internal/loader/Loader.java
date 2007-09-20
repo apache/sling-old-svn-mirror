@@ -86,13 +86,13 @@ public class Loader {
     }
 
     public void registerBundle(Bundle bundle) {
-        if (this.registerBundleInternal(bundle)) {
+        if (this.registerBundleInternal(bundle, false)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
             for (int i=this.delayedBundles.size(); i > 0 && currentSize != this.delayedBundles.size() && !this.delayedBundles.isEmpty(); i--) {
                 for (Iterator<Bundle> di=this.delayedBundles.iterator(); di.hasNext(); ) {
                     Bundle delayed = di.next();
-                    if (this.registerBundleInternal(delayed)) {
+                    if (this.registerBundleInternal(delayed, true)) {
                         di.remove();
                     }
                 }
@@ -104,20 +104,32 @@ public class Loader {
         }
     }
 
-    private boolean registerBundleInternal (Bundle bundle) {
+    private boolean registerBundleInternal (Bundle bundle, boolean isRetry) {
         try {
             this.installContent(bundle);
+            if ( isRetry ) {
+                // log success of retry
+                log.info("Retrytring to load initial content for bundle {} succeeded.",
+                        bundle.getSymbolicName());
+            }
             return true;
         } catch (RepositoryException re) {
-            log.error("Cannot load initial content for bundle {}: {}",
-                bundle.getSymbolicName(), re);
+            // if we are retrying we already logged this message once, so we won't log it again
+            if ( !isRetry ) {
+                log.error("Cannot load initial content for bundle {}: {}",
+                    bundle.getSymbolicName(), re);
+            }
         }
 
         return false;
     }
 
     public void unregisterBundle(Bundle bundle) {
-        this.uninstallContent(bundle);
+        if ( this.delayedBundles.contains(bundle) ) {
+            this.delayedBundles.remove(bundle);
+        } else {
+            this.uninstallContent(bundle);
+        }
     }
 
     //---------- internal -----------------------------------------------------
