@@ -65,13 +65,13 @@ public class Loader {
     }
 
     public void registerBundle(Bundle bundle) {
-        if (this.registerBundleInternal(bundle)) {
+        if (this.registerBundleInternal(bundle, false)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
             for (int i=this.delayedBundles.size(); i > 0 && currentSize != this.delayedBundles.size() && !this.delayedBundles.isEmpty(); i--) {
                 for (Iterator<Bundle> di=this.delayedBundles.iterator(); di.hasNext(); ) {
                     Bundle delayed = di.next();
-                    if (this.registerBundleInternal(delayed)) {
+                    if (this.registerBundleInternal(delayed, true)) {
                         di.remove();
                     }
                 }
@@ -89,24 +89,29 @@ public class Loader {
         }
     }
 
-    private boolean registerBundleInternal (Bundle bundle) {
+    private boolean registerBundleInternal (Bundle bundle, boolean isRetry) {
         try {
-            if (this.registerNodeTypes(bundle)) {
+            if (this.registerNodeTypes(bundle, isRetry)) {
                 return true;
             }
         } catch (RepositoryException re) {
-            log.error("Cannot register node types for bundle {}: {}",
-                bundle.getSymbolicName(), re);
+            if ( isRetry ) {
+                log.error("Cannot register node types for bundle {}: {}",
+                    bundle.getSymbolicName(), re);
+            } else {
+                log.debug("Retrying to register node types failed for bundle {}: {}",
+                        bundle.getSymbolicName(), re);
+            }
         }
 
         return false;
     }
 
-    private boolean registerNodeTypes(Bundle bundle) throws RepositoryException {
+    private boolean registerNodeTypes(Bundle bundle, boolean isRetry) throws RepositoryException {
         // TODO: define header referring to mapper files
         String typesHeader = (String) bundle.getHeaders().get(NODETYPES_BUNDLE_HEADER);
         if (typesHeader == null) {
-            // no components in the bundle, return with success
+            // no node types in the bundle, return with success
             log.debug("registerNodeTypes: Bundle {} has no nodetypes",
                 bundle.getSymbolicName());
             return true;
@@ -121,27 +126,37 @@ public class Loader {
 
                 URL mappingURL = bundle.getEntry(nodeTypeFile);
                 if (mappingURL == null) {
-                    log.warn("Mapping {} not found in bundle {}", nodeTypeFile, bundle.getSymbolicName());
+                    // if we are retrying we already logged this message once, so we won't log it again
+                    if ( !isRetry ) {
+                        log.warn("Custom node type definition {} not found in bundle {}", nodeTypeFile, bundle.getSymbolicName());
+                    }
                     continue;
                 }
 
                 InputStream ins = null;
                 try {
-                    // laod the descriptors
+                    // laod the node types
                     ins = mappingURL.openStream();
                     NodeTypeLoader.registerNodeType(session, ins);
+                    // log a message if retry is successful
+                    if ( isRetry ) {
+                        log.info("Retrytring to register node types from {} in bundle {} succeeded.",
+                           new Object[]{ nodeTypeFile, bundle.getSymbolicName()});
+                    }
                 } catch (IOException ioe) {
                     success = false;
-//                    log.error("Cannot read node types " + nodeTypeFile
-//                        + " from bundle " + bundle.getSymbolicName(), ioe);
-                    log.warn("Cannot read node types {} from bundle {}: {}",
-                        new Object[]{ nodeTypeFile, bundle.getSymbolicName(), ioe });
+                    // if we are retrying we already logged this message once, so we won't log it again
+                    if ( !isRetry ) {
+                        log.warn("Cannot read node types {} from bundle {}: {}",
+                            new Object[]{ nodeTypeFile, bundle.getSymbolicName(), ioe });
+                    }
                 } catch (Exception e) {
                     success = false;
-//                    log.error("Error loading node types " + nodeTypeFile
-//                        + " from bundle " + bundle.getSymbolicName(), e);
-                    log.error("Error loading node types {} from bundle {}: {}",
-                        new Object[]{ nodeTypeFile, bundle.getSymbolicName(), e });
+                    // if we are retrying we already logged this message once, so we won't log it again
+                    if ( !isRetry ) {
+                        log.error("Error loading node types {} from bundle {}: {}",
+                            new Object[]{ nodeTypeFile, bundle.getSymbolicName(), e });
+                    }
                 } finally {
                     if (ins != null) {
                         try {
