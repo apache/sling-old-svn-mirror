@@ -46,7 +46,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
- * Deploy a JAR representing an OSGi Bundle.
+ * Deploy a JAR representing an OSGi Bundle. This method posts the bundle built
+ * by maven to an OSGi Bundle Repository accepting the bundle. The plugin uses
+ * a </em>multipart/format-data</em> POST request to just post the file to
+ * the URL configured in the <code>obr</code> property. 
  *
  * @goal deploy
  * @phase deploy
@@ -71,9 +74,10 @@ public class BundleDeployMojo extends AbstractMojo {
     private String jarName;
 
     /**
-     * The URL of the OBR.
-     *
-     * @parameter expression="${obr}" default-value="http://obr.dev.day.com"
+     * The URL to the OSGi Bundle repository to which the bundle is posted,
+     * e.g. <code>http://obr.sample.com</code>
+     * 
+     * @parameter expression="${obr}"
      * @required
      */
     private String obr;
