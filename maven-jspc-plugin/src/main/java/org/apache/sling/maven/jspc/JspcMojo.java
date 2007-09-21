@@ -362,6 +362,10 @@ public class JspcMojo extends AbstractMojo implements Options {
                 clctxt.getServletPackageName() + "."
                     + clctxt.getServletClassName());
 
+            // remove the java source and smap file
+            new File(clctxt.getClassFileName()+".smap").delete();
+            new File(clctxt.getServletJavaFileName()).delete();
+            
         } catch (JasperException je) {
             Throwable rootCause = je;
             while (rootCause instanceof JasperException
