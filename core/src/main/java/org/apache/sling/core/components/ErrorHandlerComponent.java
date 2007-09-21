@@ -30,14 +30,6 @@ import org.apache.sling.component.Component;
  */
 public interface ErrorHandlerComponent extends Component {
 
-    public static final String ERROR_STATUS = "javax.servlet.error.status_code";
-    public static final String ERROR_EXCEPTION_TYPE = "javax.servlet.error.exception_type";
-    public static final String ERROR_MESSAGE = "javax.servlet.error.message";
-    public static final String ERROR_EXCEPTION = "javax.servlet.error.exception";
-    public static final String ERROR_REQUEST_URI = "javax.servlet.error.request_uri";
-    public static final String ERROR_SERVLET_NAME = "javax.servlet.error.servlet_name";
-    public static final String ERROR_COMPONENT_ID = "org.apache.components.error.componentId";
-
     /**
      * Returns <code>true</code> if this error handler can handle the given
      * <code>throwable</code>. This method does not compare the class name in

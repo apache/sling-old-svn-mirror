@@ -29,6 +29,7 @@ import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.ComponentResponseWrapper;
+import org.apache.sling.core.Constants;
 import org.apache.sling.core.components.ErrorHandlerComponent;
 import org.apache.sling.core.impl.ContentData;
 import org.apache.sling.core.impl.RequestData;
@@ -78,7 +79,7 @@ public class ErrorHandlerFilter extends ComponentBindingFilter {
             ComponentResponse response) throws IOException {
 
         // do not handle, if already handling ....
-        if (request.getAttribute(ErrorHandlerComponent.ERROR_REQUEST_URI) == null) {
+        if (request.getAttribute(Constants.ERROR_REQUEST_URI) == null) {
 
             // find the error handler component
             int checkStatus = status;
@@ -89,11 +90,9 @@ public class ErrorHandlerFilter extends ComponentBindingFilter {
                     if (handler.canHandle(checkStatus)) {
 
                         // set the message properties
-                        request.setAttribute(
-                            ErrorHandlerComponent.ERROR_STATUS, new Integer(
-                                status));
-                        request.setAttribute(
-                            ErrorHandlerComponent.ERROR_MESSAGE, message);
+                        request.setAttribute(Constants.ERROR_STATUS,
+                            new Integer(status));
+                        request.setAttribute(Constants.ERROR_MESSAGE, message);
 
                         if (this.handleError(handler, request, response)) {
                             return;
@@ -121,7 +120,7 @@ public class ErrorHandlerFilter extends ComponentBindingFilter {
             ComponentResponse response) throws ComponentException, IOException {
 
         // do not handle, if already handling ....
-        if (request.getAttribute(ErrorHandlerComponent.ERROR_REQUEST_URI) == null) {
+        if (request.getAttribute(Constants.ERROR_REQUEST_URI) == null) {
 
             // find the error handler component
             Class tClass = throwable.getClass();
@@ -132,13 +131,11 @@ public class ErrorHandlerFilter extends ComponentBindingFilter {
                     if (handler.canHandle(tClassName)) {
 
                         // set the message properties
-                        request.setAttribute(
-                            ErrorHandlerComponent.ERROR_EXCEPTION, throwable);
-                        request.setAttribute(
-                            ErrorHandlerComponent.ERROR_EXCEPTION_TYPE,
+                        request.setAttribute(Constants.ERROR_EXCEPTION,
+                            throwable);
+                        request.setAttribute(Constants.ERROR_EXCEPTION_TYPE,
                             throwable.getClass());
-                        request.setAttribute(
-                            ErrorHandlerComponent.ERROR_MESSAGE,
+                        request.setAttribute(Constants.ERROR_MESSAGE,
                             throwable.getMessage());
 
                         if (this.handleError(handler, request, response)) {
@@ -172,16 +169,16 @@ public class ErrorHandlerFilter extends ComponentBindingFilter {
             RequestData requestData = RequestData.getRequestData(request);
             ContentData contentData = requestData.getContentData();
             if (contentData != null && contentData.getContent() != null) {
-                request.setAttribute(ErrorHandlerComponent.ERROR_COMPONENT_ID,
+                request.setAttribute(Constants.ERROR_COMPONENT_ID,
                     contentData.getContent().getComponentId());
             }
         } catch (ComponentException ce) {
             log.warn("handleError: Called with wrong request type, ignore for now");
         }
 
-        request.setAttribute(ErrorHandlerComponent.ERROR_REQUEST_URI,
+        request.setAttribute(Constants.ERROR_REQUEST_URI,
             request.getRequestURI());
-        request.setAttribute(ErrorHandlerComponent.ERROR_SERVLET_NAME,
+        request.setAttribute(Constants.ERROR_SERVLET_NAME,
             errorHandler.getComponentContext().getServerInfo()); // not
         // absolutely
         // correct
