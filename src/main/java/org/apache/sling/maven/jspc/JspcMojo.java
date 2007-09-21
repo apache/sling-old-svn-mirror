@@ -18,7 +18,12 @@ package org.apache.sling.maven.jspc;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -43,14 +48,19 @@ import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.compiler.Localizer;
 import org.apache.jasper.compiler.TagPluginManager;
 import org.apache.jasper.compiler.TldLocationsCache;
+import org.apache.jasper.xmlparser.TreeNode;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
+import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 /**
- * The <code>JspcMojo</code> TODO
- *
+ * The <code>JspcMojo</code> is implements the Sling Maven JspC goal
+ * <code>jspc</code> compiling JSP into the target and creating a component
+ * descriptor for Declarative Services to use the JSP with the help of the
+ * appropriate adapter as component.
+ *  
  * @goal jspc
  * @phase compile
  * @description Compile JSP Files into Servlet Classes using the same JSP
@@ -81,7 +91,9 @@ public class JspcMojo extends AbstractMojo implements Options {
      * Target folder for the compiled classes.
      *
      * @parameter expression="${jspc.outputDirectory}"
-     *            default-value="${project.build.outputDirectory}"
+     *            default-value="${project.build.directory}/jspc-plugin-generated"
+     * @required
+     * @readonly
      */
     private String outputDirectory;
 
@@ -152,17 +164,18 @@ public class JspcMojo extends AbstractMojo implements Options {
     private String jspFileExtensions;
 
     /**
-     * @parameter expression="${jspc.servletPackage}" default=""
+     * @parameter expression="${jspc.servletPackage}"
+     *            default-value="org.apache.jsp"
      */
     private String servletPackage;
 
-    private Set jspFileExtensionSet;
+    private Set<String> jspFileExtensionSet;
 
     private boolean compile = true;
 
     private String uriSourceRoot;
 
-    private List pages = new ArrayList();
+    private List<String> pages = new ArrayList<String>();
 
     private ServletContext context;
 
@@ -170,7 +183,7 @@ public class JspcMojo extends AbstractMojo implements Options {
 
     private URLClassLoader loader = null;
 
-    private Map tldCache;
+    private Map<String, TreeNode> tldCache;
 
     /**
      * Cache for the TLD locations
@@ -189,9 +202,9 @@ public class JspcMojo extends AbstractMojo implements Options {
     public void execute() throws MojoExecutionException {
 
         try {
-            this.uriSourceRoot = new File(this.sourceDirectory).getCanonicalPath();
+            uriSourceRoot = new File(sourceDirectory).getCanonicalPath();
         } catch (Exception e) {
-            this.uriSourceRoot = new File(this.sourceDirectory).getAbsolutePath();
+            uriSourceRoot = new File(sourceDirectory).getAbsolutePath();
         }
 
         // scan all JSP file
@@ -199,11 +212,13 @@ public class JspcMojo extends AbstractMojo implements Options {
 
         // have the files compiled
         try {
-            this.executeInternal();
+            executeInternal();
         } catch (JasperException je) {
-            this.getLog().error("Compilation Failure", je);
+            getLog().error("Compilation Failure", je);
             throw new MojoExecutionException(je.getMessage(), je);
         }
+
+        project.addCompileSourceRoot(outputDirectory);
     }
 
     /**
@@ -211,23 +226,22 @@ public class JspcMojo extends AbstractMojo implements Options {
      * specified.
      */
     public void scanFiles(File base) {
-        Stack dirs = new Stack();
+        Stack<File> dirs = new Stack<File>();
         dirs.push(base);
 
         while (!dirs.isEmpty()) {
-            String s = dirs.pop().toString();
-            File f = new File(s);
+            File f = dirs.pop();
             if (f.exists() && f.isDirectory()) {
                 String[] files = f.list();
                 String ext;
                 for (int i = 0; (files != null) && i < files.length; i++) {
-                    File f2 = new File(s, files[i]);
+                    File f2 = new File(f, files[i]);
                     if (f2.isDirectory()) {
-                        dirs.push(f2.getPath());
+                        dirs.push(f2);
                     } else {
                         ext = files[i].substring(files[i].lastIndexOf('.') + 1);
-                        if (this.getExtensions().contains(ext)) {
-                            this.pages.add(f2.getAbsolutePath());
+                        if (getExtensions().contains(ext)) {
+                            pages.add(f2.getAbsolutePath());
                         }
                     }
                 }
@@ -241,50 +255,53 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @throws JasperException If an error occurs
      */
     private void executeInternal() throws JasperException {
-        if (this.getLog().isDebugEnabled()) {
-            this.getLog().debug("execute() starting for " + this.pages.size() + " pages.");
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("execute() starting for " + pages.size() + " pages.");
         }
 
+        StringWriter serviceComponentWriter = new StringWriter();
+
         try {
-            if (this.context == null) {
-                this.initServletContext();
+            if (context == null) {
+                initServletContext();
             }
 
             // No explicit pages, we'll process all .jsp in the webapp
-            if (this.pages.size() == 0) {
-                this.scanFiles(new File(this.sourceDirectory));
+            if (pages.size() == 0) {
+                scanFiles(new File(sourceDirectory));
             }
 
-            File uriRootF = new File(this.uriSourceRoot);
+            File uriRootF = new File(uriSourceRoot);
             if (!uriRootF.exists() || !uriRootF.isDirectory()) {
                 throw new JasperException(
                     Localizer.getMessage("jsp.error.jspc.uriroot_not_dir"));
             }
 
-            Iterator iter = this.pages.iterator();
-            while (iter.hasNext()) {
-                String nextjsp = iter.next().toString();
+            for (String nextjsp : pages) {
                 File fjsp = new File(nextjsp);
                 if (!fjsp.isAbsolute()) {
                     fjsp = new File(uriRootF, nextjsp);
                 }
                 if (!fjsp.exists()) {
-                    if (this.getLog().isWarnEnabled()) {
-                        this.getLog().warn(
+                    if (getLog().isWarnEnabled()) {
+                        getLog().warn(
                             Localizer.getMessage("jspc.error.fileDoesNotExist",
                                 fjsp.toString()));
                     }
                     continue;
                 }
                 String s = fjsp.getAbsolutePath();
-                if (s.startsWith(this.uriSourceRoot)) {
-                    nextjsp = s.substring(this.uriSourceRoot.length());
+                if (s.startsWith(uriSourceRoot)) {
+                    nextjsp = s.substring(uriSourceRoot.length());
                 }
                 if (nextjsp.startsWith("." + File.separatorChar)) {
                     nextjsp = nextjsp.substring(2);
                 }
-                this.processFile(nextjsp);
+
+                processFile(nextjsp, serviceComponentWriter);
             }
+
+            printServiceComponents(serviceComponentWriter);
 
         } catch (JasperException je) {
             Throwable rootCause = je;
@@ -302,25 +319,26 @@ public class JspcMojo extends AbstractMojo implements Options {
         }
     }
 
-    private void processFile(String file) throws JasperException {
+    private void processFile(String file, Writer serviceComponentWriter)
+            throws JasperException {
         ClassLoader originalClassLoader = null;
 
         try {
             String jspUri = file.replace('\\', '/');
             JspCompilationContext clctxt = new JspCompilationContext(jspUri,
-                false, this, this.context, null, this.rctxt);
+                false, this, context, null, rctxt);
 
             // write to a specific servlet package
-            clctxt.setServletPackageName(this.servletPackage);
+            clctxt.setServletPackageName(servletPackage);
 
             originalClassLoader = Thread.currentThread().getContextClassLoader();
-            if (this.loader == null) {
-                this.initClassLoader(clctxt);
+            if (loader == null) {
+                initClassLoader();
             }
-            Thread.currentThread().setContextClassLoader(this.loader);
+            Thread.currentThread().setContextClassLoader(loader);
 
             // we only use the class loader and do not need the class path
-            clctxt.setClassLoader(this.loader);
+            clctxt.setClassLoader(loader);
             clctxt.setClassPath(null);
 
             Compiler clc = clctxt.createCompiler();
@@ -329,15 +347,20 @@ public class JspcMojo extends AbstractMojo implements Options {
             // .jsp file is newer than .class file;
             // Otherwise only generate .java, if .jsp file is newer than
             // the .java file
-            if (clc.isOutDated(this.compile)) {
-                clc.compile(this.compile, true);
+            if (clc.isOutDated(compile)) {
+                clc.compile(compile, true);
 
-                if (this.showSuccess) {
-                    this.getLog().info("Built File: " + file);
+                if (showSuccess) {
+                    getLog().info("Built File: " + file);
                 }
-            } else if (this.showSuccess) {
-                this.getLog().info("File up to date: " + file);
+            } else if (showSuccess) {
+                getLog().info("File up to date: " + file);
             }
+
+            // write the OSGi component descriptor
+            writeJspServiceComponent(serviceComponentWriter,
+                clctxt.getServletPackageName() + "."
+                    + clctxt.getServletClassName());
 
         } catch (JasperException je) {
             Throwable rootCause = je;
@@ -346,22 +369,23 @@ public class JspcMojo extends AbstractMojo implements Options {
                 rootCause = ((JasperException) rootCause).getRootCause();
             }
             if (rootCause != je) {
-                this.getLog().error(
+                getLog().error(
                     Localizer.getMessage("jspc.error.generalException", file),
                     rootCause);
             }
 
             // Bugzilla 35114.
-            if (this.failOnError) {
+            if (failOnError) {
                 throw je;
-            } else {
-                this.getLog().error(je.getMessage());
             }
+
+            // just log otherwise
+            getLog().error(je.getMessage());
 
         } catch (Exception e) {
             if ((e instanceof FileNotFoundException)
-                && this.getLog().isWarnEnabled()) {
-                this.getLog().warn(
+                && getLog().isWarnEnabled()) {
+                getLog().warn(
                     Localizer.getMessage("jspc.error.fileDoesNotExist",
                         e.getMessage()));
             }
@@ -376,39 +400,39 @@ public class JspcMojo extends AbstractMojo implements Options {
 
     // ---------- Additional Settings ------------------------------------------
 
-    private Set getExtensions() {
-        if (this.jspFileExtensionSet == null) {
-            this.jspFileExtensionSet = new HashSet();
+    private Set<String> getExtensions() {
+        if (jspFileExtensionSet == null) {
+            jspFileExtensionSet = new HashSet<String>();
 
             // fallback default value, should actually be set by Maven
-            if (this.jspFileExtensions == null) {
-                this.jspFileExtensions = "jsp,jspx";
+            if (jspFileExtensions == null) {
+                jspFileExtensions = "jsp,jspx";
             }
 
-            StringTokenizer st = new StringTokenizer(this.jspFileExtensions, ",");
+            StringTokenizer st = new StringTokenizer(jspFileExtensions, ",");
             while (st.hasMoreTokens()) {
                 String ext = st.nextToken().trim();
                 if (ext.length() > 0) {
-                    this.jspFileExtensionSet.add(ext);
+                    jspFileExtensionSet.add(ext);
                 }
             }
         }
 
-        return this.jspFileExtensionSet;
+        return jspFileExtensionSet;
     }
 
     private void initServletContext() {
         try {
-            this.context = new JspCServletContext(this.getLog(), new URL("file:"
-                + this.uriSourceRoot.replace('\\', '/') + '/'));
-            this.tldLocationsCache = new TldLocationsCache(this.context, true);
+            context = new JspCServletContext(getLog(), new URL("file:"
+                + uriSourceRoot.replace('\\', '/') + '/'));
+            tldLocationsCache = new TldLocationsCache(context, true);
         } catch (MalformedURLException me) {
-            this.getLog().error("Cannot setup ServletContext", me);
+            getLog().error("Cannot setup ServletContext", me);
         }
 
-        this.rctxt = new JspRuntimeContext(this.context, this);
-        this.jspConfig = new JspConfig(this.context);
-        this.tagPluginManager = new TagPluginManager(this.context);
+        rctxt = new JspRuntimeContext(context, this);
+        jspConfig = new JspConfig(context);
+        tagPluginManager = new TagPluginManager(context);
     }
 
     /**
@@ -418,20 +442,117 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @param clctxt The compilation context
      * @throws IOException If an error occurs
      */
-    private void initClassLoader(JspCompilationContext clctxt)
-            throws IOException, DependencyResolutionRequiredException {
+    private void initClassLoader() throws IOException,
+            DependencyResolutionRequiredException {
 
         // Turn the classPath into URLs
-        List classPath = this.project.getCompileClasspathElements();
-        ArrayList urls = new ArrayList();
-        for (Iterator cpi = classPath.iterator(); cpi.hasNext();) {
+        List<?> classPath = project.getCompileClasspathElements();
+        ArrayList<URL> urls = new ArrayList<URL>();
+        for (Iterator<?> cpi = classPath.iterator(); cpi.hasNext();) {
             String path = (String) cpi.next();
             urls.add(new File(path).toURI().toURL());
         }
 
         URL urlsA[] = new URL[urls.size()];
         urls.toArray(urlsA);
-        this.loader = new URLClassLoader(urlsA, this.getClass().getClassLoader());
+        loader = new URLClassLoader(urlsA, getClass().getClassLoader());
+    }
+
+    private void writeJspServiceComponent(Writer out, String className) {
+
+        String id = className;
+        if (id.startsWith(servletPackage)) {
+            // account for trailing dot of the package
+            id = id.substring(servletPackage.length() + 1);
+        }
+
+        try {
+            out.write("<scr:component enabled=\"true\" immediate=\"true\" name=\"");
+            out.write(id);
+            out.write("\">\r\n");
+            
+            // the implementation is of course the compiled JSP
+            out.write("<scr:implementation class=\"");
+            out.write(className);
+            out.write("\"/>\r\n");
+            
+            // the JSP registers as a Servlet
+            out.write("<scr:service>\r\n");
+            out.write("<scr:provide interface=\"javax.servlet.Servlet\"/>\r\n");
+            out.write("</scr:service>\r\n");
+            
+            // use the JSP's id as the service.pid
+            out.write("<scr:property name=\"service.pid\" value=\"");
+            out.write(id);
+            out.write("\"/>\r\n");
+
+            // if the project defines an organization name, add it
+            if (project.getOrganization() != null
+                && project.getOrganization().getName() != null) {
+                out.write("<scr:property name=\"service.vendor\" value=\"");
+                out.write(project.getOrganization().getName());
+                out.write("\"/>\r\n");
+            }
+            
+            out.write("</scr:component>\r\n");
+
+            out.flush();
+        } catch (IOException ignore) {
+            // don't care
+        }
+    }
+
+    private void printServiceComponents(StringWriter serviceComponentWriter)
+            throws IOException {
+        FileOutputStream out = null;
+        try {
+
+            String target = "OSGI-INF/jspServiceComponents.xml";
+            File targetFile = new File(outputDirectory, target);
+            targetFile.getParentFile().mkdirs();
+
+            out = new FileOutputStream(targetFile);
+            PrintWriter pw = new PrintWriter(new OutputStreamWriter(out,
+                "UTF-8"));
+
+            pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            pw.println("<components xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\">");
+
+            pw.print(serviceComponentWriter.toString());
+
+            pw.println("</components>");
+
+            pw.flush();
+            pw.close();
+
+            // now add the descriptor file to the maven resources
+            final String ourRsrcPath = new File(outputDirectory).getAbsolutePath();
+            boolean found = false;
+            final Iterator<?> rsrcIterator = project.getResources().iterator();
+            while (!found && rsrcIterator.hasNext()) {
+                final Resource rsrc = (Resource) rsrcIterator.next();
+                found = rsrc.getDirectory().equals(ourRsrcPath);
+            }
+            if (!found) {
+                final Resource resource = new Resource();
+                resource.setDirectory(new File(outputDirectory).getAbsolutePath());
+                project.addResource(resource);
+            }
+
+            // and set include accordingly
+            String svcComp = project.getProperties().getProperty("Service-Component");
+            svcComp= (svcComp == null) ? target : svcComp + ", " + target;
+            project.getProperties().setProperty("Service-Component", svcComp);
+
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignore) {
+                    // don't care
+                }
+            }
+        }
     }
 
     // ---------- Options interface --------------------------------------------
@@ -442,7 +563,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#genStringAsCharArray()
      */
     public boolean genStringAsCharArray() {
-        return this.jasperGenStringAsCharArray;
+        return jasperGenStringAsCharArray;
     }
 
     /*
@@ -459,12 +580,12 @@ public class JspcMojo extends AbstractMojo implements Options {
      *
      * @see org.apache.jasper.Options#getCache()
      */
-    public Map getCache() {
-        if (this.tldCache == null) {
-            this.tldCache = new HashMap();
+    public Map<String, TreeNode> getCache() {
+        if (tldCache == null) {
+            tldCache = new HashMap<String, TreeNode>();
         }
 
-        return this.tldCache;
+        return tldCache;
     }
 
     /*
@@ -482,7 +603,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getClassDebugInfo()
      */
     public boolean getClassDebugInfo() {
-        return this.jasperClassDebugInfo;
+        return jasperClassDebugInfo;
     }
 
     /*
@@ -491,7 +612,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getClassPath()
      */
     public String getClassPath() {
-        // TODO Auto-generated method stub
+        // no extra classpath
         return null;
     }
 
@@ -501,7 +622,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getCompiler()
      */
     public String getCompiler() {
-        // TODO Auto-generated method stub
+        // use JDTCompiler, which is the default
         return null;
     }
 
@@ -511,7 +632,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getCompilerSourceVM()
      */
     public String getCompilerSourceVM() {
-        return this.compilerSourceVM;
+        return compilerSourceVM;
     }
 
     /*
@@ -520,7 +641,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getCompilerTargetVM()
      */
     public String getCompilerTargetVM() {
-        return this.compilerTargetVM;
+        return compilerTargetVM;
     }
 
     /*
@@ -558,7 +679,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getIeClassId()
      */
     public String getIeClassId() {
-        return this.jasperIeClassId;
+        return jasperIeClassId;
     }
 
     /*
@@ -576,7 +697,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getJspClassLoader()
      */
     public ClassLoader getJspClassLoader() {
-        // TODO Auto-generated method stub
+        // no JSP ClassLoader, use default
         return null;
     }
 
@@ -586,7 +707,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getJspConfig()
      */
     public JspConfig getJspConfig() {
-        return this.jspConfig;
+        return jspConfig;
     }
 
     /*
@@ -595,7 +716,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getKeepGenerated()
      */
     public boolean getKeepGenerated() {
-        return this.jasperKeepGenerated;
+        return jasperKeepGenerated;
     }
 
     /*
@@ -604,7 +725,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getMappedFile()
      */
     public boolean getMappedFile() {
-        return this.jasperMappedFile;
+        return jasperMappedFile;
     }
 
     /*
@@ -622,7 +743,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getScratchDir()
      */
     public String getScratchDir() {
-        return this.outputDirectory;
+        return outputDirectory;
     }
 
     /*
@@ -641,7 +762,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getTagPluginManager()
      */
     public TagPluginManager getTagPluginManager() {
-        return this.tagPluginManager;
+        return tagPluginManager;
     }
 
     /*
@@ -650,7 +771,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getTldLocationsCache()
      */
     public TldLocationsCache getTldLocationsCache() {
-        return this.tldLocationsCache;
+        return tldLocationsCache;
     }
 
     /*
@@ -659,7 +780,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getTrimSpaces()
      */
     public boolean getTrimSpaces() {
-        return this.jasperTrimSpaces;
+        return jasperTrimSpaces;
     }
 
     /*
@@ -668,7 +789,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#isPoolingEnabled()
      */
     public boolean isPoolingEnabled() {
-        return this.jasperEnablePooling;
+        return jasperEnablePooling;
     }
 
     /*
