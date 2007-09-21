@@ -56,7 +56,7 @@ public class JspCServletContext implements ServletContext {
     /**
      * Servlet context attributes.
      */
-    protected Hashtable attributes;
+    protected Hashtable<String, Object> attributes;
 
     /**
      * The log writer we will write log messages to.
@@ -75,7 +75,7 @@ public class JspCServletContext implements ServletContext {
      * @param resourceBaseURL Resource base URL
      */
     public JspCServletContext(Log log, URL resourceBaseURL) {
-        this.attributes = new Hashtable();
+        attributes = new Hashtable<String, Object>();
         this.log = log;
         this.resourceBaseURL = resourceBaseURL;
     }
@@ -88,14 +88,14 @@ public class JspCServletContext implements ServletContext {
      * @param name Name of the requested attribute
      */
     public Object getAttribute(String name) {
-        return this.attributes.get(name);
+        return attributes.get(name);
     }
 
     /**
      * Return an enumeration of context attribute names.
      */
-    public Enumeration getAttributeNames() {
-        return this.attributes.keys();
+    public Enumeration<String> getAttributeNames() {
+        return attributes.keys();
     }
 
     /**
@@ -119,8 +119,8 @@ public class JspCServletContext implements ServletContext {
     /**
      * Return an enumeration of the names of context initialization parameters.
      */
-    public Enumeration getInitParameterNames() {
-        return new Vector().elements();
+    public Enumeration<String> getInitParameterNames() {
+        return new Vector<String>().elements();
     }
 
     /**
@@ -161,7 +161,7 @@ public class JspCServletContext implements ServletContext {
      * @param path The context-relative virtual path to resolve
      */
     public String getRealPath(String path) {
-        if (!this.resourceBaseURL.getProtocol().equals("file")) {
+        if (!resourceBaseURL.getProtocol().equals("file")) {
             return null;
         }
 
@@ -170,7 +170,7 @@ public class JspCServletContext implements ServletContext {
         }
 
         try {
-            return this.getResource(path).getFile().replace('/', File.separatorChar);
+            return getResource(path).getFile().replace('/', File.separatorChar);
         } catch (Throwable t) {
             return null;
         }
@@ -205,7 +205,7 @@ public class JspCServletContext implements ServletContext {
                 + "' does not start with '/'");
         }
 
-        URL url = new URL(this.resourceBaseURL, path.substring(1));
+        URL url = new URL(resourceBaseURL, path.substring(1));
         InputStream is = null;
         try {
             is = url.openStream();
@@ -231,7 +231,7 @@ public class JspCServletContext implements ServletContext {
      */
     public InputStream getResourceAsStream(String path) {
         try {
-            return this.getResource(path).openStream();
+            return getResource(path).openStream();
         } catch (Throwable t) {
             return null;
         }
@@ -243,14 +243,14 @@ public class JspCServletContext implements ServletContext {
      *
      * @param path Context-relative base path
      */
-    public Set getResourcePaths(String path) {
-        Set thePaths = new HashSet();
+    public Set<String> getResourcePaths(String path) {
+        Set<String> thePaths = new HashSet<String>();
 
         if (!path.endsWith("/")) {
             path += "/";
         }
 
-        String basePath = this.getRealPath(path);
+        String basePath = getRealPath(path);
         if (basePath == null) {
             return (thePaths);
         }
@@ -286,6 +286,7 @@ public class JspCServletContext implements ServletContext {
      * @param name Name of the requested servlet
      * @deprecated This method has been deprecated with no replacement
      */
+    @Deprecated
     public Servlet getServlet(String name) {
         return null;
     }
@@ -294,7 +295,7 @@ public class JspCServletContext implements ServletContext {
      * Return the name of this servlet context.
      */
     public String getServletContextName() {
-        return this.getServerInfo();
+        return getServerInfo();
     }
 
     /**
@@ -302,8 +303,9 @@ public class JspCServletContext implements ServletContext {
      *
      * @deprecated This method has been deprecated with no replacement
      */
-    public Enumeration getServletNames() {
-        return new Vector().elements();
+    @Deprecated
+    public Enumeration<String> getServletNames() {
+        return new Vector<String>().elements();
     }
 
     /**
@@ -311,8 +313,9 @@ public class JspCServletContext implements ServletContext {
      *
      * @deprecated This method has been deprecated with no replacement
      */
-    public Enumeration getServlets() {
-        return new Vector().elements();
+    @Deprecated
+    public Enumeration<Servlet> getServlets() {
+        return new Vector<Servlet>().elements();
     }
 
     /**
@@ -321,7 +324,7 @@ public class JspCServletContext implements ServletContext {
      * @param message The message to be logged
      */
     public void log(String message) {
-        this.log.info(message);
+        log.info(message);
     }
 
     /**
@@ -331,6 +334,7 @@ public class JspCServletContext implements ServletContext {
      * @param message The message to be logged
      * @deprecated Use log(String,Throwable) instead
      */
+    @Deprecated
     public void log(Exception exception, String message) {
         this.log(message, exception);
     }
@@ -342,7 +346,7 @@ public class JspCServletContext implements ServletContext {
      * @param exception The exception to be logged
      */
     public void log(String message, Throwable exception) {
-        this.log.error(message, exception);
+        log.error(message, exception);
     }
 
     /**
@@ -351,7 +355,7 @@ public class JspCServletContext implements ServletContext {
      * @param name Name of the attribute to remove
      */
     public void removeAttribute(String name) {
-        this.attributes.remove(name);
+        attributes.remove(name);
     }
 
     /**
@@ -361,6 +365,6 @@ public class JspCServletContext implements ServletContext {
      * @param value Corresponding attribute value
      */
     public void setAttribute(String name, Object value) {
-        this.attributes.put(name, value);
+        attributes.put(name, value);
     }
 }
