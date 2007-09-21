@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.Content;
+import org.apache.sling.core.Constants;
 
 /**
  * The <code>DefaultErrorHandlerComponent</code> TODO
@@ -86,9 +87,9 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
             throws IOException {
 
         // get settings
-        Integer scObject = (Integer) request.getAttribute(ERROR_STATUS);
-        String statusMessage = (String) request.getAttribute(ERROR_MESSAGE);
-        String requestUri = (String) request.getAttribute(ERROR_REQUEST_URI);
+        Integer scObject = (Integer) request.getAttribute(Constants.ERROR_STATUS);
+        String statusMessage = (String) request.getAttribute(Constants.ERROR_MESSAGE);
+        String requestUri = (String) request.getAttribute(Constants.ERROR_REQUEST_URI);
 
         // ensure values
         int statusCode = (scObject != null)
@@ -103,7 +104,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
             requestUri);
 
         // write the exception message
-        if (request.getAttribute(ERROR_EXCEPTION) != null) {
+        if (request.getAttribute(Constants.ERROR_EXCEPTION) != null) {
             Throwable throwable = (Throwable) request.getAttribute("javax.servlet.error.exception");
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
