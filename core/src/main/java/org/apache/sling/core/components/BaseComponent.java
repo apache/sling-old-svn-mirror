@@ -23,6 +23,7 @@ import java.util.Enumeration;
 
 import org.apache.sling.component.Component;
 import org.apache.sling.component.ComponentContext;
+import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentExtension;
 import org.apache.sling.component.Content;
 
@@ -78,7 +79,7 @@ public abstract class BaseComponent implements Component {
         return this.componentId;
     }
 
-    public void init(ComponentContext context) {
+    public void init(ComponentContext context) throws ComponentException {
         this.context = context;
         this.doInit();
     }
@@ -87,7 +88,7 @@ public abstract class BaseComponent implements Component {
         // nothing to do here, overwrite if needed
     }
 
-    protected abstract void doInit();
+    protected abstract void doInit() throws ComponentException;
 
     protected void setContentClassName(String contentClassName) {
         this.contentClassName = contentClassName;
