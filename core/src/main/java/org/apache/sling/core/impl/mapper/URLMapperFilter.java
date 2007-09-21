@@ -53,8 +53,6 @@ import org.apache.sling.core.mapper.URLTranslationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.security.krb5.internal.Ticket;
-
 
 /**
  * @scr.component immediate="true" label="%mapper.name"
