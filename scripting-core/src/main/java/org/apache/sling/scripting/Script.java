@@ -18,6 +18,9 @@ package org.apache.sling.scripting;
 
 import org.apache.sling.component.ComponentRequest;
 
+/**
+ * @ocm.mapped discriminator="false"
+ */
 public interface Script {
 
     /**
