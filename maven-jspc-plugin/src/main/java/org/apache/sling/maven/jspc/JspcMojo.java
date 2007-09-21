@@ -146,12 +146,12 @@ public class JspcMojo extends AbstractMojo implements Options {
     private boolean showSuccess;
 
     /**
-     * @parameter expression="${jspc.compilerTargetVM}" default-value="1.4"
+     * @parameter expression="${jspc.compilerTargetVM}" default-value="1.5"
      */
     private String compilerTargetVM;
 
     /**
-     * @parameter expression="${jspc.compilerSourceVM}" default-value="1.4"
+     * @parameter expression="${jspc.compilerSourceVM}" default-value="1.5"
      */
     private String compilerSourceVM;
 
