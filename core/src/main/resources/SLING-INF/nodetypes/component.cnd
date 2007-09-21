@@ -28,7 +28,7 @@
 
   - sling:contentClass (String)
   	= 'org.apache.sling.jcr.content.DefaultContent'
-    copy mandatory
+    copy mandatory autocreated
   
   + sling:extensions (sling:ExtensionList)
     = sling:ExtensionList
