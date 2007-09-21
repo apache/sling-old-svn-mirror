@@ -44,8 +44,6 @@ import org.apache.sling.jcr.TooManySessionsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.security.krb5.internal.Ticket;
-
 
 /**
  * The <code>AuthenticationFilter</code> class is the default implementation
