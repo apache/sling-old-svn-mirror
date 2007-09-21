@@ -36,7 +36,7 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
 
     private final RequestData requestData;
     private String contentType = "text/html";
-    private String characterEncoding = "ISO-8859-1";
+    private String characterEncoding = null;
 
     protected ComponentResponseImpl(RequestData requestData) {
         super(requestData.getServletResponse());
@@ -45,39 +45,45 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
 
     protected ComponentResponseImpl(ComponentResponseImpl response) {
         super(response);
-        this.requestData = response.getRequestData();
+        requestData = response.getRequestData();
     }
 
     protected final RequestData getRequestData() {
-        return this.requestData;
+        return requestData;
     }
 
     /**
      * @see javax.servlet.ServletResponseWrapper#flushBuffer()
      */
     public void flushBuffer() throws IOException {
-        this.getRequestData().getContentData().flushBuffer();
+        getRequestData().getContentData().flushBuffer();
     }
 
     /**
      * @see javax.servlet.ServletResponseWrapper#getBufferSize()
      */
     public int getBufferSize() {
-        return this.getRequestData().getContentData().getBufferSize();
+        return getRequestData().getContentData().getBufferSize();
     }
 
     /**
      * @see javax.servlet.ServletResponseWrapper#getCharacterEncoding()
      */
     public String getCharacterEncoding() {
-        return this.characterEncoding;
+        return characterEncoding;
     }
 
     /**
      * @see org.apache.sling.core.component.ComponentResponse#getContentType()
      */
     public String getContentType() {
-        return this.contentType + ";charset=" + this.characterEncoding;
+        // plaing content type if there is no character encoding
+        if (characterEncoding == null) {
+            return contentType;
+        }
+        
+        // otherwise append the charset
+        return contentType + ";charset=" + characterEncoding;
     }
 
     /**
@@ -85,7 +91,7 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
      */
     public Locale getLocale() {
         // TODO Should use our Locale Resolver and not let the component set the locale, right ??
-        return this.getResponse().getLocale();
+        return getResponse().getLocale();
     }
 
     /**
@@ -100,14 +106,14 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
      * @see javax.servlet.ServletResponseWrapper#getOutputStream()
      */
     public ServletOutputStream getOutputStream() throws IOException {
-        return this.getRequestData().getBufferProvider().getOutputStream();
+        return getRequestData().getBufferProvider().getOutputStream();
     }
 
     /**
      * @see javax.servlet.ServletResponseWrapper#getWriter()
      */
     public PrintWriter getWriter() throws IOException {
-        return this.getRequestData().getBufferProvider().getWriter();
+        return getRequestData().getBufferProvider().getWriter();
     }
 
     /**
@@ -115,7 +121,7 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
      */
     public boolean isCommitted() {
         // TODO: integrate with our output catcher
-        return this.getResponse().isCommitted();
+        return getResponse().isCommitted();
     }
 
     /**
@@ -123,28 +129,26 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
      */
     public void reset() {
         // TODO: integrate with our output catcher
-        this.getResponse().reset();
+        getResponse().reset();
     }
 
     /**
      * @see javax.servlet.ServletResponseWrapper#resetBuffer()
      */
     public void resetBuffer() {
-        this.getRequestData().getContentData().resetBuffer();
+        getRequestData().getContentData().resetBuffer();
     }
 
     /**
      * @see javax.servlet.ServletResponseWrapper#setBufferSize(int)
      */
     public void setBufferSize(int size) {
-        this.getRequestData().getContentData().setBufferSize(size);
+        getRequestData().getContentData().setBufferSize(size);
     }
 
     public void setCharacterEncoding(String charset) {
-        if (charset != null && charset.length() > 0) {
-            // should actually check for charset validity ??
-            this.characterEncoding = charset;
-        }
+        // should actually check for charset validity ??
+        characterEncoding = charset;
     }
 
     /**
@@ -165,13 +169,15 @@ class ComponentResponseImpl extends HttpServletResponseWrapper implements Compon
                 Map.Entry entry = (Map.Entry) parsedType.entrySet().iterator().next();
                 type = (String) entry.getKey();
                 String charset = (String) ((Map) entry.getValue()).get("charset");
-                this.setCharacterEncoding(charset);
+                if (charset != null && charset.length() > 0) {
+                    setCharacterEncoding(charset);
+                }
             }
         }
 
-        this.contentType = type;
+        contentType = type;
 
         // set the content type with charset on the underlying response
-        super.setContentType(this.getContentType());
+        super.setContentType(getContentType());
     }
 }
