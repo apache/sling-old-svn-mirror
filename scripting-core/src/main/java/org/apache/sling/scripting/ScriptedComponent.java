@@ -19,6 +19,7 @@ package org.apache.sling.scripting;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.TreeSet;
 
 import org.apache.sling.component.Component;
@@ -145,9 +146,12 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     protected Script getScript(ComponentRequest request) {
 
         // check whether we can handle the script
-        for (int i = 0; i < this.scripts.length && this.scripts[i] != null; i++) {
-            if (this.scripts[i].matches(request)) {
-                return this.scripts[i];
+        Script[] scripts = this.scripts;
+        if (scripts != null) {
+            for (int i = 0; i < this.scripts.length && this.scripts[i] != null; i++) {
+                if (this.scripts[i].matches(request)) {
+                    return this.scripts[i];
+                }
             }
         }
 
@@ -266,14 +270,22 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     }
 
     public void setScripts(Collection scripts) {
-        TreeSet scriptSet = new TreeSet();
-        if (scripts != null && !scripts.isEmpty()) {
-            scriptSet.addAll(scripts);
+        if (scripts == null || scripts.isEmpty()) {
+            this.scripts = null;
+        } else {
+            TreeSet scriptSet = new TreeSet();
+            if (scripts != null && !scripts.isEmpty()) {
+                scriptSet.addAll(scripts);
+            }
+            this.scripts = (Script[]) scriptSet.toArray(new Script[scriptSet.size()]);
         }
-        this.scripts = (Script[]) scriptSet.toArray(new Script[scriptSet.size()]);
     }
 
     public Collection getScripts() {
+        if (scripts == null) {
+            return Collections.emptyList();
+        }
+        
         return Arrays.asList(this.scripts);
     }
 
