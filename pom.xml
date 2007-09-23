@@ -364,13 +364,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>2.3</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
                 <groupId>org.osgi</groupId>
                 <artifactId>osgi_R4_core</artifactId>
                 <version>1.0</version>
@@ -435,6 +428,19 @@
                 <groupId>org.apache.sling</groupId>
                 <artifactId>sling-scripting-jsp-taglib</artifactId>
                 <version>2.0.0-incubator-SNAPSHOT</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.4</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
                 <scope>provided</scope>
             </dependency>
 
