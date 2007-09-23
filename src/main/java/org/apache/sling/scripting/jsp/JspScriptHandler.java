@@ -140,7 +140,7 @@ public class JspScriptHandler implements ScriptHandler {
 
     public ComponentRenderer getComponentRenderer(Component component,
             String scriptName) {
-        return this.getJspWrapperAdapter(component, scriptName).getServletAdapter();
+        return getJspWrapperAdapter(component, scriptName);
     }
 
     private JspServletWrapperAdapter getJspWrapperAdapter(Component component,
