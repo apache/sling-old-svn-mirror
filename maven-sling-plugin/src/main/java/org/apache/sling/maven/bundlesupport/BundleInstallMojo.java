@@ -33,6 +33,9 @@ import org.apache.commons.httpclient.methods.multipart.FilePartSource;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.maven.model.Build;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 
 /**
  * Install an OSGi bundle to a running Sling instance.
@@ -41,7 +44,7 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
  * @phase install
  * @description install an OSGi bundle jar to a running Sling instance
  */
-public class BundleInstallMojo extends AbstractBundlePostMojo {
+public class BundleInstallMojo extends AbstractBundleInstallMojo {
 
     /**
      * Whether to skip this step even though it has been configured in the
@@ -62,113 +65,19 @@ public class BundleInstallMojo extends AbstractBundlePostMojo {
      */
     private String bundleFileName;
 
-    /**
-     * The URL of the running Sling instance.
-     *
-     * @parameter expression="${sling.url}" default-value="http://localhost:8080/sling"
-     * @required
-     */
-    private String slingUrl;
-    
-    /**
-     * The user name to authenticate at the running Sling instance.
-     *
-     * @parameter expression="${sling.user}" default-value="admin"
-     * @required
-     */
-    private String user;
-    
-    /**
-     * The password to authenticate at the running Sling instance.
-     *
-     * @parameter expression="${sling.password}" default-value="admin"
-     * @required
-     */
-    private String password;
-    
-    /**
-     * The startlevel for the uploaded bundle
-     *
-     * @parameter expression="${sling.bundle.startlevel}" default-value="20"
-     * @required
-     */
-    private String bundleStartLevel;
-    
-    /**
-     * Whether to start the uploaded bundle or not
-     *
-     * @parameter expression="${sling.bundle.start}" default-value="true"
-     * @required
-     */
-    private boolean bundleStart;
-
-	/**
-	 * Execute this Mojo
-	 */
-	public void execute() {
-	    // don't do anything, if this step is to be skipped
-	    if (skip) {
-	        getLog().debug("Skipping bundle installation as instructed");
-	        return;
-	    }
-
-        // only upload if packaging as an osgi-bundle
-        File bundleFile = new File(bundleFileName);
-        String bundleName = getBundleSymbolicName(bundleFile);
-        if (bundleName == null) {
-            getLog().info(bundleFile + " is not an OSGi Bundle, not uploading");
+    @Override
+    public void execute() throws MojoExecutionException {
+        // don't do anything, if this step is to be skipped
+        if (skip) {
+            getLog().debug("Skipping bundle installation as instructed");
             return;
         }
 
-        getLog().info("Installing Bundle " + bundleName + "(" + bundleFile + ") to " + slingUrl);
-        post(slingUrl, bundleFile);
-	}
-
-	private void post(String targetURL, File file) {
-
-        // append pseudo path after root URL to not get redirected for nothing
-        PostMethod filePost = new PostMethod(targetURL + "/install");
-
-        try {
-
-            List<Part> partList = new ArrayList<Part>();
-            partList.add(new StringPart("action", "install"));
-            partList.add(new StringPart("_noredir_", "_noredir_"));
-            partList.add(new FilePart("bundlefile", new FilePartSource(file.getName(), file)));
-            partList.add(new StringPart("bundlestartlevel", bundleStartLevel));
-            
-            if (bundleStart) {
-                partList.add(new StringPart("bundlestart", "start"));
-            }
-
-            Part[] parts = partList.toArray(new Part[partList.size()]);
-
-            filePost.setRequestEntity(new MultipartRequestEntity(parts,
-                filePost.getParams()));
-            HttpClient client = new HttpClient();
-            client.getHttpConnectionManager().getParams().setConnectionTimeout(
-                5000);
-            
-            // authentication stuff
-            client.getParams().setAuthenticationPreemptive(true);
-            Credentials defaultcreds = new UsernamePasswordCredentials(user, password);
-            client.getState().setCredentials(AuthScope.ANY, defaultcreds);
-            
-            int status = client.executeMethod(filePost);
-            if (status == HttpStatus.SC_OK) {
-                getLog().info("Bundle installed");
-            } else {
-                getLog().error(
-                    "Installation failed, cause: " + HttpStatus.getStatusText(status));
-            }
-        } catch (ConnectException ce) {
-            getLog().info("Installation on " + targetURL + " failed, cause: " + ce.getMessage());
-            getLog().debug(ce); // dump on debug
-        } catch (Exception ex) {
-            getLog().error(ex.getClass().getName() + " " + ex.getMessage());
-            ex.printStackTrace();
-        } finally {
-            filePost.releaseConnection();
-        }
+        super.execute();
+    }
+    
+    @Override
+    protected String getBundleFileName() {
+        return bundleFileName;
     }
 }

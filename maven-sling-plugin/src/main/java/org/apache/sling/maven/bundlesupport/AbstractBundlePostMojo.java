@@ -24,13 +24,14 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 
 public abstract class AbstractBundlePostMojo extends AbstractMojo {
 
     /**
      * Returns the symbolic name of the given bundle. If the
-     * <code>jarFile</code> does not exist or does not contain a manifest with
-     * a <code>Bundle-SymbolicName</code> header <code>null</code> is
+     * <code>jarFile</code> does not contain a manifest with a
+     * <code>Bundle-SymbolicName</code> header <code>null</code> is
      * returned. Otherwise the value of the <code>Bundle-SymbolicName</code>
      * header is returned.
      * <p>
@@ -42,15 +43,17 @@ public abstract class AbstractBundlePostMojo extends AbstractMojo {
      *            requested.
      * @return The bundle's symbolic name from the
      *         <code>Bundle-SymbolicName</code> manifest header or
-     *         <code>null</code> if the file does not exists or no manifest
-     *         exists in the file or the header is not contained in the
-     *         manifest. However, if <code>null</code> is returned, the file
-     *         may be assumed to not contain an OSGi bundle.
+     *         <code>null</code> if no manifest exists in the file or the
+     *         header is not contained in the manifest. However, if
+     *         <code>null</code> is returned, the file may be assumed to not
+     *         contain an OSGi bundle.
+     * @throws MojoExecutionException if the file does not exist
      */
-    protected String getBundleSymbolicName(File jarFile) {
+    protected String getBundleSymbolicName(File jarFile)
+            throws MojoExecutionException {
+
         if (!jarFile.exists()) {
-            getLog().debug("getBundleSymbolicName: " + jarFile + " does not exist");
-            return null;
+            throw new MojoExecutionException("Missing file " + jarFile);
         }
 
         JarFile jaf = null;
@@ -58,20 +61,24 @@ public abstract class AbstractBundlePostMojo extends AbstractMojo {
             jaf = new JarFile(jarFile);
             Manifest manif = jaf.getManifest();
             if (manif == null) {
-                getLog().debug("getBundleSymbolicName: Missing manifest in " + jarFile);
+                getLog().debug(
+                    "getBundleSymbolicName: Missing manifest in " + jarFile);
                 return null;
             }
 
             String symbName = manif.getMainAttributes().getValue(
                 "Bundle-SymbolicName");
             if (symbName == null) {
-                getLog().debug("getBundleSymbolicName: No Bundle-SymbolicName in " + jarFile);
+                getLog().debug(
+                    "getBundleSymbolicName: No Bundle-SymbolicName in "
+                        + jarFile);
                 return null;
             }
 
             return symbName;
         } catch (IOException ioe) {
-            getLog().warn("getBundleSymbolicName: Problem checking " + jarFile, ioe);
+            getLog().warn("getBundleSymbolicName: Problem checking " + jarFile,
+                ioe);
         } finally {
             if (jaf != null) {
                 try {
