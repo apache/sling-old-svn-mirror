@@ -463,6 +463,9 @@ public class RequestData implements BufferProvider {
      */
     public void setTheme(Theme theme) {
         this.theme = theme;
+        // provide the current theme to components as a request attribute
+        // TODO - We should define a well known constant for this
+        this.servletRequest.setAttribute(Theme.class.getName(), theme);
     }
 
     public void setOriginalURL(String originalURL) {
