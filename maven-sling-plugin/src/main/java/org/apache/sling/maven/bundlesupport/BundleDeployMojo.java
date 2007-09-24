@@ -18,26 +18,7 @@
 package org.apache.sling.maven.bundlesupport;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.Deflater;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.FilePartSource;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -53,7 +34,7 @@ import org.apache.maven.project.MavenProject;
  * @phase deploy
  * @description deploy an OSGi bundle jar to the Day OBR
  */
-public class BundleDeployMojo extends AbstractBundlePostMojo {
+public class BundleDeployMojo extends AbstractBundleDeployMojo {
 
 	/**
      * The directory for the generated JAR.
@@ -72,15 +53,6 @@ public class BundleDeployMojo extends AbstractBundlePostMojo {
     private String jarName;
 
     /**
-     * The URL to the OSGi Bundle repository to which the bundle is posted,
-     * e.g. <code>http://obr.sample.com</code>
-     * 
-     * @parameter expression="${obr}"
-     * @required
-     */
-    private String obr;
-
-    /**
      * The Maven project.
      *
      * @parameter expression="${project}"
@@ -89,18 +61,13 @@ public class BundleDeployMojo extends AbstractBundlePostMojo {
      */
     private MavenProject project;
 
-	/**
-	 * Execute this Mojo
-	 */
-	public void execute() throws MojoExecutionException {
-        // only upload if packaging as an osgi-bundle
-        File jarFile = new File(this.buildDirectory, this.jarName);
-        String bundleName = getBundleSymbolicName(jarFile);
-        if (bundleName == null) {
-            this.getLog().info(jarFile + " is not an OSGi Bundle, not uploading");
-            return;
-        }
+    @Override
+    protected String getJarFileName() {
+        return buildDirectory + "/" + jarName;
+    }
 
+    @Override
+    protected File fixBundleVersion(File jarFile) throws MojoExecutionException {
         // if this is a snapshot, replace "SNAPSHOT" with the date generated
         // by the maven deploy plugin
         if ( this.project.getVersion().indexOf("SNAPSHOT") > 0 ) {
@@ -120,103 +87,21 @@ public class BundleDeployMojo extends AbstractBundlePostMojo {
                 newVersion = newVersion.substring(0, pos) + newVersion.substring(pos+1);
                 pos = newVersion.indexOf('.', pos+1);
             }
-            jarFile = this.changeVersion(jarFile, newVersion);
-        } else {
-            // if this is a final release append "final"
-            try {
-                final ArtifactVersion v = this.project.getArtifact().getSelectedVersion();
-                if ( v.getBuildNumber() == 0 && v.getQualifier() == null ) {
-                    final String newVersion = this.project.getArtifact().getVersion() + ".FINAL";
-                    jarFile = this.changeVersion(jarFile, newVersion);
-                }
-            } catch (OverConstrainedVersionException ocve) {
-                // we ignore this and don't append "final"!
-            }
+            return changeVersion(jarFile, project.getVersion(), newVersion);
         }
         
-        getLog().info("Deploying Bundle " + bundleName + "(" + jarFile + ") to " + obr);
-        this.post(this.obr, jarFile);
-	}
-
-	private void post(String targetURL, File file) {
-        PostMethod filePost = new PostMethod(targetURL);
+        // if this is a final release append "final"
         try {
-            Part[] parts = { new FilePart(file.getName(), new FilePartSource(file.getName(), file)),
-                new StringPart("_noredir_", "_noredir_") };
-            filePost.setRequestEntity(new MultipartRequestEntity(parts,
-                filePost.getParams()));
-            HttpClient client = new HttpClient();
-            client.getHttpConnectionManager().getParams().setConnectionTimeout(
-                5000);
-            int status = client.executeMethod(filePost);
-            if (status == HttpStatus.SC_OK) {
-                getLog().info("Bundle deployed");
-            } else {
-                this.getLog().error(
-                    "Deployment failed, cause: " + HttpStatus.getStatusText(status));
+            final ArtifactVersion v = this.project.getArtifact().getSelectedVersion();
+            if ( v.getBuildNumber() == 0 && v.getQualifier() == null ) {
+                final String newVersion = this.project.getArtifact().getVersion() + ".FINAL";
+                return changeVersion(jarFile, project.getVersion(), newVersion);
             }
-        } catch (Exception ex) {
-            this.getLog().error(ex.getClass().getName() + " " + ex.getMessage());
-            ex.printStackTrace();
-        } finally {
-            filePost.releaseConnection();
+        } catch (OverConstrainedVersionException ocve) {
+            // we ignore this and don't append "final"!
         }
-    }
-
-    /**
-     * Change the version in jar
-     * @param newVersion
-     * @param file
-     * @return
-     * @throws MojoExecutionException
-     */
-    protected File changeVersion(File file, String newVersion)
-    throws MojoExecutionException {
-        String fileName = file.getName();
-        int pos = fileName.indexOf(this.project.getVersion());
-        fileName = fileName.substring(0, pos) + newVersion + fileName.substring(pos + this.project.getVersion().length());
-
-        JarInputStream jis = null;
-        JarOutputStream jos;
-        OutputStream out = null;
-        try {
-            // now create a temporary file and update the version
-            final JarFile sourceJar = new JarFile(file);
-            final Manifest manifest = sourceJar.getManifest();
-            manifest.getMainAttributes().putValue("Bundle-Version", newVersion);
-
-            jis = new JarInputStream(new FileInputStream(file));
-            final File destJar = new File(file.getParentFile(), fileName);
-            out = new FileOutputStream(destJar);
-            jos = new JarOutputStream(out, manifest);
-
-            jos.setMethod(JarOutputStream.DEFLATED);
-            jos.setLevel(Deflater.BEST_COMPRESSION);
-
-            JarEntry entryIn = jis.getNextJarEntry();
-            while (entryIn != null) {
-                JarEntry entryOut = new JarEntry(entryIn.getName());
-                entryOut.setTime(entryIn.getTime());
-                entryOut.setComment(entryIn.getComment());
-                jos.putNextEntry(entryOut);
-                if (!entryIn.isDirectory()) {
-                    IOUtils.copy(jis, jos);
-                }
-                jos.closeEntry();
-                jis.closeEntry();
-                entryIn = jis.getNextJarEntry();
-            }
-
-            // close the JAR file now to force writing
-            jos.close();
-            return destJar;
-        } catch (IOException ioe) {
-            throw new MojoExecutionException("Unable to update version in jar file.", ioe);
-        } finally {
-            IOUtils.closeQuietly(jis);
-            IOUtils.closeQuietly(out);
-        }
-
-
+        
+        // just return the file in case of some issues
+        return jarFile;
     }
 }
