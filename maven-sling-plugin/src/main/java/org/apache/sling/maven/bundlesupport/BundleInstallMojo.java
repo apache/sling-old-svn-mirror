@@ -18,13 +18,9 @@
 package org.apache.sling.maven.bundlesupport;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
@@ -37,9 +33,6 @@ import org.apache.commons.httpclient.methods.multipart.FilePartSource;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.commons.io.IOUtils;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.project.MavenProject;
 
 /**
  * Install an OSGi bundle to a running Sling instance.
@@ -48,7 +41,7 @@ import org.apache.maven.project.MavenProject;
  * @phase install
  * @description install an OSGi bundle jar to a running Sling instance
  */
-public class BundleInstallMojo extends AbstractMojo {
+public class BundleInstallMojo extends AbstractBundlePostMojo {
 
     /**
      * Whether to skip this step even though it has been configured in the
@@ -61,21 +54,13 @@ public class BundleInstallMojo extends AbstractMojo {
      */
     private boolean skip;
     
-	/**
-     * The directory for the generated JAR.
-     *
-     * @parameter expression="${project.build.directory}"
-     * @required
-     */
-    private String buildDirectory;
-
     /**
      * The name of the generated JAR file.
      *
-     * @parameter alias="jarName" expression="${project.build.finalName}.jar"
+     * @parameter expression="${sling.file}" default-value="${project.build.directory}/${project.build.finalName}.jar"
      * @required
      */
-    private String jarName;
+    private String bundleFileName;
 
     /**
      * The URL of the running Sling instance.
@@ -128,15 +113,15 @@ public class BundleInstallMojo extends AbstractMojo {
 	    }
 
         // only upload if packaging as an osgi-bundle
-        File jarFile = new File(buildDirectory, jarName);
-        String bundleName = isBundle(jarFile);
+        File bundleFile = new File(bundleFileName);
+        String bundleName = getBundleSymbolicName(bundleFile);
         if (bundleName == null) {
-            getLog().info(jarFile + " is not an OSGi Bundle, not uploading");
+            getLog().info(bundleFile + " is not an OSGi Bundle, not uploading");
             return;
         }
 
-        getLog().info("Installing Bundle " + bundleName + "(" + jarFile + ") to " + slingUrl);
-        post(slingUrl, jarFile);
+        getLog().info("Installing Bundle " + bundleName + "(" + bundleFile + ") to " + slingUrl);
+        post(slingUrl, bundleFile);
 	}
 
 	private void post(String targetURL, File file) {
@@ -174,10 +159,10 @@ public class BundleInstallMojo extends AbstractMojo {
                 getLog().info("Bundle installed");
             } else {
                 getLog().error(
-                    "Install failed, cause: " + HttpStatus.getStatusText(status));
+                    "Installation failed, cause: " + HttpStatus.getStatusText(status));
             }
         } catch (ConnectException ce) {
-            getLog().info("Install on " + targetURL + " failed, cause: " + ce.getMessage());
+            getLog().info("Installation on " + targetURL + " failed, cause: " + ce.getMessage());
             getLog().debug(ce); // dump on debug
         } catch (Exception ex) {
             getLog().error(ex.getClass().getName() + " " + ex.getMessage());
@@ -185,44 +170,5 @@ public class BundleInstallMojo extends AbstractMojo {
         } finally {
             filePost.releaseConnection();
         }
-    }
-
-    private String isBundle(File jarFile) {
-        if (!jarFile.exists()) {
-            getLog().debug("isBundle: " + jarFile + " does not exist");
-            return null;
-        }
-
-        JarFile jaf = null;
-        try {
-            jaf = new JarFile(jarFile);
-            Manifest manif = jaf.getManifest();
-            if (manif == null) {
-                getLog().debug("isBundle: Missing manifest in " + jarFile);
-                return null;
-            }
-
-            String symbName =
-                manif.getMainAttributes().getValue("Bundle-SymbolicName");
-            if (symbName == null) {
-                getLog().debug("isBundle: No Bundle-SymbolicName in " + jarFile);
-                return null;
-            }
-
-            return symbName;
-        } catch (IOException ioe) {
-            getLog().warn("isBundle: Problem checking " + jarFile, ioe);
-        } finally {
-            if (jaf != null) {
-                try {
-                    jaf.close();
-                } catch (IOException ignore) {
-                    // don't care
-                }
-            }
-        }
-
-        // fall back to not being a bundle
-        return null;
     }
 }
