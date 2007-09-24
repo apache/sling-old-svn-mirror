@@ -36,6 +36,17 @@ import org.apache.maven.project.MavenProject;
  */
 public class BundleDeployMojo extends AbstractBundleDeployMojo {
 
+    /**
+     * Whether to skip this step even though it has been configured in the
+     * project to be executed. This property may be set by the
+     * <code>sling.deploy.skip</code> comparable to the <code>maven.test.skip</code>
+     * property to prevent running the unit tests.
+     * 
+     * @parameter expression="${sling.deploy.skip}" default-value="false"
+     * @required
+     */
+    private boolean skip;
+    
 	/**
      * The directory for the generated JAR.
      *
@@ -61,6 +72,17 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
      */
     private MavenProject project;
 
+    @Override
+    public void execute() throws MojoExecutionException {
+        // don't do anything, if this step is to be skipped
+        if (skip) {
+            getLog().debug("Skipping bundle deployment as instructed");
+            return;
+        }
+
+        super.execute();
+    }
+    
     @Override
     protected String getJarFileName() {
         return buildDirectory + "/" + jarName;
