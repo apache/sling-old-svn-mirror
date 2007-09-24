@@ -26,7 +26,7 @@ import java.util.jar.Manifest;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
-public abstract class AbstractBundlePostMojo extends AbstractMojo {
+abstract class AbstractBundlePostMojo extends AbstractMojo {
 
     /**
      * Returns the symbolic name of the given bundle. If the
