@@ -17,8 +17,6 @@
 
 package org.apache.sling.maven.bundlesupport;
 
-import java.io.File;
-
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
