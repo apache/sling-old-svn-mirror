@@ -98,7 +98,7 @@ public abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         post(slingUrl, bundleFile);
     }
 
-    protected void post(String targetURL, File file) {
+    protected void post(String targetURL, File file) throws MojoExecutionException {
     
         // append pseudo path after root URL to not get redirected for nothing
         PostMethod filePost = new PostMethod(targetURL + "/install");
@@ -135,12 +135,8 @@ public abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 getLog().error(
                     "Installation failed, cause: " + HttpStatus.getStatusText(status));
             }
-        } catch (ConnectException ce) {
-            getLog().info("Installation on " + targetURL + " failed, cause: " + ce.getMessage());
-            getLog().debug(ce); // dump on debug
         } catch (Exception ex) {
-            getLog().error(ex.getClass().getName() + " " + ex.getMessage());
-            ex.printStackTrace();
+            throw new MojoExecutionException("Installation on " + targetURL + " failed, cause: " + ex.getMessage(), ex);
         } finally {
             filePost.releaseConnection();
         }
