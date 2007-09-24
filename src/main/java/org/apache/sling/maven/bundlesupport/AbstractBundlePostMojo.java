@@ -47,13 +47,11 @@ abstract class AbstractBundlePostMojo extends AbstractMojo {
      *         header is not contained in the manifest. However, if
      *         <code>null</code> is returned, the file may be assumed to not
      *         contain an OSGi bundle.
-     * @throws MojoExecutionException if the file does not exist
      */
-    protected String getBundleSymbolicName(File jarFile)
-            throws MojoExecutionException {
+    protected String getBundleSymbolicName(File jarFile) {
 
         if (!jarFile.exists()) {
-            throw new MojoExecutionException("Missing file " + jarFile);
+            return null;
         }
 
         JarFile jaf = null;
