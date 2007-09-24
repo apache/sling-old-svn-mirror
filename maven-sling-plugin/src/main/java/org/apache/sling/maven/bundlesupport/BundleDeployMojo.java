@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -41,7 +40,6 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.OverConstrainedVersionException;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
@@ -55,7 +53,7 @@ import org.apache.maven.project.MavenProject;
  * @phase deploy
  * @description deploy an OSGi bundle jar to the Day OBR
  */
-public class BundleDeployMojo extends AbstractMojo {
+public class BundleDeployMojo extends AbstractBundlePostMojo {
 
 	/**
      * The directory for the generated JAR.
@@ -97,7 +95,8 @@ public class BundleDeployMojo extends AbstractMojo {
 	public void execute() throws MojoExecutionException {
         // only upload if packaging as an osgi-bundle
         File jarFile = new File(this.buildDirectory, this.jarName);
-        if (!this.isBundle(jarFile)) {
+        String bundleName = getBundleSymbolicName(jarFile);
+        if (bundleName == null) {
             this.getLog().info(jarFile + " is not an OSGi Bundle, not uploading");
             return;
         }
@@ -134,14 +133,13 @@ public class BundleDeployMojo extends AbstractMojo {
                 // we ignore this and don't append "final"!
             }
         }
+        
+        getLog().info("Deploying Bundle " + bundleName + "(" + jarFile + ") to " + obr);
         this.post(this.obr, jarFile);
 	}
 
 	private void post(String targetURL, File file) {
-        this.getLog().info("Uploading " + file + " to " + targetURL);
-
         PostMethod filePost = new PostMethod(targetURL);
-
         try {
             Part[] parts = { new FilePart(file.getName(), new FilePartSource(file.getName(), file)),
                 new StringPart("_noredir_", "_noredir_") };
@@ -152,16 +150,10 @@ public class BundleDeployMojo extends AbstractMojo {
                 5000);
             int status = client.executeMethod(filePost);
             if (status == HttpStatus.SC_OK) {
-                InputStream res = filePost.getResponseBodyAsStream();
-                String response = "";
-                if (res != null) {
-                    response = IOUtils.toString(res,
-                        filePost.getResponseCharSet());
-                }
-                this.getLog().info("Upload complete: " + response);
+                getLog().info("Bundle deployed");
             } else {
                 this.getLog().error(
-                    "Upload failed, cause: " + HttpStatus.getStatusText(status));
+                    "Deployment failed, cause: " + HttpStatus.getStatusText(status));
             }
         } catch (Exception ex) {
             this.getLog().error(ex.getClass().getName() + " " + ex.getMessage());
@@ -169,46 +161,6 @@ public class BundleDeployMojo extends AbstractMojo {
         } finally {
             filePost.releaseConnection();
         }
-    }
-
-    private boolean isBundle(File jarFile) {
-        if (!jarFile.exists()) {
-            this.getLog().debug("isBundle: " + jarFile + " does not exist");
-            return false;
-        }
-
-        JarFile jaf = null;
-        try {
-            jaf = new JarFile(jarFile);
-            Manifest manif = jaf.getManifest();
-            if (manif == null) {
-                this.getLog().debug("isBundle: Missing manifest in " + jarFile);
-                return false;
-            }
-
-            String symbName =
-                manif.getMainAttributes().getValue("Bundle-SymbolicName");
-            if (symbName == null) {
-                this.getLog().debug("isBundle: No Bundle-SymbolicName in " + jarFile);
-                return false;
-            }
-
-            this.getLog().info("isBundle: " + jarFile + " contains Bundle " + symbName);
-            return true;
-        } catch (IOException ioe) {
-            // TODO
-        } finally {
-            if (jaf != null) {
-                try {
-                    jaf.close();
-                } catch (IOException ignore) {
-                    // don't care
-                }
-            }
-        }
-
-        // fall back to not being a bundle
-        return false;
     }
 
     /**
