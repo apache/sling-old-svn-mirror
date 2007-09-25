@@ -19,15 +19,6 @@
 package org.apache.sling.core.impl.filter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 
 import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
@@ -36,6 +27,8 @@ import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.core.ServiceLocator;
+import org.apache.sling.core.util.ServiceLocatorImpl;
+import org.osgi.framework.BundleContext;
 
 /**
  * The <code>ServiceLocatorFilter</code> adds the service locator to the request
@@ -90,71 +83,5 @@ public class ServiceLocatorFilter implements ComponentFilter {
      */
     public void destroy() {
         // nothing to do
-    }
-
-    /**
-     * We start with a simple implementation just adding all references into a list.
-     */
-    protected static final class ServiceLocatorImpl implements ServiceLocator {
-
-        protected final BundleContext bundleContext;
-
-        /** The list of references - we don't need to synchronize this as we are running in one single request. */
-        protected final List references = new ArrayList();
-
-        /** A map of found services. */
-        protected final Map services = new HashMap();
-
-        public ServiceLocatorImpl(BundleContext ctx) {
-            this.bundleContext = ctx;
-        }
-
-        /**
-         * @see org.apache.sling.core.ServiceLocator#getService(java.lang.String, java.lang.String)
-         */
-        public Object[] getService(String serviceName, String filter) throws InvalidSyntaxException {
-            final ServiceReference[] refs = this.bundleContext.getServiceReferences(serviceName, filter);
-            Object[] result = null;
-            if ( refs != null ) {
-                final List objects = new ArrayList();
-                for(int i=0; i<refs.length; i++ ) {
-                    this.references.add(refs[i]);
-                    final Object service = this.bundleContext.getService(refs[i]);
-                    if ( service != null) {
-                        objects.add(service);
-                    }
-                }
-                if ( objects.size() > 0 ) {
-                    result = objects.toArray();
-                }
-            }
-            return result;
-        }
-
-        /**
-         * @see org.apache.sling.core.ServiceLocator#getService(java.lang.String)
-         */
-        public Object getService(String serviceName) {
-            Object service = this.services.get(serviceName);
-            if ( service == null ) {
-                final ServiceReference ref = this.bundleContext.getServiceReference(serviceName);
-                if ( ref != null ) {
-                    this.references.add(ref);
-                    service = this.bundleContext.getService(ref);
-                    this.services.put(serviceName, service);
-                }
-            }
-            return service;
-        }
-
-        public void clear() {
-            final Iterator i = this.references.iterator();
-            while ( i.hasNext() ) {
-                final ServiceReference ref = (ServiceReference)i.next();
-                this.bundleContext.ungetService(ref);
-            }
-            this.references.clear();
-            this.services.clear();
-        }
     }
 }
