@@ -81,7 +81,8 @@
                             org.apache.sling.core.filter,
                             org.apache.sling.core.locale,
                             org.apache.sling.core.mapper,
-                            org.apache.sling.core.theme
+                            org.apache.sling.core.theme,
+                            org.apache.sling.core.util
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.core.impl,
