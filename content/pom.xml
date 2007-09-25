@@ -97,6 +97,8 @@
                             org.apache.jackrabbit.ocm.manager.objectconverter,
                             org.apache.jackrabbit.ocm.manager.objectconverter.impl,
                             org.apache.jackrabbit.ocm.mapper.impl,
+                            org.apache.jackrabbit.ocm.mapper.impl.annotation,
+                            org.apache.jackrabbit.ocm.mapper.impl.digester,
                             org.apache.jackrabbit.ocm.mapper.model,
                             org.apache.jackrabbit.ocm.query.impl,
                             org.apache.jackrabbit.ocm.reflection,
