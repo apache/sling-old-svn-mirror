@@ -34,6 +34,7 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.core.Constants;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.SlingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -88,8 +89,7 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void activate(final ComponentContext context)
     throws RepositoryException {
-        // FIXME - We should rather use a provided constant for the sling id
-        this.applicationId = context.getBundleContext().getProperty("sling.id");
+        this.applicationId = context.getBundleContext().getProperty(Constants.SLING_ID);
         this.cleanupPeriod = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
         this.startSession();
     }
