@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component
  * @scr.service interface="org.apache.sling.scheduler.Scheduler"
- * @scr.reference name="job" interface="org.apache.sling.scheduler.Job" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
- * @scr.reference name="task" interface="java.lang.Runnable" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
+ * @scr.reference name="job" interface="org.apache.sling.scheduler.Job" cardinality="0..n" policy="dynamic"
+ * @scr.reference name="task" interface="java.lang.Runnable" cardinality="0..n" policy="dynamic"
  */
 public class QuartzScheduler implements Scheduler {
 
@@ -72,7 +72,7 @@ public class QuartzScheduler implements Scheduler {
 
     protected org.quartz.Scheduler scheduler;
 
-    protected final List<ServiceReference> registeredJobs = new ArrayList<ServiceReference>();
+    protected final List<Object[]> registeredJobs = new ArrayList<Object[]>();
 
     protected ComponentContext context;
 
@@ -86,13 +86,13 @@ public class QuartzScheduler implements Scheduler {
         this.context = ctx;
         synchronized ( this.registeredJobs ) {
             this.init();
-            for( ServiceReference ref : this.registeredJobs ) {
+            for( Object[] arr : this.registeredJobs ) {
                 try {
-                    this.register(ref);
+                    this.register((String)arr[0], (ServiceReference)arr[1]);
                 } catch (Exception e) {
                     // we don't want that one malicious service brings down the scheduler, so we just log
                     // the exception and continue
-                    this.logger.error("Exception during registering job service {}.", ref, e);
+                    this.logger.error("Exception during registering job service {}.", arr[1], e);
                 }
             }
             this.registeredJobs.clear();
@@ -293,10 +293,9 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
-    protected void register(ServiceReference ref)
+    protected void register(String type, ServiceReference ref)
     throws Exception {
-        // get the job
-        final Object job = this.context.locateService("job", ref);
+        final Object job = this.context.locateService(type, ref);
         if ( ref != null ) {
             this.checkJob(job);
             String name = (String)ref.getProperty("scheduler.name");
@@ -339,9 +338,9 @@ public class QuartzScheduler implements Scheduler {
     throws Exception {
         synchronized ( this.registeredJobs ) {
             if ( this.scheduler != null ) {
-                this.register(ref);
+                this.register("job", ref);
             } else {
-                this.registeredJobs.add(ref);
+                this.registeredJobs.add(new Object[] {"job", ref});
             }
         }
     }
@@ -351,6 +350,34 @@ public class QuartzScheduler implements Scheduler {
      * @param ref
      */
     protected void unbindJob(ServiceReference ref) {
+        synchronized ( this.registeredJobs ) {
+            if ( this.scheduler != null ) {
+                this.unregister(ref);
+            }
+        }
+    }
+
+    /**
+     * Bind a new job.
+     * @param ref
+     * @throws Exception
+     */
+    protected void bindTask(ServiceReference ref)
+    throws Exception {
+        synchronized ( this.registeredJobs ) {
+            if ( this.scheduler != null ) {
+                this.register("task", ref);
+            } else {
+                this.registeredJobs.add(new Object[] {"task", ref});
+            }
+        }
+    }
+
+    /**
+     * Unbind a job.
+     * @param ref
+     */
+    protected void unbindTask(ServiceReference ref) {
         synchronized ( this.registeredJobs ) {
             if ( this.scheduler != null ) {
                 this.unregister(ref);
