@@ -22,13 +22,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
+import org.apache.sling.scheduler.Job;
 import org.apache.sling.scheduler.Scheduler;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.quartz.CronTrigger;
-import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
@@ -44,7 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component
  * @scr.service interface="org.apache.sling.scheduler.Scheduler"
- * @scr.reference name="job" interface="org.quartz.Job" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
+ * @scr.reference name="job" interface="org.apache.sling.scheduler.Job" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
  * @scr.reference name="task" interface="java.lang.Runnable" cardinality="0..n" policy="dynamic" bind="bindJob" unbind="unbindJob"
  */
 public class QuartzScheduler implements Scheduler {
@@ -66,12 +67,21 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the run status */
     static final String DATA_MAP_KEY_ISRUNNING = "QuartzJobExecutor.isRunning";
 
+    /** Map key for the configuration. */
+    static final String DATA_MAP_CONFIGURATION = "QuartzJobScheduler.Configuration";
+
     protected org.quartz.Scheduler scheduler;
 
     protected final List<ServiceReference> registeredJobs = new ArrayList<ServiceReference>();
 
     protected ComponentContext context;
 
+    /**
+     * Activate this component.
+     * Start the scheduler.
+     * @param ctx The component context.
+     * @throws Exception
+     */
     protected void activate(ComponentContext ctx) throws Exception {
         this.context = ctx;
         synchronized ( this.registeredJobs ) {
@@ -89,6 +99,11 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
+    /**
+     * Deactivate this component.
+     * Stop the scheduler.
+     * @param ctx The component context.
+     */
     protected void deactivate(ComponentContext ctx) {
         synchronized (this.registeredJobs ) {
             this.dispose();
@@ -122,14 +137,14 @@ public class QuartzScheduler implements Scheduler {
     /**
      * Add a job to the scheduler
      *
-     * @param name The name of the job to add
+     * @param name The name of the job to add (or null)
      * @param Tje jopb
      * @param trigger a Trigger
      * @param canRunConcurrently whether this job can be run concurrently
      *
      * @throws Exception thrown in case of errors
      */
-    protected void scheduleJob(final String name,
+    protected void scheduleJob(String name,
                                final Object job,
                                final Map<Object, Object>    config,
                                final Trigger trigger,
@@ -139,12 +154,16 @@ public class QuartzScheduler implements Scheduler {
         this.checkJob(job);
 
         // if there is already a job with the name, remove it first
-        try {
-            final JobDetail jobdetail = this.scheduler.getJobDetail(name, DEFAULT_QUARTZ_JOB_GROUP);
-            if (jobdetail != null) {
-                this.removeJob(name);
+        if ( name != null ) {
+            try {
+                final JobDetail jobdetail = this.scheduler.getJobDetail(name, DEFAULT_QUARTZ_JOB_GROUP);
+                if (jobdetail != null) {
+                    this.removeJob(name);
+                }
+            } catch (final SchedulerException ignored) {
             }
-        } catch (final SchedulerException ignored) {
+        } else {
+            name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
         }
 
         // create the data map
@@ -155,23 +174,37 @@ public class QuartzScheduler implements Scheduler {
         this.scheduler.scheduleJob(detail, trigger);
     }
 
+    /**
+     * Initialize the data map for the job executor.
+     * @param jobName
+     * @param job
+     * @param config
+     * @param concurent
+     * @return
+     */
     protected JobDataMap initDataMap(String  jobName,
                                      Object  job,
-                                     Map<Object, Object>     config,
+                                     Map<Object, Object> config,
                                      boolean concurent) {
         final JobDataMap jobDataMap = new JobDataMap();
-        // if config is supplied copy all entries first
-        if ( config != null ) {
-            jobDataMap.putAll(config);
-        }
+
         jobDataMap.put(DATA_MAP_OBJECT, job);
 
         jobDataMap.put(DATA_MAP_NAME, jobName);
         jobDataMap.put(DATA_MAP_RUN_CONCURRENT, (concurent? Boolean.TRUE: Boolean.FALSE));
+        if ( config != null ) {
+            jobDataMap.put(DATA_MAP_CONFIGURATION, config);
+        }
 
         return jobDataMap;
     }
 
+    /**
+     * Create the job detail.
+     * @param name
+     * @param jobDataMap
+     * @return
+     */
     protected JobDetail createJobDetail(String name, JobDataMap jobDataMap) {
         final JobDetail detail = new JobDetail(name, DEFAULT_QUARTZ_JOB_GROUP, QuartzJobExecutor.class);
         detail.setJobDataMap(jobDataMap);
@@ -213,6 +246,9 @@ public class QuartzScheduler implements Scheduler {
     public void addPeriodicJob(String name, Object job, Map<Object, Object> config, long period, boolean canRunConcurrently)
     throws Exception {
         final long ms = period * 1000;
+        if ( name == null ) {
+            name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
+        }
         final SimpleTrigger timeEntry =
             new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, new Date(System.currentTimeMillis() + ms), null,
                               SimpleTrigger.REPEAT_INDEFINITELY, ms);
@@ -239,6 +275,9 @@ public class QuartzScheduler implements Scheduler {
      * @see org.apache.sling.core.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
     public void fireJobAt(String name, Object job, Map<Object, Object> config, Date date) throws Exception {
+        if ( name == null ) {
+            name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
+        }
         final SimpleTrigger trigger = new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, date);
         this.scheduleJob(name, job, config, trigger, true);
     }
@@ -257,7 +296,7 @@ public class QuartzScheduler implements Scheduler {
     protected void register(ServiceReference ref)
     throws Exception {
         // get the job
-        final Object job = this.context.getBundleContext().getService(ref);
+        final Object job = this.context.locateService("job", ref);
         if ( ref != null ) {
             this.checkJob(job);
             String name = (String)ref.getProperty("scheduler.name");
@@ -291,6 +330,11 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
+    /**
+     * Bind a new job.
+     * @param ref
+     * @throws Exception
+     */
     protected void bindJob(ServiceReference ref)
     throws Exception {
         synchronized ( this.registeredJobs ) {
@@ -302,6 +346,10 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
+    /**
+     * Unbind a job.
+     * @param ref
+     */
     protected void unbindJob(ServiceReference ref) {
         synchronized ( this.registeredJobs ) {
             if ( this.scheduler != null ) {
