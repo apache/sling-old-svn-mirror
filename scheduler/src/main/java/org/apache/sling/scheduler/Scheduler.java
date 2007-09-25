@@ -22,53 +22,59 @@ import java.util.NoSuchElementException;
 
 /**
  * A scheduler to schedule time/cron based jobs.
- * The fired jobs can either implement the Runnable interface or the Quartz job interface.
+ * A job is an object which is executed/fired by the scheduler. The object
+ * should either implement the {@link Job} interface or the {@link Runnable}
+ * interface.
  */
 public interface Scheduler {
 
     /**
-     * Schedule a time based job.  Note that if a job with the same name has already beed added it is overwritten.
+     * Schedule a time based job.
+     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * the old job.
      *
-     * @param name the name of the job
-     * @param job The job object itself. It must implement either Runnable or might also be an implementation
-     *        specific class (i.e. org.quartz.Job)
-     * @param schedulingExpression the time specification using a scheduling expression
-     * @param canRunConcurrently whether this job can run even previous scheduled runs are still running
+     * @param name The name of the job - or null. If no name is specified it can't be cancelled.
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @param schedulingExpression The time specification using a scheduling expression.
+     * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
      */
     void addJob(String name, Object job, Map<Object, Object> config, String schedulingExpression, boolean canRunConcurrently)
     throws Exception;
 
     /**
-     * Schedule a periodic job. The job is started the first time when the period has passed.  Note that if a job with
-     * the same name has already beed added it is overwritten.
+     * Schedule a periodic job.
+     * The job is started the first time when the period has passed.
+     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * the old job.
      *
-     * @param name the name of the job
-     * @param job The job object itself. It must implement either Runnable or might also be an implementation
-     *        specific class (i.e. org.quartz.Job)
-     * @param period Every period seconds this job is started
-     * @param canRunConcurrently whether this job can run even previous scheduled runs are still running
+     * @param name The name of the job - or null. If no name is specified it can't be cancelled.
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @param period Every period seconds this job is started.
+     * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
      */
     void addPeriodicJob(String name, Object job, Map<Object, Object> config, long period, boolean canRunConcurrently)
     throws Exception;
 
     /**
-     * Fire a job once immediately
+     * Fire a job immediately and only once.
      *
-     * @param job The job object itself. It must implement either Runnable or might also be an implementation
-     *        specific class (i.e. org.quartz.Job)
-     *
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      */
     void fireJob(Object job, Map<Object, Object> config)
     throws Exception;
 
     /**
-     * Fire a job once at a specific date Note that if a job with the same name has already beed added it is
-     * overwritten.
+     * Fire a job once at a specific date
+     * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
+     * the old job.
      *
-     * @param date The date this job should be scheduled
-     * @param name the name of the job
-     * @param job The job object itself. It must implement either Runnable or might also be an implementation
-     *        specific class (i.e. org.quartz.Job)
+     * @param name The name of the job - or null. If no name is specified it can't be cancelled.
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @param date The date this job should be run.
      */
     void fireJobAt(String name, Object job, Map<Object, Object> config, Date date)
     throws Exception;
@@ -76,7 +82,7 @@ public interface Scheduler {
     /**
      * Remove a scheduled job by name.
      *
-     * @param name the name of the job
+     * @param name The name of the job.
      */
     void removeJob(String name)
     throws NoSuchElementException;
