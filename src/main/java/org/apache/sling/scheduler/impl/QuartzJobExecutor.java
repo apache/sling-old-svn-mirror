@@ -16,13 +16,16 @@
  */
 package org.apache.sling.scheduler.impl;
 
+import java.util.Map;
+
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 /**
- * This component is resposible to launch a {@link Job} or {@link Runnable} in a Quartz Scheduler.
+ * This component is resposible to launch a {@link org.apache.sling.scheduler.Job}
+ * or {@link Runnable} in a Quartz Scheduler.
  *
  */
 public class QuartzJobExecutor implements Job {
@@ -48,9 +51,10 @@ public class QuartzJobExecutor implements Job {
 
         try {
             final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
-
-            if (job instanceof Job) {
-                ((Job) job).execute(context);
+            final Map<Object, Object> configuration = (Map<Object, Object>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
+            final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
+            if (job instanceof org.apache.sling.scheduler.Job) {
+                ((org.apache.sling.scheduler.Job) job).execute(name, configuration, null);
             } else if (job instanceof Runnable) {
                 ((Runnable) job).run();
             }
