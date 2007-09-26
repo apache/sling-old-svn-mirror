@@ -16,8 +16,13 @@
  */
 package org.apache.sling.scheduler.impl;
 
+import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.sling.core.ServiceLocator;
+import org.apache.sling.core.util.ServiceLocatorImpl;
+import org.apache.sling.scheduler.JobContext;
+import org.osgi.framework.BundleContext;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -49,12 +54,23 @@ public class QuartzJobExecutor implements Job {
 
         this.setup(data);
 
+
+        final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
+
         try {
-            final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
-            final Map<Object, Object> configuration = (Map<Object, Object>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
-            final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
             if (job instanceof org.apache.sling.scheduler.Job) {
-                ((org.apache.sling.scheduler.Job) job).execute(name, configuration, null);
+                final BundleContext bundleContext = (BundleContext)data.get(QuartzScheduler.DATA_MAP_BUNDLE_CONTEXT);
+                final ServiceLocatorImpl serviceLocator = new ServiceLocatorImpl(bundleContext);
+
+                final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
+                final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
+
+                try {
+                    final JobContext jobCtx = new JobContextImpl(name, configuration, serviceLocator);
+                    ((org.apache.sling.scheduler.Job) job).execute(jobCtx);
+                } finally {
+                    serviceLocator.clear();
+                }
             } else if (job instanceof Runnable) {
                 ((Runnable) job).run();
             }
@@ -77,4 +93,37 @@ public class QuartzJobExecutor implements Job {
         data.put(QuartzScheduler.DATA_MAP_KEY_ISRUNNING, Boolean.FALSE);
     }
 
+    public static final class JobContextImpl implements JobContext {
+
+        protected final Map<String, Serializable> configuration;
+        protected final String name;
+        protected final ServiceLocator serviceLocator;
+
+        public JobContextImpl(String name, Map<String, Serializable> config, ServiceLocator locator) {
+            this.name = name;
+            this.configuration = config;
+            this.serviceLocator = locator;
+        }
+
+        /**
+         * @see org.apache.sling.scheduler.JobContext#getConfiguration()
+         */
+        public Map<String, Serializable> getConfiguration() {
+            return this.configuration;
+        }
+
+        /**
+         * @see org.apache.sling.scheduler.JobContext#getName()
+         */
+        public String getName() {
+            return this.name;
+        }
+
+        /**
+         * @see org.apache.sling.scheduler.JobContext#getServiceLocator()
+         */
+        public ServiceLocator getServiceLocator() {
+            return this.serviceLocator;
+        }
+    }
 }
