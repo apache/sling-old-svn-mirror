@@ -55,6 +55,15 @@ public abstract class EventUtil {
     /** The real topic of the event. */
     public static final String PROPERTY_TIMED_EVENT_TOPIC = "event.topic.timed";
 
+    /** The scheduler expression for the timed event. */
+    public static final String PROPERTY_TIMED_EVENT_SCHEDULE = "event.topic.scheduler";
+
+    /** The period for the timed event. */
+    public static final String PROPERTY_TIMED_EVENT_PERIOD = "event.topic.period";
+
+    /** The date for the timed event. */
+    public static final String PROPERTY_TIMED_EVENT_DATE = "event.topic.date";
+
     /**
      * Create a distributable event.
      * A distributable event is distributed across the cluster.
