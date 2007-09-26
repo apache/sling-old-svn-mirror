@@ -485,8 +485,9 @@ class Assembly {
     }
 
     private void ensureStarted() {
-        // do nothing if already started
-        if (this.state >= STATE_STARTED) {
+        // do nothing if already started or if the system is starting up
+        if (this.state >= STATE_STARTED
+            || manager.getBundleContext().getBundle(0).getState() != Bundle.ACTIVE) {
             return;
         }
 
@@ -498,9 +499,13 @@ class Assembly {
             InstalledBundle ib = (InstalledBundle) ii.next();
             if (ib.getBundleSpec().isLinked()) {
                 Bundle bundle = ib.getBundle();
+
+                // if the bundle is in uninstalled state, we cannot do anything
                 if (bundle.getState() == Bundle.UNINSTALLED) {
                     this.manager.log(LogService.LOG_ERROR, "Cannot start bundle "
                         + bundle.getSymbolicName() + ", already uninstalled");
+
+                // otherwise start the bundle now
                 } else {
                     try {
                         bundle.start();
@@ -520,8 +525,9 @@ class Assembly {
         // make sure this is not unsinstalled
         this.checkUninstalled();
 
-        // already stopped (or never started)
-        if (this.state < STATE_STARTED) {
+        // already stopped (or never started) or the system is shutting down
+        if (this.state < STATE_STARTED
+            || manager.getBundleContext().getBundle(0).getState() != Bundle.ACTIVE) {
             return;
         }
 
@@ -531,9 +537,12 @@ class Assembly {
             if (ib.getBundleSpec().isLinked()) {
                 Bundle bundle = ib.getBundle();
 
+                // if the bundle is in uninstalled state, we cannot do anything
                 if (bundle.getState() == Bundle.UNINSTALLED) {
                     this.manager.log(LogService.LOG_INFO, "Bundle "
                         + bundle.getSymbolicName() + " already uninstalled");
+
+                // otherwise stop the bundle now
                 } else {
                     try {
                         bundle.stop();
