@@ -97,14 +97,19 @@
             <artifactId>osgi_R4_compendium</artifactId>
         </dependency>
         <dependency>
-            <groupId>quartz</groupId>
-            <artifactId>quartz</artifactId>
-            <version>1.5.2</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>sling-core</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
+        </dependency>
+        <!-- The following dependencies will be replaced by using the quartz wrapper bundle -->
+        <dependency>
+            <groupId>quartz</groupId>
+            <artifactId>quartz</artifactId>
+            <version>1.5.2</version>
         </dependency>
 		<dependency>
 		    <groupId>commons-pool</groupId>
@@ -115,10 +120,6 @@
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
             <version>1.2.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 </project>
