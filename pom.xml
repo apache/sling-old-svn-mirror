@@ -92,16 +92,12 @@
 		<module>event</module>
 		<module>scheduler</module>
 
-        <!--
-            <module>obr</module>
-        -->
+        <module>obr</module>
 
         <module>webmanager</module>
 
         <module>sling-app</module>
         <module>sling-servlet</module>
 
-        <!-- Build assembly bundles. MUST BE LAST -->
-        <!-- <module>assemblies</module> -->
     </modules>
 </project>
