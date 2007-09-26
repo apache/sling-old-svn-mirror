@@ -49,6 +49,12 @@ public abstract class EventUtil {
     /** The topic for jobs. */
     public static final String TOPIC_JOB = "org/apache/sling/event/job";
 
+    /** The topic for timed events. */
+    public static final String TOPIC_TIMED_EVENT = "org/apache/sling/event/timed";
+
+    /** The real topic of the event. */
+    public static final String PROPERTY_TIMED_EVENT_TOPIC = "event.topic.timed";
+
     /**
      * Create a distributable event.
      * A distributable event is distributed across the cluster.

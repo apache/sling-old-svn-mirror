@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -51,26 +49,17 @@ import org.osgi.service.event.Event;
  * @scr.component inherit="true"
  * @scr.service interface="org.apache.sling.event.JobStatusProvider"
  * @scr.property name="event.topics" value="org/apache/sling/event/job"
- *
+ * @scr.property name="repository.path" value="/sling/jobs"
  */
 public class JobEventHandler
     extends AbstractRepositoryEventHandler
-    implements Runnable, EventUtil.JobStatusNotifier, JobStatusProvider {
-
-    /** @scr.property value="/sling/jobs" */
-    protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.job.path";
+    implements EventUtil.JobStatusNotifier, JobStatusProvider {
 
     /** @scr.property value="20" type="Long" */
     protected static final String CONFIG_PROPERTY_SLEEP_TIME = "sleep.time";
 
-    /** A local queue for serialising the job processing. */
-    protected final BlockingQueue<JobInfo> queue = new LinkedBlockingQueue<JobInfo>();
-
     /** A flag indicating if this handler is currently processing a job. */
     protected boolean isProcessing = false;
-
-    /** Is the background task still running? */
-    protected boolean running;
 
     /** We check every 20 secs by default. */
     protected long sleepTime;
@@ -82,21 +71,11 @@ public class JobEventHandler
      */
     protected void activate(final ComponentContext context)
     throws RepositoryException {
-        this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
         this.sleepTime = (Long)context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) * 1000;
 
         super.activate(context);
         // load unprocessed jobs from repository
         this.loadJobs();
-
-        // start background thread
-        this.running = true;
-        final Thread t = new Thread() {
-            public void run() {
-                JobEventHandler.this.runInBackground();
-            }
-        };
-        t.start();
     }
 
     /**
@@ -156,7 +135,7 @@ public class JobEventHandler
     protected void runInBackground() {
         while ( this.running ) {
             // so let's wait/get the next job from the queue
-            JobInfo info = null;
+            EventInfo info = null;
             try {
                 info = this.queue.take();
             } catch (InterruptedException e) {
@@ -241,21 +220,6 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
-     */
-    protected void deactivate(ComponentContext context) {
-        // stop background thread, by adding a job info to wake it up
-        this.running = false;
-        try {
-            this.queue.put(new JobInfo());
-        } catch (InterruptedException e) {
-            // we ignore this
-            this.ignoreException(e);
-        }
-        super.deactivate(context);
-    }
-
-    /**
      * Start the repository session and add this handler as an observer
      * for new events created on other nodes.
      * @throws RepositoryException
@@ -267,14 +231,14 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#getContainerNodeType()
+     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#getContainerNodeType()
      */
     protected String getContainerNodeType() {
         return EventHelper.JOBS_NODE_TYPE;
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#getEventNodeType()
+     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#getEventNodeType()
      */
     protected String getEventNodeType() {
         return EventHelper.JOB_NODE_TYPE;
@@ -292,7 +256,7 @@ public class JobEventHandler
             //  job id  and job topic must be set, otherwise we ignore this event!
             if ( jobId != null && jobTopic != null ) {
                 // queue the event in order to respond quickly
-                final JobInfo info = new JobInfo();
+                final EventInfo info = new EventInfo();
                 info.event = event;
                 try {
                     this.queue.put(info);
@@ -369,7 +333,7 @@ public class JobEventHandler
                     this.processJob(event, eventNode, lock.getLockToken());
                 } else {
                     // we don't process the job right now, so unlock and put in local queue
-                    final JobInfo info = new JobInfo();
+                    final EventInfo info = new EventInfo();
                     info.event = event;
                     try {
                         info.nodePath = eventNode.getPath();
@@ -447,7 +411,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
+     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
      */
     protected void addNodeProperties(Node eventNode, Event event)
     throws RepositoryException {
@@ -473,7 +437,7 @@ public class JobEventHandler
                         if ( !eventNode.isLocked()
                              && eventNode.hasProperty(EventHelper.NODE_PROPERTY_ACTIVE)
                              && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
-                            final JobInfo info = new JobInfo();
+                            final EventInfo info = new EventInfo();
                             info.event = this.readEvent(eventNode);
                             info.nodePath = event.getPath();
                             try {
@@ -547,7 +511,7 @@ public class JobEventHandler
             final Node eventNode = result.nextNode();
             if ( !eventNode.isLocked() ) {
                 final Event event = this.readEvent(eventNode);
-                final JobInfo info = new JobInfo();
+                final EventInfo info = new EventInfo();
                 info.event = event;
                 info.nodePath = eventNode.getPath();
                 try {
@@ -596,7 +560,7 @@ public class JobEventHandler
                 }
             }
             if ( reschedule ) {
-                final JobInfo info = new JobInfo();
+                final EventInfo info = new EventInfo();
                 try {
                     info.event = job;
                     info.nodePath = eventNode.getPath();
@@ -680,11 +644,5 @@ public class JobEventHandler
      */
     public Collection<Event> scheduledJobs(String topic) {
         return this.queryCurrentJobs(topic, false);
-    }
-
-
-    protected static final class JobInfo {
-        public Event event;
-        public String nodePath;
     }
 }
