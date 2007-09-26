@@ -27,6 +27,8 @@ import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -64,6 +66,9 @@ public abstract class AbstractRepositoryEventHandler
     /** @scr.property value="30" type="Integer" */
     protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
+    /** @scr.property value="/sling/events" */
+    protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.path";
+
     /** @scr.reference */
     protected SlingRepository repository;
 
@@ -82,6 +87,12 @@ public abstract class AbstractRepositoryEventHandler
     /** We remove everything which is older than 30min by default. */
     protected int cleanupPeriod;
 
+    /** Is the background task still running? */
+    protected boolean running;
+
+    /** A local queue for serialising the job processing. */
+    protected final BlockingQueue<EventInfo> queue = new LinkedBlockingQueue<EventInfo>();
+
     /**
      * Activate this component.
      * @param context
@@ -90,8 +101,17 @@ public abstract class AbstractRepositoryEventHandler
     protected void activate(final ComponentContext context)
     throws RepositoryException {
         this.applicationId = context.getBundleContext().getProperty(Constants.SLING_ID);
+        this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
         this.cleanupPeriod = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
         this.startSession();
+        // start background thread
+        this.running = true;
+        final Thread t = new Thread() {
+            public void run() {
+                runInBackground();
+            }
+        };
+        t.start();
     }
 
     /**
@@ -106,6 +126,8 @@ public abstract class AbstractRepositoryEventHandler
         }
     }
 
+    protected abstract void runInBackground();
+
     /**
      * Clean up the repository.
      */
@@ -116,6 +138,14 @@ public abstract class AbstractRepositoryEventHandler
      * @param context
      */
     protected void deactivate(final ComponentContext context) {
+        // stop background thread, by adding a job info to wake it up
+        this.running = false;
+        try {
+            this.queue.put(new EventInfo());
+        } catch (InterruptedException e) {
+            // we ignore this
+            this.ignoreException(e);
+        }
         this.stopSession();
     }
 
@@ -313,4 +343,10 @@ public abstract class AbstractRepositoryEventHandler
             this.logger.debug("Ignore exception " + e.getMessage(), e);
         }
     }
+
+    protected static final class EventInfo {
+        public String nodePath;
+        public Event event;
+    }
+
 }

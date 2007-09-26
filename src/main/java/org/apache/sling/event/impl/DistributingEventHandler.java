@@ -20,8 +20,6 @@ package org.apache.sling.event.impl;
 
 import java.util.Calendar;
 import java.util.Dictionary;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -33,7 +31,6 @@ import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.event.EventUtil;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 
 /**
@@ -41,56 +38,13 @@ import org.osgi.service.event.Event;
  * @scr.component inherit="true"
  * @scr.property name="event.topics" value="*"
  * @scr.property name="event.filter" value="(event.distribute=*)"
- *
+ * @scr.property name="repository.path" value="/sling/events"
  */
 public class DistributingEventHandler
     extends AbstractRepositoryEventHandler {
 
-    /** @scr.property value="/sling/events" */
-    protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.event.path";
-
-    /** A local queue for serialising the job processing. */
-    protected final BlockingQueue<EventInfo> queue = new LinkedBlockingQueue<EventInfo>();
-
-    /** Is the background task still running? */
-    protected boolean running;
-
     /**
-     * Activate this component.
-     * @param context
-     * @throws RepositoryException
-     */
-    protected void activate(final ComponentContext context)
-    throws RepositoryException {
-        this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
-        super.activate(context);
-        // start background thread
-        this.running = true;
-        final Thread t = new Thread() {
-            public void run() {
-                runInBackground();
-            }
-        };
-        t.start();
-    }
-
-    /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
-     */
-    protected void deactivate(ComponentContext context) {
-        // stop background thread, by adding a job info to wake it up
-        this.running = false;
-        try {
-            this.queue.put(new EventInfo());
-        } catch (InterruptedException e) {
-            // we ignore this
-            this.ignoreException(e);
-        }
-        super.deactivate(context);
-    }
-
-    /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
+     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#cleanUpRepository()
      */
     protected void cleanUpRepository() {
         // we create an own session for concurrency issues
@@ -147,9 +101,9 @@ public class DistributingEventHandler
                     } catch (Exception e) {
                         this.logger.error("Exception during writing the event to the repository.", e);
                     }
-                } else if ( info.path != null) {
+                } else if ( info.nodePath != null) {
                     try {
-                        final Node eventNode = (Node) this.session.getItem(info.path);
+                        final Node eventNode = (Node) this.session.getItem(info.nodePath);
                         this.eventAdmin.postEvent(this.readEvent(eventNode));
                     } catch (Exception ex) {
                         this.logger.error("Exception during reading the event from the repository.", ex);
@@ -181,7 +135,7 @@ public class DistributingEventHandler
             final javax.jcr.observation.Event event = iterator.nextEvent();
             try {
                 final EventInfo info = new EventInfo();
-                info.path = event.getPath();
+                info.nodePath = event.getPath();
                 this.queue.put(info);
             } catch (InterruptedException ex) {
                 // we ignore this
@@ -193,7 +147,7 @@ public class DistributingEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.AbstractRepositoryEventHandler#addEventProperties(Node, java.util.Dictionary)
+     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#addEventProperties(Node, java.util.Dictionary)
      */
     protected void addEventProperties(Node eventNode, Dictionary<String, Object> properties)
     throws RepositoryException {
@@ -211,10 +165,5 @@ public class DistributingEventHandler
         super.startSession();
         this.session.getWorkspace().getObservationManager()
             .addEventListener(this, javax.jcr.observation.Event.NODE_ADDED, this.repositoryPath, true, null, null, true);
-    }
-
-    protected static final class EventInfo {
-        public String path;
-        public Event event;
     }
 }
