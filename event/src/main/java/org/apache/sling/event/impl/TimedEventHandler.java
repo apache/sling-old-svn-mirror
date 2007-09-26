@@ -18,6 +18,13 @@
  */
 package org.apache.sling.event.impl;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -26,20 +33,31 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import org.apache.sling.event.EventUtil;
+import org.apache.sling.scheduler.Job;
+import org.apache.sling.scheduler.JobContext;
+import org.apache.sling.scheduler.Scheduler;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 
 
 /**
  * An event handler for timed events.
  *
- * scr.component inherit="true"
+ * @scr.component inherit="true"
  * @scr.property name="event.topics" value="org/apache/sling/event/timed"
  * @scr.property name="repository.path" value="/sling/timed-events"
  */
 public abstract class TimedEventHandler
-    extends AbstractRepositoryEventHandler{
+    extends AbstractRepositoryEventHandler
+    implements Job {
 
+    /** @scr.reference */
+    protected Scheduler scheduler;
+
+    /** @scr.reference */
+    protected EventAdmin eventAdmin;
 
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#activate(org.osgi.service.component.ComponentContext)
@@ -48,7 +66,7 @@ public abstract class TimedEventHandler
     throws RepositoryException {
         super.activate(context);
         // load timed events from repository
-        this.loadEvents();
+        //this.loadEvents();
     }
 
     /**
@@ -95,7 +113,7 @@ public abstract class TimedEventHandler
                             // lock failed which means that the node is locked by someone else, so we don't have to requeue
                         }
                         if ( lock != null ) {
-                            this.processEvent(info.event, eventNode);
+                            this.processEvent(info.event);
                         }
                     }
                 } catch (RepositoryException e) {
@@ -106,8 +124,52 @@ public abstract class TimedEventHandler
         }
     }
 
-    protected void processEvent(Event event, Node eventNode) {
-        // TODO
+    protected boolean processEvent(Event event) {
+        if ( this.scheduler != null ) {
+            final Map<String, Serializable> config = new HashMap<String, Serializable>();
+            try {
+                final Hashtable properties = new Hashtable();
+                config.put("topic", (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
+                final String[] names = event.getPropertyNames();
+                if ( names != null ) {
+                    for(int i=0; i<names.length; i++) {
+                        properties.put(names[i], event.getProperty(names[i]));
+                    }
+                }
+                config.put("config", properties);
+                // if the event contains a job id we'll use that as the name
+                String jobName = null;
+                if ( event.getProperty(EventUtil.PROPERTY_JOB_ID) != null ) {
+                    jobName = "Timed job " + event.getProperty(EventUtil.PROPERTY_JOB_ID);
+                }
+                // first, check for expression
+                final String expression = (String) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_SCHEDULE);
+                if ( expression != null ) {
+                    this.scheduler.addJob(jobName, this, config, expression, false);
+                } else {
+                    // check for period next
+                    final Long period = (Long) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_PERIOD);
+                    if ( period != null ) {
+                        this.scheduler.addPeriodicJob(jobName, this, config, period, false);
+                    } else {
+                        // then we check for a fixed date
+                        final Date date = (Date) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_DATE);
+                        if ( date != null ) {
+                            this.scheduler.fireJobAt(jobName, this, config, date);
+                        } else {
+                            // no information, so fire the job once now
+                            this.scheduler.fireJob(this, config);
+                            return true;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                this.ignoreException(e);
+            }
+        } else {
+            this.logger.error("No scheduler available to start timed event " + event);
+        }
+        return false;
     }
 
     public void onEvent(EventIterator events) {
@@ -115,9 +177,25 @@ public abstract class TimedEventHandler
 
     }
 
+    /**
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
+     */
     public void handleEvent(Event event) {
-        // TODO Auto-generated method stub
+        this.processEvent(event);
 
+    }
+
+    /**
+     * @see org.apache.sling.scheduler.Job#execute(org.apache.sling.scheduler.JobContext)
+     */
+    public void execute(JobContext context) {
+        final String topic = (String) context.getConfiguration().get("topic");
+        final Dictionary properties = (Dictionary) context.getConfiguration().get("config");
+        if ( this.eventAdmin != null ) {
+            this.eventAdmin.postEvent(new Event(topic, properties));
+        } else {
+            this.logger.warn("Unable to send timed event as no event admin service is available.");
+        }
     }
 
     /**
