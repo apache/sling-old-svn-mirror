@@ -19,6 +19,7 @@
 package org.apache.sling.core.components;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -37,7 +38,7 @@ public abstract class AbstractRepositoryComponent extends BaseComponent {
     /** @ocm.field path="true" */
     private String path;
 
-    private Map<String, ComponentExtension> extensions;
+    private Map<String, ComponentExtension> extensions = Collections.emptyMap();
 
     public ComponentExtension getExtension(String name) {
         return this.extensions.get(name);
