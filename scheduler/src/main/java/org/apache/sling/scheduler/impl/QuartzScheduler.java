@@ -16,6 +16,7 @@
  */
 package org.apache.sling.scheduler.impl;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,6 +70,9 @@ public class QuartzScheduler implements Scheduler {
 
     /** Map key for the configuration. */
     static final String DATA_MAP_CONFIGURATION = "QuartzJobScheduler.Configuration";
+
+    /** Map key for the bundle context. */
+    static final String DATA_MAP_BUNDLE_CONTEXT = "QuartzJobScheduler.BundleContext";
 
     protected org.quartz.Scheduler scheduler;
 
@@ -146,7 +150,7 @@ public class QuartzScheduler implements Scheduler {
      */
     protected void scheduleJob(String name,
                                final Object job,
-                               final Map<Object, Object>    config,
+                               final Map<String, Serializable>    config,
                                final Trigger trigger,
                                final boolean canRunConcurrently)
     throws Exception {
@@ -184,7 +188,7 @@ public class QuartzScheduler implements Scheduler {
      */
     protected JobDataMap initDataMap(String  jobName,
                                      Object  job,
-                                     Map<Object, Object> config,
+                                     Map<String, Serializable> config,
                                      boolean concurent) {
         final JobDataMap jobDataMap = new JobDataMap();
 
@@ -226,7 +230,7 @@ public class QuartzScheduler implements Scheduler {
      */
     public void addJob(String name,
                        Object job,
-                       Map<Object, Object>    config,
+                       Map<String, Serializable>    config,
                        String schedulingExpression,
                        boolean canRunConcurrently)
     throws Exception {
@@ -243,7 +247,7 @@ public class QuartzScheduler implements Scheduler {
     /**
      * @see org.apache.sling.core.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
-    public void addPeriodicJob(String name, Object job, Map<Object, Object> config, long period, boolean canRunConcurrently)
+    public void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
     throws Exception {
         final long ms = period * 1000;
         if ( name == null ) {
@@ -259,7 +263,7 @@ public class QuartzScheduler implements Scheduler {
     /**
      * @see org.apache.sling.core.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
-    public void fireJob(Object job, Map<Object, Object> config)
+    public void fireJob(Object job, Map<String, Serializable> config)
     throws Exception {
         this.checkJob(job);
         final String name = job.getClass().getName();
@@ -274,7 +278,7 @@ public class QuartzScheduler implements Scheduler {
     /**
      * @see org.apache.sling.core.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
-    public void fireJobAt(String name, Object job, Map<Object, Object> config, Date date) throws Exception {
+    public void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date) throws Exception {
         if ( name == null ) {
             name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
         }

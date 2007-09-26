@@ -16,6 +16,7 @@
  */
 package org.apache.sling.scheduler;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -39,7 +40,7 @@ public interface Scheduler {
      * @param schedulingExpression The time specification using a scheduling expression.
      * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
      */
-    void addJob(String name, Object job, Map<Object, Object> config, String schedulingExpression, boolean canRunConcurrently)
+    void addJob(String name, Object job, Map<String, Serializable> config, String schedulingExpression, boolean canRunConcurrently)
     throws Exception;
 
     /**
@@ -54,7 +55,7 @@ public interface Scheduler {
      * @param period Every period seconds this job is started.
      * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
      */
-    void addPeriodicJob(String name, Object job, Map<Object, Object> config, long period, boolean canRunConcurrently)
+    void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
     throws Exception;
 
     /**
@@ -63,7 +64,7 @@ public interface Scheduler {
      * @param job The job to execute (either {@link Job} or {@link Runnable}).
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      */
-    void fireJob(Object job, Map<Object, Object> config)
+    void fireJob(Object job, Map<String, Serializable> config)
     throws Exception;
 
     /**
@@ -76,7 +77,7 @@ public interface Scheduler {
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      * @param date The date this job should be run.
      */
-    void fireJobAt(String name, Object job, Map<Object, Object> config, Date date)
+    void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date)
     throws Exception;
 
     /**
