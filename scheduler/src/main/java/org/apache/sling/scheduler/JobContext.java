@@ -16,8 +16,24 @@
  */
 package org.apache.sling.scheduler;
 
+import java.io.Serializable;
+import java.util.Map;
 
-public interface Job {
+import org.apache.sling.core.ServiceLocator;
 
-    void execute(JobContext context);
+public interface JobContext {
+
+    /**
+     * Get the name of the scheduled job.
+     * @return
+     */
+    String getName();
+
+    Map<String, Serializable> getConfiguration();
+
+    /**
+     * Get the service locator.
+     * @return
+     */
+    ServiceLocator getServiceLocator();
 }

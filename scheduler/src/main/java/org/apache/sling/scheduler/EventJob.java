@@ -18,10 +18,13 @@ package org.apache.sling.scheduler;
 
 import java.util.Dictionary;
 
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+
 /**
  * This is an utility implementation for sending timed events.
  */
-public class EventJob implements Runnable {
+public class EventJob implements Job {
 
     protected final String eventTopic;
 
@@ -33,10 +36,11 @@ public class EventJob implements Runnable {
     }
 
     /**
-     * @see java.lang.Runnable#run()
+     * @see org.apache.sling.scheduler.Job#execute(org.apache.sling.scheduler.JobContext)
      */
-    public void run() {
-        // TODO Auto-generated method stub
-
+    public void execute(JobContext context) {
+        final EventAdmin eventAdmin = (EventAdmin) context.getServiceLocator().getService(EventAdmin.class.getName());
+        final Event event = new Event(this.eventTopic, this.eventProperties);
+        eventAdmin.sendEvent(event);
     }
 }
