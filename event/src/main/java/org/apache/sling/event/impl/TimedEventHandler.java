@@ -49,7 +49,7 @@ import org.osgi.service.event.EventAdmin;
  * @scr.property name="event.topics" value="org/apache/sling/event/timed"
  * @scr.property name="repository.path" value="/sling/timed-events"
  */
-public abstract class TimedEventHandler
+public class TimedEventHandler
     extends AbstractRepositoryEventHandler
     implements Job {
 
