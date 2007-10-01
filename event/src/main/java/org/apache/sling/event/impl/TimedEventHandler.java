@@ -102,18 +102,22 @@ public class TimedEventHandler
             }
             if ( info != null && this.running ) {
                 try {
-                    this.session.refresh(true);
-                    final Node eventNode = (Node) this.session.getItem(info.nodePath);
-                    if ( !eventNode.isLocked() ) {
-                        // lock node
-                        Lock lock = null;
-                        try {
-                            lock = eventNode.lock(false, true);
-                        } catch (RepositoryException re) {
-                            // lock failed which means that the node is locked by someone else, so we don't have to requeue
-                        }
-                        if ( lock != null ) {
-                            this.processEvent(info.event);
+                    if ( info.nodePath == null ) {
+                        this.processEvent(info.event);
+                    } else {
+                        this.session.refresh(true);
+                        final Node eventNode = (Node) this.session.getItem(info.nodePath);
+                        if ( !eventNode.isLocked() ) {
+                            // lock node
+                            Lock lock = null;
+                            try {
+                                lock = eventNode.lock(false, true);
+                            } catch (RepositoryException re) {
+                                // lock failed which means that the node is locked by someone else, so we don't have to requeue
+                            }
+                            if ( lock != null ) {
+                                this.processEvent(info.event);
+                            }
                         }
                     }
                 } catch (RepositoryException e) {
@@ -128,51 +132,70 @@ public class TimedEventHandler
         if ( this.scheduler != null ) {
             final Map<String, Serializable> config = new HashMap<String, Serializable>();
             try {
-                final Hashtable properties = new Hashtable();
-                config.put("topic", (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
-                final String[] names = event.getPropertyNames();
-                if ( names != null ) {
-                    for(int i=0; i<names.length; i++) {
-                        properties.put(names[i], event.getProperty(names[i]));
-                    }
-                }
-                config.put("config", properties);
-                // if the event contains a job id we'll use that as the name
-                String jobName = null;
-                if ( event.getProperty(EventUtil.PROPERTY_JOB_ID) != null ) {
+                // if the event contains a timed event id or a job id we'll use that as the name
+                String jobName = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
+                if ( jobName == null && event.getProperty(EventUtil.PROPERTY_JOB_ID) != null ) {
                     jobName = "Timed job " + event.getProperty(EventUtil.PROPERTY_JOB_ID);
                 }
-                // first, check for expression
+
+                // let's see if a schedule information is specified or if the job should be stopped
                 final String expression = (String) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_SCHEDULE);
-                if ( expression != null ) {
+                final Long period = (Long) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_PERIOD);
+                final Date date = (Date) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_DATE);
+                int count = 0;
+                if ( expression != null) {
+                    count++;
+                }
+                if ( period != null ) {
+                    count++;
+                }
+                if ( date != null ) {
+                    count++;
+                }
+                if ( count > 1 ) {
+                    this.logger.error("Only one configuration property from " + EventUtil.PROPERTY_TIMED_EVENT_SCHEDULE +
+                                      ", " + EventUtil.PROPERTY_TIMED_EVENT_PERIOD +
+                                      ", or " + EventUtil.PROPERTY_TIMED_EVENT_DATE + " should be used.");
+                    return true;
+                }
+                if ( count == 0 ) {
+                    // let's stop the event
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get("topic") + " with cron expression " + expression);
+                        this.logger.debug("Stopping timed event " + config.get("topic") + "(" + jobName + ")");
                     }
-                    this.scheduler.addJob(jobName, this, config, expression, false);
+                    if ( jobName == null ) {
+                        this.logger.error("Unable to stop timed event without proper job name.");
+                    } else {
+                        this.scheduler.removeJob(jobName);
+                    }
+                    return true;
                 } else {
-                    // check for period next
-                    final Long period = (Long) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_PERIOD);
-                    if ( period != null ) {
+                    // copy properties
+                    final Hashtable properties = new Hashtable();
+                    config.put("topic", (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
+                    final String[] names = event.getPropertyNames();
+                    if ( names != null ) {
+                        for(int i=0; i<names.length; i++) {
+                            properties.put(names[i], event.getProperty(names[i]));
+                        }
+                    }
+                    config.put("config", properties);
+                    if ( expression != null ) {
                         if ( this.logger.isDebugEnabled() ) {
-                            this.logger.debug("Adding timed event " + config.get("topic") + " with period " + period);
+                            this.logger.debug("Adding timed event " + config.get("topic") + "(" + jobName + ")" + " with cron expression " + expression);
+                        }
+                        this.scheduler.addJob(jobName, this, config, expression, false);
+                    } else if ( period != null ) {
+                        if ( this.logger.isDebugEnabled() ) {
+                            this.logger.debug("Adding timed event " + config.get("topic") + "(" + jobName + ")" + " with period " + period);
                         }
                         this.scheduler.addPeriodicJob(jobName, this, config, period, false);
                     } else {
-                        // then we check for a fixed date
-                        final Date date = (Date) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_DATE);
-                        if ( date != null ) {
-                            if ( this.logger.isDebugEnabled() ) {
-                                this.logger.debug("Adding timed event " + config.get("topic") + " with date " + date);
-                            }
-                            this.scheduler.fireJobAt(jobName, this, config, date);
-                        } else {
-                            if ( this.logger.isDebugEnabled() ) {
-                                this.logger.debug("Firing timed event " + config.get("topic"));
-                            }
-                            // no information, so fire the job once now
-                            this.scheduler.fireJob(this, config);
-                            return true;
+                        // then it must be date
+                        if ( this.logger.isDebugEnabled() ) {
+                            this.logger.debug("Adding timed event " + config.get("topic") + "(" + jobName + ")" + " with date " + date);
                         }
+                        this.scheduler.fireJobAt(jobName, this, config, date);
                     }
                 }
             } catch (Exception e) {
@@ -193,8 +216,15 @@ public class TimedEventHandler
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
     public void handleEvent(Event event) {
-        this.processEvent(event);
-
+        // queue the event in order to respond quickly
+        final EventInfo info = new EventInfo();
+        info.event = event;
+        try {
+            this.queue.put(info);
+        } catch (InterruptedException e) {
+            // this should never happen
+            this.ignoreException(e);
+        }
     }
 
     /**

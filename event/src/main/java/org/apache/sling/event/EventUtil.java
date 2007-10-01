@@ -55,14 +55,17 @@ public abstract class EventUtil {
     /** The real topic of the event. */
     public static final String PROPERTY_TIMED_EVENT_TOPIC = "event.topic.timed";
 
+    /** The property for the unique event id. */
+    public static final String PROPERTY_TIMED_EVENT_ID = "event.timed.id";
+
     /** The scheduler expression for the timed event. */
-    public static final String PROPERTY_TIMED_EVENT_SCHEDULE = "event.topic.scheduler";
+    public static final String PROPERTY_TIMED_EVENT_SCHEDULE = "event.timed.scheduler";
 
     /** The period for the timed event. */
-    public static final String PROPERTY_TIMED_EVENT_PERIOD = "event.topic.period";
+    public static final String PROPERTY_TIMED_EVENT_PERIOD = "event.timed.period";
 
     /** The date for the timed event. */
-    public static final String PROPERTY_TIMED_EVENT_DATE = "event.topic.date";
+    public static final String PROPERTY_TIMED_EVENT_DATE = "event.timed.date";
 
     /**
      * Create a distributable event.
