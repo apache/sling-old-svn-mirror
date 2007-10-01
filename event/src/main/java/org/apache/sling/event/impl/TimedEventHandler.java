@@ -204,7 +204,11 @@ public class TimedEventHandler
         final String topic = (String) context.getConfiguration().get("topic");
         final Dictionary properties = (Dictionary) context.getConfiguration().get("config");
         if ( this.eventAdmin != null ) {
-            this.eventAdmin.postEvent(new Event(topic, properties));
+            try {
+                this.eventAdmin.postEvent(new Event(topic, properties));
+            } catch (IllegalArgumentException iae) {
+                this.logger.error("Scheduled event has illegal topic: " + topic, iae);
+            }
         } else {
             this.logger.warn("Unable to send timed event as no event admin service is available.");
         }
