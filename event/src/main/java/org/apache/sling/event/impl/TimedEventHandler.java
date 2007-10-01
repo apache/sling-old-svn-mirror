@@ -145,18 +145,30 @@ public class TimedEventHandler
                 // first, check for expression
                 final String expression = (String) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_SCHEDULE);
                 if ( expression != null ) {
+                    if ( this.logger.isDebugEnabled() ) {
+                        this.logger.debug("Adding timed event " + config.get("topic") + " with cron expression " + expression);
+                    }
                     this.scheduler.addJob(jobName, this, config, expression, false);
                 } else {
                     // check for period next
                     final Long period = (Long) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_PERIOD);
                     if ( period != null ) {
+                        if ( this.logger.isDebugEnabled() ) {
+                            this.logger.debug("Adding timed event " + config.get("topic") + " with period " + period);
+                        }
                         this.scheduler.addPeriodicJob(jobName, this, config, period, false);
                     } else {
                         // then we check for a fixed date
                         final Date date = (Date) event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_DATE);
                         if ( date != null ) {
+                            if ( this.logger.isDebugEnabled() ) {
+                                this.logger.debug("Adding timed event " + config.get("topic") + " with date " + date);
+                            }
                             this.scheduler.fireJobAt(jobName, this, config, date);
                         } else {
+                            if ( this.logger.isDebugEnabled() ) {
+                                this.logger.debug("Firing timed event " + config.get("topic"));
+                            }
                             // no information, so fire the job once now
                             this.scheduler.fireJob(this, config);
                             return true;
