@@ -462,7 +462,7 @@ public class JobEventHandler
     }
 
     /**
-     * Search for all a node with the corresponding topic and unique key.
+     * Search for a node with the corresponding topic and unique key.
      * @param topic
      * @param key
      * @return The node or null.

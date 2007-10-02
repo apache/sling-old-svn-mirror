@@ -21,7 +21,7 @@
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 
-[event:Events] > nt:base
+[event:Events] > nt:base, mix:lockable
   + * (event:Event)
 
 [event:Event] > nt:base
@@ -38,5 +38,12 @@
   - event:active (boolean)
   - event:id (string)
   - event:finished (date)
+
+[event:TimedEvents] > event:Events, mix:lockable
+ + * (event:TimedEvent)
+ 
+[event:TimedEvent] > event:Event
+  - event:processor (string)
+  - event:id (string)
 
   
