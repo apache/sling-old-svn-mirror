@@ -37,4 +37,6 @@ public abstract class EventHelper {
     public static final String EVENT_NODE_TYPE = "event:Event";
     public static final String JOBS_NODE_TYPE = "event:Jobs";
     public static final String JOB_NODE_TYPE = "event:Job";
+    public static final String TIMED_EVENTS_NODE_TYPE = "event:TimedEvents";
+    public static final String TIMED_EVENT_NODE_TYPE = "event:TimedEvent";
 }
