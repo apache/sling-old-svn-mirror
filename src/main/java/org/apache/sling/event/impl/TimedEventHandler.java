@@ -29,6 +29,7 @@ import java.util.NoSuchElementException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.EventIterator;
@@ -69,7 +70,7 @@ public class TimedEventHandler
     throws RepositoryException {
         super.activate(context);
         // load timed events from repository
-        //this.loadEvents();
+        this.loadEvents();
     }
 
     /**
@@ -182,26 +183,22 @@ public class TimedEventHandler
                         processEvent(event, scheduleInfo);
                         return null;
                     }
-                    boolean writeAndSend = false;
-                    // if node is not present, we'll write it, lock it and schedule the event
-                    if ( foundNode == null ) {
-                        writeAndSend = true;
-                    } else {
-                        // node is already in repository, let's check the application id
-                        if ( foundNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString().equals(applicationId) ) {
-                            // delete old node (deleting is easier than updating...)
-                            foundNode.remove();
-                            parentNode.save();
-                            writeAndSend = true;
+                    // we only write the event if this is a local one
+                    if ( EventUtil.isLocal(event) ) {
+                        // if node is not present, we'll write it, lock it and schedule the event
+                        if ( foundNode == null ) {
+                            final Node eventNode = writeEvent(event);
+                            return eventNode.lock(false, true);
+                        } else {
+                            // node is already in repository, this is an error as we don't support updates
+                            // of timed events!
+                            logger.error("Timed event is already scheduled: " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + " (" + scheduleInfo.getJobId() + ")");
                         }
-                    }
-                    if ( writeAndSend ) {
-                        final Node eventNode = writeEvent(event);
-                        return eventNode.lock(false, true);
                     }
                     return null;
                 }
             }.with(parentNode, false);
+
             if ( lock != null ) {
                 // if something went wrong, we reschedule
                 if ( !this.processEvent(event, scheduleInfo) ) {
@@ -287,9 +284,42 @@ public class TimedEventHandler
         return false;
     }
 
-    public void onEvent(EventIterator events) {
-        // TODO Auto-generated method stub
-
+    /**
+     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
+     */
+    public void onEvent(EventIterator iter) {
+        // we create an own session here
+        Session s = null;
+        try {
+            s = this.createSession();
+            while ( iter.hasNext() ) {
+                final javax.jcr.observation.Event event = iter.nextEvent();
+                if ( event.getType() == javax.jcr.observation.Event.PROPERTY_CHANGED ) {
+                    try {
+                        final Node eventNode = (Node) s.getItem(event.getPath());
+                        if ( !eventNode.isLocked() ) {
+                            final EventInfo info = new EventInfo();
+                            info.event = this.readEvent(eventNode);
+                            info.nodePath = event.getPath();
+                            try {
+                                this.queue.put(info);
+                            } catch (InterruptedException e) {
+                                // we ignore this exception as this should never occur
+                                this.ignoreException(e);
+                            }
+                        }
+                    } catch (RepositoryException re) {
+                        this.logger.error("Exception during jcr event processing.", re);
+                    }
+                }
+            }
+        } catch (RepositoryException re) {
+            this.logger.error("Unable to create a session.", re);
+        } finally {
+            if ( s != null ) {
+                s.logout();
+            }
+        }
     }
 
     /**
@@ -352,6 +382,17 @@ public class TimedEventHandler
                 }
             }
         }
+    }
+
+    /**
+     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
+     */
+    protected void addNodeProperties(Node eventNode, Event event)
+    throws RepositoryException {
+        super.addNodeProperties(eventNode, event);
+        eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
+        final ScheduleInfo info = new ScheduleInfo(event);
+        eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, info.getJobId());
     }
 
     /**
