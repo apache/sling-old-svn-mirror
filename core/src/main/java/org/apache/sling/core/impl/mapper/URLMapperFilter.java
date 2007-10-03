@@ -92,7 +92,7 @@ public class URLMapperFilter implements ComponentFilter, URLMapper {
     private static final Logger log = LoggerFactory.getLogger(URLMapperFilter.class);
 
     /**
-     * @scr.reference target=""
+     * @scr.reference
      */
     private JcrContentManagerFactory contentManagerFactory;
 
@@ -754,7 +754,9 @@ public class URLMapperFilter implements ComponentFilter, URLMapper {
                 // }
                 for (int i = 0; i < fromList.length; i++) {
                     // add slash lost during expansion
-                    if (this.addSlash) fromList[i] += "/";
+                    if (this.addSlash) {
+                        fromList[i] += "/";
+                    }
                     log.debug(
                         "addMappings: Add mapping from {} to {}, dir={}",
                         new Object[] { fromList[i], this.to, this.dir });
