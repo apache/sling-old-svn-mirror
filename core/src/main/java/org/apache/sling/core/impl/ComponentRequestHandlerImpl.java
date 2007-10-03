@@ -159,9 +159,8 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
 
     // ---------- Generic Content Request processor ----------------------------
 
-    /* package */void includeServlet(ComponentRequest request,
-            ComponentResponse response, String path) throws IOException,
-            ComponentException {
+    void includeServlet(ServletRequest request, ServletResponse response,
+            String path) throws IOException, ComponentException {
 
         // check type of response, don't care actually for the response itself
         RequestData.unwrap(response);
@@ -183,19 +182,19 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
         }
     }
 
-    /* package */void includeContent(ComponentRequest request,
-            ComponentResponse response, Content content) throws IOException,
-            ComponentException {
+    void includeContent(ServletRequest request, ServletResponse response,
+            Content content) throws IOException, ComponentException {
 
-        // check type of response, don't care actually for the response itself
-        RequestData.unwrap(response);
+        // we need a ComponentRequest/ComponentResponse tupel to continue
+        ComponentRequest cRequest = RequestData.toComponentRequest(request);
+        ComponentResponse cResponse = RequestData.toComponentResponse(response);
 
-        // get the request data (and btw check the correct type
-        RequestData requestData = RequestData.getRequestData(request);
-
+        // get the request data (and btw check the correct type)
+        RequestData requestData = RequestData.getRequestData(cRequest);
         requestData.pushContent(content);
+
         try {
-            this.processRequest(request, response);
+            this.processRequest(cRequest, cResponse);
         } catch (ServletException se) {
             throw new ComponentException(se.getMessage(), se);
         } finally {
