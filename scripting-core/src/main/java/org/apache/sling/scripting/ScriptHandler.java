@@ -19,16 +19,24 @@ package org.apache.sling.scripting;
 import org.apache.sling.component.Component;
 
 
-// this is a service interface. components required to register
+/**
+ * The <code>ScriptHandler</code> service interface may be implemented by
+ * bundles implementing support for scripting languages such as JSP, ECMA
+ * or JSR-223 scripting.
+ */
 public interface ScriptHandler {
 
-    // initialize the script handler with a prepared ServletConfig
-    // --> really, or should the handler build the config from its
-    // bundle/component context ??
-
-    // return the script types supported by this handler
+    /**
+     * Returns the type of script supported by this handler. This value is
+     * compared to the script type of the ScriptedComponent.
+     * <p>
+     * For example a handler for JSP scripts might return <em>jsp</em>.
+     */
     String getType();
 
-    // return a ComponentRenderer for the script
+    /**
+     * Returns a {@link ComponentRenderer} called by the ScriptedComponent
+     * to actually executed the script on behalf of the component.
+     */
     ComponentRenderer getComponentRenderer(Component component, String scriptName);
 }
