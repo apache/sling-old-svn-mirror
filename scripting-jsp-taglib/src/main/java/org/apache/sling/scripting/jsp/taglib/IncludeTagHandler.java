@@ -18,13 +18,13 @@ package org.apache.sling.scripting.jsp.taglib;
 
 import java.io.IOException;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.sling.component.Component;
-import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentRequestDispatcher;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.Content;
 import org.apache.sling.scripting.jsp.util.JspComponentResponseWrapper;
@@ -43,8 +43,14 @@ public class IncludeTagHandler extends TagSupport {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(IncludeTagHandler.class);
 
+    /** flush argument */
+    private boolean flush = false;
+
     /** content argument */
     private Content content;
+
+    /** path argument */
+    private String path;
 
     /**
      * Called after the body has been processed.
@@ -55,29 +61,59 @@ public class IncludeTagHandler extends TagSupport {
         log.debug("IncludeTagHandler.doEndTag");
 
         // only try to include, if there is anything to include !!
-        if (this.content != null) {
+        ComponentRequest request = TagUtil.getRequest(pageContext);
+        RequestDispatcher dispatcher = null;
+        if (content != null) {
             // get the request dispatcher for the content object
-            Component component = TagUtil.getComponent(this.pageContext);
-            ComponentRequestDispatcher crd = component.getComponentContext().getRequestDispatcher(this.content);
+            dispatcher = request.getRequestDispatcher(content);
+            path = content.getPath();
+
+        } else if (path != null) {
+            // ensure the child path is absolute and assign the result to path
+            if (!path.startsWith("/")) {
+                path = request.getContent().getPath() + "/" + path;
+            }
+
+            // get the request dispatcher for the (relative) path
+            dispatcher = request.getRequestDispatcher(path);
+        }
+
+        try {
+
+            // optionally flush
+            if (flush && !(pageContext.getOut() instanceof BodyContent)) {
+                // might throw an IOException of course
+                pageContext.getOut().flush();
+            }
 
             // include the rendered content
-            try {
-                ComponentRequest request = TagUtil.getRequest(this.pageContext);
-                ComponentResponse response = new JspComponentResponseWrapper(this.pageContext);
-                crd.include(request, response);
-            } catch (IOException ioe) {
-                throw new JspException("Error including " + this.content, ioe);
-            } catch (ComponentException ce) {
-                throw new JspException("Error including " + this.content, TagUtil.getRootCause(ce));
+            if (dispatcher != null) {
+                ComponentResponse response = new JspComponentResponseWrapper(
+                    pageContext);
+                dispatcher.include(request, response);
+            } else {
+                TagUtil.log(log, pageContext, "No content to include...", null);
             }
-        } else {
-            TagUtil.log(log, this.pageContext, "No content to include...", null);
+
+        } catch (IOException ioe) {
+            throw new JspException("Error including " + path, ioe);
+        } catch (ServletException ce) {
+            throw new JspException("Error including " + path,
+                TagUtil.getRootCause(ce));
         }
 
         return EVAL_PAGE;
     }
 
+    public void setFlush(boolean flush) {
+        this.flush = flush;
+    }
+
     public void setContent(Content content) {
         this.content = content;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }
