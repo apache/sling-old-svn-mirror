@@ -1,0 +1,63 @@
+{
+	"primaryNodeType": "sling:SamplePage",
+	"properties": {
+		"sling:componentId": "/sample/components/page",
+		"title": "This is a Sample Page"
+	},
+	
+	"nodes": [
+		{
+	        "name": "content",
+			"primaryNodeType": "sling:SampleContent",
+			"properties": {
+				"sling:componentId": "/sample/components/content",
+				"title": "Welcome to the Sample Component",
+				"text": "The Sample Component is a simple component showing nested content"
+			}
+		},
+		
+		{
+	        "name": "moreinfo",
+			"primaryNodeType": "sling:SamplePage",
+			"properties": {
+				"sling:componentId": "/sample/components/page",
+				"title": "More Information"
+			},
+			
+			"nodes": [
+				{
+			        "name": "content",
+					"primaryNodeType": "sling:SampleContent",
+					"properties": {
+						"sling:componentId": "/sample/components/content",
+						"title": "Page Providing More Information",
+						"text": "This page provides more information on this tool, yet it seems empty."
+					}
+				}
+			]
+		},
+		
+		{
+	        "name": "moreinfojsp",
+			"primaryNodeType": "sling:SamplePage",
+			"properties": {
+				"sling:componentId": "/sample/components/page",
+				"title": "Bundle-JSP Page"
+			},
+			
+			"nodes": [
+				{
+			        "name": "content",
+					"primaryNodeType": "sling:SampleContent",
+					"properties": {
+						"sling:componentId": "org.apache.sling.sample.jsp.component_jsp",
+						"title": "JSP Rendered Content",
+						"text": "This Content is rendered by a JSP script embeded in the Bundle."
+					}
+				}
+			]
+		}
+		
+	]
+
+}
