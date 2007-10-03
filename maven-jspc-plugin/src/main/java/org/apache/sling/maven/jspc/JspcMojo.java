@@ -39,6 +39,8 @@ import java.util.StringTokenizer;
 
 import javax.servlet.ServletContext;
 
+import org.apache.commons.logging.impl.LogFactoryImpl;
+import org.apache.commons.logging.impl.SimpleLog;
 import org.apache.jasper.JasperException;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.Options;
@@ -60,7 +62,7 @@ import org.apache.maven.project.MavenProject;
  * <code>jspc</code> compiling JSP into the target and creating a component
  * descriptor for Declarative Services to use the JSP with the help of the
  * appropriate adapter as component.
- *  
+ *
  * @goal jspc
  * @phase compile
  * @description Compile JSP Files into Servlet Classes using the same JSP
@@ -211,11 +213,22 @@ public class JspcMojo extends AbstractMojo implements Options {
         // scanFiles(new File(sourceDirectory));
 
         // have the files compiled
+        String oldValue = System.getProperty(LogFactoryImpl.LOG_PROPERTY);
         try {
+            // ensure the JSP Compiler does not try to use Log4J
+            System.setProperty(LogFactoryImpl.LOG_PROPERTY,
+                SimpleLog.class.getName());
+
             executeInternal();
         } catch (JasperException je) {
             getLog().error("Compilation Failure", je);
             throw new MojoExecutionException(je.getMessage(), je);
+        } finally {
+            if (oldValue == null) {
+                System.clearProperty(LogFactoryImpl.LOG_PROPERTY);
+            } else {
+                System.setProperty(LogFactoryImpl.LOG_PROPERTY, oldValue);
+            }
         }
 
         project.addCompileSourceRoot(outputDirectory);
