@@ -319,6 +319,9 @@ public abstract class AbstractSlingRepository
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
+
+        componentContext.getBundleContext().removeBundleListener(this);
+
         if (this.poolManager != null) {
             this.poolManager.dispose();
             this.poolManager = null;
