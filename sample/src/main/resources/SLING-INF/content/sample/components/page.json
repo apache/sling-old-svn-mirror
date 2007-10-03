@@ -1,0 +1,7 @@
+{
+	"primaryNodeType": "sling:ScriptedComponent",
+    
+    "properties": {
+    	"sling:contentClass": "org.apache.sling.sample.SamplePage"
+    }
+}
