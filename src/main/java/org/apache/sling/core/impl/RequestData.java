@@ -28,6 +28,10 @@ import java.util.Locale;
 import javax.jcr.Session;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
+import javax.servlet.ServletResponse;
+import javax.servlet.ServletResponseWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -176,6 +180,36 @@ public class RequestData implements BufferProvider {
 
     //---------- Request Helper
 
+    /**
+     * Unwraps the ServletRequest to a ComponentRequest.
+     */
+    public static ComponentRequest unwrap(ServletRequest request) throws ComponentException {
+
+        // early check for most cases
+        if (request instanceof ComponentRequest) {
+            return (ComponentRequest) request;
+        }
+
+        // unwrap wrappers
+        while (request instanceof ServletRequestWrapper) {
+            request = ((ServletRequestWrapper) request).getRequest();
+
+            // immediate termination if we found one
+            if (request instanceof ComponentRequest) {
+                return (ComponentRequest) request;
+            }
+        }
+
+        // if we unwrapped everything and did not find a ComponentRequest, we lost
+        throw new ComponentException("ServletRequest not wrapping ComponentRequest");
+    }
+
+    /**
+     * Unwraps the ComponentRequest to a ComponentRequestImpl
+     * @param request
+     * @return
+     * @throws ComponentException
+     */
     public static ComponentRequestImpl unwrap(ComponentRequest request) throws ComponentException {
         while (request instanceof ComponentRequestWrapper) {
             request = ((ComponentRequestWrapper) request).getComponentRequest();
@@ -185,9 +219,39 @@ public class RequestData implements BufferProvider {
             return (ComponentRequestImpl) request;
         }
 
-        throw new ComponentException("RenderRequest not of correct type");
+        throw new ComponentException("ComponentRequest not of correct type");
     }
 
+    /**
+     * Unwraps the ServletRequest to a ComponentRequest.
+     */
+    public static ComponentResponse unwrap(ServletResponse response) throws ComponentException {
+
+        // early check for most cases
+        if (response instanceof ComponentResponse) {
+            return (ComponentResponse) response;
+        }
+
+        // unwrap wrappers
+        while (response instanceof ServletResponseWrapper) {
+            response = ((ServletResponseWrapper) response).getResponse();
+
+            // immediate termination if we found one
+            if (response instanceof ComponentResponse) {
+                return (ComponentResponse) response;
+            }
+        }
+
+        // if we unwrapped everything and did not find a ComponentResponse, we lost
+        throw new ComponentException("ServletResponse not wrapping ComponentResponse");
+    }
+
+    /**
+     * Unwraps a ComponentResponse to a ComponentResponseImpl
+     * @param response
+     * @return
+     * @throws ComponentException
+     */
     public static ComponentResponseImpl unwrap(ComponentResponse response) throws ComponentException {
         while (response instanceof ComponentResponseWrapper) {
             response = ((ComponentResponseWrapper) response).getComponentResponse();
@@ -202,6 +266,54 @@ public class RequestData implements BufferProvider {
 
     public static RequestData getRequestData(ComponentRequest request) throws ComponentException {
         return unwrap(request).getRequestData();
+    }
+
+    public static RequestData getRequestData(ServletRequest request) throws ComponentException {
+        return unwrap(unwrap(request)).getRequestData();
+    }
+
+    public static ComponentRequest toComponentRequest(ServletRequest request) throws ComponentException {
+        // unwrap to ComponentRequest
+        ComponentRequest cRequest = unwrap(request);
+
+        // check type of response, don't care actually for the response itself
+        RequestData.unwrap(cRequest);
+
+        // if the servlet response is actually the ComponentResponse, we are done
+        if (cRequest == request) {
+            return cRequest;
+        }
+
+        // ensure the request is a HTTP request
+        if (!(request instanceof HttpServletRequest)) {
+            throw new ComponentException("Request is not an HTTP request");
+        }
+
+        // otherwise, we create a new response wrapping the servlet response
+        // and unwrapped component response
+        return new ComponentServletRequestWrapper(cRequest, (HttpServletRequest) request);
+    }
+
+    public static ComponentResponse toComponentResponse(ServletResponse response) throws ComponentException {
+        // unwrap to ComponentResponse
+        ComponentResponse cResponse = unwrap(response);
+
+        // check type of response, don't care actually for the response itself
+        RequestData.unwrap(cResponse);
+
+        // if the servlet response is actually the ComponentResponse, we are done
+        if (cResponse == response) {
+            return cResponse;
+        }
+
+        // ensure the response is a HTTP response
+        if (!(response instanceof HttpServletResponse)) {
+            throw new ComponentException("Response is not an HTTP response");
+        }
+
+        // otherwise, we create a new response wrapping the servlet response
+        // and unwrapped component response
+        return null;
     }
 
     // ---------- Content inclusion stacking -----------------------------------
