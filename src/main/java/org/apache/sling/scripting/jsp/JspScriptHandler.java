@@ -34,8 +34,8 @@ import org.apache.jasper.compiler.TldLocationsCache;
 import org.apache.sling.component.Component;
 import org.apache.sling.jcr.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
+import org.apache.sling.scripting.AbstractScriptHandler;
 import org.apache.sling.scripting.ComponentRenderer;
-import org.apache.sling.scripting.ScriptHandler;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.service
  */
-public class JspScriptHandler implements ScriptHandler {
+public class JspScriptHandler extends AbstractScriptHandler  {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspScriptHandler.class);
@@ -93,51 +93,6 @@ public class JspScriptHandler implements ScriptHandler {
         return SCRIPT_TYPE;
     }
 
-    // /**
-    // * Returns the {@link JspRuntimeContext} used by this instance.
-    // */
-    // protected JspRuntimeContext getRuntimeContext() {
-    // return rctxt;
-    // }
-    //
-    // /**
-    // * Returns the number of JSPs for which JspServletWrappers exist, i.e.,
-    // * the number of JSPs that have been loaded into the webapp with which
-    // * this JspScriptHandler is associated.
-    // *
-    // * <p>This info may be used for monitoring purposes.
-    // *
-    // * @return The number of JSPs that have been loaded into the webapp with
-    // * which this JspScriptHandler is associated
-    // */
-    // public int getJspCount() {
-    // return this.rctxt.getJspCount();
-    // }
-    //
-    //
-    // /**
-    // * Resets the JSP reload counter.
-    // *
-    // * @param count Value to which to reset the JSP reload counter
-    // */
-    // public void setJspReloadCount(int count) {
-    // this.rctxt.setJspReloadCount(count);
-    // }
-    //
-    //
-    // /**
-    // * Gets the number of JSPs that have been reloaded.
-    // *
-    // * <p>This info may be used for monitoring purposes.
-    // *
-    // * @return The number of JSPs (in the webapp with which this
-    // JspScriptHandler is
-    // * associated) that have been reloaded
-    // */
-    // public int getJspReloadCount() {
-    // return this.rctxt.getJspReloadCount();
-    // }
-
     public ComponentRenderer getComponentRenderer(Component component,
             String scriptName) {
         return getJspWrapperAdapter(component, scriptName);
@@ -145,6 +100,10 @@ public class JspScriptHandler implements ScriptHandler {
 
     private JspServletWrapperAdapter getJspWrapperAdapter(Component component,
             String scriptName) {
+
+        // resolve an optionally relative path name
+        scriptName = resolve(component, scriptName);
+
         JspComponentContext jcc = this.getJspRuntimeContext(component);
         JspRuntimeContext rctxt = jcc.getRctxt();
         JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
