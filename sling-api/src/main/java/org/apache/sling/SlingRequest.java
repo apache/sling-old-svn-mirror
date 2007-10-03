@@ -380,17 +380,6 @@ public interface SlingRequest extends HttpServletRequest {
     String getResponseContentType();
 
     /**
-     * Gets a list of content types which the framework accepts for the
-     * response. This list is ordered with the most preferable types listed
-     * first.
-     * <p>
-     * The content type only includes the MIME type, not the character set.
-     *
-     * @return ordered list of MIME types for the response
-     */
-    Enumeration<String> getResponseContentTypes();
-
-    /**
      * Returns the resource bundle for the given locale.
      *
      * @param locale the locale for which to retrieve the resource bundle. If
