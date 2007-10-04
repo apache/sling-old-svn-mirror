@@ -114,6 +114,11 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
+            <name>contentManagerClass</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
             <name>serviceLocatorName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
