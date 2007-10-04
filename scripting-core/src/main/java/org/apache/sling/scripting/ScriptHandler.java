@@ -36,7 +36,8 @@ public interface ScriptHandler {
 
     /**
      * Returns a {@link ComponentRenderer} called by the ScriptedComponent
-     * to actually executed the script on behalf of the component.
+     * to actually executed the script on behalf of the component. If the
+     * handler cannot find the name script, <code>null</code> is returned.
      */
     ComponentRenderer getComponentRenderer(Component component, String scriptName);
 }

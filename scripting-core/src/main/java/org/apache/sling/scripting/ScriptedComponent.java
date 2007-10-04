@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeSet;
 
-import org.apache.sling.component.Component;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
@@ -32,15 +31,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>ScriptedComponent</code> Is the (base class) for scripting in
+ * The <code>ScriptedComponent</code> is the (base class) for scripting in
  * Sling. This class may be used as the default scripting component by just
- * registering instance of this class directly or by creating nodes of type
+ * registering instances of this class directly or by creating nodes of type
  * <code>sling:ScriptedComponent</code> which are automatically recognized by
  * the Sling Core as repository based components and loaded.
  * <p>
  * This class may be extended to implement custom behaviour in any of the
  * {@link #service(ComponentRequest, ComponentResponse)},
- * {@link #getScript(ComponentRequest)}, {@link #getComponentRenderer(Script)}
+ * {@link #resolveRenderer(ComponentRequest)},
+ * {@link #getDeclaredScript(ComponentRequest)},
+ * {@link #getSelectorScript(String)}, {@link #getComponentRenderer(Script)}
  * and
  * {@link #callScript(ComponentRenderer, ComponentRequest, ComponentResponse)}
  * methods.
@@ -49,13 +50,20 @@ import org.slf4j.LoggerFactory;
  */
 public class ScriptedComponent extends AbstractRepositoryComponent {
 
+    /**
+     * Default script name to use when resolving a request to a script, which is
+     * not defined (value is "default.jsp").
+     *
+     * @see #getSelectorScript(String)
+     * @see DefaultScript
+     */
+    public static final String DEFAULT_SCRIPT_REL_PATH = "default.jsp";
+
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(ScriptedComponent.class);
+    private final Logger log = LoggerFactory.getLogger(ScriptedComponent.class);
 
     /** @ocm.field jcrName="sling:baseComponent" */
     private String baseComponentReference;
-
-    private Component superComponent;
 
     /**
      * @ocm.collection jcrName="sling:scripts" jcrType="sling:ScriptList"
@@ -63,32 +71,22 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      */
     private Script[] scripts;
 
+    /**
+     * This implementation does nothing. Extensions of this class may overwrite
+     * but should call this base class implementation first.
+     */
     protected void doInit() {
-        // TODO Auto-generated method stub
     }
 
     /**
-     * Resolves the {@link Script} responsible for handling the request and
-     * calls that script. if no script is found, the base component is called
-     * (if available). If no base component is available, a warning message is
-     * just logged and nothing more happens.
+     * Calls the {@link Script} responsible for handling the request. If none
+     * can be resolved or if no handler is available to handle the resolved
+     * script a {@link ComponentException} is thrown.
      * <p>
-     * If a script may be resolved for which no script handler is known, a
-     * <code>ComponentException</code> is thrown.
-     * <p>
-     * This method may be overwritten by extending classes completely replacing
-     * this method or wrapping this method with additional processing. For
-     * information, this method executes these steps:
-     * <ol>
-     * <li>Get the script calling {@link #getScript(ComponentRequest)}
-     * <li>Retrieve the component renderer calling
-     * {@link #getComponentRenderer(Script)} with the script found in the first
-     * step
-     * <li>Call
-     * {@link ComponentRenderer#service(ComponentRequest, ComponentResponse)} on
-     * the component renderer found in the second step
-     * <li>Call the base component if no script can be resolved for the request
-     * </ol>
+     * This method is implemented by first calling the
+     * {@link #resolveRenderer(ComponentRequest)} method and then the
+     * {@link #callScript(ComponentRenderer, ComponentRequest, ComponentResponse)}
+     * method with the resolved renderer.
      *
      * @param request The <code>ComponentRequest</code> representing the
      *            request to handle.
@@ -97,82 +95,186 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      * @throws IOException Forwarded from the
      *             {@link ComponentRenderer#service(ComponentRequest, ComponentResponse)}
      *             method.
-     * @throws ComponentException If no script handler can be found for a
-     *             resolved script or forwarded from the
-     *             {@link ComponentRenderer#service(ComponentRequest, ComponentResponse)}
-     *             method.
+     * @throws ComponentException If no script can be resolved to handle the
+     *             request, if no script handler can be found for a resolved
+     *             script or if thrown by the script handling the request.
      */
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException, ComponentException {
 
-        // resolve the script and its renderer
-        Script script = this.getScript(request);
-        ComponentRenderer cr = this.getComponentRenderer(script);
-
-        if (cr != null) {
-
-            // render it if found
-            this.callScript(cr, request, response);
-
-        } else if (this.getSuperComponent() != null) {
-
-            // otherwise use super component (if available)
-            this.getSuperComponent().service(request, response);
-
-        } else {
-
-            // we cannot render anything ....
-            log.warn("service: Cannot service request {}",
-                request.getRequestURI());
-
+        // resolve the ComponentRenderer for the request, fail if none
+        ComponentRenderer renderer = resolveRenderer(request);
+        if (renderer == null) {
+            throw new ComponentException("Cannot resolve script for request");
         }
+
+        // otherwise call that renderer now
+        callScript(renderer, request, response);
     }
 
     /**
-     * Returns the {@link ScriptInfo} matching the query. The matching strategy
-     * is first-match. That is the first {@link ScriptInfo} found in the Vector
-     * matching the request details is returned.
+     * Resolves the a {@link ComponentRenderer} for the given request as
+     * follows:
+     * <ol>
+     * <li>Calls the {@link #getDeclaredScript(ComponentRequest)} to resolve a
+     * script from the script definitions in this component.
+     * <li>If there is a {@link #getBaseComponent() base component}, the same
+     * method is called on the base component.
+     * <li>Calls the {@link #getSelectorScript(String)} to find a script for
+     * the request's selectors.
+     * <li>If there is base component, the same method is called on the base
+     * component.
+     * </ol>
      * <p>
-     * A match is first searched for in the template itself. If no match can be
-     * found and a base template has been configured, the base template is asked
-     * for a script info. If the base template does not have any either,
-     * <code>null</code> is returned.
+     * As soon as a {@link ComponentRenderer} can be found for the request, this
+     * method returns that renderer. If all steps fail, <code>null</code> is
+     * returned. Note that, not finding a component renderer may be cause by not
+     * being able to resolve a script or not being able to resolve a component
+     * renderer for script, which may have been resolved.
+     *
+     * @param request The ComponentRequest for which to select a script to call.
+     * @return The selected {@link ComponentRenderer} as per the above algorithm
+     *         or <code>null</code> if no script may be selected and used.
+     */
+    protected ComponentRenderer resolveRenderer(ComponentRequest request) {
+        // 1. Resolve declared script first
+        ComponentRenderer renderer = getDeclaredScript(request);
+        if (renderer != null) {
+            return renderer;
+        }
+
+        // 2. Resolve using base component
+        ScriptedComponent baseComponent = null; // getBaseComponent();
+        if (baseComponent != null) {
+            renderer = baseComponent.getDeclaredScript(request);
+            if (renderer != null) {
+                return renderer;
+            }
+        }
+
+        // 3. Resolve with selectors
+        String selectors = request.getSelectorString();
+        renderer = getSelectorScript(selectors);
+        if (renderer != null) {
+            return renderer;
+        }
+
+        // 4. Resolve with selectors using base component
+        if (baseComponent != null) {
+            return baseComponent.getSelectorScript(selectors);
+        }
+
+        // finally, nothing could be found
+        log.debug("resolveRenderer: No ComponentRenderer found");
+        return null;
+    }
+
+    /**
+     * Returns a {@link ComponentRenderer} matching the request. This method
+     * traverses the registered scripts and selects the first script matching
+     * the request. For that selected script the
+     * {@link #getComponentRenderer(Script)} method is called and the renderer
+     * is returned if no <code>null</code>. Otherwise the list of scripts is
+     * further scanned for matching scripts and to hopefully find a script with
+     * a renderer. Finally, if no matching script can be found with a non-<code>null</code>
+     * renderer, this method returns <code>null</code>.
      *
      * @param request The {@link DeliveryHttpServletRequest} for which to find
      *            the match {@link ScriptInfo}.
-     * @return the first {@link ScriptInfo} matching the request or
-     *         <code>null</code> if no script info could be found.
+     * @return a {@link ComponentRenderer} for the first script configured which
+     *         matches the request or <code>null</code> if no such script or
+     *         component renderer can be found.
      */
-    protected Script getScript(ComponentRequest request) {
+    protected ComponentRenderer getDeclaredScript(ComponentRequest request) {
 
         // check whether we can handle the script
         Script[] scripts = this.scripts;
         if (scripts != null) {
-            for (int i = 0; i < this.scripts.length && this.scripts[i] != null; i++) {
-                if (this.scripts[i].matches(request)) {
-                    return this.scripts[i];
+            for (int i = 0; i < scripts.length && scripts[i] != null; i++) {
+                if (scripts[i].matches(request)) {
+                    ComponentRenderer renderer = getComponentRenderer(scripts[i]);
+                    if (renderer != null) {
+                        log.debug("getDeclaredScript: Using script {}",
+                            scripts[i]);
+                        return renderer;
+                    }
                 }
             }
         }
 
         // outsch - cannot handle
-        log.debug("No scriptinfo for request: {0}, using default", request);
-        return new DefaultScript(this.getPath());
+        log.debug(
+            "getDeclaredScript: No declared script found for request: {}",
+            request);
+        return null;
+    }
+
+    /**
+     * Tries to find a default script in this scripted component for the given
+     * request selectors. If no selectors exist, i.e. the selector string is
+     * empty, the default script is
+     * <code>{@link #DEFAULT_SCRIPT_REL_PATH default.jsp}</code> just below
+     * this scripted component. Otherwise the selectors the
+     * <code>default.jsp</code> script is searched for using the selectors as
+     * a path after replacing dots with slashes:
+     * <ol>
+     * <li>Let path be this components path + "/" + selectors.replace('.', '/')
+     * <li>Check the script path + "/default.jsp"
+     * <li>If unsuccesfull, cut of the last path segment of path and repeat
+     * step two unless the path is shorter than this components path.
+     * </ol>
+     *
+     * @param selectors The selectors of the request URI as returned by the
+     *            <code>ComponentRequest.getSelectors()</code> method.
+     * @return a {@link ComponentRenderer} for default script selected based on
+     *         the selectors or <code>null</code> if no such script exists or
+     *         no renderer can be retrieved for the script.
+     */
+    protected ComponentRenderer getSelectorScript(String selectors) {
+
+        // shortcut for standard case without selectors
+        if (selectors.length() == 0) {
+            return getComponentRenderer(new DefaultScript(getPath()));
+        }
+
+        // build a path string from the
+        String path = getPath() + "/" + selectors.replace('.', '/');
+        int termCond = getPath().length();
+        while (path.length() >= termCond) {
+
+            // try to get a component renderer for the current path
+            Script script = new DefaultScript(path);
+            ComponentRenderer renderer = getComponentRenderer(script);
+            if (renderer != null) {
+                log.debug("getSelectorScript: Using script {}", script);
+                return renderer;
+            }
+
+            // cut off the last element of the path
+            int lastSlash = path.lastIndexOf('/');
+            if (lastSlash > 0) {
+                path = path.substring(0, lastSlash);
+            }
+        }
+
+        log.debug("getSelectorScript: No script found for selectors {}",
+            selectors);
+        return null;
     }
 
     /**
      * Returns a {@link ComponentRenderer} for the {@link Script} or
-     * <code>null</code> if <code>script</code> is <code>null</code>.
+     * <code>null</code> if <code>script</code> is <code>null</code> or if
+     * no {@link ScriptHandler} is registered for the type of the script, in
+     * which case an error is also logged.
      *
      * @param script The {@link Script} for which to return the
      *            {@link ComponentRenderer}
-     * @return The component renderer or <code>null</code> of
-     *         <code>script</code> is <code>null</code>.
-     * @throws ComponentException is thrown, if no {@link ScriptHandler} is
-     *             registered for the type of the <code>script</code>
+     * @return The component renderer or <code>null</code> if
+     *         <code>script</code> is <code>null</code> or if no script
+     *         handler for the type of the script is registered.
      */
-    protected ComponentRenderer getComponentRenderer(Script script)
-            throws ComponentException {
+    protected ComponentRenderer getComponentRenderer(Script script) {
 
         // ensure the script
         if (script == null) {
@@ -183,9 +285,9 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
         // get the handler for the type of the script, throw if none
         ScriptHandler handler = ScriptManager.getScriptHandler(script);
         if (handler == null) {
-            throw new ComponentException("No handler for Script "
-                + script.getScriptName() + " (type=" + script.getType()
-                + ") found");
+            log.error("No handler for Script {} (type={}) found",
+                script.getScriptName(), script.getType());
+            return null;
         }
 
         return handler.getComponentRenderer(this, script.getScriptName());
@@ -194,8 +296,7 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
     /**
      * Calls
      * {@link ComponentRenderer#service(ComponentRequest, ComponentResponse)}
-     * method to handle the request. If the <code>renderer</code> is
-     * <code>null</code>, this method does nothing.
+     * method to handle the request.
      * <p>
      * Before calling the renderer, this instance is set as the
      * {@link Util#ATTR_COMPONENT org.apache.sling.scripting.component}
@@ -214,15 +315,11 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
      * @throws ComponentException Forwarded from the
      *             {@link ComponentRenderer#service(ComponentRequest, ComponentResponse)}
      *             method.
+     * @throws NullPointerException if render is <code>null</code>.
      */
     protected void callScript(ComponentRenderer renderer,
             ComponentRequest request, ComponentResponse response)
             throws IOException, ComponentException {
-
-        if (renderer == null) {
-            log.debug("callScript: No ComponentRenderer to call");
-            return;
-        }
 
         // replace the component attribute with the current component
         Object oldComponent = Util.replaceAttribute(request,
@@ -239,14 +336,19 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
         }
     }
 
-    // ---------- internal -----------------------------------------------------
-
-    public void setSuperComponent(Component superComponent) {
-        this.superComponent = superComponent;
-    }
-
-    public Component getSuperComponent() {
-        return this.superComponent;
+    /**
+     * Returns the base component of this scripted component as defined by the
+     * {@link #setBaseComponentReference(String)} method or <code>null</code>
+     * if the base component is not defined or is not a scripted component.
+     * <p>
+     * Currently, this method is not implemented and always returns null.
+     *
+     * @return The base component configured for this component or
+     *         <code>null</code> if none is defined or registered.
+     */
+    protected ScriptedComponent getBaseComponent() {
+        // TODO to be implemented ...
+        return null;
     }
 
     // ---------- JCR Mapping support ------------------------------------------
@@ -285,20 +387,31 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
         if (scripts == null) {
             return Collections.emptyList();
         }
-        
+
         return Arrays.asList(this.scripts);
     }
 
     // ---------- Inner class for pseudo default script ------------------------
 
-    private static class DefaultScript implements Script {
+    /**
+     * The <code>DefaultScript</code> class is a synthetic script definition
+     * which is used by the {@link ScriptedComponent#getSelectorScript(String)}
+     * method to represent a non-configured script.
+     */
+    protected static class DefaultScript implements Script {
 
-        public static final String DEFAULT_SCRIPT_REL_PATH = "/jsp/start.jsp";
+        /** The path of the script */
+        private final String scriptName;
 
-        private String scriptName;
-
+        /**
+         * Creates an instance of this default script by appending the
+         * {@link #DEFAULT_SCRIPT_REL_PATH} to the given path.
+         *
+         * @param componentPath The path in which the default script should be
+         *            located.
+         */
         DefaultScript(String componentPath) {
-            this.scriptName = componentPath + DEFAULT_SCRIPT_REL_PATH;
+            scriptName = componentPath + "/" + DEFAULT_SCRIPT_REL_PATH;
         }
 
         /**
@@ -308,12 +421,24 @@ public class ScriptedComponent extends AbstractRepositoryComponent {
             return "jsp";
         }
 
+        /**
+         * Returns the absolute path to the script as configured by the
+         * constructor.
+         */
         public String getScriptName() {
-            return this.scriptName;
+            return scriptName;
         }
 
+        /**
+         * Always returns <code>true</code>.
+         */
         public boolean matches(ComponentRequest request) {
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "DefaultScript: " + getScriptName();
         }
     }
 
