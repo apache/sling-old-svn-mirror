@@ -56,8 +56,8 @@ public class DefineObjectsTag extends TagSupport {
 
     /**
      * Default name of the Java type for the scripting variable referencing the
-     * current <code>Content</code> object (value is
-     * "org.apache.sling.components.Content").
+     * current <code>Content</code> object (value is the fully qualifed name
+     * of the <code>Content</code> interface).
      */
     public static final String DEFAULT_CONTENT_CLASS = Content.class.getName();
 
@@ -72,6 +72,13 @@ public class DefineObjectsTag extends TagSupport {
      * <code>ContentManager</code> (value is "contentManager").
      */
     public static final String DEFAULT_CONTENT_MANAGER_NAME = "contentManager";
+
+    /**
+     * Default name of the Java type for the scripting variable referencing the
+     * current <code>ContentManager</code> (value is the fully qualified name
+     * of the <code>ContentManager</code> inerface).
+     */
+    public static final String DEFAULT_CONTENT_MANAGER_CLASS = ContentManager.class.getName();
 
     /**
      * Default name for the scripting variable referencing the current
@@ -90,6 +97,8 @@ public class DefineObjectsTag extends TagSupport {
     private String handleName = DEFUALT_HANDLE_NAME;
 
     private String contentManagerName = DEFAULT_CONTENT_MANAGER_NAME;
+
+    private String contentManagerClass = DEFAULT_CONTENT_MANAGER_CLASS;
 
     private String serviceLocatorName = DEFAULT_SERVICE_LOCATOR_NAME;
 
@@ -113,26 +122,27 @@ public class DefineObjectsTag extends TagSupport {
      */
     public int doEndTag() {
 
-        ComponentRequest req = TagUtil.getRequest(this.pageContext);
-        ComponentResponse res = TagUtil.getResponse(this.pageContext);
+        ComponentRequest req = TagUtil.getRequest(pageContext);
+        ComponentResponse res = TagUtil.getResponse(pageContext);
         Content content = req.getContent();
-        ContentManager contentManager = TagUtil.getContentManager(this.pageContext);
+        ContentManager contentManager = TagUtil.getContentManager(pageContext);
 
-        this.pageContext.setAttribute(this.requestName, req);
-        this.pageContext.setAttribute(this.responseName, res);
-        this.pageContext.setAttribute(this.contentManagerName, contentManager);
+        pageContext.setAttribute(requestName, req);
+        pageContext.setAttribute(responseName, res);
+        pageContext.setAttribute(contentManagerName, contentManager);
+        pageContext.setAttribute(contentManagerClass, contentManager.getClass().getName());
 
         // content may be null
         if (content != null) {
-            this.pageContext.setAttribute(this.contentName, content);
-            this.pageContext.setAttribute(this.contentClass, content.getClass().getName());
-            this.pageContext.setAttribute(this.handleName, content.getPath());
+            pageContext.setAttribute(contentName, content);
+            pageContext.setAttribute(contentClass, content.getClass().getName());
+            pageContext.setAttribute(handleName, content.getPath());
         } else {
-            TagUtil.log(log, this.pageContext, "RenderRequest has no Content !",
+            TagUtil.log(log, pageContext, "RenderRequest has no Content !",
                 null);
         }
 
-        this.pageContext.setAttribute(this.serviceLocatorName, req.getAttribute(ServiceLocator.REQUEST_ATTRIBUTE_NAME));
+        pageContext.setAttribute(serviceLocatorName, req.getAttribute(ServiceLocator.REQUEST_ATTRIBUTE_NAME));
 
         return EVAL_PAGE;
     }
@@ -161,6 +171,10 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setContentManagerName(String contentManagerName) {
         this.contentManagerName = contentManagerName;
+    }
+
+    public void setContentManagerClass(String contentManagerClass) {
+        this.contentManagerClass = contentManagerClass;
     }
 
     public void setServiceLocatorName(String name) {
