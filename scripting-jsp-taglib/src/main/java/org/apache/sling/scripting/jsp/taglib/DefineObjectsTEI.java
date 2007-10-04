@@ -23,7 +23,6 @@ import javax.servlet.jsp.tagext.VariableInfo;
 import org.apache.sling.core.ServiceLocator;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.content.ContentManager;
 
 /**
  * This class defines the scripting variables that are created by the
@@ -73,13 +72,17 @@ public class DefineObjectsTEI extends TagExtraInfo {
      */
     public static final String ATTR_CONTENT_MANAGER_NAME = "contentManagerName";
 
+    /**
+     * The name of the tag attribute used to define the type of the
+     * ContentManager scripting variable (value is "contentManagerClass").
+     */
+    public static final String ATTR_CONTENT_MANAGER_CLASS = "contentManagerClass";
+
     private static final String RENDER_REQUEST_CLASS = ComponentRequest.class.getName();
 
     private static final String RENDER_RESPONSE_CLASS = ComponentResponse.class.getName();
 
     private static final String STRING_CLASS = "String"; // always imported
-
-    private static final String CONTENT_MANAGER_CLASS = ContentManager.class.getName();
 
     private static final String SERVICE_LOCATOR_CLASS = ServiceLocator.class.getName();
 
@@ -102,6 +105,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
             DefineObjectsTag.DEFUALT_HANDLE_NAME);
         String contentManagerName = this.getValue(data, ATTR_CONTENT_MANAGER_NAME,
             DefineObjectsTag.DEFAULT_CONTENT_MANAGER_NAME);
+        String contentManagerClass = this.getValue(data, ATTR_CONTENT_MANAGER_CLASS,
+            DefineObjectsTag.DEFAULT_CONTENT_MANAGER_CLASS);
         String serviceLocatorName = this.getValue(data, ATTR_SERVICE_LOCATOR_NAME,
             DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME);
 
@@ -114,7 +119,7 @@ public class DefineObjectsTEI extends TagExtraInfo {
                 VariableInfo.AT_END),
             new VariableInfo(handleName, STRING_CLASS, true,
                 VariableInfo.AT_END),
-            new VariableInfo(contentManagerName, CONTENT_MANAGER_CLASS, true,
+            new VariableInfo(contentManagerName, contentManagerClass, true,
                 VariableInfo.AT_END),
             new VariableInfo(serviceLocatorName, SERVICE_LOCATOR_CLASS, true,
                 VariableInfo.AT_END) };
