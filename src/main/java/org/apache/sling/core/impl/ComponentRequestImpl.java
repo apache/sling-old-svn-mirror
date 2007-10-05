@@ -397,35 +397,35 @@ class ComponentRequestImpl extends HttpServletRequestWrapper implements Componen
      * @see org.apache.sling.core.component.ComponentRequest#getSelectorString()
      */
     public String getSelectorString() {
-        return this.getRequestData().getSelectorString();
+        return this.getRequestData().getContentData().getSelectorString();
     }
 
     /**
      * @see org.apache.sling.core.component.ComponentRequest#getSelectors()
      */
     public String[] getSelectors() {
-        return this.getRequestData().getSelectors();
+        return this.getRequestData().getContentData().getSelectors();
     }
 
     /**
      * @see org.apache.sling.core.component.ComponentRequest#getSelector(int)
      */
     public String getSelector(int i) {
-        return this.getRequestData().getSelector(i);
+        return this.getRequestData().getContentData().getSelector(i);
     }
 
     /**
      * @see org.apache.sling.core.component.ComponentRequest#getExtension()
      */
     public String getExtension() {
-        return this.getRequestData().getExtension();
+        return this.getRequestData().getContentData().getExtension();
     }
 
     /**
      * @see org.apache.sling.core.component.ComponentRequest#getSuffix()
      */
     public String getSuffix() {
-        return this.getRequestData().getSuffix();
+        return this.getRequestData().getContentData().getSuffix();
     }
 
     public String getQueryString() {
