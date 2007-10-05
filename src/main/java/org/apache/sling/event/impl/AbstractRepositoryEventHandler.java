@@ -85,7 +85,7 @@ public abstract class AbstractRepositoryEventHandler
     protected String repositoryPath;
 
     /** We remove everything which is older than 30min by default. */
-    protected int cleanupPeriod;
+    protected int cleanupPeriod = 30;
 
     /** Is the background task still running? */
     protected boolean running;
@@ -102,7 +102,10 @@ public abstract class AbstractRepositoryEventHandler
     throws RepositoryException {
         this.applicationId = context.getBundleContext().getProperty(Constants.SLING_ID);
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
-        this.cleanupPeriod = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
+        final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
+        if ( i != null ) {
+            this.cleanupPeriod = i;
+        }
         this.startSession();
         // start background thread
         this.running = true;
