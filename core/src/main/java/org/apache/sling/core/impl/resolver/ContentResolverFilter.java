@@ -42,40 +42,40 @@ import org.apache.sling.component.ComponentResponseWrapper;
 import org.apache.sling.component.Content;
 import org.apache.sling.content.ContentManager;
 import org.apache.sling.content.jcr.JcrContentManagerFactory;
-import org.apache.sling.core.ContentResolver;
-import org.apache.sling.core.ResolvedURL;
 import org.apache.sling.core.content.SelectableContent;
 import org.apache.sling.core.content.Selector;
 import org.apache.sling.core.impl.RequestData;
+import org.apache.sling.core.resolver.ContentResolver;
+import org.apache.sling.core.resolver.ResolvedURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * @scr.component immediate="true" label="%mapper.name"
- *      description="%mapper.description"
+ * @scr.component immediate="true" label="%resolver.name"
+ *      description="%resolver.description"
  * @scr.property name="service.description"
- *      value="Default URLMapper implementation"
+ *      value="Default ContentResolver implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-500" type="Integer" private="true"
  * @scr.service
  */
-public class URLMapperFilter implements ComponentFilter, ContentResolver {
+public class ContentResolverFilter implements ComponentFilter, ContentResolver {
 
     /**
     * @scr.property value="true" type="Boolean"
     */
-    public static final String MAPPER_ALLOW_DIRECT = "mapper.allowDirect";
+    public static final String MAPPER_ALLOW_DIRECT = "resolver.allowDirect";
 
     /**
-     * The mapper.fake property has no default configuration. But the sling
+     * The resolver.fake property has no default configuration. But the sling
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
      * @scr.property values.1="/-/"
      */
-    public static final String MAPPER_FAKE = "mapper.fake";
+    public static final String MAPPER_FAKE = "resolver.fake";
 
     /**
      * @scr.property values.1="/-/" values.2="/content/-/"
@@ -83,10 +83,10 @@ public class URLMapperFilter implements ComponentFilter, ContentResolver {
      *               Cvalues.4="/libs/&times;/docroot/-/"
      *               values.5="/system/docroot/-/"
      */
-    public static final String MAPPER_MAPPING = "mapper.mapping";
+    public static final String MAPPER_MAPPING = "resolver.mapping";
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(URLMapperFilter.class);
+    private final Logger log = LoggerFactory.getLogger(ContentResolverFilter.class);
 
     /**
      * Allow startup without the factory

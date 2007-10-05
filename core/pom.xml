@@ -80,7 +80,7 @@
                             org.apache.sling.core.content,
                             org.apache.sling.core.filter,
                             org.apache.sling.core.locale,
-                            org.apache.sling.core.mapper,
+                            org.apache.sling.core.resolver,
                             org.apache.sling.core.theme,
                             org.apache.sling.core.util
                         </Export-Package>
