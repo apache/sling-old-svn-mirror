@@ -19,7 +19,7 @@
 package org.apache.sling.core.impl.resolver;
 
 import org.apache.sling.component.Content;
-import org.apache.sling.core.ResolvedURL;
+import org.apache.sling.core.resolver.ResolvedURL;
 
 /**
  * The <code>ResolvedURLImpl</code> class represents the URL after resolution

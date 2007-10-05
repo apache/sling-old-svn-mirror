@@ -21,6 +21,8 @@ package org.apache.sling.core.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.servlet.GenericServlet;
@@ -31,19 +33,19 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.component.ComponentContext;
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentFilter;
 import org.apache.sling.component.ComponentFilterChain;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
 import org.apache.sling.core.impl.filter.ComponentFilterChainHelper;
+import org.apache.sling.core.resolver.ResolvedURL;
 import org.apache.sling.mime.MimeTypeService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,13 +73,17 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
      */
     private static String PRODUCT_NAME = "Apache Sling";
 
-    private ComponentContext componentContext;
+    /**
+     * The name of the Declarative Services reference to the ComponentFilter
+     * services (value is "ComponentFilter").
+     */
+    private static String COMPONENT_FILTER_NAME = "ComponentFilter";
 
-    private BundleContext bundleContext;
+    private ComponentContextImpl slingComponentContext;
+
+    private org.osgi.service.component.ComponentContext osgiComponentContext;
 
     private List<ServiceReference> delayedComponentFilters;
-
-    private List<ServiceReference>filterReferences = new ArrayList<ServiceReference>();
 
     /**
      * The server information to report in the {@link #getServerInfo()} method.
@@ -183,7 +189,7 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
     }
 
     void includeContent(ServletRequest request, ServletResponse response,
-            Content content) throws IOException, ComponentException {
+            ResolvedURL resolvedURL) throws IOException, ComponentException {
 
         // we need a ComponentRequest/ComponentResponse tupel to continue
         ComponentRequest cRequest = RequestData.toComponentRequest(request);
@@ -191,7 +197,7 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
 
         // get the request data (and btw check the correct type)
         RequestData requestData = RequestData.getRequestData(cRequest);
-        requestData.pushContent(content);
+        requestData.pushContent(resolvedURL);
 
         try {
             this.processRequest(cRequest, cResponse);
@@ -227,28 +233,16 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
         return this.serverInfo;
     }
 
+    BundleContext getBundleContext() {
+        return osgiComponentContext.getBundleContext();
+    }
+
     // ---------- Property Setter for SCR --------------------------------------
 
-    protected void activate(
-            org.osgi.service.component.ComponentContext componentContext) {
-
-        // get the bundle context and register delayed filters
-        this.bundleContext = componentContext.getBundleContext();
-
-        // the component context for filters and components
-        this.componentContext = new ComponentContextImpl(this);
-
-        // register render filters already registered before our activation
-        List<ServiceReference> filterList = this.delayedComponentFilters;
-        this.delayedComponentFilters = null;
-        if (filterList != null) {
-            for (ServiceReference serviceReference : filterList) {
-                this.bindComponentFilter(serviceReference);
-            }
-        }
+    protected void activate(ComponentContext componentContext) {
 
         // setup server info
-        Dictionary<?, ?> props = this.bundleContext.getBundle().getHeaders();
+        Dictionary<?, ?> props = componentContext.getBundleContext().getBundle().getHeaders();
         Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
         String productVersion = bundleVersion.getMajor() + "."
             + bundleVersion.getMinor();
@@ -259,8 +253,16 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
             + System.getProperty("os.version") + " "
             + System.getProperty("os.arch") + ")";
 
+
+        // prepare the servlet configuration from the component config
+        Hashtable<String, Object> configuration = new Hashtable<String, Object>();
+        Dictionary<?, ?> componentConfig = componentContext.getProperties();
+        for (Enumeration<?> cce=componentConfig.keys(); cce.hasMoreElements(); ) {
+            Object key = cce.nextElement();
+            configuration.put(String.valueOf(key), componentConfig.get(key));
+        }
+
         // get the web manager root path
-        Dictionary configuration = componentContext.getProperties();
         Object wmr = configuration.get("sling.root");
         this.slingRoot = (wmr instanceof String) ? (String) wmr : null;
         if (this.slingRoot == null) {
@@ -278,8 +280,8 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
         // register the servlet and resources
         try {
             this.slingHttpContext = new SlingHttpContext(this.mimeTypeService);
-            this.httpService.registerServlet(this.slingRoot, this, configuration,
-                this.slingHttpContext);
+            this.httpService.registerServlet(this.slingRoot, this,
+                configuration, this.slingHttpContext);
 
             log.info("{} ready to serve requests", this.getServerInfo());
 
@@ -287,10 +289,37 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
             log.error("Cannot register " + this.getServerInfo(), e);
         }
 
+        // register render filters already registered after registration with
+        // the HttpService as filter initialization may cause the servlet
+        // context to be required (see SLING-42)
+
+        List<ServiceReference> filterList;
+        synchronized (this) {
+            filterList = delayedComponentFilters;
+
+            // assign the OSGi Component Context now, after leaving this
+            // synched block, bindFilter will be "active" and set the
+            // delayedComponentFilters field to null for GC
+            osgiComponentContext = componentContext;
+            delayedComponentFilters = null;
+        }
+
+        // prepare the Sling Component Context now after having finished the
+        // handler setup but before initializing the filters
+        this.slingComponentContext = new ComponentContextImpl(this);
+
+        // if there are filters at all, initialize them now
+        if (filterList != null) {
+            for (ServiceReference serviceReference : filterList) {
+                initFilter(componentContext, serviceReference);
+            }
+        }
     }
 
-    protected void deactivate(
-            org.osgi.service.component.ComponentContext componentContext) {
+    protected void deactivate(ComponentContext componentContext) {
+
+        destroyFilters(innerFilterChain);
+        destroyFilters(requestFilterChain);
 
         this.httpService.unregister(this.slingRoot);
 
@@ -298,96 +327,97 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
             this.slingHttpContext.dispose();
         }
 
-        while ( this.filterReferences.size() > 0 ) {
-            this.unbindComponentFilter(this.filterReferences.get(0));
+        if (this.slingComponentContext != null) {
+            this.slingComponentContext.dispose();
+            this.slingComponentContext = null;
         }
 
-        this.componentContext = null;
-        this.bundleContext = null;
+        this.osgiComponentContext = null;
 
         log.info(this.getServerInfo() + " shut down");
     }
 
     protected void bindComponentFilter(ServiceReference ref) {
-        if (this.bundleContext == null) {
-            if (this.delayedComponentFilters == null) {
-                this.delayedComponentFilters = new ArrayList<ServiceReference>();
-            }
-            this.delayedComponentFilters.add(ref);
-        } else {
-            ComponentFilter filter = (ComponentFilter) this.bundleContext.getService(ref);
-
-            // initialize the filter first
-            try {
-                filter.init(this.componentContext);
-
-                // service id
-                Object serviceId = ref.getProperty(Constants.SERVICE_ID);
-
-                // get the order, Integer.MAX_VALUE by default
-                Object orderObj = ref.getProperty("filter.order");
-                int order = (orderObj instanceof Integer)
-                        ? ((Integer) orderObj).intValue()
-                        : Integer.MAX_VALUE;
-
-                // register by scope
-                Object scope = ref.getProperty("filter.scope");
-                if ("component".equals(scope)) {
-                    // component rendering filter
-                    this.innerFilterChain.addFilter(filter, serviceId, order);
-                } else {
-                    // global filter by default
-                    this.requestFilterChain.addFilter(filter, serviceId, order);
+        synchronized (this) {
+            if (osgiComponentContext == null) {
+                if (delayedComponentFilters == null) {
+                    delayedComponentFilters = new ArrayList<ServiceReference>();
                 }
-
-                // mark success by setting the filter variable to null
-                filter = null;
-                this.filterReferences.add(ref);
-            } catch (ComponentException ce) {
-                log.error("ComponentFilter " + "" + " failed to initialize", ce);
-            } catch (Throwable t) {
-                log.error("Unexpected Problem initializing ComponentFilter "
-                    + "", t);
-            } finally {
-                // if filter is not null, there was an error binding
-                if (filter != null) {
-                    this.bundleContext.ungetService(ref);
-                }
+                delayedComponentFilters.add(ref);
+            } else {
+                initFilter(osgiComponentContext, ref);
             }
         }
     }
 
     protected void unbindComponentFilter(ServiceReference ref) {
-        // if bundle context is null, we are already deactivated
-        if ( this.bundleContext != null ) {
-            this.filterReferences.remove(ref);
+        // service id
+        Object serviceId = ref.getProperty(Constants.SERVICE_ID);
 
-            // service id
-            Object serviceId = ref.getProperty(Constants.SERVICE_ID);
-
-            // unregister by scope
-            ComponentFilter filter;
-            Object scope = ref.getProperty("filter.scope");
-            if ("component".equals(scope)) {
-                // component rendering filter
-                filter = this.innerFilterChain.removeFilterById(serviceId);
-            } else {
-                // global filter by default
-                filter = this.requestFilterChain.removeFilterById(serviceId);
-            }
-
-            // if a filter has actually been removed, destroy it
-            if (filter != null) {
-                try {
-                    filter.destroy();
-                } catch (Throwable t) {
-                    log.error(
-                        "Unexpected problem destroying ComponentFilter " + "", t);
-                }
-
-                // unget the filter service
-                this.bundleContext.ungetService(ref);
+        // unregister by scope and destroy it
+        ComponentFilter filter = getChain(ref).removeFilterById(serviceId);
+        if (filter != null) {
+            try {
+                filter.destroy();
+            } catch (Throwable t) {
+                log.error(
+                    "Unexpected problem destroying ComponentFilter {}", filter, t);
             }
         }
+    }
+
+    private void initFilter(ComponentContext osgiContext, ServiceReference ref) {
+        ComponentFilter filter = (ComponentFilter) osgiContext.locateService(
+            COMPONENT_FILTER_NAME, ref);
+
+        // initialize the filter first
+        try {
+            filter.init(slingComponentContext);
+
+            // service id
+            Long serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
+
+            // get the order, Integer.MAX_VALUE by default
+            Object orderObj = ref.getProperty("filter.order");
+            int order = (orderObj instanceof Integer)
+                    ? ((Integer) orderObj).intValue()
+                    : Integer.MAX_VALUE;
+
+            // register by scope
+            getChain(ref).addFilter(filter, serviceId, order);
+
+        } catch (ComponentException ce) {
+            log.error("ComponentFilter " + "" + " failed to initialize", ce);
+        } catch (Throwable t) {
+            log.error("Unexpected Problem initializing ComponentFilter "
+                + "", t);
+        }
+    }
+
+    private void destroyFilters(ComponentFilterChainHelper chain) {
+        ComponentFilter[] filters = chain.removeAllFilters();
+        if (filters != null) {
+            for (int i = 0; i < filters.length; i++) {
+                try {
+                    filters[i].destroy();
+                } catch (Throwable t) {
+                    log.error(
+                        "Unexpected problem destroying ComponentFilter {}",
+                        filters[i], t);
+                }
+            }
+        }
+    }
+
+    private ComponentFilterChainHelper getChain(ServiceReference ref) {
+
+        // component rendering filter
+        Object scope = ref.getProperty("filter.scope");
+        if ("component".equals(scope)) {
+            return innerFilterChain;
+        }
+
+        // global filter by default
+        return requestFilterChain;
     }
 }
