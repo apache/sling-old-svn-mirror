@@ -37,7 +37,7 @@
         Standalone Application comprising base bundles and installing
         Sling required bundles on demand
     </description>
- 
+
     <scm>
         <connection>
             scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling-app
@@ -71,7 +71,6 @@
                             <outputDirectory>
                                 ${project.build.outputDirectory}/resources/corebundles
                             </outputDirectory>
-                            <stripVersion>true</stripVersion>
                         </configuration>
                     </execution>
                     <execution>
@@ -87,7 +86,6 @@
                             <outputDirectory>
                                 ${project.build.outputDirectory}/resources/bundles
                             </outputDirectory>
-                            <stripVersion>true</stripVersion>
                         </configuration>
                     </execution>
                     <execution>
@@ -205,7 +203,9 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix.commons</groupId>
-            <artifactId>org.apache.felix.commons.servlet-api</artifactId>
+            <artifactId>
+                org.apache.felix.commons.servlet-api
+            </artifactId>
             <version>2.4.0-0002-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -245,6 +245,156 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        
+        <!--
+            The "full" profile also includes all Sling bundles plus
+            the dependencies of Sling from the Apache Felix Commons
+            subproject. 
+        -->
+        <profile>
+            <id>full</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <configuration>
+                            <classifier>full</classifier>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <!--
+                    Commons Dependencies provided by the Apache Felix project
+                -->
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.commons-io
+                    </artifactId>
+                    <version>1.3.2-0002-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.commons-fileupload
+                    </artifactId>
+                    <version>1.1.1-0001-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.commons-collections
+                    </artifactId>
+                    <version>3.2.0-0001-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.commons-beanutils
+                    </artifactId>
+                    <version>1.7.0-0001-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.commons-codec
+                    </artifactId>
+                    <version>1.3.0-0001-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.jsp-api
+                    </artifactId>
+                    <version>2.0.0-0001-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.commons-el
+                    </artifactId>
+                    <version>1.0.0-0001-SNAPSHOT</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.apache.felix.commons</groupId>
+                    <artifactId>
+                        org.apache.felix.commons.cglib-full
+                    </artifactId>
+                    <version>2.0.2-0001-SNAPSHOT</version>
+                </dependency>
+
+                <!--
+                    Finally all the Sling bundles not yet included in the
+                    base sling-app
+                -->
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-jasper-sling</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-mime</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-jackrabbit-api</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-jackrabbit-server</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>
+                        sling-jackrabbit-classloader
+                    </artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-component-api</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-content-jcr</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-core</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-scripting-core</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-scripting-jsp</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>sling-scripting-jsp-taglib</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
         </profile>
     </profiles>
 </project>
