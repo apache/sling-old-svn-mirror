@@ -24,9 +24,11 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.Content;
+import org.apache.sling.content.jcr.SyntheticContent;
 import org.apache.sling.scripting.jsp.util.JspComponentResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
@@ -52,6 +54,9 @@ public class IncludeTagHandler extends TagSupport {
     /** path argument */
     private String path;
 
+    /** componentId argument */
+    private String componentId;
+
     /**
      * Called after the body has been processed.
      *
@@ -74,8 +79,24 @@ public class IncludeTagHandler extends TagSupport {
                 path = request.getContent().getPath() + "/" + path;
             }
 
-            // get the request dispatcher for the (relative) path
-            dispatcher = request.getRequestDispatcher(path);
+            // if the componentId is set, try to resolve the path, if no
+            // content exists for the path create a synthetic content
+            if (componentId != null) {
+                try {
+                    content = request.getContent(path);
+                    if (content == null) {
+                        content = new SyntheticContent(path, componentId);
+                    }
+                } catch (ComponentException ce) {
+                    TagUtil.log(log, pageContext, "Problem trying to load content", ce);
+                }
+            }
+
+            // get the request dispatcher for the (relative) path (if not set
+            // with the base content above
+            if (dispatcher == null) {
+                dispatcher = request.getRequestDispatcher(path);
+            }
         }
 
         try {
@@ -115,5 +136,9 @@ public class IncludeTagHandler extends TagSupport {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public void setComponentId(String componentId) {
+        this.componentId = componentId;
     }
 }
