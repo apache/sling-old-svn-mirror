@@ -38,6 +38,11 @@ import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentRequestDispatcher;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.Content;
+import org.apache.sling.content.ContentManager;
+import org.apache.sling.core.impl.resolver.ResolvedURLImpl;
+import org.apache.sling.core.resolver.ContentResolver;
+import org.apache.sling.core.resolver.ResolvedURL;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +52,25 @@ import org.slf4j.LoggerFactory;
 public class ComponentContextImpl implements ComponentContext {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(ComponentContextImpl.class);
+    private final Logger log = LoggerFactory.getLogger(ComponentContextImpl.class);
 
     private ComponentRequestHandlerImpl requestHandler;
 
-    public ComponentContextImpl(ComponentRequestHandlerImpl requestHandler) {
+    private ServiceTracker contentResolver;
+
+    ComponentContextImpl(ComponentRequestHandlerImpl requestHandler) {
         this.requestHandler = requestHandler;
+
+        this.contentResolver = new ServiceTracker(
+            requestHandler.getBundleContext(), ContentResolver.class.getName(),
+            null);
+        this.contentResolver.open();
+    }
+
+    void dispose() {
+        if (contentResolver != null) {
+            contentResolver.close();
+        }
     }
 
     /**
@@ -114,7 +132,10 @@ public class ComponentContextImpl implements ComponentContext {
             return null;
         }
 
-        return new ComponentRequestDispatcherImpl(content);
+        ResolvedURL resolvedURL = new ResolvedURLImpl(content.getPath(),
+            content);
+
+        return new ComponentRequestDispatcherImpl(resolvedURL);
     }
 
     public RequestDispatcher getRequestDispatcher(String path) {
@@ -144,6 +165,7 @@ public class ComponentContextImpl implements ComponentContext {
 
     /*
      * (non-Javadoc)
+     *
      * @see javax.servlet.ServletContext#getServerInfo()
      */
     public String getServerInfo() {
@@ -170,7 +192,8 @@ public class ComponentContextImpl implements ComponentContext {
     }
 
     /**
-     * @see javax.servlet.ServletContext#setAttribute(java.lang.String, java.lang.Object)
+     * @see javax.servlet.ServletContext#setAttribute(java.lang.String,
+     *      java.lang.Object)
      */
     public void setAttribute(String name, Object object) {
         getServletContext().removeAttribute(name);
@@ -209,41 +232,45 @@ public class ComponentContextImpl implements ComponentContext {
         return getServletContext().getServlets();
     }
 
-    //---------- Inner class --------------------------------------------------
+    // ---------- Inner class --------------------------------------------------
 
     private class ComponentRequestDispatcherImpl implements
             ComponentRequestDispatcher {
 
-        private final Content content;
+        private ResolvedURL resolvedURL;
+
         private final String path;
 
-        private ComponentRequestDispatcherImpl(Content content) {
-            this.content = content;
-            this.path = content.getPath();
+        private ComponentRequestDispatcherImpl(ResolvedURL resolvedURL) {
+            this.resolvedURL = resolvedURL;
+            this.path = resolvedURL.getOriginalURL();
         }
 
         private ComponentRequestDispatcherImpl(String path) {
-            this.content = null;
+            this.resolvedURL = null;
             this.path = path;
         }
 
-        public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException {
-            // if content is null, try to resolve it using the path
-            Content target;
-            if (content != null) {
-                target = content;
-            } else {
+        public void include(ServletRequest request, ServletResponse response)
+                throws ServletException, IOException {
+
+            if (resolvedURL == null) {
+
                 // this may throw an exception in case loading fails, which is
                 // ok here, if no content is available at that path null is
                 // return, which results in using the servlet container
                 ComponentRequest cRequest = RequestData.unwrap(request);
-
                 String absPath = getAbsolutePath(cRequest, path);
-                target = cRequest.getContent(absPath);
+
+                ContentResolver cr = (ContentResolver) contentResolver.getService();
+                ContentManager cm = RequestData.getRequestData(cRequest).getContentManager();
+                if (cr != null && cm != null) {
+                    resolvedURL = cr.resolveURL(cm, absPath);
+                }
             }
 
-            if (target != null) {
-                requestHandler.includeContent(request, response, target);
+            if (resolvedURL != null) {
+                requestHandler.includeContent(request, response, resolvedURL);
             } else {
                 requestHandler.includeServlet(request, response, path);
             }
@@ -258,7 +285,8 @@ public class ComponentContextImpl implements ComponentContext {
             }
         }
 
-        public void forward(ServletRequest request, ServletResponse response) throws ServletException, IOException {
+        public void forward(ServletRequest request, ServletResponse response)
+                throws ServletException, IOException {
             // TODO Auto-generated method stub
             // TODO, use servlet container dispatcher !!
         }

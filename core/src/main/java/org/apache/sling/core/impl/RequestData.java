@@ -40,11 +40,11 @@ import org.apache.sling.component.ComponentRequest;
 import org.apache.sling.component.ComponentRequestWrapper;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.ComponentResponseWrapper;
-import org.apache.sling.component.Content;
 import org.apache.sling.content.ContentManager;
 import org.apache.sling.core.Constants;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
+import org.apache.sling.core.resolver.ResolvedURL;
 import org.apache.sling.core.theme.Theme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
 public class RequestData implements BufferProvider {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(RequestData.class);
+    private final Logger log = LoggerFactory.getLogger(RequestData.class);
 
     /** The original servlet Servlet Request Object */
     private HttpServletRequest servletRequest;
@@ -108,26 +108,11 @@ public class RequestData implements BufferProvider {
 
     private Theme theme;
 
-    /** The request URI after applying any fake URLs */
-    private String originalURL;
-
-    /** The mapped selectors */
-    private String[] selectors = new String[0];
-
-    /** The combined selectors string */
-    private String combinedSelectorString = "";
-
-    /** The extension */
-    private String extension = "";
-
-    /** the suffix */
-    private String suffix = "";
-
     /** the current ContentData */
     private ContentData currentContentData;
 
     /** the stack of ContentData objects */
-    private LinkedList contentDataStack;
+    private LinkedList<ContentData> contentDataStack;
 
     public RequestData(HttpServletRequest request, HttpServletResponse response) {
         this.servletRequest = request;
@@ -146,7 +131,7 @@ public class RequestData implements BufferProvider {
         // clear the content data stack
         if (this.contentDataStack != null) {
             while (!this.contentDataStack.isEmpty()) {
-                ContentData cd = (ContentData) this.contentDataStack.removeLast();
+                ContentData cd = this.contentDataStack.removeLast();
                 cd.dispose();
             }
         }
@@ -318,11 +303,11 @@ public class RequestData implements BufferProvider {
 
     // ---------- Content inclusion stacking -----------------------------------
 
-    public void pushContent(Content content) {
+    public void pushContent(ResolvedURL resolvedURL) {
         BufferProvider parent;
         if (this.currentContentData != null) {
             if (this.contentDataStack == null) {
-                this.contentDataStack = new LinkedList();
+                this.contentDataStack = new LinkedList<ContentData>();
             }
 
             // remove the request attributes if the stack is empty now
@@ -337,7 +322,7 @@ public class RequestData implements BufferProvider {
             parent = this;
         }
 
-        this.currentContentData = new ContentData(content, parent);
+        this.currentContentData = new ContentData(resolvedURL, parent);
     }
 
     public void popContent() {
@@ -348,7 +333,7 @@ public class RequestData implements BufferProvider {
 
         if (this.contentDataStack != null && !this.contentDataStack.isEmpty()) {
             // remove the topmost content data object
-            this.currentContentData = (ContentData) this.contentDataStack.removeLast();
+            this.currentContentData = this.contentDataStack.removeLast();
 
             // remove the request attributes if the stack is empty now
             if (this.contentDataStack.isEmpty()) {
@@ -578,62 +563,6 @@ public class RequestData implements BufferProvider {
         // provide the current theme to components as a request attribute
         // TODO - We should define a well known constant for this
         this.servletRequest.setAttribute(Theme.class.getName(), theme);
-    }
-
-    public void setOriginalURL(String originalURL) {
-        this.originalURL = originalURL;
-    }
-
-    public String getOriginalURL() {
-        return this.originalURL;
-    }
-
-    /**
-     * The selectors to set here is the string of dot-separated words after the
-     * path but before any optional subsequent slashes. This string includes the
-     * request URL extension, which is extracted here, too.
-     */
-    public void setSelectorsExtension(String selectors) {
-        int lastDot = selectors.lastIndexOf('.');
-        if (lastDot < 0) {
-            // no selectors, just the extension
-            this.extension = selectors;
-            return;
-        }
-
-        // extension comes after last dot, rest are selectors
-        this.extension = selectors.substring(lastDot + 1);
-
-        // cut off extension to split selectors
-        this.combinedSelectorString = selectors.substring(0, lastDot);
-        this.selectors = this.combinedSelectorString.split("\\.");
-    }
-
-    public String getExtension() {
-        return this.extension;
-    }
-
-    /**
-     * The i-th selector string or null if i&lt;0 or i&gt;getSelectors().length
-     */
-    public String getSelector(int i) {
-        return (i >= 0 && i < this.selectors.length) ? this.selectors[i] : null;
-    }
-
-    public String[] getSelectors() {
-        return this.selectors;
-    }
-
-    public String getSelectorString() {
-        return this.combinedSelectorString;
-    }
-
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
-    }
-
-    public String getSuffix() {
-        return this.suffix;
     }
 
     // ---------- BufferProvider -----------------------------------------
