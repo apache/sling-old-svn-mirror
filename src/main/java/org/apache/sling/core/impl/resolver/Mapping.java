@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.mapper;
+package org.apache.sling.core.impl.resolver;
 
 
 /**
+ * The <code>Mapping</code> class conveys the mapping configuration used by the
+ * {@link ContentResolverFilter}.
  */
-public class Mapping {
+class Mapping {
 
     /** defines the 'inbound' direction, that is mapping request path to item path */
     public static final int INBOUND = 1;
@@ -59,7 +61,7 @@ public class Mapping {
      * @throws NullPointerException if either <code>from</code> or
      * 		<code>to</code> is <code>null</code>.
      */
-    public Mapping(String from, String to, String dir) {
+    Mapping(String from, String to, String dir) {
         this(from, to, "in".equals(dir) ? Mapping.INBOUND :
                        ("out".equals(dir) ? Mapping.OUTBOUND:
                         Mapping.BOTH));
