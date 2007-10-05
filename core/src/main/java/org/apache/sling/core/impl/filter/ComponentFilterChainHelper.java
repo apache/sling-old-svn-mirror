@@ -25,40 +25,46 @@ import java.util.TreeSet;
 import org.apache.sling.component.ComponentFilter;
 
 /**
- * The <code>ComponentFilterChainHelper</code> class is used by Sling to support
- * building lists of <code>RenderFilter</code>s. To ensure filter ordering,
- * each filter is optionally registered with an ordering index. If none is
- * provided the default ordering index is Integer.MAX_VALUE to append the filter
- * to the end of the list.
+ * The <code>ComponentFilterChainHelper</code> class is used by Sling to
+ * support building lists of <code>RenderFilter</code>s. To ensure filter
+ * ordering, each filter is optionally registered with an ordering index. If
+ * none is provided the default ordering index is Integer.MAX_VALUE to append
+ * the filter to the end of the list.
  */
 public class ComponentFilterChainHelper {
 
-    SortedSet filterList;
+    SortedSet<FilterListEntry> filterList;
 
     ComponentFilter[] filters;
 
     public ComponentFilterChainHelper() {
     }
 
-    public ComponentFilter addFilter(ComponentFilter filter) {
-        return this.addFilter(filter, filter, Integer.MAX_VALUE);
-    }
-
     public synchronized ComponentFilter addFilter(ComponentFilter filter,
-            Object filterId, int order) {
+            Long filterId, int order) {
         this.filters = null;
         if (this.filterList == null) {
-            this.filterList = new TreeSet();
+            this.filterList = new TreeSet<FilterListEntry>();
         }
         this.filterList.add(new FilterListEntry(filter, filterId, order));
         return filter;
     }
 
+    public synchronized ComponentFilter[] removeAllFilters() {
+        // will be returned after cleaning the lists
+        ComponentFilter[] removedFilters = getFilters();
+
+        filters = null;
+        filterList = null;
+
+        return removedFilters;
+    }
+
     public synchronized ComponentFilter removeFilter(ComponentFilter filter) {
         if (this.filterList != null) {
             this.filters = null;
-            for (Iterator fi=this.filterList.iterator(); fi.hasNext(); ) {
-                FilterListEntry test = (FilterListEntry) fi.next();
+            for (Iterator<FilterListEntry> fi = filterList.iterator(); fi.hasNext();) {
+                FilterListEntry test = fi.next();
                 if (test.getFilter().equals(filter)) {
                     fi.remove();
                     return test.getFilter();
@@ -73,8 +79,8 @@ public class ComponentFilterChainHelper {
     public synchronized ComponentFilter removeFilterById(Object filterId) {
         if (this.filterList != null) {
             this.filters = null;
-            for (Iterator fi=this.filterList.iterator(); fi.hasNext(); ) {
-                FilterListEntry test = (FilterListEntry) fi.next();
+            for (Iterator<FilterListEntry> fi = filterList.iterator(); fi.hasNext();) {
+                FilterListEntry test = fi.next();
                 if (test.getFitlerId() == filterId
                     || (test.getFitlerId() != null && test.getFitlerId().equals(
                         filterId))) {
@@ -97,8 +103,9 @@ public class ComponentFilterChainHelper {
             if (this.filterList != null && !this.filterList.isEmpty()) {
                 ComponentFilter[] tmp = new ComponentFilter[this.filterList.size()];
                 int i = 0;
-                for (Iterator fi = this.filterList.iterator(); fi.hasNext(); i++) {
-                    tmp[i] = ((FilterListEntry) fi.next()).getFilter();
+                for (FilterListEntry entry : filterList) {
+                    tmp[i] = entry.getFilter();
+                    i++;
                 }
                 this.filters = tmp;
             }
@@ -106,15 +113,15 @@ public class ComponentFilterChainHelper {
         return this.filters;
     }
 
-    private static class FilterListEntry implements Comparable {
+    private static class FilterListEntry implements Comparable<FilterListEntry> {
 
         private ComponentFilter filter;
 
-        private Object filterId;
+        private Long filterId;
 
         private int order;
 
-        FilterListEntry(ComponentFilter filter, Object filterId, int order) {
+        FilterListEntry(ComponentFilter filter, Long filterId, int order) {
             this.filter = filter;
             this.filterId = filterId;
             this.order = order;
@@ -124,7 +131,7 @@ public class ComponentFilterChainHelper {
             return this.filter;
         }
 
-        Object getFitlerId() {
+        Long getFitlerId() {
             return this.filterId;
         }
 
@@ -132,12 +139,11 @@ public class ComponentFilterChainHelper {
          * Note: this class has a natural ordering that is inconsistent with
          * equals.
          */
-        public int compareTo(Object obj) {
-            if (this == obj || this.equals(obj)) {
+        public int compareTo(FilterListEntry other) {
+            if (this == other || this.equals(other)) {
                 return 0;
             }
 
-            FilterListEntry other = (FilterListEntry) obj;
             if (this.order < other.order) {
                 return -1;
             } else if (this.order > other.order) {
@@ -145,9 +151,8 @@ public class ComponentFilterChainHelper {
             }
 
             // if the filterId is comparable and the other is of the same class
-            if (this.filterId instanceof Comparable && other.filterId != null
-                && this.filterId.getClass() == other.filterId.getClass()) {
-                int comp = ((Comparable) this.filterId).compareTo(other.filterId);
+            if (filterId != null && other.filterId != null) {
+                int comp = filterId.compareTo(other.filterId);
                 if (comp != 0) {
                     return comp;
                 }

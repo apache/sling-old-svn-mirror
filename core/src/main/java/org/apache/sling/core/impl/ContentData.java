@@ -30,6 +30,7 @@ import org.apache.sling.core.impl.output.Buffer;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.output.BufferedPrintWriter;
 import org.apache.sling.core.impl.output.BufferedServletOutputStream;
+import org.apache.sling.core.resolver.ResolvedURL;
 
 
 /**
@@ -41,7 +42,7 @@ import org.apache.sling.core.impl.output.BufferedServletOutputStream;
  */
 public class ContentData implements BufferProvider {
 
-    private Content content;
+    private ResolvedURL resolvedURL;
 
     private Component component;
 
@@ -49,13 +50,13 @@ public class ContentData implements BufferProvider {
     private int requestedBufferSize;
     private BufferProvider parent;
 
-    public ContentData(Content content, BufferProvider parent) {
-        this.content = content;
+    public ContentData(ResolvedURL resolvedURL, BufferProvider parent) {
+        this.resolvedURL = resolvedURL;
         this.parent = parent;
     }
 
     /* package */ void dispose() {
-        this.content = null;
+        this.resolvedURL = null;
 
         // flush buffer contents to output
         try {
@@ -69,7 +70,7 @@ public class ContentData implements BufferProvider {
      * @return the content
      */
     public Content getContent() {
-        return this.content;
+        return resolvedURL.getContent();
     }
 
     /**
@@ -142,5 +143,34 @@ public class ContentData implements BufferProvider {
         this.buffer = writer;
 
         return writer;
+    }
+
+    //---------- URL Resolution results ---------------------------------------
+
+    public String getOriginalURL() {
+        return resolvedURL.getOriginalURL();
+    }
+
+    public String getExtension() {
+        return resolvedURL.getExtension();
+    }
+
+    /**
+     * The i-th selector string or null if i&lt;0 or i&gt;getSelectors().length
+     */
+    public String getSelector(int i) {
+        return resolvedURL.getSelector(i);
+    }
+
+    public String[] getSelectors() {
+        return resolvedURL.getSelectors();
+    }
+
+    public String getSelectorString() {
+        return resolvedURL.getSelectorString();
+    }
+
+    public String getSuffix() {
+        return resolvedURL.getSuffix();
     }
 }
