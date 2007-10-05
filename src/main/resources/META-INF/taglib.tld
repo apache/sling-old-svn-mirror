@@ -69,6 +69,21 @@
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
+        <attribute>
+            <description>
+                The component ID of a content to include. If the content
+                to be included is specified with the path attribute,
+                which cannot be resolved to a Content, the tag may
+                create a synthetic Content object out of the path and
+                this componentId. If the componentId is set the path
+                must be the exact path to a Content object. That is,
+                adding parameters, selectors and extensions to the path
+                is not supported if the componentId is set.
+            </description>
+            <name>componentId</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
     </tag>
 
     <tag>
