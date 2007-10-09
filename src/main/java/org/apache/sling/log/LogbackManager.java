@@ -303,6 +303,8 @@ public class LogbackManager implements ManagedService {
 
             // link the roller to the file appender
             rolling.setParent(fa);
+            rolling.start();
+            trigger.start();
 
             appender = fa;
 
