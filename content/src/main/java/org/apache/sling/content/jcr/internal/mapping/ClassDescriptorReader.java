@@ -279,6 +279,7 @@ public class ClassDescriptorReader {
         fd.setJcrOnParentVersion(this.getOptionalAttribute("jcrOnParentVersion", "COPY"));
         fd.setJcrProtected(this.getOptionalAttribute("jcrProtected", false));
         fd.setJcrMultiple(this.getOptionalAttribute("jcrMultiple", false));
+        fd.setJcrDefaultValue(this.getOptionalAttribute("jcrDefaultValue"));
 
         return fd;
     }
