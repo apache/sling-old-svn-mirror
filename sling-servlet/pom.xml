@@ -127,10 +127,10 @@
                                     org/apache/sling/launcher/main/**
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.http.jetty.jar
+                                    resources/bundles/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.commons.servlet-api.jar
+                                    resources/bundles/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
                             <includes>
@@ -153,10 +153,10 @@
                             </includes>
                             <excludes>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.http.jetty.jar
+                                    resources/bundles/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.commons.servlet-api.jar
+                                    resources/bundles/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
                         </resource>
