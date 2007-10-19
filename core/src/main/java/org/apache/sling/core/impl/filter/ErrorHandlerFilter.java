@@ -63,6 +63,7 @@ public class ErrorHandlerFilter extends ComponentBindingFilter {
             filterChain.doFilter(request, new ErrorHandlerResponse(request,
                 response));
         } catch (Throwable throwable) {
+            log.error("Error during request processing.", throwable);
             this.handleError(throwable, request, response);
         }
 
