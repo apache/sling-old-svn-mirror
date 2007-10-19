@@ -74,6 +74,7 @@
                             org.apache.jackrabbit.rmi.*
                         </Private-Package>
                         <Import-Package>
+                            !org.apache.jackrabbit.rmi.remote.RemoteEventCollection,
                             javax.xml.*; org.apache.xml.*;
                             org.xml.*;resolution:=optional, *
                         </Import-Package>
