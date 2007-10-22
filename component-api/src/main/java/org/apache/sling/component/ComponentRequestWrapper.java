@@ -84,7 +84,7 @@ public class ComponentRequestWrapper extends HttpServletRequestWrapper implement
         return this.getComponentRequest().getRequestParameter(name);
     }
 
-    public Map<String, RequestParameter> getRequestParameterMap() {
+    public Map<String, RequestParameter[]> getRequestParameterMap() {
         return this.getComponentRequest().getRequestParameterMap();
     }
 
