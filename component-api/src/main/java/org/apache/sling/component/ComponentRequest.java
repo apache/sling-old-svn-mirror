@@ -321,7 +321,7 @@ public interface ComponentRequest extends HttpServletRequest {
      *         parameter map are of type String. The values in the parameter map
      *         are of type {@link RequestParameter} array (<code>RequestParameter[]</code>).
      */
-    Map<String, RequestParameter> getRequestParameterMap();
+    Map<String, RequestParameter[]> getRequestParameterMap();
 
     /**
      * Returns an array of {@link RequestParameter} objects containing all of the
