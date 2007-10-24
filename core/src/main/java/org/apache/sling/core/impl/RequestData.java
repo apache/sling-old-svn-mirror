@@ -44,6 +44,7 @@ import org.apache.sling.content.ContentManager;
 import org.apache.sling.core.Constants;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
+import org.apache.sling.core.impl.resolver.ResolvedURLImpl;
 import org.apache.sling.core.resolver.ResolvedURL;
 import org.apache.sling.core.theme.Theme;
 import org.slf4j.Logger;
@@ -308,6 +309,16 @@ public class RequestData implements BufferProvider {
         if (this.currentContentData != null) {
             if (this.contentDataStack == null) {
                 this.contentDataStack = new LinkedList<ContentData>();
+            }
+
+            // ensure the selectors, extension and suffix are inherited
+            // from the parent if none have been declared on inclusion
+            if (resolvedURL.getExtension() == null || resolvedURL.getExtension().length() == 0) {
+                ResolvedURLImpl copy = new ResolvedURLImpl(resolvedURL);
+                copy.setSelectorString(currentContentData.getSelectorString());
+                copy.setExtension(currentContentData.getExtension());
+                copy.setSuffix(currentContentData.getSuffix());
+                resolvedURL = copy;
             }
 
             // remove the request attributes if the stack is empty now
