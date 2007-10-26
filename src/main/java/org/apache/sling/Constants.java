@@ -32,20 +32,21 @@ public interface Constants {
      * "org.apache.sling.include.servlet"). This attribute is <code>null</code>
      * if the current servlet is the servlet handling the client request.
      * <p>
-     * The type of the attribute value is <code>javax.jcr.servlet</code>.
+     * The type of the attribute value is <code>javax.servlet.Servlet</code>.
      */
     public static final String ATTR_REQUEST_SERVLET = "org.apache.sling.include.servlet";
 
     /**
-     * The name of the request attribute containing the <code>Content</code>
+     * The name of the request attribute containing the <code>Resource</code>
      * underlying the <code>Servlet</code> which included the servlet
-     * currently being active (value is "org.apache.sling.include.content").
+     * currently being active (value is "org.apache.sling.include.resource").
      * This attribute is <code>null</code> if the current servlet is the
      * servlet handling the client request.
      * <p>
-     * The type of the attribute value is <code>org.apache.sling.Content</code>.
+     * The type of the attribute value is
+     * <code>org.apache.sling.resource.Resource</code>.
      */
-    public static final String ATTR_REQUEST_CONTENT = "org.apache.sling.include.content";
+    public static final String ATTR_REQUEST_CONTENT = "org.apache.sling.include.resource";
 
     /**
      * The name of the request attribute containing request context path if
@@ -138,8 +139,8 @@ public interface Constants {
      * situation (value is "javax.servlet.error.message"). If an exception
      * caused error handling, this is the exceptions message from
      * <code>Throwable.getMessage()</code>. If error handling is caused by a
-     * call to one of the <code>SlingResponse.sendError</code> methods, this
-     * attribute contains the optional message.
+     * call to one of the <code>SlingHttpServletResponse.sendError</code>
+     * methods, this attribute contains the optional message.
      * <p>
      * The type of the attribute value is <code>java.lang.String</code>.
      */
@@ -149,7 +150,7 @@ public interface Constants {
      * The name of the request attribute containing the URL requested by the
      * client during whose processing the error handling was caused (value is
      * "javax.servlet.error.request_uri"). This property is retrieved calling
-     * the <code>SlingRequest.getRequestURI()</code> method.
+     * the <code>SlingHttpServletRequest.getRequestURI()</code> method.
      * <p>
      * The type of the attribute value is <code>java.lang.String</code>.
      */

@@ -16,14 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling;
+package org.apache.sling.helpers;
 
-import javax.servlet.http.HttpServletResponse;
+import org.apache.sling.exceptions.SlingException;
 
-/**
- * The <code>SlingResponse</code> defines the interface to assist a servlet in
- * creating and sending a response to the client.
- */
-public interface SlingResponse extends HttpServletResponse {
+/** Thrown when a required service is not found */
+public class ServiceNotAvailableException extends SlingException {
+    private static final long serialVersionUID = 1L;
 
+    public ServiceNotAvailableException(String reason) {
+        super(reason);
+    }
+
+    public ServiceNotAvailableException(String reason, Throwable cause) {
+        super(reason, cause);
+    }
 }

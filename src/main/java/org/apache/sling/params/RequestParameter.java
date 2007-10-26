@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling;
+package org.apache.sling.params;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,13 +25,13 @@ import java.io.UnsupportedEncodingException;
 /**
  * The <code>RequestParameter</code> class represents a single parameter sent
  * with the client request. Instances of this class are returned by the
- * {@link SlingRequest#getRequestParameter(String)},
- * {@link SlingRequest#getRequestParameters(String)} and
- * {@link SlingRequest#getRequestParameterMap()} method.
+ * {@link SlingHttpServletRequest#getRequestParameter(String)},
+ * {@link SlingHttpServletRequest#getRequestParameters(String)} and
+ * {@link SlingHttpServletRequest#getRequestParameterMap()} method.
  * 
- * @see SlingRequest#getRequestParameter(String)
- * @see SlingRequest#getRequestParameters(String)
- * @see SlingRequest#getRequestParameterMap()
+ * @see SlingHttpServletRequest#getRequestParameter(String)
+ * @see SlingHttpServletRequest#getRequestParameters(String)
+ * @see SlingHttpServletRequest#getRequestParameterMap()
  */
 public interface RequestParameter {
 

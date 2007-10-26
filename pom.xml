@@ -60,6 +60,10 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -87,9 +91,9 @@
                             http://incubator.apache.org/sling/site/component-api.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling;version=${pom.version}
+                            org.apache.sling.*;version=${pom.version}
                         </Export-Package>
-                        <!-- Require explicite version of the servlet API -->
+                        <!-- Require explicit version of the servlet API -->
                         <Import-Package>
                             javax.servlet.*;version=2.4,*
                         </Import-Package>
