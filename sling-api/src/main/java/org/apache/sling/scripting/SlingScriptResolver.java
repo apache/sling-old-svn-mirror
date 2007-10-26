@@ -41,18 +41,10 @@ import org.apache.sling.exceptions.SlingException;
  * through a <code>RequestDispatcher</code> is handled by the Sling Framework.
  * <p>
  * The script resolver service is available from the
- * {@link org.apache.sling.helpers.ServiceLocator} using the fully qualified
- * name of this interface as its name. This name is provided as the
- * {@link #NAME} field for convenience.
+ * {@link org.apache.sling.helpers.ServiceLocator} using this interface as its
+ * argument.
  */
 public interface SlingScriptResolver {
-
-    /**
-     * The service name which may be used to ask the
-     * {@link org.apache.sling.helpers.ServiceLocator} for the resource resolver
-     * (value is the fully qualified name of this interface class).
-     */
-    static final String NAME = SlingScriptResolver.class.getName();
 
     /**
      * Resolves a {@link SlingScript} to handle the given request.
