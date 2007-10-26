@@ -371,14 +371,14 @@ public class JspcMojo extends AbstractMojo implements Options {
             }
 
             // write the OSGi component descriptor
-            writeJspServiceComponent(serviceComponentWriter,
+            writeJspServiceComponent(serviceComponentWriter, jspUri,
                 clctxt.getServletPackageName() + "."
                     + clctxt.getServletClassName());
 
             // remove the java source and smap file
-            new File(clctxt.getClassFileName()+".smap").delete();
+            new File(clctxt.getClassFileName() + ".smap").delete();
             new File(clctxt.getServletJavaFileName()).delete();
-            
+
         } catch (JasperException je) {
             Throwable rootCause = je;
             while (rootCause instanceof JasperException
@@ -475,32 +475,27 @@ public class JspcMojo extends AbstractMojo implements Options {
         loader = new URLClassLoader(urlsA, getClass().getClassLoader());
     }
 
-    private void writeJspServiceComponent(Writer out, String className) {
-
-        String id = className;
-        if (id.startsWith(servletPackage)) {
-            // account for trailing dot of the package
-            id = id.substring(servletPackage.length() + 1);
-        }
+    private void writeJspServiceComponent(Writer out, String componentName,
+            String className) {
 
         try {
             out.write("<scr:component enabled=\"true\" immediate=\"true\" name=\"");
-            out.write(id);
+            out.write(componentName);
             out.write("\">\r\n");
-            
+
             // the implementation is of course the compiled JSP
             out.write("<scr:implementation class=\"");
             out.write(className);
             out.write("\"/>\r\n");
-            
+
             // the JSP registers as a Servlet
             out.write("<scr:service>\r\n");
             out.write("<scr:provide interface=\"javax.servlet.Servlet\"/>\r\n");
             out.write("</scr:service>\r\n");
-            
+
             // use the JSP's id as the service.pid
             out.write("<scr:property name=\"service.pid\" value=\"");
-            out.write(id);
+            out.write(componentName);
             out.write("\"/>\r\n");
 
             // if the project defines an organization name, add it
@@ -510,7 +505,7 @@ public class JspcMojo extends AbstractMojo implements Options {
                 out.write(project.getOrganization().getName());
                 out.write("\"/>\r\n");
             }
-            
+
             out.write("</scr:component>\r\n");
 
             out.flush();
@@ -557,8 +552,9 @@ public class JspcMojo extends AbstractMojo implements Options {
             }
 
             // and set include accordingly
-            String svcComp = project.getProperties().getProperty("Service-Component");
-            svcComp= (svcComp == null) ? target : svcComp + ", " + target;
+            String svcComp = project.getProperties().getProperty(
+                "Service-Component");
+            svcComp = (svcComp == null) ? target : svcComp + ", " + target;
             project.getProperties().setProperty("Service-Component", svcComp);
 
         } finally {
