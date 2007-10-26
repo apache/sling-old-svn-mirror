@@ -16,28 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling;
+package org.apache.sling.resource;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.sling.exceptions.HttpStatusCodeException;
 
 /**
- * The <code>Content</code> interface defines the API to be implemented by all
- * content to be acted upon by the Sling framework.
- *
- * @ocm.mapped discriminator="false"
+ * The <code>ResourceNotFoundException</code> is a special
+ * {@link HttpStatusCodeException} fixing the status code to 404 (Not Found).
+ * This exception may be thrown by the if a requested
+ * {@link org.apache.sling.resource.Resource} may not be found.
  */
-public interface Content {
+public class ResourceNotFoundException extends HttpStatusCodeException {
 
-    /**
-     * Returns the name of the servlet responsible for the handling and
-     * presentation of this content object. This method must never return
-     * <code>null</code>.
-     *
-     * @return the name of the handling Servlet.
-     */
-    String getServletName();
+    public ResourceNotFoundException(String message) {
+        super(HttpServletResponse.SC_NOT_FOUND, message);
+    }
 
-    /**
-     * Returns the path of this content object in the persistence layer from
-     * where the object has been loaded.
-     */
-    String getPath();
 }
