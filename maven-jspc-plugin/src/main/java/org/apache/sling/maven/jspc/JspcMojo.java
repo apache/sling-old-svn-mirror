@@ -47,7 +47,6 @@ import org.apache.jasper.Options;
 import org.apache.jasper.compiler.Compiler;
 import org.apache.jasper.compiler.JspConfig;
 import org.apache.jasper.compiler.JspRuntimeContext;
-import org.apache.jasper.compiler.Localizer;
 import org.apache.jasper.compiler.TagPluginManager;
 import org.apache.jasper.compiler.TldLocationsCache;
 import org.apache.jasper.xmlparser.TreeNode;
@@ -286,8 +285,8 @@ public class JspcMojo extends AbstractMojo implements Options {
 
             File uriRootF = new File(uriSourceRoot);
             if (!uriRootF.exists() || !uriRootF.isDirectory()) {
-                throw new JasperException(
-                    Localizer.getMessage("jsp.error.jspc.uriroot_not_dir"));
+                throw new JasperException("The source location '"
+                    + uriSourceRoot + "' must be an existing directory");
             }
 
             for (String nextjsp : pages) {
@@ -297,9 +296,7 @@ public class JspcMojo extends AbstractMojo implements Options {
                 }
                 if (!fjsp.exists()) {
                     if (getLog().isWarnEnabled()) {
-                        getLog().warn(
-                            Localizer.getMessage("jspc.error.fileDoesNotExist",
-                                fjsp.toString()));
+                        getLog().warn("JSP file " + fjsp + " does not exist");
                     }
                     continue;
                 }
@@ -386,9 +383,7 @@ public class JspcMojo extends AbstractMojo implements Options {
                 rootCause = ((JasperException) rootCause).getRootCause();
             }
             if (rootCause != je) {
-                getLog().error(
-                    Localizer.getMessage("jspc.error.generalException", file),
-                    rootCause);
+                getLog().error("General problem compiling " + file, rootCause);
             }
 
             // Bugzilla 35114.
@@ -402,9 +397,7 @@ public class JspcMojo extends AbstractMojo implements Options {
         } catch (Exception e) {
             if ((e instanceof FileNotFoundException)
                 && getLog().isWarnEnabled()) {
-                getLog().warn(
-                    Localizer.getMessage("jspc.error.fileDoesNotExist",
-                        e.getMessage()));
+                getLog().warn("Missing file: " + e.getMessage());
             }
             throw new JasperException(e);
         } finally {
