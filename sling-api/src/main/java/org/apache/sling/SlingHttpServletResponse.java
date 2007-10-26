@@ -18,25 +18,15 @@
  */
 package org.apache.sling;
 
-import javax.servlet.http.HttpServletResponseWrapper;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * The <code>SlingResponseWrapper</code> class is a default wrapper class
- * around a {@link SlingResponse} which may be extended to amend the
- * functionality of the original response object.
+ * The <code>SlingHttpServletResponse</code> defines the interface to assist a
+ * servlet in creating and sending a response to the client.
+ * <p>
+ * This interface is currently empty and merely exists to paralell the
+ * {@link SlingHttpServletRequest} interface.
  */
-public class SlingResponseWrapper extends HttpServletResponseWrapper implements
-        SlingResponse {
-
-    public SlingResponseWrapper(SlingResponse delegatee) {
-        super(delegatee);
-    }
-
-    /**
-     * Return the original {@link SlingResponse} object wrapped by this.
-     */
-    public SlingResponse getSlingResponse() {
-        return (SlingResponse) getResponse();
-    }
+public interface SlingHttpServletResponse extends HttpServletResponse {
 
 }
