@@ -50,7 +50,7 @@
 			        "name": "content",
 					"primaryNodeType": "sling:SampleContent",
 					"properties": {
-						"sling:componentId": "org.apache.sling.sample.jsp.component_jsp",
+						"sling:componentId": "/org/apache/sling/sample/jsp/component.jsp",
 						"title": "JSP Rendered Content",
 						"text": "This Content is rendered by a JSP script embeded in the Bundle."
 					}
