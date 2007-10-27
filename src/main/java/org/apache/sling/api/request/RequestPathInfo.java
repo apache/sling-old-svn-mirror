@@ -192,8 +192,8 @@ public interface RequestPathInfo {
     String getSuffix();
 
     /**
-     * Return the "content path" part of the URL, what comes before selectors,
+     * Return the "resource path" part of the URL, what comes before selectors,
      * extension and suffix
      */
-    String getContentPath();
+    String getResourcePath();
 }
