@@ -91,7 +91,7 @@
                             http://incubator.apache.org/sling/site/component-api.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.*;version=${pom.version}
+                            org.apache.sling.api.*;version=${pom.version}
                         </Export-Package>
                         <!-- Require explicit version of the servlet API -->
                         <Import-Package>
