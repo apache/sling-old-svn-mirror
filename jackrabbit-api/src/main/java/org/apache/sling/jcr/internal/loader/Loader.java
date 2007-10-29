@@ -21,16 +21,21 @@ package org.apache.sling.jcr.internal.loader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.jcr.AbstractSlingRepository;
 import org.apache.sling.jcr.NodeTypeLoader;
+import org.apache.sling.jcr.internal.NamespaceMapper;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +44,11 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>Loader</code> TODO
  */
-public class Loader {
+public class Loader implements NamespaceMapper {
 
     public static final String NODETYPES_BUNDLE_HEADER = "Sling-Nodetypes";
+
+    public static final String NAMESPACES_BUNDLE_HEADER = "Sling-Namespaces";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(Loader.class);
@@ -50,6 +57,9 @@ public class Loader {
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
+
+    /** Namespace prefix table. */
+    private final Map<Long, NamespaceEntry[]> namespaceTable = new HashMap<Long, NamespaceEntry[]>();
 
     public Loader(AbstractSlingRepository repository) {
         this.slingRepository = repository;
@@ -65,6 +75,7 @@ public class Loader {
     }
 
     public void registerBundle(Bundle bundle) {
+        this.registerNamespaces(bundle);
         if (this.registerBundleInternal(bundle, false)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
@@ -84,9 +95,53 @@ public class Loader {
     }
 
     public void unregisterBundle(Bundle bundle) {
+        this.unregisterNamespaces(bundle);
         if ( this.delayedBundles.contains(bundle) ) {
             this.delayedBundles.remove(bundle);
         }
+    }
+
+    public void updateBundle(Bundle bundle) {
+        this.unregisterNamespaces(bundle);
+        this.registerNamespaces(bundle);
+    }
+
+    /**
+     * Register namespaces defined in the bundle in the namespace table.
+     * @param bundle The bundle.
+     */
+    protected void registerNamespaces(Bundle bundle) {
+        final String definition = (String) bundle.getHeaders().get(NAMESPACES_BUNDLE_HEADER);
+        if ( definition != null ) {
+            log.debug("registerNamespaces: Bundle {} tries to register: {}",
+                    bundle.getSymbolicName(), definition);
+            final StringTokenizer st = new StringTokenizer(definition, ",");
+            final List<NamespaceEntry>entries = new ArrayList<NamespaceEntry>();
+
+            while ( st.hasMoreTokens() ) {
+                final String token = st.nextToken().trim();
+                int pos = token.indexOf('=');
+                if ( pos == -1 ) {
+                    log.warn("registerNamespaces: Bundle {} has an invalid namespace manifest header entry: {}",
+                            bundle.getSymbolicName(), token);
+                } else {
+                    final String prefix = token.substring(0, pos).trim();
+                    final String namespace = token.substring(pos+1).trim();
+                    entries.add(new NamespaceEntry(prefix, namespace));
+                }
+            }
+            if ( entries.size() > 0 ) {
+                this.namespaceTable.put(bundle.getBundleId(), entries.toArray(new NamespaceEntry[entries.size()]));
+            }
+        }
+    }
+
+    /**
+     * Unregister namespaces defined in the bundle.
+     * @param bundle The bundle.
+     */
+    protected void unregisterNamespaces(Bundle bundle) {
+        this.namespaceTable.remove(bundle.getBundleId());
     }
 
     private boolean registerBundleInternal (Bundle bundle, boolean isRetry) {
@@ -181,6 +236,58 @@ public class Loader {
     private void ungetSession(Session session) {
         if (session != null) {
             session.logout();
+        }
+    }
+
+    public void defineNamespacePrefixes(Session session)
+    throws RepositoryException {
+        final Iterator<NamespaceEntry[]> iter = this.namespaceTable.values().iterator();
+        while ( iter.hasNext() ) {
+            final NamespaceEntry[] entries = iter.next();
+            for(int i=0; i<entries.length; i++) {
+
+                // the namespace prefixing is a little bit tricky:
+                String mappedPrefix = null;
+                // first, we check if the namespace is registered with a prefix
+                try {
+                    mappedPrefix = session.getNamespacePrefix(entries[i].namespace);
+                } catch (NamespaceException ne) {
+                    // the namespace is not registered yet, so we should do this
+                    // can we directly use the desired prefix?
+                    mappedPrefix = entries[i].prefix + "_new";
+                    try {
+                        session.getNamespaceURI(entries[i].prefix);
+                    } catch (NamespaceException ne2) {
+                        // as an exception occured we can directly use the new prefix
+                        mappedPrefix = entries[i].prefix;
+                    }
+                    session.getWorkspace().getNamespaceRegistry().registerNamespace(mappedPrefix, entries[i].namespace);
+                }
+                // do we have to remap?
+                if ( mappedPrefix != null && !mappedPrefix.equals(entries[i].prefix ) ) {
+                    // check if the prefix is already used?
+                    String oldUri = null;
+                    try {
+                        oldUri = session.getNamespaceURI(entries[i].prefix);
+                        session.setNamespacePrefix(entries[i].prefix + "_old", oldUri);
+                    } catch (NamespaceException ne) {
+                        // ignore: prefix is not used
+                    }
+                    // finally set prefix
+                    session.setNamespacePrefix(entries[i].prefix, entries[i].namespace);
+                }
+            }
+        }
+    }
+
+    public static class NamespaceEntry {
+
+        public final String prefix;
+        public final String namespace;
+
+        public NamespaceEntry(String p, String n) {
+            this.prefix = p;
+            this.namespace = n;
         }
     }
 }

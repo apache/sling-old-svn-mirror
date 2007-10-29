@@ -690,8 +690,7 @@ class SessionPool {
      * @param delegatee The <code>Session</code> to wrap as a pooled session.
      * @see PooledSession
      */
-    private PooledSession createPooledSession(Session delegatee) {
-
+    private PooledSession createPooledSession(Session delegatee) throws RepositoryException {
         PooledSession pooledSession = new PooledSession(this, delegatee);
 
         // keep the pooled session
@@ -770,7 +769,7 @@ class SessionPool {
      *          <code>null</code> if no session for the workspace is available
      *          from the pool.
      */
-    private Session getFromPool(String workSpaceName) {
+    private Session getFromPool(String workSpaceName) throws RepositoryException {
         // check with pool
         for (;;) {
 
