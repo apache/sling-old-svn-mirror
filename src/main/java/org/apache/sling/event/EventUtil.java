@@ -94,7 +94,7 @@ public abstract class EventUtil {
     /**
      * Should this event be distributed in the cluster?
      * @param event
-     * @return
+     * @return <code>true</code> if the event should be distributed.
      */
     public static boolean shouldDistribute(Event event) {
         return event.getProperty(PROPERTY_DISTRIBUTE) != null;
@@ -103,7 +103,7 @@ public abstract class EventUtil {
     /**
      * Is this a local event?
      * @param event
-     * @return
+     * @return <code>true</code> if this is a local event
      */
     public static boolean isLocal(Event event) {
         return getApplicationId(event) == null;
