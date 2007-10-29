@@ -23,14 +23,14 @@ import java.util.HashMap;
 import org.apache.sling.api.SlingHttpServletRequest;
 
 /** <code>RequestDispatcherOptions</code> are used in the
- *  {@link SlingHttpServletRequest#getRequestDispatcher SlingHttpServletRequest.getRequestDispatcher} 
- *  method, to give more control on some aspects of the include/forward  
+ *  {@link SlingHttpServletRequest#getRequestDispatcher(org.apache.sling.api.resource.Resource, RequestDispatcherOptions)}
+ *  method, to give more control on some aspects of the include/forward
  *  mechanism.
- *  
+ *
  *  Typical use cases include:
  *  <ul>
  *      <li>
- *          Forcing a resource type, to render a Resource in a specific way, 
+ *          Forcing a resource type, to render a Resource in a specific way,
  *          like for example <em>render myself in a suitable way for a navigation box</em>.
  *      </li>
  *      <li>
@@ -38,31 +38,31 @@ import org.apache.sling.api.SlingHttpServletRequest;
  *          a "teaser" selector to the request that I'm including here</em>.
  *      </li>
  *  </ul>
- *  
- *  This class currently only inherits from Map, and defines some constants 
+ *
+ *  This class currently only inherits from Map, and defines some constants
  *  for well-known options.
  */
 
 public class RequestDispatcherOptions extends HashMap <String,String> {
-    
-    /** When dispatching, use the value provided by this option as the resource type, 
-     *  instead of the one defined by the {@link Resource}.
+
+    /** When dispatching, use the value provided by this option as the resource type,
+     *  instead of the one defined by the {@link org.apache.sling.api.resource.Resource}.
      */
     public static final String OPT_FORCE_RESOURCE_TYPE = "forceResourceType";
-    
-    /** When dispatching, replace {@link RequestPathInfo} selectors by the 
+
+    /** When dispatching, replace {@link RequestPathInfo} selectors by the
      *  value provided by this option.
      */
     public static final String OPT_REPLACE_SELECTORS = "replaceSelectors";
-    
+
     /** When dispatching, add the value provided by this option to the
      *  {@link RequestPathInfo} selectors.
      */
-    public static final String OPT_ADD_SELECTORS = "addSelectors"; 
+    public static final String OPT_ADD_SELECTORS = "addSelectors";
 
     /** When dispatching, replace the {@link RequestPathInfo} suffix by
      *  the value provided by this option
      */
-    public static final String REPLACE_SUFFIX = "replaceSuffix"; 
+    public static final String REPLACE_SUFFIX = "replaceSuffix";
 
 }

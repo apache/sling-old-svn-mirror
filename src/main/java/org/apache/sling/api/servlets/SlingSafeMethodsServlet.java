@@ -31,6 +31,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
@@ -47,9 +48,9 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * If any of the default HTTP methods is to be implemented just overwrite the
  * respective doXXX method. If additional methods should be supported implement
  * appropriate doXXX methods and overwrite the
- * {@link #mayService(HttpServletRequest, HttpServletResponse)} method to
+ * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to
  * dispatch to the doXXX methods as appropriate and overwrite the
- * {@link #getAllowedRequestMethods(Set)} to add the new method names.
+ * {@link #getAllowedRequestMethods(Map)} to add the new method names.
  * <p>
  * Please note, that this base class is intended for applications where data is
  * only read. As such, this servlet by itself does not support the <em>POST</em>,
@@ -350,10 +351,10 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * @param res The Servlet response
      * @throws ServletException If the request is not a HTTP request or
      *             forwarded from the
-     *             {@link #service(HttpServletRequest, HttpServletResponse)}
+     *             {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             called.
      * @throws IOException Forwarded from the
-     *             {@link #service(HttpServletRequest, HttpServletResponse)}
+     *             {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             called.
      */
     public void service(ServletRequest req, ServletResponse res)
