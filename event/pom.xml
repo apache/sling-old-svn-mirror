@@ -75,7 +75,7 @@
                             SLING-INF/nodetypes/event.cnd
                         </Sling-Nodetypes>
                         <Sling-Namespaces>
-                            sling-event=http://sling.apache.org/jcr/event/1.0
+                            slingevent=http://sling.apache.org/jcr/event/1.0
                         </Sling-Namespaces>
                     </instructions>
                 </configuration>
