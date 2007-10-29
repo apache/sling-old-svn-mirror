@@ -19,18 +19,43 @@
 package org.apache.sling.api;
 
 /**
- * The <code>SlingConstants</code> interface provides some symbolic constants for
- * well known constant strings in Sling. Even though these constants will never
- * change, it is recommended that applications refer to the symbolic constants
- * instead of code the strings themselves.
+ * The <code>SlingConstants</code> interface provides some symbolic constants
+ * for well known constant strings in Sling. Even though these constants will
+ * never change, it is recommended that applications refer to the symbolic
+ * constants instead of code the strings themselves.
  */
 public class SlingConstants {
 
     /**
+     * The namespace prefix used throughout Sling (value is "sling").
+     * <p>
+     * The actual use depends on the environment. For example a
+     * {@link org.apache.sling.api.resource.ResourceResolver} using a JCR
+     * repository may name Sling node types and items using namespaces mapped to
+     * this prefix. A JSP tag library for Sling may use this prefix as the
+     * namespace prefix for its tags.
+     */
+    public static final String NAMESPACE_PREFIX = "sling";
+
+    /**
+     * The namespace URI prefix to be used by Sling projects to define
+     * namespaces (value is "http://sling.apache.org/").
+     * <p>
+     * The actual namespace URI depends on the environment. For example a
+     * {@link org.apache.sling.api.resource.ResourceResolver} using a JCR
+     * repository may define its namespace as
+     * <code><em>NAMESPACE_URI_ROOT + "jcr/sling/1.0"</em></code>. A JSP tag library for
+     * Sling may define its namespace as
+     * <code><em>NAMESPACE_URI_ROOT + "taglib/sling/1.0"</em></code>.
+     */
+    public static final String NAMESPACE_URI_ROOT = "http://sling.apache.org/";
+
+    /**
      * The name of the request attribute containing the <code>Servlet</code>
      * which included the servlet currently being active (value is
-     * "org.apache.sling.api.include.servlet"). This attribute is <code>null</code>
-     * if the current servlet is the servlet handling the client request.
+     * "org.apache.sling.api.include.servlet"). This attribute is
+     * <code>null</code> if the current servlet is the servlet handling the
+     * client request.
      * <p>
      * The type of the attribute value is <code>javax.servlet.Servlet</code>.
      */
@@ -39,9 +64,10 @@ public class SlingConstants {
     /**
      * The name of the request attribute containing the <code>Resource</code>
      * underlying the <code>Servlet</code> which included the servlet
-     * currently being active (value is "org.apache.sling.api.include.resource").
-     * This attribute is <code>null</code> if the current servlet is the
-     * servlet handling the client request.
+     * currently being active (value is
+     * "org.apache.sling.api.include.resource"). This attribute is
+     * <code>null</code> if the current servlet is the servlet handling the
+     * client request.
      * <p>
      * The type of the attribute value is
      * <code>org.apache.sling.api.resource.Resource</code>.
