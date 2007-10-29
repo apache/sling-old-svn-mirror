@@ -27,6 +27,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.request.RequestPathInfo;
@@ -65,6 +66,10 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
 
     public RequestDispatcher getRequestDispatcher(Resource resource) {
         return getSlingRequest().getRequestDispatcher(resource);
+    }
+
+    public RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
+        return getSlingRequest().getRequestDispatcher(resource, options);
     }
 
     public RequestParameter getRequestParameter(String name) {
