@@ -24,6 +24,7 @@ import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestDispatcherOptions;
 
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
@@ -64,8 +65,14 @@ public interface SlingScriptHelper {
      * </pre>
      *
      * @param path The path to the resource to include.
+     * @param options influence the rendering of the included Resource            
      * @throws ServletException Forwarded from including the resource
      * @throws IOException Forwarded from including the resource
+     */
+    void include(String path,RequestDispatcherOptions options) throws ServletException, IOException;
+
+    /** Same as {@link #include(String,RequestDispatcherOptions)}, but using 
+     *  empty options.
      */
     void include(String path) throws ServletException, IOException;
 }
