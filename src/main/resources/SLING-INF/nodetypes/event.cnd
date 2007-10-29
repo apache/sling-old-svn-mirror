@@ -17,33 +17,33 @@
 //  under the License.
 //
 
-<event = 'http://sling.apache.org/jcr/event/1.0'>
+<sling-event = 'http://sling.apache.org/jcr/event/1.0'>
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 
-[event:Events] > nt:base, mix:lockable
-  + * (event:Event)
+[sling-event:Events] > nt:base, mix:lockable
+  + * (sling-event:Event)
 
-[event:Event] > nt:base
-  - event:topic (string)
-  - event:application (string)
-  - event:created (date)
-  - event:properties (binary)
+[sling-event:Event] > nt:base
+  - sling-event:topic (string)
+  - sling-event:application (string)
+  - sling-event:created (date)
+  - sling-event:properties (binary)
   
-[event:Jobs] > event:Events, mix:lockable
-  + * (event:Job)
+[sling-event:Jobs] > sling-event:Events, mix:lockable
+  + * (sling-event:Job)
   
-[event:Job] > event:Event, mix:lockable
-  - event:processor (string)
-  - event:active (boolean)
-  - event:id (string)
-  - event:finished (date)
+[sling-event:Job] > sling-event:Event, mix:lockable
+  - sling-event:processor (string)
+  - sling-event:active (boolean)
+  - sling-event:id (string)
+  - sling-event:finished (date)
 
-[event:TimedEvents] > event:Events, mix:lockable
- + * (event:TimedEvent)
+[sling-event:TimedEvents] > sling-event:Events, mix:lockable
+ + * (sling-event:TimedEvent)
  
-[event:TimedEvent] > event:Event
-  - event:processor (string)
-  - event:id (string)
+[sling-event:TimedEvent] > sling-event:Event
+  - sling-event:processor (string)
+  - sling-event:id (string)
 
   
