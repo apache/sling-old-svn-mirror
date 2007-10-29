@@ -62,7 +62,7 @@ public interface ResourceResolver {
      *            which are resolved by this method. If the path is relative,
      *            that is the first character is not a slash, a
      *            <code>ResourceNotFoundException</code> is thrown.
-     * @return The <code>Content</code> object loaded from the path.
+     * @return The <code>Resource</code> object loaded from the path.
      * @throws java.security.AccessControlException if an item exists at the
      *             <code>path</code> but the session of this resource manager
      *             has no read access to the item.
@@ -95,7 +95,7 @@ public interface ResourceResolver {
      *            specifiers like <code>.</code> (current location) and
      *            <code>..</code> (parent location), which are resolved by
      *            this method.
-     * @return The <code>Content</code> object loaded from the path.
+     * @return The <code>Resource</code> object loaded from the path.
      * @throws java.security.AccessControlException if an item exists at the
      *             <code>path</code> but the session of this resource manager
      *             has no read access to the item.
@@ -109,18 +109,18 @@ public interface ResourceResolver {
             throws ResourceNotFoundException, SlingException;
 
     /**
-     * Returns an <code>Iterator</code> of {@link Content} objects loaded from
-     * the children of the given <code>content</code>.
+     * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
+     * the children of the given <code>Resource</code>.
      * <p>
      * This specification does not define what the term "child" means. This is
      * left to the implementation to define. For example an implementation
      * reading content from a Java Content Repository, the children could be the
-     * {@link Content} objects loaded from child items of the
-     * <code>javax.jcr.Item</code> of the given <code>content</code>.
+     * {@link Resource} objects loaded from child items of the
+     * <code>Item</code> of the given <code>Resource</code>.
      *
-     * @param content The {@link Content content object} whose children are
+     * @param parent The {@link Resource Resource} whose children are
      *            requested. If <code>null</code> the children of this
-     *            request's content (see {@link #getContent()}) are returned.
+     *            request's Resource are returned.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is
      *             <code>null</code>.
