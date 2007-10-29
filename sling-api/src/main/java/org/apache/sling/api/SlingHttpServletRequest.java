@@ -26,6 +26,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.request.RequestPathInfo;
@@ -143,14 +144,20 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * <code>RequestDispatcher</code> object can be used to include the
      * resource in a response.
      * <p>
-     * This method returns <code>null</code> if a
+     * Returns <code>null</code> if a
      * <code>RequestDispatcher</code> cannot be returned for any reason.
      *
      * @param resource The {@link Resource} instance whose response content may
      *            be included by the returned dispatcher.
+     * @param options influence the rendering of the included Resource            
      * @return a <code>RequestDispatcher</code> object that acts as a wrapper
      *         for the <code>resource</code> or <code>null</code> if an
-     *         error occurrs preparing the dispatcher.
+     *         error occurs preparing the dispatcher.
+     */
+    RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions options);
+    
+    /** Same as {@link #getRequestDispatcher(Resource,RequestDispatcherOptions)} but using
+     *  empty options.
      */
     RequestDispatcher getRequestDispatcher(Resource resource);
 
