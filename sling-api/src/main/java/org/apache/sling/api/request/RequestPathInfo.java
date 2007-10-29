@@ -23,8 +23,8 @@ package org.apache.sling.api.request;
  * <p id="decomp">
  * <b>Decomposition of a Request URL</b>
  * <ol>
- * <li>{@link Content#getPath() content path} - The longest substring of the
- * request URI resolving to a {@link Content} object such that the content path
+ * <li>{@link #getPath() content path} - The longest substring of the
+ * request URI resolving to a {@link org.apache.sling.api.resource.Resource} object such that the content path
  * is either the complete request URI the next character in the request URI
  * after the content path is either a dot (<code>.</code>) or a slash (<code>/</code>).
  * <li>{@link #getSelectors() selectors} - If the first character in the
@@ -164,7 +164,6 @@ public interface RequestPathInfo {
      * href="#decomp">Decomposition of a Request URL</a> above.
      *
      * @see #getSelectorString()
-     * @see #getSelector(int)
      */
     String[] getSelectors();
 
@@ -176,7 +175,6 @@ public interface RequestPathInfo {
      * href="#decomp">Decomposition of a Request URL</a> above.
      *
      * @see #getSelectors()
-     * @see #getSelector(int)
      */
     String getSelectorString();
 
