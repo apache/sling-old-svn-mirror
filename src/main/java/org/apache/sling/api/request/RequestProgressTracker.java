@@ -34,7 +34,7 @@ import java.util.Iterator;
  * {@link #log(String)} and {@link #log(String, Object...)} methods.
  * <li>Ability to measure and track processing times of parts of request
  * processing through the {@link #startTimer(String)},
- * {@link #logTimer(String)} ahd {@link #logTimer(String, String, Object...)}
+ * {@link #logTimer(String)} and {@link #logTimer(String, String, Object...)}
  * methods.
  * <li>Dumping the recording messages through the {@link #dump(PrintWriter)}
  * method.
@@ -57,10 +57,10 @@ import java.util.Iterator;
  * starting time of the named timer and adds a tracking entry with the timer
  * name as the message.
  * <p>
- * To record the number of milliseconds ellapsed since a timer has been started,
+ * To record the number of milliseconds elapsed since a timer has been started,
  * the {@link #logTimer(String)} or {@link #logTimer(String, String, Object...)}
  * method may be called. This method logs a tracking entry with a message
- * consisting of the name of the timer and the number of milliseconds ellapsed
+ * consisting of the name of the timer and the number of milliseconds elapsed
  * since the timer was last {@link #startTimer(String) started}. The
  * <code>logTimer</code> methods may be called multiple times to record
  * several timed steps.
@@ -93,20 +93,20 @@ public interface RequestProgressTracker {
      * Starts a named timer. If a timer of the same name already exists, it is
      * reset to the current time.
      */
-    public void startTimer(String name);
+    public void startTimer(String timerName);
 
     /**
      * Logs an entry with the message set to the name of the timer and the
-     * number of milliseconds ellapsed since the timer start.
+     * number of milliseconds elapsed since the timer start.
      */
-    public void logTimer(String name);
+    public void logTimer(String timerName);
 
     /**
      * Logs an entry with the message constructed from the given
      * <code>MessageFormat</code> pattern evaluated using the given arguments
-     * and the number of milliseconds ellapsed since the timer start.
+     * and the number of milliseconds elapsed since the timer start.
      */
-    public void logTimer(String name, String format, Object... args);
+    public void logTimer(String timerName, String format, Object... args);
 
     /**
      * Returns an <code>Iterator</code> of tracking entries.
