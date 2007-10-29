@@ -24,19 +24,19 @@ package org.apache.sling.event.impl;
  */
 public abstract class EventHelper {
 
-    public static final String NODE_PROPERTY_TOPIC = "sling-event:topic";
-    public static final String NODE_PROPERTY_APPLICATION = "sling-event:application";
-    public static final String NODE_PROPERTY_CREATED = "sling-event:created";
-    public static final String NODE_PROPERTY_PROPERTIES = "sling-event:properties";
-    public static final String NODE_PROPERTY_PROCESSOR = "sling-event:processor";
-    public static final String NODE_PROPERTY_JOBID = "sling-event:id";
-    public static final String NODE_PROPERTY_ACTIVE = "sling-event:active";
-    public static final String NODE_PROPERTY_FINISHED = "sling-event:finished";
+    public static final String NODE_PROPERTY_TOPIC = "slingevent:topic";
+    public static final String NODE_PROPERTY_APPLICATION = "slingevent:application";
+    public static final String NODE_PROPERTY_CREATED = "slingevent:created";
+    public static final String NODE_PROPERTY_PROPERTIES = "slingevent:properties";
+    public static final String NODE_PROPERTY_PROCESSOR = "slingevent:processor";
+    public static final String NODE_PROPERTY_JOBID = "slingevent:id";
+    public static final String NODE_PROPERTY_ACTIVE = "slingevent:active";
+    public static final String NODE_PROPERTY_FINISHED = "slingevent:finished";
 
-    public static final String EVENTS_NODE_TYPE = "sling-event:Events";
-    public static final String EVENT_NODE_TYPE = "sling-event:Event";
-    public static final String JOBS_NODE_TYPE = "sling-event:Jobs";
-    public static final String JOB_NODE_TYPE = "sling-event:Job";
-    public static final String TIMED_EVENTS_NODE_TYPE = "sling-event:TimedEvents";
-    public static final String TIMED_EVENT_NODE_TYPE = "sling-event:TimedEvent";
+    public static final String EVENTS_NODE_TYPE = "slingevent:Events";
+    public static final String EVENT_NODE_TYPE = "slingevent:Event";
+    public static final String JOBS_NODE_TYPE = "slingevent:Jobs";
+    public static final String JOB_NODE_TYPE = "slingevent:Job";
+    public static final String TIMED_EVENTS_NODE_TYPE = "slingevent:TimedEvents";
+    public static final String TIMED_EVENT_NODE_TYPE = "slingevent:TimedEvent";
 }
