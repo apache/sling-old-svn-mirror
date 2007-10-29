@@ -142,7 +142,7 @@ public abstract class AbstractSlingRepository
     }
 
     /**
-     * @see org.apache.sling.core.jcr.SlingRepository#getDefaultWorkspace()
+     * @see org.apache.sling.jcr.SlingRepository#getDefaultWorkspace()
      */
     public String getDefaultWorkspace() {
         return this.defaultWorkspace;
@@ -150,7 +150,7 @@ public abstract class AbstractSlingRepository
 
     /**
      * Logs in as an anonymous user. This implementation simply returns the
-     * result of calling {@link #login}
+     * result of calling {@link #login(Credentials, String)}
      */
     public Session login() throws LoginException, RepositoryException {
         return this.login(null, null);
