@@ -112,6 +112,9 @@
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/BaseContent.cnd
                         </Sling-Nodetypes>
+                        <Sling-Namespaces>
+                            sling=http://jackrabbit.apache.org/sling/1.0
+                        </Sling-Namespaces>
                     </instructions>
                 </configuration>
             </plugin>
