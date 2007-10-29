@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api;
+package org.apache.sling.api.wrappers;
 
 import javax.servlet.http.HttpServletResponseWrapper;
+
+import org.apache.sling.api.SlingHttpServletResponse;
 
 /**
  * The <code>SlingHttpServletResponseWrapper</code> class is a default wrapper
