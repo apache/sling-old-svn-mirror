@@ -33,10 +33,10 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.SlingHttpServletResponseWrapper;
-import org.apache.sling.api.exceptions.HttpStatusCodeException;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
 /**
  * Helper base class for read-only Servlets used in Sling. This base class is
