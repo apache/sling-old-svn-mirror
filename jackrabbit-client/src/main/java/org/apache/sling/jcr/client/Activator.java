@@ -88,7 +88,7 @@ public class Activator implements BundleActivator {
             }
 
             // we have no configuration, create from default settings
-            Hashtable props = new Hashtable();
+            Hashtable<String, Object> props = new Hashtable<String, Object>();
             props.put(SLING_CONTEXT, slingContext);
             props.put(SlingClientRepository.REPOSITORY_NAME, "crx");
             props.put(Context.PROVIDER_URL, "http://jcr.day.com");
