@@ -41,7 +41,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
  * through a <code>RequestDispatcher</code> is handled by the Sling Framework.
  * <p>
  * The servlet resolver service is available from the
- * {@link org.apache.sling.api.helpers.ServiceLocator} using the interface class as
+ * {@link org.apache.sling.api.services.ServiceLocator} using the interface class as
  * parameter.
  */
 public interface SlingScriptResolver {

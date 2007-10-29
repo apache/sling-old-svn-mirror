@@ -191,10 +191,6 @@ public interface ResourceManager extends ResourceResolver {
      * <p>
      * This method has no effect if there are no unsaved changes, that is if the
      * {@link #hasChanges()} method returns <code>false</code>.
-     *
-     * @throws SlingException If an error occurrs rolling back the changes. The
-     *             exception should provide access to any causing throwable the
-     *             <code>getCause</code> method.
      */
     void rollback();
 
