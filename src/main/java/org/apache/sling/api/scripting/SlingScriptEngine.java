@@ -21,7 +21,7 @@ package org.apache.sling.api.scripting;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.sling.api.exceptions.SlingException;
+import org.apache.sling.api.SlingException;
 
 /**
  * The <code>SlingScriptEngine</code> interface defines the API to be
@@ -74,6 +74,13 @@ public interface SlingScriptEngine {
      * the response output stream instead of the writer.
      */
     static final String OUT = "out";
+
+    /**
+     * The name of the global scripting variable providing a logger which may be
+     * used for logging purposes (value is "log"). The logger provides the API
+     * defined by the SLF4J <code>org.slf4j.Logger</code> interface.
+     */
+    static final String LOG = "log";
 
     /**
      * A list of script file name extensions identifying scripts which may be

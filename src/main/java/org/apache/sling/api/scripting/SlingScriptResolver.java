@@ -16,8 +16,8 @@
  */
 package org.apache.sling.api.scripting;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.exceptions.SlingException;
 
 /**
  * The <code>ScriptResolver</code> interface defines the API for a service
@@ -59,7 +59,7 @@ public interface SlingScriptResolver {
             throws SlingException;
 
     /**
-     * Resolves the given name to a {@link SlingScript}.
+     * Finds the given name to a {@link SlingScript}.
      * <p>
      * The semantic meaning of the name is implementation specific: It may be an
      * absolute path to a JCR respository Item providing the script source or it
@@ -72,5 +72,5 @@ public interface SlingScriptResolver {
      *         <code>null</code> otherwise.
      * @throws SlingException If an error occurrs trying to resolve the name.
      */
-    SlingScript resolveScript(String path) throws SlingException;
+    SlingScript findScript(String name) throws SlingException;
 }
