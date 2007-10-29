@@ -134,7 +134,7 @@ public abstract class AbstractSlingRepository
             int maxActiveSessionsWait = this.getIntProperty(properties,
                 PARAM_MAX_ACTIVE_SESSIONS_WAIT);
 
-            this.poolManager = new SessionPoolManager(this.getDelegatee(),
+            this.poolManager = new SessionPoolManager(this.getDelegatee(), this.loader,
                 maxActiveSessions, maxActiveSessionsWait, maxIdleSessions);
         }
 
@@ -354,6 +354,8 @@ public abstract class AbstractSlingRepository
             case BundleEvent.UNINSTALLED:
                 this.loader.unregisterBundle(event.getBundle());
                 break;
+            case BundleEvent.UPDATED:
+                this.loader.updateBundle(event.getBundle());
         }
     }
 

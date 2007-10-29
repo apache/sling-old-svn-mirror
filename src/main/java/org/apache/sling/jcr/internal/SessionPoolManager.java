@@ -44,9 +44,11 @@ import org.apache.sling.jcr.SlingRepository;
  */
 public class SessionPoolManager {
 
-    private Repository repository;
+    private final Repository repository;
 
-    private Map<String, SessionPool> sessionPools;
+    private final Map<String, SessionPool> sessionPools;
+
+    private final NamespaceMapper namespaceMapper;
 
     /**
      * The maximum number of active sessions per session pool, that is per user.
@@ -63,8 +65,11 @@ public class SessionPoolManager {
      */
     private int poolMaxActiveSessionsWait;
 
-    public SessionPoolManager(Repository repository, int maxActiveSessions,
-            int maxActiveSessionsWait, int maxIdleSessions) {
+    public SessionPoolManager(Repository repository,
+            NamespaceMapper mapper,
+            int maxActiveSessions,
+            int maxActiveSessionsWait,
+            int maxIdleSessions) {
 
         this.repository = repository;
         this.sessionPools = new HashMap<String, SessionPool>();
@@ -75,6 +80,8 @@ public class SessionPoolManager {
         this.poolMaxActiveSessions = maxActiveSessions;
         this.poolMaxActiveSessionsWait = maxActiveSessionsWait;
         this.poolMaxIdleSessions = maxIdleSessions;
+
+        this.namespaceMapper = mapper;
     }
 
     public void dispose() {
@@ -101,22 +108,31 @@ public class SessionPoolManager {
             throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
 
+        Session result = null;
+
         // get the session pool for the credentials
         if (credentials instanceof SimpleCredentials) {
             SimpleCredentials simple = (SimpleCredentials) credentials;
             SessionPool pool = this.getPool(simple);
             if (pool != null) {
-                return pool.acquireSession(simple, workspace);
+                result = pool.acquireSession(simple, workspace);
             }
         }
 
-        // direct session, if no pool is available for the credentials
-        return this.getRepository().login(credentials, workspace);
+        if ( result == null ) {
+            // direct session, if no pool is available for the credentials
+            result = this.getRepository().login(credentials, workspace);
+        }
+        if ( result != null && this.namespaceMapper != null ) {
+            this.namespaceMapper.defineNamespacePrefixes(result);
+        }
+        return result;
     }
 
     Session impersonate(Session baseSession, Credentials credentials)
             throws LoginException, NoSuchWorkspaceException,
             RepositoryException {
+        Session result = null;
 
         // assert base session is live
         if (!baseSession.isLive()) {
@@ -127,12 +143,19 @@ public class SessionPoolManager {
         if (credentials instanceof SimpleCredentials) {
             SessionPool pool = this.getPool((SimpleCredentials) credentials);
             if (pool != null) {
-                return pool.acquireSession(baseSession, credentials);
+                result = pool.acquireSession(baseSession, credentials);
             }
         }
 
-        // no pool available for the credentials, use direct session
-        return baseSession.impersonate(credentials);
+        if ( result == null ) {
+            // no pool available for the credentials, use direct session
+            result = baseSession.impersonate(credentials);
+        }
+
+        if ( result != null && this.namespaceMapper != null ) {
+            this.namespaceMapper.defineNamespacePrefixes(result);
+        }
+        return result;
     }
 
     // ---------- Session Pooling ----------------------------------------------
