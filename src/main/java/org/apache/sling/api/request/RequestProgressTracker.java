@@ -110,6 +110,7 @@ public interface RequestProgressTracker {
 
     /**
      * Returns an <code>Iterator</code> of tracking entries.
+     * If there are no messages <code>null</code> is returned.
      */
     Iterator<String> getMessages();
 
