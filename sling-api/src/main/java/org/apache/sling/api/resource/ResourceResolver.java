@@ -19,10 +19,11 @@
 package org.apache.sling.api.resource;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.ServletRequest;
 
-import org.apache.sling.api.exceptions.SlingException;
+import org.apache.sling.api.SlingException;
 
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
@@ -128,4 +129,46 @@ public interface ResourceResolver {
      */
     Iterator<Resource> listChildren(Resource parent) throws SlingException;
 
+    /**
+     * Searches for resources using the given query formulated in the given
+     * language.
+     * <p>
+     * The semantic meaning of the query and language depend on the actual
+     * implementation and storage used for the resources. For JCR repository
+     * being used as storage, the query and lanuage parameters are used to
+     * create a JCR <code>Query</code> through the <code>QueryManager</code>.
+     * The result returned is then based on the <code>NodeIterator</code>
+     * provided by the query result.
+     *
+     * @param query The query string to use to find the resources.
+     * @param language The language in which the query is formulated.
+     * @return An <code>Iterator</code> of {@link Resource} objects matching
+     *         the query.
+     * @throws SlingException If an error occurrs querying for the resources.
+     */
+    Iterator<Resource> findResources(String query, String language)
+            throws SlingException;
+
+    /**
+     * Queries the storage using the given query formulated in the given
+     * language.
+     * <p>
+     * The semantic meaning of the query and language depend on the actual
+     * implementation and storage used for the resources. For JCR repository
+     * being used as storage, the query and lanuage parameters are used to
+     * create a JCR <code>Query</code> through the <code>QueryManager</code>.
+     * The result returned is then based on the <code>RowIterator</code>
+     * provided by the query result. The map returned for each row is indexed by
+     * the column name and the column value is the JCR <code>Value</code>
+     * object converted into the respective Java object, such as
+     * <code>Boolean</code> for a value of property type <em>Boolean</em>.
+     *
+     * @param query The query string to use to find the resources.
+     * @param language The language in which the query is formulated.
+     * @return An <code>Iterator</code> of <code>Map</code> instances
+     *         providing access to the query result.
+     * @throws SlingException If an error occurrs querying for the resources.
+     */
+    Iterator<Map<String, Object>> queryResources(String query, String language)
+            throws SlingException;
 }
