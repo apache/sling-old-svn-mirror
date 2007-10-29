@@ -18,7 +18,7 @@
  */
 package org.apache.sling.api.services;
 
-import org.apache.sling.api.exceptions.SlingException;
+import org.apache.sling.api.SlingException;
 
 /** Thrown when a required service is not found */
 public class ServiceNotAvailableException extends SlingException {

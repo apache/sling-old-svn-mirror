@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.api.exceptions;
+package org.apache.sling.api;
 
 import java.io.IOException;
 
