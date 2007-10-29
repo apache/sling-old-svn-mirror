@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.exceptions.HttpStatusCodeException;
+import org.apache.sling.api.HttpStatusCodeException;
 
 /**
  * The <code>ResourceNotFoundException</code> is a special

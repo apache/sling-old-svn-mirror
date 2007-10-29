@@ -18,7 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
-import org.apache.sling.api.exceptions.SlingException;
+import org.apache.sling.api.SlingException;
 
 /**
  * The <code>ResourceManager</code> interface extends the
