@@ -68,12 +68,6 @@
 
     <build>
         <plugins>
-            <!-- Create the mapping file for the Content interface -->
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-jcrocm-plugin</artifactId>
-            </plugin>
-
             <!-- Support to install in Sling instances and deploy to Sling OBR -->
             <plugin>
                 <groupId>org.apache.sling</groupId>
