@@ -434,7 +434,6 @@ class SessionPool {
      * @param maxActiveWait The number of seconds to wait. This method has no
      *          effect if this value is less than or equal to zero.
      *
-     * @see
      */
     public void setMaxActiveSessionsWait(int maxActiveWait) {
         if (maxActiveWait > 0) {

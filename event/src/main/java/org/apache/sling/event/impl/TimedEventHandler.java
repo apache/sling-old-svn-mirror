@@ -189,11 +189,10 @@ public class TimedEventHandler
                         if ( foundNode == null ) {
                             final Node eventNode = writeEvent(event);
                             return eventNode.lock(false, true);
-                        } else {
-                            // node is already in repository, this is an error as we don't support updates
-                            // of timed events!
-                            logger.error("Timed event is already scheduled: " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + " (" + scheduleInfo.getJobId() + ")");
                         }
+                        // node is already in repository, this is an error as we don't support updates
+                        // of timed events!
+                        logger.error("Timed event is already scheduled: " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + " (" + scheduleInfo.getJobId() + ")");
                     }
                     return null;
                 }
@@ -342,7 +341,7 @@ public class TimedEventHandler
      */
     public void execute(JobContext context) {
         final String topic = (String) context.getConfiguration().get("topic");
-        final Dictionary properties = (Dictionary) context.getConfiguration().get("config");
+        final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get("config");
         if ( this.eventAdmin != null ) {
             try {
                 this.eventAdmin.postEvent(new Event(topic, properties));

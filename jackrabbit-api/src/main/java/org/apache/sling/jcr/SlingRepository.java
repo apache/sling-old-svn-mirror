@@ -51,8 +51,8 @@ public interface SlingRepository extends Repository {
      * be used to handle client requests of whatever kinds. To handle client
      * requests, either an anonymous session retrieved by
      * {@link #loginAnonymous()} or a regular authenticated session retrieved
-     * through {@link #login(Credentials, String)} or
-     * {@link #impersonate(Session, String)} must be used.</i></b>
+     * through {@link #login(javax.jcr.Credentials, String)} or
+     * {@link Session#impersonate(javax.jcr.Credentials)} must be used.</i></b>
      *
      * @param workspace The name of the workspace to which to get an
      *            administrative session. If <code>null</code> the

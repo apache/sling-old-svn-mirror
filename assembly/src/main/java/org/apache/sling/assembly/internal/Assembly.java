@@ -153,7 +153,7 @@ class Assembly {
      * the {@link BundleSpec#getCommonLocation() common location} of the
      * respective bundle specification.
      */
-    private Map bundles;
+    private Map<String, InstalledBundle> bundles;
 
     /**
      * The current state of this instance. This is one of the
@@ -341,7 +341,7 @@ class Assembly {
                 this.bundleSpecs = new BundleSpec[0];
             } else {
                 spec = spec.trim();
-                List specs = new ArrayList();
+                List<BundleSpec> specs = new ArrayList<BundleSpec>();
                 boolean quoted = false;
                 int start = 0;
                 for (int i = 0; i < spec.length(); i++) {
@@ -367,7 +367,7 @@ class Assembly {
                 if (start < spec.length()) {
                     specs.add(new BundleSpec(spec.substring(start)));
                 }
-                this.bundleSpecs = (BundleSpec[]) specs.toArray(new BundleSpec[specs.size()]);
+                this.bundleSpecs = specs.toArray(new BundleSpec[specs.size()]);
             }
         }
 
@@ -394,9 +394,9 @@ class Assembly {
             return;
         }
 
-        Map resources = new HashMap();
+        Map<String, BundleSpec> resources = new HashMap<String, BundleSpec>();
 
-        Map bundles = this.getBundles();
+        Map<String, InstalledBundle> bundles = this.getBundles();
         BundleSpec[] bundleSpecs = this.getBundleSpecs();
         for (int i = 0; i < bundleSpecs.length; i++) {
             String loc = bundleSpecs[i].getCommonLocation();
@@ -444,8 +444,8 @@ class Assembly {
 
             this.addTemporaryRepositories(installer);
 
-            for (Iterator ei = resources.values().iterator(); ei.hasNext();) {
-                BundleSpec bundleSpec = (BundleSpec) ei.next();
+            for (Iterator<BundleSpec> ei = resources.values().iterator(); ei.hasNext();) {
+                BundleSpec bundleSpec = ei.next();
                 bundleSpec.install(this.bundle, installer);
             }
 
@@ -462,7 +462,7 @@ class Assembly {
             // loop through the bundles to find the ones, we have to start as
             // they are indirect dependencies
             for (int i=0; installedBundles != null && i < installedBundles.length; i++) {
-                BundleSpec bs = (BundleSpec) resources.get(installedBundles[i].getSymbolicName());
+                BundleSpec bs = resources.get(installedBundles[i].getSymbolicName());
                 if (bs != null) {
                     // declared bundle, register internally
                     InstalledBundle ib = new InstalledBundle(bs, installedBundles[i], this);
@@ -495,8 +495,8 @@ class Assembly {
         this.ensureInstalledBundles();
 
         // now make sure the bundles are marked started
-        for (Iterator ii = this.getBundles().values().iterator(); ii.hasNext();) {
-            InstalledBundle ib = (InstalledBundle) ii.next();
+        for (Iterator<InstalledBundle> ii = this.getBundles().values().iterator(); ii.hasNext();) {
+            InstalledBundle ib = ii.next();
             if (ib.getBundleSpec().isLinked()) {
                 Bundle bundle = ib.getBundle();
 
@@ -532,8 +532,8 @@ class Assembly {
         }
 
         // now make sure the bundles are marked started
-        for (Iterator ii = this.getBundles().values().iterator(); ii.hasNext();) {
-            InstalledBundle ib = (InstalledBundle) ii.next();
+        for (Iterator<InstalledBundle> ii = this.getBundles().values().iterator(); ii.hasNext();) {
+            InstalledBundle ib = ii.next();
             if (ib.getBundleSpec().isLinked()) {
                 Bundle bundle = ib.getBundle();
 
@@ -566,8 +566,8 @@ class Assembly {
         }
 
         // directly uninstall, not needed to go by stopped/unresolved
-        for (Iterator bi = this.getBundles().values().iterator(); bi.hasNext();) {
-            InstalledBundle ib = (InstalledBundle) bi.next();
+        for (Iterator<InstalledBundle> bi = this.getBundles().values().iterator(); bi.hasNext();) {
+            InstalledBundle ib = bi.next();
 
             ib.removeReferent(this);
             bi.remove();
@@ -615,22 +615,12 @@ class Assembly {
         }
     }
 
-    private Map getBundles() {
+    private Map<String, InstalledBundle> getBundles() {
         if (this.bundles == null) {
-            this.bundles = new HashMap();
+            this.bundles = new HashMap<String, InstalledBundle>();
         }
 
         return this.bundles;
-    }
-
-    private Bundle[] getInstalledBundles() {
-        Map bundles = this.getBundles();
-        Bundle[] installedBundles = new Bundle[bundles.size()];
-        int i = 0;
-        for (Iterator bi = bundles.values().iterator(); bi.hasNext();) {
-            installedBundles[i++] = ((InstalledBundle) bi.next()).getBundle();
-        }
-        return installedBundles;
     }
 
     private Bundle findBundle(String loc) {

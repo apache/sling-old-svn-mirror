@@ -525,7 +525,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, String, boolean)
+     * @see org.apache.sling.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, String, boolean)
      */
     public void finishedJob(Event job, String eventNodePath, String lockToken, boolean reschedule) {
         final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
@@ -633,14 +633,14 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.JobStatusProvider#getCurrentJobs(java.lang.String)
+     * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String)
      */
     public Collection<Event> getCurrentJobs(String topic) {
         return this.queryCurrentJobs(topic, true);
     }
 
     /**
-     * @see org.apache.sling.core.event.JobStatusProvider#scheduledJobs(java.lang.String)
+     * @see org.apache.sling.event.JobStatusProvider#scheduledJobs(java.lang.String)
      */
     public Collection<Event> scheduledJobs(String topic) {
         return this.queryCurrentJobs(topic, false);
