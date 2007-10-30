@@ -44,8 +44,9 @@ import org.apache.sling.api.services.ServiceLocator;
 public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
         implements SlingHttpServletRequest {
 
-    public SlingHttpServletRequestWrapper(SlingHttpServletRequest delegatee) {
-        super(delegatee);
+    /** Create a wrapper for the supplied wrappedRequest */
+    public SlingHttpServletRequestWrapper(SlingHttpServletRequest wrappedRequest) {
+        super(wrappedRequest);
     }
 
     /**
