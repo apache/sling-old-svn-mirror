@@ -18,10 +18,21 @@
  */
 package org.apache.sling.event.impl;
 
+import static org.junit.Assert.*;
+
+import java.util.Calendar;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+
+import org.apache.sling.event.EventUtil;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.runner.RunWith;
+import org.osgi.service.event.Event;
 
 @RunWith(JMock.class)
 public class DistributingEventHandlerTest extends AbstractRepositoryEventHandlerTest {
@@ -38,5 +49,43 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         return this.context;
     }
 
+    @org.junit.Test public void testWriteEvent() throws Exception {
+        final String topic = "write/event/test";
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("a property", "some value");
+        final Event e = new Event(topic, props);
+        this.handler.writeEvent(e);
 
+        final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
+        final NodeIterator iter = rootNode.getNodes();
+        iter.hasNext();
+        final Node eventNode = iter.nextNode();
+        assertEquals(topic, eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString());
+        assertEquals(handler.applicationId, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
+        assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
+        // as a starting point we just check if the properties property exists
+        assertTrue(eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES));
+
+        // now we remove the node to have a clean repo
+        eventNode.remove();
+        rootNode.save();
+    }
+
+    @org.junit.Test public void testWriteEventPlusAppId() throws Exception {
+        final String topic = "write/event/test";
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("a property", "some value");
+        // now we check if the application id is handled correctly
+        props.put(EventUtil.PROPERTY_APPLICATION, "foo");
+        this.handler.writeEvent(new Event(topic, props));
+        final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
+        final NodeIterator iter = rootNode.getNodes();
+        iter.hasNext();
+        final Node eventNode = iter.nextNode();
+        assertEquals(topic, eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString());
+        assertEquals(handler.applicationId, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
+        assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
+        // as a starting point we just check if the properties property exists
+        assertTrue(eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES));
+    }
 }
