@@ -1,0 +1,128 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.event.impl;
+
+import static org.junit.Assert.*;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.EventListenerIterator;
+
+import org.apache.sling.core.Constants;
+import org.apache.sling.jcr.SlingRepository;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.junit.runner.RunWith;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+
+@RunWith(JMock.class)
+public abstract class AbstractRepositoryEventHandlerTest {
+
+    protected AbstractRepositoryEventHandler handler;
+
+    protected static final String REPO_PATH = "/test/events";
+    protected static final String SLING_ID = "4711";
+    protected static final int CLEANUP_PERIOD = 10000;
+
+    protected static Session session;
+
+    protected abstract Mockery getMockery();
+
+    protected Dictionary<String, Object> getComponentConfig() {
+        final Dictionary<String, Object> config = new Hashtable<String, Object>();
+        config.put(AbstractRepositoryEventHandler.CONFIG_PROPERTY_REPO_PATH, REPO_PATH);
+        config.put(AbstractRepositoryEventHandler.CONFIG_PROPERTY_CLEANUP_PERIOD, CLEANUP_PERIOD);
+
+        return config;
+    }
+
+    @org.junit.BeforeClass public static void setupRepository() throws Exception {
+        RepositoryUtil.startRepository();
+        final SlingRepository repository = RepositoryUtil.getRepository();
+        session = repository.loginAdministrative(repository.getDefaultWorkspace());
+        assertTrue(RepositoryUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/event.cnd")));
+    }
+
+    @org.junit.AfterClass public static void shutdownRepository() throws Exception {
+        RepositoryUtil.stopRepository();
+    }
+
+    @org.junit.Before public void setup() throws Exception {
+        this.handler.repository = RepositoryUtil.getRepository();
+
+        // the event admin
+        final EventAdmin eventAdmin = this.getMockery().mock(EventAdmin.class);
+        this.handler.eventAdmin = eventAdmin;
+        this.getMockery().checking(new Expectations() {{
+            allowing(eventAdmin).postEvent(with(any(Event.class)));
+            allowing(eventAdmin).sendEvent(with(any(Event.class)));
+        }});
+
+        // lets set up the bundle context with the sling id
+        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
+        this.getMockery().checking(new Expectations() {{
+            allowing(bundleContext).getProperty(Constants.SLING_ID);
+            will(returnValue(SLING_ID));
+        }});
+
+        // lets set up the component configuration
+        final Dictionary<String, Object> componentConfig = this.getComponentConfig();
+
+        // lets set up the compnent context
+        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
+        this.getMockery().checking(new Expectations() {{
+            allowing(componentContext).getBundleContext();
+            will(returnValue(bundleContext));
+            allowing(componentContext).getProperties();
+            will(returnValue(componentConfig));
+        }});
+
+        this.handler.activate(componentContext);
+    }
+
+    @org.junit.After public void shutdown() throws Exception {
+        ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
+        this.handler.deactivate(componentContext);
+    }
+
+    @org.junit.Test public void testSetup() throws RepositoryException {
+        assertEquals(this.handler.applicationId, SLING_ID);
+        assertEquals(this.handler.cleanupPeriod, CLEANUP_PERIOD);
+        assertEquals(this.handler.repositoryPath, REPO_PATH);
+        assertNotNull(this.handler.session);
+        final EventListenerIterator iter = this.handler.session.getWorkspace().getObservationManager().getRegisteredEventListeners();
+        boolean found = false;
+        while ( !found && iter.hasNext() ) {
+            final javax.jcr.observation.EventListener listener = iter.nextEventListener();
+            found = (listener == this.handler);
+        }
+        assertTrue("Handler is not registered as event listener.", found);
+    }
+
+    @org.junit.Test public void testPathCreation() throws RepositoryException {
+        assertTrue(session.itemExists(REPO_PATH));
+    }
+}
