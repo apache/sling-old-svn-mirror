@@ -21,23 +21,23 @@ public interface Resource {
 
     /**
      * This resource's URI - for now that could be a JCR path, but having an URI
-     * makes it possible to use other data sources (not sure if we really need
-     * that though).
+     * makes it possible to use other data sources.
      */
     String getURI();
 
     /**
      * The resource type is meant to point to rendering/processing scripts,
      * editing dialogs, etc. It is usually a path in the repository, where
-     * scripts and other tools definitions are found.
+     * scripts and other tools definitions are found, but the 
+     * {@link ResourceResolver} is free to set this to any suitable value.
      */
     String getResourceType();
 
     /**
      * The raw data from the resource repository addressed by the
      * {@link #getURI() resource URI} or <code>null</code> if the resource URI
-     * does not actually address an item in a repository or if such data is
-     * available.
+     * does not actually address an item in a repository, or if such data is
+     * not available.
      * <p>
      * For a JCR Repository based implementation of this interface, the returned
      * object will be the <code>javax.jcr.Item</code> addressed by the
@@ -49,7 +49,8 @@ public interface Resource {
     /**
      * Returns the object mapped from the {@link #getRawData() raw data} or
      * <code>null</code>, if the item cannot be mapped or mapping is not
-     * supported by the implementation.
+     * supported by the implementation. In a JCR-based implementation, the
+     * Jackrabbit OCM mapping would be used to provide this object.
      */
     Object getObject();
 
