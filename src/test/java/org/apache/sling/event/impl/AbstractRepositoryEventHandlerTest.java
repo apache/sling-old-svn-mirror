@@ -23,6 +23,8 @@ import static org.junit.Assert.*;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListenerIterator;
@@ -104,6 +106,14 @@ public abstract class AbstractRepositoryEventHandlerTest {
     }
 
     @org.junit.After public void shutdown() throws Exception {
+        // delete all child nodes to get a clean repository again
+        final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
+        final NodeIterator iter = rootNode.getNodes();
+        while ( iter.hasNext() ) {
+            final Node child = iter.nextNode();
+            child.remove();
+        }
+        rootNode.save();
         ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
         this.handler.deactivate(componentContext);
     }
