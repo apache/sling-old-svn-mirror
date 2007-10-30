@@ -65,10 +65,6 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
         // as a starting point we just check if the properties property exists
         assertTrue(eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES));
-
-        // now we remove the node to have a clean repo
-        eventNode.remove();
-        rootNode.save();
     }
 
     @org.junit.Test public void testWriteEventPlusAppId() throws Exception {
@@ -87,9 +83,5 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
         // as a starting point we just check if the properties property exists
         assertTrue(eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES));
-
-        // now we remove the node to have a clean repo
-        eventNode.remove();
-        rootNode.save();
     }
 }
