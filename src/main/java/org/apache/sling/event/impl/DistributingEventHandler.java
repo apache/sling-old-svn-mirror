@@ -44,7 +44,7 @@ public class DistributingEventHandler
     extends AbstractRepositoryEventHandler {
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#cleanUpRepository()
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
      */
     protected void cleanUpRepository() {
         // we create an own session for concurrency issues
@@ -147,7 +147,7 @@ public class DistributingEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#addEventProperties(Node, java.util.Dictionary)
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#addEventProperties(javax.jcr.Node, java.util.Dictionary)
      */
     protected void addEventProperties(Node eventNode, Dictionary<String, Object> properties)
     throws RepositoryException {
