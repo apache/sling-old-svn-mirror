@@ -16,8 +16,6 @@
  */
 package org.apache.sling.api.resource;
 
-import javax.jcr.Item;
-
 /** Resources are pieces of content on which Sling acts */
 public interface Resource {
 
@@ -36,18 +34,24 @@ public interface Resource {
     String getResourceType();
 
     /**
-     * The JCR item addressed by the {@link #getURI() resource URI} or
-     * <code>null</code> if the resource URI does not actually address an item
-     * in a repository.
+     * The raw data from the resource repository addressed by the
+     * {@link #getURI() resource URI} or <code>null</code> if the resource URI
+     * does not actually address an item in a repository or if such data is
+     * available.
+     * <p>
+     * For a JCR Repository based implementation of this interface, the returned
+     * object will be the <code>javax.jcr.Item</code> addressed by the
+     * resource URI. For a filesystem based implementation it may be the
+     * respective <code>java.io.File</code>.
      */
-    Item getItem();
+    Object getRawData();
 
     /**
-     * Returns the object mapped from the {@link #getItem() item} or
+     * Returns the object mapped from the {@link #getRawData() raw data} or
      * <code>null</code>, if the item cannot be mapped or mapping is not
      * supported by the implementation.
      */
-    Object getData();
+    Object getObject();
 
     /**
      * Returns the metadata of this resource. The concrete data contained in the
