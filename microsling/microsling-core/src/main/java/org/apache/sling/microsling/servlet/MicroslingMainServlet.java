@@ -19,6 +19,7 @@ package org.apache.sling.microsling.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -55,6 +56,15 @@ public class MicroslingMainServlet extends GenericServlet {
 
     private static final long serialVersionUID = 1L;
 
+    // the name of init-param providing the page to redirect / to
+    private static final String INIT_PARAM_WELCOME_URL = "welcome-url";
+
+    // The default page to redirect / to if not configured in web.xml
+    private static final String DEFAULT_INDEX_PAGE = "index.html";
+
+    // The page to redirect /, configured from welcome-url init-param
+    private String indexPage = DEFAULT_INDEX_PAGE;
+
     private MicroSlingFilterHelper filterChain;
 
     private MicroslingServiceLocator serviceLocator;
@@ -68,6 +78,12 @@ public class MicroslingMainServlet extends GenericServlet {
     @Override
     public void init() throws ServletException {
         super.init();
+
+        // define the indexPage
+        indexPage = getServletConfig().getInitParameter(INIT_PARAM_WELCOME_URL);
+        if (indexPage == null) {
+            indexPage = DEFAULT_INDEX_PAGE;
+        }
 
         // this must be first as services may register later
         initServiceLocator();
@@ -137,12 +153,24 @@ public class MicroslingMainServlet extends GenericServlet {
     public void service(ServletRequest req, ServletResponse resp)
             throws ServletException, IOException {
 
+        HttpServletRequest hReq = (HttpServletRequest) req;
+        HttpServletResponse hRes = (HttpServletResponse) resp;
+
+        // root redirect
+        if (hReq.getPathInfo() == null) {
+            hRes.sendRedirect(hReq.getRequestURI() + "/" + indexPage);
+            return;
+        } else if ("/".equals(hReq.getPathInfo())) {
+            hRes.sendRedirect(indexPage);
+            return;
+        }
+
         Session session = authenticate(req);
 
         MicroslingSlingHttpServletRequest request = new MicroslingSlingHttpServletRequest(
-            (HttpServletRequest) req, session, serviceLocator);
+            hReq, session, serviceLocator);
         MicroslingSlingHttpServletResponse response = new MicroslingSlingHttpServletResponse(
-            (HttpServletResponse) resp);
+            hRes);
 
         // our filters might need the SlingRequestContext to store info in it
         filterChain.service(request, response);
