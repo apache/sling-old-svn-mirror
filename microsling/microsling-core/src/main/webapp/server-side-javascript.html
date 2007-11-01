@@ -1,0 +1,137 @@
+<html>
+<head>
+  <title>microsling server-side javascript and ESP templates</title>
+  <link rel="stylesheet" href="microsling.css"/>
+</head>
+<body>
+  <h1>microsling server-side javascript and ESP templates</h1>
+  
+  <div class="note">
+    <a href="../">back to homepage</a>
+  </div>
+  
+  <p>
+    Server-side javascript code and javascript-based ESP templates can be used by microsling to process requests. 
+    The scripts are located by the
+    <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/scripting/SlingScriptResolver.java?view=markup">SlingScriptResolver</a>
+    , as for the <a href="velocity-scripts.html">Velocity templates</a> (see that
+    page for more details about how this resolution works).  
+  </p>
+  <p>
+  	Scripts can either:
+  	<ul>
+  	  <li>
+  	  	Have the <em>.esp</em> extension to use the microsling <em>ECMAscript Server Pages</em> syntax
+  	  	described below.
+  	  </li>
+  	  <li>
+  	  	Have the <em>.js</em> extension to use "raw" javascript.
+  	  </li>
+  	</ul>
+  </p>
+  <p>
+    Server-side javascript support is implemented by the 
+    <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/slingservlets/RhinoJavascriptServlet.java?revision=585096&view=markup">RhinoJavascriptServlet</a>.
+  </p>
+  <p>
+  	To test this, remove or rename <a href="velocity-scripts.html">Velocity templates</a>
+    if you played with them before (Velocity has priority due to the order in which the SlingServlet classes
+    are setup),  and store one of the scripts shown
+  	below under <em>/sling/scripts/microsling/example/</em>, using the filenames shown in comments in the scripts below.
+  </p>
+  <p>
+  	Content nodes created with the <a href="content-creation-forms.html">Content creation forms</a>
+    should then be displayed in HTML, with a layout defined by the example scripts.
+  </p>
+  <p>
+    As for the Velocity templates, other output formats can be generated, for example by renaming the ESP template 
+    to <em>plain.esp</em> (as the Content-type for text is <em>text/plain</em>), modifying it to output plain text 
+    and using a <em>.txt</em> extension in the request.
+  </p>
+  
+  <h2>ECMAscript Server Pages (ESP)</h2>
+  <p>
+    <em>ECMAscript Server Pages</em> work much like JSP:
+    <ul>
+      <li>
+      	A template mixes javascript code with litteral text that is copied to the output.
+      </li>
+      <li>
+      	<em>&lt;% ... %&gt;</em> tags enclose code blocks.
+      </li>
+      <li>
+      	<em>&lt;%= ... %&gt;</em> tags include the result of a javascript expression in the output.
+      </li>
+      <li>
+      	Several standard objects are available in javascript to access microsling data
+      	(TODO: document these objects - for now see the RhinoJavascriptServlet source code)
+      </li>
+    </ul>
+  </p>
+  <h3>ESP template example</h3>
+    <pre>
+&lt;%-- microsling ESP template example, store this as html.esp --%>
+&lt;html>
+&lt;body>
+&lt;p>This page is generated from an ESP template!&lt;/p>
+&lt;h1>&lt;%= resource.getURI() %>&lt;/h1>
+&lt;%
+  for (var prop in resource.item) {
+    %>
+      &lt;p>
+        &lt;%= resource.item[prop] %>
+      &lt;/p>
+    &lt;%
+  }
+%>
+&lt;/body>
+&lt;/html></pre>
+  <h2>Raw javascript</h2>
+  <p>
+  	Raw javascript is probably more useful to handle the POST, PUT or DELETE methods.
+  </p>
+  
+  <h3>Javascript example</h3>
+    <pre>
+// store this as html.js in the repository    
+// TODO this is not very useful, rewrite this example
+out.println("&lt;html>&lt;body>");
+out.println("&lt;p>This page is generated from a rhino script&lt;/p>");
+out.println("&lt;h1>" + resource.getURI() + "&lt;/h1>");
+out.println("&lt;p>Title: " + resource.getItem().getProperty('title').getString() + "&lt;/p>");
+out.println("&lt;p>Text: " + resource.getItem().getProperty('text').getString() + "&lt;/p>");
+out.println("&lt;/body>&lt;/html>");</pre>
+  </p>
+  </div>
+  
+  <h2>Directory listing example</h2>
+  <p>
+    Store the following template under 
+    <code>sling/scripts/NODETYPES/nt/unstructured/html.esp</code> to render a simple
+    directory listing for <em>nt:unstructured</em> nodes which do not have a 
+    <code>slingComponentId</code> property.
+  </p>
+  <pre>
+&lt;%-- microsling ESP directory listing example -%>
+&lt;html>
+&lt;body>
+&lt;p>This HTML directory listing is generated from an ESP template!&lt;/p>
+&lt;h1>&lt;%= resource.uri %>&lt;/h1>
+&lt;ol>
+&lt;%
+for (var prop in resource.item) {
+    if (resource.item[prop]["text"]) {
+        %>&lt;li>&lt;a href="/microsling&lt;%= resource.item[prop] %>.html">&lt;%= resource.item[prop] %>&lt;/a>&lt;/li>&lt;%
+    }
+}
+%>
+&lt;/ol>
+&lt;/body>
+&lt;/html></pre>
+  <p>
+    If you have created some content with the test form, and activated the above template, 
+    <a href="microsling/content/testing.sling.html">microsling/content/testing.sling.html</a> should
+    display an HTML directory listing. 
+  </p>
+</body>
+</html>

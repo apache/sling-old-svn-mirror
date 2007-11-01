@@ -1,0 +1,65 @@
+<html>
+<head>
+  <title>microsling Velocity templates</title>
+  <link rel="stylesheet" href="microsling.css"/>
+</head>
+<body>
+  <h1>microsling Velocity templates</h1>
+  
+  <div class="note">
+    <a href="../">back to homepage</a>
+  </div>
+  <p>
+  	When processing requests, the <em>VelocityTemplatesServlet</em> ask the <em>SlingScriptResolver</em>
+    for scripts with the <em>.vlt</em> extension.
+  </p>
+  <p> 
+  	If a script
+  	is found, it used as a Velocity template to render the content.
+  </p>
+  <p>
+  	To test this, try storing (via WebDAV, see mount point URL on the microsling homepage) the following script in your 
+  	repository under <em> /sling/scripts/microsling/example/html.vlt</em> . 
+    Doing so will cause microsling to use that script
+  	to render nodes having <em>slingResourceType=microsling/example</em>. 
+  </p>
+  <p>
+    To try that rendering, use the <a href="content-creation-forms.html">content creation</a> page to create
+    and node and display it.
+  </p>
+  <p>
+  	 The name <em>html.vlt</em> indicates that this script is meant to process HTTP GET requests with
+  	 expect a <em>text/html</em> response. 
+  </p>
+  <p>
+  	For other HTTP methods the script would have the method name,
+  	 for example POST.vlt for a POST. But 
+  	 GET is probably the only request method that makes sense to process with Velocity templates.
+  </p>
+  <p>
+    To generate XML instead, rename the script to <em>xml.vlt</em>, modify it to generate
+    the XML of your choice, and replace <em>.html</em> with <em>.xml</em> at the end of the request URL.
+  </p>
+  <p>
+    Here's the example HTML template. See the <a href="http://velocity.apache.org">Velocity website</a> for 
+    more info about the syntax.
+    <pre>&lt;html>
+&lt;body>
+&lt;h1>This is generated from a Velocity template&lt;/h1>
+&lt;p>
+  The current resource URI is &lt;b>$resource.URI&lt;/b>
+&lt;/p>
+
+&lt;h2>$resource.getItem().getProperty("title").getString()&lt;/h2>
+&lt;p>
+  $resource.getItem().getProperty("text").getString()
+&lt;/p>
+
+&lt;/body>
+&lt;/html></pre>  </p>
+  <p>
+    To deactivate the Velocity-based rendering of nodes, rename or delete the corresponding rendering
+    scripts. 
+  </p>
+</body>
+</html>

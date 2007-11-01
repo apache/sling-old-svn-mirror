@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+  <display-name>Microsling Web Application</display-name>
+
+  <servlet>
+    <servlet-name>Logging</servlet-name>
+    <description>Configures the Log4J logging facility.</description>
+    <servlet-class>org.apache.jackrabbit.j2ee.LoggingServlet</servlet-class>
+
+    <init-param>
+      <param-name>log4j-config</param-name>
+      <param-value>/WEB-INF/log4j.xml</param-value>
+      <description>initial log4j configuration</description>
+    </init-param>
+
+    <load-on-startup>10</load-on-startup>
+  </servlet>
+
+  <servlet>
+    <servlet-name>JackrabbitRepository</servlet-name>
+    <description>
+      Creates a Jackrabbit repository (or opens it if already created) and makes it available as
+      a servlet context attribute.
+    </description>
+    <servlet-class>org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet</servlet-class>
+    <load-on-startup>20</load-on-startup>
+  </servlet>
+
+  <servlet>
+    <servlet-name>RepositoryAccess</servlet-name>
+    <description>
+      Used by the WebDAV servlet to access the repository
+    </description>
+    <servlet-class>org.apache.jackrabbit.j2ee.RepositoryAccessServlet</servlet-class>
+    
+    <init-param>
+      <param-name>repository.context.attribute.name</param-name>
+      <param-value>javax.jcr.Repository</param-value>
+    </init-param>
+    
+    <load-on-startup>40</load-on-startup>
+  </servlet>
+ 
+  <servlet>
+    <servlet-name>Webdav</servlet-name>
+    <description>Makes the repository available via WebDAV</description>
+    <servlet-class>org.apache.jackrabbit.j2ee.SimpleWebdavServlet</servlet-class>
+
+    <init-param>
+      <param-name>resource-path-prefix</param-name>
+      <param-value>/repository</param-value>
+      <description>defines the prefix for spooling resources out of the repository.</description>
+    </init-param>
+    <!--
+      <init-param>
+      <param-name>missing-auth-mapping</param-name>
+      <param-value>anonymous:anonymous</param-value>
+      <description>
+      Defines how a missing authorization header should be handled.
+      1) If this init-param is missing, a 401 response is generated.
+      This is suiteable for clients (eg. webdav clients) for which
+      sending a proper authorization header is not possible if the
+      server never sent a 401.
+      2) If this init-param is present with an empty value,
+      null-credentials are returned, thus forcing an null login
+      on the repository.
+      3) If this init-param has a 'user:password' value, the respective
+      simple credentials are generated.
+      </description>
+      </init-param>
+    -->
+    <!--
+      Optional parameter to define the value of the 'WWW-Authenticate' header
+    -->
+    <!--
+      <init-param>
+      <param-name>authenticate-header</param-name>
+      <param-value>Basic realm="Jackrabbit Webdav Server"</param-value>
+      <description>
+      Defines the value of the 'WWW-Authenticate' header.
+      </description>
+      </init-param>
+    -->
+    <!--
+      Parameter used to configure behaviour of webdav resources such as:
+      - destinction between collections and non-collections
+      - resource filtering
+    -->
+    <init-param>
+      <param-name>resource-config</param-name>
+      <param-value>/WEB-INF/webdav-resource-config.xml</param-value>
+      <description>Defines various dav-resource configuration parameters.</description>
+    </init-param>
+    <load-on-startup>50</load-on-startup>
+  </servlet>
+
+  <servlet>
+    <servlet-name>Microsling</servlet-name>
+    <description>Microsling support servlet</description>
+    <servlet-class>org.apache.sling.microsling.servlet.MicroslingMainServlet</servlet-class>
+
+    <init-param>
+      <param-name>container-encoding</param-name>
+      <param-value>UTF-8</param-value>
+    </init-param>
+  
+    <init-param>
+      <param-name>form-encoding</param-name>
+      <param-value>UTF-8</param-value>
+    </init-param>
+  
+    <init-param>
+      <param-name>welcome-url</param-name>
+      <param-value>index.html</param-value>
+      <description>URL to redirect to when / is accessed</description>
+    </init-param>
+
+    <load-on-startup>999</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>Microsling</servlet-name>
+    <url-pattern>/microsling/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>Webdav</servlet-name>
+    <url-pattern>/repository/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>JackrabbitRepository</servlet-name>
+    <url-pattern>/repository-info</url-pattern>
+  </servlet-mapping>
+
+  <!-- ====================================================================== -->
+  <!-- M I M E T Y P E   M A P P I N G                                          -->
+  <!-- ====================================================================== -->
+  <mime-mapping>
+    <extension>doc</extension>
+    <mime-type>application/msword</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>bin</extension>
+    <mime-type>application/octet-stream</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>pdf</extension>
+    <mime-type>application/pdf</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ai</extension>
+    <mime-type>application/postscript</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>eps</extension>
+    <mime-type>application/postscript</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ps</extension>
+    <mime-type>application/postscript</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>rtf</extension>
+    <mime-type>application/rtf</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>mif</extension>
+    <mime-type>application/vnd.mif</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ppt</extension>
+    <mime-type>application/vnd.ms-powerpoint</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>vcd</extension>
+    <mime-type>application/x-cdlink</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>js</extension>
+    <mime-type>application/x-javascript</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>mp3</extension>
+    <mime-type>audio/mpeg</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ram</extension>
+    <mime-type>audio/x-pn-realaudio</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>rm</extension>
+    <mime-type>audio/x-pn-realaudio</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ra</extension>
+    <mime-type>audio/x-realaudio</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>gif</extension>
+    <mime-type>image/gif</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>jpeg</extension>
+    <mime-type>image/jpeg</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>jpg</extension>
+    <mime-type>image/jpeg</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>png</extension>
+    <mime-type>image/png</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>tiff</extension>
+    <mime-type>image/tiff</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>tif</extension>
+    <mime-type>image/tiff</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>css</extension>
+    <mime-type>text/css</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>asc</extension>
+    <mime-type>text/plain</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>txt</extension>
+    <mime-type>text/plain</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>xml</extension>
+    <mime-type>text/xml</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>html</extension>
+    <mime-type>text/html</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>htm</extension>
+    <mime-type>text/html</mime-type>
+  </mime-mapping>
+</web-app>

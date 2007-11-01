@@ -1,0 +1,147 @@
+<html>
+<head>
+  <title>microsling homepage</title>
+  <link rel="stylesheet" href="microsling.css"/>
+</head>
+<body>
+  <h1>microsling homepage</h1>
+  
+  <p>
+  	<em>Sling request processing, reduced to the max!</em>
+  </p>
+  
+  <h2>Overview</h2>
+  <p>
+	The goal of microsling is to demonstrate the Sling HTTP
+	request processing in the simplest possible way, to help the
+	community converge on the goals and architecture of this 
+	module.
+  </p>
+  
+  <h2>microsling test links</h2>
+  <ul>
+    <li>
+      <a href="content-creation-forms.html">
+        Content creation forms
+      </a>: use this page to create content and test the rendering mechanisms.
+    </li>
+    <li>
+      <a href="velocity-scripts.html">
+        Velocity templates
+      </a>: explains how to use Velocity templates to render content.
+    </li>
+    <li>
+      <a href="server-side-javascript.html">
+        Server-side javascript and ESP templates
+      </a>: explains how to use server-side javascript and javascript-based ESP templates to process requests.
+    </li>
+    <li>
+      <a href="freemarker-scripts.html">
+        FreeMarker templates
+      </a>: explains how to use FreeMarker templates to render content.
+    </li>
+  </ul>
+  
+  <h2>Show me the code</h2>
+  <p>
+  	Here's a brief description of how microsling processes HTTP requests. Follow the links to the source code
+    for more details.
+    <ul>
+      <li>
+        The main <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/servlet/MicroSlingServlet.java?view=markup">MicroSlingServlet</a>
+         handles HTTP requests. That's probably where you want to
+        start studying the code.
+      </li>
+      <li>
+        <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/api/RequestFilter.java?view=markup">RequestFilter</a>
+         objects process the incoming requests before passing them on to SlingServlet objects
+        which do the actual processing.
+        <ul>
+          <li>
+	      	The
+	        <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/resource/ResourceResolverFilter.java?view=markup">ResourceResolverFilter</a>
+	        selects the <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/api/Resource.java?view=markup">Resource</a> (currently a JCR Node, OCM is not used yet) to process. 
+	      </li>
+	      <li>
+		      The <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/contenttype/ResponseContentTypeResolverFilter.java?view=markup">ResponseContentTypeResolverFilter</a>
+		      computes the desired <em>Content-Type</em> for the response, so that rendering scripts or SlingServlets know what output format to generate.
+	      </li>
+	    </ul>
+	    	        Other filters would include
+	        Locale selection, client capabilities analysis, etc.
+	    
+      </li>
+      <li>
+        After applying the RequestFilters, the MicroSlingServlet selects a 
+        <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/api/SlingServlet.java?view=markup">SlingServlet</a> to process the request.
+        The first SlingServlet where canProcess(...) returns true is used.
+      </li>
+      <li>
+        The <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/requestcontext/SlingRequestContext.java?view=markup">SlingRequestContext</a> is
+        stored as a request attribute, and gives access to Sling-specific objects (Resource, repository Session, etc.) used for request processing.
+      </li>
+      <li>
+        A few SlingServlet classes are implemented (source code <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/slingservlets/">here</a>):
+        <ul>
+          <li>
+            The SlingPostServlet allows Nodes to be created by POSTing to URLs ending
+            with ".sling".
+          </li>
+          <li>
+            The VelocityTemplatesServlet and RhinoJavascriptServlet execute server-side scripts in those
+            languages to process requests. 
+          </li>
+          <li>
+            The DefaultSlingServlet is used when no other SlingServlet wants the request.
+          </li>
+        </ul>
+      </li>
+      <li>
+        The <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/scripting/SlingScriptResolver.java?view=markup">SlingScriptResolver</a> 
+        is used by the scripting SlingServlet classes to locate scripts in the repository.
+        See comments in that class for how script paths are computed based on the Resource's resourceType and the
+        request method and extension.
+      </li>
+      <li>
+        Rendering scripts can generate various output formats, for example a Velocity script named "get.xml.vlt" will
+        cause a page with <em>Content-Type=text/xml</em> to be generated by the VelocityTemplatesServlet. 
+      </li>
+      <li>
+        The microsling architecture allows
+        additional scripting engines (JSP, JRuby, BSF,...) to be plugged in easily - and this would
+        of course be much easier with OSGi.   
+      </li>
+      <li>
+        We'll probably need a ResponseFilter interface at some point, but for now it's not needed. It could be useful
+        to apply "rendering standards" to the output, adding header/footers/glitter to HTML pages for example. 
+      </li>
+    </ul> 
+    <p>
+      If you have followed the links to source code in the above descriptions, you've seen most or all of the interesting
+      microsling source code. What's remaining are a few simple support classes.  
+    </p>
+  </p>
+    
+  <h2>No OSGi</h2>
+  <p>
+    To keep things simple, microsling does <em>not</em> use OSGi.
+    We will of course continue to use OSGi in the real Sling, and there are many
+    places in the code which say <em>TODO - use OSGi plugins here</em>. Keeping things
+    "static" for this example makes it easier to concentrate on the basics.
+  </p>
+  
+   <h2>More test links</h2>
+  <p>
+    <ul>
+      <li>
+        <a href="repository-info">repository-info</a>, dumps the JCR repository
+        properties.
+      </li>
+      <li>
+        <a href="repository/default">WebDAV mount point</a>: use this URL to mount
+        the repository via WebDAV (login = admin/admin).
+      </li>
+    </ul>
+  </p>
+</body>
+</html>

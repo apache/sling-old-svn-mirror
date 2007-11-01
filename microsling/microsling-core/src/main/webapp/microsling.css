@@ -1,0 +1,58 @@
+body {
+	font-family: Verdana,Helvetica,Arial,sans-serif;
+}
+
+h1,h2,h3,h4 {
+	color:#869900;
+}
+
+h1 {
+	border-color:#999999;
+	border-style:solid solid dotted;
+	border-width:0px 0px 1px;
+	color:#869900;
+	font-size:x-large;
+	font-weight:900;
+	padding:20px 4px 4px 0px;
+}
+
+h2 {
+	font-size: large;
+	font-weight:900;
+}
+
+h3 {
+	font-weight:900;
+	font-size:100%;
+}
+
+.testbox {
+	border: solid gray 1px;
+	margin: 1em;
+	padding: 0.5em;		
+}
+
+form h1 {
+	padding: 1px;
+	margin: 1px;
+	font-size: 100%;		
+}
+
+p {
+	margin-bottom: 0.5em;
+}
+
+li {
+	margin-bottom: 0.2em;
+}
+
+pre {
+	font-size: 120%;
+	background-color: #FFFFCC;
+	border: solid #FF9900 1px;
+	padding: 0.5em;
+}
+
+.note {
+	font-size:80%;
+}	
