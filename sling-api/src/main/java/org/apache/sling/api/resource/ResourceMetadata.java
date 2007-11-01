@@ -42,6 +42,6 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * which was used to the resolve the resource to which the meta data
      * instance belongs (value is "sling.resolutionPath").
      */
-    static final String RESOLUTION_PATH = "sling.resolutionPath";
+    public static final String RESOLUTION_PATH = "sling.resolutionPath";
 
 }
