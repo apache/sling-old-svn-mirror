@@ -44,9 +44,14 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
     
-    public void testWithoutScript() throws IOException {
-        final String content = getContent(displayUrl + ".html", CONTENT_TYPE_PLAIN);
-        assertTrue("Content includes default servlet marker",content.contains("dumped by DefaultSlingServlet"));
+    public void testWithoutScriptTxt() throws IOException {
+        final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
+        assertTrue("Content includes PlainTextRendererServlet marker",content.contains("dumped by PlainTextRendererServlet"));
+    }
+    
+    public void testWithoutScriptHtml() throws IOException {
+        final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+        assertTrue("Content includes DefaultHtmlRendererServlet marker",content.contains("dumped by DefaultHtmlRendererServlet"));
     }
     
     public void testEspHtml() throws IOException {

@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
+import org.apache.sling.microsling.scripting.engines.freemarker.FreemarkerScriptEngine;
 import org.apache.sling.microsling.scripting.engines.rhino.RhinoJavasSriptEngine;
 import org.apache.sling.microsling.scripting.engines.velocity.VelocityTemplatesScriptEngine;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
@@ -79,6 +80,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         scriptEngines = new HashMap<String, SlingScriptEngine>();
         addScriptEngine(new RhinoJavasSriptEngine());
         addScriptEngine(new VelocityTemplatesScriptEngine());
+        addScriptEngine(new FreemarkerScriptEngine());
     }
 
     /**
@@ -102,6 +104,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             props.put(SlingScriptEngine.SLING, helper);
             props.put(SlingScriptEngine.RESOURCE, helper.getRequest().getResource());
             props.put(SlingScriptEngine.REQUEST, helper.getRequest());
+            props.put(SlingScriptEngine.RESOURCE, helper.getRequest().getResource());
             props.put(SlingScriptEngine.RESPONSE, helper.getResponse());
             props.put(SlingScriptEngine.OUT, helper.getResponse().getWriter());
             props.put(SlingScriptEngine.LOG, LoggerFactory.getLogger(script.getScriptPath()));
