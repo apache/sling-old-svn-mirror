@@ -100,6 +100,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             // prepare the properties for the script
             Map<String, Object> props = new HashMap<String, Object>();
             props.put(SlingScriptEngine.SLING, helper);
+            props.put(SlingScriptEngine.RESOURCE, helper.getRequest().getResource());
             props.put(SlingScriptEngine.REQUEST, helper.getRequest());
             props.put(SlingScriptEngine.RESPONSE, helper.getResponse());
             props.put(SlingScriptEngine.OUT, helper.getResponse().getWriter());
