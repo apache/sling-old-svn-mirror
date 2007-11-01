@@ -68,20 +68,18 @@ public interface ResourceManager extends ResourceResolver {
      * @param type The required concrete type of the loaded data of the
      *            <code>Resource</code> object.
      * @return The <code>Resource</code> object loaded from the path with the
-     *         data field set to an object of the given type.
+     *         data field set to an object of the given type. <code>null</code>
+     *         is returned if no resource can be resolved at the resolved path
+     *         or if the path is not an absolute path or if the data cannot be
+     *         mapped to an object of the requested <code>type</code>.
      * @throws java.security.AccessControlException if an item exists at the
      *             <code>path</code> but the session of this resource manager
      *             has no read access to the item.
-     * @throws ResourceNotFoundException If no resource can be resolved at the
-     *             resolved path or if the path is not an absolute path or if
-     *             the data cannot be mapped to an object of the requested
-     *             <code>type</code>.
      * @throws SlingException If an error occurrs trying to load the resource
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
      */
-    Resource getResource(String path, Class<?> type)
-            throws ResourceNotFoundException, SlingException;
+    Resource getResource(String path, Class<?> type) throws SlingException;
 
     /**
      * Deletes the persistent data at the location pointed to by the

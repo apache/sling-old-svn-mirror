@@ -20,6 +20,17 @@ package org.apache.sling.api.resource;
 public interface Resource {
 
     /**
+     * The special resource type for resource instances representing nonexisting
+     * resources (value is "sling:nonexisting"). This resource type is used
+     * by {@link ResourceResolver} instances to mark a resource which could not
+     * actually be resolved.
+     *
+     * @see #getResourceType()
+     * @see ResourceResolver#resolve(javax.servlet.ServletRequest)
+     */
+    static final String RESOURCE_TYPE_NON_EXISTING = "sling:nonexisting";
+
+    /**
      * This resource's URI - for now that could be a JCR path, but having an URI
      * makes it possible to use other data sources.
      */
@@ -28,8 +39,13 @@ public interface Resource {
     /**
      * The resource type is meant to point to rendering/processing scripts,
      * editing dialogs, etc. It is usually a path in the repository, where
-     * scripts and other tools definitions are found, but the 
-     * {@link ResourceResolver} is free to set this to any suitable value.
+     * scripts and other tools definitions are found, but the
+     * {@link ResourceResolver} is free to set this to any suitable value such
+     * as the primary node type of the JCR node from which the resource is
+     * created.
+     * <p>
+     * If the resource instance represents a resource which is not actually
+     * existing, this method returns the {@link #RESOURCE_TYPE_NON_EXISTING}.
      */
     String getResourceType();
 
