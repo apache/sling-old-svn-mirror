@@ -36,16 +36,21 @@ public interface ResourceResolver {
 
     /**
      * Resolves the resource from the given <code>ServletRequest</code>.
+     * <p>
+     * If the request cannot be resolved to an existing resource, a
+     * {@link Resource} object is returned whose
+     * {@link Resource#getResourceType() resource type} is set to
+     * {@link Resource#RESOURCE_TYPE_NON_EXISTING} and the
+     * {@link Resource#getURI() resource URI} set to the request URI. Both the
+     * {@link Resource#getRawData() raw data} and
+     * {@link Resource#getObject() object} fields will be <code>null</code>.
      *
      * @param request The servlet request object used to resolve the resource
      *            for.
      * @return The {@link Resource} for the request.
-     * @throws ResourceNotFoundException May be thrown if no resource can be
-     *             resolved for for the request.
      * @throws SlingException May be thrown if another error occurrs.
      */
-    Resource resolve(ServletRequest request) throws SlingException,
-            ResourceNotFoundException;
+    Resource resolve(ServletRequest request) throws SlingException;
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -62,18 +67,16 @@ public interface ResourceResolver {
      *            which are resolved by this method. If the path is relative,
      *            that is the first character is not a slash, a
      *            <code>ResourceNotFoundException</code> is thrown.
-     * @return The <code>Resource</code> object loaded from the path.
+     * @return The <code>Resource</code> object loaded from the path or
+     *         <code>null</code> if the path does not resolve to a resource.
      * @throws java.security.AccessControlException if an item exists at the
      *             <code>path</code> but the session of this resource manager
      *             has no read access to the item.
-     * @throws ResourceNotFoundException If no resource can be resolved at the
-     *             resolved path or if the path is not an absolute path.
      * @throws SlingException If an error occurrs trying to load the resource
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
      */
-    Resource getResource(String path) throws ResourceNotFoundException,
-            SlingException;
+    Resource getResource(String path) throws SlingException;
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -95,7 +98,8 @@ public interface ResourceResolver {
      *            specifiers like <code>.</code> (current location) and
      *            <code>..</code> (parent location), which are resolved by
      *            this method.
-     * @return The <code>Resource</code> object loaded from the path.
+     * @return The <code>Resource</code> object loaded from the path or
+     *         <code>null</code> if the path does not resolve to a resource.
      * @throws java.security.AccessControlException if an item exists at the
      *             <code>path</code> but the session of this resource manager
      *             has no read access to the item.
@@ -105,22 +109,21 @@ public interface ResourceResolver {
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
      */
-    Resource getResource(Resource base, String path)
-            throws ResourceNotFoundException, SlingException;
+    Resource getResource(Resource base, String path) throws SlingException;
 
     /**
-     * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
-     * the children of the given <code>Resource</code>.
+     * Returns an <code>Iterator</code> of {@link Resource} objects loaded
+     * from the children of the given <code>Resource</code>.
      * <p>
      * This specification does not define what the term "child" means. This is
      * left to the implementation to define. For example an implementation
      * reading content from a Java Content Repository, the children could be the
-     * {@link Resource} objects loaded from child items of the
-     * <code>Item</code> of the given <code>Resource</code>.
+     * {@link Resource} objects loaded from child items of the <code>Item</code>
+     * of the given <code>Resource</code>.
      *
-     * @param parent The {@link Resource Resource} whose children are
-     *            requested. If <code>null</code> the children of this
-     *            request's Resource are returned.
+     * @param parent The {@link Resource Resource} whose children are requested.
+     *            If <code>null</code> the children of this request's Resource
+     *            are returned.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is
      *             <code>null</code>.
