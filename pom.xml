@@ -73,6 +73,7 @@
         <module>log</module>
         <module>assembly</module>
         <module>mime</module>
+        <module>json</module>
 
         <module>jackrabbit-api</module>
         <module>jackrabbit-client</module>
