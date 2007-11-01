@@ -102,10 +102,9 @@ public class StreamServlet extends SlingSafeMethodsServlet {
                 }
             }
 
-            // just spool, the property to which the item resolves through
-            // the primary item trail
-            // the item is a property, spool and forget
-            spool(response, findDefaultProperty(node), null, null, -1);
+            // spool the property which contains the file data
+            // TODO get mime-type etc.
+            spool(response, findDataProperty(node), null, null, -1);
 
         } catch (ItemNotFoundException infe) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -167,14 +166,38 @@ public class StreamServlet extends SlingSafeMethodsServlet {
         }
     }
 
-    /** Follow the primary item trail of item until a property is found */
-    Property findDefaultProperty(Item item) throws ItemNotFoundException,
-            RepositoryException {
-        while (item.isNode()) {
-            // will throw if there is none defined or existsing
-            item = ((Node) item).getPrimaryItem();
+    /** Find the Property that contains the data to spool, under parent */ 
+    private Property findDataProperty(final Item parent) throws RepositoryException, HttpStatusCodeException {
+        Property result = null;
+        
+        // Following the path of primary items until we find a property
+        // should provide us with the file data of the parent
+        try {
+            Item item = parent;
+            while(item!=null && item.isNode()) {
+                item = ((Node) item).getPrimaryItem();
+            }
+            result = (Property)item;
+        } catch(ItemNotFoundException ignored) {
+            // TODO: for now we use an alternate method if this fails,
+            // there might be a better way (see jackrabbit WebDAV server code?)
         }
-        return (Property) item;
+        
+        if(result==null && parent.isNode()) {
+            // primary path didn't work, try the "usual" path to the data Property
+            try {
+                final Node parentNode = (Node)parent;
+                result = parentNode.getNode("jcr:content").getProperty("jcr:data");
+            } catch(ItemNotFoundException e) {
+                throw new HttpStatusCodeException(404,parent.getPath() + "/jcr:content" + "/jcr:data");
+            }
+        }
+        
+        if(result==null) {
+            throw new HttpStatusCodeException(500, "Unable to find data property for parent item " + parent.getPath());
+        }
+        
+        return result;
     }
 
     /** return the jcr:lastModified property value or null if property is missing */

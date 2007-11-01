@@ -41,7 +41,7 @@ public class StreamServletTest extends RenderingTestBase {
                     content.contains("This is just some text in an ASCII file.")
             );
         } finally {
-            // TODO testClient.delete(toDelete);
+            testClient.delete(toDelete);
         }
     }
 
@@ -58,7 +58,7 @@ public class StreamServletTest extends RenderingTestBase {
                     content.contains("This is <em>testfile.html</em>.")
             );
         } finally {
-            // TODO testClient.delete(toDelete);
+            testClient.delete(toDelete);
         }
     }
 }
