@@ -48,6 +48,15 @@ public interface SlingScriptEngine {
 
     /**
      * The name of the global scripting variable providing the
+     * {@link org.apache.sling.api.resource.Resource} object (value is
+     * "resource"). The value of the scripting variable is the same as that
+     * returned by the <code>SlingScriptHelper.getRequest().getResource()</code>
+     * method.
+     */
+    static final String RESOURCE = "resource";
+
+    /**
+     * The name of the global scripting variable providing the
      * {@link org.apache.sling.api.SlingHttpServletRequest} object (value is
      * "request"). The value of the scripting variable is the same as that
      * returned by the {@link SlingScriptHelper#getRequest()} method.
