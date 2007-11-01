@@ -13,6 +13,9 @@ Currently this depends on the Jackrabbit 1.4-SNAPSHOT, mostly
 because I had a project skeleton around that takes advantage of
 JCR-955 to reuse some Jackrabbit servlets.
 
+The sling-api module must also be available in your local
+Maven repository.
+
 To build and run:
 
 1) Install a JDK 1.5 and Maven 2.0.7.
@@ -23,13 +26,25 @@ To build and run:
 
 I'm currently using revision 583722 for my tests.
 
-3) Build and run this webapp:
+3) Build the sling-api
 
-  mvn clean package jetty:run
+  cd sling/sling-api
+  mvn clean install
+
+4) Run the microsling tests:
+
+  cd sling/microsling/microsling-core
+  mvn clean install
+  
+Builds microsling and runs the unit and integration tests.  
+  
+5) Build and run this webapp:
+
+  mvn clean jetty:run
   
 Which should say "Started SelectChannelConnector@0.0.0.0:8080" once
 the build is done.  
   
-4) Connect to http://localhost:8080/ which should return a page
+6) Connect to http://localhost:8080/ which should return a page
 saying "Microsling homepage". That page contains instructions for
 playing with Microsling.   
