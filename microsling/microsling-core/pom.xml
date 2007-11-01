@@ -222,11 +222,11 @@
                     -->
                     <property>
                       <name>microsling.http.server.url</name>
-                      <value>http://localhost:8080/microsling-1.0-incubator-SNAPSHOT/microsling</value>
+                      <value>http://localhost:8080/microsling-core-1.0-incubator-SNAPSHOT/microsling</value>
                     </property>
                     <property>
                       <name>microsling.webdav.server.url</name>
-                      <value>http://localhost:8080/microsling-1.0-incubator-SNAPSHOT/repository/default</value>
+                      <value>http://localhost:8080/microsling-core-1.0-incubator-SNAPSHOT/repository/default</value>
                     </property>
                   </systemProperties>
                 </configuration>

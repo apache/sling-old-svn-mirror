@@ -19,9 +19,6 @@ package org.apache.sling.microsling.integration;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.methods.GetMethod;
-
 /** Base class for rendering tests
  */
 class RenderingTestBase extends MicroslingHttpTestBase {
@@ -36,13 +33,6 @@ class RenderingTestBase extends MicroslingHttpTestBase {
         final String testFile = "/integration-test/" + localFilename;
         final InputStream data = getClass().getResourceAsStream(testFile);
         try {
-            System.out.println();
-            System.out.println();
-            System.out.println("Path " + testFile);
-            System.out.println("Loader " + getClass().getClassLoader());
-            System.out.println("Uploading " + data);
-            System.out.println();
-            System.out.println();
             testClient.upload(url, data);
         } finally {
             if(data!=null) {

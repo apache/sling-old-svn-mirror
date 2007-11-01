@@ -109,8 +109,7 @@ public class RhinoJavasSriptEngine implements SlingScriptEngine {
         if (entry instanceof Resource) {
             try {
                 ScriptableObject.defineClass(scope, ScriptableResource.class);
-                return context.newObject(scope, "Resource",
-                    new Object[] { entry });
+                return context.newObject(scope, "Resource",  new Object[] { entry });
             } catch (Exception e) {
                 return Context.javaToJS(entry, scope);
             }

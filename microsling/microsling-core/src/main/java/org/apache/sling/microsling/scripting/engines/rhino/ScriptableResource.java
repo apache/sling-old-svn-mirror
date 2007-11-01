@@ -51,7 +51,16 @@ public class ScriptableResource extends ScriptableObject {
         return resource.getRawData();
     }
 
+    /** alias for getRawData */
     public Object jsGet_item() {
+        if (resource.getRawData() instanceof Node) {
+            return new ScriptableNode((Node) resource.getRawData());
+        } else {
+            return Undefined.instance;
+        }
+    }
+    
+    public Object jsGet_rawData() {
         if (resource.getRawData() instanceof Node) {
             return new ScriptableNode((Node) resource.getRawData());
         } else if (resource.getRawData() != null) {
