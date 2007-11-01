@@ -1,0 +1,60 @@
+<html>
+<head>
+  <title>microsling content creation forms</title>
+  <link rel="stylesheet" href="microsling.css"/>
+</head>
+<body>
+  <h1>microsling content creation forms</h1>
+  
+  <div class="note">
+    <a href="../">back to homepage</a>
+  </div>
+  
+  <p>
+    Use these forms to test the microsling request processing and rendering SlingServlets. 
+  </p>
+  
+  <div>
+    <form class="testbox" action="microsling/content/testing.sling" method="POST">
+      <input type="hidden" name="slingDisplayExtension" value="html"/>
+      
+      <h1>SlingPostServlet content creation form</h1>
+      <p>
+        Submitting this form creates an <em>nt:unstructured</em> node under content/testing, 
+        and displays it using an <em>html</em> extension. 
+      </p>
+      <p>
+        See the <em>Velocity scripts</em> and <em>server-side Javascript</em> pages for how to
+        render the content using templates and scripts.
+      </p>
+      <p>
+	      Title:
+	      <br/>
+	      <input name="title" type="text" size="40" value="Default title"/>
+	      <br/> 
+	      Text:
+	      <br/>
+	      <input name="text" type="text" size="80" value="Default text of the test node"/>
+	      <br/>
+          slingResourceType:
+          <span class="note">(leave this empty to use the JCR node type for script resolution)</span>
+          <br/>
+          <input name="slingResourceType" type="text" size="80" value="microsling/example"/>
+          <br/>
+	      <input type="submit" value="Create and display node"/> 
+      </p>
+    </form>
+  </div>
+  
+  <div>
+    <form class="testbox" action="microsling/whatever" method="POST">
+      <h1>Non-Sling POST method form</h1>
+      <p>
+      	Submitting this form should cause an error 501: <em>POST method is not supported by DefaultSlingServlet</em>.
+      </p>
+      <input type="submit"/>
+    </form>
+  </div>
+  
+</body>
+</html>

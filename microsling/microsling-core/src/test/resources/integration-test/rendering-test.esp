@@ -1,0 +1,7 @@
+<%-- used by ScriptedRenderingTest --%>
+<html>
+	<body>
+		ESP template
+		<p><%= resource.item.text %></p>
+	</body>
+</html>

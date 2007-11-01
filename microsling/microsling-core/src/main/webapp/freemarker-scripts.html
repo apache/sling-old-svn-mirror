@@ -1,0 +1,38 @@
+<html>
+<head>
+  <title>microsling FreeMarker templates</title>
+  <link rel="stylesheet" href="microsling.css"/>
+</head>
+<body>
+  <h1>microsling FreeMarker templates</h1>
+  
+  <div class="note">
+    <a href="../">back to homepage</a>
+  </div>
+  <p> 
+  	Scripts found by the <code>SlingScriptResolver</code> using the <code>.ftl</code> extension are executed by
+    the <code>FreemarkerScriptEngine</code>.
+  </p>
+  <p>
+    This works exactly like the <a href="velocity-scripts.html">Velocity templates</a>, except that
+    templates use the FreeMarker syntax.
+  </p>
+  <p>
+    Here's an example HTML template. See the <a href="http://freemarker.org">FreeMarker</a> website 
+    more info about the syntax.
+    <pre>&lt;html>
+&lt;body>
+&lt;h1>This is generated from a FreeMarker template&lt;/h1>
+&lt;p>
+  The current resource URI is &lt;b>${resource.URI}&lt;/b>
+&lt;/p>
+
+&lt;h2>${resource.getItem().getProperty("title").getString()}&lt;/h2>
+&lt;p>
+  ${resource.getItem().getProperty("text").getString()}
+&lt;/p>
+
+&lt;/body></pre>  
+  </p>
+</body>
+</html>

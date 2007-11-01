@@ -1,0 +1,7 @@
+<!-- Used by ScriptedRenderingTest -->
+<html>
+	<body>
+		Velocity template
+		<p><b>$resource.getItem().getProperty("text").getString()</b></p>
+	</body>
+</html>
