@@ -67,10 +67,13 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         final Resource  r = req.getResource();
         if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(r.getResourceType())) {
 
-            URL url = getServletContext().getResource(r.getURI());
-            if (url != null) {
-                spool(url, resp);
-                return;
+            String path = r.getURI();
+            if (!path.startsWith("/WEB-INF") && !path.startsWith("/META-INF")) {
+                URL url = getServletContext().getResource(path);
+                if (url != null) {
+                    spool(url, resp);
+                    return;
+                }
             }
 
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
