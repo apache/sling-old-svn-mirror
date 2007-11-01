@@ -25,9 +25,9 @@ import java.util.Iterator;
 import javax.jcr.PropertyType;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.content.jcr.internal.json.JSONArray;
-import org.apache.sling.content.jcr.internal.json.JSONException;
-import org.apache.sling.content.jcr.internal.json.JSONObject;
+import org.apache.sling.json.JSONArray;
+import org.apache.sling.json.JSONException;
+import org.apache.sling.json.JSONObject;
 
 
 /**
