@@ -17,7 +17,11 @@
 package org.apache.sling.microsling.slingservlets;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Enumeration;
 
 import javax.jcr.Item;
@@ -36,6 +40,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
@@ -49,8 +54,16 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
             throws ServletException, IOException {
         resp.setContentType("text/plain");
 
+        // ensure the resource or try web app contents
         final Resource  r = req.getResource();
         if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(r.getResourceType())) {
+
+            URL url = getServletContext().getResource(r.getURI());
+            if (url != null) {
+                spool(url, resp);
+                return;
+            }
+
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                 "Resource not found: " + r.getURI());
         }
@@ -220,4 +233,47 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         }
     }
 
+    protected void spool(URL url, SlingHttpServletResponse res) throws IOException {
+        URLConnection conn = url.openConnection();
+
+        if (conn.getContentType() != null) {
+            res.setContentType(conn.getContentType());
+        }
+        if (conn.getContentLength() > 0 ) {
+            res.setContentLength(conn.getContentLength());
+        }
+        if (conn.getContentEncoding() != null) {
+            res.setCharacterEncoding(conn.getContentEncoding());
+        }
+        if (conn.getLastModified() > 0) {
+            res.setDateHeader(HttpConstants.HEADER_LAST_MODIFIED, conn.getLastModified());
+        }
+
+        InputStream ins = null;
+        OutputStream out = null;
+        try {
+            ins = conn.getInputStream();
+            out = res.getOutputStream();
+
+            byte[] buf = new byte[2048];
+            int num;
+            while ((num = ins.read(buf)) >= 0) {
+                out.write(buf, 0, num);
+            }
+        } finally {
+            if (ins != null) {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                }
+            }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+
+    }
 }
