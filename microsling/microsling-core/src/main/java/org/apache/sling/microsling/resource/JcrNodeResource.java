@@ -41,14 +41,14 @@ class JcrNodeResource implements Resource {
     JcrNodeResource(javax.jcr.Session s,String path) throws RepositoryException {
         node = (Node)s.getItem(path);
         this.path = node.getPath();
-        metadata = new MicroslingResourceMetadata();
+        metadata = new ResourceMetadata();
         resourceType = getResourceTypeForNode(node);
     }
 
     JcrNodeResource(Node node) throws RepositoryException {
         this.node = node;
         this.path = node.getPath();
-        metadata = new MicroslingResourceMetadata();
+        metadata = new ResourceMetadata();
         metadata.put(ResourceMetadata.RESOLUTION_PATH, path);
         resourceType = getResourceTypeForNode(node);
     }
