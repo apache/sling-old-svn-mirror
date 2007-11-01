@@ -18,7 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
-import java.util.Map;
+import java.util.HashMap;
+
 
 /**
  * The <code>ResourceMetadata</code> interface defines the API for the
@@ -34,7 +35,7 @@ import java.util.Map;
  * Note, that the prefix <em>sling.</em> to key names is reserved for the
  * Sling implementation.
  */
-public interface ResourceMetadata extends Map<String, Object> {
+public class ResourceMetadata extends HashMap<String, Object> {
 
     /**
      * The name of the required property providing the part of the request URI
