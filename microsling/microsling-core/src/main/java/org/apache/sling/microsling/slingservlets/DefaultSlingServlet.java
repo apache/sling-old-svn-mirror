@@ -106,8 +106,8 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
             // no Resource or if the Node that it points to already has child nodes,
             // we create a new node. Else we update the current node.
             if(current.hasNodes()) {
-                final String parentPath = current.getPath();
                 final RequestPathInfo pathInfo = req.getRequestPathInfo();
+                final String parentPath = pathInfo.getResourcePath();
                 final String newNodePath = (pathInfo.getSuffix() == null || pathInfo.getSuffix().length() == 0)
                         ? String.valueOf(System.currentTimeMillis())
                         : pathInfo.getSuffix();
