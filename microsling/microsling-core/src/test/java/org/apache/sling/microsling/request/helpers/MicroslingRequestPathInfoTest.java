@@ -16,8 +16,6 @@
  */
 package org.apache.sling.microsling.request.helpers;
 
-import java.util.HashMap;
-
 import junit.framework.TestCase;
 
 import org.apache.sling.api.request.RequestPathInfo;
@@ -169,7 +167,7 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         private final ResourceMetadata metadata;
 
         MockResource(String resolutionPath) {
-            metadata = new MockResourceMetadata();
+            metadata = new ResourceMetadata();
             metadata.put(ResourceMetadata.RESOLUTION_PATH, resolutionPath);
         }
 
@@ -192,11 +190,6 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         public ResourceMetadata getResourceMetadata() {
             return metadata;
         }
-    }
-
-    private static class MockResourceMetadata extends HashMap<String, Object>
-            implements ResourceMetadata {
-
     }
 
 }
