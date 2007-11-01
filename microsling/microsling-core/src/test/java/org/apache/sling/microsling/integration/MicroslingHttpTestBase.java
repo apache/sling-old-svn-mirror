@@ -23,6 +23,7 @@ import java.net.URL;
 import junit.framework.TestCase;
 
 import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -82,4 +83,26 @@ class MicroslingHttpTestBase extends TestCase {
     protected void assertHttpStatus(String urlString, int expectedStatusCode) throws IOException {
         assertHttpStatus(urlString, expectedStatusCode, null);
     }
+    
+    /** retrieve the contents of given URL and assert its content type
+     * @throws IOException
+     * @throws HttpException */
+    protected String getContent(String url, String expectedContentType) throws IOException {
+        final GetMethod get = new GetMethod(url);
+        final int status = httpClient.executeMethod(get);
+        assertEquals("Expected status 200 for " + url,200,status);
+        final Header h = get.getResponseHeader("Content-Type");
+        if(expectedContentType == null) {
+            if(h!=null) {
+                fail("Expected null Content-Type, got " + h.getValue());
+            }
+        } else {
+            assertTrue(
+                "Expected Content-Type '" + expectedContentType + "' for " + url,
+                h.getValue().startsWith(expectedContentType)
+            );
+        }
+        return get.getResponseBodyAsString();
+    }
+
 }
