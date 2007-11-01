@@ -19,18 +19,17 @@ package org.apache.sling.microsling.slingservlets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,17 +41,27 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.microsling.slingservlets.renderers.DefaultHtmlRendererServlet;
+import org.apache.sling.microsling.slingservlets.renderers.PlainTextRendererServlet;
 
 /**
  * The default SlingServlet, used if no other SlingServlet wants to process the
  * current request.
  */
 public class DefaultSlingServlet extends SlingAllMethodsServlet {
-
+    private static final long serialVersionUID = -2259461041692895761L;
+    
+    private Map<String, Servlet> renderingServlets = new HashMap <String, Servlet>();
+    
+    public DefaultSlingServlet() {
+        renderingServlets.put("txt", new PlainTextRendererServlet());
+        renderingServlets.put("html", new DefaultHtmlRendererServlet());
+    }
+    
     @Override
+    /** Delegate rendering to one of our renderingServlets, based on the request extension */
     protected void doGet(SlingHttpServletRequest req, SlingHttpServletResponse resp)
             throws ServletException, IOException {
-        resp.setContentType("text/plain");
 
         // ensure the resource or try web app contents
         final Resource  r = req.getResource();
@@ -68,23 +77,28 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 "Resource not found: " + r.getURI());
         }
 
+        // make sure we have an Item, and render it via one of our renderingServlets 
         final Object data = r.getRawData();
-        if (data instanceof Item) {
-            final PrintWriter pw = resp.getWriter();
-            try {
-                if (data instanceof Node) {
-                    dump(pw, r, (Node) data);
-                } else {
-                    dump(pw, r, (Property) data);
-                }
-            } catch (RepositoryException re) {
-                throw new ServletException("Cannot dump contents of "
-                    + req.getResource().getURI(), re);
+        if(data!=null && (data instanceof Item)) {
+            String ext = req.getRequestPathInfo().getExtension();
+            if(ext==null || ext.length() == 0) {
+                ext = "txt";
             }
+            final Servlet s = renderingServlets.get(ext);
+            if(s!=null) {
+                s.service(req, resp);
+            } else {
+                throw new HttpStatusCodeException(
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "No default renderer found for extension='" + ext + "'"
+                        + ", use one of these extensions: " + renderingServlets.keySet()
+                );
+            }
+            
         } else {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Not implemented: resource " + req.getResource().getURI()
-                    + " cannot be dumped by " + getClass().getSimpleName());
+                + " cannot be dumped by " + getClass().getSimpleName());
         }
     }
 
@@ -193,45 +207,6 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         return (parent);
     }
 
-    protected void dump(PrintWriter pw, Resource r, Node n) throws RepositoryException {
-        pw.println("** Node dumped by " + getClass().getSimpleName() + "**");
-        pw.println("Node path:" + n.getPath());
-        pw.println("Resource metadata: " + r.getResourceMetadata());
-
-        pw.println("\n** Node properties **");
-        for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
-            final Property p = pi.nextProperty();
-            printPropertyValue(pw, p);
-        }
-    }
-
-    protected void dump(PrintWriter pw, Resource r, Property p) throws RepositoryException {
-        pw.println("** Property dumped by " + getClass().getSimpleName() + "**");
-        pw.println("Property path:" + p.getPath());
-        pw.println("Resource metadata: " + r.getResourceMetadata());
-
-        printPropertyValue(pw, p);
-    }
-
-    protected void printPropertyValue(PrintWriter pw, Property p)
-            throws RepositoryException {
-
-        pw.print(p.getName() + ": ");
-
-        if (p.getDefinition().isMultiple()) {
-            Value[] values = p.getValues();
-            pw.print('[');
-            for (int i = 0; i < values.length; i++) {
-                if (i > 0) {
-                    pw.print(", ");
-                }
-                pw.print(values[i].getString());
-            }
-            pw.println(']');
-        } else {
-            pw.println(p.getValue().getString());
-        }
-    }
 
     protected void spool(URL url, SlingHttpServletResponse res) throws IOException {
         URLConnection conn = url.openConnection();

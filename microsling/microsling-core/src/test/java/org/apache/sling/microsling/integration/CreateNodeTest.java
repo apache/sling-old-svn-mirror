@@ -48,5 +48,11 @@ public class CreateNodeTest extends MicroslingHttpTestBase {
         final String responseBodyStr = get.getResponseBodyAsString();
         assertTrue(responseBodyStr.contains("value1"));
         assertTrue(responseBodyStr.contains("value2"));
+        
+        // test default txt and html renderings
+        getContent(urlOfNewNode, "text/plain");
+        getContent(urlOfNewNode + ".txt", "text/plain");
+        getContent(urlOfNewNode + ".html", "text/html");
+        assertHttpStatus(urlOfNewNode + ".noRendererForThisExtension", 500);
     }
 }
