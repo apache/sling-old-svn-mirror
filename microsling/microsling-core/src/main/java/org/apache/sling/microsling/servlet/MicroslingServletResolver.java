@@ -51,27 +51,38 @@ public class MicroslingServletResolver implements ServletResolver {
 
     private DefaultSlingServlet defaultSlingServlet;
 
-    MicroslingServletResolver(ServletContext servletContext) {
+    MicroslingServletResolver(ServletContext servletContext)
+            throws ServletException {
         this.servletContext = servletContext;
         this.servlets = new HashMap<String, Servlet>();
 
         // TODO use a utility class to map nt:file to the magic NODETYPES path
         addServlet("NODETYPES/nt/file", new StreamServlet());
+
         defaultSlingServlet = new DefaultSlingServlet();
+        ServletConfig config = new MicroslingServletConfig(
+            "Default microsling Servlet", getServletContext());
+        defaultSlingServlet.init(config);
     }
 
     protected void destroy() {
-        Servlet[] servletList = servlets.values().toArray(
-            new Servlet[servlets.size()]);
-        for (Servlet servlet : servletList) {
-            try {
-                servlet.destroy();
-            } catch (Throwable t) {
-                getServletContext().log(
-                    "Unexpected problem destroying servlet " + servlet, t);
+        if (servlets != null) {
+            Servlet[] servletList = servlets.values().toArray(
+                new Servlet[servlets.size()]);
+            for (Servlet servlet : servletList) {
+                try {
+                    servlet.destroy();
+                } catch (Throwable t) {
+                    getServletContext().log(
+                        "Unexpected problem destroying servlet " + servlet, t);
+                }
             }
+            servlets.clear();
         }
-        servlets.clear();
+
+        if (defaultSlingServlet != null) {
+            defaultSlingServlet.destroy();
+        }
     }
 
     public Servlet resolveServlet(SlingHttpServletRequest request)
@@ -129,23 +140,7 @@ public class MicroslingServletResolver implements ServletResolver {
     protected void addServlet(final String resourceType, Servlet servlet) {
 
         try {
-            ServletConfig config = new ServletConfig() {
-                public String getInitParameter(String name) {
-                    return null;
-                }
-
-                public Enumeration<?> getInitParameterNames() {
-                    return Collections.enumeration(Collections.emptyList());
-                }
-
-                public ServletContext getServletContext() {
-                    return MicroslingServletResolver.this.getServletContext();
-                }
-
-                public String getServletName() {
-                    return resourceType;
-                }
-            };
+            ServletConfig config = new MicroslingServletConfig(resourceType, getServletContext());
             servlet.init(config);
 
             // only register if initialization succeeds
@@ -160,5 +155,32 @@ public class MicroslingServletResolver implements ServletResolver {
 
     protected ServletContext getServletContext() {
         return servletContext;
+    }
+
+    private static class MicroslingServletConfig implements ServletConfig {
+
+        private final String servletName;
+        private final ServletContext servletContext;
+
+        public MicroslingServletConfig(String servletName, ServletContext servletContext) {
+            this.servletName = servletName;
+            this.servletContext = servletContext;
+        }
+
+        public String getInitParameter(String name) {
+            return null;
+        }
+
+        public Enumeration<?> getInitParameterNames() {
+            return Collections.enumeration(Collections.emptyList());
+        }
+
+        public ServletContext getServletContext() {
+            return servletContext;
+        }
+
+        public String getServletName() {
+            return servletName;
+        }
     }
 }
