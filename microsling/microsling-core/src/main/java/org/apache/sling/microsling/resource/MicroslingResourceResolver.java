@@ -34,6 +34,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -311,44 +312,4 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
     }
 
-    /**
-     * Resource class used to represent a non existing resource returned by the
-     * {@link MicroslingResourceResolver#resolve(ServletRequest)} method.
-     */
-    private static class NonExistingResource implements Resource {
-
-        /** The path of the missing resource */
-        private final String resourcePath;
-
-        /** The reource meta data just containing the resource path again */
-        private final ResourceMetadata resourceMetadata;
-
-        NonExistingResource(String resourcePath) {
-            this.resourcePath = resourcePath;
-
-            resourceMetadata = new MicroslingResourceMetadata();
-            resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, resourcePath);
-        }
-
-        public String getURI() {
-            return resourcePath;
-        }
-
-        public String getResourceType() {
-            return RESOURCE_TYPE_NON_EXISTING;
-        }
-
-        public ResourceMetadata getResourceMetadata() {
-            return resourceMetadata;
-        }
-
-        public Object getObject() {
-            return null;
-        }
-
-        public Object getRawData() {
-            return null;
-        }
-
-    }
 }
