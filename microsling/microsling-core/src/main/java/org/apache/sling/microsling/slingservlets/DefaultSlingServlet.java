@@ -42,6 +42,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.microsling.slingservlets.renderers.DefaultHtmlRendererServlet;
+import org.apache.sling.microsling.slingservlets.renderers.JsonRendererServlet;
 import org.apache.sling.microsling.slingservlets.renderers.PlainTextRendererServlet;
 
 /**
@@ -53,9 +54,19 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
 
     private Map<String, Servlet> renderingServlets = new HashMap <String, Servlet>();
 
-    public DefaultSlingServlet() {
-        renderingServlets.put("text/plain", new PlainTextRendererServlet());
-        renderingServlets.put("text/html", new DefaultHtmlRendererServlet());
+    @Override
+    public void init() throws ServletException {
+        String contentType = null;
+        final String ctSuffix = "; charset=UTF-8";
+        
+        contentType = getServletContext().getMimeType("dummy.txt");
+        renderingServlets.put(contentType, new PlainTextRendererServlet(contentType + ctSuffix));
+        
+        contentType = getServletContext().getMimeType("dummy.html");
+        renderingServlets.put(contentType, new DefaultHtmlRendererServlet(contentType + ctSuffix));
+        
+        contentType = getServletContext().getMimeType("dummy.json");
+        renderingServlets.put(contentType, new JsonRendererServlet(contentType + ctSuffix));
     }
 
     @Override
@@ -91,7 +102,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 throw new HttpStatusCodeException(
                         HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "No default renderer found for Content-Type='" + contentType + "'"
-                        + ", use one of these extensions: " + renderingServlets.keySet()
+                        + ", use one of these Content-types: " + renderingServlets.keySet()
                 );
             }
 

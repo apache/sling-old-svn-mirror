@@ -37,14 +37,19 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = -5815904221043005085L;
+    private final String responseContentType;
 
+    public PlainTextRendererServlet(String responseContentTypeHeaderValue) {
+        this.responseContentType = responseContentTypeHeaderValue;
+    }
+    
     @Override
     protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp) 
     throws ServletException,IOException 
     {
         final Resource  r = req.getResource();
         final Object data = r.getRawData();
-        resp.setContentType("text/plain; charset=UTF-8");
+        resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
         try {
             if (data instanceof Node) {
