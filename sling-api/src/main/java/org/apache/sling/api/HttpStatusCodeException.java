@@ -32,6 +32,12 @@ public class HttpStatusCodeException extends IOException {
         this.statusCode = statusCode;
     }
 
+    public HttpStatusCodeException(int statusCode, String message, Throwable cause) {
+        super(message);
+        initCause(cause);
+        this.statusCode = statusCode;
+    }
+
     public int getStatusCode() {
         return statusCode;
     }
