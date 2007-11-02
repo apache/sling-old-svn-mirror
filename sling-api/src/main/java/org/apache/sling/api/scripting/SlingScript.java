@@ -21,6 +21,8 @@ package org.apache.sling.api.scripting;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.apache.sling.api.resource.Resource;
+
 /**
  * The <code>SlingScript</code> defines the API for objects which encapsulate
  * a script resolved by the {@link SlingScriptResolver}. To have a script
@@ -36,9 +38,9 @@ import java.io.Reader;
 public interface SlingScript {
 
     /**
-     * Returns the (path) name of this script.
+     * Returns the Resource providing the script source code.
      */
-    String getScriptPath();
+    Resource getScriptResource();
 
     /**
      * Returns the {@link SlingScriptEngine} used to evaluate this script.
