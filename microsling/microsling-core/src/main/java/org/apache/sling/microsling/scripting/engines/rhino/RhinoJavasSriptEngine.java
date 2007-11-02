@@ -62,9 +62,11 @@ public class RhinoJavasSriptEngine implements SlingScriptEngine {
     public void eval(SlingScript script, Map<String, Object> props)
             throws SlingException, IOException {
 
+        String scriptName = script.getScriptResource().getURI();
+
         // wrap the reader in an EspReader for ESP scripts
         Reader scriptReader = script.getScriptReader();
-        if (script.getScriptPath().endsWith(ESP_SCRIPT_EXTENSION)) {
+        if (scriptName.endsWith(ESP_SCRIPT_EXTENSION)) {
             scriptReader = new EspReader(scriptReader);
         }
 
@@ -82,14 +84,13 @@ public class RhinoJavasSriptEngine implements SlingScriptEngine {
             final int lineNumber = 1;
             final Object securityDomain = null;
 
-            rhinoContext.evaluateReader(scope, scriptReader,
-                script.getScriptPath(), lineNumber, securityDomain);
+            rhinoContext.evaluateReader(scope, scriptReader, scriptName,
+                lineNumber, securityDomain);
 
         } catch (IOException ioe) {
             throw ioe;
         } catch (Throwable t) {
-            throw new SlingException("Failure running script "
-                + script.getScriptPath(), t);
+            throw new SlingException("Failure running script " + scriptName, t);
         } finally {
             Context.exit();
         }

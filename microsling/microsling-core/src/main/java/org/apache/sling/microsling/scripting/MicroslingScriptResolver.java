@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
+import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.engines.freemarker.FreemarkerScriptEngine;
 import org.apache.sling.microsling.scripting.engines.rhino.RhinoJavasSriptEngine;
 import org.apache.sling.microsling.scripting.engines.velocity.VelocityTemplatesScriptEngine;
@@ -104,10 +105,9 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             props.put(SlingScriptEngine.SLING, helper);
             props.put(SlingScriptEngine.RESOURCE, helper.getRequest().getResource());
             props.put(SlingScriptEngine.REQUEST, helper.getRequest());
-            props.put(SlingScriptEngine.RESOURCE, helper.getRequest().getResource());
             props.put(SlingScriptEngine.RESPONSE, helper.getResponse());
             props.put(SlingScriptEngine.OUT, helper.getResponse().getWriter());
-            props.put(SlingScriptEngine.LOG, LoggerFactory.getLogger(script.getScriptPath()));
+            props.put(SlingScriptEngine.LOG, LoggerFactory.getLogger(script.getScriptResource().getURI()));
 
             resp.setContentType(req.getResponseContentType()
                 + "; charset=UTF-8");
@@ -206,8 +206,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
                         if (scriptEngine != null) {
                             MicroslingScript script = new MicroslingScript();
-                            script.setNode(scriptNode);
-                            script.setScriptPath(scriptNode.getPath());
+                            script.setScriptResource(new JcrNodeResource(scriptNode));
                             script.setScriptEngine(scriptEngine);
                             result = script;
                             break;
@@ -218,11 +217,12 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         }
 
         if (result != null) {
-            log.info("Found nt:file script node " + result.getScriptPath()
-                + " for Resource=" + r);
+            log.info("Found nt:file script node {} for Resource={}",
+                result.getScriptResource().getURI(), r);
         } else {
-            log.debug("nt:file script node not found at path=" + scriptPath
-                + " for Resource=" + r);
+            log.debug(
+                "nt:file script node not found at path={} for Resource={}",
+                scriptPath, r);
         }
 
         return result;
@@ -250,67 +250,44 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     }
 
     private static class MicroslingScript implements SlingScript {
-        private Node node;
 
-        private String scriptPath;
+        private Resource scriptResource;
 
         private SlingScriptEngine scriptEngine;
 
-        /**
-         * @return the node
-         */
-        Node getNode() {
-            return node;
+        public Resource getScriptResource() {
+            return scriptResource;
         }
 
-        /**
-         * @param node the node to set
-         */
-        void setNode(Node node) {
-            this.node = node;
+        void setScriptResource(Resource scriptResource) {
+            this.scriptResource = scriptResource;
         }
 
-        /**
-         * @return the scriptPath
-         */
-        public String getScriptPath() {
-            return scriptPath;
-        }
-
-        /**
-         * @param scriptPath the scriptPath to set
-         */
-        void setScriptPath(String scriptPath) {
-            this.scriptPath = scriptPath;
-        }
-
-        /**
-         * @return the scriptEngine
-         */
         public SlingScriptEngine getScriptEngine() {
             return scriptEngine;
         }
 
-        /**
-         * @param scriptEngine the scriptEngine to set
-         */
         void setScriptEngine(SlingScriptEngine scriptEngine) {
             this.scriptEngine = scriptEngine;
         }
 
-        /**
-         * @return The script stored in the node as a Reader
-         */
         public Reader getScriptReader() throws IOException {
 
             Property property;
             Value value;
 
             try {
-                // SLING-72: Cannot use primary items due to WebDAV creating
-                // nt:unstructured as jcr:content node. So we just assume
-                // nt:file and try to use the well-known data path
-                property = getNode().getProperty("jcr:content/jcr:data");
+
+                if (getScriptResource().getRawData() instanceof Node) {
+                    // SLING-72: Cannot use primary items due to WebDAV creating
+                    // nt:unstructured as jcr:content node. So we just assume
+                    // nt:file and try to use the well-known data path
+                    Node node = (Node) getScriptResource().getRawData();
+                    property = node.getProperty("jcr:content/jcr:data");
+                } else {
+                    throw new IOException("Scriptresource " + getScriptResource() + " must is not JCR Node based");
+                }
+
                 value = null;
                 if (property.getDefinition().isMultiple()) {
                     // for a multi-valued property, we take the first non-null
@@ -328,7 +305,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                     // incase we could not find a non-null value, we bail out
                     if (value == null) {
                         throw new IOException("Cannot access "
-                            + getScriptPath());
+                            + getScriptResource().getURI());
                     }
                 } else {
                     // for single-valued properties, we just take this value
@@ -336,7 +313,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 }
             } catch (RepositoryException re) {
                 throw (IOException) new IOException("Cannot get script "
-                    + getScriptPath()).initCause(re);
+                    + getScriptResource().getURI()).initCause(re);
             }
 
             // Now know how to get the input stream, we still have to decide
@@ -364,7 +341,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                     new InputStreamReader(input, encoding));
             } catch (RepositoryException re) {
                 throw (IOException) new IOException("Cannot get script "
-                    + getScriptPath()).initCause(re);
+                    + getScriptResource().getURI()).initCause(re);
             }
         }
     }

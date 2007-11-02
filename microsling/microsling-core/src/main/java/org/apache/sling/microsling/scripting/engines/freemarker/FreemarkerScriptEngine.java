@@ -60,7 +60,6 @@ public class FreemarkerScriptEngine implements SlingScriptEngine {
     public void eval(SlingScript script, Map<String, Object> props)
             throws SlingException, IOException {
 
-        String scriptName = script.getScriptPath();
         // ensure get method
         HttpServletRequest request = (HttpServletRequest) props.get(REQUEST);
         if (!"GET".equals(request.getMethod())) {
@@ -69,6 +68,7 @@ public class FreemarkerScriptEngine implements SlingScriptEngine {
                 "FreeMarker templates only support GET requests");
         }
 
+        String scriptName = script.getScriptResource().getURI();
         Template tmpl = new Template(scriptName, script.getScriptReader(),
             configuration);
 

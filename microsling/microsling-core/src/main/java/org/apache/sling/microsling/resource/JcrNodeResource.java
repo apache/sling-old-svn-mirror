@@ -24,7 +24,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 
 /** A Resource that wraps a JCR Node */
-class JcrNodeResource implements Resource {
+public class JcrNodeResource implements Resource {
     private final Node node;
     private final String path;
     private final String resourceType;
@@ -45,7 +45,7 @@ class JcrNodeResource implements Resource {
         resourceType = getResourceTypeForNode(node);
     }
 
-    JcrNodeResource(Node node) throws RepositoryException {
+    public JcrNodeResource(Node node) throws RepositoryException {
         this.node = node;
         this.path = node.getPath();
         metadata = new ResourceMetadata();
