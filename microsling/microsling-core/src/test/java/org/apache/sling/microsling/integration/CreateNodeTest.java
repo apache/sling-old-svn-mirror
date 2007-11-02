@@ -50,9 +50,10 @@ public class CreateNodeTest extends MicroslingHttpTestBase {
         assertTrue(responseBodyStr.contains("value2"));
         
         // test default txt and html renderings
-        getContent(urlOfNewNode, "text/plain");
-        getContent(urlOfNewNode + ".txt", "text/plain");
-        getContent(urlOfNewNode + ".html", "text/html");
+        getContent(urlOfNewNode, CONTENT_TYPE_PLAIN);
+        getContent(urlOfNewNode + ".txt", CONTENT_TYPE_PLAIN);
+        getContent(urlOfNewNode + ".html", CONTENT_TYPE_HTML);
+        getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
         
         // funny extensions are rendered as text/plain
         getContent(urlOfNewNode + ".someWeirdExtension", "text/plain");

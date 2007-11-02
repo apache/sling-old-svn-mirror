@@ -41,6 +41,7 @@ class MicroslingHttpTestBase extends TestCase {
     public static final String CONTENT_TYPE_HTML = "text/html";
     public static final String CONTENT_TYPE_XML = "text/xml";
     public static final String CONTENT_TYPE_PLAIN = "text/plain";
+    public static final String CONTENT_TYPE_JSON = "application/json";
     
     protected MicroslingIntegrationTestClient testClient;
     protected HttpClient httpClient;

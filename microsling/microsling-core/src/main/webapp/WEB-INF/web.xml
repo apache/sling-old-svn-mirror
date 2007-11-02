@@ -264,4 +264,9 @@
     <extension>htm</extension>
     <mime-type>text/html</mime-type>
   </mime-mapping>
+  <mime-mapping>
+    <!-- JSON, as specified by RFC 4627 -->
+    <extension>json</extension>
+    <mime-type>application/json</mime-type>
+  </mime-mapping>
 </web-app>
