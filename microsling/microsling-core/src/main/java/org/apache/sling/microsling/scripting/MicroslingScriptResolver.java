@@ -226,20 +226,6 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         return result;
     }
 
-    protected String filterStringForFilename(String inputString) {
-        final StringBuffer sb = new StringBuffer();
-        final String str = inputString.toLowerCase();
-        for (int i = 0; i < str.length(); i++) {
-            final char c = str.charAt(i);
-            if (Character.isLetterOrDigit(c)) {
-                sb.append(c);
-            } else {
-                sb.append("_");
-            }
-        }
-        return sb.toString();
-    }
-
     private void addScriptEngine(SlingScriptEngine scriptEngine) {
         String[] extensions = scriptEngine.getExtensions();
         for (String extension : extensions) {
