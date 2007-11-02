@@ -56,8 +56,7 @@ public class MicroslingServletResolver implements ServletResolver {
         this.servletContext = servletContext;
         this.servlets = new HashMap<String, Servlet>();
 
-        // TODO use a utility class to map nt:file to the magic NODETYPES path
-        addServlet("NODETYPES/nt/file", new StreamServlet());
+        addServlet("nt:file", new StreamServlet());
 
         defaultSlingServlet = new DefaultSlingServlet();
         ServletConfig config = new MicroslingServletConfig(

@@ -36,8 +36,6 @@ public class JcrNodeResource implements Resource {
      */
     public static final String SLING_RESOURCE_TYPE_PROPERTY = "slingResourceType";
 
-    public static final String NODE_TYPE_RT_PREFIX = "NODETYPES/";
-
     JcrNodeResource(javax.jcr.Session s,String path) throws RepositoryException {
         node = (Node)s.getItem(path);
         this.path = node.getPath();
@@ -89,18 +87,13 @@ public class JcrNodeResource implements Resource {
         String result = null;
 
         if(node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)) {
-            result = node.getProperty(SLING_RESOURCE_TYPE_PROPERTY).getValue().getString().toLowerCase().trim();
+            result = node.getProperty(SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
         }
 
         if(result==null || result.length() == 0) {
-            result = NODE_TYPE_RT_PREFIX + filterName(node.getPrimaryNodeType().getName());
+            result = node.getPrimaryNodeType().getName();
         }
 
         return result;
-    }
-
-    /** Filter a node type name so that it can be used in a resource type value */
-    public static String filterName(String name) {
-        return name.toLowerCase().replaceAll("\\:","/");
     }
 }

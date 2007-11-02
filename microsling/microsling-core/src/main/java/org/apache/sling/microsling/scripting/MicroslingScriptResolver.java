@@ -66,8 +66,6 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
     private static final Logger log = LoggerFactory.getLogger(MicroslingScriptResolver.class);
 
-    public static final String SCRIPT_BASE_PATH = "/sling/scripts";
-
     /**
      * jcr:encoding
      */
@@ -169,7 +167,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             request.getMethod(),
             request.getRequestPathInfo().getSelectorString(),
             request.getResponseContentType(), "*");
-        String scriptPath = SCRIPT_BASE_PATH + "/" + r.getResourceType();
+        String scriptPath = scriptFilenameBuilder.buildScriptPath(r);
 
         // SLING-72: if the scriptfilename contains a relative path, move that
         // to the scriptPath and make the scriptFilename a direct child pattern

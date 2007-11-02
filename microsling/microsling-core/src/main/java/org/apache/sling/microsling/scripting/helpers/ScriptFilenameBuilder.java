@@ -18,6 +18,7 @@
  */
 package org.apache.sling.microsling.scripting.helpers;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.microsling.helpers.constants.HttpConstants;
 
 /** Builds the names of script files based on the current input:
@@ -35,6 +36,8 @@ import org.apache.sling.microsling.helpers.constants.HttpConstants;
  *  selectors "print.a4".
  */
 public class ScriptFilenameBuilder {
+
+    public static final String SCRIPT_BASE_PATH = "/sling/scripts";
 
     /** @return a name like "html.js" or "print/a4/html.vlt" or "POST.js" */
     public String buildScriptFilename(String methodName,String selectors,String contentType,String scriptExtension) {
@@ -79,4 +82,12 @@ public class ScriptFilenameBuilder {
         return sb.toString();
     }
 
+    /** Returns the script root path constructed from the {@link #SCRIPT_BASE_PATH}
+     * and the resource type, where all backslashes and colons are replaced by
+     * forward slashes.
+     */
+    public String buildScriptPath(Resource resource) {
+        String typePath = resource.getResourceType().replaceAll("\\:","/");
+        return SCRIPT_BASE_PATH + "/" + typePath;
+    }
 }
