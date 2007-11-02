@@ -147,7 +147,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     }
 
     public SlingScript resolveScriptInternal(
-            final SlingHttpServletRequest request) throws RepositoryException {
+            final SlingHttpServletRequest request) throws RepositoryException, SlingException {
 
         final Resource r = request.getResource();
 
