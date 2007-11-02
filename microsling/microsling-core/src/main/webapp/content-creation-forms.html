@@ -7,7 +7,7 @@
   <h1>microsling content creation forms</h1>
   
   <div class="note">
-    <a href="../">back to homepage</a>
+    <a href="index.html">back to homepage</a>
   </div>
   
   <p>
@@ -15,7 +15,7 @@
   </p>
   
   <div>
-    <form class="testbox" action="microsling/content/testing.sling" method="POST">
+    <form class="testbox" action="content/testing" method="POST">
       <input type="hidden" name="slingDisplayExtension" value="html"/>
       
       <h1>SlingPostServlet content creation form</h1>
@@ -45,16 +45,6 @@
       </p>
     </form>
   </div>
-  
-  <div>
-    <form class="testbox" action="microsling/whatever" method="POST">
-      <h1>Non-Sling POST method form</h1>
-      <p>
-      	Submitting this form should cause an error 501: <em>POST method is not supported by DefaultSlingServlet</em>.
-      </p>
-      <input type="submit"/>
-    </form>
-  </div>
-  
+    
 </body>
 </html>

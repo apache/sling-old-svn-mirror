@@ -7,13 +7,13 @@
   <h1>microsling server-side javascript and ESP templates</h1>
   
   <div class="note">
-    <a href="../">back to homepage</a>
+    <a href="index.html">back to homepage</a>
   </div>
   
   <p>
     Server-side javascript code and javascript-based ESP templates can be used by microsling to process requests. 
     The scripts are located by the
-    <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/scripting/SlingScriptResolver.java?view=markup">SlingScriptResolver</a>
+    <a href="http://svn.apache.org/viewvc/incubator/sling/trunk/microsling/microsling-core/src/main/java/org/apache/sling/microsling/scripting/MicroslingScriptResolver.java?view=markup">MicroslingScriptResolver</a>
     , as for the <a href="velocity-scripts.html">Velocity templates</a> (see that
     page for more details about how this resolution works).  
   </p>
@@ -31,7 +31,7 @@
   </p>
   <p>
     Server-side javascript support is implemented by the 
-    <a href="http://svn.apache.org/viewvc/incubator/sling/whiteboard/microsling/src/main/java/org/apache/sling/microsling/slingservlets/RhinoJavascriptServlet.java?revision=585096&view=markup">RhinoJavascriptServlet</a>.
+    <a href="http://svn.apache.org/viewvc/incubator/sling/trunk/microsling/microsling-core/src/main/java/org/apache/sling/microsling/scripting/engines/rhino/RhinoJavascriptEngine.java?view=markup">RhinoJavascriptEngine</a>.
   </p>
   <p>
   	To test this, remove or rename <a href="velocity-scripts.html">Velocity templates</a>
@@ -130,7 +130,7 @@ for (var prop in resource.item) {
 &lt;/html></pre>
   <p>
     If you have created some content with the test form, and activated the above template, 
-    <a href="microsling/content/testing.sling.html">microsling/content/testing.sling.html</a> should
+    <a href="content/testing.html">content/testing.html</a> should
     display an HTML directory listing. 
   </p>
 </body>
