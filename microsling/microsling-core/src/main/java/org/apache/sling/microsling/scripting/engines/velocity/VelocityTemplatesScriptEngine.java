@@ -88,7 +88,7 @@ public class VelocityTemplatesScriptEngine implements SlingScriptEngine {
             throw ioe;
         } catch (Throwable t) {
             throw new SlingException("Failure running script "
-                + script.getScriptPath(), t);
+                + script.getScriptResource().getURI(), t);
         }
     }
 }
