@@ -23,28 +23,30 @@ package org.apache.sling.api.request;
  * <p id="decomp">
  * <b>Decomposition of a Request URL</b>
  * <ol>
- * <li>{@link #getPath() content path} - The longest substring of the
- * request URI resolving to a {@link org.apache.sling.api.resource.Resource} object such that the content path
- * is either the complete request URI the next character in the request URI
- * after the content path is either a dot (<code>.</code>) or a slash (<code>/</code>).
+ * <li>{@link #getPath() content path} - The longest substring of the request
+ * URI resolving to a {@link org.apache.sling.api.resource.Resource} object such
+ * that the content path is either the complete request URI or the next
+ * character in the request URI after the content path is either a dot (<code>.</code>)
+ * or a slash (<code>/</code>).
  * <li>{@link #getSelectors() selectors} - If the first character in the
  * request URI after the content path is a dot, the string after the dot upto
  * but not including the last dot before the next slash character or the end of
  * the request URI. If the content path spans the complete request URI or if a
- * slash follows the content path in the request, the no seletors exist. If only
- * one dot follows the content path before the end of the request URI or the
- * next slash, no selectors exist. The selectors are available as
- * {@link #getSelectorString() a single string} and an
+ * slash follows the content path in the request, then no seletors exist. If
+ * only one dot follows the content path before the end of the request URI or
+ * the next slash, no selectors exist. The selectors are available as
+ * {@link #getSelectorString() a single string} and as an
  * {@link #getSelectors() array of strings}, which is the selector string
  * splitted on dots.
  * <li>{@link #getExtension() extension} - The string after the last dot after
  * the content path in the request uri but before the end of the request uri or
- * the next slash after the content path in the request uri. If a slash follows
- * the content path in the request URI, the extension is empty.
- * <li>{@link #getSuffix() suffix path} - If the request URI contains more a
- * slash character after the content path and optional selectors and extension,
- * the path starting with the slash upto the end of the request URI is the
- * suffix path.
+ * the next slash after the content path in the request uri. If the content path
+ * spans the complete request URI or a slash follows the content path in the
+ * request URI, the extension is empty.
+ * <li>{@link #getSuffix() suffix path} - If the request URI contains a slash
+ * character after the content path and optional selectors and extension, the
+ * path starting with the slash upto the end of the request URI is the suffix
+ * path.
  * </ol>
  * <p>
  * Examples: <table>
@@ -141,11 +143,21 @@ package org.apache.sling.api.request;
  * </tr>
  * </table>
  */
-
 public interface RequestPathInfo {
+
     /**
-     * Returns the extension from the URL or an empty string if the request URL
-     * does not contain an extension.
+     * Return the "resource path" part of the URL, what comes before selectors,
+     * extension and suffix. This string is part of the request URL and need not
+     * be equal to the {@link org.apache.sling.api.resource.Resource#getURI()}.
+     * Rather it is equal to the
+     * {@link org.apache.sling.api.resource.ResourceMetadata#RESOLUTION_PATH resolution path metadata property}
+     * of the resource.
+     */
+    String getResourcePath();
+
+    /**
+     * Returns the extension from the URL or <code>null</code> if the request
+     * URL does not contain an extension.
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
@@ -153,6 +165,17 @@ public interface RequestPathInfo {
      * @return The extension from the request URL.
      */
     String getExtension();
+
+    /**
+     * Returns the selectors decoded from the request URL as string. Returns
+     * <code>null</code> if the request has no selectors.
+     * <p>
+     * Decomposition of the request URL is defined in the <a
+     * href="#decomp">Decomposition of a Request URL</a> above.
+     *
+     * @see #getSelectors()
+     */
+    String getSelectorString();
 
     /**
      * Returns the selectors decoded from the request URL as an array of
@@ -168,19 +191,8 @@ public interface RequestPathInfo {
     String[] getSelectors();
 
     /**
-     * Returns the selectors decoded from the request URL as string. Returns an
-     * empty string if the request has no selectors.
-     * <p>
-     * Decomposition of the request URL is defined in the <a
-     * href="#decomp">Decomposition of a Request URL</a> above.
-     *
-     * @see #getSelectors()
-     */
-    String getSelectorString();
-
-    /**
-     * Returns the suffix part of the URL or an empty string if the request URL
-     * does not contain a suffix.
+     * Returns the suffix part of the URL or <code>null</code> if the request
+     * URL does not contain a suffix.
      * <p>
      * Decomposition of the request URL is defined in the <a
      * href="#decomp">Decomposition of a Request URL</a> above.
@@ -189,9 +201,4 @@ public interface RequestPathInfo {
      */
     String getSuffix();
 
-    /**
-     * Return the "resource path" part of the URL, what comes before selectors,
-     * extension and suffix
-     */
-    String getResourcePath();
 }
