@@ -42,7 +42,9 @@ public class JsonItemWriter {
 
     /** Create a JsonItemWriter
      *  @param propertyNamesToIgnore if not null, a property having a name from this
-     *  set of values is ignored
+     *  set of values is ignored. 
+     *  TODO we should use a filtering interface to make the selection of which Nodes
+     *  and Properties to dump more flexible.
      */ 
     public JsonItemWriter(Set<String> propertyNamesToIgnore) {
         this.propertyNamesToIgnore = propertyNamesToIgnore;
