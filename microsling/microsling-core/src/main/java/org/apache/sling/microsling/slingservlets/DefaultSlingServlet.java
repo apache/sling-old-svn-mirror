@@ -54,8 +54,8 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
     private Map<String, Servlet> renderingServlets = new HashMap <String, Servlet>();
 
     public DefaultSlingServlet() {
-        renderingServlets.put("txt", new PlainTextRendererServlet());
-        renderingServlets.put("html", new DefaultHtmlRendererServlet());
+        renderingServlets.put("text/plain", new PlainTextRendererServlet());
+        renderingServlets.put("text/html", new DefaultHtmlRendererServlet());
     }
 
     @Override
@@ -83,17 +83,14 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         // make sure we have an Item, and render it via one of our renderingServlets
         final Object data = r.getRawData();
         if(data!=null && (data instanceof Item)) {
-            String ext = req.getRequestPathInfo().getExtension();
-            if (ext == null) {
-                ext = "txt";
-            }
-            final Servlet s = renderingServlets.get(ext);
+            final String contentType = req.getResponseContentType();
+            final Servlet s = renderingServlets.get(contentType);
             if(s!=null) {
                 s.service(req, resp);
             } else {
                 throw new HttpStatusCodeException(
                         HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "No default renderer found for extension='" + ext + "'"
+                        "No default renderer found for Content-Type='" + contentType + "'"
                         + ", use one of these extensions: " + renderingServlets.keySet()
                 );
             }

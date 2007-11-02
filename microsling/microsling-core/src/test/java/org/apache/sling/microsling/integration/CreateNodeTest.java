@@ -53,6 +53,12 @@ public class CreateNodeTest extends MicroslingHttpTestBase {
         getContent(urlOfNewNode, "text/plain");
         getContent(urlOfNewNode + ".txt", "text/plain");
         getContent(urlOfNewNode + ".html", "text/html");
-        assertHttpStatus(urlOfNewNode + ".noRendererForThisExtension", 500);
+        
+        // funny extensions are rendered as text/plain
+        getContent(urlOfNewNode + ".someWeirdExtension", "text/plain");
+        
+        // but well-known extensions for which we have no renderer fail
+        assertHttpStatus(urlOfNewNode + ".xml", 500);
+        assertHttpStatus(urlOfNewNode + ".pdf", 500);
     }
 }

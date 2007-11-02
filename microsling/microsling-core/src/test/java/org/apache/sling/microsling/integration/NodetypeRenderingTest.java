@@ -33,8 +33,8 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         // set test values
         testText = "This is a test " + System.currentTimeMillis();
         
-        // create the test node
-        final String url = HTTP_BASE_URL + TEST_PATH + ".sling";
+        // create the test node, under a path that's specific to this class to allow collisions
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis() + ".sling";
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
         displayUrl = testClient.createNode(url, props);
