@@ -50,14 +50,14 @@ import org.apache.sling.microsling.slingservlets.renderers.PlainTextRendererServ
  */
 public class DefaultSlingServlet extends SlingAllMethodsServlet {
     private static final long serialVersionUID = -2259461041692895761L;
-    
+
     private Map<String, Servlet> renderingServlets = new HashMap <String, Servlet>();
-    
+
     public DefaultSlingServlet() {
         renderingServlets.put("txt", new PlainTextRendererServlet());
         renderingServlets.put("html", new DefaultHtmlRendererServlet());
     }
-    
+
     @Override
     /** Delegate rendering to one of our renderingServlets, based on the request extension */
     protected void doGet(SlingHttpServletRequest req, SlingHttpServletResponse resp)
@@ -80,11 +80,11 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 "Resource not found: " + r.getURI());
         }
 
-        // make sure we have an Item, and render it via one of our renderingServlets 
+        // make sure we have an Item, and render it via one of our renderingServlets
         final Object data = r.getRawData();
         if(data!=null && (data instanceof Item)) {
             String ext = req.getRequestPathInfo().getExtension();
-            if(ext==null || ext.length() == 0) {
+            if (ext == null) {
                 ext = "txt";
             }
             final Servlet s = renderingServlets.get(ext);
@@ -97,7 +97,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                         + ", use one of these extensions: " + renderingServlets.keySet()
                 );
             }
-            
+
         } else {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Not implemented: resource " + req.getResource().getURI()
@@ -138,7 +138,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
             if(current.hasNodes()) {
                 final RequestPathInfo pathInfo = req.getRequestPathInfo();
                 final String parentPath = pathInfo.getResourcePath();
-                final String newNodePath = (pathInfo.getSuffix() == null || pathInfo.getSuffix().length() == 0)
+                final String newNodePath = (pathInfo.getSuffix() == null)
                         ? String.valueOf(System.currentTimeMillis())
                         : pathInfo.getSuffix();
                 current = deepCreateNode(s, parentPath + "/" + newNodePath);

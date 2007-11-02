@@ -44,12 +44,16 @@ public class ResponseContentTypeResolverFilter extends AbstractFilter {
         @Override
         public String getResponseContentType() {
             if (responseContentType == null) {
-                String file = "dummy."
-                    + getSlingRequest().getRequestPathInfo().getExtension();
-                final String contentType = getFilterConfig().getServletContext().getMimeType(
-                    file);
-                if (contentType != null) {
-                    responseContentType = contentType;
+                String ext = getSlingRequest().getRequestPathInfo().getExtension();
+                if (ext != null) {
+                    String file = "dummy." + ext;
+                    final String contentType = getFilterConfig().getServletContext().getMimeType(
+                        file);
+                    if (contentType != null) {
+                        responseContentType = contentType;
+                    } else {
+                        responseContentType = DEFAULT_RESPONSE_CONTENT_TYPE;
+                    }
                 } else {
                     responseContentType = DEFAULT_RESPONSE_CONTENT_TYPE;
                 }

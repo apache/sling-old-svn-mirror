@@ -27,31 +27,31 @@ import org.apache.sling.microsling.helpers.constants.HttpConstants;
  *    <li>Desired response Content-Type</li>
  *    <li>Desired script extension</li>
  *  </ul>
- *  
+ *
  *  See ScriptFilenameBuilderTest for examples.
- *  
+ *
  *  Note that names can include partial paths, for example we return
  *  "print/a4/html.js" for a GET request for an html document with
  *  selectors "print.a4".
  */
 public class ScriptFilenameBuilder {
 
-    /** @return a name like "html.js" or "print/a4/html.vlt" or "POST.js" */ 
+    /** @return a name like "html.js" or "print/a4/html.vlt" or "POST.js" */
     public String buildScriptFilename(String methodName,String selectors,String contentType,String scriptExtension) {
         final StringBuffer sb = new StringBuffer();
-        
+
         // path before filename:
         // add selectors in front of the filename if any, replacing dots in them by slashes
         // so that print.a4 becomes print/a4/
-        if(selectors != null && selectors.length() > 0) {
+        if(selectors != null) {
             sb.append(selectors.toLowerCase().replace('.','/'));
             sb.append('/');
         }
-        
+
         // filename:
         if(methodName==null || methodName.length() == 0) {
             sb.append("NO_METHOD");
-            
+
         } else if(HttpConstants.METHOD_GET.equalsIgnoreCase(methodName)) {
             // for the GET method, use the simplified content-type, lowercased,
             // as the filename.
@@ -63,13 +63,13 @@ public class ScriptFilenameBuilder {
                 final String [] splitContentType = contentType.split("/");
                 sb.append(splitContentType[splitContentType.length - 1].toLowerCase());
             }
-            
+
         } else {
             // for other methods use the method name
             sb.append(methodName.toUpperCase());
         }
-        
-        // extension: use desired script extension 
+
+        // extension: use desired script extension
         sb.append(".");
         if(scriptExtension == null || scriptExtension.length()==0) {
             sb.append("NO_EXT");
@@ -78,5 +78,5 @@ public class ScriptFilenameBuilder {
         }
         return sb.toString();
     }
-    
+
 }
