@@ -29,8 +29,9 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         RequestPathInfo p = new MicroslingRequestPathInfo(
             new MockResource("/"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
-        assertEquals("", p.getExtension());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
         assertEquals("/some/path.print.a4.html/some/suffix", p.getSuffix());
     }
 
@@ -43,12 +44,73 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         }
     }
 
+    public void testTrailingDot() {
+        RequestPathInfo p = new MicroslingRequestPathInfo(
+            new MockResource("/some/path"), "/some/path.");
+        assertEquals("/some/path", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertNull(p.getSuffix());
+    }
+
+    public void testTrailingDotWithSuffix() {
+        RequestPathInfo p = new MicroslingRequestPathInfo(
+            new MockResource("/some/path"), "/some/path./suffix");
+        assertEquals("/some/path", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertEquals("/suffix", p.getSuffix());
+    }
+
+    public void testTrailingDotDot() {
+        RequestPathInfo p = new MicroslingRequestPathInfo(
+            new MockResource("/some/path"), "/some/path..");
+        assertEquals("/some/path", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertNull(p.getSuffix());
+    }
+
+    public void testTrailingDotDotWithSuffix() {
+        RequestPathInfo p = new MicroslingRequestPathInfo(
+            new MockResource("/some/path"), "/some/path../suffix");
+        assertEquals("/some/path", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertEquals("/suffix", p.getSuffix());
+    }
+
+    public void testTrailingDotDotDot() {
+        RequestPathInfo p = new MicroslingRequestPathInfo(
+            new MockResource("/some/path"), "/some/path...");
+        assertEquals("/some/path", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertNull(p.getSuffix());
+    }
+
+    public void testTrailingDotDotDotWithSuffix() {
+        RequestPathInfo p = new MicroslingRequestPathInfo(
+            new MockResource("/some/path"), "/some/path.../suffix");
+        assertEquals("/some/path", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertEquals("/suffix", p.getSuffix());
+    }
+
     public void testSimpleSuffix() {
         RequestPathInfo p = new MicroslingRequestPathInfo(
             new MockResource("/"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
-        assertEquals("", p.getExtension());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
         assertEquals("/some/path.print.a4.html/some/suffix", p.getSuffix());
     }
 
@@ -57,6 +119,9 @@ public class MicroslingRequestPathInfoTest extends TestCase {
             new MockResource("/some/path"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/some/path", p.getResourcePath());
         assertEquals("print.a4", p.getSelectorString());
+        assertEquals(2, p.getSelectors().length);
+        assertEquals("print", p.getSelectors()[0]);
+        assertEquals("a4", p.getSelectors()[1]);
         assertEquals("html", p.getExtension());
         assertEquals("/some/suffix", p.getSuffix());
     }
@@ -65,27 +130,30 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         RequestPathInfo p = new MicroslingRequestPathInfo(
             new MockResource("/"), null);
         assertEquals("/", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
-        assertEquals("", p.getExtension());
-        assertEquals("", p.getSuffix());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertNull(p.getSuffix());
     }
 
     public void testPathOnly() {
         RequestPathInfo p = new MicroslingRequestPathInfo(new MockResource(
             "/some/path/here"), "/some/path/here");
         assertEquals("/some/path/here", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
-        assertEquals("", p.getExtension());
-        assertEquals("", p.getSuffix());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertNull(p.getSuffix());
     }
 
     public void testPathAndExtensionOnly() {
         RequestPathInfo p = new MicroslingRequestPathInfo(new MockResource(
             "/some/path/here"), "/some/path/here.html");
         assertEquals("/some/path/here", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
         assertEquals("html", p.getExtension());
-        assertEquals("", p.getSuffix());
+        assertNull(p.getSuffix());
     }
 
     public void testPathAndOneSelectorOnly() {
@@ -93,15 +161,18 @@ public class MicroslingRequestPathInfoTest extends TestCase {
             "/some/path/here"), "/some/path/here.print.html");
         assertEquals("/some/path/here", p.getResourcePath());
         assertEquals("print", p.getSelectorString());
+        assertEquals(1, p.getSelectors().length);
+        assertEquals("print", p.getSelectors()[0]);
         assertEquals("html", p.getExtension());
-        assertEquals("", p.getSuffix());
+        assertNull(p.getSuffix());
     }
 
     public void testPathExtAndSuffix() {
         RequestPathInfo p = new MicroslingRequestPathInfo(new MockResource(
             "/some/path/here"), "/some/path/here.html/something");
         assertEquals("/some/path/here", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
         assertEquals("html", p.getExtension());
         assertEquals("/something", p.getSuffix());
     }
@@ -121,8 +192,9 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         RequestPathInfo p = new MicroslingRequestPathInfo(new MockResource(
             "/some"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/some", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
-        assertEquals("", p.getExtension());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
         assertEquals("/path.print.a4.html/some/suffix", p.getSuffix());
     }
 
@@ -131,6 +203,9 @@ public class MicroslingRequestPathInfoTest extends TestCase {
             "/some/path"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/some/path", p.getResourcePath());
         assertEquals("print.a4", p.getSelectorString());
+        assertEquals(2, p.getSelectors().length);
+        assertEquals("print", p.getSelectors()[0]);
+        assertEquals("a4", p.getSelectors()[1]);
         assertEquals("html", p.getExtension());
         assertEquals("/some/suffix", p.getSuffix());
     }
@@ -140,6 +215,8 @@ public class MicroslingRequestPathInfoTest extends TestCase {
             "/some/path.print"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/some/path.print", p.getResourcePath());
         assertEquals("a4", p.getSelectorString());
+        assertEquals(1, p.getSelectors().length);
+        assertEquals("a4", p.getSelectors()[0]);
         assertEquals("html", p.getExtension());
         assertEquals("/some/suffix", p.getSuffix());
     }
@@ -148,7 +225,8 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         RequestPathInfo p = new MicroslingRequestPathInfo(new MockResource(
             "/some/path.print.a4"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/some/path.print.a4", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
         assertEquals("html", p.getExtension());
         assertEquals("/some/suffix", p.getSuffix());
     }
@@ -157,8 +235,9 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         RequestPathInfo p = new MicroslingRequestPathInfo(new MockResource(
             "/some/path.print.a4.html"), "/some/path.print.a4.html/some/suffix");
         assertEquals("/some/path.print.a4.html", p.getResourcePath());
-        assertEquals("", p.getSelectorString());
-        assertEquals("", p.getExtension());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
         assertEquals("/some/suffix", p.getSuffix());
     }
 

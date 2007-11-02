@@ -43,7 +43,7 @@ public class MicroslingRequestPathInfo implements RequestPathInfo {
 
     private final String resourcePath;
 
-    private final static String EMPTY = "";
+    private final static String[] NO_SELECTORS = new String[0];
 
     /** break requestPath as required by SlingRequestPathInfo */
     public MicroslingRequestPathInfo(Resource r, String requestPath) {
@@ -65,29 +65,49 @@ public class MicroslingRequestPathInfo implements RequestPathInfo {
             pathToParse = pathToParse.substring(resourcePath.length());
         }
 
-        // separate selectors/ext from the suffix
-        int firstSlash = pathToParse.indexOf('/');
-        String pathToSplit;
-        if (firstSlash < 0) {
-            pathToSplit = pathToParse;
-            suffix = EMPTY;
-        } else {
-            pathToSplit = pathToParse.substring(0, firstSlash);
-            suffix = pathToParse.substring(firstSlash);
-        }
+        if (pathToParse.startsWith("/")) {
 
-        int lastDot = pathToSplit.lastIndexOf('.');
-        if (lastDot <= 0) {
-            // negative if pathToSplit is empty (in case all is suffix)
-            // zero if pathToSplit just contains the extension
-            selectorString = EMPTY;
-            selectors = new String[0];
-            extension = pathToSplit.substring(lastDot+1);
+            // only a suffix exists
+            selectorString = null;
+            selectors = NO_SELECTORS;
+            extension = null;
+            suffix = pathToParse;
+
         } else {
-            // assume the string to start with a dot
-            selectorString = pathToSplit.substring(1, lastDot);
-            selectors = selectorString.split("\\.");
-            extension = pathToSplit.substring(lastDot + 1);
+
+            // separate selectors/ext from the suffix
+            int firstSlash = pathToParse.indexOf('/');
+            String pathToSplit;
+            if (firstSlash < 0) {
+                pathToSplit = pathToParse;
+                suffix = null;
+            } else {
+                pathToSplit = pathToParse.substring(0, firstSlash);
+                suffix = pathToParse.substring(firstSlash);
+            }
+
+
+            int lastDot = pathToSplit.lastIndexOf('.');
+
+            if (lastDot <= 1) {
+
+                // no selectors if only extension exists or selectors is empty
+                selectorString = null;
+                selectors = NO_SELECTORS;
+
+            } else {
+
+                // no selectors if splitting would give an empty array
+                String tmpSel = pathToSplit.substring(1, lastDot);
+                selectors = tmpSel.split("\\.");
+                selectorString = (selectors.length > 0) ? tmpSel : null;
+
+            }
+
+            // extension only if lastDot is not trailing
+            extension = (lastDot + 1 < pathToSplit.length())
+                    ? pathToSplit.substring(lastDot + 1)
+                    : null;
         }
     }
 
