@@ -26,11 +26,14 @@ To build and run:
 
 I'm currently using revision 583722 for my tests.
 
-3) Build the sling-api
+3) Build the sling-api and sling-json modules
 
   cd sling/sling-api
   mvn clean install
 
+  cd sling/json
+  mvn clean install
+  
 4) Run the microsling tests:
 
   cd sling/microsling/microsling-core

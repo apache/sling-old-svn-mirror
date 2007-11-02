@@ -17,7 +17,6 @@
 package org.apache.sling.microsling.slingservlets.renderers;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -29,13 +28,18 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.json.JSONException;
 import org.apache.sling.microsling.helpers.json.JsonItemWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** A SlingSafeMethodsServlet that renders the current Resource
  *  as simple HTML
  */
 public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
+    private static final Logger log = LoggerFactory.getLogger(JsonRendererServlet.class);
+    
     private static final long serialVersionUID = 5577121546674133317L;
     private final String responseContentType;
     private final JsonItemWriter itemWriter;
@@ -82,18 +86,21 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
         // do the dump
         resp.setContentType(responseContentType);
-        final PrintWriter pw = resp.getWriter();
-        
         try {
-            itemWriter.dump(n,pw,0,maxRecursionLevels);
+            itemWriter.dump(n, resp.getWriter(), maxRecursionLevels);
+        } catch(JSONException je) {
+            reportException(je);
         } catch(RepositoryException re) {
-            throw new HttpStatusCodeException(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    re.toString(),
-                    re
-            );
-        } finally {
-            pw.flush();
+            reportException(re);
         }
+    }
+    
+    private void reportException(Exception e) throws HttpStatusCodeException {
+        log.warn("Error in JsonRendererServlet: " + e.toString(),e);
+        throw new HttpStatusCodeException(
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                e.toString(),
+                e
+        );
     }
 }
