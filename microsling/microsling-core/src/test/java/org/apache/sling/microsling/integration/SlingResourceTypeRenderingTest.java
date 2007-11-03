@@ -37,7 +37,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         testText = "This is a test " + System.currentTimeMillis();
         
         // create the test node, under a path that's specific to this class to allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis() + ".sling";
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis();
         final Map<String,String> props = new HashMap<String,String>();
         props.put("slingResourceType", slingResourceType);
         props.put("text", testText);

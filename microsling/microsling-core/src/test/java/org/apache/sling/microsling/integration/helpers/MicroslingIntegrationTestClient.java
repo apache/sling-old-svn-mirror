@@ -88,8 +88,7 @@ public class MicroslingIntegrationTestClient {
     }
     
     /** Create a node under given path, using a POST to microsling
-     *  @param url must end with ".sling" to use the microsling's default
-     *  servlet POST behaviour. 
+     *  @param url under which node is created 
      *  @return the URL that microsling provides to display the node 
      */
     public String createNode(String url, Map<String,String> nodeProperties) throws IOException {

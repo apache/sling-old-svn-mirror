@@ -26,7 +26,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 public class CreateNodeTest extends MicroslingHttpTestBase {
     
     public void testCreateNode() throws IOException {
-        final String url = HTTP_BASE_URL + "/CreateNodeTest." + System.currentTimeMillis() + ".sling";
+        final String url = HTTP_BASE_URL + "/CreateNodeTest." + System.currentTimeMillis();
         
         // add some properties to the node
         final Map<String,String> props = new HashMap<String,String>();
