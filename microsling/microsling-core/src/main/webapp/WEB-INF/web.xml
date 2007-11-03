@@ -142,7 +142,7 @@
 
   <servlet-mapping>
     <servlet-name>Microsling</servlet-name>
-    <url-pattern>/microsling/*</url-pattern>
+    <url-pattern>/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>Webdav</servlet-name>

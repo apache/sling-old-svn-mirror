@@ -21,19 +21,19 @@
     Here's an example HTML template. See the <a href="http://www.ruby-doc.org/stdlib/libdoc/erb/rdoc/">Erb docs</a> website 
     more info about the syntax.
     <pre>
-      &lt;html>
-        &lt;body>
-          &lt;p>&lt;span>This is an example Erb template &lt;%= Time.now %>&lt;/span>&lt;/p>
-          &lt;p>&lt;span>&lt;%= resource.getItem().getProperty("text").getString() %>&lt;/span>&lt;/p>
-          &lt;% unless props.nil? or props.empty? %>
-            &lt;table>
-              &lt;% for prop, val in props %>
-                &lt;tr>&lt;td>&lt;b>&lt;%= prop %>&lt;/b>:&lt;/td>&lt;td>&lt;%= val %>&lt;/td>&lt;/tr>
-              &lt;% end %>
-            &lt;/table>
-          &lt;% end %>
-        &lt;/body>
-      &lt;/html></pre>  
+&lt;html>
+  &lt;body>
+    &lt;p>&lt;span>This is an example Erb template &lt;%= Time.now %>&lt;/span>&lt;/p>
+    &lt;p>&lt;span>&lt;%= resource.getRawData().getProperty("text").getString() %>&lt;/span>&lt;/p>
+    &lt;% unless props.nil? or props.empty? %>
+      &lt;table>
+        &lt;% for prop, val in props %>
+          &lt;tr>&lt;td>&lt;b>&lt;%= prop %>&lt;/b>:&lt;/td>&lt;td>&lt;%= val %>&lt;/td>&lt;/tr>
+        &lt;% end %>
+      &lt;/table>
+    &lt;% end %>
+  &lt;/body>
+&lt;/html></pre>  
   </p>
 </body>
 </html>

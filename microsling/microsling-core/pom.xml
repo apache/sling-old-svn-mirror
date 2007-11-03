@@ -177,7 +177,7 @@
             -->
             <property>
               <name>microsling.http.server.url</name>
-              <value>http://localhost:8080/microsling</value>
+              <value>http://localhost:8080</value>
             </property>
             <property>
               <name>microsling.webdav.server.url</name>
@@ -232,7 +232,7 @@
                     -->
                     <property>
                       <name>microsling.http.server.url</name>
-                      <value>http://localhost:8080/microsling-core-1.0-incubator-SNAPSHOT/microsling</value>
+                      <value>http://localhost:8080/microsling-core-1.0-incubator-SNAPSHOT</value>
                     </property>
                     <property>
                       <name>microsling.webdav.server.url</name>
