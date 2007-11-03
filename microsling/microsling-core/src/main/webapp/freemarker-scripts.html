@@ -27,9 +27,9 @@
   The current resource URI is &lt;b>${resource.URI}&lt;/b>
 &lt;/p>
 
-&lt;h2>${resource.getItem().getProperty("title").getString()}&lt;/h2>
+&lt;h2>${resource.getRawData().getProperty("title").getString()}&lt;/h2>
 &lt;p>
-  ${resource.getItem().getProperty("text").getString()}
+  ${resource.getRawData().getProperty("text").getString()}
 &lt;/p>
 
 &lt;/body></pre>  

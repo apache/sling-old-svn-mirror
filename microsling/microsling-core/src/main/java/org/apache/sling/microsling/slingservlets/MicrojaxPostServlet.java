@@ -119,22 +119,19 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             final String savePrefix = getSavePrefix(request);
             
             // compute the path of the node to process, and deep-create if if needed
+            // TODO how to differentiate "create node" and "update node"?
+            // for now we always create a new node
             final Set<Node> changedNodes = new HashSet<Node>();
             String pathToCreate = null;
-            if(currentNode == null) {
+            if(currentNode!=null) {
+                pathToCreate = currentPath;
+            } else {
                 pathToCreate = request.getPathInfo();
-                if(!pathToCreate.endsWith("/")) {
-                    pathToCreate += "/";
-                }
-                pathToCreate += (createNodeCounter++) + System.currentTimeMillis();
-                
-            } else if(request.getRequestPathInfo().getSuffix() != null) {
-                // we have a suffix, that means our Resource is higher in
-                // the hierarchy than what the request path points to, we
-                // need to create the Node that the request meant to find
-                pathToCreate += request.getRequestPathInfo().getSuffix();
-                
             }
+            if(!pathToCreate.endsWith("/")) {
+                pathToCreate += "/";
+            }
+            pathToCreate += (createNodeCounter++) + System.currentTimeMillis();
             if(pathToCreate!=null) {
                 newNode = currentNode = deepCreateNode(s,pathToCreate, changedNodes);
             }
