@@ -139,8 +139,7 @@ public class MicroslingServletResolver implements ServletResolver {
     protected void addServlet(final String resourceType, Servlet servlet) {
 
         try {
-            ServletConfig config = new MicroslingServletConfig(resourceType, getServletContext());
-            servlet.init(config);
+            servlet.init(new MicroslingServletConfig(resourceType, getServletContext()));
 
             // only register if initialization succeeds
             servlets.put(resourceType, servlet);
@@ -154,32 +153,5 @@ public class MicroslingServletResolver implements ServletResolver {
 
     protected ServletContext getServletContext() {
         return servletContext;
-    }
-
-    private static class MicroslingServletConfig implements ServletConfig {
-
-        private final String servletName;
-        private final ServletContext servletContext;
-
-        public MicroslingServletConfig(String servletName, ServletContext servletContext) {
-            this.servletName = servletName;
-            this.servletContext = servletContext;
-        }
-
-        public String getInitParameter(String name) {
-            return null;
-        }
-
-        public Enumeration<?> getInitParameterNames() {
-            return Collections.enumeration(Collections.emptyList());
-        }
-
-        public ServletContext getServletContext() {
-            return servletContext;
-        }
-
-        public String getServletName() {
-            return servletName;
-        }
     }
 }
