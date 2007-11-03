@@ -1,0 +1,39 @@
+<html>
+<head>
+  <title>microsling Ruby Erb templates</title>
+  <link rel="stylesheet" href="microsling.css"/>
+</head>
+<body>
+  <h1>microsling Ruby Erb templates</h1>
+  
+  <div class="note">
+    <a href="../">back to homepage</a>
+  </div>
+  <p> 
+  	Scripts found by the <code>SlingScriptResolver</code> using the <code>.erb</code> extension are executed by
+    the <code>ErbScriptEngine</code>.
+  </p>
+  <p>
+    This works exactly like the <a href="velocity-scripts.html">Velocity templates</a>, except that
+    templates use the Erb syntax.
+  </p>
+  <p>
+    Here's an example HTML template. See the <a href="http://www.ruby-doc.org/stdlib/libdoc/erb/rdoc/">Erb docs</a> website 
+    more info about the syntax.
+    <pre>
+      &lt;html>
+        &lt;body>
+          &lt;p>&lt;span>This is an example Erb template &lt;%= Time.now %>&lt;/span>&lt;/p>
+          &lt;p>&lt;span>&lt;%= resource.getItem().getProperty("text").getString() %>&lt;/span>&lt;/p>
+          &lt;% unless props.nil? or props.empty? %>
+            &lt;table>
+              &lt;% for prop, val in props %>
+                &lt;tr>&lt;td>&lt;b>&lt;%= prop %>&lt;/b>:&lt;/td>&lt;td>&lt;%= val %>&lt;/td>&lt;/tr>
+              &lt;% end %>
+            &lt;/table>
+          &lt;% end %>
+        &lt;/body>
+      &lt;/html></pre>  
+  </p>
+</body>
+</html>

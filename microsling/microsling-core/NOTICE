@@ -5,10 +5,15 @@ This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
 FreeMarker templates support is provided by the FreeMarker
-libraries, which are open-source software licensed under
-a BSD-like license (http://freemarker.org/docs/app_license.html).
+libraries, which are licensed under a BSD-like license 
+(http://freemarker.org/docs/app_license.html).
 The original FreeMarker software can be downloaded at 
 http://freemarker.org/ .
+
+Ruby templates support is provided by the JRuby libraries,
+which are licensed under CPL 1.0 license.
+The original JRuby software can be downloaded at
+http://jruby.codehaus.org/ .  
 
 Server-side javascript support is provided by the Rhino
 libraries, which are open-source software licensed under

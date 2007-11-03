@@ -42,6 +42,7 @@ import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.engines.freemarker.FreemarkerScriptEngine;
+import org.apache.sling.microsling.scripting.engines.ruby.ErbScriptEngine;
 import org.apache.sling.microsling.scripting.engines.rhino.RhinoJavasSriptEngine;
 import org.apache.sling.microsling.scripting.engines.velocity.VelocityTemplatesScriptEngine;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
@@ -80,6 +81,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         addScriptEngine(new RhinoJavasSriptEngine());
         addScriptEngine(new VelocityTemplatesScriptEngine());
         addScriptEngine(new FreemarkerScriptEngine());
+        addScriptEngine(new ErbScriptEngine());
     }
 
     /**
