@@ -4,24 +4,7 @@ Copyright 2007 The Apache Software Foundation.
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
-FreeMarker templates support is provided by the FreeMarker
-libraries, which are open-source software licensed under
-a BSD-like license (http://freemarker.org/docs/app_license.html).
-The original FreeMarker software can be downloaded at 
-http://freemarker.org/ .
-
-Server-side javascript support is provided by the Rhino
-libraries, which are open-source software licensed under
-an MPL 1.1 license [1]. The original Rhino software
-can be downloaded at http://www.mozilla.org/rhino/ .
-
-Notes:
-[1] Reciprocity Required by some Components: Some included 
-third-party works are licensed under terms that require 
-distribution of derivative works to be made available 
-under the same license as the original work. See the 
-Apache product's LICENSE file to find the applicable 
-third-party licenses.
-
-[2] See http://www.apache.org/legal/3party.html for the 
+See http://www.apache.org/legal/3party.html for the 
 ASF third-party licenses policy.
+
+See also the NOTICE files of the individual Sling modules.
