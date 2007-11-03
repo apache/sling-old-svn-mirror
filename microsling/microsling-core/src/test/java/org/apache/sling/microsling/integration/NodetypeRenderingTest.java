@@ -119,4 +119,15 @@ public class NodetypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
+
+    public void testErbHtml() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.erb","html.erb");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes Ruby marker",content.contains("Ruby template"));
+            assertTrue("Content contains formatted test text",content.contains("<p><span>" + testText + "</span></p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
 }
