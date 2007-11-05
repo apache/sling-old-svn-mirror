@@ -317,7 +317,14 @@ public abstract class AbstractRepositoryEventHandler
             }
         }
         this.addEventProperties(eventNode, properties);
-        return new Event(topic, properties);
+        try {
+            final Event event = new Event(topic, properties);
+            return event;
+        } catch (IllegalArgumentException iae) {
+            // this exception occurs if the topic is not correct (it should never happen,
+            // but you never know)
+            throw new RepositoryException("Unable to read event: " + iae.getMessage(), iae);
+        }
     }
 
     protected void addEventProperties(Node eventNode, Dictionary<String, Object> properties)
