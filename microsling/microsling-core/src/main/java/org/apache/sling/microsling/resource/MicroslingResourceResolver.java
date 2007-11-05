@@ -18,10 +18,13 @@ package org.apache.sling.microsling.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -58,18 +61,9 @@ public class MicroslingResourceResolver implements ResourceResolver {
         this.session = session;
     }
 
-    public void dispose() {
-        if (session != null) {
-            try {
-                session.logout();
-            } catch (Throwable t) {
-                log.warn("dispose: Unexpected problem logging out", t);
-            }
-
-            session = null;
-        }
-    }
-
+    /**
+     * Resolves the Resource from the request
+     */
     public Resource resolve(ServletRequest request) throws SlingException,
             ResourceNotFoundException {
         Resource result = null;
@@ -79,12 +73,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
             Session session = getSession();
             final ResourcePathIterator it = new ResourcePathIterator(pathInfo);
             while (it.hasNext() && result == null) {
-                path = it.next();
-                if (log.isDebugEnabled()) {
-                    log.debug("Trying to locate Resource at path '" + path
-                        + "'");
-                }
-                result = getResource(session, path);
+                result = getResource(session, it.next());
             }
         } catch (RepositoryException re) {
             throw new SlingException("RepositoryException for path=" + path, re);
@@ -97,32 +86,82 @@ public class MicroslingResourceResolver implements ResourceResolver {
         return result;
     }
 
+    /**
+     * Resolves a resource relative to the given base resource
+     */
     public Resource getResource(Resource base, String path)
             throws SlingException {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
-    public Resource getResource(String path) throws SlingException {
-        try {
-            Session session = getSession();
-            if (session.itemExists(path)) {
-                return getResource(session, path);
-            }
-
-            log.info("Path '{}' does not resolve to an Item", path);
-            return null;
-        } catch (RepositoryException re) {
-            throw new SlingException("Cannot get resource " + path, re);
+        if (!path.startsWith("/")) {
+            path = base.getURI() + "/" + path;
         }
+
+        return getResource(path);
     }
 
-    public Iterator<Resource> listChildren(Resource parent)
-            throws SlingException {
-        // TODO Auto-generated method stub
+    /**
+     * Resolves a resource with an absolute path
+     */
+    public Resource getResource(String path) throws SlingException {
+
+        path = resolveRelativeSegments(path);
+        if (path != null) {
+            try {
+                return getResource(getSession(), path);
+            } catch (RepositoryException re) {
+                throw new SlingException("Cannot get resource " + path, re);
+            }
+        }
+
+        // relative path segments cannot be resolved
         return null;
     }
 
+    /**
+     * Find all child resources of the given parent resource
+     */
+    public Iterator<Resource> listChildren(final Resource parent)
+            throws SlingException {
+        if (parent.getRawData() instanceof Node) {
+
+            try {
+                final NodeIterator children = ((Node) parent.getRawData()).getNodes();
+                return new Iterator<Resource>() {
+
+                    public boolean hasNext() {
+                        return children.hasNext();
+                    }
+
+                    public Resource next() {
+                        try {
+                            return new JcrNodeResource(children.nextNode());
+                        } catch (RepositoryException re) {
+                            log.warn(
+                                "Problem while trying to create a resource", re);
+                            return new NonExistingResource(parent.getURI()
+                                + "/?");
+                        }
+                    }
+
+                    public void remove() {
+                        throw new UnsupportedOperationException("remove");
+                    }
+
+                };
+            } catch (RepositoryException re) {
+                throw new SlingException("Cannot get children of Resource "
+                    + parent, re);
+            }
+        }
+
+        // return an empty iterator if parent has no node
+        List<Resource> empty = Collections.emptyList();
+        return empty.iterator();
+    }
+
+    /**
+     * Query the JCR repository and return an iterator of query results
+     */
     public Iterator<Map<String, Object>> queryResources(String query,
             String language) throws SlingException {
         try {
@@ -156,6 +195,9 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
     }
 
+    /**
+     * Find all resources matching the given query
+     */
     public Iterator<Resource> findResources(String query, String language)
             throws SlingException {
         try {
@@ -183,6 +225,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
     }
 
+    /** Returns the session used by this resolver */
     protected Session getSession() throws SlingException {
         if (session != null && session.isLive()) {
             return session;
@@ -191,6 +234,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
         throw new SlingException("Session has already been closed");
     }
 
+    /** Creates a JcrNodeResource with the given path if existing */
     protected Resource getResource(Session session, String path)
             throws RepositoryException {
         if (session.itemExists(path)) {
@@ -201,9 +245,86 @@ public class MicroslingResourceResolver implements ResourceResolver {
             return result;
         }
 
+        log.info("Path '{}' does not resolve to an Item", path);
         return null;
     }
 
+    /**
+     * Resolves relative path segments '.' and '..' in the absolute path.
+     * Returns null if not possible (.. points above root) or if path is not
+     * absolute.
+     */
+    protected String resolveRelativeSegments(String path) {
+
+        // require non-empty absolute path !
+        if (path.length() == 0 || path.charAt(0) != '/') {
+            log.error("resolveRelativeSegments: Path '{}' must be absolute", path);
+            return null;
+        }
+
+        // prepare the path buffer with trailing slash (simplifies impl)
+        char[] buf = new char[path.length() + 1];
+        path.getChars(0, path.length(), buf, 0);
+        buf[buf.length - 1] = '/';
+
+        int lastSlash = 0; // last slash in path
+        int numDots = 0; // number of consecutive dots after last slash
+
+        int bufPos = 0;
+        for (int bufIdx = lastSlash; bufIdx < buf.length; bufIdx++) {
+            char c = buf[bufIdx];
+            if (c == '/') {
+                if (numDots == 2) {
+                    if (bufPos == 0) {
+                        log.error("resolveRelativeSegments: Path '{}' cannot be resolved", path);
+                        return null;
+                    }
+
+                    do {
+                        bufPos--;
+                    } while (bufPos > 0 && buf[bufPos] != '/');
+                }
+
+                lastSlash = bufIdx;
+                numDots = 0;
+            } else if (c == '.' && numDots < 2) {
+                numDots++;
+            } else {
+                // find the next slash
+                int nextSlash = bufIdx + 1;
+                while (nextSlash < buf.length && buf[nextSlash] != '/') {
+                    nextSlash++;
+                }
+
+                // append up to the next slash (or end of path)
+                if (bufPos < lastSlash) {
+                    int segLen = nextSlash - bufIdx + 1;
+                    System.arraycopy(buf, lastSlash, buf, bufPos, segLen);
+                    bufPos += segLen;
+                } else {
+                    bufPos = nextSlash;
+                }
+
+                numDots = 0;
+                lastSlash = nextSlash;
+                bufIdx = nextSlash;
+            }
+        }
+
+        if (bufPos == 0 && numDots == 0) {
+            log.debug("resolveRelativeSegments: Resolving '{}' to '/'", path);
+            return "/";
+        } else if (bufPos == path.length()) {
+            log.debug("resolveRelativeSegments: No resolution for '{}' needed", path);
+            return path;
+        }
+
+        String resolved = new String(buf, 0, bufPos);
+        log.debug("resolveRelativeSegments: Resolving '{}' to '{}'", path, resolved);
+        return resolved;
+    }
+
+    /** Helper method to execute a JCR query */
     private QueryResult queryInternal(String query, String language)
             throws RepositoryException, SlingException {
         Session s = getSession();
@@ -212,6 +333,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
         return q.execute();
     }
 
+    /** Converts a JCR Value to a corresponding Java Object */
     private Object toJavaObject(Value value) throws RepositoryException {
         switch (value.getType()) {
             case PropertyType.BINARY:
@@ -234,6 +356,10 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
     }
 
+    /**
+     * Lazily acquired InputStream which only accesses the JCR Value InputStream
+     * if data is to be read from the stream.
+     */
     private static class LazyInputStream extends InputStream {
 
         private final Value value;
@@ -292,7 +418,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
             try {
                 return getStream().markSupported();
             } catch (IOException ioe) {
-                // TODO: log
+                // ignore
             }
             return false;
         }
@@ -302,7 +428,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
             try {
                 getStream().mark(readlimit);
             } catch (IOException ioe) {
-                // TODO: log
+                // ignore
             }
         }
 
