@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl;
 
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -56,6 +57,10 @@ import org.osgi.service.event.EventAdmin;
 public class TimedEventHandler
     extends AbstractRepositoryEventHandler
     implements Job {
+
+    protected static final String JOB_TOPIC = "topic";
+
+    protected static final String JOB_CONFIG = "config";
 
     /** @scr.reference */
     protected Scheduler scheduler;
@@ -167,7 +172,7 @@ public class TimedEventHandler
                 protected Object run(Node node) throws RepositoryException {
                     final String jobId = scheduleInfo.getJobId();
                     // if there is a node, we know that there is exactly one node
-                    final Node foundNode = queryJob(jobId);
+                    Node foundNode = queryJob(jobId);
                     if ( scheduleInfo.isStopEvent() ) {
                         // if this is a stop event, we should remove the node from the repository
                         // if there is no node someone else was faster and we can ignore this
@@ -185,13 +190,30 @@ public class TimedEventHandler
                     }
                     // we only write the event if this is a local one
                     if ( EventUtil.isLocal(event) ) {
+                        // if the node is present, we check if the timed event is based on
+                        // a date and has already expired
+                        if ( foundNode != null && scheduleInfo.date != null && foundNode.hasProperty(EventHelper.NODE_PROPERTY_TE_DATE) ) {
+                            final Calendar oldScheduledDate = foundNode.getProperty(EventHelper.NODE_PROPERTY_TE_DATE).getDate();
+                            final Calendar now = Calendar.getInstance();
+                            if ( oldScheduledDate.compareTo(now) <= 0 ) {
+                                // try to remove the node
+                                try {
+                                    foundNode.remove();
+                                    parentNode.save();
+                                    foundNode = null;
+                                } catch (LockException le) {
+                                    // if someone else has the lock this is fine
+                                }
+                            }
+                        }
+
                         // if node is not present, we'll write it, lock it and schedule the event
                         if ( foundNode == null ) {
                             final Node eventNode = writeEvent(event);
                             return eventNode.lock(false, true);
                         }
                         // node is already in repository, this is an error as we don't support updates
-                        // of timed events!
+                        // of timed events! (stopping and recreating is the way to go)
                         logger.error("Timed event is already scheduled: " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + " (" + scheduleInfo.getJobId() + ")");
                     }
                     return null;
@@ -246,30 +268,30 @@ public class TimedEventHandler
             final Map<String, Serializable> config = new HashMap<String, Serializable>();
             // copy properties
             final Hashtable<String, Object> properties = new Hashtable<String, Object>();
-            config.put("topic", (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
+            config.put(JOB_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
             final String[] names = event.getPropertyNames();
             if ( names != null ) {
                 for(int i=0; i<names.length; i++) {
                     properties.put(names[i], event.getProperty(names[i]));
                 }
             }
-            config.put("config", properties);
+            config.put(JOB_CONFIG, properties);
 
             try {
                 if ( scheduleInfo.expression != null ) {
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get("topic") + "(" + scheduleInfo.getJobId() + ")" + " with cron expression " + scheduleInfo.expression);
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.getJobId() + ")" + " with cron expression " + scheduleInfo.expression);
                     }
                     this.scheduler.addJob(scheduleInfo.getJobId(), this, config, scheduleInfo.expression, false);
                 } else if ( scheduleInfo.period != null ) {
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get("topic") + "(" + scheduleInfo.getJobId() + ")" + " with period " + scheduleInfo.period);
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.getJobId() + ")" + " with period " + scheduleInfo.period);
                     }
                     this.scheduler.addPeriodicJob(scheduleInfo.getJobId(), this, config, scheduleInfo.period, false);
                 } else {
                     // then it must be date
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get("topic") + "(" + scheduleInfo.getJobId() + ")" + " with date " + scheduleInfo.date);
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.getJobId() + ")" + " with date " + scheduleInfo.date);
                     }
                     this.scheduler.fireJobAt(scheduleInfo.getJobId(), this, config, scheduleInfo.date);
                 }
@@ -340,8 +362,8 @@ public class TimedEventHandler
      * @see org.apache.sling.scheduler.Job#execute(org.apache.sling.scheduler.JobContext)
      */
     public void execute(JobContext context) {
-        final String topic = (String) context.getConfiguration().get("topic");
-        final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get("config");
+        final String topic = (String) context.getConfiguration().get(JOB_TOPIC);
+        final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get(JOB_CONFIG);
         if ( this.eventAdmin != null ) {
             try {
                 this.eventAdmin.postEvent(new Event(topic, properties));
@@ -369,15 +391,20 @@ public class TimedEventHandler
         while ( result.hasNext() ) {
             final Node eventNode = result.nextNode();
             if ( !eventNode.isLocked() ) {
-                final Event event = this.readEvent(eventNode);
-                final EventInfo info = new EventInfo();
-                info.event = event;
-                info.nodePath = eventNode.getPath();
                 try {
-                    this.queue.put(info);
-                } catch (InterruptedException e) {
-                    // we ignore this exception as this should never occur
-                    this.ignoreException(e);
+                    final Event event = this.readEvent(eventNode);
+                    final EventInfo info = new EventInfo();
+                    info.event = event;
+                    info.nodePath = eventNode.getPath();
+                    try {
+                        this.queue.put(info);
+                    } catch (InterruptedException e) {
+                        // we ignore this exception as this should never occur
+                        this.ignoreException(e);
+                    }
+                } catch (RepositoryException re) {
+                    // if reading an event fails, we ignore this
+                    this.ignoreException(re);
                 }
             }
         }
@@ -392,6 +419,17 @@ public class TimedEventHandler
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
         final ScheduleInfo info = new ScheduleInfo(event);
         eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, info.getJobId());
+        if ( info.date != null ) {
+            final Calendar c = Calendar.getInstance();
+            c.setTime(info.date);
+            eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_DATE, c);
+        }
+        if ( info.expression != null ) {
+            eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_EXPRESSION, info.expression);
+        }
+        if ( info.period != null ) {
+            eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_PERIOD, info.period.longValue());
+        }
     }
 
     /**
