@@ -62,6 +62,8 @@ public class TimedEventHandler
 
     protected static final String JOB_CONFIG = "config";
 
+    protected static final String JOB_SCHEDULE_INFO = "info";
+
     /** @scr.reference */
     protected Scheduler scheduler;
 
@@ -170,9 +172,9 @@ public class TimedEventHandler
             Lock lock = (Lock) new Locked() {
 
                 protected Object run(Node node) throws RepositoryException {
-                    final String jobId = scheduleInfo.getJobId();
+                    final String jobId = scheduleInfo.jobId;
                     // if there is a node, we know that there is exactly one node
-                    Node foundNode = queryJob(jobId);
+                    Node foundNode = queryJob(session, jobId);
                     if ( scheduleInfo.isStopEvent() ) {
                         // if this is a stop event, we should remove the node from the repository
                         // if there is no node someone else was faster and we can ignore this
@@ -214,7 +216,7 @@ public class TimedEventHandler
                         }
                         // node is already in repository, this is an error as we don't support updates
                         // of timed events! (stopping and recreating is the way to go)
-                        logger.error("Timed event is already scheduled: " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + " (" + scheduleInfo.getJobId() + ")");
+                        logger.error("Timed event is already scheduled: " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + " (" + scheduleInfo.jobId + ")");
                     }
                     return null;
                 }
@@ -249,10 +251,10 @@ public class TimedEventHandler
             // is this a stop event?
             if ( scheduleInfo.isStopEvent() ) {
                 if ( this.logger.isDebugEnabled() ) {
-                    this.logger.debug("Stopping timed event " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + "(" + scheduleInfo.getJobId() + ")");
+                    this.logger.debug("Stopping timed event " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + "(" + scheduleInfo.jobId + ")");
                 }
                 try {
-                    this.scheduler.removeJob(scheduleInfo.getJobId());
+                    this.scheduler.removeJob(scheduleInfo.jobId);
                 } catch (NoSuchElementException nsee) {
                     // this can happen if the job is scheduled on another node
                     // so we can just ignore this
@@ -276,24 +278,25 @@ public class TimedEventHandler
                 }
             }
             config.put(JOB_CONFIG, properties);
+            config.put(JOB_SCHEDULE_INFO, scheduleInfo);
 
             try {
                 if ( scheduleInfo.expression != null ) {
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.getJobId() + ")" + " with cron expression " + scheduleInfo.expression);
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with cron expression " + scheduleInfo.expression);
                     }
-                    this.scheduler.addJob(scheduleInfo.getJobId(), this, config, scheduleInfo.expression, false);
+                    this.scheduler.addJob(scheduleInfo.jobId, this, config, scheduleInfo.expression, false);
                 } else if ( scheduleInfo.period != null ) {
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.getJobId() + ")" + " with period " + scheduleInfo.period);
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with period " + scheduleInfo.period);
                     }
-                    this.scheduler.addPeriodicJob(scheduleInfo.getJobId(), this, config, scheduleInfo.period, false);
+                    this.scheduler.addPeriodicJob(scheduleInfo.jobId, this, config, scheduleInfo.period, false);
                 } else {
                     // then it must be date
                     if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.getJobId() + ")" + " with date " + scheduleInfo.date);
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with date " + scheduleInfo.date);
                     }
-                    this.scheduler.fireJobAt(scheduleInfo.getJobId(), this, config, scheduleInfo.date);
+                    this.scheduler.fireJobAt(scheduleInfo.jobId, this, config, scheduleInfo.date);
                 }
                 return true;
             } catch (Exception e) {
@@ -373,6 +376,32 @@ public class TimedEventHandler
         } else {
             this.logger.warn("Unable to send timed event as no event admin service is available.");
         }
+        final ScheduleInfo info = (ScheduleInfo) context.getConfiguration().get(JOB_SCHEDULE_INFO);
+        // is this job scheduled for a specific date?
+        if ( info.date != null ) {
+            // we can remove it from the repository
+            // we create an own session here
+            Session s = null;
+            try {
+                s = this.createSession();
+                final Node eventNode = this.queryJob(session, info.jobId);
+                if ( eventNode != null ) {
+                    try {
+                        eventNode.remove();
+                        session.save();
+                    } catch (RepositoryException re) {
+                        // we ignore the exception if removing fails
+                        ignoreException(re);
+                    }
+                }
+            } catch (RepositoryException re) {
+                this.logger.error("Unable to create a session.", re);
+            } finally {
+                if ( s != null ) {
+                    s.logout();
+                }
+            }
+        }
     }
 
     /**
@@ -418,7 +447,7 @@ public class TimedEventHandler
         super.addNodeProperties(eventNode, event);
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
         final ScheduleInfo info = new ScheduleInfo(event);
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, info.getJobId());
+        eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, info.jobId);
         if ( info.date != null ) {
             final Calendar c = Calendar.getInstance();
             c.setTime(info.date);
@@ -439,8 +468,8 @@ public class TimedEventHandler
      * @return The node or null.
      * @throws RepositoryException
      */
-    protected Node queryJob(String jobId) throws RepositoryException {
-        final QueryManager qManager = this.session.getWorkspace().getQueryManager();
+    protected Node queryJob(final Session session, final String jobId) throws RepositoryException {
+        final QueryManager qManager = session.getWorkspace().getQueryManager();
         final StringBuffer buffer = new StringBuffer("/jcr:root");
         buffer.append(this.repositoryPath);
         buffer.append("//element(*, ");
@@ -473,7 +502,7 @@ public class TimedEventHandler
         return EventHelper.TIMED_EVENT_NODE_TYPE;
     }
 
-    protected static final class ScheduleInfo {
+    protected static final class ScheduleInfo implements Serializable {
 
         public final String expression;
         public final Long   period;
@@ -515,10 +544,6 @@ public class TimedEventHandler
 
         public boolean isStopEvent() {
             return this.expression == null && this.period == null && this.date == null;
-        }
-
-        public String getJobId() {
-            return this.jobId;
         }
     }
 }
