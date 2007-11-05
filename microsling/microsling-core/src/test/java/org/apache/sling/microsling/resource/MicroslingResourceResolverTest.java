@@ -118,15 +118,27 @@ public class MicroslingResourceResolverTest extends TestCase {
         assertEquals("/az/...", resolver.resolveRelativeSegments("/az/..."));
         assertEquals("/az/bz/...", resolver.resolveRelativeSegments("/az/bz/..."));
 
-        assertNull(resolver.resolveRelativeSegments("a/b/c"));
-        assertNull(resolver.resolveRelativeSegments("az/bz/cz"));
-        assertNull(resolver.resolveRelativeSegments(""));
-
         try {
             resolver.resolveRelativeSegments(null);
             fail("Resolving null expects NullPointerException");
         } catch (NullPointerException npe) {
             // expected
         }
+    }
+
+    public void testResolveRelativeSegmentsRelative() {
+        assertEquals("a/b", resolver.resolveRelativeSegments("a/b"));
+        assertEquals("a", resolver.resolveRelativeSegments("a/b/.."));
+
+        assertEquals("b", resolver.resolveRelativeSegments("a/../b"));
+        assertEquals("a/c", resolver.resolveRelativeSegments("a/b/../c"));
+        assertEquals("c", resolver.resolveRelativeSegments("a/b/../../c"));
+        assertEquals("", resolver.resolveRelativeSegments("a/b/../.."));
+        assertEquals("a/c/d", resolver.resolveRelativeSegments("a/b/../c/d"));
+        assertNull(resolver.resolveRelativeSegments("a/b/../../../c"));
+
+        assertEquals("a/b/c", resolver.resolveRelativeSegments("a/b/c"));
+        assertEquals("az/bz/cz", resolver.resolveRelativeSegments("az/bz/cz"));
+        assertEquals("", resolver.resolveRelativeSegments(""));
     }
 }

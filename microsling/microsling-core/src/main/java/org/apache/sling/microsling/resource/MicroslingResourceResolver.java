@@ -92,10 +92,38 @@ public class MicroslingResourceResolver implements ResourceResolver {
     public Resource getResource(Resource base, String path)
             throws SlingException {
 
-        if (!path.startsWith("/")) {
-            path = base.getURI() + "/" + path;
+        // special case of absolute paths
+        if (path.startsWith("/")) {
+            return getResource(path);
         }
 
+        // resolve relative path segments now
+        path = resolveRelativeSegments(path);
+        if (path != null) {
+            if (path.length() == 0) {
+                // return the base resource
+                return base;
+            } else if (base.getRawData() instanceof Node) {
+                try {
+                    Node baseNode = (Node) base.getRawData();
+                    if (baseNode.hasNode(path)) {
+                        return new JcrNodeResource(baseNode.getNode(path));
+                    }
+
+                    log.error("getResource: There is no node at {} below {}",
+                        path, base.getURI());
+                    return null;
+                } catch (RepositoryException re) {
+                    log.error(
+                        "getResource: Problem accessing relative resource at "
+                            + path, re);
+                    return null;
+                }
+            }
+        }
+
+        // try (again) with absolute resource path
+        path = base.getURI() + "/" + path;
         return getResource(path);
     }
 
@@ -256,15 +284,19 @@ public class MicroslingResourceResolver implements ResourceResolver {
      */
     protected String resolveRelativeSegments(String path) {
 
-        // require non-empty absolute path !
-        if (path.length() == 0 || path.charAt(0) != '/') {
-            log.error("resolveRelativeSegments: Path '{}' must be absolute", path);
-            return null;
+        // don't care for empty paths
+        if (path.length() == 0) {
+            log.error("resolveRelativeSegments: Not modifying empty path");
+            return path;
         }
 
         // prepare the path buffer with trailing slash (simplifies impl)
-        char[] buf = new char[path.length() + 1];
-        path.getChars(0, path.length(), buf, 0);
+        int absOffset = (path.charAt(0) == '/') ? 0 : 1;
+        char[] buf= new char[path.length() + 1 + absOffset];
+        if (absOffset == 1) {
+            buf[0] = '/';
+        }
+        path.getChars(0, path.length(), buf, absOffset);
         buf[buf.length - 1] = '/';
 
         int lastSlash = 0; // last slash in path
@@ -311,15 +343,15 @@ public class MicroslingResourceResolver implements ResourceResolver {
             }
         }
 
+        String resolved;
         if (bufPos == 0 && numDots == 0) {
-            log.debug("resolveRelativeSegments: Resolving '{}' to '/'", path);
-            return "/";
-        } else if (bufPos == path.length()) {
-            log.debug("resolveRelativeSegments: No resolution for '{}' needed", path);
-            return path;
+            resolved = (absOffset == 0) ? "/" : "";
+        } else if ((bufPos - absOffset) == path.length()) {
+            resolved = path;
+        } else {
+            resolved = new String(buf, absOffset, bufPos-absOffset);
         }
 
-        String resolved = new String(buf, 0, bufPos);
         log.debug("resolveRelativeSegments: Resolving '{}' to '{}'", path, resolved);
         return resolved;
     }
