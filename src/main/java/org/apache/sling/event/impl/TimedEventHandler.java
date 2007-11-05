@@ -238,7 +238,7 @@ public class TimedEventHandler
                 return true;
             }
             // we ignore remote job events
-            if ( EventUtil.isLocal(event) ) {
+            if ( !EventUtil.isLocal(event) ) {
                 return true;
             }
 
@@ -458,7 +458,7 @@ public class TimedEventHandler
             if ( this.date != null ) {
                 count++;
             }
-            if ( count > 0 ) {
+            if ( count > 1 ) {
                 throw new IllegalArgumentException("Only one configuration property from " + EventUtil.PROPERTY_TIMED_EVENT_SCHEDULE +
                                       ", " + EventUtil.PROPERTY_TIMED_EVENT_PERIOD +
                                       ", or " + EventUtil.PROPERTY_TIMED_EVENT_DATE + " should be used.");
