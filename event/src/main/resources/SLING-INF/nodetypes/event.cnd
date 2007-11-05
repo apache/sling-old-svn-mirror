@@ -45,5 +45,8 @@
 [slingevent:TimedEvent] > slingevent:Event, mix:lockable
   - slingevent:processor (string)
   - slingevent:id (string)
+  - slingevent:expression (string)
+  - slingevent:date (date)
+  - slingevent:period (long)
 
   
