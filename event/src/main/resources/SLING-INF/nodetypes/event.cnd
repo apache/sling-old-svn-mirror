@@ -42,7 +42,7 @@
 [slingevent:TimedEvents] > slingevent:Events, mix:lockable
  + * (slingevent:TimedEvent)
  
-[slingevent:TimedEvent] > slingevent:Event
+[slingevent:TimedEvent] > slingevent:Event, mix:lockable
   - slingevent:processor (string)
   - slingevent:id (string)
 
