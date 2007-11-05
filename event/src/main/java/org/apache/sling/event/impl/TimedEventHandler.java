@@ -194,7 +194,9 @@ public class TimedEventHandler
                     if ( EventUtil.isLocal(event) ) {
                         // if the node is present, we check if the timed event is based on
                         // a date and has already expired
-                        if ( foundNode != null && scheduleInfo.date != null && foundNode.hasProperty(EventHelper.NODE_PROPERTY_TE_DATE) ) {
+                        if ( foundNode != null
+                            && scheduleInfo.date != null
+                            && foundNode.hasProperty(EventHelper.NODE_PROPERTY_TE_DATE) ) {
                             final Calendar oldScheduledDate = foundNode.getProperty(EventHelper.NODE_PROPERTY_TE_DATE).getDate();
                             final Calendar now = Calendar.getInstance();
                             if ( oldScheduledDate.compareTo(now) <= 0 ) {
@@ -384,18 +386,29 @@ public class TimedEventHandler
             Session s = null;
             try {
                 s = this.createSession();
-                final Node eventNode = this.queryJob(session, info.jobId);
-                if ( eventNode != null ) {
-                    try {
-                        eventNode.remove();
-                        session.save();
-                    } catch (RepositoryException re) {
-                        // we ignore the exception if removing fails
-                        ignoreException(re);
+                final Session mySession = s;
+                final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                new Locked() {
+
+                    protected Object run(Node node) throws RepositoryException {
+                        final Node eventNode = queryJob(mySession, info.jobId);
+                        if ( eventNode != null ) {
+                            try {
+                                eventNode.remove();
+                                parentNode.save();
+                            } catch (RepositoryException re) {
+                                // we ignore the exception if removing fails
+                                ignoreException(re);
+                            }
+                        }
+                        return null;
                     }
-                }
+                }.with(parentNode, false);
             } catch (RepositoryException re) {
                 this.logger.error("Unable to create a session.", re);
+            } catch (InterruptedException e) {
+                 // This should never happen from the lock, so we ignore it
+                 this.ignoreException(e);
             } finally {
                 if ( s != null ) {
                     s.logout();
