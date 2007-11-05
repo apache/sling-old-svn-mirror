@@ -166,14 +166,25 @@ public class MicroslingMainServlet extends GenericServlet {
         }
 
         Session session = authenticate(req);
+        try {
 
-        MicroslingSlingHttpServletRequest request = new MicroslingSlingHttpServletRequest(
-            hReq, session, serviceLocator);
-        MicroslingSlingHttpServletResponse response = new MicroslingSlingHttpServletResponse(
-            hRes);
+            MicroslingSlingHttpServletRequest request = new MicroslingSlingHttpServletRequest(
+                hReq, session, serviceLocator);
+            MicroslingSlingHttpServletResponse response = new MicroslingSlingHttpServletResponse(
+                hRes);
 
-        // our filters might need the SlingRequestContext to store info in it
-        filterChain.service(request, response);
+            // our filters might need the SlingRequestContext to store info in it
+            filterChain.service(request, response);
+
+        } finally {
+            try {
+                session.logout();
+            } catch (Throwable t) {
+                log.error(
+                    "service: Unexpected Problem logging out JCR Session", t);
+            }
+        }
+
     }
 
     @Override
