@@ -28,7 +28,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-jackrabbit-server</artifactId>
+    <artifactId>jcr.jackrabbit.server</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-server
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit.server
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-server
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit.server
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/jackrabbit-server
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/jackrabbit.server
         </url>
     </scm>
 
@@ -66,7 +66,7 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Bundle-Activator>
-                            org.apache.sling.jcr.server.Activator
+                            org.apache.sling.jcr.jackrabbit.server.Activator
                         </Bundle-Activator>
                         <!-- 
                             Export the crx-core package for CRXModule
@@ -126,8 +126,8 @@
                                 and day-commons-misc. Hence, include com.day.util
                                 here and forget about the rest ....
                             -->
-                            org.apache.sling.jcr.server.*,
-                            META-INF.services.*,
+                            org.apache.sling.jcr.jackrabbit.server.*,
+                            META-INF.services.*;-split-package:=merge-first,
 
                             <!-- Jackrabbit Text Extractors -->
                             org.apache.jackrabbit.extractor,
@@ -139,7 +139,7 @@
                             org.apache.lucene.*, org.apache.derby.*
                         </Private-Package>
                         <Import-Package>
-                            org.apache.sling.jcr,
+                            org.apache.sling.jcr.api,
 
                             org.apache.jackrabbit,
                             org.apache.jackrabbit.name,
@@ -178,7 +178,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-jackrabbit-api</artifactId>
+            <artifactId>jcr.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>

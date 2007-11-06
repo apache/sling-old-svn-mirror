@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.server;
+package org.apache.sling.jcr.jackrabbit.server;
 
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
