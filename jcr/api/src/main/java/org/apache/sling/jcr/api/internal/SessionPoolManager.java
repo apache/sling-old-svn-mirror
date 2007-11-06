@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.internal;
+package org.apache.sling.jcr.api.internal;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 
 /**
  * The <code>SessionPoolManager</code> is an abstract implementation of the

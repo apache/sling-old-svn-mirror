@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr;
+package org.apache.sling.jcr.api;
 
 import java.util.Dictionary;
 
@@ -30,8 +30,8 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import org.apache.sling.jcr.internal.SessionPoolManager;
-import org.apache.sling.jcr.internal.loader.Loader;
+import org.apache.sling.jcr.api.internal.SessionPoolManager;
+import org.apache.sling.jcr.api.internal.loader.Loader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
