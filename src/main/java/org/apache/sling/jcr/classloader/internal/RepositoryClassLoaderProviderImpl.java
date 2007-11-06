@@ -27,7 +27,7 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentContext;
