@@ -1,4 +1,4 @@
-package org.apache.sling.json.xml;
+package org.apache.sling.commons.json.xml;
 
 /*
 Copyright (c) 2002 JSON.org
@@ -26,9 +26,9 @@ SOFTWARE.
 
 import java.util.Iterator;
 
-import org.apache.sling.json.JSONArray;
-import org.apache.sling.json.JSONException;
-import org.apache.sling.json.JSONObject;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 
 
 /**

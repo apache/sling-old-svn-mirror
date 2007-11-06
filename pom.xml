@@ -28,7 +28,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-json</artifactId>
+    <artifactId>commons.json</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -37,22 +37,18 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/json
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/json
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/json
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/json
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/josn
+            http://svn.apache.org/viewvc/incubator/sling/trunk/commons/json
         </url>
     </scm>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-sling-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -60,14 +56,11 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.json.*
+                            org.apache.sling.commons.json.*
                         </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <dependencies>
-    </dependencies>
 </project>

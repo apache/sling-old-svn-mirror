@@ -1,4 +1,4 @@
-package org.apache.sling.json.io;
+package org.apache.sling.commons.json.io;
 
 /*
 Copyright (c) 2006 JSON.org
