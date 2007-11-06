@@ -28,7 +28,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-api</artifactId>
+    <artifactId>api</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -45,13 +45,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling-api
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/api
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling-api
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/api
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling-api
+            http://svn.apache.org/viewvc/incubator/sling/trunk/api
         </url>
     </scm>
 
@@ -64,12 +64,6 @@
 
     <build>
         <plugins>
-            <!-- Support to install in Sling instances and deploy to Sling OBR -->
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-sling-plugin</artifactId>
-            </plugin>
-
             <!-- Create the bundle of the Sling API -->
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -78,7 +72,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-DocURL>
-                            http://incubator.apache.org/sling/site/component-api.html
+                            http://incubator.apache.org/sling/site/sling-api.html
                         </Bundle-DocURL>
                         <Export-Package>
                             org.apache.sling.api.*;version=${pom.version}
