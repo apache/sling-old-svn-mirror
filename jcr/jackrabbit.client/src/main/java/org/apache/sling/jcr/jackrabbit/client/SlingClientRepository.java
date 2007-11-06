@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.client;
+package org.apache.sling.jcr.jackrabbit.client;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -30,8 +30,8 @@ import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
-import org.apache.sling.jcr.AbstractSlingRepository;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.AbstractSlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.log.LogService;
 
 /**
