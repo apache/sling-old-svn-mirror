@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.internal;
+package org.apache.sling.jcr.api.internal;
 
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -37,7 +37,7 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import org.apache.sling.jcr.TooManySessionsException;
+import org.apache.sling.jcr.api.TooManySessionsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

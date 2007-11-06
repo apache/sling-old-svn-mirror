@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.internal.loader;
+package org.apache.sling.jcr.api.internal.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,9 +33,9 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.AbstractSlingRepository;
-import org.apache.sling.jcr.NodeTypeLoader;
-import org.apache.sling.jcr.internal.NamespaceMapper;
+import org.apache.sling.jcr.api.AbstractSlingRepository;
+import org.apache.sling.jcr.api.NodeTypeLoader;
+import org.apache.sling.jcr.api.internal.NamespaceMapper;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
