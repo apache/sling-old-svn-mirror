@@ -28,7 +28,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-jackrabbit-client</artifactId>
+    <artifactId>jcr.jackrabbit.client</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-client
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit.client
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-client
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit.client
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/jackrabbit-client
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/jackrabbit.client
         </url>
     </scm>
 
@@ -66,11 +66,11 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Bundle-Activator>
-                            org.apache.sling.jcr.client.Activator
+                            org.apache.sling.jcr.jackrabbit.client.Activator
                         </Bundle-Activator>
                         <!-- No Export-Package -->
                         <Private-Package>
-                            org.apache.sling.jcr.client,
+                            org.apache.sling.jcr.jackrabbit.client,
                             org.apache.jackrabbit.rmi.*
                         </Private-Package>
                         <Import-Package>
@@ -92,7 +92,7 @@
 
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-jackrabbit-api</artifactId>
+            <artifactId>jcr.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
 
