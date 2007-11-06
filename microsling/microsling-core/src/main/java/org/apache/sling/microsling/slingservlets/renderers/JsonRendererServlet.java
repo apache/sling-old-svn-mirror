@@ -28,7 +28,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.json.JSONException;
+import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.microsling.helpers.json.JsonItemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +39,12 @@ import org.slf4j.LoggerFactory;
 public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     private static final Logger log = LoggerFactory.getLogger(JsonRendererServlet.class);
-    
+
     private static final long serialVersionUID = 5577121546674133317L;
     private final String responseContentType;
     private final JsonItemWriter itemWriter;
-    
-    /** This optional request parameter sets the recursion level 
+
+    /** This optional request parameter sets the recursion level
      *  (into chldren) when dumping a node */
     public static final String PARAM_RECURSION_LEVEL = "slingItemDumpRecursionLevel";
 
@@ -52,10 +52,10 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         this.responseContentType = responseContentTypeHeaderValue;
         itemWriter = new JsonItemWriter(null);
     }
-    
+
     @Override
-    protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp) 
-    throws ServletException,IOException 
+    protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp)
+    throws ServletException,IOException
     {
         // Access and check our data
         final Resource  r = req.getResource();
@@ -65,12 +65,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         }
         if(!(data instanceof Node)) {
             throw new HttpStatusCodeException(
-                    HttpServletResponse.SC_NOT_IMPLEMENTED, 
+                    HttpServletResponse.SC_NOT_IMPLEMENTED,
                     "Don't know how to dump a " + data.getClass().getName()
             );
         }
         final Node n = (Node)data;
-        
+
         // how many levels deep?
         int maxRecursionLevels = 0;
         final String depth = req.getParameter(PARAM_RECURSION_LEVEL);
@@ -78,7 +78,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
           try {
             maxRecursionLevels = Integer.parseInt(depth);
           } catch(Exception e) {
-            throw new HttpStatusCodeException(HttpServletResponse.SC_BAD_REQUEST, 
+            throw new HttpStatusCodeException(HttpServletResponse.SC_BAD_REQUEST,
                     "Invalid value '" + depth + "' for request parameter '" + PARAM_RECURSION_LEVEL + "'"
             );
           }
@@ -94,7 +94,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             reportException(re);
         }
     }
-    
+
     private void reportException(Exception e) throws HttpStatusCodeException {
         log.warn("Error in JsonRendererServlet: " + e.toString(),e);
         throw new HttpStatusCodeException(
