@@ -1,9 +1,9 @@
-package org.apache.sling.json.util;
+package org.apache.sling.commons.json.util;
 
-import org.apache.sling.json.JSONArray;
-import org.apache.sling.json.JSONException;
-import org.apache.sling.json.JSONObject;
-import org.apache.sling.json.JSONTokener;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.JSONTokener;
 
 /*
 Copyright (c) 2002 JSON.org

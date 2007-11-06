@@ -1,4 +1,4 @@
-package org.apache.sling.json;
+package org.apache.sling.commons.json;
 
 /**
  * The JSONException is thrown by the JSON.org classes then things are amiss.

@@ -1,10 +1,10 @@
-package org.apache.sling.json.io;
+package org.apache.sling.commons.json.io;
 
 import java.io.IOException;
 import java.io.Writer;
 
-import org.apache.sling.json.JSONException;
-import org.apache.sling.json.JSONObject;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 
 /*
 Copyright (c) 2006 JSON.org

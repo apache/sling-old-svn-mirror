@@ -1,4 +1,4 @@
-package org.apache.sling.json.http;
+package org.apache.sling.commons.json.http;
 
 /*
 Copyright (c) 2002 JSON.org
@@ -26,9 +26,9 @@ SOFTWARE.
 
 import java.util.Iterator;
 
-import org.apache.sling.json.JSONException;
-import org.apache.sling.json.JSONObject;
-import org.apache.sling.json.JSONTokener;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.JSONTokener;
 
 /**
  * Convert a web browser cookie list string to a JSONObject and back.
