@@ -31,8 +31,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
-import org.apache.sling.json.JSONException;
-import org.apache.sling.json.io.JSONWriter;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONWriter;
 
 /** Dumps JCR Items as JSON data. The dump methods
  *  are threadsafe.
@@ -42,15 +42,15 @@ public class JsonItemWriter {
 
     /** Create a JsonItemWriter
      *  @param propertyNamesToIgnore if not null, a property having a name from this
-     *  set of values is ignored. 
+     *  set of values is ignored.
      *  TODO we should use a filtering interface to make the selection of which Nodes
      *  and Properties to dump more flexible.
-     */ 
+     */
     public JsonItemWriter(Set<String> propertyNamesToIgnore) {
         this.propertyNamesToIgnore = propertyNamesToIgnore;
     }
 
-    /** Dump all Nodes of given NodeIterator in JSON 
+    /** Dump all Nodes of given NodeIterator in JSON
      * @throws JSONException */
     public void dump(NodeIterator it, Writer out) throws RepositoryException, JSONException {
         final JSONWriter w = new JSONWriter(out);
@@ -61,15 +61,15 @@ public class JsonItemWriter {
         w.endArray();
     }
 
-    /** Dump given node in JSON, optionally recursing into its child nodes */ 
+    /** Dump given node in JSON, optionally recursing into its child nodes */
     public void dump(Node node, Writer w, int maxRecursionLevels) throws RepositoryException, JSONException {
         dump(node, new JSONWriter(w), 0, maxRecursionLevels);
     }
-    
-    /** Dump given node in JSON, optionally recursing into its child nodes */ 
-    protected void dump(Node node, JSONWriter w, int currentRecursionLevel, int maxRecursionLevels) 
+
+    /** Dump given node in JSON, optionally recursing into its child nodes */
+    protected void dump(Node node, JSONWriter w, int currentRecursionLevel, int maxRecursionLevels)
     throws RepositoryException, JSONException {
-        
+
         w.object();
         PropertyIterator props = node.getProperties();
 
@@ -91,14 +91,14 @@ public class JsonItemWriter {
                 w.endArray();
             }
         }
-        
+
         // the child nodes
         final NodeIterator children = node.getNodes();
         while(children.hasNext()) {
             final Node n = children.nextNode();
             dumpSingleNode(n, w, currentRecursionLevel, maxRecursionLevels);
         }
-        
+
         w.endObject();
     }
 
@@ -114,31 +114,31 @@ public class JsonItemWriter {
     /**
      * Write a single property
      */
-    protected void writeProperty(JSONWriter w, int indent, Property p) 
+    protected void writeProperty(JSONWriter w, int indent, Property p)
     throws ValueFormatException, RepositoryException, JSONException {
         if(p.getType() == PropertyType.BINARY) {
             // TODO for now we mark binary properties with an initial star in their name
             // (star is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
             w.key("*" + p.getName());
-            
+
         } else {
             w.key(p.getName());
         }
-        
+
         w.value(convertValue(p.getValue()));
     }
-    
-    /** Convert a Value for JSON output */ 
+
+    /** Convert a Value for JSON output */
     protected Object convertValue(Value v) throws ValueFormatException, IllegalStateException, RepositoryException {
         if(v.getType() == PropertyType.BINARY) {
             // TODO return the binary size
             return new Integer(0);
-            
+
         } else if(v.getType() == PropertyType.DATE) {
             final DateFormat fmt = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
             return fmt.format(v.getDate().getTime());
-            
+
         } else {
             return v.getString();
         }
