@@ -25,7 +25,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>1-incubator-SNAPSHOT</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>sling-event</artifactId>
@@ -39,13 +39,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/event
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/event
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/event
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/event
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/event
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/event
         </url>
     </scm>
 
