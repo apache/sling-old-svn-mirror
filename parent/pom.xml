@@ -181,7 +181,7 @@
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
-                                http://wiki.apache.org/jackrabbit/ApacheSling
+                                http://incubator.apache.org/sling
                             </Bundle-DocURL>
                         </instructions>
                     </configuration>
