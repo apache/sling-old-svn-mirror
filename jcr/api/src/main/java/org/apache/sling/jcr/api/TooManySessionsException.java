@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr;
+package org.apache.sling.jcr.api;
 
 import javax.jcr.LoginException;
 
