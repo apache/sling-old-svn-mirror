@@ -25,7 +25,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>1-incubator-SNAPSHOT</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>sling-scheduler</artifactId>
@@ -39,13 +39,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scheduler
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/scheduler
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scheduler
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/scheduler
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/scheduler
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/scheduler
         </url>
     </scm>
 
