@@ -62,43 +62,19 @@
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
-        <!-- JSP Core Support: Compiler and JSP plugin -->
-        <module>jasper-sling</module>
+        <!-- The Sling API -->
+        <module>api</module>
 
-        <!-- Core Plugins -->
-        <module>maven-sling-plugin</module>
-        <module>maven-jcrocm-plugin</module>
-        <module>maven-jspc-plugin</module>
-
-        <module>log</module>
-        <module>assembly</module>
-        <module>mime</module>
-        <module>json</module>
-
-        <module>jackrabbit-api</module>
-        <module>jackrabbit-client</module>
-        <module>jackrabbit-server</module>
-        <module>jackrabbit-classloader</module>
-
-        <module>component-api</module>
-        <module>content</module>
-        <module>core</module>
-        <module>cache</module>
-
-        <module>component-standard</module>
-        <module>scripting-core</module>
-        <module>scripting-jsp</module>
-        <module>scripting-jsp-taglib</module>
-
-		<module>event</module>
-		<module>scheduler</module>
-
-        <module>obr</module>
-
-        <module>webmanager</module>
-
-        <module>sling-app</module>
-        <module>sling-servlet</module>
-
+        <!-- The commons sub project -->
+        <module>commons/json</module>
+        <module>commons/mime</module>
+                
+        <!-- The JCR sub project -->
+        <module>jcr/api</module>
+        
+        <!-- Sling -->
+        <module>sling/core</module>
+        <module>sling/event</module>
+        <module>sling/scheduler</module>
     </modules>
 </project>
