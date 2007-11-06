@@ -28,7 +28,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-mime</artifactId>
+    <artifactId>commons.mime</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -39,13 +39,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/mime
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/mime
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/mime
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/mime
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/mime
+            http://svn.apache.org/viewvc/incubator/sling/trunk/commons/mime
         </url>
     </scm>
 
@@ -62,10 +62,10 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.mime
+                            org.apache.sling.commons.mime
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.mime.internal
+                            org.apache.sling.commons.mime.internal
                         </Private-Package>
                     </instructions>
                 </configuration>

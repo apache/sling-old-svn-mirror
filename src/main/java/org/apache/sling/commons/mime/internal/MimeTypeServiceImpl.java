@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.mime.internal;
+package org.apache.sling.commons.mime.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.mime.MimeTypeProvider;
-import org.apache.sling.mime.MimeTypeService;
+import org.apache.sling.commons.mime.MimeTypeProvider;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -42,9 +42,9 @@ import org.osgi.service.log.LogService;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="MimeTypeProvider"
- *                interface="org.apache.sling.mime.MimeTypeProvider"
+ *                interface="org.apache.sling.commons.mime.MimeTypeProvider"
  *                cardinality="0..n" policy="dynamic"
- * @scr.service interface="org.apache.sling.mime.MimeTypeService"
+ * @scr.service interface="org.apache.sling.commons.mime.MimeTypeService"
  */
 public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
