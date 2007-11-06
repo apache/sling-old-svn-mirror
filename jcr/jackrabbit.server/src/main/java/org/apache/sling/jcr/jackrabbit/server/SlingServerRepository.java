@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.server;
+package org.apache.sling.jcr.jackrabbit.server;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,8 +31,8 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.sling.jcr.AbstractSlingRepository;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.AbstractSlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
@@ -41,7 +41,7 @@ import org.osgi.service.log.LogService;
  * The <code>RepositorySPIImpl</code> TODO
  *
  * @scr.component label="%repository.name" description="%repository.description"
- *          factory="org.apache.sling.jcr.server.SlingServerRepositoryFactory"
+ *          factory="org.apache.sling.jcr.jackrabbit.server.SlingServerRepositoryFactory"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
