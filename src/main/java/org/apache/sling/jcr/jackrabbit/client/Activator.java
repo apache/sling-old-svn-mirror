@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.client;
+package org.apache.sling.jcr.jackrabbit.client;
 
 import java.util.Hashtable;
 
