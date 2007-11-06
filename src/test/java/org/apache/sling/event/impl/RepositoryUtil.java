@@ -35,7 +35,7 @@ import javax.naming.NamingException;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 
 /**
 * Utility class for managing JCR repositories.

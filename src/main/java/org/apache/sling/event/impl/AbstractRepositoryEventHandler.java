@@ -38,7 +38,7 @@ import javax.jcr.observation.EventListener;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.core.Constants;
 import org.apache.sling.event.EventUtil;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
