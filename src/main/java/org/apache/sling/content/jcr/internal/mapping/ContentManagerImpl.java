@@ -18,9 +18,7 @@
  */
 package org.apache.sling.content.jcr.internal.mapping;
 
-import java.security.AccessControlException;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import javax.jcr.Node;
@@ -159,38 +157,16 @@ public class ContentManagerImpl extends ObjectContentManagerImpl implements
     }
 
     /**
-     * @see org.apache.sling.core.content.ContentManager#create(java.lang.String, java.lang.Class, java.util.Map)
+     * @see org.apache.sling.content.ContentManager#create(org.apache.sling.component.Content)
      */
-    public Content create(String path, Class objectClass, Map properties) {
+    public void create(Content content) {
+        String path = content.getPath();
+
         this.checkPermission(path, ACTION_CREATE);
 
-        try {
-            // create content
-            Content content = (Content) objectClass.newInstance();
-
-            // set the path on the content object
-            this.setPath(content, path);
-
-            // set initial properties
-            if (properties != null) {
-                for (Iterator pi = properties.entrySet().iterator(); pi.hasNext();) {
-                    Map.Entry prop = (Map.Entry) pi.next();
-                    if (prop.getKey() instanceof String) {
-                        ReflectionUtils.setNestedProperty(content,
-                            (String) prop.getKey(), prop.getValue());
-                    }
-                }
-            }
-
-            this.insert(content);
-            this.conditionalSave();
-            return content;
-        } catch (IllegalAccessException iae) {
-        } catch (InstantiationException ie) {
-        } catch (ExceptionInInitializerError eiie) {
-            // TODO: handle
-        }
-        return null;
+        // TODO handle exceptions correctly
+        this.insert(content);
+        this.conditionalSave();
     }
 
     /**

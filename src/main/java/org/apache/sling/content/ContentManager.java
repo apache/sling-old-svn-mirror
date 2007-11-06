@@ -18,8 +18,6 @@
  */
 package org.apache.sling.content;
 
-import java.util.Map;
-
 import org.apache.sling.component.Content;
 
 /**
@@ -46,7 +44,8 @@ public interface ContentManager {
 
     // Content related operations
 
-    Content create(String path, Class objectClass, Map properties);
+    // store the content object at the location set in the path field
+    void create(Content content);
 
     /**
      * Returns a <code>Content</code> object loaded from the repository node
