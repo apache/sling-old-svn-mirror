@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.mime.internal;
+package org.apache.sling.commons.mime.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.mime.MimeTypeProvider;
+import org.apache.sling.commons.mime.MimeTypeProvider;
+import org.apache.sling.commons.mime.internal.MimeTypeServiceImpl;
 
 import junit.framework.TestCase;
 

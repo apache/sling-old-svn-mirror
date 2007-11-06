@@ -1,7 +1,7 @@
-package org.apache.sling.json.xml;
+package org.apache.sling.commons.json.xml;
 
-import org.apache.sling.json.JSONException;
-import org.apache.sling.json.JSONTokener;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONTokener;
 
 /*
 Copyright (c) 2002 JSON.org
