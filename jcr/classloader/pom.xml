@@ -28,7 +28,7 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-jackrabbit-classloader</artifactId>
+    <artifactId>jcr.classloader</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -41,13 +41,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-classloader
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/classloader
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jackrabbit-classloader
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/classloader
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/jackrabbit-classloader
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/classloader
         </url>
     </scm>
 
@@ -56,10 +56,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-sling-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -86,7 +82,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-jackrabbit-api</artifactId>
+            <artifactId>jcr.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
