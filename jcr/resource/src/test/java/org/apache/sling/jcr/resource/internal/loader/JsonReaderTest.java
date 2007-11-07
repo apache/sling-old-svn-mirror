@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -33,9 +32,6 @@ import junit.framework.TestCase;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.jcr.resource.internal.loader.JsonReader;
-import org.apache.sling.jcr.resource.internal.loader.Node;
-import org.apache.sling.jcr.resource.internal.loader.Property;
 
 public class JsonReaderTest extends TestCase {
 
@@ -124,7 +120,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testMixinNodeTypes1() throws JSONException, IOException {
-        Set mixins = this.toSet(new Object[]{ "xyz:mix1" });
+        Set<Object> mixins = this.toSet(new Object[]{ "xyz:mix1" });
         String json = "{ \"name\": \"test\", \"mixinNodeTypes\": " + this.toJsonArray(mixins) + "}";
 
         Node node = this.parse(json);
@@ -133,7 +129,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testMixinNodeTypes2() throws JSONException, IOException {
-        Set mixins = this.toSet(new Object[]{ "xyz:mix1", "abc:mix2" });
+        Set<Object> mixins = this.toSet(new Object[]{ "xyz:mix1", "abc:mix2" });
         String json = "{ \"name\": \"test\", \"mixinNodeTypes\": " + this.toJsonArray(mixins) + "}";
 
         Node node = this.parse(json);
@@ -142,7 +138,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testPropertiesNone() throws IOException, JSONException {
-        List properties = null;
+        List<Property> properties = null;
         String json = "{ \"name\": \"test\", \"properties\": " + this.toJsonObject(properties) + "}";
 
         Node node = this.parse(json);
@@ -151,7 +147,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testPropertiesSingleValue() throws IOException, JSONException {
-        List properties = new ArrayList();
+        List<Property> properties = new ArrayList<Property>();
         Property prop = new Property();
         prop.setName("p1");
         prop.setValue("v1");
@@ -161,11 +157,11 @@ public class JsonReaderTest extends TestCase {
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(new HashSet(properties), new HashSet(node.getProperties()));
+        assertEquals(new HashSet<Property>(properties), new HashSet<Property>(node.getProperties()));
     }
 
     public void testPropertiesTwoSingleValue() throws IOException, JSONException {
-        List properties = new ArrayList();
+        List<Property> properties = new ArrayList<Property>();
         Property prop = new Property();
         prop.setName("p1");
         prop.setValue("v1");
@@ -179,11 +175,11 @@ public class JsonReaderTest extends TestCase {
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(new HashSet(properties), new HashSet(node.getProperties()));
+        assertEquals(new HashSet<Property>(properties), new HashSet<Property>(node.getProperties()));
     }
 
     public void testPropertiesMultiValue() throws IOException, JSONException {
-        List properties = new ArrayList();
+        List<Property> properties = new ArrayList<Property>();
         Property prop = new Property();
         prop.setName("p1");
         prop.addValue("v1");
@@ -193,11 +189,11 @@ public class JsonReaderTest extends TestCase {
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(new HashSet(properties), new HashSet(node.getProperties()));
+        assertEquals(new HashSet<Property>(properties), new HashSet<Property>(node.getProperties()));
     }
 
     public void testPropertiesMultiValueEmpty() throws IOException, JSONException {
-        List properties = new ArrayList();
+        List<Property> properties = new ArrayList<Property>();
         Property prop = new Property();
         prop.setName("p1");
         prop.addValue(null); // empty multivalue property
@@ -207,11 +203,11 @@ public class JsonReaderTest extends TestCase {
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(new HashSet(properties), new HashSet(node.getProperties()));
+        assertEquals(new HashSet<Property>(properties), new HashSet<Property>(node.getProperties()));
     }
 
     public void testChildrenNone() throws IOException, JSONException {
-        List nodes = null;
+        List<Node> nodes = null;
         String json = "{ \"name\": \"test\", \"nodes\": " + this.toJsonObject(nodes) + "}";
 
         Node node = this.parse(json);
@@ -220,7 +216,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testChild() throws IOException, JSONException {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         Node child = new Node();
         child.setName("p1");
         nodes.add(child);
@@ -233,7 +229,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testChildWithMixin() throws IOException, JSONException {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         Node child = new Node();
         child.setName("p1");
         child.addMixinNodeType("p1:mix");
@@ -247,7 +243,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testTwoChildren() throws IOException, JSONException {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         Node child = new Node();
         child.setName("p1");
         nodes.add(child);
@@ -263,7 +259,7 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testChildWithProperty() throws IOException, JSONException {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         Node child = new Node();
         child.setName("c1");
         Property prop = new Property();
@@ -286,8 +282,8 @@ public class JsonReaderTest extends TestCase {
         return this.jsonReader.parse(ins);
     }
 
-    private Set toSet(Object[] content) {
-        Set set = new HashSet();
+    private Set<Object> toSet(Object[] content) {
+        Set<Object> set = new HashSet<Object>();
         for (int i=0; content != null && i < content.length; i++) {
             set.add(content[i]);
         }
@@ -295,10 +291,9 @@ public class JsonReaderTest extends TestCase {
         return set;
     }
 
-    private JSONArray toJsonArray(Collection set) throws JSONException {
-        List list = new ArrayList();
-        for (Iterator si=set.iterator(); si.hasNext(); ) {
-            Object item = si.next();
+    private JSONArray toJsonArray(Collection<?> set) throws JSONException {
+        List<Object> list = new ArrayList<Object>();
+        for (Object item : set) {
             if (item instanceof Node) {
                 list.add(this.toJsonObject((Node) item));
             } else {
@@ -308,11 +303,10 @@ public class JsonReaderTest extends TestCase {
         return new JSONArray(list);
     }
 
-    private JSONObject toJsonObject(Collection set) throws JSONException {
+    private JSONObject toJsonObject(Collection<?> set) throws JSONException {
         JSONObject obj = new JSONObject();
         if (set != null) {
-            for (Iterator mi=set.iterator(); mi.hasNext(); ) {
-                Object next = mi.next();
+            for (Object next: set) {
                 String name = this.getName(next);
                 obj.putOpt(name, this.toJsonObject(next));
             }

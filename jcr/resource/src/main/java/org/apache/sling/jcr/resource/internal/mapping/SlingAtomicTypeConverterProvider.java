@@ -26,9 +26,9 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.DefaultAtomicT
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.UndefinedTypeConverterImpl;
 
 /**
- * The <code>MapperAtomicTypeConverterProvider</code> TODO
+ * The <code>SlingAtomicTypeConverterProvider</code> TODO
  */
-public class MapperAtomicTypeConverterProvider extends
+public class SlingAtomicTypeConverterProvider extends
         DefaultAtomicTypeConverterProvider {
 
     protected Map registerDefaultAtomicTypeConverters() {

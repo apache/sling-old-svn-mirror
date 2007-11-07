@@ -24,7 +24,10 @@ import org.apache.sling.api.resource.ResourceMetadata;
 /**
  * The <code>SyntheticResource</code> class is a simple implementation of the
  * <code>Resource</code> interface which may be used to provide a resource
- * object which is related to a repository item.
+ * object which has no related repository item.
+ * <p>
+ * Clients may call the {@link #setRawData(Object)} and
+ * {@link #setObject(Object)} method as appropriate.
  */
 public class SyntheticResource implements Resource {
 
@@ -36,6 +39,12 @@ public class SyntheticResource implements Resource {
 
     /** The metadat of this resource just containig the resource path */
     private ResourceMetadata resourceMetadata;
+
+    /** Optional raw data (JCR Item mostly) attached to this resource */
+    private Object rawData;
+
+    /** Optional object attached to this resource */
+    private Object object;
 
     /**
      * Creates a synthetic content with the given path and component Id.
@@ -63,12 +72,20 @@ public class SyntheticResource implements Resource {
         return resourceMetadata;
     }
 
+    public void setRawData(Object rawData) {
+        this.rawData = rawData;
+    }
+
     public Object getRawData() {
-        return null;
+        return rawData;
+    }
+
+    public void setObject(Object object) {
+        this.object = object;
     }
 
     public Object getObject() {
-        return null;
+        return object;
     }
 
 }

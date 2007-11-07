@@ -25,20 +25,19 @@ import java.util.List;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap;
 
 /**
- * The <code>DefaultMappedObject</code> class is a default <code>Content</code>
- * implementation as follows:
+ * The <code>DefaultMappedObject</code> is used by the JCR based resource
+ * manager implemented by this bundle as a default to map JCR nodes. This class
+ * has the following features:
  * <ul>
  * <li>This object may be loaded from any existing node.
  * <li>If inserting a new instance of this class into the repository a node of
  * type <code>nt:unstructured</code> without any mixin types is created
- * <li>All non-protected properties are simple read and may be accessed in the
+ * <li>All non-protected properties are simply read and may be accessed in the
  * Java standard <code>Map</code> style using the {@link #get(Object)} and
  * {@link #put(Object, Object)} methods.
  * <li>Storing the object back to the repository just writes the map contents
  * into the properties. Care must be taken to obey the node type restrictions if
  * setting properties, otherwise storing back may fail.
- * <li>The component ID is retrieved as the <code>sling:componentId</code>
- * property.
  * <li>Single-value properties are loaded and stored as scalar instances
  * according to the mapping below. Multi-value properties are represented by
  * this object as <code>java.util.List</code> instances.
@@ -63,10 +62,6 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap
  * mixin node types.
  * <dt><code>properties</code>
  * <dd>The map representing the properties of this content object itself.
- * <dt><code>sling:componentId</code>
- * <dd>This is not actually a read-only property. But it is used to implement
- * the {@link #getComponentId()} method. This property may thus be modified, but
- * care must be taken as the content may not be rendered correctly anymore.
  * </dl>
  * <p>
  * <b>Mapping JCR Property types</b> <table border="1" cellspacing="0"
@@ -166,7 +161,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
     /*
      * Implementation Note: As this class extends the HashMap class it
      * implements the Map interface and therefore the Commons Beanutils library
-     * used by the Graffito JCR Mapper will directly access the map getter and
+     * used by the Jackrabbit JCR Mapper will directly access the map getter and
      * setter methods to get and set properties instead of checking for specific
      * getter and setter methods. For this reason the get() and put() methods
      * have been overwritten here and check for the specially mapped property
@@ -264,10 +259,10 @@ public class DefaultMappedObject extends HashMap<String, Object> {
         return FIELD_PROPERTIES.equals(key) || super.containsKey(key);
     }
 
-    // ---------- Content Mapping support --------------------------------------
+    // ---------- OCM support -------------------------------------------------
 
     /**
-     * Sets the path of this <code>Content</code> object.
+     * Sets the path of this mapped object.
      *
      * @ocm.field path="true"
      */
@@ -278,7 +273,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
     }
 
     /**
-     * Returns the path of this <code>Content</code> object.
+     * Returns the path of this mapped object.
      */
     public String getPath() {
         return (String) this.get(FIELD_PATH);

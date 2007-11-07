@@ -24,13 +24,24 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.ResourceManager;
 
 /**
- * The <code>ContentManagerFactory</code> TODO
+ * The <code>JcrResourceManagerFactory</code> interface defines the service
+ * interface to have JCR-based <code>ResourceManager</code> instances created
+ * for JCR sessions.
+ * <p>
+ * This interface is not intended to be implemented by client applications. It
+ * is implemented by this bundle and the implementation registered as a service
+ * for use by client applications.
  */
 public interface JcrResourceManagerFactory {
 
     /**
-     * Returns a ContentManager for the given session. Calling this method
-     * repeatedly for the same session returns the same ContentManager instance.
+     * Returns a <code>ResourceManager</code> for the given session. Calling
+     * this method repeatedly returns a new instance on each call.
+     *
+     * @param session The JCR <code>Session</code> used by the created
+     *            resource manager to access the repository.
+     * @throws SlingException May be thrown if an error occurrs setting up the
+     *             <code>ResourceManager</code>.
      */
     ResourceManager getResourceManager(Session session) throws SlingException;
 
