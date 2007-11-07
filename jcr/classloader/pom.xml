@@ -67,7 +67,7 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Export-Package>
-                            org.apache.sling.jcr.classloader,
+                            org.apache.sling.jcr.classloader;version=${pom.version},
                             org.apache.jackrabbit.classloader;
                             org.apache.jackrabbit.net;version=1.3
                         </Export-Package>
