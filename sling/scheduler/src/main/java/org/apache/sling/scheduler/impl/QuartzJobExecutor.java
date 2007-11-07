@@ -19,7 +19,7 @@ package org.apache.sling.scheduler.impl;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.sling.core.ServiceLocator;
+import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.core.util.ServiceLocatorImpl;
 import org.apache.sling.scheduler.JobContext;
 import org.osgi.framework.BundleContext;
