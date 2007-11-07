@@ -16,6 +16,8 @@
  */
 package org.apache.sling.microsling.request.helpers;
 
+import java.io.InputStream;
+
 import junit.framework.TestCase;
 
 import org.apache.sling.api.request.RequestPathInfo;
@@ -268,6 +270,10 @@ public class MicroslingRequestPathInfoTest extends TestCase {
 
         public ResourceMetadata getResourceMetadata() {
             return metadata;
+        }
+
+        public InputStream getInputStream() {
+            return null;
         }
     }
 
