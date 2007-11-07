@@ -28,7 +28,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-scripting-jsp-taglib</artifactId>
+    <artifactId>org.apache.sling.scripting.jsp.taglib</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -39,13 +39,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting-jsp-taglib
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/jsp-taglib
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting-jsp-taglib
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/jsp-taglib
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting-jsp-taglib
+            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/jsp-taglib
         </url>
     </scm>
 
