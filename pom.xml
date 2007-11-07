@@ -64,7 +64,7 @@
                         </Bundle-Category>
                         <Export-Package>
                             <!-- Export provider API selectively -->
-                            org.apache.sling.jcr.api,
+                            org.apache.sling.jcr.api;version=${pom.version},
 
                             <!-- Re-export JCR API, Jackrabbit API and Jackrabbit JCR Commons -->
                             javax.jcr.*;version=1.0,
