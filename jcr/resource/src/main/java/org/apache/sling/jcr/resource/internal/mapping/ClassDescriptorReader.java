@@ -128,7 +128,10 @@ public class ClassDescriptorReader {
             if (eventType == XmlPullParser.START_TAG) {
                 switch (this.state) {
                     case STATE_NULL:
-                        if (!"graffito-jcr".equals(this.parser.getName())) {
+                        if ("graffito-jcr".equals(this.parser.getName())) {
+                            // accept for backwards compatibility
+                            // might want to log this situation
+                        } else if (!"jackrabbit-ocm".equals(this.parser.getName())) {
                             throw this.unexpectedElement();
                         }
                         this.descriptors.setPackage(this.getOptionalAttribute("package"));

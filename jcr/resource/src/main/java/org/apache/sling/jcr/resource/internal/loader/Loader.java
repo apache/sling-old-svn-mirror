@@ -41,7 +41,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.resource.internal.JcrContentHelper;
+import org.apache.sling.jcr.resource.internal.JcrResourceManagerFactoryImpl;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class Loader {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(Loader.class);
 
-    private JcrContentHelper jcrContentHelper;
+    private JcrResourceManagerFactoryImpl jcrContentHelper;
     private XmlReader xmlReader;
     private JsonReader jsonReader;
     private Map<String, List<String>> delayedReferences;
@@ -68,7 +68,7 @@ public class Loader {
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public Loader(JcrContentHelper jcrContentHelper) {
+    public Loader(JcrResourceManagerFactoryImpl jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
         this.delayedReferences = new HashMap<String, List<String>>();
         this.delayedBundles = new LinkedList<Bundle>();
@@ -85,14 +85,14 @@ public class Loader {
         this.jcrContentHelper = null;
     }
 
-    public void registerBundle(Bundle bundle) {
-        if (this.registerBundleInternal(bundle, false)) {
+    public void registerBundle(Session session, Bundle bundle) {
+        if (this.registerBundleInternal(session, bundle, false)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
             for (int i=this.delayedBundles.size(); i > 0 && currentSize != this.delayedBundles.size() && !this.delayedBundles.isEmpty(); i--) {
                 for (Iterator<Bundle> di=this.delayedBundles.iterator(); di.hasNext(); ) {
                     Bundle delayed = di.next();
-                    if (this.registerBundleInternal(delayed, true)) {
+                    if (this.registerBundleInternal(session, delayed, true)) {
                         di.remove();
                     }
                 }
@@ -104,9 +104,9 @@ public class Loader {
         }
     }
 
-    private boolean registerBundleInternal (Bundle bundle, boolean isRetry) {
+    private boolean registerBundleInternal (Session session, Bundle bundle, boolean isRetry) {
         try {
-            this.installContent(bundle);
+            this.installContent(session, bundle);
             if ( isRetry ) {
                 // log success of retry
                 log.info("Retrytring to load initial content for bundle {} succeeded.",
@@ -134,14 +134,12 @@ public class Loader {
 
     //---------- internal -----------------------------------------------------
 
-    private void installContent(Bundle bundle) throws RepositoryException {
+    private void installContent(Session session, Bundle bundle) throws RepositoryException {
         String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
         if (root == null) {
             log.debug("Bundle {} has no initial content", bundle.getSymbolicName());
             return;
         }
-
-        Session session = this.getSession();
 
         try {
             log.debug("Installing Initial Content of Bundle {}", bundle.getSymbolicName());
@@ -163,9 +161,6 @@ public class Loader {
                     "Failure to rollback partial initial content for bundle {}",
                     bundle.getSymbolicName(), re);
             }
-
-            // logout the session for now
-            this.ungetSession(session);
         }
 
     }
@@ -492,13 +487,4 @@ public class Loader {
         return this.jsonReader;
     }
 
-    private Session getSession() throws RepositoryException {
-        return this.jcrContentHelper.getRepository().loginAdministrative(null);
-    }
-
-    private void ungetSession(Session session) {
-        if (session != null) {
-            session.logout();
-        }
-    }
 }

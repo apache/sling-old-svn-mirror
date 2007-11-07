@@ -18,11 +18,16 @@
  */
 package org.apache.sling.jcr.resource.internal.mapping;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.EVENT_MAPPING_ADDED;
+import static org.apache.sling.jcr.resource.JcrResourceConstants.EVENT_MAPPING_REMOVED;
+import static org.apache.sling.jcr.resource.JcrResourceConstants.MAPPER_BUNDLE_HEADER;
+import static org.apache.sling.jcr.resource.JcrResourceConstants.MAPPING_CLASS;
+import static org.apache.sling.jcr.resource.JcrResourceConstants.MAPPING_NODE_TYPE;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +35,21 @@ import java.util.StringTokenizer;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
+import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
+import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
+import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ObjectConverterImpl;
+import org.apache.jackrabbit.ocm.manager.objectconverter.impl.ProxyManagerImpl;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
+import org.apache.jackrabbit.ocm.query.QueryManager;
+import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.ResourceManager;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.internal.JcrContentHelper;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.sling.jcr.resource.internal.JcrResourceManagerFactoryImpl;
 import org.apache.sling.jcr.resource.internal.mapping.classloader.MapperClassLoader;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
@@ -45,17 +57,22 @@ import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
 
 /**
- * The <code>PersistenceManagerProviderImpl</code> TODO
+ * The <code>ObjectContentManagerFactory</code> TODO
  */
-public class PersistenceManagerProviderImpl {
-
-    public static final String MAPPER_BUNDLE_HEADER = "Sling-Mappings";
+public class ObjectContentManagerFactory {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(PersistenceManagerProviderImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactory.class);
 
-    private JcrContentHelper jcrContentHelper;
+    private JcrResourceManagerFactoryImpl jcrResourceManagerFactory;
 
+    /**
+     * The class loader used by the Jackrabbit OCM ReflectionUtils class to load
+     * classes for mapping. The class loader is set on the ReflectionUtils
+     * before the new mappings are loaded.
+     *
+     * @see #loadMappings()
+     */
     private MapperClassLoader mapperClassLoader;
 
     private BundleMapper mapper;
@@ -64,103 +81,41 @@ public class PersistenceManagerProviderImpl {
 
     private AtomicTypeConverterProvider converterProvider;
 
-    private Map<String, Session> adminSessions;
-
-    // issued persistence managers indexed by session
-    private Map<Session, ResourceManager> managers;
-
-    private final Object managersLock = new Object();
-
-    private Thread reaper;
-
-    public PersistenceManagerProviderImpl(JcrContentHelper jcrContentHelper) {
-        this.jcrContentHelper = jcrContentHelper;
+    public ObjectContentManagerFactory(
+            JcrResourceManagerFactoryImpl jcrResourceManagerFactory) {
+        this.jcrResourceManagerFactory = jcrResourceManagerFactory;
 
         // prepare the data converters and query manager
-        this.converterProvider = new MapperAtomicTypeConverterProvider();
-
-        this.managers = new IdentityHashMap<Session, ResourceManager>();
-
-        this.reaper = new Thread("PersistenceManager Reaper") {
-            public void run() {
-                while (PersistenceManagerProviderImpl.this.reaper != null) {
-                    try {
-                        Thread.sleep(60 * 1000L);
-                    } catch (InterruptedException ie) {
-                        // don't care
-                    }
-
-                    synchronized (PersistenceManagerProviderImpl.this.managersLock) {
-                        if (PersistenceManagerProviderImpl.this.managers != null) {
-                            for (Iterator<Session> mi = PersistenceManagerProviderImpl.this.managers.keySet().iterator(); mi.hasNext();) {
-                                Session session = mi.next();
-                                if (!session.isLive()) {
-                                    mi.remove();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        this.adminSessions = new HashMap<String, Session>();
+        this.converterProvider = new SlingAtomicTypeConverterProvider();
     }
 
     public synchronized void dispose() {
-        synchronized (managersLock) {
-            if (managers != null) {
-                managers.clear();
-                managers = null;
-            }
-        }
-
-        if (reaper != null) {
-            Thread thread = reaper;
-            reaper = null;
-            thread.interrupt();
-        }
-
         if (mapperClassLoader != null) {
             mapperClassLoader.dispose();
             mapperClassLoader = null;
         }
-
-        if (adminSessions != null) {
-            Session[] sessions = adminSessions.values().toArray(
-                new Session[adminSessions.size()]);
-            adminSessions = null;
-            for (int i = 0; i < sessions.length; i++) {
-                sessions[i].logout();
-            }
-        }
     }
 
-    /**
-     * @throws IllegalStateException If this provider is not operational
-     */
-    public ResourceManager getResourceManager(Session session)
-            throws SlingException {
-        if (managers == null) {
-            throw new IllegalStateException("Already disposed");
+    public ObjectContentManager getObjectContentManager(Session session) {
+
+        ValueFactory valueFactory;
+        try {
+            valueFactory = session.getValueFactory();
+        } catch (RepositoryException re) {
+            log.info(
+                "getObjectContentManager: Cannot get ValueFactory from Session ("
+                    + session.getUserID() + "), using default factory", re);
+            valueFactory = ValueFactoryImpl.getInstance();
         }
 
-        synchronized (managersLock) {
-            ResourceManager pm = managers.get(session);
+        ObjectCache objectCache = new ObservingObjectCache(session);
+        QueryManager queryManager = new QueryManagerImpl(mapper,
+            converterProvider.getAtomicTypeConverters(), valueFactory);
+        ObjectConverter objectConverter = new ObjectConverterImpl(mapper,
+            converterProvider, new ProxyManagerImpl(), objectCache);
 
-            // create if not existing yet
-            if (pm == null) {
-                try {
-                    pm = new ContentManagerImpl(this, mapper,
-                        converterProvider, session);
-                    managers.put(session, pm);
-                } catch (RepositoryException re) {
-                    throw new SlingException(re);
-                }
-            }
-
-            return pm;
-        }
+        return new ObjectContentManagerImpl(mapper, objectConverter,
+            queryManager, objectCache, session);
     }
 
     private ClassDescriptorReader getDescriptorReader() {
@@ -175,24 +130,6 @@ public class PersistenceManagerProviderImpl {
         }
 
         return descriptorReader;
-    }
-
-    boolean itemReallyExists(Session clientSession, String path)
-            throws RepositoryException {
-
-        Session adminSession;
-        synchronized (adminSessions) {
-            String workSpace = clientSession.getWorkspace().getName();
-            adminSession = adminSessions.get(workSpace);
-            if (adminSession == null) {
-                adminSession = jcrContentHelper.getRepository().loginAdministrative(
-                    workSpace);
-                adminSessions.put(workSpace, adminSession);
-            }
-        }
-
-        // assume this session has more access rights than the client Session
-        return adminSession.itemExists(path);
     }
 
     // ---------- Bundle registration and unregistration -----------------------
@@ -234,7 +171,7 @@ public class PersistenceManagerProviderImpl {
         loadMappings();
 
         // fire mapping event
-        fireMappingEvent(bundle, JcrResourceConstants.EVENT_MAPPING_ADDED);
+        fireMappingEvent(bundle, EVENT_MAPPING_ADDED);
     }
 
     private synchronized void removeBundle(Bundle bundle) {
@@ -246,7 +183,7 @@ public class PersistenceManagerProviderImpl {
         loadMappings();
 
         // fire mapping event
-        fireMappingEvent(bundle, JcrResourceConstants.EVENT_MAPPING_REMOVED);
+        fireMappingEvent(bundle, EVENT_MAPPING_REMOVED);
     }
 
     private void loadMappings() {
@@ -301,28 +238,26 @@ public class PersistenceManagerProviderImpl {
 
         BundleMapper newMapper = new BundleMapper(md);
 
-        synchronized (managersLock) {
-            // dispose off old class loader before using new loader
-            if (mapperClassLoader != null) {
-                mapperClassLoader.dispose();
-            }
-
-            mapperClassLoader = newMapperClassLoader;
-            mapper = newMapper;
-
-            managers.clear();
+        // dispose off old class loader before using new loader
+        if (mapperClassLoader != null) {
+            // note: the mapperClassLoader is used by the Jackrabbit OCM
+            // ReflectionUtils class. This class has already been reset to
+            // use the new class loader, so we can dispose off the old
+            // class loader here safely
+            mapperClassLoader.dispose();
         }
+
+        mapperClassLoader = newMapperClassLoader;
+        mapper = newMapper;
     }
 
     private void fireMappingEvent(Bundle sourceBundle, String eventName) {
         if (mapper != null) {
             // only fire, if there is a (new) mapper
             Map<String, Object> props = new HashMap<String, Object>();
-            props.put(JcrResourceConstants.MAPPING_CLASS,
-                mapper.getMappedClasses());
-            props.put(JcrResourceConstants.MAPPING_NODE_TYPE,
-                mapper.getMappedNodeTypes());
-            jcrContentHelper.fireEvent(sourceBundle, eventName, props);
+            props.put(MAPPING_CLASS, mapper.getMappedClasses());
+            props.put(MAPPING_NODE_TYPE, mapper.getMappedNodeTypes());
+            jcrResourceManagerFactory.fireEvent(sourceBundle, eventName, props);
         }
     }
 }
