@@ -25,7 +25,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>1-incubator-SNAPSHOT</version>
-        <relativePath>../parent/pom.xml</relativePath>
+        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.sling</groupId>
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/maven-sling-plugin
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/maven/maven-sling-plugin
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/maven-sling-plugin
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/maven/maven-sling-plugin
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/maven-sling-plugin
+            http://svn.apache.org/viewvc/incubator/sling/trunk/maven/maven-sling-plugin
         </url>
     </scm>
 
