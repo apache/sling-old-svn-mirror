@@ -28,7 +28,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-assembly</artifactId>
+    <artifactId>org.apache.sling.osgi.assembly</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -41,13 +41,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/assembly
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/osgi/assembly
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/assembly
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/osgi/assembly
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/assembly
+            http://svn.apache.org/viewvc/incubator/sling/trunk/osgi/assembly
         </url>
     </scm>
 
@@ -61,13 +61,13 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.assembly.installer
+                            org.apache.sling.osgi.assembly.installer;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.assembly.internal.*
+                            org.apache.sling.osgi.assembly.internal.*
                         </Private-Package>
                         <Bundle-Activator>
-                            org.apache.sling.assembly.internal.AssemblyActivator
+                            org.apache.sling.osgi.assembly.internal.AssemblyActivator
                         </Bundle-Activator>
                     </instructions>
                 </configuration>

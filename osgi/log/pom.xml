@@ -28,7 +28,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-log</artifactId>
+    <artifactId>org.apache.sling.osgi.log</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/log
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/osgi/log
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/log
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/osgi/log
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/log
+            http://svn.apache.org/viewvc/incubator/sling/trunk/osgi/log
         </url>
     </scm>
 
@@ -59,7 +59,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.sling.log.Activator
+                            org.apache.sling.osgi.log.Activator
                         </Bundle-Activator>
                         <Export-Package>
                             org.apache.commons.logging;version=1.0.4,
@@ -74,7 +74,7 @@
                             !ch.qos.logback.classic.selector.servlet,
                             ch.qos.logback.*,
                             org.apache.commons.logging.impl,
-                            org.apache.sling.log, org.slf4j.helpers,
+                            org.apache.sling.osgi.log, org.slf4j.helpers,
                             org.slf4j.impl, org.slf4j.spi
                         </Private-Package>
                         <DynamicImport-Package>
