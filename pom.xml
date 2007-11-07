@@ -62,6 +62,11 @@
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
+        <!-- The Maven Plugins -->
+        <module>maven/maven-jcrocm-plugin</module>
+<!--         <module>maven/maven-jspc-plugin</module>    -->
+        <module>maven/maven-sling-plugin</module>
+
         <!-- The Sling API -->
         <module>api</module>
 
