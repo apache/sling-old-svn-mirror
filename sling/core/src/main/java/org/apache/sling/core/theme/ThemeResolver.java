@@ -18,13 +18,13 @@
  */
 package org.apache.sling.core.theme;
 
-import org.apache.sling.component.ComponentRequest;
+import org.apache.sling.api.SlingHttpServletRequest;
 
 /**
  * The <code>ThemeResolver</code> TODO
  */
 public interface ThemeResolver {
 
-    Theme resolveTheme(ComponentRequest request);
+    Theme resolveTheme(SlingHttpServletRequest request);
 
 }
