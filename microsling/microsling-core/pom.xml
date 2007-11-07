@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.jruby</groupId>
       <artifactId>jruby-complete</artifactId>
-      <version>1.0RC3</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.sling</groupId>
@@ -73,7 +73,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>3.8.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -105,7 +105,7 @@
     <dependency>
       <groupId>rhino</groupId>
       <artifactId>js</artifactId>
-      <version>1.6R6</version>
+      <version>1.6R7</version>
     </dependency>
     <dependency>
         <groupId>freemarker</groupId>
