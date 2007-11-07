@@ -20,7 +20,6 @@ package org.apache.sling.api.resource;
 
 import java.util.HashMap;
 
-
 /**
  * The <code>ResourceMetadata</code> interface defines the API for the
  * metadata of a Sling {@link Resource}. Essentially the resource's metadata is
@@ -43,5 +42,38 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * instance belongs (value is "sling.resolutionPath").
      */
     public static final String RESOLUTION_PATH = "sling.resolutionPath";
+
+    /**
+     * The name of the optional property providing the content type of the
+     * resource if the resource is streamable (value is "sling.contentType").
+     * This property may be missing if the resource is not streamable or if the
+     * content type is not known.
+     */
+    public static final String CONTENT_TYPE = "sling.contentType";
+
+    /**
+     * The name of the optional property providing the character encoding of the
+     * resource if the resource is streamable and contains character data (value
+     * is "sling.characterEncoding"). This property may be missing if the
+     * resource is not streamable or if the character encoding is not known.
+     */
+    public static final String CHARACTER_ENCODING = "sling.characterEncoding";
+
+    /**
+     * Returns the creation time of this resource in the repository in
+     * milliseconds (value is "sling.creationTime"). The type of this property
+     * is <code>java.lang.Long</code>. The property may be missing if the
+     * resource is not streamable or if the creation time is not known.
+     */
+    public static final String CREATION_TIME = "sling.creationTime";
+
+    /**
+     * Returns the last modification time of this resource in the repository in
+     * milliseconds (value is "sling.modificationTime"). The type of this
+     * property is <code>java.lang.Long</code>. The property may be missing
+     * if the resource is not streamable or if the last modification time is not
+     * known.
+     */
+    public static final String MODIFICATION_TIME = "sling.modificationTime";
 
 }
