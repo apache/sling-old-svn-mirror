@@ -28,37 +28,32 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-content-jcr</artifactId>
+    <artifactId>jcr.resource</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>
-        Sling - Content Loading and Mapping Management
+        Sling - Resource Loading and Mapping Management
     </name>
     <description>
         This bundle provides two kinds of Repository Content related
-        functionality: Initial content
-        installation and JCR Mapping.
+        functionality: Initial content installation and JCR Mapping.
     </description>
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/content
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/resource
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/content
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/resource
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/content
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/resource
         </url>
     </scm>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-sling-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
@@ -74,8 +69,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.content,
-                            org.apache.sling.content.jcr,
+                            org.apache.sling.jcr.resource,
                             org.apache.jackrabbit.ocm.exception;
                             org.apache.jackrabbit.ocm.mapper;
                             org.apache.jackrabbit.ocm.manager;
@@ -86,7 +80,7 @@
                             org.apache.jackrabbit.ocm.version;version=1.4
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.content.jcr.internal.*,
+                            org.apache.sling.jcr.resource.internal.*,
                             org.apache.jackrabbit.ocm.lock,
                             org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl,
                             org.apache.jackrabbit.ocm.manager.beanconverter,
@@ -108,12 +102,10 @@
                             org.apache.jackrabbit.ocm.mapper.impl.digester;resolution:=optional,*
                         </Import-Package>
 
-                        <!-- CND for the sling:content node type for BaseContent -->
-                        <Sling-Nodetypes>
-                            SLING-INF/nodetypes/BaseContent.cnd
-                        </Sling-Nodetypes>
                         <Sling-Namespaces>
-                            sling=http://jackrabbit.apache.org/sling/1.0
+                            sling=http://sling.apache.org/sling/1.0
+                            TODO!!!
+                            ocm=http://jackrabbit.apache.org/ocm/1.0
                         </Sling-Namespaces>
                     </instructions>
                 </configuration>
@@ -130,23 +122,27 @@
             <artifactId>osgi_R4_compendium</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-component-api</artifactId>
+            <artifactId>api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-mime</artifactId>
+            <artifactId>commons.mime</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-json</artifactId>
+            <artifactId>commons.json</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-jackrabbit-api</artifactId>
+            <artifactId>jcr.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
