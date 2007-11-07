@@ -24,7 +24,6 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 
 abstract class AbstractBundlePostMojo extends AbstractMojo {
 
@@ -38,7 +37,7 @@ abstract class AbstractBundlePostMojo extends AbstractMojo {
      * This method may also be used to check whether the file is a bundle at all
      * as it is assumed, that only if the file contains an OSGi bundle will the
      * <code>Bundle-SymbolicName</code> manifest header be set.
-     * 
+     *
      * @param jarFile The file providing the bundle whose symbolic name is
      *            requested.
      * @return The bundle's symbolic name from the

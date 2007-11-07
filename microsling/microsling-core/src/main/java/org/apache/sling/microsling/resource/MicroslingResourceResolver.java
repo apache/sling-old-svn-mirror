@@ -41,7 +41,6 @@ import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +63,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
     /**
      * Resolves the Resource from the request
      */
-    public Resource resolve(ServletRequest request) throws SlingException,
-            ResourceNotFoundException {
+    public Resource resolve(ServletRequest request) throws SlingException {
         Resource result = null;
         String path = null;
         String pathInfo = ((HttpServletRequest) request).getPathInfo();
