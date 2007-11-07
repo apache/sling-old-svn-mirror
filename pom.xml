@@ -62,7 +62,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.commons.mime
+                            org.apache.sling.commons.mime;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.mime.internal
