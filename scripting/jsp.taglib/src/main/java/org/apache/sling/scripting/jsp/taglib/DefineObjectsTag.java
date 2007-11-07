@@ -18,11 +18,10 @@ package org.apache.sling.scripting.jsp.taglib;
 
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.sling.core.ServiceLocator;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.content.ContentManager;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,47 +37,34 @@ public class DefineObjectsTag extends TagSupport {
 
     /**
      * Default name for the scripting variable referencing the
-     * <code>RenderRequest</code> object (value is "renderRequest").
+     * <code>SlingHttpServletRequest</code> object (value is "renderRequest").
      */
     public static final String DEFAULT_REQUEST_NAME = "renderRequest";
 
     /**
      * Default name for the scripting variable referencing the
-     * <code>RenderResponse</code> object (value is "renderResponse").
+     * <code>SlingHttpServletResponse</code> object (value is "renderResponse").
      */
     public static final String DEFAULT_RESPONSE_NAME = "renderResponse";
 
     /**
      * Default name for the scripting variable referencing the current
-     * <code>Content</code> object (value is "content").
+     * <code>Resource</code> object (value is "resource").
      */
-    public static final String DEFAULT_CONTENT_NAME = "content";
-
-    /**
-     * Default name of the Java type for the scripting variable referencing the
-     * current <code>Content</code> object (value is the fully qualifed name
-     * of the <code>Content</code> interface).
-     */
-    public static final String DEFAULT_CONTENT_CLASS = Content.class.getName();
-
-    /**
-     * Default name for the scripting variable referencing the current handle
-     * (value is "handle").
-     */
-    public static final String DEFUALT_HANDLE_NAME = "handle";
+    public static final String DEFAULT_RESOURCE_NAME = "resource";
 
     /**
      * Default name for the scripting variable referencing the current
-     * <code>ContentManager</code> (value is "contentManager").
+     * <code>ResourceManager</code> (value is "resourceManager").
      */
-    public static final String DEFAULT_CONTENT_MANAGER_NAME = "contentManager";
+    public static final String DEFAULT_RESOURCE_MANAGER_NAME = "resourceManager";
 
     /**
      * Default name of the Java type for the scripting variable referencing the
-     * current <code>ContentManager</code> (value is the fully qualified name
-     * of the <code>ContentManager</code> inerface).
+     * current <code>ResourceManager</code> (value is the fully qualified name
+     * of the <code>ResourceManager</code> interface).
      */
-    public static final String DEFAULT_CONTENT_MANAGER_CLASS = ContentManager.class.getName();
+    public static final String DEFAULT_RESOURCE_MANAGER_CLASS = ResourceManager.class.getName();
 
     /**
      * Default name for the scripting variable referencing the current
@@ -90,15 +76,11 @@ public class DefineObjectsTag extends TagSupport {
 
     private String responseName = DEFAULT_RESPONSE_NAME;
 
-    private String contentName = DEFAULT_CONTENT_NAME;
+    private String resourceName = DEFAULT_RESOURCE_NAME;
 
-    private String contentClass = DEFAULT_CONTENT_CLASS;
+    private String resourceManagerName = DEFAULT_RESOURCE_MANAGER_NAME;
 
-    private String handleName = DEFUALT_HANDLE_NAME;
-
-    private String contentManagerName = DEFAULT_CONTENT_MANAGER_NAME;
-
-    private String contentManagerClass = DEFAULT_CONTENT_MANAGER_CLASS;
+    private String resourceManagerClass = DEFAULT_RESOURCE_MANAGER_CLASS;
 
     private String serviceLocatorName = DEFAULT_SERVICE_LOCATOR_NAME;
 
@@ -111,38 +93,36 @@ public class DefineObjectsTag extends TagSupport {
     /**
      * Creates Scripting variables for:
      * <ul>
-     * <li><code>RenderRequest</code>
-     * <li><code>RenderResponse</code>
-     * <li>current <code>Content</code>
-     * <li>current handle
-     * <li>current <code>ContentManager</code>
+     * <li><code>SlingHttpServletRequest</code>
+     * <li><code>SlingHttpServletResponse</code>
+     * <li>current <code>Resource</code>
+     * <li>current <code>ResourcManager</code>
+     * <li>current <code>ServiceLocator</code>
      * </ul>
      *
      * @return always {@link #EVAL_PAGE}.
      */
     public int doEndTag() {
 
-        ComponentRequest req = TagUtil.getRequest(pageContext);
-        ComponentResponse res = TagUtil.getResponse(pageContext);
-        Content content = req.getContent();
-        ContentManager contentManager = TagUtil.getContentManager(pageContext);
+        SlingHttpServletRequest req = TagUtil.getRequest(pageContext);
+        SlingHttpServletResponse res = TagUtil.getResponse(pageContext);
+        Resource resource = req.getResource();
+        ResourceManager resourceManager = TagUtil.getResourceManager(pageContext);
 
         pageContext.setAttribute(requestName, req);
         pageContext.setAttribute(responseName, res);
-        pageContext.setAttribute(contentManagerName, contentManager);
-        pageContext.setAttribute(contentManagerClass, contentManager.getClass().getName());
+        pageContext.setAttribute(resourceManagerName, resourceManager);
+        pageContext.setAttribute(resourceManagerClass, resourceManager.getClass().getName());
 
         // content may be null
-        if (content != null) {
-            pageContext.setAttribute(contentName, content);
-            pageContext.setAttribute(contentClass, content.getClass().getName());
-            pageContext.setAttribute(handleName, content.getPath());
+        if (resource != null) {
+            pageContext.setAttribute(resourceName, resource);
         } else {
             TagUtil.log(log, pageContext, "RenderRequest has no Content !",
                 null);
         }
 
-        pageContext.setAttribute(serviceLocatorName, req.getAttribute(ServiceLocator.REQUEST_ATTRIBUTE_NAME));
+        pageContext.setAttribute(serviceLocatorName, req.getServiceLocator());
 
         return EVAL_PAGE;
     }
@@ -157,24 +137,16 @@ public class DefineObjectsTag extends TagSupport {
         this.responseName = responseName;
     }
 
-    public void setContentName(String contentName) {
-        this.contentName = contentName;
+    public void setResourceName(String name) {
+        this.resourceName = name;
     }
 
-    public void setContentClass(String contentClass) {
-        this.contentClass = contentClass;
+    public void setResourceManagerName(String name) {
+        this.resourceManagerName = name;
     }
 
-    public void setHandleName(String handleName) {
-        this.handleName = handleName;
-    }
-
-    public void setContentManagerName(String contentManagerName) {
-        this.contentManagerName = contentManagerName;
-    }
-
-    public void setContentManagerClass(String contentManagerClass) {
-        this.contentManagerClass = contentManagerClass;
+    public void setResourceManagerClass(String name) {
+        this.resourceManagerClass = name;
     }
 
     public void setServiceLocatorName(String name) {

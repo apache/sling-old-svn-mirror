@@ -20,9 +20,10 @@ import javax.servlet.jsp.tagext.TagData;
 import javax.servlet.jsp.tagext.TagExtraInfo;
 import javax.servlet.jsp.tagext.VariableInfo;
 
-import org.apache.sling.core.ServiceLocator;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.services.ServiceLocator;
 
 /**
  * This class defines the scripting variables that are created by the
@@ -43,22 +44,10 @@ public class DefineObjectsTEI extends TagExtraInfo {
     public static final String ATTR_RESPONSE_NAME = "responseName";
 
     /**
-     * The name of the tag attribute used to define the name of the Content
-     * scripting variable (value is "contentName").
+     * The name of the tag attribute used to define the name of the Resource
+     * scripting variable (value is "resourceName").
      */
-    public static final String ATTR_CONTENT_NAME = "contentName";
-
-    /**
-     * The name of the tag attribute used to define the type of the Content
-     * scripting variable (value is "contentClass").
-     */
-    public static final String ATTR_CONTENT_CLASS = "contentClass";
-
-    /**
-     * The name of the tag attribute used to define the name of the handle
-     * scripting variable (value is "handleName").
-     */
-    public static final String ATTR_HANDLE_NAME = "handleName";
+    public static final String ATTR_RESOURCE_NAME = "resourceName";
 
     /**
      * The name of the tag attribute used to define the name of the ServiceLocator
@@ -68,21 +57,21 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     /**
      * The name of the tag attribute used to define the name of the
-     * ContentManager scripting variable (value is "contentManagerName").
+     * ResourceManager scripting variable (value is "resourceManagerName").
      */
-    public static final String ATTR_CONTENT_MANAGER_NAME = "contentManagerName";
+    public static final String ATTR_RESOURCE_MANAGER_NAME = "resourceManagerName";
 
     /**
      * The name of the tag attribute used to define the type of the
-     * ContentManager scripting variable (value is "contentManagerClass").
+     * ResourceManager scripting variable (value is "resourceManagerClass").
      */
-    public static final String ATTR_CONTENT_MANAGER_CLASS = "contentManagerClass";
+    public static final String ATTR_RESOURCE_MANAGER_CLASS = "resourceManagerClass";
 
-    private static final String RENDER_REQUEST_CLASS = ComponentRequest.class.getName();
+    private static final String RENDER_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
 
-    private static final String RENDER_RESPONSE_CLASS = ComponentResponse.class.getName();
+    private static final String RENDER_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
 
-    private static final String STRING_CLASS = "String"; // always imported
+    private static final String RESOURCE_CLASS = Resource.class.getName();
 
     private static final String SERVICE_LOCATOR_CLASS = ServiceLocator.class.getName();
 
@@ -97,16 +86,12 @@ public class DefineObjectsTEI extends TagExtraInfo {
             DefineObjectsTag.DEFAULT_REQUEST_NAME);
         String responseName = this.getValue(data, ATTR_RESPONSE_NAME,
             DefineObjectsTag.DEFAULT_RESPONSE_NAME);
-        String contentName = this.getValue(data, ATTR_CONTENT_NAME,
-            DefineObjectsTag.DEFAULT_CONTENT_NAME);
-        String contentClassName = this.getValue(data, ATTR_CONTENT_CLASS,
-            DefineObjectsTag.DEFAULT_CONTENT_CLASS);
-        String handleName = this.getValue(data, ATTR_HANDLE_NAME,
-            DefineObjectsTag.DEFUALT_HANDLE_NAME);
-        String contentManagerName = this.getValue(data, ATTR_CONTENT_MANAGER_NAME,
-            DefineObjectsTag.DEFAULT_CONTENT_MANAGER_NAME);
-        String contentManagerClass = this.getValue(data, ATTR_CONTENT_MANAGER_CLASS,
-            DefineObjectsTag.DEFAULT_CONTENT_MANAGER_CLASS);
+        String resourceName = this.getValue(data, ATTR_RESOURCE_NAME,
+            DefineObjectsTag.DEFAULT_RESOURCE_NAME);
+        String resourceManagerName = this.getValue(data, ATTR_RESOURCE_MANAGER_NAME,
+            DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_NAME);
+        String resourceManagerClass = this.getValue(data, ATTR_RESOURCE_MANAGER_CLASS,
+            DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_CLASS);
         String serviceLocatorName = this.getValue(data, ATTR_SERVICE_LOCATOR_NAME,
             DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME);
 
@@ -115,11 +100,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
                 VariableInfo.AT_END),
             new VariableInfo(responseName, RENDER_RESPONSE_CLASS, true,
                 VariableInfo.AT_END),
-            new VariableInfo(contentName, contentClassName, true,
+            new VariableInfo(resourceName, RESOURCE_CLASS, true,
                 VariableInfo.AT_END),
-            new VariableInfo(handleName, STRING_CLASS, true,
-                VariableInfo.AT_END),
-            new VariableInfo(contentManagerName, contentManagerClass, true,
+            new VariableInfo(resourceManagerName, resourceManagerClass, true,
                 VariableInfo.AT_END),
             new VariableInfo(serviceLocatorName, SERVICE_LOCATOR_CLASS, true,
                 VariableInfo.AT_END) };

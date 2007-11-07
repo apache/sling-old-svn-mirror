@@ -23,12 +23,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.ServletResponseWrapper;
 import javax.servlet.jsp.PageContext;
 
-import org.apache.sling.core.Constants;
-import org.apache.sling.component.Component;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.content.ContentManager;
-import org.apache.sling.scripting.Util;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceManager;
 import org.slf4j.Logger;
 
 /**
@@ -90,9 +87,9 @@ public final class TagUtil {
         return current;
     }
 
-    public static ComponentRequest getRequest(PageContext pageContext) {
+    public static SlingHttpServletRequest getRequest(PageContext pageContext) {
         ServletRequest req = pageContext.getRequest();
-        while (!(req instanceof ComponentRequest)) {
+        while (!(req instanceof SlingHttpServletRequest)) {
             if (req instanceof ServletRequestWrapper) {
                 req = ((ServletRequestWrapper) req).getRequest();
             } else {
@@ -100,12 +97,12 @@ public final class TagUtil {
             }
         }
 
-        return (ComponentRequest) req;
+        return (SlingHttpServletRequest) req;
     }
 
-    public static ComponentResponse getResponse(PageContext pageContext) {
+    public static SlingHttpServletResponse getResponse(PageContext pageContext) {
         ServletResponse req = pageContext.getResponse();
-        while (!(req instanceof ComponentResponse)) {
+        while (!(req instanceof SlingHttpServletResponse)) {
             if (req instanceof ServletResponseWrapper) {
                 req = ((ServletResponseWrapper) req).getResponse();
             } else {
@@ -113,22 +110,13 @@ public final class TagUtil {
             }
         }
 
-        return (ComponentResponse) req;
+        return (SlingHttpServletResponse) req;
     }
 
-    public static Component getComponent(PageContext pageContext) {
+    public static ResourceManager getResourceManager(PageContext pageContext) {
         try {
-            return (Component) pageContext.getRequest().getAttribute(
-                Util.ATTR_COMPONENT);
-        } catch (ClassCastException cce) {
-            throw new IllegalStateException("response wrong class");
-        }
-    }
-
-    public static ContentManager getContentManager(PageContext pageContext) {
-        try {
-            return (ContentManager) pageContext.getRequest().getAttribute(
-                Constants.ATTR_CONTENT_MANAGER);
+            SlingHttpServletRequest request = getRequest(pageContext);
+            return (ResourceManager) request.getResourceResolver();
         } catch (ClassCastException cce) {
             throw new IllegalStateException("request wrong class");
         }
