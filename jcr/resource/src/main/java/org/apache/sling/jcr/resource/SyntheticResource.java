@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource;
 
+import java.io.InputStream;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 
@@ -88,4 +90,7 @@ public class SyntheticResource implements Resource {
         return object;
     }
 
+    public InputStream getInputStream() {
+        return null;
+    }
 }
