@@ -95,7 +95,7 @@ public class JcrOcmMojo extends AbstractMojo {
             } catch (OutOfMemoryError oome) {
                 // this may be the case for big sources and not enough VM mem
                 builder = null; // drop the builder to help GC now
-                
+
                 // fail with some explanation
                 throw new MojoFailureException(
                     "Failed analyzing source due to not enough memory, try setting Max Heap Size higher, e.g. using MAVEN_OPTS=-Xmx128m");
@@ -150,12 +150,12 @@ public class JcrOcmMojo extends AbstractMojo {
         try {
             descriptorStream = new FileOutputStream(descriptorFile);
             xw = new XMLWriter(descriptorStream, false);
-            xw.printElementStart("graffito-jcr", false);
+            xw.printElementStart("jackrabbit-ocm", false);
             for (Iterator di=descriptors.iterator(); di.hasNext(); ) {
                 ClassDescriptor sd = (ClassDescriptor) di.next();
                 sd.generate(xw);
             }
-            xw.printElementEnd("graffito-jcr");
+            xw.printElementEnd("jackrabbit-ocm");
 
         } catch (IOException ioe) {
             hasFailures = true;
