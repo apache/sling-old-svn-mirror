@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.log;
+package org.apache.sling.osgi.log;
 
 import java.io.File;
 import java.io.StringReader;
@@ -52,23 +52,23 @@ public class LogbackManager implements ManagedService {
 
     /**
      * Initial configuration property specifying whether Logback should be
-     * initialized here or not (value is "org.apache.sling.log.intialize"). If
-     * this property is missing or set to <code>true</code>, this class will
-     * reset and configure Logback. Otherwise, Logback is neither reset nor
+     * initialized here or not (value is "org.apache.sling.osgi.log.intialize").
+     * If this property is missing or set to <code>true</code>, this class
+     * will reset and configure Logback. Otherwise, Logback is neither reset nor
      * configured by this class.
      * <p>
      * This property may be used to prevent resetting Logback which might be
      * configured by a container and reused by the Framework.
      */
-    public static final String LOG_INITIALIZE = "org.apache.sling.log.intialize";
+    public static final String LOG_INITIALIZE = "org.apache.sling.osgi.log.intialize";
 
-    public static final String LOG_LEVEL = "org.apache.sling.log.level";
+    public static final String LOG_LEVEL = "org.apache.sling.osgi.log.level";
 
-    public static final String LOG_FILE = "org.apache.sling.log.file";
+    public static final String LOG_FILE = "org.apache.sling.osgi.log.file";
 
-    public static final String LOG_PATTERN = "org.apache.sling.log.pattern";
+    public static final String LOG_PATTERN = "org.apache.sling.osgi.log.pattern";
 
-    public static final String LOG_CONFIG_URL = "org.apache.sling.log.url";
+    public static final String LOG_CONFIG_URL = "org.apache.sling.osgi.log.url";
 
     public static final String LOG_PATTERN_DEFAULT = "%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n";
 
@@ -157,7 +157,8 @@ public class LogbackManager implements ManagedService {
         try {
             configuration.doConfigure(configLocation);
         } catch (Throwable t) {
-            this.log.error("reconfigure: Cannot configure from {}", configLocation);
+            this.log.error("reconfigure: Cannot configure from {}",
+                configLocation);
             // well then, fall back to simple configuration
         }
 
