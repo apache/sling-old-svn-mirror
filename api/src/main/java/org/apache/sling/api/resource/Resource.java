@@ -16,6 +16,9 @@
  */
 package org.apache.sling.api.resource;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /** Resources are pieces of content on which Sling acts */
 public interface Resource {
 
@@ -69,6 +72,19 @@ public interface Resource {
      * Jackrabbit OCM mapping would be used to provide this object.
      */
     Object getObject();
+
+    /**
+     * Returns an <code>InputStream</code> to read the data from this resource
+     * if the resoure can be streamed. Otherwise <code>null</code> is returned.
+     * <p>
+     * For a JCR Repository based implementation this method may return the
+     * stream of the <code>jcr:content/jcr:data</code> property of an
+     * <code>nt:file</code> node.
+     *
+     * @throws IOException May be thrown if an error occurrs trying to create
+     *      the input stream.
+     */
+    InputStream getInputStream() throws IOException;
 
     /**
      * Returns the metadata of this resource. The concrete data contained in the
