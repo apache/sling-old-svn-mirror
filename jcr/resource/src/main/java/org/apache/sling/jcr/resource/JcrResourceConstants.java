@@ -25,21 +25,11 @@ package org.apache.sling.jcr.resource;
 public interface JcrResourceConstants {
 
     /**
-     * The namespace URI used by the JCR Mapping implementation for internal
-     * properties, such as the discriminator property set on certain nodes to
-     * indicate the fully qualified name of the class to which the node is
-     * mapped (value is "http://jackrabbit.apache.org/ocm").
+     * The namespace prefix used by Sling JCR for nodes and node types used by
+     * Sling (value is "sling"). This prefix is ensured for any session used by
+     * the JCR Resource bundle through the <code>Sling-Namespaces</code>
+     * bundle manifest header.
      */
-    static final String JCR_OCM_NS_URI = "http://jackrabbit.apache.org/ocm";
-
-    /**
-     * The namespace prefix used for the
-     * {@link #JCR_OCM_NS_URI mapping namespace URI} (value is "ocm").
-     */
-    static final String JCR_OCM_NS_PREFIX = "ocm";
-
-    static final String SLING_NS_URI = "http://jackrabbit.apache.org/sling/1.0";
-
     static final String SLING_NS_PREFIX = "sling";
 
     /**
