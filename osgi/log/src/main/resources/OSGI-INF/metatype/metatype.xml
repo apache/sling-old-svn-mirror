@@ -20,9 +20,9 @@
 <metatype:MetaData
     xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0"
     localization="metatype">
-    <metatype:OCD id="org.apache.sling.log.LogbackManager"
+    <metatype:OCD id="org.apache.sling.osgi.log.LogbackManager"
         name="%log.name" description="%log.description">
-        <metatype:AD id="org.apache.sling.log.level" type="String"
+        <metatype:AD id="org.apache.sling.osgi.log.level" type="String"
             default="info" name="%log.level.name"
             description="%log.level.description">
             <metatype:Option value="debug" label="Debug" />
@@ -30,18 +30,18 @@
             <metatype:Option value="warn" label="Warnings" />
             <metatype:Option value="error" label="Error" />
         </metatype:AD>
-        <metatype:AD id="org.apache.sling.log.file" type="String"
+        <metatype:AD id="org.apache.sling.osgi.log.file" type="String"
             default="logs/error.log" name="%log.file.name"
             description="%log.file.description" />
-        <metatype:AD id="org.apache.sling.log.pattern" type="String"
+        <metatype:AD id="org.apache.sling.osgi.log.pattern" type="String"
             default="%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n"
             name="%log.pattern.name"
             description="%log.pattern.description" />
-        <metatype:AD id="org.apache.sling.log.url" type="String"
+        <metatype:AD id="org.apache.sling.osgi.log.url" type="String"
             default="" name="%log.url.name"
             description="%log.url.description" />
     </metatype:OCD>
-    <metatype:Designate pid="org.apache.sling.log.LogbackManager">
-        <metatype:Object ocdref="org.apache.sling.log.LogbackManager" />
+    <metatype:Designate pid="org.apache.sling.osgi.log.LogbackManager">
+        <metatype:Object ocdref="org.apache.sling.osgi.log.LogbackManager" />
     </metatype:Designate>
 </metatype:MetaData>
