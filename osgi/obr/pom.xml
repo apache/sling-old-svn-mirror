@@ -25,6 +25,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>1-incubator-SNAPSHOT</version>
+        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>sling-obr</artifactId>
