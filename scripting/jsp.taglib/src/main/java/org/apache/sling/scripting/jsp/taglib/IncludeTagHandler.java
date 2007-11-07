@@ -23,14 +23,12 @@ import javax.servlet.ServletException;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.TagSupport;
+import javax.swing.text.AbstractDocument$Content;
 
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.content.jcr.SyntheticContent;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.jsp.util.JspComponentResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
+import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +46,8 @@ public class IncludeTagHandler extends TagSupport {
     /** flush argument */
     private boolean flush = false;
 
-    /** content argument */
-    private Content content;
+    /** resource argument */
+    private Resource resource;
 
     /** path argument */
     private String path;

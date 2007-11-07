@@ -109,27 +109,17 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>contentName</name>
+            <name>resourceName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>contentClass</name>
+            <name>resourceManagerName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>handleName</name>
-            <required>false</required>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>contentManagerName</name>
-            <required>false</required>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>contentManagerClass</name>
+            <name>resourceManagerClass</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
         </attribute>
