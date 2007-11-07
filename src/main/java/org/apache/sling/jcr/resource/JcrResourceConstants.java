@@ -22,7 +22,7 @@ package org.apache.sling.jcr.resource;
  * The <code>JcrResourceConstants</code> interface provides constant values
  * for event topics and event properties for events sent from this bundle.
  */
-public interface JcrResourceConstants {
+public class JcrResourceConstants {
 
     /**
      * The namespace prefix used by Sling JCR for nodes and node types used by
@@ -30,37 +30,43 @@ public interface JcrResourceConstants {
      * the JCR Resource bundle through the <code>Sling-Namespaces</code>
      * bundle manifest header.
      */
-    static final String SLING_NS_PREFIX = "sling";
+    public static final String SLING_NS_PREFIX = "sling";
+
+    /**
+     * The name of the JCR Property that defines the resource type of this node
+     * (value is "sling:resourceType"). The resource manager implementation of
+     * this bundle uses this property to defined the resource type of a loaded
+     * resource. If this property does not exist the primary node type is used
+     * as the resource type.
+     */
+    public static final String SLING_RESOURCE_TYPE_PROPERTY = "sling:resourceType";
 
     /**
      * The topic root for events published by this bundle (value is
-     * "org/apache/sling/content/jcr/ContentEvent"). Event consumers should
-     * register to "org/apache/sling/content/jcr/ContentEvent/*" to receive all
-     * events from this bundle.
+     * "org/apache/sling/jcr/resource/ResourceEvent"). Event consumers should
+     * register to "org/apache/sling/jcr/resource/ResourceEvent/*" to receive
+     * all events from this bundle.
      */
-    static final String CONTENT_EVENT = "org/apache/sling/content/jcr/ContentEvent";
+    public static final String RESOURCE_EVENT = "org/apache/sling/jcr/resource/ResourceEvent";
 
     /**
      * The name of the event sent after new Object Mappings have been registered
-     * (value is "org/apache/sling/content/jcr/ContentEvent/MAPPED"). This name
-     * is appended to the {@link #CONTENT_EVENT root topic} to create the event
-     * topic.
+     * (value is "org/apache/sling/jcr/resource/ResourceEvent/MAPPED").
      * <p>
      * Events of this topics have two additional properties:
      * {@link #MAPPING_CLASS} and {@link #MAPPING_NODE_TYPE}.
      */
-    static final String EVENT_MAPPING_ADDED = CONTENT_EVENT + "/MAPPED";
+    public static final String EVENT_MAPPING_ADDED = RESOURCE_EVENT + "/MAPPED";
 
     /**
      * The name of the event sent after Object Mappings have been unregistered
-     * (value is "org/apache/sling/content/jcr/ContentEvent/UNMAPPED"). This
-     * name is appended to the {@link #CONTENT_EVENT root topic} to create the
-     * event topic.
+     * (value is "org/apache/sling/jcr/resource/ResourceEvent/UNMAPPED").
      * <p>
      * Events of this topics have two additional properties:
      * {@link #MAPPING_CLASS} and {@link #MAPPING_NODE_TYPE}.
      */
-    static final String EVENT_MAPPING_REMOVED = CONTENT_EVENT + "/UNMAPPED";
+    public static final String EVENT_MAPPING_REMOVED = RESOURCE_EVENT
+        + "/UNMAPPED";
 
     /**
      * The name of the event property providing a <code>String[]</code> of
@@ -68,7 +74,7 @@ public interface JcrResourceConstants {
      * "MAPPED_CLASS"). This is the complete list of all classes which are
      * supported by the content manager for mapping.
      */
-    static final String MAPPING_CLASS = "MAPPED_CLASS";
+    public static final String MAPPING_CLASS = "MAPPED_CLASS";
 
     /**
      * The name of the event property providing a <code>String[]</code> of
@@ -76,5 +82,7 @@ public interface JcrResourceConstants {
      * "MAPPED_NODE_TYPE"). This is the complete list of all node types which
      * are supported by the content manager for mapping.
      */
-    static final String MAPPING_NODE_TYPE = "MAPPED_NODE_TYPE";
+    public static final String MAPPING_NODE_TYPE = "MAPPED_NODE_TYPE";
+
+    public static final String MAPPER_BUNDLE_HEADER = "Sling-Mappings";
 }
