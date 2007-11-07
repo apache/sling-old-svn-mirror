@@ -33,19 +33,15 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.core.impl.filter.ComponentFilterChainHelper;
 import org.apache.sling.core.resolver.ResolvedURL;
-import org.apache.sling.mime.MimeTypeService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.ComponentException;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +117,7 @@ public class ComponentRequestHandlerImpl extends GenericServlet {
             this.service((HttpServletRequest) req, (HttpServletResponse) res);
         } else {
             throw new ServletException(
-                "Sling must be run in an HTTP Servlet Environment");
+                "Apache Sling must be run in an HTTP servlet environment.");
         }
     }
 
