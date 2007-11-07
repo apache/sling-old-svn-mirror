@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import java.io.InputStream;
+
 /**
  * Simple helper class representing nonexisting resources.
  */
@@ -56,4 +58,8 @@ public final class NonExistingResource implements Resource {
         return null;
     }
 
+    /** Returns null for a non-existing resource */
+    public InputStream getInputStream() {
+        return null;
+    }
 }
