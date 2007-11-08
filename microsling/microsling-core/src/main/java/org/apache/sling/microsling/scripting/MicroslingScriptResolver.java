@@ -43,8 +43,6 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
 import org.apache.sling.microsling.scripting.helpers.ScriptHelper;
-import org.apache.sling.scripting.freemarker.FreemarkerScriptEngine;
-import org.apache.sling.scripting.ruby.ErbScriptEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,12 +72,24 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
     private Map<String, SlingScriptEngine> scriptEngines;
 
+    private static final String[] DEFAULT_SCRIPT_ENGINES = new String[] {
+          "org.apache.sling.scripting.javascript.RhinoJavasSriptEngine",
+          "org.apache.sling.scripting.velocity.VelocityTemplatesScriptEngine",
+          "org.apache.sling.scripting.freemarker.FreemarkerScriptEngine",
+          "org.apache.sling.scripting.ruby.ErbScriptEngine"
+       };
+
     public MicroslingScriptResolver() throws SlingException {
         scriptEngines = new HashMap<String, SlingScriptEngine>();
-        addScriptEngine(new org.apache.sling.scripting.javascript.RhinoJavasSriptEngine());
-        addScriptEngine(new org.apache.sling.scripting.velocity.VelocityTemplatesScriptEngine());
-        addScriptEngine(new FreemarkerScriptEngine());
-        addScriptEngine(new ErbScriptEngine());
+        for(String engineName : DEFAULT_SCRIPT_ENGINES) {
+            try {
+                final Class engineClass = this.getClass().getClassLoader().loadClass(engineName);
+                final SlingScriptEngine engine = (SlingScriptEngine)engineClass.newInstance();
+                addScriptEngine(engine);
+            } catch (Exception ignore) {
+                log.warn("Unable to instantiate script engine " + engineName, ignore);
+            }
+        }
     }
 
     /**
