@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.servlets.standard;
+package org.apache.sling.servlets.standard;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
 import static org.apache.sling.api.servlets.HttpConstants.HEADER_IF_MODIFIED_SINCE;

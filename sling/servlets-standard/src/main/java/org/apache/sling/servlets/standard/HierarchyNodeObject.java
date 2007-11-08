@@ -14,13 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.servlets.standard;
+package org.apache.sling.servlets.standard;
+
+import org.apache.sling.jcr.resource.AbstractMappedObject;
 
 /**
- * The <code>FolderObject</code> TODO
+ * The <code>HierarchyNodeObject</code> class is an abstract base content
+ * class for content loaded from nodes of (extensions of) node type
+ * <code>nt:HierarchyNode</code>.
  *
- * @ocm.mapped jcrType="nt:folder" discriminator="false"
+ * @ocm.mapped jcrType="nt:hierarchyNode" discriminator="false"
  */
-public class FolderObject extends HierarchyNodeObject {
+public abstract class HierarchyNodeObject extends AbstractMappedObject {
 
+    /** @ocm.field jcrName="jcr:created" */
+    private long creationTime;
+
+    public long getCreationTime() {
+        return this.creationTime;
+    }
+
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
+    }
 }
