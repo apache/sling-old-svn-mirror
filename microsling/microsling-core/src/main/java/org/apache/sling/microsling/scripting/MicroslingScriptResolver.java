@@ -41,10 +41,10 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.microsling.resource.JcrNodeResource;
-import org.apache.sling.microsling.scripting.engines.freemarker.FreemarkerScriptEngine;
-import org.apache.sling.microsling.scripting.engines.ruby.ErbScriptEngine;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
 import org.apache.sling.microsling.scripting.helpers.ScriptHelper;
+import org.apache.sling.scripting.freemarker.FreemarkerScriptEngine;
+import org.apache.sling.scripting.ruby.ErbScriptEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

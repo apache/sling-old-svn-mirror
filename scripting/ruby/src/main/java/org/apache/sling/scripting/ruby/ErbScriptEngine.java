@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.microsling.scripting.engines.ruby;
+package org.apache.sling.scripting.ruby;
 
 import java.io.BufferedReader;
 import java.io.IOException;
