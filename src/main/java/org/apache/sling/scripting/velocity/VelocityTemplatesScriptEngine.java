@@ -32,7 +32,12 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
 /**
- * A ScriptEngine that uses Velocity templates to render a Resource
+ * A ScriptEngine that uses Velocity templates to render a Resource.
+ *
+ * @scr.component
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="service.description" value="Sling Velocity Script Engine"
+ * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
 public class VelocityTemplatesScriptEngine implements SlingScriptEngine {
 
