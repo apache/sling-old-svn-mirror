@@ -25,7 +25,7 @@
     <description>A tab library for Sling support</description>
     <tlib-version>1.0</tlib-version>
     <short-name>sling</short-name>
-    <uri>http://jackrabbit.apache.org/taglibs/sling/1.0</uri>
+    <uri>http://sling.apache.org/taglibs/sling/1.0 </uri>
 
     <tag>
         <description>
@@ -47,23 +47,23 @@
         </attribute>
         <attribute>
             <description>
-                The Content object to include in the current request
-                processing. Either content or path must be specified. If
-                both are specified, the Content takes precedences.
+                The Resource object to include in the current request
+                processing. Either resource or path must be specified. If
+                both are specified, the Resource takes precedences.
             </description>
-            <name>content</name>
+            <name>resource</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
-            <type>org.apache.sling.component.Content</type>
+            <type>org.apache.sling.api.resource.Resource</type>
         </attribute>
         <attribute>
             <description>
-                The path to the Content object to include in the current
+                The path to the Resource object to include in the current
                 request processing. If this path is relative it is
-                appended to the path of the current Content whose
-                Component is including the given Content. Either content
+                appended to the path of the current Resource whose
+                Component is including the given Resource. Either resource
                 or path must be specified. If both are specified, the
-                Content takes precedences.
+                Resource takes precedences.
             </description>
             <name>path</name>
             <required>false</required>

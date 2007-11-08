@@ -23,12 +23,14 @@ import javax.servlet.ServletException;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.TagSupport;
-import javax.swing.text.AbstractDocument$Content;
 
+import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.jcr.resource.SyntheticResource;
 import org.apache.sling.scripting.jsp.util.JspComponentResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
-import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,37 +66,34 @@ public class IncludeTagHandler extends TagSupport {
         log.debug("IncludeTagHandler.doEndTag");
 
         // only try to include, if there is anything to include !!
-        ComponentRequest request = TagUtil.getRequest(pageContext);
+        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
         RequestDispatcher dispatcher = null;
-        if (content != null) {
+        if (resource != null) {
             // get the request dispatcher for the content object
-            dispatcher = request.getRequestDispatcher(content);
-            path = content.getPath();
+            dispatcher = request.getRequestDispatcher(resource);
+            path = resource.getURI();
 
         } else if (path != null) {
             // ensure the child path is absolute and assign the result to path
             if (!path.startsWith("/")) {
-                path = request.getContent().getPath() + "/" + path;
+                path = request.getResource().getURI() + "/" + path;
             }
 
             // if the componentId is set, try to resolve the path, if no
             // content exists for the path create a synthetic content
             if (componentId != null) {
                 try {
-                    content = request.getContent(path);
-                    if (content == null) {
-                        content = new SyntheticContent(path, componentId);
+                    resource = request.getResourceResolver().getResource(path);
+                    if (resource == null) {
+                        resource = new SyntheticResource(path, componentId);
                     }
-                } catch (ComponentException ce) {
-                    TagUtil.log(log, pageContext, "Problem trying to load content", ce);
+                } catch (SlingException e) {
+                    TagUtil.log(log, pageContext, "Problem trying to load content", e);
                 }
             }
 
-            // get the request dispatcher for the (relative) path (if not set
-            // with the base content above
-            if (dispatcher == null) {
-                dispatcher = request.getRequestDispatcher(path);
-            }
+            // get the request dispatcher for the (relative) path
+            dispatcher = request.getRequestDispatcher(path);
         }
 
         try {
@@ -107,7 +106,7 @@ public class IncludeTagHandler extends TagSupport {
 
             // include the rendered content
             if (dispatcher != null) {
-                ComponentResponse response = new JspComponentResponseWrapper(
+                SlingHttpServletResponse response = new JspComponentResponseWrapper(
                     pageContext);
                 dispatcher.include(request, response);
             } else {
@@ -128,8 +127,8 @@ public class IncludeTagHandler extends TagSupport {
         this.flush = flush;
     }
 
-    public void setContent(Content content) {
-        this.content = content;
+    public void setResource(Resource rsrc) {
+        this.resource = rsrc;
     }
 
     public void setPath(String path) {
