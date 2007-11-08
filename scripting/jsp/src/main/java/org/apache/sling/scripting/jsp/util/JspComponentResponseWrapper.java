@@ -23,7 +23,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 
-import org.apache.sling.component.ComponentResponseWrapper;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
 /**
  * The <code>JspComponentResponseWrapper</code> class may be used by tag library
@@ -35,7 +35,7 @@ import org.apache.sling.component.ComponentResponseWrapper;
  * <code>IllegalStateException</code>. This is the same behaviour as
  * implemented by response wrappers of Apache Jasper.
  */
-public class JspComponentResponseWrapper extends ComponentResponseWrapper {
+public class JspComponentResponseWrapper extends SlingHttpServletResponseWrapper {
 
     // The original JspWriter of the wrapped response
     private JspWriter jspWriter;

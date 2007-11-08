@@ -36,7 +36,7 @@ import javax.jcr.Value;
 
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.jasper.OutputProvider;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

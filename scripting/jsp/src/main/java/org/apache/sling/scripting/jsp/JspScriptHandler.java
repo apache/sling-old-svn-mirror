@@ -31,11 +31,9 @@ import org.apache.jasper.JasperException;
 import org.apache.jasper.Options;
 import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.compiler.TldLocationsCache;
-import org.apache.sling.component.Component;
-import org.apache.sling.jcr.SlingRepository;
+import org.apache.sling.api.scripting.SlingScriptEngine;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
-import org.apache.sling.scripting.AbstractScriptHandler;
-import org.apache.sling.scripting.ComponentRenderer;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -63,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.service
  */
-public class JspScriptHandler extends AbstractScriptHandler  {
+public class JspScriptHandler implements SlingScriptEngine  {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspScriptHandler.class);
