@@ -81,5 +81,11 @@
         <module>sling/core</module>
         <module>sling/event</module>
         <module>sling/scheduler</module>
+        
+        <!-- Scripting Support -->
+        <module>scripting/javascript</module>
+        <module>scripting/jsp</module>
+        <module>scripting/jsp-taglib</module>
+        <module>scripting/velocity</module>
     </modules>
 </project>
