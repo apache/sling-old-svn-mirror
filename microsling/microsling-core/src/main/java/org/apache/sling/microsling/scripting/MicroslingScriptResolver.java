@@ -43,8 +43,6 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.engines.freemarker.FreemarkerScriptEngine;
 import org.apache.sling.microsling.scripting.engines.ruby.ErbScriptEngine;
-import org.apache.sling.microsling.scripting.engines.rhino.RhinoJavasSriptEngine;
-import org.apache.sling.microsling.scripting.engines.velocity.VelocityTemplatesScriptEngine;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
 import org.apache.sling.microsling.scripting.helpers.ScriptHelper;
 import org.slf4j.Logger;
@@ -78,8 +76,8 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
     public MicroslingScriptResolver() throws SlingException {
         scriptEngines = new HashMap<String, SlingScriptEngine>();
-        addScriptEngine(new RhinoJavasSriptEngine());
-        addScriptEngine(new VelocityTemplatesScriptEngine());
+        addScriptEngine(new org.apache.sling.scripting.javascript.RhinoJavasSriptEngine());
+        addScriptEngine(new org.apache.sling.scripting.velocity.VelocityTemplatesScriptEngine());
         addScriptEngine(new FreemarkerScriptEngine());
         addScriptEngine(new ErbScriptEngine());
     }
