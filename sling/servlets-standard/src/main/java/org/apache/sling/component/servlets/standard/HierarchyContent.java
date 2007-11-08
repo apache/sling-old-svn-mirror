@@ -14,18 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.standard;
-
-import org.apache.sling.core.content.SelectableSimpleContent;
+package org.apache.sling.component.servlets.standard;
 
 /**
- * The <code>HierarchyContent</code> class is an abstract base content class
+ * The <code>HierarchyNodeObject</code> class is an abstract base content class
  * for content loaded from nodes of (extensions of) node type
  * <code>nt:HierarchyNode</code>.
  *
  * @ocm.mapped jcrType="nt:hierarchyNode" discriminator="false"
  */
-public abstract class HierarchyContent extends SelectableSimpleContent {
+public abstract class HierarchyContent  {
 
     /** @ocm.field jcrName="jcr:created" */
     private long creationTime;

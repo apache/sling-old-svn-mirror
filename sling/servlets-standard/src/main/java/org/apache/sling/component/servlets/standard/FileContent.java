@@ -14,19 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.standard;
+package org.apache.sling.component.servlets.standard;
 
 /**
- * The <code>FolderContent</code> TODO
+ * The <code>FileContent</code> class represents an nt:file node in the
+ * repository and as such has no more direct content data as the
+ * {@link HierarchyNodeObject}.
  *
- * @ocm.mapped jcrType="nt:folder" discriminator="false"
+ * @ocm.mapped jcrType="nt:file" discriminator="false"
  */
-public class FolderContent extends HierarchyContent {
+public class FileContent extends HierarchyNodeObject {
 
     // --------- Content interface ---------------------------------------------
 
     public String getComponentId() {
-        return FolderComponent.ID;
+        return FileComponent.ID;
     }
 
 }

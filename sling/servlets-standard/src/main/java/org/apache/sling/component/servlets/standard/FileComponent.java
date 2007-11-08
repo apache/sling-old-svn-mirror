@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.standard;
+package org.apache.sling.component.servlets.standard;
 
 import java.io.IOException;
 
@@ -26,35 +26,29 @@ import org.apache.sling.component.Content;
 import org.apache.sling.core.components.BaseComponent;
 
 /**
- * The <code>ReferenceComponent</code> TODO
+ * The <code>FileComponent</code> TODO
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *          value="Component to handle sling:Reference content"
+ *          value="Component to handle nt:file content"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  */
-public class ReferenceComponent extends BaseComponent {
+public class FileComponent extends BaseComponent {
 
-    public static final String ID = ReferenceComponent.class.getName();
+    public static final String ID = FileComponent.class.getName();
 
     {
-        this.setContentClassName(ReferenceContent.class.getName());
+        this.setContentClassName(FileContent.class.getName());
         this.setComponentId(ID);
     }
 
-    /**
-     * @see org.apache.sling.core.components.BaseComponent#createContentInstance()
-     */
     public Content createContentInstance() {
-        return new ReferenceContent();
+        return new FileContent();
     }
 
-    /**
-     * @see org.apache.sling.core.components.BaseComponent#doInit()
-     */
+    // nothing to do
     protected void doInit() {
-        // nothing to do
     }
 
     /**
@@ -63,17 +57,14 @@ public class ReferenceComponent extends BaseComponent {
     public void service(ComponentRequest request, ComponentResponse response)
             throws IOException, ComponentException {
 
-        final ReferenceContent content = (ReferenceContent)request.getContent();
-        final String path = content.getReference();
-
-        // just forward to the referenced content
-        Content jcrContent = request.getContent(path);
+        // just render the child content
+        Content jcrContent = request.getContent("jcr:content");
         if (jcrContent != null) {
             ComponentRequestDispatcher crd = this.getComponentContext().getRequestDispatcher(
                 jcrContent);
             crd.include(request, response);
         } else {
-            throw new ComponentException("No content for path " + path);
+            throw new ComponentException("No content");
         }
     }
 }
