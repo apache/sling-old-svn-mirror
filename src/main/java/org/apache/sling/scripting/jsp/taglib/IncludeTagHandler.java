@@ -54,8 +54,8 @@ public class IncludeTagHandler extends TagSupport {
     /** path argument */
     private String path;
 
-    /** componentId argument */
-    private String componentId;
+    /** resource type argument */
+    private String resourceType;
 
     /**
      * Called after the body has been processed.
@@ -79,13 +79,13 @@ public class IncludeTagHandler extends TagSupport {
                 path = request.getResource().getURI() + "/" + path;
             }
 
-            // if the componentId is set, try to resolve the path, if no
-            // content exists for the path create a synthetic content
-            if (componentId != null) {
+            // if the resourceType is set, try to resolve the path, if no
+            // resource exists for the path create a synthetic resource
+            if (resourceType != null) {
                 try {
                     resource = request.getResourceResolver().getResource(path);
                     if (resource == null) {
-                        resource = new SyntheticResource(path, componentId);
+                        resource = new SyntheticResource(path, resourceType);
                     }
                 } catch (SlingException e) {
                     TagUtil.log(log, pageContext, "Problem trying to load content", e);
@@ -135,7 +135,7 @@ public class IncludeTagHandler extends TagSupport {
         this.path = path;
     }
 
-    public void setComponentId(String componentId) {
-        this.componentId = componentId;
+    public void setResourceType(String rsrcType) {
+        this.resourceType = rsrcType;
     }
 }
