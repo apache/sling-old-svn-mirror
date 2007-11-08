@@ -239,6 +239,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     private void addScriptEngine(SlingScriptEngine scriptEngine) {
         String[] extensions = scriptEngine.getExtensions();
         for (String extension : extensions) {
+            log.debug("Adding script engine {} for extension {}.", scriptEngine, extension);
             scriptEngines.put(extension, scriptEngine);
         }
     }
