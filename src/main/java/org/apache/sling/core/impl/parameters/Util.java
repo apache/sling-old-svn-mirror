@@ -25,10 +25,9 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.sling.component.RequestParameter;
+import org.apache.sling.api.request.RequestParameter;
 
 /**
  * The <code>Util</code> TODO
@@ -78,7 +77,8 @@ class Util {
     }
 
     static void parse(InputStream input, String encoding,
-            ParameterMap parameterMap, boolean allowSemicolon) throws IOException {
+            ParameterMap parameterMap, boolean allowSemicolon)
+            throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         int b;
         boolean readingName = true;
@@ -86,7 +86,8 @@ class Util {
         while ((b = input.read()) >= 0) {
             if (b == '=' && readingName) {
                 // finished reading the name
-                current = createParameter(parameterMap, bos.toByteArray(), encoding);
+                current = createParameter(parameterMap, bos.toByteArray(),
+                    encoding);
                 bos.reset();
                 readingName = false;
             } else if (b == '&' || (b == ';' && allowSemicolon)) {
@@ -94,10 +95,12 @@ class Util {
                 // smicolon allowed as per HTML 4 recommendation for HTML
                 // enclosed URLs with parameters to prevent required encoding
                 // of '&' characters inside HTML
-                // see http://www.w3.org/TR/html4/appendix/notes.html#ampersands-in-uris
+                // see
+                // http://www.w3.org/TR/html4/appendix/notes.html#ampersands-in-uris
                 if (readingName) {
                     // still reading the name, have a parameter without value
-                    current = createParameter(parameterMap, bos.toByteArray(), encoding);
+                    current = createParameter(parameterMap, bos.toByteArray(),
+                        encoding);
                 } else {
                     if (current != null) {
                         current.setContent(bos.toByteArray());
@@ -137,7 +140,7 @@ class Util {
         String formEncoding = ENCODING_DIRECT;
 
         // check whether a FormEncoding parameter overwrites this default
-        RequestParameter[] feParm = (RequestParameter[]) parameterMap.get(PARAMETER_FORMENCODING);
+        RequestParameter[] feParm = parameterMap.get(PARAMETER_FORMENCODING);
         if (feParm != null) {
             // get and check form encoding
             byte[] rawEncoding = feParm[0].get();
@@ -155,12 +158,11 @@ class Util {
         }
 
         // map for rename parameters due to encoding fixes
-        Map renameMap = new HashMap();
+        Map<String, String> renameMap = new HashMap<String, String>();
 
         // convert the map of lists to a map of arrays
-        for (Iterator pi = parameterMap.entrySet().iterator(); pi.hasNext();) {
-            Map.Entry paramEntry = (Map.Entry) pi.next();
-            RequestParameter[] params = (RequestParameter[]) paramEntry.getValue();
+        for (Map.Entry<String, RequestParameter[]> paramEntry : parameterMap.entrySet()) {
+            RequestParameter[] params = paramEntry.getValue();
             String parName = null;
             for (int i = 0; i < params.length; i++) {
                 if (params[i] instanceof AbstractEncodedParameter) {
@@ -173,8 +175,9 @@ class Util {
                         // prepare the parameter for renaming
                         try {
                             if (parName == null) {
-                                parName = (String) paramEntry.getKey();
-                                String name = URLDecoder.decode(parName, formEncoding);
+                                parName = paramEntry.getKey();
+                                String name = URLDecoder.decode(parName,
+                                    formEncoding);
                                 renameMap.put(paramEntry.getKey(), name);
                             }
                         } catch (UnsupportedEncodingException uee) {
@@ -187,8 +190,7 @@ class Util {
 
         // apply mappings of deinternationalized names
         if (!renameMap.isEmpty()) {
-            for (Iterator ri=renameMap.entrySet().iterator(); ri.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) ri.next();
+            for (Map.Entry<String, String> entry : renameMap.entrySet()) {
                 parameterMap.renameParameter(entry.getKey(), entry.getValue());
             }
         }

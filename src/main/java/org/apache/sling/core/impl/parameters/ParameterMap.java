@@ -18,56 +18,61 @@
  */
 package org.apache.sling.core.impl.parameters;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.sling.component.RequestParameter;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.request.RequestParameterMap;
 
 /**
  * The <code>ParameterMap</code> TODO
  */
-class ParameterMap implements Map {
+class ParameterMap extends HashMap<String, RequestParameter[]> implements
+        RequestParameterMap {
 
-    private Map delegatee;
-    private Map stringParameterMap;
+    private Map<String, String[]> stringParameterMap;
 
     ParameterMap() {
-        this.delegatee = new HashMap();
     }
 
-    void renameParameter(Object oldName, Object newName) {
-        Object params = this.delegatee.remove(oldName);
-        this.delegatee.put(newName, params);
+    public RequestParameter getValue(String name) {
+        RequestParameter[] params = getValues(name);
+        return (params != null && params.length > 0) ? params[0] : null;
     }
 
-    void addParameter(Object name, RequestParameter parameter) {
+    public RequestParameter[] getValues(String name) {
+        return super.get(name);
+    }
+
+    void renameParameter(String oldName, String newName) {
+        RequestParameter[] params = super.remove(oldName);
+        super.put(newName, params);
+    }
+
+    void addParameter(String name, RequestParameter parameter) {
         Object current = this.get(name);
         if (current == null) {
-            this.delegatee.put(name, new RequestParameter[] { parameter });
+            super.put(name, new RequestParameter[] { parameter });
         } else {
             RequestParameter[] ppo = (RequestParameter[]) current;
-            RequestParameter[] ppn = new RequestParameter[ppo.length+1];
+            RequestParameter[] ppn = new RequestParameter[ppo.length + 1];
             System.arraycopy(ppo, 0, ppn, 0, ppo.length);
             ppn[ppo.length] = parameter;
 
-            this.delegatee.put(name, ppn);
+            super.put(name, ppn);
         }
     }
 
-    void setParameters(Object name, Object parameters) {
-        this.delegatee.put(name, parameters);
+    void setParameters(String name, RequestParameter[] parameters) {
+        super.put(name, parameters);
     }
 
-    Map getStringParameterMap() {
+    Map<String, String[]> getStringParameterMap() {
         if (this.stringParameterMap == null) {
-            Map pm = new HashMap();
-            for (Iterator pi = this.entrySet().iterator(); pi.hasNext();) {
-                Map.Entry ppmEntry = (Map.Entry) pi.next();
-                RequestParameter[] pps = (RequestParameter[]) ppmEntry.getValue();
+            Map<String, String[]> pm = new HashMap<String, String[]>();
+            for (Map.Entry<String, RequestParameter[]> ppmEntry : entrySet()) {
+                RequestParameter[] pps = ppmEntry.getValue();
                 String[] ps = new String[pps.length];
                 for (int i = 0; i < pps.length; i++) {
                     ps[i] = pps[i].getString();
@@ -76,76 +81,7 @@ class ParameterMap implements Map {
             }
             this.stringParameterMap = Collections.unmodifiableMap(pm);
         }
-        return this.stringParameterMap;
-    }
-
-    // ---------- Stanard Map interface ----------------------------------------
-
-    /**
-     * @param key
-     * @return
-     * @see java.util.Map#containsKey(java.lang.Object)
-     */
-    public boolean containsKey(Object key) {
-        return this.delegatee.containsKey(key);
-    }
-
-    /**
-     * @param value
-     * @return
-     * @see java.util.Map#containsValue(java.lang.Object)
-     */
-    public boolean containsValue(Object value) {
-        return this.delegatee.containsValue(value);
-    }
-
-    /**
-     * @return
-     * @see java.util.Map#entrySet()
-     */
-    public Set entrySet() {
-        return this.delegatee.entrySet();
-    }
-
-    /**
-     * @param key
-     * @return
-     * @see java.util.Map#get(java.lang.Object)
-     */
-    public Object get(Object key) {
-        return this.delegatee.get(key);
-    }
-
-    /**
-     * @return
-     * @see java.util.Map#isEmpty()
-     */
-    public boolean isEmpty() {
-        return this.delegatee.isEmpty();
-    }
-
-    /**
-     * @return
-     * @see java.util.Map#keySet()
-     */
-    public Set keySet() {
-        return this.delegatee.keySet();
-    }
-
-    /**
-     * @return
-     * @see java.util.Map#size()
-     */
-    public int size() {
-        return this.delegatee.size();
-    }
-
-    /**
-     * @return
-     * @see java.util.Map#values()
-     */
-    public Collection values() {
-        return this.delegatee.values();
+        return stringParameterMap;
     }
 
     // ---------- Prohibited Write Access --------------------------------------
@@ -155,6 +91,7 @@ class ParameterMap implements Map {
      *
      * @see java.util.Map#clear()
      */
+    @Override
     public void clear() {
         throw new UnsupportedOperationException("clear");
     }
@@ -164,7 +101,8 @@ class ParameterMap implements Map {
      *
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
-    public Object put(Object key, Object value) {
+    @Override
+    public RequestParameter[] put(String key, RequestParameter[] value) {
         throw new UnsupportedOperationException("put");
     }
 
@@ -173,7 +111,8 @@ class ParameterMap implements Map {
      *
      * @see java.util.Map#putAll(java.util.Map)
      */
-    public void putAll(Map t) {
+    @Override
+    public void putAll(Map<? extends String, ? extends RequestParameter[]> t) {
         throw new UnsupportedOperationException("putAll");
     }
 
@@ -182,7 +121,8 @@ class ParameterMap implements Map {
      *
      * @see java.util.Map#remove(java.lang.Object)
      */
-    public Object remove(Object key) {
+    @Override
+    public RequestParameter[] remove(Object key) {
         throw new UnsupportedOperationException("remove");
     }
 }

@@ -18,15 +18,14 @@
  */
 package org.apache.sling.core.impl.resolver;
 
-import org.apache.sling.component.Content;
-import org.apache.sling.core.resolver.ResolvedURL;
+import org.apache.sling.api.request.RequestPathInfo;
 
 /**
  * The <code>ResolvedURLImpl</code> class represents the URL after resolution
  * to the Content. It also contains the selectors and extension extracted from
  * the request URL.
  */
-public class ResolvedURLImpl implements ResolvedURL {
+public class ResolvedURLImpl implements RequestPathInfo {
 
     /**
      * The original URL from which was decomposed into this instance. This field
@@ -34,13 +33,6 @@ public class ResolvedURLImpl implements ResolvedURL {
      * {@link #setOriginalURL(String)} method.
      */
     private String originalURL;
-
-    /**
-     * The content object addressed by the original URL. This field must be set
-     * by either the constructor or later calling the
-     * {@link #setContent(Content)} method.
-     */
-    private Content content;
 
     /**
      * The decomposed array of the request selectors. By default the selectors
@@ -72,9 +64,8 @@ public class ResolvedURLImpl implements ResolvedURL {
      *      not necessairily be the prefix of this URL.
      * @param content The Content object resolved from the given original URL
      */
-    public ResolvedURLImpl(String originalURL, Content content) {
+    public ResolvedURLImpl(String originalURL) {
         setOriginalURL(originalURL);
-        setContent(content);
     }
 
     /**
@@ -85,9 +76,8 @@ public class ResolvedURLImpl implements ResolvedURL {
      *
      * @throws NullPointerException If resolvedURL is <code>null</code>.
      */
-    public ResolvedURLImpl(ResolvedURL resolvedURL) {
-        setOriginalURL(resolvedURL.getOriginalURL());
-        setContent(resolvedURL.getContent());
+    public ResolvedURLImpl(RequestPathInfo resolvedURL) {
+        setOriginalURL(resolvedURL.getResourcePath());
         setSelectorString(resolvedURL.getSelectorString());
         setExtension(resolvedURL.getExtension());
         setSuffix(resolvedURL.getSuffix());
@@ -95,12 +85,8 @@ public class ResolvedURLImpl implements ResolvedURL {
 
     //---------- ResolvedURL interface ----------------------------------------
 
-    public String getOriginalURL() {
+    public String getResourcePath() {
         return originalURL;
-    }
-
-    public Content getContent() {
-        return content;
     }
 
     public String[] getSelectors() {
@@ -109,10 +95,6 @@ public class ResolvedURLImpl implements ResolvedURL {
 
     public String getSelectorString() {
         return selectorString;
-    }
-
-    public String getSelector(int i) {
-        return (i >= 0 && i < selectors.length) ? selectors[i] : null;
     }
 
     public String getExtension() {
@@ -127,10 +109,6 @@ public class ResolvedURLImpl implements ResolvedURL {
 
     public void setOriginalURL(String originalURL) {
         this.originalURL = originalURL;
-    }
-
-    public void setContent(Content content) {
-        this.content = content;
     }
 
     /**

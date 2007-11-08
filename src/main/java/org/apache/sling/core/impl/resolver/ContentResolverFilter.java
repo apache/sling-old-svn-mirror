@@ -27,26 +27,27 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.ComponentResponseWrapper;
-import org.apache.sling.component.Content;
-import org.apache.sling.content.ContentManager;
-import org.apache.sling.content.jcr.JcrContentManagerFactory;
-import org.apache.sling.core.content.SelectableContent;
-import org.apache.sling.core.content.Selector;
-import org.apache.sling.core.impl.RequestData;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestPathInfo;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.core.objects.SelectableContent;
+import org.apache.sling.core.objects.Selector;
 import org.apache.sling.core.resolver.ContentResolver;
-import org.apache.sling.core.resolver.ResolvedURL;
+import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="filter.order" value="-500" type="Integer" private="true"
  * @scr.service
  */
-public class ContentResolverFilter implements ComponentFilter, ContentResolver {
+public class ContentResolverFilter implements Filter, ContentResolver {
 
     /**
     * @scr.property value="true" type="Boolean"
@@ -92,7 +93,7 @@ public class ContentResolverFilter implements ComponentFilter, ContentResolver {
      * Allow startup without the factory
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
-    private JcrContentManagerFactory contentManagerFactory;
+    private JcrResourceManagerFactory resourceManagerFactory;
 
     /** all mappings */
     private Mapping[] mappings;
@@ -105,56 +106,53 @@ public class ContentResolverFilter implements ComponentFilter, ContentResolver {
 
     // ---------- AbstractCoreFilter
 
-    public void init(ComponentContext context) {
+    public void init(FilterConfig config) {
     }
 
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
+    public void doFilter(ServletRequest sRequest, ServletResponse sResponse,
+            FilterChain filterChain) throws IOException,
+            ServletException {
+
+        SlingHttpServletRequest request = (SlingHttpServletRequest) sRequest;
+        SlingHttpServletResponse response = (SlingHttpServletResponse) sResponse;
 
         // fail early, if we have no ContentManagerFactory
-        JcrContentManagerFactory cmf = contentManagerFactory;
-        if (cmf == null) {
-            log.error("Missing ContentManageFactory, cannot access data");
+        JcrResourceManagerFactory rmf = resourceManagerFactory;
+        if (rmf == null) {
+            log.error("Missing ResourceManageFactory, cannot access data");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         RequestData requestData = RequestData.getRequestData(request);
 
-        ContentManager cm = cmf.getContentManager(requestData.getSession());
-        requestData.setContentManager(cm);
+        ResourceManager rm = rmf.getResourceManager(requestData.getSession());
+        requestData.setResourceManager(rm);
 
         // 1.6 URL Mapping / Content Resolution --> URL Mapper
-        ResolvedURL resolvedURL = resolveURL(cm, requestData.getRequestURI());
+        Resource resource = rm.resolve(request);
+        RequestPathInfo resolvedURL = null;// resolveURL(rm, requestData.getRequestURI());
         if (resolvedURL == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         // 1.7 Check content selection
-        Content content = resolvedURL.getContent();
-        if (content instanceof SelectableContent) {
-            Selector sel = ((SelectableContent) content).getSelector();
+        if (resource.getObject() instanceof SelectableContent) {
+            Selector sel = ((SelectableContent) resource.getObject()).getSelector();
             if (sel != null) {
-                content = sel.select(request, content);
-
-                if (content == null) {
+                resource = sel.select(request, resource);
+                if (resource == null) {
                     log.error("Content slection yielded no content");
                     response.sendError(HttpServletResponse.SC_NOT_FOUND,
                         "No content selected");
                     return;
                 }
-
-                // replace content in the resolved URL with the selected content
-                ResolvedURLImpl ru = new ResolvedURLImpl(resolvedURL);
-                ru.setContent(content);
-                resolvedURL = ru;
             }
         }
 
         // 2. Handle the request
-        requestData.pushContent(resolvedURL);
+        requestData.pushContent(resource, resolvedURL);
         try {
             filterChain.doFilter(request, new MapperComponentResponse(response, request.getContextPath()));
         } finally {
@@ -391,11 +389,11 @@ public class ContentResolverFilter implements ComponentFilter, ContentResolver {
         return (fake != null) ? fake : url;
     }
 
-    private class MapperComponentResponse extends ComponentResponseWrapper {
+    private class MapperComponentResponse extends SlingHttpServletResponseWrapper {
 
         private String contextPath;
 
-        public MapperComponentResponse(ComponentResponse response, String contextPath) {
+        public MapperComponentResponse(SlingHttpServletResponse response, String contextPath) {
             super(response);
             this.contextPath = contextPath;
         }

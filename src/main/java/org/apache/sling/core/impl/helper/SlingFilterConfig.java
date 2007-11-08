@@ -16,13 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.locale;
+package org.apache.sling.core.impl.helper;
 
-import java.util.Locale;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 
-import javax.servlet.ServletRequest;
+import org.osgi.framework.ServiceReference;
 
-public interface LocaleResolver {
+public class SlingFilterConfig extends AbstractServiceReferenceConfig implements FilterConfig {
 
-    Locale resolveLocale(ServletRequest request);
+    public SlingFilterConfig(ServletContext servletContext,
+            ServiceReference reference, String filterName) {
+        super(servletContext, reference, filterName);
+    }
+
+    public String getFilterName() {
+        return getName();
+    }
 }

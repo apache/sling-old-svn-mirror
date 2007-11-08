@@ -22,28 +22,28 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Locale;
 
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.core.impl.RequestData;
-import org.apache.sling.core.locale.LocaleResolver;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
+import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.core.locale.LocaleResolver;
 
 /**
  * The <code>LocaleResolverFilter</code> TODO
  *
  * @scr.component immediate="true" label="%locale.name"
- *      description="%locale.description"
+ *                description="%locale.description"
  * @scr.property name="service.description" value="Locale Resolver Filter"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-700" type="Integer" private="true"
  * @scr.service
  */
-public class LocaleResolverFilter implements ComponentFilter {
+public class LocaleResolverFilter implements Filter {
 
     /**
      * @scr.property value="en_US"
@@ -58,11 +58,12 @@ public class LocaleResolverFilter implements ComponentFilter {
     private Locale defaultLocale;
 
     /**
-     * @see org.apache.sling.core.component.ComponentFilter#doFilter(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse, org.apache.sling.core.component.ComponentFilterChain)
+     * @see org.apache.sling.core.component.ComponentFilter#doFilter(org.apache.sling.core.component.ComponentRequest,
+     *      org.apache.sling.core.component.ComponentResponse,
+     *      org.apache.sling.core.component.ComponentFilterChain)
      */
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain filterChain) throws IOException, ServletException {
 
         // assert request data on request (may throw ComponentException if none)
         RequestData requestData = RequestData.getRequestData(request);
@@ -86,7 +87,7 @@ public class LocaleResolverFilter implements ComponentFilter {
         filterChain.doFilter(request, response);
     }
 
-    public void init(ComponentContext context) {
+    public void init(FilterConfig config) {
     }
 
     public void destroy() {

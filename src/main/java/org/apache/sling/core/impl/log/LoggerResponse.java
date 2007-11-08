@@ -20,7 +20,9 @@ package org.apache.sling.core.impl.log;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,9 +32,8 @@ import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.ComponentResponseWrapper;
-import org.apache.sling.core.RequestUtil;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
 /**
  * The <code>LoggerResponse</code> class is a
@@ -43,13 +44,17 @@ import org.apache.sling.core.RequestUtil;
  * <code>PrintWriter</code> instances which count the number of bytes and
  * characters, resp., written.
  */
-class LoggerResponse extends ComponentResponseWrapper {
+class LoggerResponse extends SlingHttpServletResponseWrapper {
 
     // the content type header name
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
     // the content length header name
     private static final String HEADER_CONTENT_LENGTH = "Content-Length";
+
+    /** format for RFC 1123 date string -- "Sun, 06 Nov 1994 08:49:37 GMT" */
+    private final static SimpleDateFormat RFC1123_FORMAT = new SimpleDateFormat(
+        "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
 
     // TODO: more content related headers, namely Content-Language should
     // probably be supported
@@ -75,12 +80,12 @@ class LoggerResponse extends ComponentResponseWrapper {
     private int status = SC_OK;
 
     // the cookies set during the request, indexed by cookie name
-    private Map cookies;
+    private Map<String, Cookie> cookies;
 
     // the headers set during the request, indexed by lower-case header
     // name, value is string for single-valued and list for multi-valued
     // headers
-    private Map headers;
+    private Map<String, Object> headers;
 
     /**
      * Creates an instance of this response wrapper setting the request counter
@@ -92,7 +97,7 @@ class LoggerResponse extends ComponentResponseWrapper {
      * @param requestId The request counter value to report by
      *            {@link #getRequestId()}.
      */
-    LoggerResponse(ComponentResponse delegatee, int requestId) {
+    LoggerResponse(SlingHttpServletResponse delegatee, int requestId) {
         super(delegatee);
 
         this.requestId = requestId;
@@ -108,7 +113,7 @@ class LoggerResponse extends ComponentResponseWrapper {
         this.requestEnd = System.currentTimeMillis();
     }
 
-    //---------- Retrieving response information ------------------------------
+    // ---------- Retrieving response information ------------------------------
 
     int getRequestId() {
         return this.requestId;
@@ -146,7 +151,8 @@ class LoggerResponse extends ComponentResponseWrapper {
     }
 
     String getHeaders(String name) {
-        // normalize header name to lower case to support case-insensitive headers
+        // normalize header name to lower case to support case-insensitive
+        // headers
         name = name.toLowerCase();
 
         Object header = (this.headers != null) ? this.headers.get(name) : null;
@@ -156,7 +162,7 @@ class LoggerResponse extends ComponentResponseWrapper {
             return (String) header;
         } else {
             StringBuffer headerBuf = new StringBuffer();
-            for (Iterator hi=((List) header).iterator(); hi.hasNext(); ) {
+            for (Iterator<?> hi = ((List<?>) header).iterator(); hi.hasNext();) {
                 if (headerBuf.length() > 0) {
                     headerBuf.append(",");
                 }
@@ -166,7 +172,7 @@ class LoggerResponse extends ComponentResponseWrapper {
         }
     }
 
-    //---------- Standard Response overwrites ---------------------------------
+    // ---------- Standard Response overwrites ---------------------------------
 
     public ServletOutputStream getOutputStream() throws IOException {
         if (this.out == null) {
@@ -188,7 +194,7 @@ class LoggerResponse extends ComponentResponseWrapper {
 
         // register the cookie for later use
         if (this.cookies == null) {
-            this.cookies = new HashMap();
+            this.cookies = new HashMap<String, Cookie>();
         }
         this.cookies.put(cookie.getName(), cookie);
 
@@ -196,7 +202,7 @@ class LoggerResponse extends ComponentResponseWrapper {
     }
 
     public void addDateHeader(String name, long date) {
-        this.registerHeader(name, RequestUtil.toDateString(date), true);
+        this.registerHeader(name, toDateString(date), true);
         super.addDateHeader(name, date);
     }
 
@@ -221,7 +227,7 @@ class LoggerResponse extends ComponentResponseWrapper {
     }
 
     public void setDateHeader(String name, long date) {
-        this.registerHeader(name, RequestUtil.toDateString(date), false);
+        this.registerHeader(name, toDateString(date), false);
         super.setDateHeader(name, date);
     }
 
@@ -260,7 +266,7 @@ class LoggerResponse extends ComponentResponseWrapper {
         super.sendError(status, message);
     }
 
-    //--------- Helper Methods ------------------------------------------------
+    // --------- Helper Methods ------------------------------------------------
 
     /**
      * Stores the name header-value pair in the header map. The name is
@@ -275,10 +281,11 @@ class LoggerResponse extends ComponentResponseWrapper {
     private void registerHeader(String name, String value, boolean add) {
         // ensure the headers map
         if (this.headers == null) {
-            this.headers = new HashMap();
+            this.headers = new HashMap<String, Object>();
         }
 
-        // normalize header name to lower case to support case-insensitive headers
+        // normalize header name to lower case to support case-insensitive
+        // headers
         name = name.toLowerCase();
 
         // retrieve the current contents if adding, otherwise assume no current
@@ -290,20 +297,38 @@ class LoggerResponse extends ComponentResponseWrapper {
 
         } else if (current instanceof String) {
             // create list if a single value is already set
-            List list = new ArrayList();
-            list.add(current);
+            List<String> list = new ArrayList<String>();
+            list.add((String) current);
             list.add(value);
             this.headers.put(name, list);
 
         } else {
             // append to the list of more than one already set
-            ((List) current).add(value);
+            ((List<Object>) current).add(value);
+        }
+    }
+
+    /**
+     * Converts the time value given as the number of milliseconds since January
+     * 1, 1970 to a date and time string compliant with RFC 1123 date
+     * specification. The resulting string is compliant with section 3.3.1, Full
+     * Date, of <a href="http://www.faqs.org/rfcs/rfc2616.html">RFC 2616</a>
+     * and may thus be used as the value of date header such as
+     * <code>Date</code>.
+     *
+     * @param date The date value to convert to a string
+     * @return The string representation of the date and time value.
+     */
+    public static String toDateString(long date) {
+        synchronized (RFC1123_FORMAT) {
+            return RFC1123_FORMAT.format(new Date(date));
         }
     }
 
     // byte transfer counting ServletOutputStream
     private static class LoggerResponseOutputStream extends ServletOutputStream {
         private ServletOutputStream delegatee;
+
         private int count;
 
         LoggerResponseOutputStream(ServletOutputStream delegatee) {
@@ -341,8 +366,8 @@ class LoggerResponse extends ComponentResponseWrapper {
     // character transfer counting PrintWriter
     private static class LoggerResponseWriter extends PrintWriter {
 
-        private static final int LINE_SEPARATOR_LENGTH =
-            System.getProperty("line.separator").length();
+        private static final int LINE_SEPARATOR_LENGTH = System.getProperty(
+            "line.separator").length();
 
         private int count;
 

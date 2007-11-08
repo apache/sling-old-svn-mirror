@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.locale;
+package org.apache.sling.core.objects;
 
-import java.util.Locale;
+/**
+ * The <code>CommandObject</code> is a simple marker content object, which
+ * allows implementation of simple command components
+ *
+ * @ocm.mapped jcrType="sling:Command" discriminator="false"
+ */
+public class CommandObject extends AbstractSelectableMappedObject {
 
-import javax.servlet.ServletRequest;
-
-public interface LocaleResolver {
-
-    Locale resolveLocale(ServletRequest request);
 }

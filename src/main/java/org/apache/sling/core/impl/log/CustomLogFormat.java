@@ -30,10 +30,8 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.Cookie;
-
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.Content;
-import org.apache.sling.core.RequestUtil;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
 
 /**
  * The <code>CustomLogFormat</code> class implements the support for log format
@@ -73,7 +71,7 @@ class CustomLogFormat {
      *         formatter has not been initialized with a valid log format
      *         pattern.
      */
-    String format(ComponentRequest request, LoggerResponse response) {
+    String format(SlingHttpServletRequest request, LoggerResponse response) {
         if (this.logParameters != null) {
             StringBuffer buf = new StringBuffer();
             for (int i=0; i < this.logParameters.length; i++) {
@@ -104,7 +102,7 @@ class CustomLogFormat {
 
     private Parameter[] parse(String pattern) {
 
-        List parameterList = new ArrayList();
+        List<Parameter> parameterList = new ArrayList<Parameter>();
         StringBuffer buf = new StringBuffer();
 
         CharacterIterator sr = new StringCharacterIterator(pattern);
@@ -137,7 +135,7 @@ class CustomLogFormat {
             buf.setLength(0);
         }
 
-        return (Parameter[]) parameterList.toArray(new Parameter[parameterList.size()]);
+        return parameterList.toArray(new Parameter[parameterList.size()]);
     }
 
     private Parameter parseFormatString(CharacterIterator sr, int c) {
@@ -293,7 +291,7 @@ class CustomLogFormat {
         StringBuffer buf = new StringBuffer();
         buf.append((char) c);
 
-        List numbers = new ArrayList();
+        List<Integer> numbers = new ArrayList<Integer>();
         for (c=sr.next(); c != CharacterIterator.DONE; c=sr.next()) {
             if (c == ',') {
                 int num = 0;
@@ -303,7 +301,7 @@ class CustomLogFormat {
                     // don't care
                 }
                 if (num >= 100 && num <= 999) {
-                    numbers.add(new Integer(num));
+                    numbers.add(num);
                 }
                 buf.setLength(0);
             } else if (c >= '0' && c <= '9') {
@@ -334,7 +332,7 @@ class CustomLogFormat {
 
         int[] statusCodes = new int[numbers.size()];
         for (int i=0; i < numbers.size(); i++) {
-            statusCodes[i] = ((Integer) numbers.get(i)).intValue();
+            statusCodes[i] = (numbers.get(i)).intValue();
         }
         return statusCodes;
     }
@@ -342,7 +340,7 @@ class CustomLogFormat {
     //---------- Parameter support --------------------------------------------
 
     static interface Parameter {
-        void print(StringBuffer dest, ComponentRequest request, LoggerResponse response);
+        void print(StringBuffer dest, SlingHttpServletRequest request, LoggerResponse response);
     }
 
     static class PlainTextParameter implements Parameter {
@@ -350,7 +348,7 @@ class CustomLogFormat {
         PlainTextParameter(String value) {
             this.value = value;
         }
-        public void print(StringBuffer dest, ComponentRequest request,
+        public void print(StringBuffer dest, SlingHttpServletRequest request,
                 LoggerResponse response) {
             dest.append(this.value);
         }
@@ -389,10 +387,10 @@ class CustomLogFormat {
             this.required = required;
         }
 
-        protected abstract String getValue(ComponentRequest request);
+        protected abstract String getValue(SlingHttpServletRequest request);
         protected abstract String getValue(LoggerResponse response);
 
-        public final void print(StringBuffer dest, ComponentRequest request, LoggerResponse response) {
+        public final void print(StringBuffer dest, SlingHttpServletRequest request, LoggerResponse response) {
             if (this.printOk(response.getStatus())) {
                 String value = this.isRequest ? this.getValue(request) : this.getValue(response);
                 dest.append((value == null) ? "-" : value);
@@ -486,9 +484,15 @@ class CustomLogFormat {
                     buf.append("\\\\");
                 } else {                // encode
                     buf.append("\\u");
-                    if (c < 0x10) buf.append('0');   // leading zero
-                    if (c < 0x100) buf.append('0');  // leading zero
-                    if (c < 0x1000) buf.append('0'); // leading zero
+                    if (c < 0x10) {
+                        buf.append('0');   // leading zero
+                    }
+                    if (c < 0x100) {
+                        buf.append('0');  // leading zero
+                    }
+                    if (c < 0x1000) {
+                        buf.append('0'); // leading zero
+                    }
                     buf.append(Integer.toHexString(c));
                 }
                 i++;
@@ -506,7 +510,7 @@ class CustomLogFormat {
             super(parName, parParam, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return null;
         }
 
@@ -520,7 +524,7 @@ class CustomLogFormat {
             super('P', parParam, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return Thread.currentThread().getName();
         }
 
@@ -534,7 +538,7 @@ class CustomLogFormat {
             super('R', null, false);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return null;
         }
 
@@ -548,7 +552,7 @@ class CustomLogFormat {
             super(c, null, false);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return null;
         }
 
@@ -592,7 +596,7 @@ class CustomLogFormat {
             this.requestStart = parParam== null || !parParam.equals("end");
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return null;
         }
 
@@ -632,7 +636,7 @@ class CustomLogFormat {
             this.seconds = seconds;
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return null;
         }
 
@@ -650,7 +654,7 @@ class CustomLogFormat {
             super('a', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getRemoteAddr();
         }
 
@@ -664,7 +668,7 @@ class CustomLogFormat {
             super('h', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getRemoteHost();
         }
 
@@ -678,7 +682,7 @@ class CustomLogFormat {
             super('A', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getLocalAddr();
         }
 
@@ -692,7 +696,7 @@ class CustomLogFormat {
             super('p', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return String.valueOf(request.getServerPort());
         }
 
@@ -706,7 +710,7 @@ class CustomLogFormat {
             super('v', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getServerName();
         }
 
@@ -720,9 +724,9 @@ class CustomLogFormat {
             super('f', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
-            Content content = request.getContent();
-            return (content != null) ? content.getPath() : null;
+        protected String getValue(SlingHttpServletRequest request) {
+            Resource resource = request.getResource();
+            return (resource != null) ? resource.getURI() : null;
         }
 
         protected String getValue(LoggerResponse response) {
@@ -735,7 +739,7 @@ class CustomLogFormat {
             super('r', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             String query = request.getQueryString();
             query = (query == null || query.length() == 0) ? "" : "?" + query;
 
@@ -753,7 +757,7 @@ class CustomLogFormat {
             super('H', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getProtocol();
         }
 
@@ -767,7 +771,7 @@ class CustomLogFormat {
             super('m', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getMethod();
         }
 
@@ -781,7 +785,7 @@ class CustomLogFormat {
             super('U', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getRequestURI();
         }
 
@@ -795,7 +799,7 @@ class CustomLogFormat {
             super('q', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             String query = request.getQueryString();
             return (query == null || query.length() == 0) ? "" : "?" + query;
         }
@@ -810,7 +814,7 @@ class CustomLogFormat {
             super('u', null, true);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return request.getRemoteUser();
         }
 
@@ -824,7 +828,7 @@ class CustomLogFormat {
             super('s', null, false);
         }
 
-        protected String getValue(ComponentRequest request) {
+        protected String getValue(SlingHttpServletRequest request) {
             return null;
         }
 
@@ -840,8 +844,8 @@ class CustomLogFormat {
             this.cookieName = cookieName;
         }
 
-        protected String getValue(ComponentRequest request) {
-            Cookie cookie = RequestUtil.getCookie(request, this.cookieName);
+        protected String getValue(SlingHttpServletRequest request) {
+            Cookie cookie = request.getCookie(cookieName);
             return (cookie == null) ? null : escape(cookie.toString());
         }
 
@@ -859,8 +863,8 @@ class CustomLogFormat {
             this.headerName = headerName;
         }
 
-        protected String getValue(ComponentRequest request) {
-            Enumeration values = request.getHeaders(this.headerName);
+        protected String getValue(SlingHttpServletRequest request) {
+            Enumeration<?> values = request.getHeaders(this.headerName);
             if (values == null || !values.hasMoreElements()) {
                 return null;
             }
