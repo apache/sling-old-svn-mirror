@@ -18,17 +18,17 @@
  */
 package org.apache.sling.core.components;
 
-import org.apache.sling.component.Component;
+import javax.servlet.Servlet;
 
 /**
- * The <code>ErrorHandlerComponent</code> interface extends the
+ * The <code>ErrorHandlerServlet</code> interface extends the
  * <code>Component</code> providing the required API for components used for
  * error handling.
  * <p>
  * Error handling components are registered just like regular components but are
  * recognized by the Component Framework and used for error handling only.
  */
-public interface ErrorHandlerComponent extends Component {
+public interface ErrorHandlerServlet extends Servlet {
 
     /**
      * Returns <code>true</code> if this error handler can handle the given

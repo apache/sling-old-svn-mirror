@@ -24,34 +24,23 @@ import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.core.Constants;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.core.CoreConstants;
 
 /**
- * The <code>DefaultErrorHandlerComponent</code> TODO
+ * The <code>DefaultErrorHandlerServlet</code> TODO
  *
  * @scr.component immediate="true" label="%errhandler.default.name"
- *      description="%errhandler.default.description"
- * @scr.property name="service.description"
- *          value="Default Error Handler Component"
+ *                description="%errhandler.default.description"
+ * @scr.property name="service.description" value="Default Error Handler
+ *               Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.component.Component"
  */
-public class DefaultErrorHandlerComponent extends BaseComponent implements
-        ErrorHandlerComponent {
-
-    public static final String ID = DefaultErrorHandlerComponent.class.getName();
-
-    {
-        this.setContentClassName(null);
-        this.setComponentId(ID);
-    }
-
-    public Content createContentInstance() {
-        throw new IllegalStateException("Error Handlers have no content");
-    }
+public class DefaultErrorHandlerServlet extends SlingSafeMethodsServlet
+        implements ErrorHandlerServlet {
 
     /*
      * (non-Javadoc)
@@ -80,16 +69,14 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
         return status == 0;
     }
 
-    /**
-     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
-     */
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws IOException {
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException {
 
         // get settings
-        Integer scObject = (Integer) request.getAttribute(Constants.ERROR_STATUS);
-        String statusMessage = (String) request.getAttribute(Constants.ERROR_MESSAGE);
-        String requestUri = (String) request.getAttribute(Constants.ERROR_REQUEST_URI);
+        Integer scObject = (Integer) request.getAttribute(CoreConstants.ERROR_STATUS);
+        String statusMessage = (String) request.getAttribute(CoreConstants.ERROR_MESSAGE);
+        String requestUri = (String) request.getAttribute(CoreConstants.ERROR_REQUEST_URI);
 
         // ensure values
         int statusCode = (scObject != null)
@@ -100,20 +87,20 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
         }
 
         // start the response message
-        PrintWriter pw = this.sendIntro(response, statusCode, statusMessage,
+        PrintWriter pw = sendIntro(response, statusCode, statusMessage,
             requestUri);
 
         // write the exception message
-        if (request.getAttribute(Constants.ERROR_EXCEPTION) != null) {
+        if (request.getAttribute(CoreConstants.ERROR_EXCEPTION) != null) {
             Throwable throwable = (Throwable) request.getAttribute("javax.servlet.error.exception");
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
-            this.printStackTrace(pw, throwable);
+            printStackTrace(pw, throwable);
             pw.println("</pre>");
         }
 
         // conclude the response message
-        this.sendEpilogue(pw);
+        sendEpilogue(pw);
     }
 
     /**
@@ -152,8 +139,9 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
      * Sets the response status and content type header and starts the the
      * response HTML text with the header, and an introductory phrase.
      */
-    private PrintWriter sendIntro(ComponentResponse response, int statusCode,
-            String statusMessage, String requestUri) throws IOException {
+    private PrintWriter sendIntro(SlingHttpServletResponse response,
+            int statusCode, String statusMessage, String requestUri)
+            throws IOException {
 
         // set the status code and content type in the response
         response.setStatus(statusCode);
@@ -179,7 +167,7 @@ public class DefaultErrorHandlerComponent extends BaseComponent implements
      */
     private void sendEpilogue(PrintWriter pw) {
         pw.println("<hr>");
-        pw.println("<address>" + this.getComponentContext().getServerInfo()
+        pw.println("<address>" + getServletContext().getServerInfo()
             + "</address>");
         pw.println("</body>");
         pw.println("</html>");
