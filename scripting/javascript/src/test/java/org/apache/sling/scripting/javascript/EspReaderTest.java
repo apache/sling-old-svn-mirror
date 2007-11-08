@@ -16,15 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.microsling.scripting.helpers;
+package org.apache.sling.scripting.javascript;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
-
-import org.apache.sling.microsling.scripting.helpers.EspReader;
 
 /**
  * The <code>EspReaderTest</code> contains some simple test cases for the
