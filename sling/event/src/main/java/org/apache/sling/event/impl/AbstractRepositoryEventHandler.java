@@ -36,7 +36,7 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.core.Constants;
+import org.apache.sling.core.CoreConstants;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -100,7 +100,7 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void activate(final ComponentContext context)
     throws RepositoryException {
-        this.applicationId = context.getBundleContext().getProperty(Constants.SLING_ID);
+        this.applicationId = context.getBundleContext().getProperty(CoreConstants.SLING_ID);
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
         final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
         if ( i != null ) {
