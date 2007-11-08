@@ -14,33 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.standard;
+package org.apache.sling.component.servlets.standard;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Enumeration;
 
 import org.apache.sling.component.ComponentException;
 import org.apache.sling.component.ComponentRequest;
+import org.apache.sling.component.ComponentRequestDispatcher;
 import org.apache.sling.component.ComponentResponse;
 import org.apache.sling.component.Content;
 import org.apache.sling.core.components.BaseComponent;
 
 /**
- * The <code>FolderComponent</code> TODO
+ * The <code>ReferenceComponent</code> TODO
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *          value="Component to handle nt:folder content"
+ *          value="Component to handle sling:Reference content"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  */
-public class FolderComponent extends BaseComponent {
+public class ReferenceComponent extends BaseComponent {
 
-    public static final String ID = FolderComponent.class.getName();
+    public static final String ID = ReferenceComponent.class.getName();
 
     {
-        this.setContentClassName(FolderContent.class.getName());
+        this.setContentClassName(ReferenceContent.class.getName());
         this.setComponentId(ID);
     }
 
@@ -48,38 +47,33 @@ public class FolderComponent extends BaseComponent {
      * @see org.apache.sling.core.components.BaseComponent#createContentInstance()
      */
     public Content createContentInstance() {
-        return new FolderContent();
+        return new ReferenceContent();
     }
 
-    // nothing to do
-    protected void doInit() {}
+    /**
+     * @see org.apache.sling.core.components.BaseComponent#doInit()
+     */
+    protected void doInit() {
+        // nothing to do
+    }
 
     /**
      * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
      */
     public void service(ComponentRequest request, ComponentResponse response)
-            throws IOException {
-        FolderContent content = (FolderContent) request.getContent();
+            throws IOException, ComponentException {
 
-        response.setContentType("text/html");
-        PrintWriter pw = response.getWriter();
-        pw.println("<html><head>");
-        pw.println("<title>" + content.getPath() + "</title>");
-        pw.println("</head><body bgcolor='white'>");
-        pw.println("<h1>Contents of <code>" + content.getPath() + "</code></h1>");
-        pw.println("<ul>");
+        final ReferenceContent content = (ReferenceContent)request.getContent();
+        final String path = content.getReference();
 
-        try {
-            Enumeration<Content> entries = request.getChildren(content);
-            while (entries.hasMoreElements()) {
-                Content entry = entries.nextElement();
-                pw.println("<li>" + entry.getPath() + "</li>");
-            }
-        } catch (ComponentException ce) {
-            // TODO: handle
+        // just forward to the referenced content
+        Content jcrContent = request.getContent(path);
+        if (jcrContent != null) {
+            ComponentRequestDispatcher crd = this.getComponentContext().getRequestDispatcher(
+                jcrContent);
+            crd.include(request, response);
+        } else {
+            throw new ComponentException("No content for path " + path);
         }
-
-        pw.println("</ul>");
-        pw.println("</body></html>");
     }
 }

@@ -28,7 +28,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-component-standard</artifactId>
+    <artifactId>org.apache.sling.servlets.standard</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/component-standard
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets-standard
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/component-standard
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets-standard
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/component-standard
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/servlets-standard
         </url>
     </scm>
 
@@ -61,17 +61,13 @@
                 <artifactId>maven-jcrocm-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-sling-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.component.standard
+                            org.apache.sling.servlets.standard;version=${pom.version}
                         </Export-Package>
                     </instructions>
                 </configuration>
@@ -82,7 +78,7 @@
 
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-jackrabbit-api</artifactId>
+            <artifactId>org.apache.sling.jcr.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
 
@@ -93,17 +89,19 @@
 
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-component-api</artifactId>
+            <artifactId>org.apache.sling.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
+<!--
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-core</artifactId>
+            <artifactId>org.apache.sling.core</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
+-->
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-content-jcr</artifactId>
+            <artifactId>org.apache.sling.jcr.resource</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
 
