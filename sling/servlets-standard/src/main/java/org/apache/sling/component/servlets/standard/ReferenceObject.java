@@ -16,13 +16,14 @@
  */
 package org.apache.sling.component.servlets.standard;
 
+import org.apache.sling.jcr.resource.AbstractMappedObject;
 
 /**
- * The <code>ReferenceContent</code> TODO
+ * The <code>ReferenceObject</code> TODO
  *
  * @ocm.mapped jcrType="sling:Reference" discriminator="false"
  */
-public class ReferenceContent extends org.apache.sling.content.jcr.SimpleContent {
+public class ReferenceObject extends AbstractMappedObject {
 
     /** @ocm.field jcrName="sling:path" */
     private String reference;
@@ -41,10 +42,5 @@ public class ReferenceContent extends org.apache.sling.content.jcr.SimpleContent
      */
     public void setReference(String value) {
         this.reference = value;
-    }
-    // --------- Content interface ---------------------------------------------
-
-    public String getComponentId() {
-        return ReferenceComponent.ID;
     }
 }

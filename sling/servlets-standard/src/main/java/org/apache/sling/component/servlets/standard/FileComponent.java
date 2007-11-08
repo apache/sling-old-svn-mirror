@@ -18,12 +18,14 @@ package org.apache.sling.component.servlets.standard;
 
 import java.io.IOException;
 
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentRequestDispatcher;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.core.components.BaseComponent;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+
+import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
  * The <code>FileComponent</code> TODO
@@ -32,39 +34,35 @@ import org.apache.sling.core.components.BaseComponent;
  * @scr.property name="service.description"
  *          value="Component to handle nt:file content"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="sling.resourceTypes" value="nt:file"
  * @scr.service
  */
-public class FileComponent extends BaseComponent {
-
-    public static final String ID = FileComponent.class.getName();
-
-    {
-        this.setContentClassName(FileContent.class.getName());
-        this.setComponentId(ID);
-    }
-
-    public Content createContentInstance() {
-        return new FileContent();
-    }
+public class FileComponent extends SlingAllMethodsServlet {
 
     // nothing to do
     protected void doInit() {
     }
 
-    /**
-     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
-     */
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws IOException, ComponentException {
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
+
+        Resource resource = request.getResource();
+        FileObject file = (FileObject) resource.getObject();
+        if (file == null) {
+            throw new SlingException("Missing mapped object for file "
+                + resource.getURI());
+        }
 
         // just render the child content
-        Content jcrContent = request.getContent("jcr:content");
+        Resource jcrContent = request.getResourceResolver().getResource(resource, "jcr:content");
         if (jcrContent != null) {
-            ComponentRequestDispatcher crd = this.getComponentContext().getRequestDispatcher(
-                jcrContent);
-            crd.include(request, response);
+            RequestDispatcher rd = request.getRequestDispatcher(jcrContent);
+            rd.include(request, response);
         } else {
-            throw new ComponentException("No content");
+            throw new SlingException("File " + resource.getURI()
+                + " has no content");
         }
     }
 }

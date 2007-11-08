@@ -17,18 +17,10 @@
 package org.apache.sling.component.servlets.standard;
 
 /**
- * The <code>FileContent</code> class represents an nt:file node in the
- * repository and as such has no more direct content data as the
- * {@link HierarchyNodeObject}.
+ * The <code>FolderObject</code> TODO
  *
- * @ocm.mapped jcrType="nt:file" discriminator="false"
+ * @ocm.mapped jcrType="nt:folder" discriminator="false"
  */
-public class FileContent extends HierarchyNodeObject {
-
-    // --------- Content interface ---------------------------------------------
-
-    public String getComponentId() {
-        return FileComponent.ID;
-    }
+public class FolderObject extends HierarchyNodeObject {
 
 }

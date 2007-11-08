@@ -18,14 +18,14 @@ package org.apache.sling.component.servlets.standard;
 
 import javax.jcr.Value;
 
-import org.apache.sling.core.content.SelectableSimpleContent;
+import org.apache.sling.jcr.resource.AbstractMappedObject;
 
 /**
- * The <code>ResourceContent</code> TODO
+ * The <code>ResourceObject</code> TODO
  *
  * @ocm.mapped jcrType="nt:resource" discriminator="false"
  */
-public class ResourceContent extends SelectableSimpleContent {
+public class ResourceObject extends AbstractMappedObject {
 
     /** @ocm.field jcrName="jcr:lastModified" */
     private long lastModificationTime;
@@ -95,11 +95,5 @@ public class ResourceContent extends SelectableSimpleContent {
      */
     public void setValue(Value value) {
         this.value = value;
-    }
-
-    // --------- Content interface ---------------------------------------------
-
-    public String getComponentId() {
-        return ResourceComponent.ID;
     }
 }

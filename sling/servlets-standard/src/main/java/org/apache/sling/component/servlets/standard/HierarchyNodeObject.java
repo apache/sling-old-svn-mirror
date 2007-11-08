@@ -16,17 +16,25 @@
  */
 package org.apache.sling.component.servlets.standard;
 
+import org.apache.sling.jcr.resource.AbstractMappedObject;
+
 /**
- * The <code>FolderContent</code> TODO
+ * The <code>HierarchyNodeObject</code> class is an abstract base content
+ * class for content loaded from nodes of (extensions of) node type
+ * <code>nt:HierarchyNode</code>.
  *
- * @ocm.mapped jcrType="nt:folder" discriminator="false"
+ * @ocm.mapped jcrType="nt:hierarchyNode" discriminator="false"
  */
-public class FolderContent extends HierarchyNodeObject {
+public abstract class HierarchyNodeObject extends AbstractMappedObject {
 
-    // --------- Content interface ---------------------------------------------
+    /** @ocm.field jcrName="jcr:created" */
+    private long creationTime;
 
-    public String getComponentId() {
-        return FolderComponent.ID;
+    public long getCreationTime() {
+        return this.creationTime;
     }
 
+    public void setCreationTime(long creationTime) {
+        this.creationTime = creationTime;
+    }
 }
