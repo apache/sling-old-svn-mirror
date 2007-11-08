@@ -44,7 +44,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.DefaultMappedObject;
-import org.apache.sling.jcr.resource.internal.helper.JcrHelper;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
@@ -132,7 +132,7 @@ public class JcrResourceManager implements ResourceManager {
         }
 
         // resolve relative path segments now
-        path = JcrHelper.resolveRelativeSegments(path);
+        path = JcrResourceUtil.normalize(path);
         if (path != null) {
             if (path.length() == 0) {
                 // return the base resource
@@ -182,7 +182,7 @@ public class JcrResourceManager implements ResourceManager {
     public Iterator<Resource> findResources(String query, String language)
             throws SlingException {
         try {
-            QueryResult res = JcrHelper.query(getSession(), query, language);
+            QueryResult res = JcrResourceUtil.query(getSession(), query, language);
             return new JcrNodeResourceIterator(this, res.getNodes());
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new SlingException(iqe);
@@ -194,7 +194,7 @@ public class JcrResourceManager implements ResourceManager {
     public Iterator<Map<String, Object>> queryResources(String query,
             String language) throws SlingException {
         try {
-            QueryResult result = JcrHelper.query(getSession(), query, language);
+            QueryResult result = JcrResourceUtil.query(getSession(), query, language);
             final String[] colNames = result.getColumnNames();
             final RowIterator rows = result.getRows();
             return new Iterator<Map<String, Object>>() {
@@ -208,7 +208,7 @@ public class JcrResourceManager implements ResourceManager {
                         Value[] values = rows.nextRow().getValues();
                         for (int i = 0; i < values.length; i++) {
                             row.put(colNames[i],
-                                JcrHelper.toJavaObject(values[i]));
+                                JcrResourceUtil.toJavaObject(values[i]));
                         }
                     } catch (RepositoryException re) {
                         // TODO:log
@@ -229,7 +229,7 @@ public class JcrResourceManager implements ResourceManager {
 
     public Resource getResource(String path, Class<?> type)
             throws SlingException {
-        path = JcrHelper.resolveRelativeSegments(path);
+        path = JcrResourceUtil.normalize(path);
         if (path != null) {
             try {
                 return getResourceInternal(path, type);
