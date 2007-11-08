@@ -34,8 +34,9 @@ import org.apache.commons.fileupload.RequestContext;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
-import org.apache.sling.component.RequestParameter;
-import org.apache.sling.core.impl.RequestData;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.core.impl.helper.RequestData;
 
 public class ParameterSupport {
 
@@ -67,30 +68,29 @@ public class ParameterSupport {
     }
 
     public String[] getParameterValues(String name) {
-        return (String[]) this.getParameterMap().get(name);
+        return this.getParameterMap().get(name);
     }
 
-    public Map getParameterMap() {
-        return this.getRequestParameterMapInternal().getStringParameterMap();
+    public Map<String, String[]> getParameterMap() {
+        return getRequestParameterMapInternal().getStringParameterMap();
     }
 
-    public Enumeration getParameterNames() {
+    @SuppressWarnings("unchecked")
+    public Enumeration<String> getParameterNames() {
         return new IteratorEnumeration(
             this.getRequestParameterMapInternal().keySet().iterator());
     }
 
     public RequestParameter getRequestParameter(String name) {
-        RequestParameter[] values = (RequestParameter[]) this.getRequestParameterMapInternal().get(
-            name);
-        return (values != null && values.length > 0) ? values[0] : null;
+        return getRequestParameterMapInternal().getValue(name);
     }
 
     public RequestParameter[] getRequestParameters(String name) {
-        return (RequestParameter[]) this.getRequestParameterMapInternal().get(name);
+        return getRequestParameterMapInternal().getValues(name);
     }
 
-    public Map getRequestParameterMap() {
-        return this.getRequestParameterMapInternal();
+    public RequestParameterMap getRequestParameterMap() {
+        return getRequestParameterMapInternal();
     }
 
     private ParameterMap getRequestParameterMapInternal() {
@@ -159,8 +159,8 @@ public class ParameterSupport {
 
         // Parse the request
         try {
-            List /* FileItem */items = upload.parseRequest(rc);
-            for (Iterator ii = items.iterator(); ii.hasNext();) {
+            List<?> /* FileItem */items = upload.parseRequest(rc);
+            for (Iterator<?> ii = items.iterator(); ii.hasNext();) {
                 FileItem fileItem = (FileItem) ii.next();
                 RequestParameter pp = new MultipartRequestParameter(fileItem);
                 parameters.addParameter(fileItem.getFieldName(), pp);

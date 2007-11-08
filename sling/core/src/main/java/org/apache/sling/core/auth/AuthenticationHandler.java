@@ -20,8 +20,8 @@ package org.apache.sling.core.auth;
 
 import javax.jcr.Credentials;
 
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 
 /**
  * The <code>AuthenticationHandler</code> interface is implemented by handlers
@@ -40,7 +40,7 @@ public interface AuthenticationHandler {
 
     // TODO
     // @return true this handler can authenticate the request
-    boolean handles(ComponentRequest request);
+    boolean handles(SlingHttpServletRequest request);
 
     /**
      * Extracts credential data from the request if at all contained. This check
@@ -81,8 +81,8 @@ public interface AuthenticationHandler {
      *         {@link #DOING_AUTH}, the method must have sent a response
      *         indicating that fact to the client.
      */
-    Credentials authenticate(ComponentRequest request,
-            ComponentResponse response);
+    Credentials authenticate(SlingHttpServletRequest request,
+            SlingHttpServletResponse response);
 
     /**
      * Requests authentication information from the client. Returns
@@ -103,6 +103,6 @@ public interface AuthenticationHandler {
      *         <code>false</code>, if the request should fail with the
      *         appropriate error status.
      */
-    boolean requestAuthentication(ComponentRequest request,
-            ComponentResponse response);
+    boolean requestAuthentication(SlingHttpServletRequest request,
+            SlingHttpServletResponse response);
 }

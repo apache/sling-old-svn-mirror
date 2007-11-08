@@ -27,20 +27,21 @@ import javax.jcr.LoginException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.core.RequestUtil;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.auth.AuthenticationHandler;
-import org.apache.sling.core.impl.RequestData;
-import org.apache.sling.jcr.SlingRepository;
-import org.apache.sling.jcr.TooManySessionsException;
+import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.api.TooManySessionsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +85,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="filter.order" value="-900" type="Integer" private="true"
  * @scr.service
  */
-public class AuthenticationFilter implements ComponentFilter {
+public class AuthenticationFilter implements Filter {
 
     /**
      * The name of the request attribute containing the AuthenticationHandler
@@ -159,9 +160,13 @@ public class AuthenticationFilter implements ComponentFilter {
 
     // ----------- AbstractCoreFilter ------------------------------------------
 
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
+    public void doFilter(ServletRequest sRequest, ServletResponse sResponse,
+            FilterChain filterChain) throws IOException,
+            ServletException {
+
+        SlingHttpServletRequest request = (SlingHttpServletRequest) sRequest;
+        SlingHttpServletResponse response = (SlingHttpServletResponse) sResponse;
+
         Session session = this.authenticate(request, response);
         if (session != null) {
             try {
@@ -185,7 +190,7 @@ public class AuthenticationFilter implements ComponentFilter {
         }
     }
 
-    public void init(ComponentContext context) {}
+    public void init(FilterConfig config) {}
     public void destroy() {}
 
     // ----------- SCR Integration ---------------------------------------------
@@ -253,10 +258,13 @@ public class AuthenticationFilter implements ComponentFilter {
                 // remove this handler
                 AuthenticationHandler[] newHandlers = new AuthenticationHandler[this.handlers.length - 1];
 
-                if (i > 0) System.arraycopy(this.handlers, 0, newHandlers, 0, i);
-                if (i < newHandlers.length)
+                if (i > 0) {
+                    System.arraycopy(this.handlers, 0, newHandlers, 0, i);
+                }
+                if (i < newHandlers.length) {
                     System.arraycopy(this.handlers, i + 1, newHandlers, i,
                         newHandlers.length - i);
+                }
 
                 this.handlers = newHandlers;
             }
@@ -291,7 +299,7 @@ public class AuthenticationFilter implements ComponentFilter {
      *         be assumed, that during this method enough response information
      *         has been sent to the client.
      */
-    private Session authenticate(ComponentRequest req, ComponentResponse res) {
+    private Session authenticate(SlingHttpServletRequest req, SlingHttpServletResponse res) {
 
         // 0. Get package for request and be anonymous if none configured
         AuthenticationHandler handler = this.getAuthHandler(req);
@@ -363,7 +371,7 @@ public class AuthenticationFilter implements ComponentFilter {
      * @return true if the information could be requested or false, if the
      *         request should fail with the appropriate error status
      */
-    public boolean requestAuthentication(ComponentRequest req, ComponentResponse res) {
+    public boolean requestAuthentication(SlingHttpServletRequest req, SlingHttpServletResponse res) {
 
         AuthenticationHandler handler = this.getAuthHandler(req);
         if (handler != null) {
@@ -379,7 +387,7 @@ public class AuthenticationFilter implements ComponentFilter {
 
     // ---------- internal ----------------------------------------------------
 
-    private AuthenticationHandler getAuthHandler(ComponentRequest req) {
+    private AuthenticationHandler getAuthHandler(SlingHttpServletRequest req) {
         AuthenticationHandler[] local = this.handlers;
         for (int i = 0; i < local.length; i++) {
             if (local[i].handles(req)) {
@@ -410,7 +418,7 @@ public class AuthenticationFilter implements ComponentFilter {
     // }
 
     // TODO
-    private Session getAnonymousSession(ComponentRequest req, ComponentResponse res) {
+    private Session getAnonymousSession(SlingHttpServletRequest req, SlingHttpServletResponse res) {
         // login anonymously, log the exact cause in case of failure
         if (this.anonymousAllowed) {
             try {
@@ -436,7 +444,7 @@ public class AuthenticationFilter implements ComponentFilter {
     }
 
     // TODO
-    private void sendFailure(ComponentResponse res) {
+    private void sendFailure(SlingHttpServletResponse res) {
         try {
             res.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
         } catch (IOException ioe) {
@@ -518,7 +526,7 @@ public class AuthenticationFilter implements ComponentFilter {
      *            temporary cookie to be deleted when the browser exits.
      * @param path The cookie path to use. If empty or <code>null</code> the
      */
-    private void sendCookie(ComponentResponse response, String name, String value,
+    private void sendCookie(SlingHttpServletResponse response, String name, String value,
             int maxAge, String path) {
 
         if (path == null || path.length() == 0) {
@@ -562,11 +570,11 @@ public class AuthenticationFilter implements ComponentFilter {
      * @see Ticket#impersonate for details on the user configuration
      *      requirements for impersonation.
      */
-    private Session handleImpersonation(ComponentRequest req, ComponentResponse res,
+    private Session handleImpersonation(SlingHttpServletRequest req, SlingHttpServletResponse res,
             Session session) throws LoginException, RepositoryException {
 
         // the current state of impersonation
-        Cookie sudoCookie = RequestUtil.getCookie(req, this.sudoCookieName);
+        Cookie sudoCookie = req.getCookie(sudoCookieName);
         String currentSudo = (sudoCookie == null)
                 ? null
                 : sudoCookie.getValue();

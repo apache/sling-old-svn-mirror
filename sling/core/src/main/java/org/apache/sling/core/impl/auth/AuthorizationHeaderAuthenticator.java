@@ -27,8 +27,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.auth.AuthenticationHandler;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
 
     // ----------- AuthenticationHandler interface ----------------------------
 
-    public boolean handles(ComponentRequest request) {
+    public boolean handles(SlingHttpServletRequest request) {
         return true;
     }
 
@@ -118,8 +118,8 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      *         information. In case of DOING_AUTH, the method must have sent a
      *         response indicating that fact to the client.
      */
-    public Credentials authenticate(ComponentRequest request,
-            ComponentResponse response) {
+    public Credentials authenticate(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) {
         return this.extractAuthentication(request);
     }
 
@@ -140,8 +140,8 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      * @return true if the information could be requested or false, if the
      *         request should fail with the appropriate error status
      */
-    public boolean requestAuthentication(ComponentRequest request,
-            ComponentResponse response) {
+    public boolean requestAuthentication(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) {
 
         // if the response is already committed, we have a problem !!
         if (response.isCommitted()) {
@@ -183,7 +183,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
     /**
      * Extract the Base64 authentication string from the request
      */
-    protected Credentials extractAuthentication(ComponentRequest request) {
+    protected Credentials extractAuthentication(SlingHttpServletRequest request) {
 
         // Return immediately if the header is missing
         String authHeader = request.getHeader(HEADER_AUTHORIZATION);

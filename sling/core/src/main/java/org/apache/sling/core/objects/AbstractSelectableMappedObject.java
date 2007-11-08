@@ -16,13 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.locale;
+package org.apache.sling.core.objects;
 
-import java.util.Locale;
+import org.apache.sling.jcr.resource.AbstractMappedObject;
 
-import javax.servlet.ServletRequest;
+/**
+ * The <code>AbstractSelectableMappedObject</code> class extends the
+ * <code>BaseContent</code> class by implementing the
+ * {@link SelectableContent} interface hence supporting selection as defined by
+ * the Sling core bundle.
+ *
+ * @ocm.mapped jcrType="sling:SelectableContent" discriminator="false"
+ */
+public abstract class AbstractSelectableMappedObject extends AbstractMappedObject implements
+        SelectableContent {
 
-public interface LocaleResolver {
+    /** @ocm.bean jcrName="sling:selector" */
+    private Selector selector;
 
-    Locale resolveLocale(ServletRequest request);
+    public Selector getSelector() {
+        return this.selector;
+    }
+
+    public void setSelector(Selector selector) {
+        this.selector = selector;
+    }
 }

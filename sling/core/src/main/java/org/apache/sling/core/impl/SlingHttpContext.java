@@ -24,7 +24,7 @@ import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.mime.MimeTypeService;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.osgi.service.http.HttpContext;
 
 /**

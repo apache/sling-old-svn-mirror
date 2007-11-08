@@ -18,7 +18,8 @@
  */
 package org.apache.sling.core.resolver;
 
-import org.apache.sling.content.ContentManager;
+import org.apache.sling.api.request.RequestPathInfo;
+import org.apache.sling.api.resource.ResourceManager;
 
 /**
  * The <code>ContentResolver</code> interface defines the service API of the
@@ -41,7 +42,7 @@ public interface ContentResolver {
      *         request URI or <code>null</code> if the request URI cannot be
      *         mapped to a Content object.
      */
-    ResolvedURL resolveURL(ContentManager cm, String requestURI);
+    RequestPathInfo resolveURL(ResourceManager cm, String requestURI);
 
     /**
      * Maps a Content path to an URI, which when fed to the
