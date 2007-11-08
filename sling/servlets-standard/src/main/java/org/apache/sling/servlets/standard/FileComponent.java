@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.servlets.standard;
+package org.apache.sling.servlets.standard;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Iterator;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
@@ -29,19 +28,20 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
- * The <code>FolderComponent</code> TODO
+ * The <code>FileComponent</code> TODO
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *          value="Component to handle nt:folder content"
+ *          value="Component to handle nt:file content"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.resourceTypes" value="nt:folder"
+ * @scr.property name="sling.resourceTypes" value="nt:file"
  * @scr.service
  */
-public class FolderComponent extends SlingAllMethodsServlet {
+public class FileComponent extends SlingAllMethodsServlet {
 
     // nothing to do
-    protected void doInit() {}
+    protected void doInit() {
+    }
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -49,31 +49,21 @@ public class FolderComponent extends SlingAllMethodsServlet {
             IOException {
 
         Resource resource = request.getResource();
-        FolderObject content = (FolderObject) resource.getObject();
-        if (content == null) {
-            throw new SlingException("Missing mapped object for folder "
+        FileObject file = (FileObject) resource.getObject();
+        if (file == null) {
+            throw new SlingException("Missing mapped object for file "
                 + resource.getURI());
         }
 
-        response.setContentType("text/html");
-        PrintWriter pw = response.getWriter();
-        pw.println("<html><head>");
-        pw.println("<title>" + content.getPath() + "</title>");
-        pw.println("</head><body bgcolor='white'>");
-        pw.println("<h1>Contents of <code>" + content.getPath() + "</code></h1>");
-        pw.println("<ul>");
-
-        try {
-            Iterator<Resource> entries = request.getResourceResolver().listChildren(resource);
-            while (entries.hasNext()) {
-                Resource entry = entries.next();
-                pw.println("<li>" + entry.getURI() + "</li>");
-            }
-        } catch (SlingException ce) {
-            // TODO: handle
+        // just render the child content
+        Resource jcrContent = request.getResourceResolver().getResource(
+            resource, "jcr:content");
+        if (jcrContent != null) {
+            RequestDispatcher rd = request.getRequestDispatcher(jcrContent);
+            rd.include(request, response);
+        } else {
+            throw new SlingException("File " + resource.getURI()
+                + " has no content");
         }
-
-        pw.println("</ul>");
-        pw.println("</body></html>");
     }
 }

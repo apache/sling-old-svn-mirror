@@ -14,27 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.servlets.standard;
+package org.apache.sling.servlets.standard;
 
 import org.apache.sling.jcr.resource.AbstractMappedObject;
 
 /**
- * The <code>HierarchyNodeObject</code> class is an abstract base content
- * class for content loaded from nodes of (extensions of) node type
- * <code>nt:HierarchyNode</code>.
+ * The <code>ReferenceObject</code> TODO
  *
- * @ocm.mapped jcrType="nt:hierarchyNode" discriminator="false"
+ * @ocm.mapped jcrType="sling:Reference" discriminator="false"
  */
-public abstract class HierarchyNodeObject extends AbstractMappedObject {
+public class ReferenceObject extends AbstractMappedObject {
 
-    /** @ocm.field jcrName="jcr:created" */
-    private long creationTime;
+    /** @ocm.field jcrName="sling:path" */
+    private String reference;
 
-    public long getCreationTime() {
-        return this.creationTime;
+    // ---------- Mapped Content -----------------------------------------------
+
+    /**
+     * @return the reference
+     */
+    public String getReference() {
+        return this.reference;
     }
 
-    public void setCreationTime(long creationTime) {
-        this.creationTime = creationTime;
+    /**
+     * @param value the reference to set
+     */
+    public void setReference(String value) {
+        this.reference = value;
     }
 }

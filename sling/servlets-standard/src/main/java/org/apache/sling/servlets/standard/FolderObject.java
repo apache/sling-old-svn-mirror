@@ -14,33 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.servlets.standard;
-
-import org.apache.sling.jcr.resource.AbstractMappedObject;
+package org.apache.sling.servlets.standard;
 
 /**
- * The <code>ReferenceObject</code> TODO
+ * The <code>FolderObject</code> TODO
  *
- * @ocm.mapped jcrType="sling:Reference" discriminator="false"
+ * @ocm.mapped jcrType="nt:folder" discriminator="false"
  */
-public class ReferenceObject extends AbstractMappedObject {
+public class FolderObject extends HierarchyNodeObject {
 
-    /** @ocm.field jcrName="sling:path" */
-    private String reference;
-
-    // ---------- Mapped Content -----------------------------------------------
-
-    /**
-     * @return the reference
-     */
-    public String getReference() {
-        return this.reference;
-    }
-
-    /**
-     * @param value the reference to set
-     */
-    public void setReference(String value) {
-        this.reference = value;
-    }
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.component.servlets.standard;
+package org.apache.sling.servlets.standard;
 
 /**
  * The <code>FileObject</code> class represents an nt:file node in the
@@ -25,14 +25,4 @@ package org.apache.sling.component.servlets.standard;
  */
 public class FileObject extends HierarchyNodeObject {
 
-    /** @ocm.bean jcrName="jcr:content" */
-    private Object content;
-
-    public void setContent(Object content) {
-        this.content = content;
-    }
-
-    public Object getContent() {
-        return content;
-    }
 }
