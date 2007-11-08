@@ -18,37 +18,26 @@ package org.apache.sling.component.servlets.standard;
 
 import java.io.IOException;
 
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentRequestDispatcher;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.core.components.BaseComponent;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+
+import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
  * The <code>ReferenceComponent</code> TODO
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *          value="Component to handle sling:Reference content"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ *             value="Component to handle sling:Reference content"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation" *
+ * @scr.property name="sling.resourceTypes" value="sling:Reference"
  * @scr.service
  */
-public class ReferenceComponent extends BaseComponent {
-
-    public static final String ID = ReferenceComponent.class.getName();
-
-    {
-        this.setContentClassName(ReferenceContent.class.getName());
-        this.setComponentId(ID);
-    }
-
-    /**
-     * @see org.apache.sling.core.components.BaseComponent#createContentInstance()
-     */
-    public Content createContentInstance() {
-        return new ReferenceContent();
-    }
+public class ReferenceComponent extends SlingAllMethodsServlet {
 
     /**
      * @see org.apache.sling.core.components.BaseComponent#doInit()
@@ -57,23 +46,23 @@ public class ReferenceComponent extends BaseComponent {
         // nothing to do
     }
 
-    /**
-     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
-     */
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws IOException, ComponentException {
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
 
-        final ReferenceContent content = (ReferenceContent)request.getContent();
+        final Resource resource = request.getResource();
+        final ReferenceObject content = (ReferenceObject) resource.getObject();
         final String path = content.getReference();
 
         // just forward to the referenced content
-        Content jcrContent = request.getContent(path);
-        if (jcrContent != null) {
-            ComponentRequestDispatcher crd = this.getComponentContext().getRequestDispatcher(
-                jcrContent);
-            crd.include(request, response);
+        Resource target = request.getResourceResolver().getResource(resource,
+            path);
+        if (target != null) {
+            RequestDispatcher rd = request.getRequestDispatcher(target);
+            rd.include(request, response);
         } else {
-            throw new ComponentException("No content for path " + path);
+            throw new SlingException("No content for path " + path);
         }
     }
 }

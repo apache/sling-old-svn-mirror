@@ -16,79 +16,54 @@
  */
 package org.apache.sling.component.servlets.standard;
 
+import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
+import static org.apache.sling.api.servlets.HttpConstants.HEADER_IF_MODIFIED_SINCE;
+import static org.apache.sling.api.servlets.HttpConstants.HEADER_LAST_MODIFIED;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.jcr.RepositoryException;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.core.RequestUtil;
-import org.apache.sling.core.components.BaseComponent;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
  * The <code>ResourceComponent</code> TODO
  *
  * @scr.component immediate="true" metatype="false"
- * @scr.property name="service.description"
- *          value="Component to handle nt:resource content"
+ * @scr.property name="service.description" value="Component to handle
+ *               nt:resource content"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="sling.resourceTypes" value="nt:resource"
  * @scr.service
  */
-public class ResourceComponent extends BaseComponent {
-
-    public static final String ID = ResourceComponent.class.getName();
-
-    /**
-     * The name of the header used to send the last modification date of the
-     * resource (value is "Last-Modified").
-     */
-    private static final String LAST_MODIFIED = "Last-Modified";
-
-    /**
-     * The name of the header checked for a conditional modification date to
-     * compare to the resource's last modification date (value is
-     * "If-Modified-Since").
-     */
-    private static final String IF_MODIFIED_SINCE = "If-Modified-Since";
-
-    {
-        this.setContentClassName(ResourceContent.class.getName());
-        this.setComponentId(ID);
-    }
-
-    /**
-     * @see org.apache.sling.core.components.BaseComponent#createContentInstance()
-     */
-    public Content createContentInstance() {
-        return new ResourceContent();
-    }
+public class ResourceComponent extends SlingAllMethodsServlet {
 
     // nothing to do
-    protected void doInit() {}
+    protected void doInit() {
+    }
 
-    /**
-     * @see org.apache.sling.core.component.Component#service(org.apache.sling.core.component.ComponentRequest, org.apache.sling.core.component.ComponentResponse)
-     */
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws IOException {
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException {
 
-        ResourceContent content = (ResourceContent) request.getContent();
+        Resource resource = request.getResource();
+        ResourceObject content = (ResourceObject) resource.getObject();
 
         // check the last modification time and If-Modified-Since header
         long modifTime = content.getLastModificationTime();
-        if (this.unmodified(request, modifTime)) {
+        if (unmodified(request, modifTime)) {
 
-            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            response.setStatus(SC_NOT_MODIFIED);
 
         } else {
 
             response.setContentType(content.getMimeType());
-            response.setHeader(LAST_MODIFIED, RequestUtil.toDateString(modifTime));
+            response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
 
             OutputStream out = response.getOutputStream();
             InputStream ins = null;
@@ -117,9 +92,8 @@ public class ResourceComponent extends BaseComponent {
      *         or equal to the time of the <code>If-Modified-Since</code>
      *         header.
      */
-    private boolean unmodified(ComponentRequest request, long modifTime) {
-        String par = request.getHeader(IF_MODIFIED_SINCE);
-        long ims = RequestUtil.toDateValue(par);
+    private boolean unmodified(SlingHttpServletRequest request, long modifTime) {
+        long ims = request.getDateHeader(HEADER_IF_MODIFIED_SINCE);
         return modifTime <= ims;
     }
 }

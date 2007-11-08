@@ -17,27 +17,22 @@
 package org.apache.sling.component.servlets.standard;
 
 /**
- * The <code>HierarchyNodeObject</code> class is an abstract base content class
- * for content loaded from nodes of (extensions of) node type
- * <code>nt:HierarchyNode</code>.
+ * The <code>FileObject</code> class represents an nt:file node in the
+ * repository and as such has no more direct content data as the
+ * {@link HierarchyNodeObject}.
  *
- * @ocm.mapped jcrType="nt:hierarchyNode" discriminator="false"
+ * @ocm.mapped jcrType="nt:file" discriminator="false"
  */
-public abstract class HierarchyContent  {
+public class FileObject extends HierarchyNodeObject {
 
-    /** @ocm.field jcrName="jcr:created" */
-    private long creationTime;
+    /** @ocm.bean jcrName="jcr:content" */
+    private Object content;
 
-    // ---------- Mapped Content -----------------------------------------------
-
-    public long getCreationTime() {
-        return this.creationTime;
+    public void setContent(Object content) {
+        this.content = content;
     }
 
-    /**
-     * @param creationTime the creationTime to set
-     */
-    public void setCreationTime(long creationTime) {
-        this.creationTime = creationTime;
+    public Object getContent() {
+        return content;
     }
 }
