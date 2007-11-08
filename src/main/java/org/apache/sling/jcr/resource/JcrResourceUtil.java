@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.jcr.resource;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -26,18 +26,19 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
+import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * The <code>JcrHelper</code> class provides helper methods used throughout
+ * The <code>JcrResourceUtil</code> class provides helper methods used throughout
  * this bundle.
  */
-public class JcrHelper {
+public class JcrResourceUtil {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(JcrHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(JcrResourceUtil.class);
 
     /** Helper method to execute a JCR query */
     public static QueryResult query(Session session, String query,
@@ -75,11 +76,11 @@ public class JcrHelper {
      * Returns null if not possible (.. points above root) or if path is not
      * absolute.
      */
-    public static String resolveRelativeSegments(String path) {
+    public static String normalize(String path) {
 
         // don't care for empty paths
         if (path.length() == 0) {
-            log.error("resolveRelativeSegments: Not modifying empty path");
+            log.error("normalize: Not modifying empty path");
             return path;
         }
 
@@ -101,7 +102,7 @@ public class JcrHelper {
             if (c == '/') {
                 if (numDots == 2) {
                     if (bufPos == 0) {
-                        log.error("resolveRelativeSegments: Path '{}' cannot be resolved", path);
+                        log.error("normalize: Path '{}' cannot be resolved", path);
                         return null;
                     }
 
@@ -145,8 +146,75 @@ public class JcrHelper {
             resolved = new String(buf, absOffset, bufPos-absOffset);
         }
 
-        log.debug("resolveRelativeSegments: Resolving '{}' to '{}'", path, resolved);
+        log.debug("normalize: Resolving '{}' to '{}'", path, resolved);
         return resolved;
+    }
+
+    /**
+     * Utility method returns the parent path of the given <code>path</code>,
+     * which is normalized by {@link #normalize(String)} before resolving the
+     * parent.
+     *
+     * @param path The path whose parent is to be returned.
+     *
+     * @return <code>null</code> if <code>path</code> is the root path (<code>/</code>)
+     *      or if <code>path</code> is a single name containing no slash (<code>/</code>)
+     *      characters.
+     *
+     * @throws IllegalArgumentException If the path cannot be normalized by
+     *      the {@link #normalize(String)} method.
+     * @throws NullPointerException If <code>path</code> is <code>null</code>.
+     */
+    public static String getParent(String path) {
+        if ("/".equals(path)) {
+            return null;
+        }
+
+        // normalize path (remove . and ..)
+        path = normalize(path);
+
+        // if normalized to root, there is no parent
+        if ("/".equals(path)) {
+            return null;
+        }
+
+        // find the last slash, after which to cut off
+        int lastSlash = path.lastIndexOf('/');
+        if (lastSlash < 0) {
+            // no slash in the path
+            return null;
+        }
+
+        return path.substring(0, lastSlash);
+    }
+
+    /**
+     * Utility method returns the name of the given <code>path</code>, which
+     * is normalized by {@link #normalize(String)} before resolving the name.
+     *
+     * @param path The path whose name (the last path element) is to be
+     *            returned.
+     * @return The empty string if <code>path</code> is the root path (<code>/</code>)
+     *         or if <code>path</code> is a single name containing no slash (<code>/</code>)
+     *         characters.
+     * @throws IllegalArgumentException If the path cannot be normalized by the
+     *             {@link #normalize(String)} method.
+     * @throws NullPointerException If <code>path</code> is <code>null</code>.
+     */
+    public static String getName(String path) {
+        if ("/".equals(path)) {
+            return "";
+        }
+
+        // normalize path (remove . and ..)
+        path = normalize(path);
+        if ("/".equals(path)) {
+            return "";
+        }
+
+        // find the last slash
+        int lastSlash = path.lastIndexOf('/');
+        return (lastSlash >= 0) ? path.substring(lastSlash) : path;
     }
 
 }
