@@ -34,6 +34,11 @@ import freemarker.template.Template;
 /**
  * A ScriptEngine that uses {@link http://freemarker.org/ FreeMarker} templates
  * to render a Resource in HTML.
+ *
+ * @scr.component
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="service.description" value="Sling FreeMarker Script Engine"
+ * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
 public class FreemarkerScriptEngine implements SlingScriptEngine {
 

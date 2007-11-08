@@ -37,7 +37,12 @@ import org.jruby.javasupport.JavaEmbedUtils;
 import org.jruby.runtime.builtin.IRubyObject;
 
 /**
- * A ScriptEngine that uses ruby erb templates to render a Resource
+ * A ScriptEngine that uses ruby erb templates to render a Resource.
+ *
+ * @scr.component
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="service.description" value="Sling Ruby Script Engine"
+ * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
 public class ErbScriptEngine implements SlingScriptEngine {
 
@@ -109,7 +114,7 @@ public class ErbScriptEngine implements SlingScriptEngine {
                 .invokeMethod(runtime, erb, "send", new Object[]{bindingSym}, IRubyObject.class);
 
             String out = (String) JavaEmbedUtils.invokeMethod(runtime, erb, "result",
-                new Object[]{(Object) binding}, String.class);
+                new Object[]{binding}, String.class);
 
             stream.println(out);
             stream.flush();
