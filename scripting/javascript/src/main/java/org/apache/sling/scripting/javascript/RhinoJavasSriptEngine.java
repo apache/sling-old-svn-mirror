@@ -31,6 +31,11 @@ import org.mozilla.javascript.ScriptableObject;
 /**
  * A ScriptEngine that uses the Rhino interpreter to process Sling requests with
  * server-side javascript.
+ *
+ * @scr.component
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="service.description" value="Sling JavaScript Script Engine"
+ * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
 public class RhinoJavasSriptEngine implements SlingScriptEngine {
 
