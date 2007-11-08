@@ -71,16 +71,16 @@
         </attribute>
         <attribute>
             <description>
-                The component ID of a content to include. If the content
+                The resource type of a resource to include. If the resource
                 to be included is specified with the path attribute,
-                which cannot be resolved to a Content, the tag may
-                create a synthetic Content object out of the path and
-                this componentId. If the componentId is set the path
-                must be the exact path to a Content object. That is,
+                which cannot be resolved to a Resource, the tag may
+                create a synthetic Resource object out of the path and
+                this resource type. If the resource type is set the path
+                must be the exact path to a Resource object. That is,
                 adding parameters, selectors and extensions to the path
-                is not supported if the componentId is set.
+                is not supported if the resource type is set.
             </description>
-            <name>componentId</name>
+            <name>resourceType</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
