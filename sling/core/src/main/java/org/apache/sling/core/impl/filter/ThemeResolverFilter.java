@@ -20,16 +20,16 @@ package org.apache.sling.core.impl.filter;
 
 import java.io.IOException;
 
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.core.impl.RequestData;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+import org.apache.sling.core.impl.helper.RequestData;
 import org.apache.sling.core.theme.Theme;
 import org.apache.sling.core.theme.ThemeResolver;
-
 
 /**
  * The <code>LocaleResolverFilter</code> is an internal global request filter
@@ -40,15 +40,15 @@ import org.apache.sling.core.theme.ThemeResolver;
  * receives the currently used {@link ThemeResolver} from Sling.
  *
  * @scr.component immediate="true" label="%theme.name"
- *      description="%theme.description"
- * @scr.property name="service.description"
- *      value="Default AuthenticationService implementation"
+ *                description="%theme.description"
+ * @scr.property name="service.description" value="Default AuthenticationService
+ *               implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-600" type="Integer" private="true"
  * @scr.service
  */
-public class ThemeResolverFilter implements ComponentFilter {
+public class ThemeResolverFilter implements Filter {
 
     /**
      * The current {@link ThemeResolver} to use or <code>null</code> if the
@@ -64,9 +64,8 @@ public class ThemeResolverFilter implements ComponentFilter {
      * request. If no theme resolver is assigned, this method just forwards the
      * request to the next filter.
      */
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain filterChain) throws IOException, ServletException {
 
         if (this.themeResolver != null) {
             Theme theme = this.themeResolver.resolveTheme(request);
@@ -77,23 +76,9 @@ public class ThemeResolverFilter implements ComponentFilter {
         filterChain.doFilter(request, response);
     }
 
-    public void init(ComponentContext context) {
+    public void init(FilterConfig config) {
     }
 
     public void destroy() {
-    }
-
-    // ---------- Configuration
-
-    /**
-     * Sets the {@link ThemeResolver} to use. This may be <code>null</code> in
-     * which case, themes will not be resolved any more.
-     */
-    protected void bindThemeResolver(ThemeResolver themeResolver) {
-        this.themeResolver = themeResolver;
-    }
-
-    protected void unbindThemeResolver(ThemeResolver themeResolver) {
-        this.themeResolver = null;
     }
 }

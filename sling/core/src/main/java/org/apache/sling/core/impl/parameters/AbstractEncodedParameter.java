@@ -18,7 +18,7 @@
  */
 package org.apache.sling.core.impl.parameters;
 
-import org.apache.sling.component.RequestParameter;
+import org.apache.sling.api.request.RequestParameter;
 
 abstract class AbstractEncodedParameter implements RequestParameter {
 

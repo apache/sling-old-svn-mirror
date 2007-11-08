@@ -22,12 +22,15 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Properties;
 
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -49,7 +52,7 @@ import org.osgi.framework.BundleContext;
  *                interface="org.apache.sling.core.impl.log.RequestLoggerService"
  *                cardinality="0..n" policy="dynamic"
  */
-public class RequestLoggerFilter implements ComponentFilter {
+public class RequestLoggerFilter implements Filter {
 
     /**
      * @scr.property value="logs/request.log"
@@ -155,7 +158,7 @@ public class RequestLoggerFilter implements ComponentFilter {
      *
      * @param context Not used.
      */
-    public void init(ComponentContext context) {
+    public void init(FilterConfig config) {
     }
 
     /**
@@ -182,12 +185,13 @@ public class RequestLoggerFilter implements ComponentFilter {
      * @throws ComponentException Forwarded if thrown by any filter in the chain
      *             or by the Component called to handle the request.
      */
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
+    public void doFilter(ServletRequest sRequest, ServletResponse response,
+            FilterChain filterChain) throws IOException,
+            ServletException {
 
-        LoggerResponse loggerResponse = new LoggerResponse(response,
-            this.requestCounter++);
+        SlingHttpServletRequest request = (SlingHttpServletRequest) sRequest;
+        LoggerResponse loggerResponse = new LoggerResponse(
+            (SlingHttpServletResponse) response, this.requestCounter++);
 
         // log the request start
         if (this.requestEntry != null) {
