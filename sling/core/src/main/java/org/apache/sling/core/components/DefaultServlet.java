@@ -29,73 +29,63 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.apache.commons.collections.BeanMap;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.component.RequestParameter;
-import org.apache.sling.content.ContentManager;
-import org.apache.sling.core.RequestUtil;
-
+import org.apache.commons.beanutils.BeanMap;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.osgi.service.component.ComponentException;
 
 /**
- * The <code>DefaultComponent</code> TODO
+ * The <code>DefaultServlet</code> TODO
+ * <p>
+ * The default servlet is not registered to handle any concrete resource
+ * type. Rather it is used internally on demand.
  *
  * @scr.component immediate="true"
  * @scr.property name="service.description" value="Default Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  */
-public class DefaultComponent extends BaseComponent {
-
-    public static final String ID = DefaultComponent.class.getName();
-
-    public DefaultComponent() {
-        super(ID);
-    }
+public class DefaultServlet extends SlingAllMethodsServlet {
 
     protected void doInit() {
     }
 
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws ComponentException, IOException {
+    @Override
+    protected void doPost(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException {
 
-        // if there are parameters, update the content object
-        this.updateContent(request);
-
-        // render the content object
-        this.renderContent(request, response);
-    }
-
-    private void updateContent(ComponentRequest request)
-            throws ComponentException {
-
-        Map parameters = request.getRequestParameterMap();
+        RequestParameterMap parameters = request.getRequestParameterMap();
         if (parameters == null || parameters.isEmpty()) {
+            // just redirect to display the resource
+            response.sendRedirect(request.getRequestURI());
             return;
         }
 
-        Content content = request.getContent();
-        Map contentMap = this.asMap(content);
+        Resource resource = request.getResource();
+        Map<Object, Object> contentMap = asMap(resource);
 
         // special _delete property to remove a property
-        RequestParameter[] toRemove = (RequestParameter[]) parameters.get("_delete");
-        for (int i=0; toRemove != null && i < toRemove.length; i++) {
+        RequestParameter[] toRemove = parameters.get("_delete");
+        for (int i = 0; toRemove != null && i < toRemove.length; i++) {
             String[] names = toRemove[i].getString().split("[, ]");
-            for (int j=0; j < names.length; j++) {
+            for (int j = 0; j < names.length; j++) {
                 contentMap.remove(names[j]);
             }
         }
 
-        for (Iterator pi = parameters.entrySet().iterator(); pi.hasNext();) {
-            Map.Entry pEntry = (Map.Entry) pi.next();
-            String name = (String) pEntry.getKey();
+        for (Iterator<Map.Entry<String, RequestParameter[]>> pi = parameters.entrySet().iterator(); pi.hasNext();) {
+            Map.Entry<String, RequestParameter[]> pEntry = pi.next();
+            String name = pEntry.getKey();
             if ("_delete".equals(name)) {
                 continue;
             }
 
-            RequestParameter[] values = (RequestParameter[]) pEntry.getValue();
+            RequestParameter[] values = pEntry.getValue();
 
             try {
                 if (values == null || values.length == 0) {
@@ -103,7 +93,7 @@ public class DefaultComponent extends BaseComponent {
                 } else if (values.length == 1) {
                     contentMap.put(name, this.toObject(values[0]));
                 } else {
-                    List valueList = new ArrayList();
+                    List<Object> valueList = new ArrayList<Object>();
                     for (int i = 0; i < values.length; i++) {
                         valueList.add(this.toObject(values[i]));
                     }
@@ -115,56 +105,60 @@ public class DefaultComponent extends BaseComponent {
         }
 
         try {
-            ContentManager cm = RequestUtil.getContentManager(request);
-            if (cm != null) {
-                cm.store(content);
-                cm.save();
+            ResourceManager rm = (ResourceManager) request.getResourceResolver();
+            if (rm != null) {
+                rm.store(resource);
+                rm.save();
             }
         } catch (Throwable t) {
-            throw new ComponentException("Cannot update " + content.getPath(),
+            throw new ComponentException("Cannot update " + resource.getURI(),
                 t);
         }
+
+        // have the resource rendered now
+        response.sendRedirect(request.getRequestURI());
     }
 
-    private void renderContent(ComponentRequest request,
-            ComponentResponse response) throws IOException {
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException {
 
-        Content content = request.getContent();
+        Resource resource = request.getResource();
 
         // format response according to extension (use Mime mapping instead)
-        String extension = request.getExtension();
+        String extension = request.getRequestPathInfo().getExtension();
         if ("html".equals(extension) || "htm".equals(extension)) {
-            this.renderContentHtml(content, response);
+            this.renderContentHtml(resource, response);
         } else if ("xml".equals(extension)) {
-            this.renderContentXML(content, response);
+            this.renderContentXML(resource, response);
         } else if ("properties".equals(extension)) {
-            this.renderContentProperties(content, response);
+            this.renderContentProperties(resource, response);
         } else if ("json".equals(extension)) {
-            this.renderContentJson(content, response);
+            this.renderContentJson(resource, response);
         } else {
             // default rendering as plain text
-            this.renderContentText(content, response);
+            this.renderContentText(resource, response);
         }
     }
 
-    private void renderContentHtml(Content content, ComponentResponse response)
-    throws IOException {
-        Map contentMap = new TreeMap(this.asMap(content));
+    private void renderContentHtml(Resource resource,
+            SlingHttpServletResponse response) throws IOException {
+        Map<Object, Object> contentMap = new TreeMap<Object, Object>(
+            this.asMap(resource));
 
         response.setContentType("text/html; charset=UTF-8");
         PrintWriter pw = response.getWriter();
 
         pw.println("<html><head><title>");
-        pw.println(content.getPath());
+        pw.println(resource.getURI());
         pw.println("</title></head><body bgcolor='white' fgcolor='black'>");
-        pw.println("<h1>Contents of <code>" + content.getPath()
+        pw.println("<h1>Contents of <code>" + resource.getURI()
             + "</code></h1>");
 
         pw.println("<table>");
         pw.println("<tr><th>name</th><th>Value</th></tr>");
-        for (Iterator ei = contentMap.entrySet().iterator(); ei.hasNext();) {
-            Map.Entry entry = (Map.Entry) ei.next();
 
+        for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
             pw.println("<tr><td>" + entry.getKey() + "</td><td>"
                 + entry.getValue() + "</td></tr>");
         }
@@ -172,41 +166,43 @@ public class DefaultComponent extends BaseComponent {
         pw.println("</body></html>");
     }
 
-    private void renderContentText(Content content, ComponentResponse response)
-    throws IOException {
-        Map contentMap = new TreeMap(this.asMap(content));
+    private void renderContentText(Resource resource,
+            SlingHttpServletResponse response) throws IOException {
+        Map<Object, Object> contentMap = new TreeMap<Object, Object>(
+            this.asMap(resource));
 
         response.setContentType("text/plain; charset=UTF-8");
         PrintWriter pw = response.getWriter();
 
-        pw.println("Contents of " + content.getPath());
+        pw.println("Contents of " + resource.getURI());
         pw.println();
 
-        for (Iterator ei = contentMap.entrySet().iterator(); ei.hasNext();) {
-            Map.Entry entry = (Map.Entry) ei.next();
-
+        for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
             pw.println(entry.getKey() + ": " + entry.getValue());
         }
     }
 
-    private void renderContentProperties(Content content, ComponentResponse response)
-    throws IOException {
+    private void renderContentProperties(Resource resource,
+            SlingHttpServletResponse response) throws IOException {
         Properties props = new Properties();
-        for (Iterator ci=this.asMap(content).entrySet().iterator(); ci.hasNext(); ) {
-            Map.Entry cEntry = (Map.Entry) ci.next();
-            props.setProperty(String.valueOf(cEntry.getKey()),
-                String.valueOf(cEntry.getValue()));
+
+        Map<Object, Object> contentMap = new TreeMap<Object, Object>(
+            this.asMap(resource));
+        for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
+            props.setProperty(String.valueOf(entry.getKey()),
+                String.valueOf(entry.getValue()));
         }
 
         response.setContentType("text/plain; charset=ISO-8859-1");
 
         OutputStream out = response.getOutputStream();
-        props.store(out, "Contents of " + content.getPath());
+        props.store(out, "Contents of " + resource.getURI());
     }
 
-    private void renderContentXML(Content content, ComponentResponse response)
-    throws IOException {
-        Map contentMap = new TreeMap(this.asMap(content));
+    private void renderContentXML(Resource resource,
+            SlingHttpServletResponse response) throws IOException {
+        Map<Object, Object> contentMap = new TreeMap<Object, Object>(
+            this.asMap(resource));
 
         response.setContentType("text/xml; charset=UTF-8");
         PrintWriter pw = response.getWriter();
@@ -214,16 +210,15 @@ public class DefaultComponent extends BaseComponent {
         pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         pw.println("<content>");
 
-        for (Iterator ei = contentMap.entrySet().iterator(); ei.hasNext();) {
-            Map.Entry entry = (Map.Entry) ei.next();
+        for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
 
             pw.println("  <property>");
             pw.println("    <name>" + entry.getKey() + "</name>");
 
             if (entry.getValue() instanceof Collection) {
                 pw.println("    <values>");
-                Collection coll = (Collection) entry.getValue();
-                for (Iterator ci=coll.iterator(); ci.hasNext(); ) {
+                Collection<?> coll = (Collection<?>) entry.getValue();
+                for (Iterator<?> ci = coll.iterator(); ci.hasNext();) {
                     pw.println("      <value>" + ci.next() + "</value>");
                 }
                 pw.println("    </values>");
@@ -237,8 +232,8 @@ public class DefaultComponent extends BaseComponent {
         pw.println("</content>");
     }
 
-    private void renderContentJson(Content content, ComponentResponse response)
-            throws IOException {
+    private void renderContentJson(Resource resource,
+            SlingHttpServletResponse response) throws IOException {
         // {"newValue":"test",
         // "primaryType":"nt:unstructured",
         // "multi":"[eins, zwei]",
@@ -246,22 +241,29 @@ public class DefaultComponent extends BaseComponent {
         // "avalue":"a"
         // }
 
-        Map contentMap = new TreeMap(this.asMap(content));
+        Map<Object, Object> contentMap = new TreeMap<Object, Object>(
+            this.asMap(resource));
 
         response.setContentType("text/x-json; charset=UTF-8");
         PrintWriter pw = response.getWriter();
 
         pw.println("{");
 
-        for (Iterator ei = contentMap.entrySet().iterator(); ei.hasNext();) {
-            Map.Entry entry = (Map.Entry) ei.next();
+        boolean notFirst = false;
+        for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
+
+            if (notFirst) {
+                pw.println(',');
+            } else {
+                notFirst = true;
+            }
 
             pw.print("  \"" + entry.getKey() + "\": ");
 
             if (entry.getValue() instanceof Collection) {
                 pw.println("[");
-                Collection coll = (Collection) entry.getValue();
-                for (Iterator ci=coll.iterator(); ci.hasNext(); ) {
+                Collection<?> coll = (Collection<?>) entry.getValue();
+                for (Iterator<?> ci = coll.iterator(); ci.hasNext();) {
                     pw.print("    ");
                     this.printObjectJson(pw, ci.next());
                     if (ci.hasNext()) {
@@ -274,10 +276,6 @@ public class DefaultComponent extends BaseComponent {
             } else {
                 this.printObjectJson(pw, entry.getValue());
             }
-
-            if (ei.hasNext()) {
-                pw.println(',');
-            }
         }
 
         pw.println();
@@ -287,17 +285,23 @@ public class DefaultComponent extends BaseComponent {
 
     private void printObjectJson(PrintWriter pw, Object object) {
         boolean quote = !((object instanceof Boolean) || (object instanceof Number));
-        if (quote) pw.print('"');
+        if (quote) {
+            pw.print('"');
+        }
         pw.print(object);
-        if (quote) pw.print('"');
+        if (quote) {
+            pw.print('"');
+        }
     }
 
-    private Map asMap(Content content) {
-        if (content instanceof Map) {
-            return (Map) content;
+    @SuppressWarnings("unchecked")
+    private Map<Object, Object> asMap(Resource resource) {
+        Object object = resource.getObject();
+        if (object instanceof Map) {
+            return (Map<Object, Object>) object; // unchecked cast
         }
 
-        return new BeanMap(content);
+        return new BeanMap(object); // unchecked cast
     }
 
     private Object toObject(RequestParameter parameter) throws IOException {
