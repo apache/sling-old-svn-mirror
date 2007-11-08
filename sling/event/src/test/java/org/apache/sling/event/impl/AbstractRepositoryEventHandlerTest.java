@@ -29,7 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListenerIterator;
 
-import org.apache.sling.core.Constants;
+import org.apache.sling.core.CoreConstants;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -86,7 +86,7 @@ public abstract class AbstractRepositoryEventHandlerTest {
         // lets set up the bundle context with the sling id
         final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
         this.getMockery().checking(new Expectations() {{
-            allowing(bundleContext).getProperty(Constants.SLING_ID);
+            allowing(bundleContext).getProperty(CoreConstants.SLING_ID);
             will(returnValue(SLING_ID));
         }});
 
