@@ -103,8 +103,6 @@ public interface ResourceResolver {
      * @throws java.security.AccessControlException if an item exists at the
      *             <code>path</code> but the session of this resource manager
      *             has no read access to the item.
-     * @throws ResourceNotFoundException If no resource can be resolved at the
-     *             resolved path.
      * @throws SlingException If an error occurrs trying to load the resource
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
