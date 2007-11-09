@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.core.impl.resolver;
+package org.apache.sling.core.impl.helper;
 
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -31,7 +32,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
  *
  * @see MicroslingRequestPathInfoTest for a number of examples.
  */
-public class MicroslingRequestPathInfo implements RequestPathInfo {
+public class SlingRequestPathInfo implements RequestPathInfo {
 
     private final String selectorString;
 
@@ -46,7 +47,7 @@ public class MicroslingRequestPathInfo implements RequestPathInfo {
     private final static String[] NO_SELECTORS = new String[0];
 
     /** break requestPath as required by SlingRequestPathInfo */
-    public MicroslingRequestPathInfo(Resource r, String requestPath) {
+    public SlingRequestPathInfo(Resource r, String requestPath) {
 
         // ensure the resource
         if (r == null) {
@@ -109,6 +110,64 @@ public class MicroslingRequestPathInfo implements RequestPathInfo {
                     ? pathToSplit.substring(lastDot + 1)
                     : null;
         }
+    }
+
+    private SlingRequestPathInfo(String resourcePath, String selectorString, String extension, String suffix) {
+        this.resourcePath = resourcePath;
+        this.selectorString = selectorString;
+        this.selectors = (selectorString != null) ? selectorString.split("\\.") : NO_SELECTORS;
+        this.extension = extension;
+        this.suffix = suffix;
+    }
+
+    public SlingRequestPathInfo merge(RequestPathInfo baseInfo) {
+        if (getExtension() == null) {
+            return new SlingRequestPathInfo(getResourcePath(),
+                baseInfo.getSelectorString(), baseInfo.getExtension(),
+                baseInfo.getSuffix());
+        }
+
+        return this;
+    }
+
+    public SlingRequestPathInfo merge(RequestDispatcherOptions options) {
+
+        // set to true if any option is set
+        boolean needCreate = false;
+
+        // replacement selectors
+        String selectors = options.get(RequestDispatcherOptions.OPT_REPLACE_SELECTORS);
+        if (selectors != null) {
+            needCreate = true;
+        } else {
+            selectors = getSelectorString();
+        }
+
+        // additional selectors
+        String selectorsAdd = options.get(RequestDispatcherOptions.OPT_ADD_SELECTORS);
+        if (selectorsAdd != null) {
+            if (selectors != null) {
+                selectors += "." + selectorsAdd;
+            } else {
+                selectors = selectorsAdd;
+            }
+            needCreate = true;
+        }
+
+        // suffix replacement
+        String suffix = options.get(RequestDispatcherOptions.REPLACE_SUFFIX);
+        if (suffix != null) {
+            needCreate = true;
+        } else {
+            suffix = getSuffix();
+        }
+
+        if (needCreate) {
+            return new SlingRequestPathInfo(getResourcePath(), selectors,
+                getExtension(), suffix);
+        }
+
+        return this;
     }
 
     @Override

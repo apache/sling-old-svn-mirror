@@ -19,12 +19,14 @@
 package org.apache.sling.core.impl;
 
 import java.io.IOException;
+import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import javax.jcr.Session;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -36,15 +38,26 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.services.ServiceLocator;
+import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.core.impl.auth.SlingAuthenticator;
+import org.apache.sling.core.impl.filter.ErrorHandler;
+import org.apache.sling.core.impl.filter.RequestSlingFilterChain;
+import org.apache.sling.core.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.core.impl.filter.SlingFilterChainHelper;
+import org.apache.sling.core.impl.filter.SlingServletResolver;
 import org.apache.sling.core.impl.helper.AbstractServiceReferenceConfig;
 import org.apache.sling.core.impl.helper.RequestData;
 import org.apache.sling.core.impl.helper.SlingFilterConfig;
+import org.apache.sling.core.impl.helper.SlingServletContext;
+import org.apache.sling.core.impl.services.ServiceLocatorImpl;
+import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -84,9 +97,9 @@ public class SlingMainServlet extends GenericServlet {
      */
     private static String COMPONENT_FILTER_NAME = "ComponentFilter";
 
-    private SlingServletContextImpl slingServletContext;
+    private SlingServletContext slingServletContext;
 
-    private org.osgi.service.component.ComponentContext osgiComponentContext;
+    private ComponentContext osgiComponentContext;
 
     private List<ServiceReference> delayedComponentFilters;
 
@@ -105,6 +118,9 @@ public class SlingMainServlet extends GenericServlet {
     private HttpService httpService;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private JcrResourceManagerFactory resourceManagerFactory;
+
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
     private MimeTypeService mimeTypeService;
 
     private SlingHttpContext slingHttpContext;
@@ -114,6 +130,14 @@ public class SlingMainServlet extends GenericServlet {
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
 
     private String slingRoot;
+
+    private ServiceLocatorImpl slingServiceLocator;
+
+    private SlingAuthenticator slingAuthenticator;
+
+    private SlingServletResolver servletResolver;
+
+    private ErrorHandler errorHandler;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -133,45 +157,68 @@ public class SlingMainServlet extends GenericServlet {
     // ---------- Request Handling on behalf of the servlet -------------------
 
     public void service(HttpServletRequest clientRequest,
-            HttpServletResponse clientResponse) throws IOException,
-            ServletException {
+            HttpServletResponse clientResponse) throws IOException {
 
-        // prepare internal request stuff
-        RequestData requestData = new RequestData(clientRequest, clientResponse);
-        SlingHttpServletRequestImpl request = new SlingHttpServletRequestImpl(requestData);
-        SlingHttpServletResponseImpl response = new SlingHttpServletResponseImpl(requestData);
-
-        Filter[] filters = requestFilterChain.getFilters();
-        if (filters != null) {
-            FilterChain processor = new RequestSlingFilterChain(
-                this, filters);
-
+        Session session = getSlingAuthenticator().authenticate(clientRequest,
+            clientResponse);
+        if (session != null) {
+            RequestData requestData = null;
             try {
-                processor.doFilter(request, response);
-            } catch (IOException ioe) {
-                log.error("service: IO problem handling the request", ioe);
-                throw ioe;
-            } catch (ComponentException ce) {
-                log.error("service: Component problem handling the request", ce);
-                throw ce;
+
+                // prepare internal request stuff
+                requestData = new RequestData(this, session, clientRequest,
+                    clientResponse);
+                SlingHttpServletRequest request = requestData.getSlingRequest();
+                SlingHttpServletResponse response = requestData.getSlingResponse();
+
+                Filter[] filters = requestFilterChain.getFilters();
+                if (filters != null) {
+                    FilterChain processor = new RequestSlingFilterChain(this,
+                        filters);
+
+                    processor.doFilter(request, response);
+
+                } else {
+                    log.error("service: No Request Handling filters, cannot process request");
+                    response.sendError(
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Cannot process Request");
+                }
+
+            } catch (AccessControlException ace) {
+
+                // try to request authentication fail, if not possible
+                if (!getSlingAuthenticator().requestAuthentication(
+                    clientRequest, clientResponse)) {
+                    getErrorHandler().handleError(
+                        HttpServletResponse.SC_FORBIDDEN, "Access Denied",
+                        clientRequest, clientResponse);
+                }
+
+            } catch (HttpStatusCodeException hsce) {
+                // convert the status code exception to sendError
+                getErrorHandler().handleError(hsce.getStatusCode(),
+                    hsce.getMessage(), clientRequest, clientResponse);
+
             } catch (Throwable t) {
-                // otherwise send an internal server error
-                log.error("service: Unexpected problem handling the request", t);
-                response.sendError(
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Unexpected problem handling the request");
+                getErrorHandler().handleError(t, clientRequest, clientResponse);
+
+            } finally {
+                if (requestData != null) {
+                    requestData.dispose();
+                }
+
+                session.logout();
             }
-        } else {
-            log.error("service: No Request Handling filters, cannot process request");
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                "Cannot process Request");
         }
+
     }
 
     // ---------- Generic Content Request processor ----------------------------
 
-    void includeServlet(ServletRequest request, ServletResponse response,
-            String path) throws IOException, ComponentException {
+    public void includeServlet(ServletRequest request,
+            ServletResponse response, String path) throws IOException,
+            ComponentException {
 
         // check type of response, don't care actually for the response itself
         RequestData.unwrap(response);
@@ -193,8 +240,8 @@ public class SlingMainServlet extends GenericServlet {
         }
     }
 
-    void includeContent(ServletRequest request, ServletResponse response,
-            Resource resource,
+    public void includeContent(ServletRequest request,
+            ServletResponse response, Resource resource,
             RequestPathInfo resolvedURL) throws IOException, ComponentException {
 
         // we need a ComponentRequest/ComponentResponse tupel to continue
@@ -214,16 +261,16 @@ public class SlingMainServlet extends GenericServlet {
         }
     }
 
-    void processRequest(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws IOException, ServletException {
+    public void processRequest(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException,
+            ServletException {
 
         // 2.0 Set Content from mappedURL
         // ContentData contentData = null;
 
         Filter filters[] = innerFilterChain.getFilters();
         if (filters != null) {
-            FilterChain processor = new SlingComponentFilterChain(
-                filters);
+            FilterChain processor = new SlingComponentFilterChain(filters);
 
             processor.doFilter(request, response);
         } else {
@@ -235,12 +282,32 @@ public class SlingMainServlet extends GenericServlet {
 
     // ---------- Internal helper ----------------------------------------------
 
-    /* package */String getServerInfo() {
-        return this.serverInfo;
+    public String getServerInfo() {
+        return serverInfo;
     }
 
-    BundleContext getBundleContext() {
+    public BundleContext getBundleContext() {
         return osgiComponentContext.getBundleContext();
+    }
+
+    public ServiceLocator getServiceLocator() {
+        return slingServiceLocator;
+    }
+
+    public SlingAuthenticator getSlingAuthenticator() {
+        return slingAuthenticator;
+    }
+
+    public JcrResourceManagerFactory getResourceManagerFactory() {
+        return resourceManagerFactory;
+    }
+
+    public ServletResolver getServletResolver() {
+        return servletResolver;
+    }
+
+    public ErrorHandler getErrorHandler() {
+        return errorHandler;
     }
 
     // ---------- Property Setter for SCR --------------------------------------
@@ -248,7 +315,8 @@ public class SlingMainServlet extends GenericServlet {
     protected void activate(ComponentContext componentContext) {
 
         // setup server info
-        Dictionary<?, ?> props = componentContext.getBundleContext().getBundle().getHeaders();
+        BundleContext bundleContext = componentContext.getBundleContext();
+        Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
         Version bundleVersion = Version.parseVersion((String) props.get(Constants.BUNDLE_VERSION));
         String productVersion = bundleVersion.getMajor() + "."
             + bundleVersion.getMinor();
@@ -259,11 +327,10 @@ public class SlingMainServlet extends GenericServlet {
             + System.getProperty("os.version") + " "
             + System.getProperty("os.arch") + ")";
 
-
         // prepare the servlet configuration from the component config
         Hashtable<String, Object> configuration = new Hashtable<String, Object>();
         Dictionary<?, ?> componentConfig = componentContext.getProperties();
-        for (Enumeration<?> cce=componentConfig.keys(); cce.hasMoreElements(); ) {
+        for (Enumeration<?> cce = componentConfig.keys(); cce.hasMoreElements();) {
             Object key = cce.nextElement();
             configuration.put(String.valueOf(key), componentConfig.get(key));
         }
@@ -283,6 +350,12 @@ public class SlingMainServlet extends GenericServlet {
                 + productVersion);
         }
 
+        // setup servlet request processing helpers
+        this.slingServiceLocator = new ServiceLocatorImpl(bundleContext);
+        this.slingAuthenticator = new SlingAuthenticator(bundleContext);
+        this.servletResolver = new SlingServletResolver(bundleContext, slingServletContext);
+        this.errorHandler = new ErrorHandler(bundleContext, slingServletContext);
+
         // register the servlet and resources
         try {
             this.slingHttpContext = new SlingHttpContext(this.mimeTypeService);
@@ -294,6 +367,10 @@ public class SlingMainServlet extends GenericServlet {
         } catch (Exception e) {
             log.error("Cannot register " + this.getServerInfo(), e);
         }
+
+        // prepare the Sling Component Context now after having finished the
+        // handler setup but before initializing the filters
+        this.slingServletContext = new SlingServletContext(this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet
@@ -310,10 +387,6 @@ public class SlingMainServlet extends GenericServlet {
             delayedComponentFilters = null;
         }
 
-        // prepare the Sling Component Context now after having finished the
-        // handler setup but before initializing the filters
-        this.slingServletContext = new SlingServletContextImpl(this);
-
         // if there are filters at all, initialize them now
         if (filterList != null) {
             for (ServiceReference serviceReference : filterList) {
@@ -327,17 +400,30 @@ public class SlingMainServlet extends GenericServlet {
         destroyFilters(innerFilterChain);
         destroyFilters(requestFilterChain);
 
+        if (errorHandler != null) {
+            errorHandler.dispose();
+            errorHandler = null;
+        }
+        if (servletResolver != null) {
+            servletResolver.dispose();
+            servletResolver = null;
+        }
+        if (slingAuthenticator != null) {
+            slingAuthenticator.dispose();
+            slingAuthenticator = null;
+        }
+        if (slingServiceLocator != null) {
+            slingServiceLocator.dispose();
+            slingServiceLocator = null;
+        }
+
         this.httpService.unregister(this.slingRoot);
 
         if (this.slingHttpContext != null) {
             this.slingHttpContext.dispose();
         }
 
-        if (this.slingServletContext != null) {
-            this.slingServletContext.dispose();
-            this.slingServletContext = null;
-        }
-
+        this.slingServletContext = null;
         this.osgiComponentContext = null;
 
         log.info(this.getServerInfo() + " shut down");
@@ -366,8 +452,8 @@ public class SlingMainServlet extends GenericServlet {
             try {
                 filter.destroy();
             } catch (Throwable t) {
-                log.error(
-                    "Unexpected problem destroying ComponentFilter {}", filter, t);
+                log.error("Unexpected problem destroying ComponentFilter {}",
+                    filter, t);
             }
         }
     }
@@ -404,8 +490,8 @@ public class SlingMainServlet extends GenericServlet {
         } catch (ComponentException ce) {
             log.error("ComponentFilter " + "" + " failed to initialize", ce);
         } catch (Throwable t) {
-            log.error("Unexpected Problem initializing ComponentFilter "
-                + "", t);
+            log.error("Unexpected Problem initializing ComponentFilter " + "",
+                t);
         }
     }
 

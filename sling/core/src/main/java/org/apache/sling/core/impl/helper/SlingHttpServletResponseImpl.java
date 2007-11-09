@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl;
+package org.apache.sling.core.impl.helper;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,29 +24,28 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.RequestUtil;
-import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.core.impl.filter.ErrorHandler;
+import org.apache.sling.jcr.resource.PathResolver;
 
 /**
  * The <code>SlingHttpServletResponseImpl</code> TODO
  */
-class SlingHttpServletResponseImpl extends HttpServletResponseWrapper implements SlingHttpServletResponse {
+public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper implements SlingHttpServletResponse {
 
     private final RequestData requestData;
+
     private String contentType = "text/html";
     private String characterEncoding = null;
 
-    protected SlingHttpServletResponseImpl(RequestData requestData) {
-        super(requestData.getServletResponse());
-        this.requestData = requestData;
-    }
-
-    protected SlingHttpServletResponseImpl(SlingHttpServletResponseImpl response) {
+    public SlingHttpServletResponseImpl(RequestData requestData,
+            HttpServletResponse response) {
         super(response);
-        requestData = response.getRequestData();
+        this.requestData = requestData;
     }
 
     protected final RequestData getRequestData() {
@@ -149,5 +148,86 @@ class SlingHttpServletResponseImpl extends HttpServletResponseWrapper implements
 
         // set the content type with charset on the underlying response
         super.setContentType(getContentType());
+    }
+
+    // ---------- Redirection support through PathResolver --------------------
+
+    @Override
+    public String encodeURL(String url) {
+        // make the path absolute
+        url = makeAbsolutePath(url);
+
+        // resolve the url to as if it would be a resource path
+        url = getPathResolver().pathToURL(url);
+
+        // have the servlet container to further encodings
+        return super.encodeURL(url);
+    }
+
+    @Override
+    public String encodeRedirectURL(String url) {
+        // make the path absolute
+        url = makeAbsolutePath(url);
+
+        // resolve the url to as if it would be a resource path
+        url = getPathResolver().pathToURL(url);
+
+        // have the servlet container to further encodings
+        return super.encodeRedirectURL(url);
+    }
+
+    @Override
+    @Deprecated
+    public String encodeUrl(String url) {
+        return encodeURL(url);
+    }
+
+    @Override
+    @Deprecated
+    public String encodeRedirectUrl(String url) {
+        return encodeRedirectURL(url);
+    }
+
+    // ---------- Error handling through Sling Error Resolver -----------------
+
+    @Override
+    public void sendError(int sc) throws IOException {
+        sendError(sc, null);
+    }
+
+    @Override
+    public void sendError(int sc, String msg) throws IOException {
+        checkCommitted();
+
+        ErrorHandler eh = getRequestData().getSlingMainServlet().getErrorHandler();
+        eh.handleError(sc, msg, requestData.getSlingRequest(), this);
+    }
+
+    // ---------- Internal helper ---------------------------------------------
+
+    private void checkCommitted() {
+        if (isCommitted()) {
+            throw new IllegalStateException(
+                "Response has already been committed");
+        }
+    }
+
+    private String makeAbsolutePath(String path) {
+        if (path.startsWith("/")) {
+            return path;
+        }
+
+        String base = getRequestData().getContentData().getResource().getURI();
+        int lastSlash = base.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            path = base.substring(0, lastSlash+1) + path;
+        } else {
+            path = "/" + path;
+        }
+
+        return path;
+    }
+    private PathResolver getPathResolver() {
+        return (PathResolver) getRequestData().getResourceManager();
     }
 }

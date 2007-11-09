@@ -24,11 +24,10 @@ import java.io.UnsupportedEncodingException;
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.auth.AuthenticationHandler;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * The <code>AuthorizationHeaderAuthenticator</code> class implements the
+ * The <code>AuthorizationHeaderAuthenticationHandler</code> class implements the
  * authorization steps based on the Authorization header of the HTTP request.
  * This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
@@ -48,15 +47,12 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  */
-public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
+public class AuthorizationHeaderAuthenticationHandler implements AuthenticationHandler {
 
     /**
      * @scr.property value="Sling (Development)"
      */
     public static final String PAR_REALM_NAME = "auth.http.realm";
-
-    /** default log */
-    private static final Logger log = LoggerFactory.getLogger(AuthorizationHeaderAuthenticator.class);
 
     private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
@@ -66,15 +62,18 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
 
     private static final String DEFAULT_REALM = "Sling (Development)";
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private String realm = DEFAULT_REALM;
 
-    public AuthorizationHeaderAuthenticator() {
-        log.info("AuthorizationHeaderAuthenticator created");
+    public AuthorizationHeaderAuthenticationHandler() {
+        log.info("AuthorizationHeaderAuthenticationHandler created");
     }
 
     // ----------- AuthenticationHandler interface ----------------------------
 
-    public boolean handles(SlingHttpServletRequest request) {
+    public boolean handles(HttpServletRequest request) {
         return true;
     }
 
@@ -118,8 +117,8 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      *         information. In case of DOING_AUTH, the method must have sent a
      *         response indicating that fact to the client.
      */
-    public Credentials authenticate(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) {
+    public Credentials authenticate(HttpServletRequest request,
+            HttpServletResponse response) {
         return this.extractAuthentication(request);
     }
 
@@ -140,8 +139,8 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
      * @return true if the information could be requested or false, if the
      *         request should fail with the appropriate error status
      */
-    public boolean requestAuthentication(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) {
+    public boolean requestAuthentication(HttpServletRequest request,
+            HttpServletResponse response) {
 
         // if the response is already committed, we have a problem !!
         if (response.isCommitted()) {
@@ -183,7 +182,7 @@ public class AuthorizationHeaderAuthenticator implements AuthenticationHandler {
     /**
      * Extract the Base64 authentication string from the request
      */
-    protected Credentials extractAuthentication(SlingHttpServletRequest request) {
+    protected Credentials extractAuthentication(HttpServletRequest request) {
 
         // Return immediately if the header is missing
         String authHeader = request.getHeader(HEADER_AUTHORIZATION);
