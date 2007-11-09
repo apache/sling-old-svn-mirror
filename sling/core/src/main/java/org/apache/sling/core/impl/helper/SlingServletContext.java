@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl;
+package org.apache.sling.core.impl.helper;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -28,46 +27,23 @@ import java.util.Set;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.request.RequestPathInfo;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.core.impl.helper.RequestData;
-import org.apache.sling.core.impl.resolver.ResolvedURLImpl;
-import org.apache.sling.core.resolver.ContentResolver;
-import org.osgi.service.component.ComponentException;
-import org.osgi.util.tracker.ServiceTracker;
+import org.apache.sling.core.impl.SlingMainServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingServletContextImpl</code> TODO
+ * The <code>SlingServletContext</code> TODO
  */
-public class SlingServletContextImpl implements ServletContext {
+public class SlingServletContext implements ServletContext {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private SlingMainServlet requestHandler;
+    SlingMainServlet requestHandler;
 
-    private ServiceTracker contentResolver;
-
-    SlingServletContextImpl(SlingMainServlet requestHandler) {
+    public SlingServletContext(SlingMainServlet requestHandler) {
         this.requestHandler = requestHandler;
-
-        this.contentResolver = new ServiceTracker(
-            requestHandler.getBundleContext(), ContentResolver.class.getName(),
-            null);
-        this.contentResolver.open();
-    }
-
-    void dispose() {
-        if (contentResolver != null) {
-            contentResolver.close();
-        }
     }
 
     /**
@@ -121,17 +97,6 @@ public class SlingServletContextImpl implements ServletContext {
         return getServletContext().getMinorVersion();
     }
 
-    public RequestDispatcher getRequestDispatcher(Resource resource) {
-        // return no dispatcher if content is null
-        if (resource == null) {
-            log.error("getRequestDispatcher: No content, cannot create request dispatcher");
-            return null;
-        }
-
-        RequestPathInfo resolvedURL = new ResolvedURLImpl(resource.getURI());
-        return new ComponentRequestDispatcherImpl(resource, resolvedURL);
-    }
-
     public RequestDispatcher getRequestDispatcher(String path) {
         // return no dispatcher if content is null
         if (path == null) {
@@ -139,7 +104,7 @@ public class SlingServletContextImpl implements ServletContext {
             return null;
         }
 
-        return new ComponentRequestDispatcherImpl(path);
+        return new SlingRequestDispatcher(path);
     }
 
     public URL getResource(String path) throws MalformedURLException {
@@ -227,75 +192,6 @@ public class SlingServletContextImpl implements ServletContext {
     @Deprecated
     public Enumeration<?> getServlets() {
         return null;
-    }
-
-    // ---------- Inner class --------------------------------------------------
-
-    private class ComponentRequestDispatcherImpl implements
-            RequestDispatcher {
-
-        private RequestPathInfo resolvedURL;
-
-        private final String path;
-
-        private ComponentRequestDispatcherImpl(Resource resource, RequestPathInfo resolvedURL) {
-            this.resolvedURL = resolvedURL;
-            this.path = resolvedURL.getResourcePath();
-        }
-
-        private ComponentRequestDispatcherImpl(String path) {
-            this.resolvedURL = null;
-            this.path = path;
-        }
-
-        public void include(ServletRequest request, ServletResponse response)
-                throws ServletException, IOException {
-
-            if (resolvedURL == null) {
-
-                // this may throw an exception in case loading fails, which is
-                // ok here, if no content is available at that path null is
-                // return, which results in using the servlet container
-                SlingHttpServletRequest cRequest = RequestData.unwrap(request);
-                String absPath = getAbsolutePath(cRequest, path);
-
-                ContentResolver cr = (ContentResolver) contentResolver.getService();
-                ContentManager cm = RequestData.getRequestData(cRequest).getContentManager();
-                if (cr != null && cm != null) {
-                    resolvedURL = cr.resolveURL(cm, absPath);
-                }
-            }
-
-            if (resolvedURL != null) {
-                requestHandler.includeContent(request, response, resolvedURL);
-            } else {
-                requestHandler.includeServlet(request, response, path);
-            }
-        }
-
-        public void forward(ServletRequest request, ServletResponse response)
-                throws ServletException, IOException {
-            // TODO Auto-generated method stub
-            // TODO, use servlet container dispatcher !!
-        }
-
-        private String getAbsolutePath(SlingHttpServletRequest request, String path) {
-            // path is already absolute
-            if (path.startsWith("/")) {
-                return path;
-            }
-
-            // get parent of current request
-            String uri = request.getResource().getURI();
-            int lastSlash = uri.lastIndexOf('/');
-            if (lastSlash >= 0) {
-                uri = uri.substring(0, lastSlash);
-            }
-
-            // append relative path to parent
-            return uri + '/' + path;
-        }
-
     }
 
 }

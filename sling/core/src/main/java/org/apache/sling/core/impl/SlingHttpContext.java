@@ -89,8 +89,8 @@ public class SlingHttpContext implements HttpContext {
 
         /*
          * Currently we do not handle security in the context but in the
-         * SlingServlet as an AuthenticationFilter. It might be worth it
-         * considering to move the authentication from the AuthenticationFilter
+         * SlingServlet as an SlingAuthenticator. It might be worth it
+         * considering to move the authentication from the SlingAuthenticator
          * to this context.
          */
 
