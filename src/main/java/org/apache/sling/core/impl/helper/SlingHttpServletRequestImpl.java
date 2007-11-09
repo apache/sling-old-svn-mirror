@@ -16,35 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl;
+package org.apache.sling.core.impl.helper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.ResourceBundle;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
-
-import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
@@ -54,23 +42,19 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
-import org.apache.sling.core.RequestUtil;
-import org.apache.sling.core.impl.helper.ContentData;
-import org.apache.sling.core.impl.helper.RequestData;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
-import org.apache.sling.core.objects.SelectableContent;
-import org.apache.sling.core.objects.Selector;
 
 /**
  * The <code>SlingHttpServletRequestImpl</code> TODO
  */
-class SlingHttpServletRequestImpl extends HttpServletRequestWrapper implements
+public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper implements
         SlingHttpServletRequest {
 
     private final RequestData requestData;
 
-    protected SlingHttpServletRequestImpl(RequestData requestData) {
-        super(requestData.getServletRequest());
+    public SlingHttpServletRequestImpl(RequestData requestData,
+            HttpServletRequest servletRequest) {
+        super(servletRequest);
         this.requestData = requestData;
     }
 
@@ -110,28 +94,14 @@ class SlingHttpServletRequestImpl extends HttpServletRequestWrapper implements
 
     public RequestDispatcher getRequestDispatcher(Resource resource,
             RequestDispatcherOptions options) {
-        ContentData cd = getRequestData().getContentData();
-        if (cd == null) {
-            // in case of issue, this may happen, but should, just taking care
-            return null;
-        }
-
-        ServletContext ctx = cd.getServlet().getServletConfig().getServletContext();
-        return ctx.getRequestDispatcher(resource);
+        return new SlingRequestDispatcher(resource, options);
     }
 
     /**
      * @see javax.servlet.ServletRequestWrapper#getRequestDispatcher(java.lang.String)
      */
     public RequestDispatcher getRequestDispatcher(String path) {
-        ContentData cd = this.getRequestData().getContentData();
-        if (cd == null) {
-            // in case of issue, this may happen, but should, just taking care
-            return null;
-        }
-
-        ServletContext ctx = cd.getServlet().getServletConfig().getServletContext();
-        return ctx.getRequestDispatcher(path);
+        return new SlingRequestDispatcher(path);
     }
 
     /**
@@ -204,11 +174,15 @@ class SlingHttpServletRequestImpl extends HttpServletRequestWrapper implements
      */
     public Cookie getCookie(String name) {
         Cookie[] cookies = getCookies();
-        for (int i = 0; cookies != null && i < cookies.length; i++) {
-            if (cookies[i].getName().equals(name)) {
-                return cookies[i];
+
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals(name)) {
+                    return cookies[i];
+                }
             }
         }
+
         return null;
     }
 

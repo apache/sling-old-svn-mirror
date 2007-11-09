@@ -19,36 +19,32 @@
 package org.apache.sling.core.impl.auth;
 
 import java.io.IOException;
-import java.security.AccessControlException;
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.auth.AuthenticationHandler;
-import org.apache.sling.core.impl.helper.RequestData;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.api.TooManySessionsException;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * The <code>AuthenticationFilter</code> class is the default implementation
- * of the {@link AuthenticationFilter} interface. This class supports :
+ * The <code>SlingAuthenticator</code> class is the default implementation of
+ * the {@link SlingAuthenticator} interface. This class supports :
  * <ul>
  * <li>Support for login sessions where session ids are exchanged with cookies
  * <li>Support for multiple authentication handlers, which must implement the
@@ -76,16 +72,13 @@ import org.slf4j.LoggerFactory;
  * removing any one the thread finds. Currently the cleanup routine runs at and
  * interval twice as big as the time-to-life value.
  *
- * @scr.component immediate="true" label="%auth.name"
- *          description="%auth.description"
- * @scr.property name="service.description"
- *          value="Default AuthenticationService implementation"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="-900" type="Integer" private="true"
- * @scr.service
+ * @  scr.component immediate="true" label="%auth.name"
+ *                description="%auth.description"
+ * @ scr.property name="service.description" value="Default AuthenticationService
+ *               implementation"
+ * @ scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class AuthenticationFilter implements Filter {
+public class SlingAuthenticator implements ManagedService {
 
     /**
      * The name of the request attribute containing the AuthenticationHandler
@@ -96,7 +89,7 @@ public class AuthenticationFilter implements Filter {
     public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.core.impl.auth.authentication_handler";
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
 
     /**
      * @scr.property value="cqsudo"
@@ -122,10 +115,13 @@ public class AuthenticationFilter implements Filter {
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = false;
 
-    /**
-     * @scr.reference
-     */
-    private SlingRepository repository;
+    private final ServiceTracker repositoryTracker;
+
+    private final ServiceTracker authHandlerTracker;
+
+    private int authHandlerTrackerCount;
+
+    private AuthenticationHandler[] authHandlerCache;
 
     /** The name of the impersonation parameter */
     private String sudoParameterName;
@@ -140,14 +136,6 @@ public class AuthenticationFilter implements Filter {
     boolean anonymousAllowed;
 
     /**
-     * The map of {@link AuthenticationHandler} implementations indexed by
-     * configured name of the handler.
-     *
-     * @scr.reference cardinality="0..n" policy="dynamic"
-     */
-    private AuthenticationHandler[] handlers = new AuthenticationHandler[0];
-
-    /**
      * The list of packages from the configuration file. This list is checked
      * for each request. The handler of the first package match is used for the
      * authentication.
@@ -157,121 +145,33 @@ public class AuthenticationFilter implements Filter {
      * The number of {@link AuthPackage} elements in the {@link #packages} list.
      */
     // private int numPackages;
+    private ServiceRegistration registration;
 
-    // ----------- AbstractCoreFilter ------------------------------------------
+    public SlingAuthenticator(BundleContext bundleContext) {
+        repositoryTracker = new ServiceTracker(bundleContext,
+            Repository.class.getName(), null);
+        repositoryTracker.open();
 
-    public void doFilter(ServletRequest sRequest, ServletResponse sResponse,
-            FilterChain filterChain) throws IOException,
-            ServletException {
+        authHandlerTracker = new ServiceTracker(bundleContext,
+            AuthenticationHandler.class.getName(), null);
+        authHandlerTracker.open();
+        authHandlerTrackerCount = -1;
+        authHandlerCache = null;
 
-        SlingHttpServletRequest request = (SlingHttpServletRequest) sRequest;
-        SlingHttpServletResponse response = (SlingHttpServletResponse) sResponse;
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(Constants.SERVICE_PID, getClass().getName());
+        props.put(Constants.SERVICE_DESCRIPTION, "Sling Request Authenticator");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-        Session session = this.authenticate(request, response);
-        if (session != null) {
-            try {
-                // set the session (throws if no request data is available)
-                RequestData.getRequestData(request).setSession(session);
-
-                // continue processing
-                filterChain.doFilter(request, response);
-
-            } catch (AccessControlException ace) {
-
-                // try to request authentication fail, if not possible
-                if (!this.requestAuthentication(request, response)) {
-                    this.sendFailure(response);
-                }
-
-            } finally {
-                // make sure the session is closed after processing !!
-                session.logout();
-            }
-        }
+        registration = bundleContext.registerService(
+            ManagedService.class.getName(), this, props);
     }
 
-    public void init(FilterConfig config) {}
-    public void destroy() {}
-
-    // ----------- SCR Integration ---------------------------------------------
-
-    protected void activate(org.osgi.service.component.ComponentContext context) {
-        Dictionary configuration = context.getProperties();
-
-        String newCookie = (String) configuration.get(PAR_IMPERSONATION_COOKIE_NAME);
-        if (newCookie == null || newCookie.length() == 0) {
-            newCookie = DEFAULT_IMPERSONATION_COOKIE;
-        }
-        if (!newCookie.equals(this.sudoCookieName)) {
-            log.info("Setting new cookie name for impersonation {} (was {})",
-                newCookie, this.sudoCookieName);
-            this.sudoCookieName = newCookie;
-        }
-
-        String newPar = (String) configuration.get(PAR_IMPERSONATION_PAR_NAME);
-        if (newPar == null || newPar.length() == 0) {
-            newPar = DEFAULT_IMPERSONATION_PARAMETER;
-        }
-        if (!newPar.equals(this.sudoParameterName)) {
-            log.info(
-                "Setting new parameter name for impersonation {} (was {})",
-                newPar, this.sudoParameterName);
-            this.sudoParameterName = newPar;
-        }
-
-        Object flag = configuration.get(PAR_ANONYMOUS_ALLOWED);
-        if (flag instanceof Boolean) {
-            this.anonymousAllowed = ((Boolean) flag).booleanValue();
-        } else {
-            this.anonymousAllowed = DEFAULT_ANONYMOUS_ALLOWED;
-        }
+    public void dispose() {
+        registration.unregister();
+        authHandlerTracker.close();
+        repositoryTracker.close();
     }
-
-    protected void bindRepository(SlingRepository repository) {
-        this.repository = repository;
-    }
-
-    protected void unbindRepository(SlingRepository repository) {
-        this.repository = null;
-    }
-
-    protected void bindAuthenticationHandler(
-            AuthenticationHandler authenticationHandler) {
-        // ensure not in the list yet
-        for (int i = 0; i < this.handlers.length; i++) {
-            if (this.handlers[i] == authenticationHandler) {
-                // already in the list, ignore this time
-                return;
-            }
-        }
-
-        AuthenticationHandler[] newHandlers = new AuthenticationHandler[this.handlers.length + 1];
-        System.arraycopy(this.handlers, 0, newHandlers, 0, this.handlers.length);
-        newHandlers[this.handlers.length] = authenticationHandler;
-        this.handlers = newHandlers;
-    }
-
-    protected void unbindAuthenticationHandler(
-            AuthenticationHandler authenticationHandler) {
-        for (int i = 0; i < this.handlers.length; i++) {
-            if (this.handlers[i] == authenticationHandler) {
-                // remove this handler
-                AuthenticationHandler[] newHandlers = new AuthenticationHandler[this.handlers.length - 1];
-
-                if (i > 0) {
-                    System.arraycopy(this.handlers, 0, newHandlers, 0, i);
-                }
-                if (i < newHandlers.length) {
-                    System.arraycopy(this.handlers, i + 1, newHandlers, i,
-                        newHandlers.length - i);
-                }
-
-                this.handlers = newHandlers;
-            }
-        }
-    }
-
-    // ---------- AuthenticationFilter interface ------------------------------
 
     /**
      * Checks the authentication contained in the request. This check is only
@@ -299,7 +199,7 @@ public class AuthenticationFilter implements Filter {
      *         be assumed, that during this method enough response information
      *         has been sent to the client.
      */
-    private Session authenticate(SlingHttpServletRequest req, SlingHttpServletResponse res) {
+    public Session authenticate(HttpServletRequest req, HttpServletResponse res) {
 
         // 0. Get package for request and be anonymous if none configured
         AuthenticationHandler handler = this.getAuthHandler(req);
@@ -330,7 +230,7 @@ public class AuthenticationFilter implements Filter {
             // try to connect
             try {
                 log.debug("authenticate: credentials, trying to get a ticket");
-                Session session = this.repository.login(creds, null);
+                Session session = getRepository().login(creds, null);
 
                 // handle impersonation
                 session = this.handleImpersonation(req, res, session);
@@ -346,7 +246,7 @@ public class AuthenticationFilter implements Filter {
             }
 
             // request authentication information and send 403 (Forbidden)
-            // if the handle cannot request authentication information.
+            // if the handler cannot request authentication information.
             if (!handler.requestAuthentication(req, res)) {
                 this.sendFailure(res);
             }
@@ -371,7 +271,8 @@ public class AuthenticationFilter implements Filter {
      * @return true if the information could be requested or false, if the
      *         request should fail with the appropriate error status
      */
-    public boolean requestAuthentication(SlingHttpServletRequest req, SlingHttpServletResponse res) {
+    public boolean requestAuthentication(HttpServletRequest req,
+            HttpServletResponse res) {
 
         AuthenticationHandler handler = this.getAuthHandler(req);
         if (handler != null) {
@@ -385,10 +286,61 @@ public class AuthenticationFilter implements Filter {
         return false;
     }
 
+    // ----------- ManagedService interface -----------------------------------
+
+    public void updated(Dictionary properties) {
+
+        String newCookie = (String) properties.get(PAR_IMPERSONATION_COOKIE_NAME);
+        if (newCookie == null || newCookie.length() == 0) {
+            newCookie = DEFAULT_IMPERSONATION_COOKIE;
+        }
+        if (!newCookie.equals(this.sudoCookieName)) {
+            log.info("Setting new cookie name for impersonation {} (was {})",
+                newCookie, this.sudoCookieName);
+            this.sudoCookieName = newCookie;
+        }
+
+        String newPar = (String) properties.get(PAR_IMPERSONATION_PAR_NAME);
+        if (newPar == null || newPar.length() == 0) {
+            newPar = DEFAULT_IMPERSONATION_PARAMETER;
+        }
+        if (!newPar.equals(this.sudoParameterName)) {
+            log.info(
+                "Setting new parameter name for impersonation {} (was {})",
+                newPar, this.sudoParameterName);
+            this.sudoParameterName = newPar;
+        }
+
+        Object flag = properties.get(PAR_ANONYMOUS_ALLOWED);
+        if (flag instanceof Boolean) {
+            this.anonymousAllowed = ((Boolean) flag).booleanValue();
+        } else {
+            this.anonymousAllowed = DEFAULT_ANONYMOUS_ALLOWED;
+        }
+    }
+
     // ---------- internal ----------------------------------------------------
 
-    private AuthenticationHandler getAuthHandler(SlingHttpServletRequest req) {
-        AuthenticationHandler[] local = this.handlers;
+    private Repository getRepository() {
+        return (Repository) repositoryTracker.getService();
+    }
+
+    private AuthenticationHandler[] getAuthenticationHandlers() {
+        if (authHandlerCache == null
+            || authHandlerTrackerCount < authHandlerTracker.getTrackingCount()) {
+            Object[] services = authHandlerTracker.getServices();
+            AuthenticationHandler[] ac = new AuthenticationHandler[services.length];
+            for (int i = 0; i < services.length; i++) {
+                ac[i] = (AuthenticationHandler) services[i];
+            }
+            authHandlerCache = ac;
+            authHandlerTrackerCount = authHandlerTracker.getTrackingCount();
+        }
+        return authHandlerCache;
+    }
+
+    private AuthenticationHandler getAuthHandler(HttpServletRequest req) {
+        AuthenticationHandler[] local = getAuthenticationHandlers();
         for (int i = 0; i < local.length; i++) {
             if (local[i].handles(req)) {
                 return local[i];
@@ -418,17 +370,22 @@ public class AuthenticationFilter implements Filter {
     // }
 
     // TODO
-    private Session getAnonymousSession(SlingHttpServletRequest req, SlingHttpServletResponse res) {
+    private Session getAnonymousSession(HttpServletRequest req,
+            HttpServletResponse res) {
         // login anonymously, log the exact cause in case of failure
         if (this.anonymousAllowed) {
             try {
-                return this.repository.login();
+                return getRepository().login();
             } catch (TooManySessionsException se) {
-                log.error("getAnonymousSession: Too many anonymous users active", se);
+                log.error(
+                    "getAnonymousSession: Too many anonymous users active", se);
             } catch (LoginException le) {
-                log.error("getAnonymousSession: Login failure, requesting authentication", le);
+                log.error(
+                    "getAnonymousSession: Login failure, requesting authentication",
+                    le);
             } catch (RepositoryException re) {
-                log.error("getAnonymousSession: Cannot get anonymous session", re);
+                log.error("getAnonymousSession: Cannot get anonymous session",
+                    re);
             }
         } else {
             log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
@@ -444,7 +401,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     // TODO
-    private void sendFailure(SlingHttpServletResponse res) {
+    private void sendFailure(HttpServletResponse res) {
         try {
             res.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
         } catch (IOException ioe) {
@@ -514,9 +471,8 @@ public class AuthenticationFilter implements Filter {
      * Sends the session cookie for the name session with the given age in
      * seconds. This sends a Version 1 cookie.
      *
-     * @param response The
-     *            {@link DeliveryHttpServletResponse} on
-     *            which to send back the cookie.
+     * @param response The {@link DeliveryHttpServletResponse} on which to send
+     *            back the cookie.
      * @param name The name of the cookie to send.
      * @param value The value of cookie.
      * @param maxAge The maximum age of the cookie in seconds. Positive values
@@ -526,8 +482,8 @@ public class AuthenticationFilter implements Filter {
      *            temporary cookie to be deleted when the browser exits.
      * @param path The cookie path to use. If empty or <code>null</code> the
      */
-    private void sendCookie(SlingHttpServletResponse response, String name, String value,
-            int maxAge, String path) {
+    private void sendCookie(HttpServletResponse response, String name,
+            String value, int maxAge, String path) {
 
         if (path == null || path.length() == 0) {
             log.debug("sendCookie: Using root path ''/''");
@@ -559,8 +515,8 @@ public class AuthenticationFilter implements Filter {
      *
      * @param req The {@link DeliveryHttpServletRequest} optionally containing
      *            the sudo parameter.
-     * @param res The {@link DeliveryHttpServletResponse} to
-     *            send the impersonation cookie.
+     * @param res The {@link DeliveryHttpServletResponse} to send the
+     *            impersonation cookie.
      * @param ticket The real {@link Ticket} to optionally replace with an
      *            impersonated ticket.
      * @return The impersonated ticket or the input ticket.
@@ -570,14 +526,20 @@ public class AuthenticationFilter implements Filter {
      * @see Ticket#impersonate for details on the user configuration
      *      requirements for impersonation.
      */
-    private Session handleImpersonation(SlingHttpServletRequest req, SlingHttpServletResponse res,
-            Session session) throws LoginException, RepositoryException {
+    private Session handleImpersonation(HttpServletRequest req,
+            HttpServletResponse res, Session session) throws LoginException,
+            RepositoryException {
 
         // the current state of impersonation
-        Cookie sudoCookie = req.getCookie(sudoCookieName);
-        String currentSudo = (sudoCookie == null)
-                ? null
-                : sudoCookie.getValue();
+        String currentSudo = null;
+        Cookie[] cookies = req.getCookies();
+        if (cookies != null) {
+            for (int i = 0; currentSudo == null && i < cookies.length; i++) {
+                if (sudoCookieName.equals(cookies[i].getName())) {
+                    currentSudo = cookies[i].getValue();
+                }
+            }
+        }
 
         /**
          * sudo parameter : empty or missing to continue to use the setting
@@ -606,14 +568,16 @@ public class AuthenticationFilter implements Filter {
                 // active due to cookie setting
 
                 // clear impersonation
-                this.sendCookie(res, this.sudoCookieName, "", 0, req.getContextPath());
+                this.sendCookie(res, this.sudoCookieName, "", 0,
+                    req.getContextPath());
 
             } else if (currentSudo == null || !currentSudo.equals(sudo)) {
                 // Parameter set to a name. As the cookie is not set yet
                 // or is set to another name, send the cookie with current sudo
 
                 // (re-)set impersonation
-                this.sendCookie(res, this.sudoCookieName, sudo, -1, req.getContextPath());
+                this.sendCookie(res, this.sudoCookieName, sudo, -1,
+                    req.getContextPath());
             }
         }
 

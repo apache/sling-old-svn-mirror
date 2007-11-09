@@ -114,7 +114,7 @@ public class ServiceLocatorImpl implements ServiceLocator {
         }
     }
 
-    public void clear() {
+    public void dispose() {
         final Iterator<ServiceReference> i = this.references.iterator();
         while (i.hasNext()) {
             final ServiceReference ref = i.next();

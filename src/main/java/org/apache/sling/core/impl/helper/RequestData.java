@@ -18,6 +18,9 @@
  */
 package org.apache.sling.core.impl.helper;
 
+import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_CONTENT;
+import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_SERVLET;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,6 +29,8 @@ import java.util.LinkedList;
 import java.util.Locale;
 
 import javax.jcr.Session;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
@@ -35,6 +40,7 @@ import javax.servlet.ServletResponseWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -43,16 +49,16 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.services.ServiceLocator;
+import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
-import org.apache.sling.core.impl.SlingHttpServletRequestImpl;
-import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
+import org.apache.sling.core.impl.SlingMainServlet;
 import org.apache.sling.core.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.core.impl.request.SlingRequestProgressTracker;
-import org.apache.sling.core.impl.resolver.ResolvedURLImpl;
 import org.apache.sling.core.theme.Theme;
+import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
 import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,14 +75,23 @@ public class RequestData implements BufferProvider {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(RequestData.class);
 
+    /** The SlingMainServlet used for request dispatching and other stuff */
+    private final SlingMainServlet slingMainServlet;
+
     /** The original servlet Servlet Request Object */
     private HttpServletRequest servletRequest;
 
-    /** The parameter support class */
-    private ParameterSupport parameterSupport;
-
     /** The original servlet Servlet Response object */
     private HttpServletResponse servletResponse;
+
+    /** The original servlet Servlet Request Object */
+    private SlingHttpServletRequest slingRequest;
+
+    /** The original servlet Servlet Response object */
+    private SlingHttpServletResponse slingResponse;
+
+    /** The parameter support class */
+    private ParameterSupport parameterSupport;
 
     /**
      * <code>true</code> if the servlet is
@@ -104,16 +119,9 @@ public class RequestData implements BufferProvider {
     /** Caches the real query string returned by {@link #getRealQueryString()} */
     private String queryString;
 
-    /** Caches the real method name returned by {@link #getRealMethod()} */
-    private String method;
-
-    private Session session;
-
     private ResourceManager resourceManager;
 
     private RequestProgressTracker requestProgressTracker;
-
-    private ServiceLocator serviceLocator;
 
     private Locale locale;
 
@@ -125,54 +133,87 @@ public class RequestData implements BufferProvider {
     /** the stack of ContentData objects */
     private LinkedList<ContentData> contentDataStack;
 
-    public RequestData(HttpServletRequest request, HttpServletResponse response) {
+    public RequestData(SlingMainServlet slingMainServlet, Session session,
+            HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        this.slingMainServlet = slingMainServlet;
+
         this.servletRequest = request;
         this.servletResponse = response;
 
-        requestProgressTracker = new SlingRequestProgressTracker();
+        this.slingRequest = new SlingHttpServletRequestImpl(this, servletRequest);
+        this.slingResponse = new SlingHttpServletResponseImpl(this, servletResponse);
 
-        // some more preparation
+        this.requestProgressTracker = new SlingRequestProgressTracker();
         this.included = request.getAttribute(SlingConstants.INCLUDE_REQUEST_URI) != null;
+
+        // the resource manager factory may be missing
+        JcrResourceManagerFactory rmf = slingMainServlet.getResourceManagerFactory();
+        if (rmf == null) {
+            log.error("RequestData: Missing JcrResourceManagerFactory");
+            throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
+                "No resource can be found");
+        }
+
+        // officially, getting the manager may fail, but not i this implementation
+        this.resourceManager = rmf.getResourceManager(session);
+
+        // resolve the resource and the request path info, will never be null
+        Resource resource = resourceManager.resolve(request);
+        RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource,
+            request.getPathInfo());
+        ContentData contentData = pushContent(resource, requestPathInfo);
+
+        // finally resolve the servlet for the resource
+        ServletResolver sr = slingMainServlet.getServletResolver();
+        Servlet servlet = sr.resolveServlet(slingRequest);
+        contentData.setServlet(servlet);
     }
 
-    /* package */void dispose() {
+    public void dispose() {
         // make sure our request attributes do not exist anymore
-        this.servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
-        this.servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
+        servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
+        servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
 
         // clear the content data stack
-        if (this.contentDataStack != null) {
-            while (!this.contentDataStack.isEmpty()) {
-                ContentData cd = this.contentDataStack.removeLast();
+        if (contentDataStack != null) {
+            while (!contentDataStack.isEmpty()) {
+                ContentData cd = contentDataStack.removeLast();
                 cd.dispose();
             }
         }
 
         // dispose current content data, if any
-        if (this.currentContentData != null) {
-            this.currentContentData.dispose();
-        }
-
-        // logout the session
-        if (this.session != null) {
-            this.session.logout();
+        if (currentContentData != null) {
+            currentContentData.dispose();
         }
 
         // clear fields
-        this.contentDataStack = null;
-        this.currentContentData = null;
-        this.servletRequest = null;
-        this.servletResponse = null;
-        this.resourceManager = null;
-        this.session = null;
+        contentDataStack = null;
+        currentContentData = null;
+        servletRequest = null;
+        servletResponse = null;
+        resourceManager = null;
+    }
+
+    public SlingMainServlet getSlingMainServlet() {
+        return slingMainServlet;
     }
 
     public HttpServletRequest getServletRequest() {
-        return this.servletRequest;
+        return servletRequest;
     }
 
     public HttpServletResponse getServletResponse() {
-        return this.servletResponse;
+        return servletResponse;
+    }
+
+    public SlingHttpServletRequest getSlingRequest() {
+        return slingRequest;
+    }
+
+    public SlingHttpServletResponse getSlingResponse() {
+        return slingResponse;
     }
 
     // ---------- Request Helper
@@ -334,66 +375,55 @@ public class RequestData implements BufferProvider {
 
     // ---------- Content inclusion stacking -----------------------------------
 
-    public void pushContent(Resource resource, RequestPathInfo requestPathInfo) {
+    public ContentData pushContent(Resource resource,
+            RequestPathInfo requestPathInfo) {
         BufferProvider parent;
-        if (this.currentContentData != null) {
-            if (this.contentDataStack == null) {
-                this.contentDataStack = new LinkedList<ContentData>();
-            }
-
-            // ensure the selectors, extension and suffix are inherited
-            // from the parent if none have been declared on inclusion
-            if (requestPathInfo.getExtension() == null
-                || requestPathInfo.getExtension().length() == 0) {
-                ResolvedURLImpl copy = new ResolvedURLImpl(requestPathInfo);
-                RequestPathInfo current = currentContentData.getRequestPathInfo();
-                copy.setSelectorString(current.getSelectorString());
-                copy.setExtension(current.getExtension());
-                copy.setSuffix(current.getSuffix());
-                requestPathInfo = copy;
+        if (currentContentData != null) {
+            if (contentDataStack == null) {
+                contentDataStack = new LinkedList<ContentData>();
             }
 
             // remove the request attributes if the stack is empty now
-            this.servletRequest.setAttribute(
-                SlingConstants.ATTR_REQUEST_CONTENT,
-                this.currentContentData.getResource());
-            this.servletRequest.setAttribute(
-                SlingConstants.ATTR_REQUEST_SERVLET,
-                this.currentContentData.getServlet());
+            servletRequest.setAttribute(ATTR_REQUEST_CONTENT,
+                currentContentData.getResource());
+            servletRequest.setAttribute(ATTR_REQUEST_SERVLET,
+                currentContentData.getServlet());
 
-            this.contentDataStack.add(this.currentContentData);
-            parent = this.currentContentData;
+            contentDataStack.add(currentContentData);
+            parent = currentContentData;
         } else {
             parent = this;
         }
 
-        this.currentContentData = new ContentData(resource, requestPathInfo,
-            parent);
+        currentContentData = new ContentData(resource, requestPathInfo, parent);
+        return currentContentData;
     }
 
-    public void popContent() {
+    public ContentData popContent() {
         // dispose current content data before replacing it
-        if (this.currentContentData != null) {
-            this.currentContentData.dispose();
+        if (currentContentData != null) {
+            currentContentData.dispose();
         }
 
-        if (this.contentDataStack != null && !this.contentDataStack.isEmpty()) {
+        if (contentDataStack != null && !contentDataStack.isEmpty()) {
             // remove the topmost content data object
-            this.currentContentData = this.contentDataStack.removeLast();
+            currentContentData = contentDataStack.removeLast();
 
             // remove the request attributes if the stack is empty now
-            if (this.contentDataStack.isEmpty()) {
-                this.servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
-                this.servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
+            if (contentDataStack.isEmpty()) {
+                servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
+                servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
             }
 
         } else {
-            this.currentContentData = null;
+            currentContentData = null;
         }
+
+        return currentContentData;
     }
 
     public ContentData getContentData() {
-        return this.currentContentData;
+        return currentContentData;
     }
 
     /**
@@ -402,8 +432,7 @@ public class RequestData implements BufferProvider {
      * <code>SlingHttpServletRequestDispatcher.include</code>.
      */
     public boolean isContentIncluded() {
-        return this.contentDataStack != null
-            && !this.contentDataStack.isEmpty();
+        return contentDataStack != null && !contentDataStack.isEmpty();
     }
 
     // ---------- parameters differing in included servlets --------------------
@@ -416,7 +445,7 @@ public class RequestData implements BufferProvider {
      *         <code>RequestDispatcher.include()</code>.
      */
     public boolean isIncluded() {
-        return this.included;
+        return included;
     }
 
     /**
@@ -431,18 +460,18 @@ public class RequestData implements BufferProvider {
      *         context path removed.
      */
     public String getRequestURI() {
-        if (this.requestURI == null) {
+        if (requestURI == null) {
 
             // get the unmodified request URI and context information
-            this.requestURI = this.included
-                    ? (String) this.servletRequest.getAttribute(SlingConstants.INCLUDE_REQUEST_URI)
-                    : this.servletRequest.getRequestURI();
+            requestURI = included
+                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_REQUEST_URI)
+                    : servletRequest.getRequestURI();
 
-            String ctxPrefix = this.getContextPath();
+            String ctxPrefix = getContextPath();
 
             if (log.isDebugEnabled()) {
                 log.debug("getRequestURI: Servlet request URI is {}",
-                    this.requestURI);
+                    requestURI);
             }
 
             // check to remove the context prefix
@@ -453,25 +482,25 @@ public class RequestData implements BufferProvider {
                 if (log.isDebugEnabled()) {
                     log.debug("getRequestURI: Default root context, no change to uri");
                 }
-            } else if (ctxPrefix.length() < this.requestURI.length()
-                && this.requestURI.startsWith(ctxPrefix)
-                && this.requestURI.charAt(ctxPrefix.length()) == '/') {
+            } else if (ctxPrefix.length() < requestURI.length()
+                && requestURI.startsWith(ctxPrefix)
+                && requestURI.charAt(ctxPrefix.length()) == '/') {
                 // some path below context root
                 if (log.isDebugEnabled()) {
                     log.debug("getRequestURI: removing '{}' from '{}'",
-                        ctxPrefix, this.requestURI);
+                        ctxPrefix, requestURI);
                 }
-                this.requestURI = this.requestURI.substring(ctxPrefix.length());
-            } else if (ctxPrefix.equals(this.requestURI)) {
+                requestURI = requestURI.substring(ctxPrefix.length());
+            } else if (ctxPrefix.equals(requestURI)) {
                 // context root
                 if (log.isDebugEnabled()) {
                     log.debug("getRequestURI: URI equals context prefix, assuming '/'");
                 }
-                this.requestURI = "/";
+                requestURI = "/";
             }
         }
 
-        return this.requestURI;
+        return requestURI;
     }
 
     /**
@@ -482,13 +511,13 @@ public class RequestData implements BufferProvider {
      * @return The relevant context path according to environment.
      */
     public String getContextPath() {
-        if (this.contextPath == null) {
-            this.contextPath = this.included
-                    ? (String) this.servletRequest.getAttribute(SlingConstants.INCLUDE_CONTEXT_PATH)
-                    : this.servletRequest.getContextPath();
+        if (contextPath == null) {
+            contextPath = included
+                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_CONTEXT_PATH)
+                    : servletRequest.getContextPath();
         }
 
-        return this.contextPath;
+        return contextPath;
     }
 
     /**
@@ -503,13 +532,13 @@ public class RequestData implements BufferProvider {
      * @return The relevant servlet path according to environment.
      */
     public String getServletPath() {
-        if (this.servletPath == null) {
-            this.servletPath = this.included
-                    ? (String) this.servletRequest.getAttribute(SlingConstants.INCLUDE_SERVLET_PATH)
-                    : this.servletRequest.getServletPath();
+        if (servletPath == null) {
+            servletPath = included
+                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_SERVLET_PATH)
+                    : servletRequest.getServletPath();
         }
 
-        return this.servletPath;
+        return servletPath;
     }
 
     /**
@@ -523,13 +552,13 @@ public class RequestData implements BufferProvider {
      * @return The relevant path info according to environment.
      */
     public String getPathInfo() {
-        if (this.pathInfo == null) {
-            this.pathInfo = this.included
-                    ? (String) this.servletRequest.getAttribute(SlingConstants.INCLUDE_PATH_INFO)
-                    : this.servletRequest.getPathInfo();
+        if (pathInfo == null) {
+            pathInfo = included
+                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_PATH_INFO)
+                    : servletRequest.getPathInfo();
         }
 
-        return this.pathInfo;
+        return pathInfo;
     }
 
     /**
@@ -540,20 +569,20 @@ public class RequestData implements BufferProvider {
      * @return The relevant query string according to environment.
      */
     public String getQueryString() {
-        if (this.queryString == null) {
-            this.queryString = this.included
-                    ? (String) this.servletRequest.getAttribute(SlingConstants.INCLUDE_QUERY_STRING)
-                    : this.servletRequest.getQueryString();
+        if (queryString == null) {
+            queryString = included
+                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_QUERY_STRING)
+                    : servletRequest.getQueryString();
         }
 
-        return this.queryString;
+        return queryString;
     }
 
     /**
      * @return the locale
      */
     public Locale getLocale() {
-        return this.locale;
+        return locale;
     }
 
     /**
@@ -567,44 +596,19 @@ public class RequestData implements BufferProvider {
         return resourceManager;
     }
 
-    /**
-     * @param persistenceManager the persistenceManager to set
-     */
-    public void setResourceManager(ResourceManager resourceManager) {
-        this.resourceManager = resourceManager;
-    }
-
     public RequestProgressTracker getRequestProgressTracker() {
         return requestProgressTracker;
     }
 
-    public void setServiceLocator(ServiceLocator serviceLocator) {
-        this.serviceLocator = serviceLocator;
-    }
-
     public ServiceLocator getServiceLocator() {
-        return serviceLocator;
-    }
-
-    /**
-     * @return the session
-     */
-    public Session getSession() {
-        return this.session;
-    }
-
-    /**
-     * @param session the session to set
-     */
-    public void setSession(Session session) {
-        this.session = session;
+        return slingMainServlet.getServiceLocator();
     }
 
     /**
      * @return the theme
      */
     public Theme getTheme() {
-        return this.theme;
+        return theme;
     }
 
     /**
@@ -614,56 +618,54 @@ public class RequestData implements BufferProvider {
         this.theme = theme;
         // provide the current theme to components as a request attribute
         // TODO - We should define a well known constant for this
-        this.servletRequest.setAttribute(Theme.class.getName(), theme);
+        servletRequest.setAttribute(Theme.class.getName(), theme);
     }
 
     // ---------- BufferProvider -----------------------------------------
 
     public BufferProvider getBufferProvider() {
-        return (this.currentContentData != null)
-                ? (BufferProvider) this.currentContentData
+        return (currentContentData != null)
+                ? (BufferProvider) currentContentData
                 : this;
     }
 
     public ServletOutputStream getOutputStream() throws IOException {
-        return this.getServletResponse().getOutputStream();
+        return getServletResponse().getOutputStream();
     }
 
     public PrintWriter getWriter() throws IOException {
-        return this.getServletResponse().getWriter();
+        return getServletResponse().getWriter();
     }
 
     // ---------- Parameter support -------------------------------------------
 
     ServletInputStream getInputStream() throws IOException {
-        if (this.parameterSupport != null
-            && this.parameterSupport.requestDataUsed()) {
+        if (parameterSupport != null && parameterSupport.requestDataUsed()) {
             throw new IllegalStateException(
                 "Request Data has already been read");
         }
 
         // may throw IllegalStateException if the reader has already been
         // acquired
-        return this.getServletRequest().getInputStream();
+        return getServletRequest().getInputStream();
     }
 
     BufferedReader getReader() throws UnsupportedEncodingException, IOException {
-        if (this.parameterSupport != null
-            && this.parameterSupport.requestDataUsed()) {
+        if (parameterSupport != null && parameterSupport.requestDataUsed()) {
             throw new IllegalStateException(
                 "Request Data has already been read");
         }
 
         // may throw IllegalStateException if the input stream has already been
         // acquired
-        return this.getServletRequest().getReader();
+        return getServletRequest().getReader();
     }
 
     ParameterSupport getParameterSupport() {
-        if (this.parameterSupport == null) {
-            this.parameterSupport = new ParameterSupport(this /* getServletRequest() */);
+        if (parameterSupport == null) {
+            parameterSupport = new ParameterSupport(this /* getServletRequest() */);
         }
 
-        return this.parameterSupport;
+        return parameterSupport;
     }
 }

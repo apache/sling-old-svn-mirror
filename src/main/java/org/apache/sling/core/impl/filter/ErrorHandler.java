@@ -19,74 +19,37 @@
 package org.apache.sling.core.impl.filter;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.core.impl.helper.ContentData;
 import org.apache.sling.core.impl.helper.RequestData;
 import org.apache.sling.core.servlets.ErrorHandlerServlet;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>ErrorHandlerFilter</code> TODO
- *
- * @scr.component immediate="true" label="%errhandler.name"
- *                description="%errhandler.description"
- * @scr.property name="service.description" value="Error Handler Filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="-1000" type="Integer" private="true"
- * @scr.service
- * @scr.reference name="Servlets"
- *                interface="org.apache.sling.core.servlets.ErrorHandlerServlet"
- *                cardinality="0..n" policy="dynamic"
+ * The <code>ErrorHandler</code> TODO
  */
-public class ErrorHandlerFilter extends ServletBindingFilter {
+public class ErrorHandler extends ServletBinder {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(ErrorHandlerFilter.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain)
-            throws IOException {
-
-        SlingHttpServletRequest request = (SlingHttpServletRequest) req;
-        SlingHttpServletResponse response = (SlingHttpServletResponse) res;
-
-        try {
-            filterChain.doFilter(request, new ErrorHandlerResponse(request,
-                response));
-        } catch (Throwable throwable) {
-            log.error("Error during request processing.", throwable);
-            handleError(throwable, request, response);
-        }
-
+    public ErrorHandler(BundleContext bundleContext,
+            ServletContext servletContext) {
+        super(bundleContext, servletContext,
+            ErrorHandlerServlet.class.getName());
     }
 
-    @Override
-    protected void servletBound(ServiceReference reference, Servlet servlet) {
-    }
-
-    @Override
-    protected void servletUnbound(ServiceReference reference, Servlet servlet) {
-    }
-
-    // ---------- internal -----------------------------------------------------
-
-    // TODO: this must be called from SlingHttpServletResponseImpl...
-    private void handleError(int status, String message,
-            SlingHttpServletRequest request, SlingHttpServletResponse response)
+    public void handleError(int status, String message,
+            HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
         // do not handle, if already handling ....
@@ -96,8 +59,8 @@ public class ErrorHandlerFilter extends ServletBindingFilter {
             int checkStatus = status;
             int filter = 10;
             for (;;) {
-                for (Iterator<Servlet> hi = getServlets(); hi.hasNext();) {
-                    ErrorHandlerServlet handler = (ErrorHandlerServlet) hi.next();
+                for (Servlet servlet : getServlets()) {
+                    ErrorHandlerServlet handler = (ErrorHandlerServlet) servlet;
                     if (handler.canHandle(checkStatus)) {
 
                         // set the message properties
@@ -128,9 +91,9 @@ public class ErrorHandlerFilter extends ServletBindingFilter {
         response.sendError(status, message);
     }
 
-    private void handleError(Throwable throwable,
-            SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws ComponentException, IOException {
+    public void handleError(Throwable throwable, HttpServletRequest request,
+            HttpServletResponse response) throws ComponentException,
+            IOException {
 
         // do not handle, if already handling ....
         if (request.getAttribute(SlingConstants.ERROR_REQUEST_URI) == null) {
@@ -139,8 +102,8 @@ public class ErrorHandlerFilter extends ServletBindingFilter {
             Class<?> tClass = throwable.getClass();
             while (tClass != null) {
                 String tClassName = tClass.getName();
-                for (Iterator<Servlet> hi = getServlets(); hi.hasNext();) {
-                    ErrorHandlerServlet handler = (ErrorHandlerServlet) hi.next();
+                for (Servlet servlet : getServlets()) {
+                    ErrorHandlerServlet handler = (ErrorHandlerServlet) servlet;
                     if (handler.canHandle(tClassName)) {
 
                         // set the message properties
@@ -176,7 +139,7 @@ public class ErrorHandlerFilter extends ServletBindingFilter {
     }
 
     private boolean handleError(ErrorHandlerServlet errorHandler,
-            SlingHttpServletRequest request, SlingHttpServletResponse response) {
+            HttpServletRequest request, HttpServletResponse response) {
 
         // set the message properties
         try {
@@ -216,45 +179,4 @@ public class ErrorHandlerFilter extends ServletBindingFilter {
 
         return false;
     }
-
-    // ---------- internal class -----------------------------------------------
-
-    private class ErrorHandlerResponse extends SlingHttpServletResponseWrapper {
-
-        private SlingHttpServletRequest handlerRequest;
-
-        public ErrorHandlerResponse(SlingHttpServletRequest handlerRequest,
-                SlingHttpServletResponse delegatee) {
-            super(delegatee);
-            this.handlerRequest = handlerRequest;
-        }
-
-        public void sendError(int status) throws IOException {
-            checkCommitted();
-            handleError(status, null, handlerRequest, getSlingResponse());
-        }
-
-        public void sendError(int status, String message) throws IOException {
-            checkCommitted();
-            handleError(status, message, handlerRequest, getSlingResponse());
-        }
-
-        public void sendRedirect(String location) {
-            checkCommitted();
-
-            // TODO: location must be converted into an absolute URL and
-            // link-checked
-
-            setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-            setHeader("Location", location);
-        }
-
-        private void checkCommitted() {
-            if (isCommitted()) {
-                throw new IllegalStateException(
-                    "Response has already been committed");
-            }
-        }
-    }
-
 }

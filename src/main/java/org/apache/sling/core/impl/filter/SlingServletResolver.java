@@ -18,47 +18,35 @@
  */
 package org.apache.sling.core.impl.filter;
 
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
-import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletContext;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.core.CoreConstants;
-import org.apache.sling.core.impl.helper.ContentData;
-import org.apache.sling.core.impl.helper.RequestData;
 import org.apache.sling.core.servlets.DefaultServlet;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>ServletResolverFilter</code> TODO
- *
- * @scr.component immediate="true" label="%resolver.name"
- *                description="%resolver.description"
- * @scr.property name="service.description" value="Component Resolver Filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="component" private="true"
- * @scr.property name="filter.order" value="-900" type="Integer" private="true"
- * @scr.service
- * @scr.reference name="Components" interface="javax.servlet.Servlet"
- *                cardinality="0..n" policy="dynamic"
+ * The <code>SlingServletResolver</code> TODO
  */
-public class ServletResolverFilter extends ServletBindingFilter {
+public class SlingServletResolver extends ServletBinder implements
+        ServletResolver, ManagedService {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(ServletResolverFilter.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * @scr.property values.1="/apps/components" values.2="/libs/components"
@@ -71,76 +59,106 @@ public class ServletResolverFilter extends ServletBindingFilter {
 
     private Map<String, Servlet> servlets = new HashMap<String, Servlet>();
 
-    /**
-     * @see org.apache.sling.core.component.ComponentFilter#doFilter(org.apache.sling.core.component.ComponentRequest,
-     *      org.apache.sling.core.component.ComponentResponse,
-     *      org.apache.sling.core.component.ComponentFilterChain)
-     */
-    public void doFilter(ServletRequest req, ServletResponse res,
-            FilterChain filterChain) throws IOException, ServletException {
+    private ServiceRegistration registration;
 
-        SlingHttpServletRequest request = (SlingHttpServletRequest) req;
-        SlingHttpServletResponse response = (SlingHttpServletResponse) res;
+    public SlingServletResolver(BundleContext bundleContext,
+            ServletContext servletContext) {
+        super(bundleContext, servletContext, Servlet.class.getName());
 
-        ContentData contentData = RequestData.getRequestData(request).getContentData();
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(Constants.SERVICE_PID, getClass().getName());
+        props.put(Constants.SERVICE_DESCRIPTION, "Sling Servlet Resolver");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-        if (contentData != null) {
-            // 2.3 check Servlet
-            Resource resource = contentData.getResource();
-            String path = resource.getURI();
-            Servlet servlet = resolveServlet(resource);
-            if (servlet != null) {
-
-                String compId = servlet.getServletConfig().getServletName();
-                log.debug("Using Component {} for {}", compId, path);
-                contentData.setServlet(servlet);
-                filterChain.doFilter(request, response);
-                return;
-
-            }
-        } else {
-            log.error("ComponentResolver: No Content data in request {}",
-                request.getRequestURI());
-        }
-
-        response.sendError(HttpServletResponse.SC_NOT_FOUND, "Cannot handle");
+        registration = bundleContext.registerService(
+            ManagedService.class.getName(), this, props);
     }
 
     @Override
-    protected void servletBound(ServiceReference reference, Servlet servlet) {
+    public void dispose() {
+        if (registration != null) {
+            registration.unregister();
+        }
+
+        super.dispose();
+    }
+    // ---------- ServletResolver interface -----------------------------------
+
+    public Servlet resolveServlet(SlingHttpServletRequest request) {
+
+        // 2.3 check Servlet
+        Resource resource = request.getResource();
+        String path = resource.getURI();
+        Servlet servlet = resolveServlet(resource);
+
+        if (servlet != null) {
+            String name = servlet.getServletConfig().getServletName();
+            log.debug("Using Component {} for {}", name, path);
+        }
+
+        return servlet;
+    }
+
+    @Override
+    public Object addingService(ServiceReference reference) {
         Object typeObject = reference.getProperty(CoreConstants.SLING_RESOURCE_TYPES);
-        String name = servlet.getServletConfig().getServletName();
-        if (typeObject instanceof String) {
-            log.debug("servletBound: Servlet {} handles type {}", name,
-                typeObject);
-            servlets.put((String) typeObject, servlet);
-        } else if (typeObject instanceof String[]) {
-            String[] types = (String[]) typeObject;
-            for (String type : types) {
+        if (typeObject == null) {
+            log.info(
+                "addingService: Ignoring Servlet service {} without resource types",
+                reference.getProperty(Constants.SERVICE_ID));
+            return null;
+        }
+
+        Servlet servlet = (Servlet) super.addingService(reference);
+        if (servlet != null) {
+            String name = servlet.getServletConfig().getServletName();
+            if (typeObject instanceof String[]) {
+                String[] types = (String[]) typeObject;
+                for (String type : types) {
+                    log.debug("servletBound: Servlet {} handles type {}", name,
+                        type);
+                    servlets.put(type, servlet);
+                }
+            } else {
                 log.debug("servletBound: Servlet {} handles type {}", name,
-                    type);
-                servlets.put(type, servlet);
+                    typeObject);
+                servlets.put(typeObject.toString(), servlet);
             }
         }
+
+        return servlet;
     }
 
     @Override
-    protected void servletUnbound(ServiceReference reference, Servlet servlet) {
+    public void modifiedService(ServiceReference reference, Object service) {
+        // might decide to fix registration resource types
+        super.modifiedService(reference, service);
+    }
+
+    @Override
+    public void removedService(ServiceReference reference, Object service) {
         Object typeObject = reference.getProperty(CoreConstants.SLING_RESOURCE_TYPES);
-        String name = servlet.getServletConfig().getServletName();
-        if (typeObject instanceof String) {
-            log.debug("servletBound: Servlet {} unregistered for {}", name,
-                typeObject);
-            servlets.remove(typeObject);
-        } else if (typeObject instanceof String[]) {
-            String[] types = (String[]) typeObject;
-            for (String type : types) {
-                log.debug("servletBound: Servlet {} unregistered for  {}", name,
-                    type);
-                servlets.remove(type);
+
+        if (typeObject != null) {
+            String name = ((Servlet) service).getServletConfig().getServletName();
+            if (typeObject instanceof String[]) {
+                String[] types = (String[]) typeObject;
+                for (String type : types) {
+                    log.debug("servletBound: Servlet {} unregistered for  {}",
+                        name, type);
+                    servlets.remove(type);
+                }
+            } else {
+                log.debug("servletBound: Servlet {} unregistered for {}", name,
+                    typeObject);
+                servlets.remove(typeObject);
             }
         }
+
+        super.removedService(reference, service);
     }
+
+    // ---------- internal helper ---------------------------------------------
 
     private Servlet getServlet(String resourceType) {
         return servlets.get(resourceType);
@@ -234,13 +252,9 @@ public class ServletResolverFilter extends ServletBindingFilter {
 
     // ---------- SCR Integration ----------------------------------------------
 
-    @Override
-    protected void activate(ComponentContext context) {
-        super.activate(context);
+    public void updated(Dictionary properties) {
 
-        Dictionary props = context.getProperties();
-
-        Object pathObject = props.get(PROP_PATH);
+        Object pathObject = properties.get(PROP_PATH);
         if (pathObject instanceof String[]) {
             this.path = (String[]) pathObject;
             for (int i = 0; i < this.path.length; i++) {
@@ -257,4 +271,5 @@ public class ServletResolverFilter extends ServletBindingFilter {
             this.path = null;
         }
     }
+
 }

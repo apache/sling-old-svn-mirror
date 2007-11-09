@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl;
+package org.apache.sling.core.impl.filter;
 
 import java.io.IOException;
 
@@ -26,7 +26,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.sling.core.impl.filter.AbstractSlingFilterChain;
 import org.apache.sling.core.impl.helper.RequestData;
 
 
@@ -36,8 +35,9 @@ import org.apache.sling.core.impl.helper.RequestData;
  * {@link SlingMainServlet#processRequest(RenderRequest, ComponentResponse)}
  * method to dispatch component processing.
  */
-class SlingComponentFilterChain extends AbstractSlingFilterChain {
-    SlingComponentFilterChain(Filter[] filters) {
+public class SlingComponentFilterChain extends AbstractSlingFilterChain {
+
+    public SlingComponentFilterChain(Filter[] filters) {
         super(filters);
     }
 
