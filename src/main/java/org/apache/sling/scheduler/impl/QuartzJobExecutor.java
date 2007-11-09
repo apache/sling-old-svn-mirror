@@ -69,7 +69,7 @@ public class QuartzJobExecutor implements Job {
                     final JobContext jobCtx = new JobContextImpl(name, configuration, serviceLocator);
                     ((org.apache.sling.scheduler.Job) job).execute(jobCtx);
                 } finally {
-                    serviceLocator.clear();
+                    serviceLocator.dispose();
                 }
             } else if (job instanceof Runnable) {
                 ((Runnable) job).run();
