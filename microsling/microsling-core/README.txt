@@ -18,36 +18,50 @@ Maven repository.
 
 To build and run:
 
-1) Install a JDK 1.5 and Maven 2.0.7.
+- Install a JDK 1.5 and Maven 2.0.7.
 
-2) Get and build the Jackrabbit trunk from
+- Get and build the Jackrabbit trunk from
 
   http://svn.apache.org/repos/asf/jackrabbit/trunk
 
-I'm currently using revision 583722 for my tests.
+  I'm currently using revision 583722 for my tests.
 
-3) Build the sling-api and sling-json modules
+- Build the api and sling-json modules
 
-  cd sling/sling-api
+  cd sling/api
   mvn clean install
 
-  cd sling/json
+  cd sling/commons/json
   mvn clean install
   
-4) Run the microsling tests:
+- Build the script modules used by microsling
+
+  cd sling/scripting/freemarker
+  mvn clean install
+
+  cd sling/scripting/javascript
+  mvn clean install
+
+  cd sling/scripting/ruby
+  mvn clean install
+
+  cd sling/scripting/velocity
+  mvn clean install
+  
+- Run the microsling tests:
 
   cd sling/microsling/microsling-core
   mvn clean install
   
-Builds microsling and runs the unit and integration tests.  
+  Builds microsling and runs the unit and integration tests.  
   
-5) Build and run this webapp:
+- Build and run this webapp:
 
   mvn clean jetty:run
   
-Which should say "Started SelectChannelConnector@0.0.0.0:8080" once
-the build is done.  
+  Which should say "Started SelectChannelConnector@0.0.0.0:8080" once
+  the build is done.  
   
-6) Connect to http://localhost:8080/ which should return a page
-saying "Microsling homepage". That page contains instructions for
-playing with Microsling.   
+- Connect to http://localhost:8080/ which should return a page
+  saying "Microsling homepage". That page contains instructions for
+  playing with Microsling.   
