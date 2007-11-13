@@ -18,6 +18,9 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,8 +48,10 @@ import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.DefaultMappedObject;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.jcr.resource.PathResolver;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResourceIterator;
+import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +59,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>JcrResourceManager</code> TODO
  */
-public class JcrResourceManager implements ResourceManager {
+public class JcrResourceManager implements ResourceManager, PathResolver {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -101,17 +106,8 @@ public class JcrResourceManager implements ResourceManager {
     // ---------- ResourceResolver interface ----------------------------------
 
     public Resource resolve(ServletRequest request) throws SlingException {
-        Resource result = null;
-        String path = null;
         String pathInfo = ((HttpServletRequest) request).getPathInfo();
-        try {
-            final ResourcePathIterator it = new ResourcePathIterator(pathInfo);
-            while (it.hasNext() && result == null) {
-                result = getResourceInternal(it.next(), null);
-            }
-        } catch (RepositoryException re) {
-            throw new SlingException("RepositoryException for path=" + path, re);
-        }
+        Resource result = resolve(pathInfo);
 
         if (result == null) {
             result = new NonExistingResource(pathInfo);
@@ -223,6 +219,88 @@ public class JcrResourceManager implements ResourceManager {
         } catch (RepositoryException re) {
             throw new SlingException(re);
         }
+    }
+
+    // ---------- PathResolver interface --------------------------------------
+
+    /**
+     * @throws AccessControlException If an item would exist but is not readable
+     *      to this manager's session.
+     */
+    public Resource resolve(String url) throws SlingException {
+
+        // decode the request URI (required as the servlet container does not
+        try {
+            url = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException uee) {
+            log.error("Cannot decode request URI using UTF-8", uee);
+        } catch (Exception e) {
+            log.error("Failed to decode request URI " + url, e);
+        }
+
+
+        // convert fake urls
+        String realUrl = (String) factory.getVirtualURLMap().get(url);
+        if (realUrl != null) {
+            log.debug("resolve: Using real url '{}' for virtual url '{}'",
+                realUrl, url);
+            url = realUrl;
+        }
+
+        try {
+
+            // translate url to a mapped url structure
+            return transformURL(url);
+
+        } catch (AccessControlException ace) {
+            // rethrow AccessControlExceptions to be handled
+            throw ace;
+
+        } catch (SlingException se) {
+            // rethrow SlingException as it is declared
+            throw se;
+
+        } catch (Throwable t) {
+            // wrap any other issue into a SlingException
+            throw new SlingException("Problem resolving " + url, t);
+        }
+    }
+
+    public String pathToURL(String path) {
+        return pathToURL(null, path, null);
+    }
+
+    public String pathToURL(String prefix, String path, String suffix) {
+        String href = null;
+
+        // get first map
+        Mapping[] mappings = factory.getMappings();
+        for (int i = 0; i < mappings.length && href == null; i++) {
+            href = mappings[i].mapHandle(path);
+        }
+
+        // if no mapping's to prefix matches the handle, use the handle itself
+        if (href == null) {
+            href = path;
+        }
+
+        // check virtual mappings
+        String virtual = (String) factory.getVirtualURLMap().getKey(href);
+        if (virtual != null) {
+            href = virtual;
+        }
+
+        // handle prefix and suffix
+        if (prefix != null && !prefix.equals("") && !prefix.equals("/")) {
+            href = prefix + href;
+        }
+        if (suffix != null) {
+            href += suffix;
+        }
+
+        log.debug("MapHandle: {} + {} + {} -> {}", new Object[] { prefix, path,
+            suffix, href });
+        return href;
     }
 
     // ---------- ResourceManager interface -----------------------------------
@@ -408,6 +486,46 @@ public class JcrResourceManager implements ResourceManager {
     }
 
     // ---------- implementation helper ----------------------------------------
+
+    private Resource transformURL(String url) throws SlingException {
+        Mapping[] mappings = factory.getMappings();
+        for (int i = 0; i < mappings.length; i++) {
+            // exchange the 'to'-portion with the 'from' portion and check
+            String href = mappings[i].mapUri(url);
+            if (href == null) {
+                log.debug("Mapping {} cannot map {}", mappings[i], url);
+                continue;
+            }
+
+            Resource resource = scanPath(href);
+            if (resource != null) {
+                return resource;
+            }
+
+            log.debug("Cannot resolve {} to resource", href);
+        }
+
+        log.error("Could not resolve URL {} to a Content object", url);
+        return null;
+
+    }
+
+    private Resource scanPath(String uriPath) throws SlingException {
+        Resource resource = null;
+        String curPath = uriPath;
+        try {
+            final ResourcePathIterator it = new ResourcePathIterator(uriPath);
+            while (it.hasNext() && resource == null) {
+                curPath = it.next();
+                resource = getResourceInternal(curPath, null);
+            }
+        } catch (RepositoryException re) {
+            throw new SlingException("Problem trying " + curPath
+                + " for request path " + uriPath, re);
+        }
+
+        return resource;
+    }
 
     /** Creates a JcrNodeResource with the given path if existing */
     protected Resource getResourceInternal(String path, Class<?> type)
