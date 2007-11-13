@@ -18,19 +18,24 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.collections.BidiMap;
+import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
+import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.loader.Loader;
 import org.apache.sling.jcr.resource.internal.mapping.ObjectContentManagerFactory;
 import org.osgi.framework.Bundle;
@@ -53,10 +58,10 @@ import org.osgi.service.event.EventConstants;
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
  *
- * @scr.component immediate="true" label="%content.name"
- *                description="%content.description" metatype="false"
- * @scr.property name="service.description" value="Sling
- *               JcrResourceManagerFactory Implementation"
+ * @scr.component immediate="true" label="%resource.resolver.name"
+ *                description="%resource.resolver.description"
+ * @scr.property name="service.description"
+ *                value="Sling JcrResourceManagerFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceManagerFactory"
  */
@@ -64,6 +69,28 @@ public class JcrResourceManagerFactoryImpl implements
         JcrResourceManagerFactory, SynchronousBundleListener {
 
     /**
+     * @scr.property value="true" type="Boolean"
+     */
+     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
+
+     /**
+      * The resolver.virtual property has no default configuration. But the sling
+      * maven plugin and the sling management console cannot handle empty
+      * multivalue properties at the moment. So we just add a dummy direct
+      * mapping.
+      * @scr.property values.1="/-/"
+      */
+     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
+
+     /**
+      * @scr.property values.1="/-/" values.2="/content/-/"
+      *               Cvalues.3="/apps/&times;/docroot/-/"
+      *               Cvalues.4="/libs/&times;/docroot/-/"
+      *               values.5="/system/docroot/-/"
+      */
+     private static final String PROP_MAPPING = "resource.resolver.mapping";
+
+     /**
      * The JCR Repository we access to resolve resources
      *
      * @scr.reference
@@ -87,6 +114,15 @@ public class JcrResourceManagerFactoryImpl implements
 
     /** The OSGi Component Context */
     private ComponentContext componentContext;
+
+    /** all mappings */
+    private Mapping[] mappings;
+
+    /** The fake urls */
+    private BidiMap virtualURLMap;
+
+    /** <code>true</code>, if direct mappings from URI to handle are allowed */
+    private boolean allowDirect = false;
 
     /**
      * Map of administrative sessions used to check item existence. Indexed by
@@ -258,6 +294,15 @@ public class JcrResourceManagerFactoryImpl implements
         return (mts != null) ? mts.getMimeType(name) : null;
     }
 
+    /** If url is a virtual URL returns the real URL, otherwise returns url */
+    BidiMap getVirtualURLMap() {
+        return virtualURLMap;
+    }
+
+    Mapping[] getMappings() {
+        return mappings;
+    }
+
     // ---------- SCR Integration
 
     protected void activate(ComponentContext componentContext) {
@@ -287,6 +332,36 @@ public class JcrResourceManagerFactoryImpl implements
                 objectContentManagerFactory.registerMapperClient(bundles[i]);
             }
         }
+
+        Dictionary<?, ?> properties = componentContext.getProperties();
+
+        BidiMap virtuals = new TreeBidiMap();
+        String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
+        for (int i=0; virtualList != null && i < virtualList.length; i++) {
+            String[] parts = Mapping.split(virtualList[i]);
+            virtuals.put(parts[0], parts[2]);
+        }
+        virtualURLMap = virtuals;
+
+        List<Mapping> maps = new ArrayList<Mapping>();
+        String[] mappingList = (String[]) properties.get(PROP_MAPPING);
+        for (int i=0; mappingList != null && i < mappingList.length; i++) {
+            maps.add(new Mapping(mappingList[i]));
+        }
+        Mapping[] tmp = maps.toArray(new Mapping[maps.size()]);
+
+        // check whether direct mappings are allowed
+        Boolean directProp = (Boolean) properties.get(PROP_ALLOW_DIRECT);
+        allowDirect = (directProp != null) ? directProp.booleanValue() : true;
+        if (allowDirect) {
+            Mapping[] tmp2 = new Mapping[tmp.length + 1];
+            tmp2[0] = Mapping.DIRECT;
+            System.arraycopy(tmp, 0, tmp2, 1, tmp.length);
+            mappings = tmp2;
+        } else {
+            mappings = tmp;
+        }
+
     }
 
     protected void deactivate(ComponentContext oldContext) {
