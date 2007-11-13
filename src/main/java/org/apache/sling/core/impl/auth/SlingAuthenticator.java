@@ -72,11 +72,9 @@ import org.slf4j.LoggerFactory;
  * removing any one the thread finds. Currently the cleanup routine runs at and
  * interval twice as big as the time-to-life value.
  *
- * @  scr.component immediate="true" label="%auth.name"
- *                description="%auth.description"
- * @ scr.property name="service.description" value="Default AuthenticationService
- *               implementation"
- * @ scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.component label="%auth.name" description="%auth.description" ds="false"
+ * @scr.property name="service.description" value="Sling Authenticator"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
 public class SlingAuthenticator implements ManagedService {
 
