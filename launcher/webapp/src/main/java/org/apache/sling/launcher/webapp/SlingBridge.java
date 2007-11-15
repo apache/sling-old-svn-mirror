@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.servlet;
+package org.apache.sling.launcher.webapp;
 
 import java.util.Map;
 
-import org.apache.sling.launcher.Logger;
-import org.apache.sling.launcher.ResourceProvider;
-import org.apache.sling.launcher.Sling;
+import org.apache.sling.launcher.app.Logger;
+import org.apache.sling.launcher.app.ResourceProvider;
+import org.apache.sling.launcher.app.Sling;
 import org.eclipse.equinox.http.servlet.internal.Activator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleException;
@@ -53,7 +53,7 @@ public class SlingBridge extends Sling {
             try {
                 this.httpServiceActivator.stop(this.getBundleContext());
             } catch (Exception e) {
-                // TODO :log but don't care
+                logger.log("Unexpected problem stopping HttpService", e);
             }
             this.httpServiceActivator = null;
         }
