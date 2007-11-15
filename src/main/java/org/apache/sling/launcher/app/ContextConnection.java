@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher;
+package org.apache.sling.launcher.app;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,20 +24,20 @@ import java.net.URLConnection;
 /**
  * The <code>ContextConnection</code> extends the
  * <code>java.net.URLConnection</code> to provide access to a resource which
- * is available from the servlet context.
+ * is available from {@link ResourceProvider} provided to {@link Sling}.
  * <p>
  * This class is implemented by actually connecting to a resource URL which is
- * provided by the servlet context and delegating the relevant method calls.
+ * provided by the resource provider and delegating the relevant method calls.
  * Currently only {@link #getContentLength()}, {@link #getContentType()},
  * {@link #getInputStream()} and {@link #getLastModified()} are supported.
  */
 public class ContextConnection extends URLConnection {
 
     /**
-     * The <code>ServletContext</code> to which requests for content access
-     * are delegated.
+     * The {@link ResourceProvider} to which requests for content access are
+     * delegated.
      */
-    private final ResourceProvider classLoader;
+    private final ResourceProvider resourceProvider;
 
     /**
      * The delegatee <code>URLConnection</code> to which some of the method
@@ -49,34 +49,29 @@ public class ContextConnection extends URLConnection {
      * Creates an instance of this context connection.
      *
      * @param url The original URL whose path part is used to address the
-     *      resource from the servlet context.
-     * @param context The <code>ServletContext</code> to which requests for
-     *      content access are delegated.
+     *            resource from the resource provider.
+     * @param resourceProvider The {@link ResourceProvider} to which requests
+     *            for content access are delegated.
      */
-    ContextConnection(URL url, ResourceProvider classLoader) {
+    ContextConnection(URL url, ResourceProvider resourceProvider) {
         super(url);
-        this.classLoader = classLoader;
+        this.resourceProvider = resourceProvider;
     }
 
     /**
-     * Accesses the servlet context resource by opening the connection to the
-     * respective resource URL.
-     * <p>
-     * If this instance has already been connected, this method has no effect.
-     *
-     * @throws IOException If the URL path does not address an existing resource
-     *      in the servlet context or if opening the connection to that resource
-     *      fails.
+     * Accesses the the resource from the underlaying resource provider at the
+     * URL's path.
      */
     public void connect() throws IOException {
         if (!this.connected) {
-            URL contextURL = this.classLoader.getResource(this.url.getPath());
+            URL contextURL = resourceProvider.getResource(url.getPath());
             if (contextURL == null) {
-                throw new IOException("Resource " + this.url.getPath() + " does not exist");
+                throw new IOException("Resource " + url.getPath()
+                    + " does not exist");
             }
 
-            this.delegatee = contextURL.openConnection();
-            this.connected = true;
+            delegatee = contextURL.openConnection();
+            connected = true;
         }
     }
 
@@ -85,7 +80,7 @@ public class ContextConnection extends URLConnection {
      * not been connected yet.
      */
     public int getContentLength() {
-        return (this.delegatee == null) ? -1 : this.delegatee.getContentLength();
+        return (delegatee == null) ? -1 : delegatee.getContentLength();
     }
 
     /**
@@ -93,7 +88,7 @@ public class ContextConnection extends URLConnection {
      * if this connection has not been connected yet.
      */
     public String getContentType() {
-        return (this.delegatee == null) ? null : this.delegatee.getContentType();
+        return (delegatee == null) ? null : delegatee.getContentType();
     }
 
     /**
@@ -101,11 +96,12 @@ public class ContextConnection extends URLConnection {
      * is not connected yet, the conneciton is opened.
      *
      * @throws IOException may be thrown if an error occurrs opening the
-     *      connection or accessing the content as an <code>InputStream</code>.
+     *             connection or accessing the content as an
+     *             <code>InputStream</code>.
      */
     public InputStream getInputStream() throws IOException {
-        this.connect();
-        return this.delegatee.getInputStream();
+        connect();
+        return delegatee.getInputStream();
     }
 
     /**
@@ -113,6 +109,6 @@ public class ContextConnection extends URLConnection {
      * connection has not been connected yet.
      */
     public long getLastModified() {
-        return (this.delegatee == null) ? 0 : this.delegatee.getLastModified();
+        return (delegatee == null) ? 0 : delegatee.getLastModified();
     }
 }

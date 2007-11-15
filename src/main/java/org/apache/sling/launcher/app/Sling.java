@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher;
+package org.apache.sling.launcher.app;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,8 +37,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.Map.Entry;
-
-import javax.servlet.ServletException;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.util.FelixConstants;
@@ -115,24 +113,6 @@ public class Sling implements BundleActivator {
     public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
     /**
-     * The name of the servlet context attribute containing the
-     * <code>Felix</code> instance.
-     * <p>
-     * This context attribute must be used with utmost care ! It is not intended
-     * for this value to be used in generall applications of the framework.
-     */
-    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.framework";
-
-    /**
-     * The name of the servlet context attribute containing the
-     * <code>BundleContext</code> instance of the system bundle.
-     * <p>
-     * This context attribute must be used with utmost care ! It is not intended
-     * for this value to be used in generall applications of the framework.
-     */
-    public static final String CONTEXT_ATTR_SLING_SYSTEM_BUNDLE_CONTEXT = "org.apache.sling.system.bundlecontext";
-
-    /**
      * The name of the configuration property defining the Sling home directory
      * (value is "sling.home"). This is a Platform file system directory below
      * which all runtime data, such as the Felix bundle archives, logfiles, CRX
@@ -156,7 +136,7 @@ public class Sling implements BundleActivator {
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
-    
+
     /**
      * The name of the framework property containing the identifier of the
      * running Sling instance (value is "sling.id"). This value of this property
@@ -170,7 +150,7 @@ public class Sling implements BundleActivator {
      * {@link #SLING_ID Sling instance identifier} (value is "sling.id").
      */
     public static final String SLING_ID_FILE = SLING_ID;
-    
+
     /**
      * The name of the configuration property defining a properties file
      * defining a list of bundles, which are installed into the framework when
@@ -204,7 +184,7 @@ public class Sling implements BundleActivator {
     /**
      * The simple logger to log messages during startup and shutdown to
      */
-    private final Logger logger;
+    protected final Logger logger;
 
     private ResourceProvider resourceProvider;
 
@@ -232,10 +212,8 @@ public class Sling implements BundleActivator {
     public Sling(Logger logger, ResourceProvider resourceProvider,
             Map<String, String> propOverwrite) throws BundleException {
 
-        this.logger = (logger != null) ? logger : new SimpleLogger();
-        this.resourceProvider = (resourceProvider != null)
-                ? resourceProvider
-                : new ClassLoaderResourceProvider(this.getClass().getClassLoader());
+        this.logger = logger;
+        this.resourceProvider = resourceProvider;
 
         this.logger.log("Starting Sling");
 
@@ -248,7 +226,7 @@ public class Sling implements BundleActivator {
 
         // ensure execution environment
         this.setExecutionEnvironment(props);
-        
+
         // ensure the instance ID
         props.put(SLING_ID, getInstanceId(props));
 
@@ -277,7 +255,8 @@ public class Sling implements BundleActivator {
     public final void destroy() {
         // shutdown the Felix container
         if (felix != null) {
-            String label = "Sling Instance " + felix.getBundleContext().getProperty(SLING_ID);
+            String label = "Sling Instance "
+                + felix.getBundleContext().getProperty(SLING_ID);
             logger.log("Shutting down " + label);
             felix.stopAndWait();
             logger.log(label + " stopped");
@@ -379,8 +358,8 @@ public class Sling implements BundleActivator {
             slingHome = props.get(SLING_HOME);
             if (slingHome == null || slingHome.length() == 0) {
                 slingHome = "sling";
-                this.logger.log("sling.home is not defined. Using '" + slingHome
-                    + "'");
+                this.logger.log("sling.home is not defined. Using '"
+                    + slingHome + "'");
             }
         }
 
@@ -494,7 +473,8 @@ public class Sling implements BundleActivator {
             tmp.putAll(origProps);
             tmp.store(os, "Overlay properties for configuration");
         } catch (Exception ex) {
-            this.logger.log("Error loading overlay properties from " + propFile, ex);
+            this.logger.log(
+                "Error loading overlay properties from " + propFile, ex);
         } finally {
             if (os != null) {
                 try {
@@ -658,7 +638,7 @@ public class Sling implements BundleActivator {
      * <code>${sling.home}/sling.id</code> file if existing and valid.
      * Otherwise a new id is created as a random UUID and then stored in the
      * file.
-     * 
+     *
      * @return the Sling Instance Identifier
      */
     private String getInstanceId(Map<String, String> props) {
@@ -673,12 +653,13 @@ public class Sling implements BundleActivator {
                 byte[] rawBytes = new byte[36];
                 if (fin.read(rawBytes) == 36) {
                     String rawString = new String(rawBytes, "ISO-8859-1");
-                    
+
                     // roundtrip to ensure correct format of UUID value
-                    slingId = UUID.fromString(rawString).toString(); 
+                    slingId = UUID.fromString(rawString).toString();
                 }
             } catch (Throwable t) {
-                logger.log("Failed reading UUID from id file " + idFile + ", creating new id", t);
+                logger.log("Failed reading UUID from id file " + idFile
+                    + ", creating new id", t);
             } finally {
                 if (fin != null) {
                     try {
@@ -688,11 +669,11 @@ public class Sling implements BundleActivator {
                 }
             }
         }
-        
+
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
             slingId = UUID.randomUUID().toString();
-            
+
             idFile.delete();
             idFile.getParentFile().mkdirs();
             FileOutputStream fout = null;
@@ -711,7 +692,7 @@ public class Sling implements BundleActivator {
                 }
             }
         }
-        
+
         return slingId;
     }
 
@@ -887,8 +868,8 @@ public class Sling implements BundleActivator {
                         this.load(props, is);
                     }
                 } catch (IOException ioe) {
-                    this.logger.log("Error loading config properties from " + file,
-                        ioe);
+                    this.logger.log("Error loading config properties from "
+                        + file, ioe);
                 }
             }
         }
@@ -909,8 +890,8 @@ public class Sling implements BundleActivator {
             try {
                 this.load(props, is);
             } catch (IOException ioe) {
-                this.logger.log("Error loading config properties from " + resource,
-                    ioe);
+                this.logger.log("Error loading config properties from "
+                    + resource, ioe);
             }
         }
     }
