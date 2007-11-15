@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.servlet;
+package org.apache.sling.launcher.webapp;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,7 +23,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.GenericServlet;
@@ -35,11 +34,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launcher.Logger;
-import org.apache.sling.launcher.ResourceProvider;
-import org.apache.sling.launcher.Sling;
+import org.apache.sling.launcher.app.Logger;
+import org.apache.sling.launcher.app.ResourceProvider;
+import org.apache.sling.launcher.app.Sling;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
-import org.osgi.framework.ServiceEvent;
 
 /**
  * The <code>SlingServlet</code> serves as a basic servlet for Project Sling.
@@ -104,46 +102,9 @@ public class SlingServlet extends GenericServlet {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The name of the servlet context attribute containing the
-     * <code>Felix</code> instance.
-     * <p>
-     * This context attribute must be used with utmost care ! It is not intended
-     * for this value to be used in generall applications of the framework.
-     */
-    public static final String CONTEXT_ATTR_SLING_FRAMEWORK = "org.apache.sling.framework";
-
-    /**
-     * The name of the configuration property defining the Sling home directory
-     * (value is "sling.home"). This is a Platform file system directory below
-     * which all runtime data, such as the Felix bundle archives, logfiles, JCR
-     * repository, etc., is located.
-     * <p>
-     * The value of this property, if missing from the web application
-     * deployment descriptor as an init-param, is "sling".
-     * <p>
-     * This configuration property is generally set in the web application
-     * configuration and may be referenced in all property files (default, user
-     * supplied and web application parameters) used to build the framework
-     * configuration.
-     */
-    public static final String SLING_HOME = "sling.home";
-
-    /**
-     * The name of the configuration property defining a properties file
-     * defining a list of bundles, which are installed into the framework when
-     * it has been launched (value is "org.apache.osgi.bundles").
-     * <p>
-     * This configuration property is generally set in the web application
-     * configuration and may be referenced in all property files (default, user
-     * supplied and web application parameters) used to build the framework
-     * configuration.
-     */
-    public static final String OSGI_FRAMEWORK_BUNDLES = "org.apache.osgi.bundles";
-
-    /**
      * The name of the configuration property defining the obr repository.
      */
-    public static final String OBR_REPOSITORY_URL = "obr.repository.url";
+    private static final String OBR_REPOSITORY_URL = "obr.repository.url";
 
     /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
@@ -173,33 +134,25 @@ public class SlingServlet extends GenericServlet {
     public final void init() throws ServletException {
         super.init();
 
-        if (this.getServletContext().getAttribute(CONTEXT_ATTR_SLING_FRAMEWORK) != null) {
-            this.log("Has this framework already been started ???");
-            return;
-        }
-
         // read the default parameters
-        Map<String, String> props = this.loadConfigProperties();
+        Map<String, String> props = loadConfigProperties();
 
         try {
-            Logger logger = new ServletContextLogger(this.getServletContext());
+            Logger logger = new ServletContextLogger(getServletContext());
             ResourceProvider rp = new ServletContextResourceProvider(
-                this.getServletContext());
-            this.sling = new SlingBridge(logger, rp, props);
+                getServletContext());
+            sling = new SlingBridge(logger, rp, props);
         } catch (Exception ex) {
-            this.log("Cannot start the OSGi framework", ex);
+            log("Cannot start the OSGi framework", ex);
             throw new UnavailableException("Cannot start the OSGi Framework: "
                 + ex);
         }
 
-        // set the context attributes only if all setup has been successfull
-        this.getServletContext().setAttribute(CONTEXT_ATTR_SLING_FRAMEWORK, this.sling);
+        // set up the OSGi HttpService proxy servlet
+        delegatee = new HttpServiceServlet();
+        delegatee.init(getServletConfig());
 
-        // set up the proxy servlet
-        this.delegatee = new HttpServiceServlet();
-        this.delegatee.init(this.getServletConfig());
-
-        this.log("Servlet " + this.getServletName() + " initialized");
+        log("Servlet " + getServletName() + " initialized");
     }
 
     /**
@@ -221,7 +174,7 @@ public class SlingServlet extends GenericServlet {
             throws ServletException, IOException {
 
         // delegate the request to the registered delegatee servlet
-        Servlet delegatee = this.getDelegatee();
+        Servlet delegatee = getDelegatee();
         if (delegatee == null) {
             ((HttpServletResponse) res).sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
@@ -236,18 +189,15 @@ public class SlingServlet extends GenericServlet {
     public final void destroy() {
 
         // destroy the delegatee
-        if (this.delegatee != null) {
-            this.delegatee.destroy();
-            this.delegatee = null;
+        if (delegatee != null) {
+            delegatee.destroy();
+            delegatee = null;
         }
 
-        // remove the context attributes immediately
-        this.getServletContext().removeAttribute(CONTEXT_ATTR_SLING_FRAMEWORK);
-
         // shutdown the Felix container
-        if (this.sling != null) {
-            this.sling.destroy();
-            this.sling = null;
+        if (sling != null) {
+            sling.destroy();
+            sling = null;
         }
 
         // finally call the base class destroy method
@@ -255,7 +205,7 @@ public class SlingServlet extends GenericServlet {
     }
 
     Servlet getDelegatee() {
-        return this.delegatee;
+        return delegatee;
     }
 
     // ---------- Configuration Loading ----------------------------------------
@@ -293,27 +243,30 @@ public class SlingServlet extends GenericServlet {
         props.put("sling.include.jcr-client", "jcr-client.properties");
 
         // copy context init parameters
-        Enumeration<String> pe = this.getServletContext().getInitParameterNames();
+        Enumeration<String> pe = getServletContext().getInitParameterNames();
         while (pe.hasMoreElements()) {
             String name = pe.nextElement();
-            props.put(name, this.getServletContext().getInitParameter(name));
+            props.put(name, getServletContext().getInitParameter(name));
         }
 
         // copy servlet init parameters
-        pe = this.getInitParameterNames();
+        pe = getInitParameterNames();
         while (pe.hasMoreElements()) {
             String name = pe.nextElement();
-            props.put(name, this.getInitParameter(name));
+            props.put(name, getInitParameter(name));
         }
 
         // if the specified obr location is not a url and starts with a '/', we
-        // assume that this location is inside the webapp and create the correct full url
+        // assume that this location is inside the webapp and create the correct
+        // full url
         final String repoLocation = props.get(OBR_REPOSITORY_URL);
-        if ( repoLocation != null && repoLocation.indexOf(":/") < 1 && repoLocation.startsWith("/")) {
+        if (repoLocation != null && repoLocation.indexOf(":/") < 1
+            && repoLocation.startsWith("/")) {
             try {
-                final URL url = this.getServletContext().getResource(repoLocation);
+                final URL url = getServletContext().getResource(
+                    repoLocation);
                 // only if we get back a resource url, we update it
-                if ( url != null ) {
+                if (url != null) {
                     props.put(OBR_REPOSITORY_URL, url.toExternalForm());
                 }
             } catch (MalformedURLException e) {
@@ -332,9 +285,9 @@ public class SlingServlet extends GenericServlet {
 
         public void log(String message, Throwable throwable) {
             if (throwable == null) {
-                this.servletContext.log(message);
+                servletContext.log(message);
             } else {
-                this.servletContext.log(message, throwable);
+                servletContext.log(message, throwable);
             }
         }
     }
@@ -362,9 +315,9 @@ public class SlingServlet extends GenericServlet {
                 path = "/" + path;
             }
 
-            Set resources = this.servletContext.getResourcePaths(path); // unchecked
+            Set resources = servletContext.getResourcePaths(path); // unchecked
             if (resources.isEmpty()) {
-                resources = this.servletContext.getResourcePaths(WEB_INF + path); // unchecked
+                resources = servletContext.getResourcePaths(WEB_INF + path); // unchecked
             }
 
             return resources.iterator(); // unchecked
@@ -383,16 +336,16 @@ public class SlingServlet extends GenericServlet {
 
             try {
                 // try direct path
-                URL resource = this.servletContext.getResource(path);
+                URL resource = servletContext.getResource(path);
                 if (resource != null) {
                     return resource;
                 }
 
                 // otherwise try WEB-INF location
-                return this.servletContext.getResource(WEB_INF + path);
+                return servletContext.getResource(WEB_INF + path);
 
             } catch (MalformedURLException mue) {
-                this.servletContext.log("Failure to get resource " + path, mue);
+                servletContext.log("Failure to get resource " + path, mue);
             }
 
             // fall back to no resource found

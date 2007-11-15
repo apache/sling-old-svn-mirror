@@ -28,7 +28,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-servlet</artifactId>
+    <artifactId>org.apache.sling.launcher.webapp</artifactId>
     <packaging>war</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling-servlet
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launcher/webapp
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling-servlet
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launcher/webapp
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling-servlet
+            http://svn.apache.org/viewvc/incubator/sling/trunk/launcher/webapp
         </url>
     </scm>
 
@@ -95,11 +95,11 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                sling-app,servlet
+                                org.apache.sling.launcher.app,servlet
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
-                                ${project.build.directory}/sling-app
+                                ${project.build.directory}/launcher-app
                             </outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>
@@ -119,12 +119,12 @@
                         <!-- the classes (except unneeded Main) -->
                         <resource>
                             <directory>
-                                ${basedir}/target/sling-app
+                                ${basedir}/target/launcher-app
                             </directory>
                             <targetPath>WEB-INF/classes</targetPath>
                             <excludes>
                                 <exclude>
-                                    org/apache/sling/launcher/main/**
+                                    org/apache/sling/launcher/app/main/**
                                 </exclude>
                                 <exclude>
                                     resources/bundles/org.apache.felix.http.jetty*.jar
@@ -140,7 +140,7 @@
                         <!-- the configuration resources -->
                         <resource>
                             <directory>
-                                ${basedir}/target/sling-app
+                                ${basedir}/target/launcher-app
                             </directory>
                             <targetPath>WEB-INF</targetPath>
                             <includes>
@@ -188,7 +188,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-app</artifactId>
+            <artifactId>org.apache.sling.launcher.app</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <scope>provided</scope>
             <exclusions>
