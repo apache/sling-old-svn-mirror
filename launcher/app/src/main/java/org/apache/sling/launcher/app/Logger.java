@@ -14,17 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher;
+package org.apache.sling.launcher.app;
 
 /**
- * The <code>Logger</code> TODO
+ * The <code>Logger</code> class defines a simple API to abstract the real
+ * logging to use depending on whether Sling is running as a standalone
+ * application or as a web application.
  */
 public abstract class Logger {
 
+    /** Logs an informational message */
     public void log(String message) {
         this.log(message, null);
     }
 
+    /** Logs an error message with an accompanying Throwable */
     public abstract void log(String message, Throwable throwable);
 
 }

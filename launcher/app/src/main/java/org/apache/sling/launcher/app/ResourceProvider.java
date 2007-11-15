@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher;
+package org.apache.sling.launcher.app;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,14 +22,27 @@ import java.net.URL;
 import java.util.Iterator;
 
 /**
- * The <code>ResourceProvider</code> TODO
+ * The <code>ResourceProvider</code> defines a simple API to access resources
+ * from the environment depending on how Sling is launched.
  */
 public abstract class ResourceProvider {
 
+    /**
+     * Returns an iterator of paths strings of the children of the given folder
+     * defined by its path.
+     */
     public abstract Iterator<String> getChildren(String path);
 
+    /**
+     * Returns an URL to the resource with the given path or <code>null</code>
+     * if no such resource exists.
+     */
     public abstract URL getResource(String path);
 
+    /**
+     * Returns an <code>InputStream</code> to the resource given by the path
+     * or <code>null</code> if no such resource exists.
+     */
     public InputStream getResourceAsStream(String path) {
         URL res = this.getResource(path);
         if (res != null) {

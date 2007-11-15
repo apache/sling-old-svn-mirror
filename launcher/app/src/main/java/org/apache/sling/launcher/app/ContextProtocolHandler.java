@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher;
+package org.apache.sling.launcher.app;
 
 import java.net.URL;
 import java.net.URLConnection;
@@ -30,29 +30,29 @@ import org.osgi.service.url.AbstractURLStreamHandlerService;
 public class ContextProtocolHandler extends AbstractURLStreamHandlerService {
 
     /**
-     * The <code>ServletContext</code> to which requests for content access
-     * are delegated.
+     * The {@link ResourceProvider} to which requests for content access are
+     * delegated.
      */
-    private final ResourceProvider classLoader;
+    private final ResourceProvider resourceProvider;
 
     /**
      * Creates an instance of this protocol handler setting the servlet context
      * which is queried to access content.
      *
-     * @param context The <code>ServletContext</code> to which requests for
-     *      content access are delegated.
+     * @param resourceProvider The {@link ResourceProvider} to which requests
+     *            for content access are delegated.
      */
-    public ContextProtocolHandler(ResourceProvider classLoader) {
-        this.classLoader = classLoader;
+    public ContextProtocolHandler(ResourceProvider resourceProvider) {
+        this.resourceProvider = resourceProvider;
     }
 
     /**
-     * Returns an instance of the {@link ContextConnection} class to access
-     * the content of the <code>url</code>.
+     * Returns an instance of the {@link ContextConnection} class to access the
+     * content of the <code>url</code>.
      *
      * @param url The URL whose content is requested.
      */
     public URLConnection openConnection(URL url) {
-        return new ContextConnection(url, this.classLoader);
+        return new ContextConnection(url, resourceProvider);
     }
 }

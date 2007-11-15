@@ -14,12 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher;
+package org.apache.sling.launcher.app.main;
+
+import org.apache.sling.launcher.app.Logger;
 
 /**
  * The <code>SimpleLogger</code> TODO
  */
-public class SimpleLogger extends Logger {
+class SimpleLogger extends Logger {
 
     public void log(String message, Throwable t) {
         if (t != null) {
