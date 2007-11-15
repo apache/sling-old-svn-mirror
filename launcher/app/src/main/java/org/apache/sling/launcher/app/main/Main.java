@@ -14,71 +14,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.main;
+package org.apache.sling.launcher.app.main;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
-import org.apache.sling.launcher.Sling;
+import org.apache.sling.launcher.app.Logger;
+import org.apache.sling.launcher.app.ResourceProvider;
+import org.apache.sling.launcher.app.Sling;
+import org.apache.sling.osgi.log.LogbackManager;
 import org.osgi.framework.BundleException;
 
 /**
- * The <code>Sling</code> serves as a basic servlet for Project Sling. The
- * tasks of this servlet are as follows:
- * <ul>
- * <li>The {@link #init()} method launches Apache <code>Felix</code> as the
- * OSGi framework implementation we use.
- * <li>Registers as a service listener interested for services of type
- * <code>javax.servlet.Servlet</code>.
- * <li>Handles requests by delegating to a servlet which is expected to be
- * registered with the framework as a service of type
- * <code>javax.servlet.Servlet</code>. If no delegatee servlet has been
- * registered request handlings results in a temporary unavailability of the
- * servlet.
- * </ul>
+ * The <code>Main</code> class is a simple Java Application which interprests
+ * the command line and creates the {@link Sling} launcher class and thus starts
+ * the OSGi framework. In addition a shutdown thread is registered to ensure
+ * proper shutdown on VM termination.
  * <p>
- * <b>Request Handling</b>
- * <p>
- * This servlet handles request by forwarding to a delegatee servlet. The
- * delegatee servlet is automatically retrieved from the service registry by the
- * {@link #getDelegatee()}. This method also makes sure, the such a servlet
- * actually exits by throwing an <code>UnvailableException</code> if not and
- * also makes sure the servlet is initialized.
- * <p>
- * <b>Launch Configuration</b>
- * <p>
- * The Apache <code>Felix</code> framework requires configuration parameters
- * to be specified for startup. This servlet builds the list of parameters from
- * three locations:
- * <ol>
- * <li>The <code>com/day/osgi/servlet/Sling.properties</code> is read from
- * the servlet class path. This properties file contains default settings.</li>
- * <li>Extensions of this servlet may provide additional properties to be
- * loaded overwriting the {@link #loadPropertiesOverride(Properties)} method.
- * <li>Finally, web application init parameters are added to the properties and
- * may overwrite existing properties of the same name(s).
- * </ol>
- * <p>
- * After loading all properties, variable substitution takes place on the
- * property values. A variable is indicated as <code>${&lt;prop-name&gt;}</code>
- * where <code>&lt;prop-name&gt;</code> is the name of a system or
- * configuration property (configuration properties override system properties).
- * Variables may be nested and are resolved from inner-most to outer-most. For
- * example, the property value <code>${outer-${inner}}</code> is resolved by
- * first resolving <code>${inner}</code> and then resolving the property whose
- * name is the catenation of <code>outer-</code> and the result of resolving
- * <code>${inner}</code>.
- * <p>
- * <b>Logging</b>
- * <p>
- * This servlet logs through the servlet container logging mechanism by calling
- * the <code>GenericServlet.log</code> methods. Bundles launched within the
- * framework provided by this servlet may use whatever logging mechanism they
- * choose to use. The Day Commons OSGI Log Bundle provides an OSGi Log Service
- * implementation, which also provides access to Apache Commons Logging, SLF4J
- * and Log4J logging. It is recommended that this bundle is used to setup and
- * configure logging for systems based on this servlet.
+ * The supported command line options are:
+ * <dl>
+ * <dt>-l loglevel</dt>
+ * <dd>Sets the initial loglevel as an integer in the range 0 to 4 or as one of
+ * the well known level strings FATAL, ERROR, WARN, INFO or DEBUG. This option
+ * overwrites the <code>org.apache.sling.osg.log.level</code> setting the
+ * <code>sling.properties</code> file.</dd>
+ * <dt>-f logfile</dt>
+ * <dd>The log file, \"-\" for stdout (default logs/error.log). This option
+ * overwrites the <code>org.apache.sling.osg.log.file</code> setting the
+ * <code>sling.properties</code> file.</dd>
+ * <dt>-c slinghome</dt>
+ * <dd>The directory in which Sling locates its initial configuration file
+ * <code>sling.properties</code> and where files of Sling itself such as the
+ * Apache Felix bundle archive or the JCR repository files are stored (default
+ * sling).</dd>
+ * <dt>-a address</dt>
+ * <dd>The interfact to bind to (use 0.0.0.0 for any). This option is not
+ * implemented yet.</dd>
+ * <dt>-p port</dt>
+ * <dd>The port to listen (default 8080) to handle HTTP requests. This option
+ * overwrites the <code>org.osgi.service.http.port</code> setting the
+ * <code>sling.properties</code> file.</dd>
+ * <dt>-h</dt>
+ * <dd>Prints a simple usage message listing all available command line
+ * options.</dd>
+ * </dl>
  */
 public class Main {
 
@@ -86,14 +65,22 @@ public class Main {
     private static final String[] logLevels = { "FATAL", "ERROR", "WARN",
         "INFO", "DEBUG" };
 
-    private static final String PROP_LOG_LEVEL = "org.apache.sling.log.level";
+    /** The Sling configuration property name setting the initial log level */
+    private static final String PROP_LOG_LEVEL = LogbackManager.LOG_LEVEL;
 
-    private static final String PROP_LOG_FILE = "org.apache.sling.log.file";
+    /** The Sling configuration property name setting the initial log file */
+    private static final String PROP_LOG_FILE = LogbackManager.LOG_FILE;
 
+    /**
+     * The configuration property setting the port on which the HTTP service
+     * listens
+     */
     private static final String PROP_PORT = "org.osgi.service.http.port";
 
+    /** The default port on which the HTTP service listens. */
     private static final String DEFAULT_PORT = "8080";
 
+    /** The parsed command line mapping (Sling) option name to option value */
     private static Map<String, String> commandLine;
 
     public static void main(String[] args) throws Exception {
@@ -115,7 +102,10 @@ public class Main {
         // properties file, though
 
         try {
-            Sling sling = new Sling(null, null, props) {
+            Logger logger = new SimpleLogger();
+            ResourceProvider resProvider = new ClassLoaderResourceProvider(
+                Main.class.getClassLoader());
+            Sling sling = new Sling(logger, resProvider, props) {
                 protected void loadPropertiesOverride(
                         Map<String, String> properties) {
                     if (commandLine != null) {
@@ -126,7 +116,7 @@ public class Main {
 
             Runtime.getRuntime().addShutdownHook(new TerminateSling(sling));
         } catch (BundleException be) {
-            System.err.println("Failed to Start OSGi framework");
+            log("Failed to Start OSGi framework");
             be.printStackTrace(System.err);
             System.exit(2);
         }
@@ -147,16 +137,24 @@ public class Main {
         }
     }
 
+    /**
+     * Parses the command line in <code>args</code> and sets appropriate Sling
+     * configuration options in the <code>props</code> map.
+     */
     private static void parseCommandLine(String[] args,
             Map<String, String> props) {
-        int argc = 0;
-        while (argc < args.length) {
-            String arg = args[argc++];
+        for (int argc = 0; argc < args.length; argc++) {
+            String arg = args[argc];
             if (arg.startsWith("-")) {
+
+                // require at least another character naming the option
                 if (arg.length() != 2) {
                     usage("Missing option name", 1);
                 }
+
+                // option argument is following the current option
                 String value = argc < args.length ? args[argc++] : null;
+
                 switch (arg.charAt(1)) {
                     case 'l':
                         if (value == null) {
@@ -174,6 +172,7 @@ public class Main {
                             props.put(PROP_LOG_LEVEL, value);
                         }
                         break;
+
                     case 'f':
                         if (value == null) {
                             usage("Missing log file value", 1);
@@ -183,9 +182,7 @@ public class Main {
                         }
                         props.put(PROP_LOG_FILE, value);
                         break;
-                    case 'd':
-                        log("The -d command line parameter is deprecated: use -c instead.");
-                        // fall through
+
                     case 'c':
                         if (value == null) {
                             usage("Missing directory value", 1);
@@ -193,6 +190,7 @@ public class Main {
                         }
                         props.put(Sling.SLING_HOME, value);
                         break;
+
                     case 'p':
                         if (value == null) {
                             usage("Missing port value", 1);
@@ -206,21 +204,18 @@ public class Main {
                             usage("Bad port: " + value, 1);
                         }
                         break;
+
                     case 'a':
                         if (value == null) {
                             usage("Missing address value", 1);
                             continue;
                         }
                         log("Setting the address to bind to is not supported, binding to 0.0.0.0");
-                        // try {
-                        // // just to verify it is a number
-                        // InetAddress.getByName(value);
-                        // } catch (UnknownHostException e) {
-                        // log("Bad address: " + value);
-                        // }
                         break;
+
                     case 'h':
                         usage(null, 0);
+
                     default:
                         usage("Unrecognized option " + arg, 1);
                         break;
@@ -229,31 +224,34 @@ public class Main {
         }
     }
 
+    /** prints a simple usage plus optional error message and exists with code */
     private static void usage(String message, int code) {
         if (message != null) {
             log(message);
-            System.err.println();
+            log("");
         }
 
-        System.err.println("usage: "
+        log("usage: "
             + Main.class.getName()
             + " [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
 
-        System.err.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
-        System.err.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
-        System.err.println("    -c slinghome  the sling context directory (default sling)");
-        System.err.println("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
-        System.err.println("    -p port       the port to listen to (default 8080)");
-        System.err.println("    -h            prints this usage message");
+        log("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
+        log("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
+        log("    -c slinghome  the sling context directory (default sling)");
+        log("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
+        log("    -p port       the port to listen to (default 8080)");
+        log("    -h            prints this usage message");
 
         // exiting now
         System.exit(code);
     }
 
+    /** Writes the message to stderr output */
     private static void log(String message) {
         System.err.println(message);
     }
 
+    /** Converts the loglevel code to a loglevel string name */
     private static String toLogLevel(int level) {
         if (level >= 0 && level < logLevels.length) {
             return logLevels[level];
@@ -263,6 +261,7 @@ public class Main {
         return null;
     }
 
+    /** Verifies the log level is one of the known values, returns null otherwise */
     private static String checkLogLevel(String level) {
         for (int i = 0; i < logLevels.length; i++) {
             if (logLevels[i].equalsIgnoreCase(level)) {

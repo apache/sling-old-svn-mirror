@@ -28,7 +28,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>sling-app</artifactId>
+    <artifactId>org.apache.sling.launcher.app</artifactId>
     <packaging>jar</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling-app
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launcher/app
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling-app
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launcher/app
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling-app
+            http://svn.apache.org/viewvc/incubator/sling/trunk/launcher/app
         </url>
     </scm>
 
@@ -65,7 +65,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                sling-log
+                                org.apache.sling.osgi.log
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -80,7 +80,7 @@
                         </goals>
                         <configuration>
                             <excludeArtifactIds>
-                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,sling-log
+                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,org.apache.sling.osgi.log
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -113,7 +113,7 @@
                     <archive>
                         <manifest>
                             <mainClass>
-                                org.apache.sling.launcher.main.Main
+                                org.apache.sling.launcher.app.main.Main
                             </mainClass>
                             <addDefaultImplementationEntries>
                                 true
@@ -163,7 +163,7 @@
 
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-log</artifactId>
+            <artifactId>org.apache.sling.osgi.log</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -172,7 +172,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-assembly</artifactId>
+            <artifactId>org.apache.sling.osgi.assembly</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
 
@@ -210,7 +210,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>sling-console-web</artifactId>
+            <artifactId>org.apache.sling.osgi.console.web</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
     </dependencies>
@@ -339,59 +339,49 @@
                 -->
                 <dependency>
                     <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-jasper-sling</artifactId>
+                    <artifactId>org.apache.sling.api</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-mime</artifactId>
+                    <artifactId>org.apache.sling.core</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-jackrabbit-api</artifactId>
+                    <artifactId>org.apache.sling.commons.mime</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-jackrabbit-server</artifactId>
+                    <artifactId>org.apache.sling.jcr.api</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.resource</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>
-                        sling-jackrabbit-classloader
+                        org.apache.sling.jcr.classloader
                     </artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-component-api</artifactId>
+                    <artifactId>org.apache.sling.scripting.jsp</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-content-jcr</artifactId>
-                    <version>2.0.0-incubator-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-core</artifactId>
-                    <version>2.0.0-incubator-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-scripting-core</artifactId>
-                    <version>2.0.0-incubator-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-scripting-jsp</artifactId>
-                    <version>2.0.0-incubator-SNAPSHOT</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.sling</groupId>
-                    <artifactId>sling-scripting-jsp-taglib</artifactId>
+                    <artifactId>org.apache.sling.scripting.jsp.taglib</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
             </dependencies>
