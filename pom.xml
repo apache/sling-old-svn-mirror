@@ -76,6 +76,7 @@
                 
         <!-- The JCR sub project -->
         <module>jcr/api</module>
+        <module>jcr/resource</module>
         
         <!-- Sling -->
         <module>sling/core</module>
@@ -85,8 +86,6 @@
         <!-- Scripting Support -->
         <module>scripting/freemarker</module>
         <module>scripting/javascript</module>
-        <module>scripting/jsp</module>
-        <module>scripting/jsp-taglib</module>
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
     </modules>
