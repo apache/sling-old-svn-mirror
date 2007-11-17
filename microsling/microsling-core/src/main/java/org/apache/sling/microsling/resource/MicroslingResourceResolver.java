@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
@@ -36,6 +38,7 @@ import javax.jcr.query.RowIterator;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
@@ -54,10 +57,45 @@ public class MicroslingResourceResolver implements ResourceResolver {
 
     private final Logger log = LoggerFactory.getLogger(MicroslingResourceResolver.class);
 
+    /** The URI we require to be mapped to the sling prefix for microsling */
+    private static final String REQUIRED_NAMESPACE_URI = SlingConstants.NAMESPACE_URI_ROOT
+        + "jcr/sling/1.0";
+
     private Session session;
+
+    // package private default constructor for unit tests, DO NOT USE
+    MicroslingResourceResolver() {
+    }
 
     public MicroslingResourceResolver(Session session) {
         this.session = session;
+
+        // ensure session name space mapping for sling:
+        try {
+            String uri = session.getNamespaceURI(SlingConstants.NAMESPACE_PREFIX);
+            if (!REQUIRED_NAMESPACE_URI.equals(uri)) {
+                log.info("<init> Remapping sling prefix to {}, was {}",
+                    REQUIRED_NAMESPACE_URI, uri);
+                session.setNamespacePrefix(SlingConstants.NAMESPACE_PREFIX,
+                    REQUIRED_NAMESPACE_URI);
+            } else {
+                log.debug("<init> sling prefix mapped correctly to {}", uri);
+            }
+        } catch (NamespaceException ne) {
+            // need to define the namespace
+            try {
+                log.info(
+                    "<init> Registering missing mapping for sling prefix to {}",
+                    REQUIRED_NAMESPACE_URI);
+                NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
+                nsr.registerNamespace(SlingConstants.NAMESPACE_PREFIX,
+                    REQUIRED_NAMESPACE_URI);
+            } catch (RepositoryException re) {
+                log.error("<init>: Cannot register namespace mapping", re);
+            }
+        } catch (RepositoryException re) {
+            log.error("<init>: Cannot check namespace mapping", re);
+        }
     }
 
     /**
