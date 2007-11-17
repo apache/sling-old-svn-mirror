@@ -47,10 +47,8 @@ public class JcrNodeResource implements Resource {
     private Object object;
     private final ResourceMetadata metadata;
 
-    /** JCR Property that defines the resource type of this node
-     *  (TODO: use a sling:namespaced property name)
-     */
-    public static final String SLING_RESOURCE_TYPE_PROPERTY = "slingResourceType";
+    /** JCR Property that defines the resource type of this node */
+    public static final String SLING_RESOURCE_TYPE_PROPERTY = "sling:resourceType";
 
     /** The relative path name of the data property of an nt:file node */
     private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;

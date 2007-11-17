@@ -43,7 +43,7 @@ public class MicroslingResourceResolverTest extends TestCase {
         LogManager.getRootLogger().addAppender(ca);
 
         // may call with null, don't need repository for now
-        resolver = new MicroslingResourceResolver(null);
+        resolver = new MicroslingResourceResolver();
     }
 
     public void testResolveRelativeSegments() {

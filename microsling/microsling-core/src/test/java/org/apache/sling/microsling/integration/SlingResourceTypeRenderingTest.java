@@ -20,44 +20,44 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Test creating a Node and rendering it using scripts in 
+/** Test creating a Node and rendering it using scripts in
  *  various supported languages, using slingResourceType-based
  *  script resolution
  */
 public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     private String slingResourceType;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         // set test values
         slingResourceType = "integration-test/srt." + System.currentTimeMillis();
         testText = "This is a test " + System.currentTimeMillis();
-        
+
         // create the test node, under a path that's specific to this class to allow collisions
         final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis();
         final Map<String,String> props = new HashMap<String,String>();
-        props.put("slingResourceType", slingResourceType);
+        props.put("sling:resourceType", slingResourceType);
         props.put("text", testText);
         displayUrl = testClient.createNode(url, props);
-        
+
         // the rendering script goes under /sling/scripts in the repository
         scriptPath = "/sling/scripts/" + slingResourceType;
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
-    
+
     public void testWithoutScriptTxt() throws IOException {
         final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
         assertTrue("Content includes PlainTextRendererServlet marker",content.contains("dumped by PlainTextRendererServlet"));
     }
-    
+
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
         assertTrue("Content includes DefaultHtmlRendererServlet marker",content.contains("dumped by DefaultHtmlRendererServlet"));
     }
-    
+
     public void testEspHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
@@ -68,7 +68,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testEspXml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","xml.esp");
         try {
@@ -79,7 +79,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testEspPlain() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","plain.esp");
         try {
@@ -90,7 +90,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testVltHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.vlt","html.vlt");
         try {
@@ -101,7 +101,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testJsHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.js","html.js");
         try {
@@ -112,7 +112,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testFtlHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.ftl","html.ftl");
         try {
@@ -123,7 +123,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testErbHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.erb","html.erb");
         try {
