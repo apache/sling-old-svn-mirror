@@ -93,32 +93,6 @@ public class RequestData implements BufferProvider {
     /** The parameter support class */
     private ParameterSupport parameterSupport;
 
-    /**
-     * <code>true</code> if the servlet is
-     * <code>RequestDispatcher.include()</code>-ed
-     */
-    private boolean included;
-
-    /**
-     * The prepared request URI. This URI is either the URI from the HTTP
-     * request line or the request URI from the
-     * <code>javax.servlet.include.request_uri</code> request attribute with
-     * the context path removed.
-     */
-    private String requestURI;
-
-    /** Caches the real context path returned by {@link #getRealContextPath()} */
-    private String contextPath;
-
-    /** Caches the real servlet path returned by {@link #getRealServletPath()} */
-    private String servletPath;
-
-    /** Caches the real path info returned by {@link #getRealPathInfo()} */
-    private String pathInfo;
-
-    /** Caches the real query string returned by {@link #getRealQueryString()} */
-    private String queryString;
-
     private ResourceManager resourceManager;
 
     private RequestProgressTracker requestProgressTracker;
@@ -145,7 +119,6 @@ public class RequestData implements BufferProvider {
         this.slingResponse = new SlingHttpServletResponseImpl(this, servletResponse);
 
         this.requestProgressTracker = new SlingRequestProgressTracker();
-        this.included = request.getAttribute(SlingConstants.INCLUDE_REQUEST_URI) != null;
 
         // the resource manager factory may be missing
         JcrResourceManagerFactory rmf = slingMainServlet.getResourceManagerFactory();
@@ -433,149 +406,6 @@ public class RequestData implements BufferProvider {
      */
     public boolean isContentIncluded() {
         return contentDataStack != null && !contentDataStack.isEmpty();
-    }
-
-    // ---------- parameters differing in included servlets --------------------
-
-    /**
-     * Returns <code>true</code> if the servlet is executed through
-     * <code>RequestDispatcher.include()</code>.
-     *
-     * @return <code>true</code> if the servlet is executed through
-     *         <code>RequestDispatcher.include()</code>.
-     */
-    public boolean isIncluded() {
-        return included;
-    }
-
-    /**
-     * Returns the contents of the
-     * <code>javax.servlet.include.request_uri</code> attribute if
-     * {@link #isIncluded()} or <code>request.getRequestURI()</code>. The
-     * context path has been removed from the beginning of the returned string.
-     * That is for request, which is not {@link #isIncluded() included}:
-     * <code>getRealRequestURI() == getRealContextPath() + getRequestURI()</code>.
-     *
-     * @return The relevant request URI according to environment with the
-     *         context path removed.
-     */
-    public String getRequestURI() {
-        if (requestURI == null) {
-
-            // get the unmodified request URI and context information
-            requestURI = included
-                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_REQUEST_URI)
-                    : servletRequest.getRequestURI();
-
-            String ctxPrefix = getContextPath();
-
-            if (log.isDebugEnabled()) {
-                log.debug("getRequestURI: Servlet request URI is {}",
-                    requestURI);
-            }
-
-            // check to remove the context prefix
-            if (ctxPrefix == null) {
-                log.error("getRequestURI: Context path not expected to be null");
-            } else if (ctxPrefix.length() == 0) {
-                // default root context, no change
-                if (log.isDebugEnabled()) {
-                    log.debug("getRequestURI: Default root context, no change to uri");
-                }
-            } else if (ctxPrefix.length() < requestURI.length()
-                && requestURI.startsWith(ctxPrefix)
-                && requestURI.charAt(ctxPrefix.length()) == '/') {
-                // some path below context root
-                if (log.isDebugEnabled()) {
-                    log.debug("getRequestURI: removing '{}' from '{}'",
-                        ctxPrefix, requestURI);
-                }
-                requestURI = requestURI.substring(ctxPrefix.length());
-            } else if (ctxPrefix.equals(requestURI)) {
-                // context root
-                if (log.isDebugEnabled()) {
-                    log.debug("getRequestURI: URI equals context prefix, assuming '/'");
-                }
-                requestURI = "/";
-            }
-        }
-
-        return requestURI;
-    }
-
-    /**
-     * Returns the contents of the
-     * <code>javax.servlet.include.context_path</code> attribute if
-     * {@link #isIncluded()} or <code>request.getContextPath()</code>.
-     *
-     * @return The relevant context path according to environment.
-     */
-    public String getContextPath() {
-        if (contextPath == null) {
-            contextPath = included
-                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_CONTEXT_PATH)
-                    : servletRequest.getContextPath();
-        }
-
-        return contextPath;
-    }
-
-    /**
-     * Returns the contents of the
-     * <code>javax.servlet.include.servlet_path</code> attribute if
-     * {@link #isIncluded()} or <code>request.getServletPath()</code>.
-     * <p>
-     * <strong>NOTE</strong>: This is the path to the servlet being executed
-     * from the perspective of the servlet container. Thus this path is really
-     * the path to the {@link DeliveryServlet}.
-     *
-     * @return The relevant servlet path according to environment.
-     */
-    public String getServletPath() {
-        if (servletPath == null) {
-            servletPath = included
-                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_SERVLET_PATH)
-                    : servletRequest.getServletPath();
-        }
-
-        return servletPath;
-    }
-
-    /**
-     * Returns the contents of the <code>javax.servlet.include.path_info</code>
-     * attribute if {@link #isIncluded()} or <code>request.getPathInfo()</code>.
-     * <p>
-     * <strong>NOTE</strong>: This is the additional path info extending the
-     * servlet path from the perspective of the servlet container. This is not
-     * the same as the {@link #getSuffix() suffix}.
-     *
-     * @return The relevant path info according to environment.
-     */
-    public String getPathInfo() {
-        if (pathInfo == null) {
-            pathInfo = included
-                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_PATH_INFO)
-                    : servletRequest.getPathInfo();
-        }
-
-        return pathInfo;
-    }
-
-    /**
-     * Returns the contents of the
-     * <code>javax.servlet.include.query_string</code> attribute if
-     * {@link #isIncluded()} or <code>request.getQueryString()</code>.
-     *
-     * @return The relevant query string according to environment.
-     */
-    public String getQueryString() {
-        if (queryString == null) {
-            queryString = included
-                    ? (String) servletRequest.getAttribute(SlingConstants.INCLUDE_QUERY_STRING)
-                    : servletRequest.getQueryString();
-        }
-
-        return queryString;
     }
 
     /**
