@@ -213,6 +213,11 @@
             <artifactId>org.apache.sling.osgi.console.web</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.json</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <profiles>
