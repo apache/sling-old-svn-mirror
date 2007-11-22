@@ -303,6 +303,10 @@ public class SlingAuthenticator implements ManagedService {
 
     public void updated(Dictionary properties) {
 
+        if (properties == null) {
+            properties = new Hashtable<String, Object>();
+        }
+
         String newCookie = (String) properties.get(PAR_IMPERSONATION_COOKIE_NAME);
         if (newCookie == null || newCookie.length() == 0) {
             newCookie = DEFAULT_IMPERSONATION_COOKIE;
