@@ -17,29 +17,15 @@
 package org.apache.sling.microsling.integration;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /** Base class for rendering tests
  */
 class RenderingTestBase extends MicroslingHttpTestBase {
-
     protected String scriptPath;
     protected String testText;
     protected String displayUrl;
-
-    /** upload rendering test script, and return its URL for future deletion */
+    
     protected String uploadTestScript(String localFilename,String filenameOnServer) throws IOException {
-        final String url = WEBDAV_BASE_URL + scriptPath + "/" + filenameOnServer;
-        final String testFile = "/integration-test/" + localFilename;
-        final InputStream data = getClass().getResourceAsStream(testFile);
-        try {
-            testClient.upload(url, data);
-        } finally {
-            if(data!=null) {
-                data.close();
-            }
-        }
-        return url;
+        return uploadTestScript(scriptPath, localFilename, filenameOnServer);
     }
-
 }

@@ -44,6 +44,7 @@ import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +105,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
     public Resource resolve(ServletRequest request) throws SlingException {
         Resource result = null;
         String path = null;
-        String pathInfo = ((HttpServletRequest) request).getPathInfo();
+        String pathInfo = SlingRequestPaths.getPathInfo((HttpServletRequest)request);
         try {
             Session session = getSession();
             final ResourcePathIterator it = new ResourcePathIterator(pathInfo);

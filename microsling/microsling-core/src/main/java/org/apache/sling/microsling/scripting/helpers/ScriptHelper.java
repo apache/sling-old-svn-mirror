@@ -26,9 +26,13 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletResponse;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Simple script helper providing access to the (wrapped) response, the
  * on-demand writer and a simple API for request inclusion. Instances of this
@@ -37,9 +41,20 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  */
 public class ScriptHelper {
 
+    private static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
+    
     private final SlingHttpServletRequest request;
 
     private final SlingHttpServletResponse response;
+    
+    public static final String INCLUDE_COUNTER = "ScriptHelper.include.counter";
+    public static final int MAX_INCLUDE_RECURSION_LEVEL = 20;
+    
+    public static class InfiniteIncludeLoopException extends SlingException {
+        InfiniteIncludeLoopException(String path) {
+            super("Infinite include loop (> " + MAX_INCLUDE_RECURSION_LEVEL + " levels) for path '" + path + "'");
+        }
+    }
 
     public ScriptHelper(SlingHttpServletRequest request, SlingHttpServletResponse response) {
         this.request = request;
@@ -54,7 +69,30 @@ public class ScriptHelper {
         return response;
     }
 
-    public void include(String path) throws ServletException, IOException {
+    public void include(String path) throws ServletException, IOException, SlingException {
+        
+        // detect infinite loops
+        Integer recursionLevel = (Integer)getRequest().getAttribute(INCLUDE_COUNTER);
+        if(recursionLevel == null) {
+            recursionLevel = new Integer(1);
+        } else if(recursionLevel.intValue() > MAX_INCLUDE_RECURSION_LEVEL) {
+            throw new InfiniteIncludeLoopException(path);
+        } else {
+            recursionLevel = new Integer(recursionLevel.intValue() + 1);
+        }
+        getRequest().setAttribute(INCLUDE_COUNTER, recursionLevel);
+
+        if(log.isDebugEnabled()) {
+            log.debug(
+                    "Including path '" 
+                    + path 
+                    + "' in request '" 
+                    + SlingRequestPaths.getPathInfo(getRequest())
+                    + "'"
+            );
+        }
+        
+        // include path
         RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
         if (dispatcher != null) {
             dispatcher.include(getRequest(), getResponse());

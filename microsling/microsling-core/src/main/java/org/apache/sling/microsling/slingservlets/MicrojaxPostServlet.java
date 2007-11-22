@@ -33,6 +33,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +99,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 currentPath = currentNode.getPath();
                 s = currentNode.getSession();
             } else {
-                currentPath = request.getPathInfo();
+                currentPath = SlingRequestPaths.getPathInfo(request);
                 // TODO not very convenient way to get a Session...
                 final Resource root = request.getResourceResolver().getResource("/");
                 final Node rootNode = (Node)root.getRawData();
@@ -126,7 +127,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             if(currentNode!=null) {
                 pathToCreate = currentPath;
             } else {
-                pathToCreate = request.getPathInfo();
+                pathToCreate = SlingRequestPaths.getPathInfo(request);
             }
             if(!pathToCreate.endsWith("/")) {
                 pathToCreate += "/";
@@ -159,7 +160,10 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 redirectPath += redirectExtension;
             }
             
-            final String redirectUrl = request.getContextPath() + request.getServletPath() + redirectPath; 
+            final String redirectUrl = 
+                SlingRequestPaths.getContextPath(request)
+                + SlingRequestPaths.getServletPath(request)
+                + redirectPath; 
             if(log.isDebugEnabled()) {
                 log.debug("Redirecting to " + redirectUrl);
             }

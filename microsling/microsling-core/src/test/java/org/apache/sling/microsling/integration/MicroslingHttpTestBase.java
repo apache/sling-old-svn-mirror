@@ -17,6 +17,7 @@
 package org.apache.sling.microsling.integration;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -104,6 +105,21 @@ class MicroslingHttpTestBase extends TestCase {
             );
         }
         return get.getResponseBodyAsString();
+    }
+
+    /** upload rendering test script, and return its URL for future deletion */
+    protected String uploadTestScript(String scriptPath, String localFilename,String filenameOnServer) throws IOException {
+        final String url = WEBDAV_BASE_URL + scriptPath + "/" + filenameOnServer;
+        final String testFile = "/integration-test/" + localFilename;
+        final InputStream data = getClass().getResourceAsStream(testFile);
+        try {
+            testClient.upload(url, data);
+        } finally {
+            if(data!=null) {
+                data.close();
+            }
+        }
+        return url;
     }
 
 }

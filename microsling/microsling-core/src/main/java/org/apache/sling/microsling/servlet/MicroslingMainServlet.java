@@ -39,6 +39,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.scripting.SlingScriptResolver;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.microsling.MicroslingSlingHttpServletRequest;
 import org.apache.sling.microsling.MicroslingSlingHttpServletResponse;
 import org.apache.sling.microsling.contenttype.ResponseContentTypeResolverFilter;
@@ -157,10 +158,11 @@ public class MicroslingMainServlet extends GenericServlet {
         HttpServletResponse hRes = (HttpServletResponse) resp;
 
         // root redirect
-        if (hReq.getPathInfo() == null) {
-            hRes.sendRedirect(hReq.getRequestURI() + "/" + indexPage);
+        final String pathInfo = SlingRequestPaths.getPathInfo(hReq);
+        if (pathInfo == null) {
+            hRes.sendRedirect(SlingRequestPaths.getRequestURI(hReq) + "/" + indexPage);
             return;
-        } else if ("/".equals(hReq.getPathInfo())) {
+        } else if ("/".equals(pathInfo)) {
             hRes.sendRedirect(indexPage);
             return;
         }
