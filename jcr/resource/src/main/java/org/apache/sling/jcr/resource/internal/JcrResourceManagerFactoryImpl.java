@@ -46,6 +46,8 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceManagerFactoryImpl</code> is the
@@ -60,8 +62,8 @@ import org.osgi.service.event.EventConstants;
  *
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
- * @scr.property name="service.description"
- *                value="Sling JcrResourceManagerFactory Implementation"
+ * @scr.property name="service.description" value="Sling
+ *               JcrResourceManagerFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceManagerFactory"
  */
@@ -71,26 +73,30 @@ public class JcrResourceManagerFactoryImpl implements
     /**
      * @scr.property value="true" type="Boolean"
      */
-     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
+    private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
 
-     /**
-      * The resolver.virtual property has no default configuration. But the sling
-      * maven plugin and the sling management console cannot handle empty
-      * multivalue properties at the moment. So we just add a dummy direct
-      * mapping.
-      * @scr.property values.1="/-/"
-      */
-     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
+    /**
+     * The resolver.virtual property has no default configuration. But the sling
+     * maven plugin and the sling management console cannot handle empty
+     * multivalue properties at the moment. So we just add a dummy direct
+     * mapping.
+     *
+     * @scr.property values.1="/-/"
+     */
+    private static final String PROP_VIRTUAL = "resource.resolver.virtual";
 
-     /**
-      * @scr.property values.1="/-/" values.2="/content/-/"
-      *               Cvalues.3="/apps/&times;/docroot/-/"
-      *               Cvalues.4="/libs/&times;/docroot/-/"
-      *               values.5="/system/docroot/-/"
-      */
-     private static final String PROP_MAPPING = "resource.resolver.mapping";
+    /**
+     * @scr.property values.1="/-/" values.2="/content/-/"
+     *               Cvalues.3="/apps/&times;/docroot/-/"
+     *               Cvalues.4="/libs/&times;/docroot/-/"
+     *               values.5="/system/docroot/-/"
+     */
+    private static final String PROP_MAPPING = "resource.resolver.mapping";
 
-     /**
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
      * The JCR Repository we access to resolve resources
      *
      * @scr.reference
@@ -112,8 +118,8 @@ public class JcrResourceManagerFactoryImpl implements
      */
     private MimeTypeService mimeTypeService;
 
-    /** The OSGi Component Context */
-    private ComponentContext componentContext;
+    /** This services ServiceReference for use in {@link #fireEvent(Bundle, String, Map)} */
+    private ServiceReference serviceReference;
 
     /** all mappings */
     private Mapping[] mappings;
@@ -145,11 +151,14 @@ public class JcrResourceManagerFactoryImpl implements
      */
     private Loader initialContentLoader;
 
-    // ---------- ContentManagerFactory ----------------------------------------
+    // ---------- JcrResourceManagerFactory ------------------------------------
 
     /**
      * Returns a new <code>ResourceManager</code> for the given session. Note
      * that each call to this method returns a new resource manager instance.
+     * The resource manager returned also implements the
+     * {@link org.apache.sling.jcr.resource.PathResolver} interface to which it
+     * may be cast.
      */
     public ResourceManager getResourceManager(Session session) {
         return new JcrResourceManager(this, session);
@@ -169,24 +178,21 @@ public class JcrResourceManagerFactoryImpl implements
 
         //
         // NOTE:
-        //    This is synchronous - take care to not block the system !!
+        // This is synchronous - take care to not block the system !!
         //
 
         switch (event.getType()) {
             case BundleEvent.INSTALLED:
-                // register content and types when the bundle content is
-                // available
-                Session session = null;
+                // register content when the bundle content is available
                 try {
-                    session = getRepository().loginAdministrative(null);
+                    Session session = getAdminSession(null);
                     initialContentLoader.registerBundle(session,
                         event.getBundle());
-                } catch (RepositoryException re) {
-                    // TODO: log and/or handle !!
-                } finally {
-                    if (session != null) {
-                        session.logout();
-                    }
+                } catch (Throwable t) {
+                    log.error(
+                        "bundleChanged: Problem loading initial content of bundle "
+                            + event.getBundle().getSymbolicName() + " ("
+                            + event.getBundle().getBundleId() + ")", t);
                 }
                 break;
 
@@ -206,7 +212,7 @@ public class JcrResourceManagerFactoryImpl implements
         }
     }
 
-    // ---------- EventAdmin Event Dispatching
+    // ---------- EventAdmin Event Dispatching ---------------------------------
 
     /**
      * Fires an OSGi event through the EventAdmin service.
@@ -229,7 +235,7 @@ public class JcrResourceManagerFactoryImpl implements
         Dictionary<String, Object> table = new Hashtable<String, Object>(props);
 
         // service information of this JcrResourceManagerFactoryImpl service
-        ServiceReference sr = componentContext.getServiceReference();
+        ServiceReference sr = serviceReference;
         if (sr != null) {
             table.put(EventConstants.SERVICE, sr);
             table.put(EventConstants.SERVICE_ID,
@@ -256,7 +262,7 @@ public class JcrResourceManagerFactoryImpl implements
         ea.postEvent(new Event(eventName, table));
     }
 
-    // ---------- Implementation helpers
+    // ---------- Implementation helpers --------------------------------------
 
     /** return the ObjectContentManager, used by JcrResourceManager */
     ObjectContentManager getObjectContentManager(Session session) {
@@ -267,23 +273,10 @@ public class JcrResourceManagerFactoryImpl implements
     boolean itemReallyExists(Session clientSession, String path)
             throws RepositoryException {
 
-        Session adminSession;
-        synchronized (adminSessions) {
-            String workSpace = clientSession.getWorkspace().getName();
-            adminSession = adminSessions.get(workSpace);
-            if (adminSession == null) {
-                adminSession = getRepository().loginAdministrative(workSpace);
-                adminSessions.put(workSpace, adminSession);
-            }
-        }
-
         // assume this session has more access rights than the client Session
+        String workSpace = clientSession.getWorkspace().getName();
+        Session adminSession = getAdminSession(workSpace);
         return adminSession.itemExists(path);
-    }
-
-    /** Returns the JCR repository used by this factory */
-    private SlingRepository getRepository() {
-        return repository;
     }
 
     /** Returns the MIME type from the MimeTypeService for the given name */
@@ -294,50 +287,65 @@ public class JcrResourceManagerFactoryImpl implements
         return (mts != null) ? mts.getMimeType(name) : null;
     }
 
-    /** If url is a virtual URL returns the real URL, otherwise returns url */
-    BidiMap getVirtualURLMap() {
-        return virtualURLMap;
+    /** If uri is a virtual URI returns the real URI, otherwise returns null */
+    String virtualToRealUri(String virtualUri) {
+        return (virtualURLMap != null)
+                ? (String) virtualURLMap.get(virtualUri)
+                : null;
+    }
+
+    /**
+     * If uri is a real URI for any virtual URI, the virtual URI is returned,
+     * otherwise returns null
+     */
+    String realToVirtualUri(String realUri) {
+        return (virtualURLMap != null)
+                ? (String) virtualURLMap.getKey(realUri)
+                : null;
     }
 
     Mapping[] getMappings() {
         return mappings;
     }
 
-    // ---------- SCR Integration
+    // ---------- SCR Integration ---------------------------------------------
 
+    /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
-        this.componentContext = componentContext;
+        this.serviceReference = componentContext.getServiceReference();
+
         this.initialContentLoader = new Loader(this);
         this.objectContentManagerFactory = new ObjectContentManagerFactory(this);
 
         componentContext.getBundleContext().addBundleListener(this);
 
-        Session session = null;
         try {
-            session = getRepository().loginAdministrative(null);
-        } catch (RepositoryException re) {
-            // TODO: log and handle
+            Session session = getAdminSession(null);
+
+            Bundle[] bundles = componentContext.getBundleContext().getBundles();
+            for (int i = 0; i < bundles.length; i++) {
+                if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+                    // load content for bundles which are neither INSTALLED nor
+                    // UNINSTALLED
+                    initialContentLoader.registerBundle(session, bundles[i]);
+                }
+
+                if (bundles[i].getState() == Bundle.ACTIVE) {
+                    // register active bundles with the mapper client
+                    objectContentManagerFactory.registerMapperClient(bundles[i]);
+                }
+            }
+        } catch (Throwable t) {
+            log.error("activate: Problem while loading initial content and"
+                + " registering mappings for existing bundles", t);
         }
 
-        Bundle[] bundles = componentContext.getBundleContext().getBundles();
-        for (int i = 0; i < bundles.length; i++) {
-            if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
-                // load content for bundles which are neither INSTALLED nor
-                // UNINSTALLED
-                initialContentLoader.registerBundle(session, bundles[i]);
-            }
-
-            if (bundles[i].getState() == Bundle.ACTIVE) {
-                // register active bundles with the mapper client
-                objectContentManagerFactory.registerMapperClient(bundles[i]);
-            }
-        }
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
         BidiMap virtuals = new TreeBidiMap();
         String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
-        for (int i=0; virtualList != null && i < virtualList.length; i++) {
+        for (int i = 0; virtualList != null && i < virtualList.length; i++) {
             String[] parts = Mapping.split(virtualList[i]);
             virtuals.put(parts[0], parts[2]);
         }
@@ -345,7 +353,7 @@ public class JcrResourceManagerFactoryImpl implements
 
         List<Mapping> maps = new ArrayList<Mapping>();
         String[] mappingList = (String[]) properties.get(PROP_MAPPING);
-        for (int i=0; mappingList != null && i < mappingList.length; i++) {
+        for (int i = 0; mappingList != null && i < mappingList.length; i++) {
             maps.add(new Mapping(mappingList[i]));
         }
         Mapping[] tmp = maps.toArray(new Mapping[maps.size()]);
@@ -364,12 +372,12 @@ public class JcrResourceManagerFactoryImpl implements
 
     }
 
-    protected void deactivate(ComponentContext oldContext) {
+    /** Deativates this component, called by SCR to take out of service */
+    protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
         objectContentManagerFactory.dispose();
         initialContentLoader.dispose();
-        componentContext = null;
 
         Session[] sessions = adminSessions.values().toArray(
             new Session[adminSessions.size()]);
@@ -378,4 +386,36 @@ public class JcrResourceManagerFactoryImpl implements
             sessions[i].logout();
         }
     }
+
+    // ---------- internal helper ----------------------------------------------
+
+    /** Returns the JCR repository used by this factory */
+    protected SlingRepository getRepository() {
+        return repository;
+    }
+
+    /**
+     * Returns an administrative session to the given workspace or the default
+     * workspaces if the supplied name is <code>null</code>.
+     */
+    private Session getAdminSession(String workspaceName)
+            throws RepositoryException {
+
+        // ensure workspace name
+        if (workspaceName == null) {
+            workspaceName = getRepository().getDefaultWorkspace();
+        }
+
+        synchronized (adminSessions) {
+            Session adminSession = adminSessions.get(workspaceName);
+            if (adminSession != null && adminSession.isLive()) {
+                return adminSession;
+            }
+
+            adminSession = getRepository().loginAdministrative(workspaceName);
+            adminSessions.put(workspaceName, adminSession);
+            return adminSession;
+        }
+    }
+
 }
