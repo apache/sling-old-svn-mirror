@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource;
 
+import org.apache.sling.api.SlingConstants;
+
 /**
  * The <code>JcrResourceConstants</code> interface provides constant values
  * for event topics and event properties for events sent from this bundle.
@@ -25,12 +27,14 @@ package org.apache.sling.jcr.resource;
 public class JcrResourceConstants {
 
     /**
-     * The namespace prefix used by Sling JCR for nodes and node types used by
-     * Sling (value is "sling"). This prefix is ensured for any session used by
-     * the JCR Resource bundle through the <code>Sling-Namespaces</code>
-     * bundle manifest header.
+     * The namespace URI used by Sling JCR for items and node types used by
+     * Sling (value is "http://sling.apache.org/jcr/sling/1.0"). This URI is
+     * ensured to be mapped to the Sling namespace prefix <em>sling</em> for
+     * any session used by the JCR Resource bundle through the
+     * <code>Sling-Namespaces</code> bundle manifest header.
      */
-    public static final String SLING_NS_PREFIX = "sling";
+    public static final String SLING_NAMESPACE_URI = SlingConstants.NAMESPACE_URI_ROOT
+        + "jcr/sling/1.0";
 
     /**
      * The name of the JCR Property that defines the resource type of this node
