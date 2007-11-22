@@ -308,6 +308,8 @@ public class SlingMainServlet extends GenericServlet {
 
     protected void activate(ComponentContext componentContext) {
 
+        osgiComponentContext = componentContext;
+
         // setup server info
         BundleContext bundleContext = componentContext.getBundleContext();
         Dictionary<?, ?> props = bundleContext.getBundle().getHeaders();
@@ -376,10 +378,6 @@ public class SlingMainServlet extends GenericServlet {
             log.error("Cannot register " + this.getServerInfo(), e);
         }
 
-        // prepare the Sling Component Context now after having finished the
-        // handler setup but before initializing the filters
-        this.slingServletContext = new SlingServletContext(this);
-
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet
         // context to be required (see SLING-42)
@@ -388,10 +386,11 @@ public class SlingMainServlet extends GenericServlet {
         synchronized (this) {
             filterList = delayedComponentFilters;
 
-            // assign the OSGi Component Context now, after leaving this
-            // synched block, bindFilter will be "active" and set the
-            // delayedComponentFilters field to null for GC
-            osgiComponentContext = componentContext;
+            // prepare the Sling Component Context now after having finished the
+            // handler setup but before initializing the filters.
+            // After leaving this synched block, bindFilter will be "active" and
+            // set the delayedComponentFilters field to null for GC
+            slingServletContext = new SlingServletContext(this);
             delayedComponentFilters = null;
         }
 
@@ -436,7 +435,7 @@ public class SlingMainServlet extends GenericServlet {
 
     protected void bindFilter(ServiceReference ref) {
         synchronized (this) {
-            if (osgiComponentContext == null) {
+            if (slingServletContext == null) {
                 if (delayedComponentFilters == null) {
                     delayedComponentFilters = new ArrayList<ServiceReference>();
                 }
