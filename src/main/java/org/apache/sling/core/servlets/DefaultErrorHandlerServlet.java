@@ -21,13 +21,13 @@ package org.apache.sling.core.servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javax.servlet.GenericServlet;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * The <code>DefaultErrorHandlerServlet</code> TODO
@@ -39,16 +39,8 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.core.servlets.ErrorHandlerServlet"
  */
-public class DefaultErrorHandlerServlet extends SlingSafeMethodsServlet
+public class DefaultErrorHandlerServlet extends GenericServlet
         implements ErrorHandlerServlet {
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.servlets.BaseComponent#doInit()
-     */
-    protected void doInit() {
-    }
 
     /**
      * Returns <code>true</code> if <code>throwable</code> is the fully
@@ -70,13 +62,13 @@ public class DefaultErrorHandlerServlet extends SlingSafeMethodsServlet
     }
 
     @Override
-    protected void doGet(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
+    public void service(ServletRequest req, ServletResponse res)
+            throws IOException {
 
         // get settings
-        Integer scObject = (Integer) request.getAttribute(SlingConstants.ERROR_STATUS);
-        String statusMessage = (String) request.getAttribute(SlingConstants.ERROR_MESSAGE);
-        String requestUri = (String) request.getAttribute(SlingConstants.ERROR_REQUEST_URI);
+        Integer scObject = (Integer) req.getAttribute(SlingConstants.ERROR_STATUS);
+        String statusMessage = (String) req.getAttribute(SlingConstants.ERROR_MESSAGE);
+        String requestUri = (String) req.getAttribute(SlingConstants.ERROR_REQUEST_URI);
 
         // ensure values
         int statusCode = (scObject != null)
@@ -87,12 +79,12 @@ public class DefaultErrorHandlerServlet extends SlingSafeMethodsServlet
         }
 
         // start the response message
-        PrintWriter pw = sendIntro(response, statusCode, statusMessage,
-            requestUri);
+        PrintWriter pw = sendIntro((HttpServletResponse) res, statusCode,
+            statusMessage, requestUri);
 
         // write the exception message
-        if (request.getAttribute(SlingConstants.ERROR_EXCEPTION) != null) {
-            Throwable throwable = (Throwable) request.getAttribute("javax.servlet.error.exception");
+        if (req.getAttribute(SlingConstants.ERROR_EXCEPTION) instanceof Throwable) {
+            Throwable throwable = (Throwable) req.getAttribute(SlingConstants.ERROR_EXCEPTION);
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
             printStackTrace(pw, throwable);
@@ -139,7 +131,7 @@ public class DefaultErrorHandlerServlet extends SlingSafeMethodsServlet
      * Sets the response status and content type header and starts the the
      * response HTML text with the header, and an introductory phrase.
      */
-    private PrintWriter sendIntro(SlingHttpServletResponse response,
+    private PrintWriter sendIntro(HttpServletResponse response,
             int statusCode, String statusMessage, String requestUri)
             throws IOException {
 
