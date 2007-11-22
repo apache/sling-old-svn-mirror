@@ -177,7 +177,8 @@ public class ClassDescriptorReader {
                         break;
 
                     case STATE_MAPPING:
-                        if (!"graffito-jcr".equals(this.parser.getName())) {
+                        if (!"graffito-jcr".equals(this.parser.getName())
+                            && !"jackrabbit-ocm".equals(this.parser.getName())) {
                             throw this.unexpectedElement();
                         }
 
