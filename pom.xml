@@ -106,11 +106,6 @@
             <artifactId>slf4j-simple</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-
         <!-- OSGi Libraries -->
         <dependency>
             <groupId>org.osgi</groupId>
