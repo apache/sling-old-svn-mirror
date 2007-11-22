@@ -1,0 +1,27 @@
+<%-- used by IncludeTest --%>
+<html>
+	<body>
+		<h1>ESP template</h1>
+		<p class="main"><%= resource.item.text %></p>
+		
+		<%
+			if(resource.item.pathToInclude) {
+			  %>
+			  <p>pathToInclude = <%= resource.item.pathToInclude %></p>
+  		  	  <p>Including <%= resource.item.pathToInclude %></p>
+			  <%
+			  sling.include(resource.item.pathToInclude + ".html");
+			}
+		%>
+		
+		<%
+			if(resource.item.testInfiniteLoop) {
+			  %>
+			  <p>testInfiniteLoop = <%= resource.item.testInfiniteLoop %></p>
+			  <%
+			  // try to include the item itself, to cause an infinite loop
+			  sling.include(resource.getURI() + ".html");
+			}
+		%>
+	</body>
+</html>

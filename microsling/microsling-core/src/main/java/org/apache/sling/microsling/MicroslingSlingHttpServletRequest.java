@@ -40,6 +40,7 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.microsling.request.helpers.MicroslingRequestPathInfo;
 import org.apache.sling.microsling.request.helpers.MicroslingRequestProgressTracker;
 import org.apache.sling.microsling.request.helpers.SlingRequestParameterMap;
@@ -75,8 +76,8 @@ public class MicroslingSlingHttpServletRequest extends
         this.serviceLocator = serviceLocator;
         this.resourceResolver = new MicroslingResourceResolver(session);
         this.resource = resourceResolver.resolve(request);
-        this.requestPathInfo = new MicroslingRequestPathInfo(resource,
-            request.getPathInfo());
+        this.requestPathInfo = 
+            new MicroslingRequestPathInfo(resource, SlingRequestPaths.getPathInfo(request));
     }
 
     /*
