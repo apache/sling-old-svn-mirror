@@ -22,20 +22,37 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * The <code>JcrNodeResourceIterator</code> class is a resource iterator,
+ * which returns resources for each node of an underlying
+ * <code>NodeIterator</code>. Nodes in the node iterator which cannot be
+ * accessed or for which a resource cannot be created are skipped.
+ */
 public class JcrNodeResourceIterator implements Iterator<Resource> {
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /** resource manager used to create resources from nodes */
     private JcrResourceManager resourceManager;
+
+    /** underlying node iterator to be used for resources */
     private NodeIterator nodes;
 
-    private Resource nextResult = seek();
+    /** The prefetched next iterator entry, null at the end of iterating */
+    private Resource nextResult;
 
-    public JcrNodeResourceIterator(JcrResourceManager resourceManager, NodeIterator nodes) {
+    /**
+     * Creates an instance using the given resource manager and the nodes
+     * provided as a node iterator.
+     */
+    public JcrNodeResourceIterator(JcrResourceManager resourceManager,
+            NodeIterator nodes) {
         this.resourceManager = resourceManager;
         this.nodes = nodes;
         this.nextResult = seek();
@@ -55,6 +72,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         return result;
     }
 
+    /**
+     * Throws <code>UnsupportedOperationException</code> as this method is not
+     * supported by this implementation.
+     */
     public void remove() {
         throw new UnsupportedOperationException();
     }
@@ -63,17 +84,15 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         while (nodes.hasNext()) {
             try {
                 return new JcrNodeResource(resourceManager, nodes.nextNode());
-            } catch (RepositoryException re) {
-                // TODO: log this situation and continue mapping
-            } catch (ObjectContentManagerException ocme) {
-                // TODO: log this situation and continue mapping
             } catch (Throwable t) {
-                // TODO: log this situation and continue mapping
+                log.error(
+                    "seek: Problem creating Resource for next node, skipping",
+                    t);
             }
         }
 
         // no more results
+        log.debug("seek: No more nodes, iterator exhausted");
         return null;
     }
-
 }
