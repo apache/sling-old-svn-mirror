@@ -36,6 +36,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.core.impl.helper.RequestData;
 
 public class ParameterSupport {
@@ -121,7 +122,8 @@ public class ParameterSupport {
     }
 
     private void parseQueryString(ParameterMap parameters) {
-        InputStream input = Util.getInputStream(this.getRequestData().getQueryString());
+        String queryString = SlingRequestPaths.getQueryString(requestData.getSlingRequest());
+        InputStream input = Util.getInputStream(queryString);
         try {
             Util.parse(input, Util.ENCODING_DEFAULT, parameters, true);
         } catch (IOException ioe) {
