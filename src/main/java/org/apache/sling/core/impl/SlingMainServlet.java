@@ -19,6 +19,7 @@
 package org.apache.sling.core.impl;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -64,6 +65,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentException;
+import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +78,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="sling.root" value="/" private="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
- * @scr.reference name="ComponentFilter"
- *                interface="org.apache.sling.component.ComponentFilter"
+ * @scr.reference name="Filter" interface="javax.servlet.Filter"
  *                cardinality="0..n" policy="dynamic"
  */
 public class SlingMainServlet extends GenericServlet {
@@ -87,15 +88,15 @@ public class SlingMainServlet extends GenericServlet {
 
     /**
      * The name of the product to report in the {@link #getServerInfo()} method
-     * (value is "Apache Sling").
+     * (value is "ApacheSling").
      */
-    private static String PRODUCT_NAME = "Apache Sling";
+    private static String PRODUCT_NAME = "ApacheSling";
 
     /**
-     * The name of the Declarative Services reference to the ComponentFilter
-     * services (value is "ComponentFilter").
+     * The name of the Declarative Services reference to the Servlet API Filter
+     * services (value is "Filter").
      */
-    private static String COMPONENT_FILTER_NAME = "ComponentFilter";
+    private static String FILTER_NAME = "Filter";
 
     private SlingServletContext slingServletContext;
 
@@ -122,8 +123,6 @@ public class SlingMainServlet extends GenericServlet {
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private MimeTypeService mimeTypeService;
-
-    private SlingHttpContext slingHttpContext;
 
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
@@ -159,8 +158,7 @@ public class SlingMainServlet extends GenericServlet {
     public void service(HttpServletRequest clientRequest,
             HttpServletResponse clientResponse) throws IOException {
 
-        Session session = getSlingAuthenticator().authenticate(clientRequest,
-            clientResponse);
+        Session session = (Session) clientRequest.getAttribute(SlingHttpContext.SESSION);
         if (session != null) {
             RequestData requestData = null;
             try {
@@ -188,12 +186,8 @@ public class SlingMainServlet extends GenericServlet {
             } catch (AccessControlException ace) {
 
                 // try to request authentication fail, if not possible
-                if (!getSlingAuthenticator().requestAuthentication(
-                    clientRequest, clientResponse)) {
-                    getErrorHandler().handleError(
-                        HttpServletResponse.SC_FORBIDDEN, "Access Denied",
-                        clientRequest, clientResponse);
-                }
+                getSlingAuthenticator().requestAuthentication(clientRequest,
+                    clientResponse);
 
             } catch (HttpStatusCodeException hsce) {
                 // convert the status code exception to sendError
@@ -353,14 +347,28 @@ public class SlingMainServlet extends GenericServlet {
         // setup servlet request processing helpers
         this.slingServiceLocator = new ServiceLocatorImpl(bundleContext);
         this.slingAuthenticator = new SlingAuthenticator(bundleContext);
-        this.servletResolver = new SlingServletResolver(bundleContext, slingServletContext);
+        this.servletResolver = new SlingServletResolver(bundleContext,
+            slingServletContext);
         this.errorHandler = new ErrorHandler(bundleContext, slingServletContext);
 
         // register the servlet and resources
         try {
-            this.slingHttpContext = new SlingHttpContext(this.mimeTypeService);
+            HttpContext httpContext = new HttpContext() {
+                public String getMimeType(String name) {
+                    return mimeTypeService.getMimeType(name);
+                }
+
+                public URL getResource(String name) {
+                    return null;
+                }
+
+                public boolean handleSecurity(HttpServletRequest request,
+                        HttpServletResponse response) {
+                    return slingAuthenticator.authenticate(request, response);
+                }
+            };
             this.httpService.registerServlet(this.slingRoot, this,
-                configuration, this.slingHttpContext);
+                configuration, httpContext);
 
             log.info("{} ready to serve requests", this.getServerInfo());
 
@@ -397,6 +405,9 @@ public class SlingMainServlet extends GenericServlet {
 
     protected void deactivate(ComponentContext componentContext) {
 
+        // first of all, we have to unregister
+        httpService.unregister(this.slingRoot);
+
         destroyFilters(innerFilterChain);
         destroyFilters(requestFilterChain);
 
@@ -417,19 +428,13 @@ public class SlingMainServlet extends GenericServlet {
             slingServiceLocator = null;
         }
 
-        this.httpService.unregister(this.slingRoot);
-
-        if (this.slingHttpContext != null) {
-            this.slingHttpContext.dispose();
-        }
-
         this.slingServletContext = null;
         this.osgiComponentContext = null;
 
         log.info(this.getServerInfo() + " shut down");
     }
 
-    protected void bindComponentFilter(ServiceReference ref) {
+    protected void bindFilter(ServiceReference ref) {
         synchronized (this) {
             if (osgiComponentContext == null) {
                 if (delayedComponentFilters == null) {
@@ -442,7 +447,7 @@ public class SlingMainServlet extends GenericServlet {
         }
     }
 
-    protected void unbindComponentFilter(ServiceReference ref) {
+    protected void unbindFilter(ServiceReference ref) {
         // service id
         Object serviceId = ref.getProperty(Constants.SERVICE_ID);
 
@@ -459,8 +464,7 @@ public class SlingMainServlet extends GenericServlet {
     }
 
     private void initFilter(ComponentContext osgiContext, ServiceReference ref) {
-        Filter filter = (Filter) osgiContext.locateService(
-            COMPONENT_FILTER_NAME, ref);
+        Filter filter = (Filter) osgiContext.locateService(FILTER_NAME, ref);
 
         // require a name for the filter
         String filterName = AbstractServiceReferenceConfig.getName(ref);

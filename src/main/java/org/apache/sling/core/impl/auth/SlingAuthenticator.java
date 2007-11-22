@@ -33,11 +33,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.core.auth.AuthenticationHandler;
+import org.apache.sling.core.auth.AuthenticationInfo;
+import org.apache.sling.core.impl.SlingHttpContext;
 import org.apache.sling.jcr.api.TooManySessionsException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
+import org.osgi.service.http.HttpContext;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,43 +200,49 @@ public class SlingAuthenticator implements ManagedService {
      *         be assumed, that during this method enough response information
      *         has been sent to the client.
      */
-    public Session authenticate(HttpServletRequest req, HttpServletResponse res) {
+    public boolean authenticate(HttpServletRequest req, HttpServletResponse res) {
 
-        // 0. Get package for request and be anonymous if none configured
-        AuthenticationHandler handler = this.getAuthHandler(req);
-        if (handler == null) {
-            log.debug("authenticate: no authentication needed, anonymous access");
-            return this.getAnonymousSession(req, res);
+        // 0. Nothing to do, if the session is also in the request
+        // this might be the case if the request is handled as a result
+        // of a servlet container include inside another Sling request
+        Object sessionAttr = req.getAttribute(SlingHttpContext.SESSION);
+        if (sessionAttr instanceof Session) {
+            log.debug("authenticate: Request already authenticated, nothing to do");
+            return true;
+        } else if (sessionAttr != null) {
+            // warn and remove existing non-session
+            log.warn(
+                "authenticate: Overwriting existing Session attribute ({})",
+                sessionAttr);
+            req.removeAttribute(SlingHttpContext.SESSION);
         }
 
-        // 1. Check request login session - only if we have sessions
-        // not any more :-)
-
-        // 2. Ask the packages handler for the credentials
-        Credentials creds = handler.authenticate(req, res);
+        // 1. Ask all authentication handlers to try to extract credentials
+        AuthenticationInfo authInfo = getAuthenticationInfo(req, res);
 
         // 3. Check Credentials
-        if (creds == AuthenticationHandler.DOING_AUTH) {
+        if (authInfo == AuthenticationInfo.DOING_AUTH) {
 
             log.debug("authenticate: ongoing authentication in the handler");
-            // is this the correct return value ??
-            return null;
+            return false;
 
-        } else if (creds == null) {
+        } else if (authInfo == null) {
 
             log.debug("authenticate: no credentials in the request, anonymous");
-            return this.getAnonymousSession(req, res);
+            return getAnonymousSession(req, res);
 
         } else {
             // try to connect
             try {
                 log.debug("authenticate: credentials, trying to get a ticket");
-                Session session = getRepository().login(creds, null);
+                Session session = getRepository().login(
+                    authInfo.getCredentials(), null);
 
                 // handle impersonation
-                session = this.handleImpersonation(req, res, session);
+                session = handleImpersonation(req, res, session);
+                setAttributes(session, authInfo.getAuthType(), req);
 
-                return session;
+                return true;
 
             } catch (TooManySessionsException se) {
                 log.info("Too many sessions for user: {}", se.getMessage());
@@ -244,13 +253,11 @@ public class SlingAuthenticator implements ManagedService {
             }
 
             // request authentication information and send 403 (Forbidden)
-            // if the handler cannot request authentication information.
-            if (!handler.requestAuthentication(req, res)) {
-                this.sendFailure(res);
-            }
+            // if no handler can request authentication information.
+            requestAuthentication(req, res);
 
             // end request
-            return null;
+            return false;
         }
     }
 
@@ -266,22 +273,30 @@ public class SlingAuthenticator implements ManagedService {
      *
      * @param req The request object
      * @param res The response object to which to send the request
-     * @return true if the information could be requested or false, if the
-     *         request should fail with the appropriate error status
      */
-    public boolean requestAuthentication(HttpServletRequest req,
-            HttpServletResponse res) {
+    public void requestAuthentication(HttpServletRequest request,
+            HttpServletResponse response) {
 
-        AuthenticationHandler handler = this.getAuthHandler(req);
-        if (handler != null) {
-            log.debug("requestAuthentication: requesting authentication using "
-                + "handler: {0}", handler);
+        AuthenticationHandler[] handlers = getAuthenticationHandlers();
+        boolean done = false;
+        for (int i = 0; !done && i < handlers.length; i++) {
+            log.debug(
+                "requestAuthentication: requesting authentication using handler: {0}",
+                handlers[i]);
 
-            return handler.requestAuthentication(req, res);
+            try {
+                done = handlers[i].requestAuthentication(request, response);
+            } catch (IOException ioe) {
+                log.error(
+                    "requestAuthentication: Failed sending authentication request through handler "
+                        + handlers[i] + ", access forbidden", ioe);
+                done = true;
+            }
         }
 
-        log.info("requestAuthentication: no handler found for request");
-        return false;
+        // no handler could send an authentication request, fail with FORBIDDEN
+        log.info("requestAuthentication: No handler for request, sending FORBIDDEN");
+        sendFailure(response);
     }
 
     // ----------- ManagedService interface -----------------------------------
@@ -337,43 +352,31 @@ public class SlingAuthenticator implements ManagedService {
         return authHandlerCache;
     }
 
-    private AuthenticationHandler getAuthHandler(HttpServletRequest req) {
+    private AuthenticationInfo getAuthenticationInfo(
+            HttpServletRequest request, HttpServletResponse response) {
         AuthenticationHandler[] local = getAuthenticationHandlers();
         for (int i = 0; i < local.length; i++) {
-            if (local[i].handles(req)) {
-                return local[i];
+            AuthenticationInfo authInfo = local[i].authenticate(request,
+                response);
+            if (authInfo != null) {
+                return authInfo;
             }
         }
 
         // no handler found for the request ....
+        log.debug("getCredentials: no handler could extract credentials");
         return null;
     }
 
-    // private AuthPackage getAuthPackage(HttpServletRequest req) {
-    //
-    // // Get the request URI from the request or from the include
-    // String requestURI = req.getRequestURI();
-    // log.debug("getAuthPackage: Check for {0}", requestURI);
-    //
-    // // Look in the packages list
-    // for (int i = 0; i < numPackages; i++) {
-    // if (packages[i].contains(requestURI)) {
-    // return packages[i];
-    // }
-    // }
-    // // invariant: returned or no package found
-    //
-    // // if no package is responsible
-    // return null;
-    // }
-
     // TODO
-    private Session getAnonymousSession(HttpServletRequest req,
+    private boolean getAnonymousSession(HttpServletRequest req,
             HttpServletResponse res) {
         // login anonymously, log the exact cause in case of failure
         if (this.anonymousAllowed) {
             try {
-                return getRepository().login();
+                Session session = getRepository().login();
+                setAttributes(session, null, req);
+                return true;
             } catch (TooManySessionsException se) {
                 log.error(
                     "getAnonymousSession: Too many anonymous users active", se);
@@ -390,12 +393,10 @@ public class SlingAuthenticator implements ManagedService {
         }
 
         // request authentication now, and fail if not possible
-        if (!this.requestAuthentication(req, res)) {
-            this.sendFailure(res);
-        }
+        requestAuthentication(req, res);
 
         // fallback to no session
-        return null;
+        return false;
     }
 
     // TODO
@@ -409,62 +410,18 @@ public class SlingAuthenticator implements ManagedService {
     }
 
     /**
-     * Tries to instantiate a handler from the given handler configuration.
-     *
-     * @param defaultPackage The name of the package for the handler class if
-     *            the class name is not a fully qualified class name.
-     * @param className The name of the class. If this is not fully qualified,
-     *            the class is assumed to be in the defaultPackage.
-     * @param configPath The path name (handle) of the handler configuration or
-     *            <code>null</code> if the handler has no configuration.
-     * @throws ServiceException if the handler cannot be instantiated and
-     *             initialized.
+     * Sets the request attributes required by the OSGi HttpContext interface
+     * specification for the <code>handleSecurity</code> method. In addition
+     * the {@link SlingHttpContext#SESSION} request attribute is set with the
+     * JCR Session.
      */
-    // private AuthenticationHandler getHandlerInstance(String defaultPackage,
-    // String className, String configPath) {
-    //
-    // // check fully qualified classname
-    // if (className.indexOf('.') < 0 && defaultPackage != null) {
-    // className = defaultPackage + "." + className;
-    // }
-    //
-    // Exception e = null;
-    // try {
-    // // Read the configuration
-    // Config config = (configPath != null) ? MutableConfig.createFromXml(
-    // null, ticket, configPath) : null;
-    //
-    // // get the instance
-    // Class clazz = classLoader.loadClass(className);
-    // AuthenticationHandler handler = (AuthenticationHandler)
-    // clazz.newInstance();
-    //
-    // // initialize the handler
-    // handler.init(ticket, config);
-    //
-    // // return the handler
-    // return handler;
-    //
-    // } catch (ContentBusException cbe) {
-    // // MutableConfig.createFromXml()
-    // e = cbe;
-    // } catch (ClassNotFoundException cnfe) {
-    // // Class.forName()
-    // e = cnfe;
-    // } catch (InstantiationException ie) {
-    // // newInstance()
-    // e = ie;
-    // } catch (IllegalAccessException iae) {
-    // // newInstance()
-    // e = iae;
-    // } catch (ClassCastException cce) {
-    // // clazz is not an AuthenticationHandler
-    // e = cce;
-    // }
-    //
-    // // invariant : e != null if we get here
-    // throw new ServiceException(e.getMessage(), e);
-    // }
+    private void setAttributes(Session session, String authType,
+            HttpServletRequest request) {
+        request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
+        request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
+        request.setAttribute(SlingHttpContext.SESSION, session);
+    }
+
     /**
      * Sends the session cookie for the name session with the given age in
      * seconds. This sends a Version 1 cookie.
@@ -583,107 +540,4 @@ public class SlingAuthenticator implements ManagedService {
         return session;
     }
 
-    // ---------- internal class -----------------------------------------------
-
-    /**
-     * The <code>AuthPackage</code> class implements the
-     * {@link ContentPackage} package providing additional information for
-     * handler detection.
-     */
-    // private class AuthPackage implements ContentPackage {
-    //
-    // /**
-    // * The name of the configuration attribute defining the handler to use
-    // * for requests matching this package.
-    // */
-    // private static final String HANDLER_ATTR = "handler";
-    //
-    // /**
-    // * The name of the configuration attribute defining the parameter the
-    // * handler may use when requesting authentication.
-    // */
-    // private static final String PARAM_ATTR = "param";
-    //
-    // /**
-    // * The default value of the parameter attribute
-    // *
-    // * @see #PARAM_ATTR
-    // */
-    // private static final String DEFAULT_PARAM = "";
-    //
-    // /** the name of the handler */
-    // private final String handler;
-    //
-    // /** the addInfo parameter for the requestAuthentication call */
-    // private final String param;
-    //
-    // private final ContentPackage delegatee;
-    //
-    // /**
-    // * Create the package from the configuration element using the given
-    // * handler name as the default handler name
-    // *
-    // * @param config The configuration element on which to base the package
-    // * definition and authentication configuration.
-    // * @param defaultHandler The defualt authentication handler name to use
-    // * if none is specified in the configuration.
-    // */
-    // AuthPackage(Configuration config, String defaultHandler) throws
-    // RepositoryException {
-    // FilterContentPackageBuilder builder = new FilterContentPackageBuilder();
-    // builder.addFilters((Session) null, config);
-    // delegatee = builder.createContentPackage();
-    //
-    // this.handler = config.getString(HANDLER_ATTR, defaultHandler);
-    // this.param = config.getString(PARAM_ATTR, DEFAULT_PARAM);
-    // }
-    //
-    // /**
-    // * Returns the name of the handler to use for requests matching this
-    // * package.
-    // *
-    // * @return The name of the handler to use.
-    // */
-    // String getHandler() {
-    // return handler;
-    // }
-    //
-    // /**
-    // * The parameter to provide to the handler when requesting
-    // * authentication.
-    // *
-    // * @return The authentication request parameter for the handler.
-    // */
-    // String getParam() {
-    // return param;
-    // }
-    //
-    // /**
-    // * @see ContentPackage#contains(String)
-    // */
-    // public boolean contains(String handle) {
-    // return delegatee.contains(handle);
-    // }
-    //
-    // /**
-    // * @see ContentPackage#contains(Ticket, String)
-    // */
-    // public boolean contains(Session session, String handle) {
-    // return delegatee.contains(session, handle);
-    // }
-    //
-    // /**
-    // * @see ContentPackage#contains(Page)
-    // */
-    // public boolean contains(Item item) {
-    // return delegatee.contains(item);
-    // }
-    //
-    // /**
-    // * @see ContentPackage#getTraversingStartPoints()
-    // */
-    // public String[] getTraversingStartPoints() {
-    // return delegatee.getTraversingStartPoints();
-    // }
-    // }
 }
