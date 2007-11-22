@@ -254,21 +254,25 @@ public class SlingServletResolver extends ServletBinder implements
 
     public void updated(Dictionary properties) {
 
-        Object pathObject = properties.get(PROP_PATH);
-        if (pathObject instanceof String[]) {
-            this.path = (String[]) pathObject;
-            for (int i = 0; i < this.path.length; i++) {
-                // ensure leading slash
-                if (!this.path[i].startsWith("/")) {
-                    this.path[i] = "/" + this.path[i];
-                }
-                // ensure trailing slash
-                if (!this.path[i].endsWith("/")) {
-                    this.path[i] += "/";
+        // empty path to begin with
+        path = null;
+
+        // from configuration if available
+        if (properties != null) {
+            Object pathObject = properties.get(PROP_PATH);
+            if (pathObject instanceof String[]) {
+                this.path = (String[]) pathObject;
+                for (int i = 0; i < this.path.length; i++) {
+                    // ensure leading slash
+                    if (!this.path[i].startsWith("/")) {
+                        this.path[i] = "/" + this.path[i];
+                    }
+                    // ensure trailing slash
+                    if (!this.path[i].endsWith("/")) {
+                        this.path[i] += "/";
+                    }
                 }
             }
-        } else {
-            this.path = null;
         }
     }
 
