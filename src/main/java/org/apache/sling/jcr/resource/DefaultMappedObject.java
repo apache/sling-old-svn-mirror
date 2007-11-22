@@ -217,7 +217,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
         // due to an inconsistency in the BeanUtils 1.5 through 1.7.0
         // versions. Version 1.7.1 will fix this again, though ...
         if (FIELD_PROPERTIES.equals(key)) {
-            return this.getProperties();
+            return getProperties();
         }
 
         return super.get(key);
@@ -244,8 +244,8 @@ public class DefaultMappedObject extends HashMap<String, Object> {
         // due to an inconsistency in the BeanUtils 1.5 through 1.7.0
         // versions. Version 1.7.1 will fix this again, though ...
         if (FIELD_PROPERTIES.equals(key)) {
-            Object old = this.getProperties();
-            this.setProperties((ManagedHashMap) value);
+            Object old = getProperties();
+            setProperties((ManagedHashMap) value);
             return old;
         }
 
@@ -268,7 +268,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      */
     public void setPath(String path) {
         if (path != null) {
-            this.put(FIELD_PATH, path);
+            put(FIELD_PATH, path);
         }
     }
 
@@ -276,7 +276,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      * Returns the path of this mapped object.
      */
     public String getPath() {
-        return (String) this.get(FIELD_PATH);
+        return (String) get(FIELD_PATH);
     }
 
     /**
@@ -289,9 +289,10 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      * @ocm.collection jcrName="*"
      *                 collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl"
      */
+    @SuppressWarnings("unchecked")
     public void setProperties(ManagedHashMap contents) {
         if (contents != null) {
-            this.putAll(contents);
+            putAll(contents); // unchecked cast
         }
     }
 
@@ -325,7 +326,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      *            autoInsert="false"
      */
     public void setPrimaryType(String type) {
-        this.put(FIELD_PRIMARY_TYPE, type);
+        put(FIELD_PRIMARY_TYPE, type);
     }
 
     /**
@@ -333,7 +334,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      * for new objects.
      */
     public String getPrimaryType() {
-        return (String) this.get(FIELD_PRIMARY_TYPE);
+        return (String) get(FIELD_PRIMARY_TYPE);
     }
 
     /**
@@ -347,9 +348,9 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      *                 collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl"
      *                 autoUpdate="false" autoInsert="false"
      */
-    public void setMixinTypes(ArrayList mixinTypes) {
+    public void setMixinTypes(ArrayList<String> mixinTypes) {
         if (mixinTypes != null) {
-            this.put(FIELD_MIXIN_TYPES, new ArrayList(mixinTypes));
+            put(FIELD_MIXIN_TYPES, new ArrayList<String>(mixinTypes));
         }
     }
 
@@ -358,8 +359,9 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      * <code>null</code> for new objects or if the node has no mixin node
      * types.
      */
-    public ArrayList getMixinTypes() {
-        List types = (List) this.get(FIELD_MIXIN_TYPES);
-        return (types != null) ? new ArrayList(types) : null;
+    @SuppressWarnings("unchecked")
+    public ArrayList<String> getMixinTypes() {
+        List<String> types = (List<String>) get(FIELD_MIXIN_TYPES); // unchecked cast
+        return (types != null) ? new ArrayList<String>(types) : null;
     }
 }
