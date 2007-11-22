@@ -33,6 +33,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.GenericServlet;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -268,9 +269,9 @@ public class SlingMainServlet extends GenericServlet {
 
             processor.doFilter(request, response);
         } else {
-            log.error("service: No Inner Request Handling filters, cannot process request");
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                "Cannot process Request");
+            log.debug("service: No Resource level filters, calling servlet");
+            Servlet servlet = RequestData.getRequestData(request).getContentData().getServlet();
+            servlet.service(request, response);
         }
     }
 
@@ -347,11 +348,12 @@ public class SlingMainServlet extends GenericServlet {
         }
 
         // setup servlet request processing helpers
-        this.slingServiceLocator = new ServiceLocatorImpl(bundleContext);
-        this.slingAuthenticator = new SlingAuthenticator(bundleContext);
-        this.servletResolver = new SlingServletResolver(bundleContext,
-            slingServletContext);
-        this.errorHandler = new ErrorHandler(bundleContext, slingServletContext);
+        SlingServletContext tmpServletContext = new SlingServletContext(this);
+        slingServiceLocator = new ServiceLocatorImpl(bundleContext);
+        slingAuthenticator = new SlingAuthenticator(bundleContext);
+        servletResolver = new SlingServletResolver(bundleContext,
+            tmpServletContext);
+        errorHandler = new ErrorHandler(bundleContext, tmpServletContext);
 
         // register the servlet and resources
         try {
@@ -390,7 +392,7 @@ public class SlingMainServlet extends GenericServlet {
             // handler setup but before initializing the filters.
             // After leaving this synched block, bindFilter will be "active" and
             // set the delayedComponentFilters field to null for GC
-            slingServletContext = new SlingServletContext(this);
+            slingServletContext = tmpServletContext;
             delayedComponentFilters = null;
         }
 
