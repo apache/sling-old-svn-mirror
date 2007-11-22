@@ -29,25 +29,26 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.sling.core.auth.AuthenticationHandler;
+import org.apache.sling.core.auth.AuthenticationInfo;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * The <code>AuthorizationHeaderAuthenticationHandler</code> class implements the
- * authorization steps based on the Authorization header of the HTTP request.
- * This authenticator should eventually support both BASIC and DIGEST
+ * The <code>AuthorizationHeaderAuthenticationHandler</code> class implements
+ * the authorization steps based on the Authorization header of the HTTP
+ * request. This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
  *
  * @scr.component immediate="false" label="%auth.http.name"
  *                description="%auth.http.description"
- * @scr.property name="service.description"
- *          value="HTTP Header Authentication Handler"
+ * @scr.property name="service.description" value="HTTP Header Authentication
+ *               Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  */
-public class AuthorizationHeaderAuthenticationHandler implements AuthenticationHandler {
+public class AuthorizationHeaderAuthenticationHandler implements
+        AuthenticationHandler {
 
     /**
      * @scr.property value="Sling (Development)"
@@ -72,10 +73,6 @@ public class AuthorizationHeaderAuthenticationHandler implements AuthenticationH
     }
 
     // ----------- AuthenticationHandler interface ----------------------------
-
-    public boolean handles(HttpServletRequest request) {
-        return true;
-    }
 
     /**
      * Extracts credential data from the request if at all contained. This check
@@ -117,7 +114,7 @@ public class AuthorizationHeaderAuthenticationHandler implements AuthenticationH
      *         information. In case of DOING_AUTH, the method must have sent a
      *         response indicating that fact to the client.
      */
-    public Credentials authenticate(HttpServletRequest request,
+    public AuthenticationInfo authenticate(HttpServletRequest request,
             HttpServletResponse response) {
         return this.extractAuthentication(request);
     }
@@ -126,41 +123,33 @@ public class AuthorizationHeaderAuthenticationHandler implements AuthenticationH
      * Sends status <code>401</code> (Unauthorized) with a
      * <code>WWW-Authenticate</code> requesting standard HTTP header
      * authentication with the <code>Basic</code> scheme and the configured
-     * realm name.
-     * <p>
-     * Returns <code>true</code> if the response could successfully be sent to
-     * the client. Otherwise <code>false</code> is returned.
+     * realm name. If the response is already committed, an error message is
+     * logged but the 401 status is not sent.
      *
      * @param request The request object
      * @param response The response object to which to send the request
-     * @param addInfo Additional information string from the configuration. This
-     *            may for example be used as the realm name for HTTP header
-     *            authentication. TODO configuration
-     * @return true if the information could be requested or false, if the
-     *         request should fail with the appropriate error status
+     * @return <code>true</code> is always returned by this handler
+     * @throws IOException if an error occurrs sending back the response.
      */
     public boolean requestAuthentication(HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response) throws IOException {
 
         // if the response is already committed, we have a problem !!
-        if (response.isCommitted()) {
-            log.warn("requestAuthentication: response already committed");
-            return false;
-        }
+        if (!response.isCommitted()) {
 
-        response.setHeader(HEADER_WWW_AUTHENTICATE,
-            AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"");
+            response.setHeader(HEADER_WWW_AUTHENTICATE,
+                AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"");
 
-        try {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return true;
-        } catch (IOException ioe) {
-            log.info("requestAuthentication: Cannot send the error: {0}",
-                ioe.toString());
+
+        } else {
+
+            log.error("requestAuthentication: Response is committed, cannot request authentication");
+
+
         }
 
-        // got a problem with sending the error
-        return false;
+        return true;
     }
 
     // ---------- SCR Integration ----------------------------------------------
@@ -182,7 +171,8 @@ public class AuthorizationHeaderAuthenticationHandler implements AuthenticationH
     /**
      * Extract the Base64 authentication string from the request
      */
-    protected Credentials extractAuthentication(HttpServletRequest request) {
+    protected AuthenticationInfo extractAuthentication(
+            HttpServletRequest request) {
 
         // Return immediately if the header is missing
         String authHeader = request.getHeader(HEADER_AUTHORIZATION);
@@ -237,12 +227,15 @@ public class AuthorizationHeaderAuthenticationHandler implements AuthenticationH
             return null;
         }
 
+        Credentials creds;
         int colIdx = decoded.indexOf(':');
         if (colIdx < 0) {
-            return new SimpleCredentials(decoded, new char[0]);
+            creds = new SimpleCredentials(decoded, new char[0]);
+        } else {
+            creds = new SimpleCredentials(decoded.substring(0, colIdx),
+                decoded.substring(colIdx + 1).toCharArray());
         }
 
-        return new SimpleCredentials(decoded.substring(0, colIdx),
-            decoded.substring(colIdx + 1).toCharArray());
+        return new AuthenticationInfo(HttpServletRequest.BASIC_AUTH, creds);
     }
 }

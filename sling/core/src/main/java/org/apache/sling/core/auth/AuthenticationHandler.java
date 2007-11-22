@@ -18,7 +18,8 @@
  */
 package org.apache.sling.core.auth;
 
-import javax.jcr.Credentials;
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,22 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 public interface AuthenticationHandler {
 
     /**
-     * Returned by {@link #authenticate} to indicate an ongoing authentication
-     * transaction.
-     */
-    static final Credentials DOING_AUTH = new Credentials() {
-    };
-
-    // TODO
-    // @return true this handler can authenticate the request
-    boolean handles(HttpServletRequest request);
-
-    /**
-     * Extracts credential data from the request if at all contained. This check
-     * must basically be based on the original request object with the exception
-     * of the request URI, which may be gotten from the request object through
-     * the {@link DeliveryHttpServletRequest#getRealRequestURI()}, which
-     * returns the request URI with the context path removed.
+     * Extracts credential data from the request if at all contained.
      * <p>
      * The method returns any of the following values : <table>
      * <tr>
@@ -54,16 +40,17 @@ public interface AuthenticationHandler {
      * <th>description</tr>
      * <tr>
      * <td><code>null</code>
-     * <td>no user details were contained in the request </tr>
+     * <td>no user details were contained in the request or the handler is not
+     * capable or willing to extract credentials from the request</tr>
      * <tr>
      * <td>{@link #DOING_AUTH}
      * <td>the handler is in an ongoing authentication transaction with the
-     * client. Further request handling in the DeliveryModule should not take
-     * place.
+     * client. Request processing should be aborted at this stage.
      * <tr>
      * <tr>
-     * <td><code>Credentials</code> object
-     * <td>The user sent credentials.</tr>
+     * <td><code>AuthenticationInfo</code> object
+     * <td>The user sent credentials. The returned object contains the
+     * credentials as well as the type of authentication transmission employed.</tr>
      * </table>
      * <p>
      * The method must not request credential information from the client, if
@@ -73,14 +60,14 @@ public interface AuthenticationHandler {
      *            authentication.
      * @param response The response object which may be used to send the
      *            information on the request failure to the user.
-     * @return A valid <code>Credentials</code> instance identifying the
-     *         request user, {@link #DOING_AUTH} if the handler is in an
+     * @return A valid <code>AuthenticationInfo</code> instance identifying
+     *         the request user, {@link #DOING_AUTH} if the handler is in an
      *         authentication transaction with the client or null if the request
      *         does not contain authentication information. In case of
      *         {@link #DOING_AUTH}, the method must have sent a response
      *         indicating that fact to the client.
      */
-    Credentials authenticate(HttpServletRequest request,
+    AuthenticationInfo authenticate(HttpServletRequest request,
             HttpServletResponse response);
 
     /**
@@ -95,13 +82,12 @@ public interface AuthenticationHandler {
      *
      * @param request The request object.
      * @param response The response object to which to send the request.
-     * @param addInfo Additional information string from the configuration. This
-     *            may for example be used as the realm name for HTTP header
-     *            authentication. TODO: handler configuration
-     * @return <code>true</code> if the information could be requested or
-     *         <code>false</code>, if the request should fail with the
-     *         appropriate error status.
+     * @return <code>true</code> if the handler is able to end an
+     *         authentication inquiry for the given request. <code>false</code>
+     *         otherwise.
+     * @throws IOException If an error occurrs sending the authentication
+     *             inquiry to the client.
      */
     boolean requestAuthentication(HttpServletRequest request,
-            HttpServletResponse response);
+            HttpServletResponse response) throws IOException;
 }
