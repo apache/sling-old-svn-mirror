@@ -30,25 +30,19 @@ import javax.jcr.Value;
  */
 public class LazyInputStream extends InputStream {
 
+    /** The JCR Value from which the input stream is requested on demand */
     private final Value value;
 
+    /** The inputstream created on demand, null if not used */
     private InputStream delegatee;
 
     public LazyInputStream(Value value) {
         this.value = value;
     }
 
-    private InputStream getStream() throws IOException {
-        if (delegatee == null) {
-            try {
-                delegatee = value.getStream();
-            } catch (RepositoryException re) {
-                throw (IOException) new IOException(re.getMessage()).initCause(re);
-            }
-        }
-        return delegatee;
-    }
-
+    /**
+     * Closes the input stream if acquired otherwise does nothing.
+     */
     @Override
     public void close() throws IOException {
         if (delegatee != null) {
@@ -104,4 +98,17 @@ public class LazyInputStream extends InputStream {
     public synchronized void reset() throws IOException {
         getStream().reset();
     }
+
+    /** Actually retrieves the input stream from the underlying JCR Value */
+    private InputStream getStream() throws IOException {
+        if (delegatee == null) {
+            try {
+                delegatee = value.getStream();
+            } catch (RepositoryException re) {
+                throw (IOException) new IOException(re.getMessage()).initCause(re);
+            }
+        }
+        return delegatee;
+    }
+
 }
