@@ -105,13 +105,6 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see javax.servlet.http.HttpServletRequestWrapper#getContextPath()
-     */
-    public String getContextPath() {
-        return this.getRequestData().getContextPath();
-    }
-
-    /**
      * @see javax.servlet.ServletRequestWrapper#getLocale()
      */
     public Locale getLocale() {
@@ -186,31 +179,8 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         return null;
     }
 
-    /**
-     * @see javax.servlet.http.HttpServletRequestWrapper#getRequestURI()
-     */
-    public String getRequestURI() {
-        return this.getRequestData().getRequestURI();
-    }
-
     public RequestPathInfo getRequestPathInfo() {
         return getRequestData().getContentData().getRequestPathInfo();
-    }
-
-    public String getQueryString() {
-        return this.getRequestData().getQueryString();
-    }
-
-    @Override
-    public String getAuthType() {
-        // TODO: Use Authentication service info
-        return super.getAuthType();
-    }
-
-    @Override
-    public String getRemoteUser() {
-        // TODO: Use Authentication service info
-        return super.getRemoteUser();
     }
 
     /**
