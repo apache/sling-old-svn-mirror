@@ -38,7 +38,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.sling.api.SlingException;
@@ -57,7 +56,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>JcrResourceManager</code> TODO
+ * The <code>JcrResourceManager</code> class implements the Sling
+ * <code>ResourceManager</code> and <code>ResourceResolver</code> interfaces
+ * and in addition is a {@link PathResolver}. Instances of this class are
+ * retrieved through the
+ * {@link org.apache.sling.jcr.resource.JcrResourceManagerFactory#getResourceManager(Session)}
+ * method.
  */
 public class JcrResourceManager implements ResourceManager, PathResolver {
 
@@ -90,17 +94,6 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             Session session) {
         this.factory = factory;
         this.session = session;
-    }
-
-    protected Session getSession() {
-        return session;
-    }
-
-    protected ObjectContentManager getObjectContentManager() {
-        if (objectContentManager == null) {
-            objectContentManager = factory.getObjectContentManager(getSession());
-        }
-        return objectContentManager;
     }
 
     // ---------- ResourceResolver interface ----------------------------------
@@ -207,7 +200,9 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
                                 JcrResourceUtil.toJavaObject(values[i]));
                         }
                     } catch (RepositoryException re) {
-                        // TODO:log
+                        log.error(
+                            "queryResources$next: Problem accessing row values",
+                            re);
                     }
                     return row;
                 }
@@ -227,30 +222,30 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      * @throws AccessControlException If an item would exist but is not readable
      *      to this manager's session.
      */
-    public Resource resolve(String url) throws SlingException {
+    public Resource resolve(String uri) throws SlingException {
 
         // decode the request URI (required as the servlet container does not
         try {
-            url = URLDecoder.decode(url, "UTF-8");
+            uri = URLDecoder.decode(uri, "UTF-8");
         } catch (UnsupportedEncodingException uee) {
             log.error("Cannot decode request URI using UTF-8", uee);
         } catch (Exception e) {
-            log.error("Failed to decode request URI " + url, e);
+            log.error("Failed to decode request URI " + uri, e);
         }
 
 
-        // convert fake urls
-        String realUrl = (String) factory.getVirtualURLMap().get(url);
+        // resolve virtual uri
+        String realUrl = factory.virtualToRealUri(uri);
         if (realUrl != null) {
             log.debug("resolve: Using real url '{}' for virtual url '{}'",
-                realUrl, url);
-            url = realUrl;
+                realUrl, uri);
+            uri = realUrl;
         }
 
         try {
 
             // translate url to a mapped url structure
-            return transformURL(url);
+            return transformURL(uri);
 
         } catch (AccessControlException ace) {
             // rethrow AccessControlExceptions to be handled
@@ -262,7 +257,7 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
 
         } catch (Throwable t) {
             // wrap any other issue into a SlingException
-            throw new SlingException("Problem resolving " + url, t);
+            throw new SlingException("Problem resolving " + uri, t);
         }
     }
 
@@ -285,8 +280,10 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         }
 
         // check virtual mappings
-        String virtual = (String) factory.getVirtualURLMap().getKey(href);
+        String virtual = factory.realToVirtualUri(href);
         if (virtual != null) {
+            log.debug("pathToURL: Using virtual URI {} for path {}", virtual,
+                href);
             href = virtual;
         }
 
@@ -305,6 +302,33 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
 
     // ---------- ResourceManager interface -----------------------------------
 
+    /**
+     * @throws AccessControlException If this manager has does not have enough
+     *             permisssions to store the resource's object.
+     */
+    public void store(Resource resource) throws SlingException {
+        String path = resource.getURI();
+        if (resource.getObject() != null) {
+            try {
+                if (itemExists(path)) {
+                    checkPermission(path, ACTION_SET_PROPERTY);
+                    getObjectContentManager().update(resource.getObject());
+                } else {
+                    checkPermission(path, ACTION_CREATE);
+                    getObjectContentManager().insert(resource.getObject());
+                }
+            } catch (RepositoryException re) {
+                throw new SlingException("Problem storing object for resource "
+                    + path, re);
+            }
+        } else {
+            log.info("store: The resource {} has no object to store", path);
+        }
+    }
+
+    /**
+     * @throws AccessControlException if this manager has no read access
+     */
     public Resource getResource(String path, Class<?> type)
             throws SlingException {
         path = JcrResourceUtil.normalize(path);
@@ -312,7 +336,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             try {
                 return getResourceInternal(path, type);
             } catch (RepositoryException re) {
-                throw new SlingException("Cannot get resource " + path, re);
+                throw new SlingException("Problem accessing resource" + path,
+                    re);
             }
         }
 
@@ -320,42 +345,43 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         return null;
     }
 
-    public void store(Resource resource) throws SlingException {
-        if (resource.getObject() != null) {
-            String path = resource.getURI();
-
-            if (itemExists(path)) {
-                checkPermission(path, ACTION_SET_PROPERTY);
-                getObjectContentManager().update(resource.getObject());
-            } else {
-                this.checkPermission(path, ACTION_CREATE);
-                getObjectContentManager().insert(resource.getObject());
-            }
-        }
-    }
-
     public void delete(Resource resource) throws SlingException {
         String path = resource.getURI();
-        this.checkPermission(path, ACTION_REMOVE);
-        getObjectContentManager().remove(path);
+        try {
+            checkPermission(path, ACTION_REMOVE);
+            getObjectContentManager().remove(path);
+        } catch (AccessControlException ace) {
+            // rethrow access control issues
+            throw ace;
+        } catch (Exception ex) {
+            throw new SlingException("Problem deleting resource " + path, ex);
+        }
     }
 
     public void copy(Resource resource, String destination, boolean deep)
             throws SlingException {
-        this.checkPermission(destination, ACTION_CREATE);
 
-        if (deep) {
-            // recursively copy directly in the repository
-            try {
-                getSession().getWorkspace().copy(resource.getURI(), destination);
-            } catch (RepositoryException e) {
-                e.printStackTrace();
+        String source = resource.getURI();
+        try {
+
+            checkPermission(destination, ACTION_CREATE);
+
+            if (deep) {
+                // recursively copy directly in the repository
+                getSession().getWorkspace().copy(source, destination);
+            } else {
+                Object copied = getObjectContentManager().getObject(
+                    resource.getObject().getClass(), source);
+                setPath(copied, destination);
+                getObjectContentManager().insert(copied);
             }
-        } else {
-            Object copied = getObjectContentManager().getObject(
-                resource.getObject().getClass(), resource.getURI());
-            setPath(copied, destination);
-            getObjectContentManager().insert(copied);
+
+        } catch (AccessControlException ace) {
+            // rethrow access control issues
+            throw ace;
+        } catch (Exception ex) {
+            throw new SlingException("Problem copying resource " + source
+                + " to " + destination, ex);
         }
     }
 
@@ -363,61 +389,61 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             throws SlingException {
         String source = resource.getURI();
 
-        this.checkPermission(source, ACTION_REMOVE);
-        this.checkPermission(destination, ACTION_CREATE);
-
         try {
-            this.getSession().move(source, destination);
-            // } catch (ItemExistsException iee) {
-            // } catch (PathNotFoundException pnfe) {
-            // } catch (VersionException ve) {
-            // } catch (ConstraintViolationException cve) {
-            // } catch (LockException le) {
-        } catch (RepositoryException re) {
-            throw new SlingException("Cannot move " + source + " to "
-                + destination, re);
+            checkPermission(source, ACTION_REMOVE);
+            checkPermission(destination, ACTION_CREATE);
+
+            getSession().move(source, destination);
+
+        } catch (AccessControlException ace) {
+            // rethrow access control issues
+            throw ace;
+        } catch (Exception ex) {
+            throw new SlingException("Problem moving resource " + source
+                + " to " + destination, ex);
         }
     }
 
     public void orderBefore(Resource resource, String afterName)
             throws SlingException {
-        Node parent;
-        try {
-            parent = ((Item) resource.getRawData()).getParent();
-        } catch (RepositoryException re) {
-            throw new SlingException("Cannot get parent of "
-                + resource.getURI() + " to order content");
+
+        String path = resource.getURI();
+        if (!(resource.getRawData() instanceof Item)) {
+            log.info("orderBefore: Resource {} has no attached Item", path);
+            return;
         }
 
-        // check whether the parent node supports child node ordering
         try {
+            Node parent = ((Item) resource.getRawData()).getParent();
+
+            // check whether the parent node supports child node ordering
             if (!parent.getPrimaryNodeType().hasOrderableChildNodes()) {
                 return;
             }
-        } catch (RepositoryException re) {
-            throw new SlingException("Cannot check whether "
-                + resource.getURI() + " can be ordered", re);
-        }
 
-        int ls = resource.getURI().lastIndexOf('/');
-        String name = resource.getURI().substring(ls + 1);
-
-        try {
+            String name = path.substring(path.lastIndexOf('/') + 1);
             parent.orderBefore(name, afterName);
-        } catch (RepositoryException re) {
-            throw new SlingException("Cannot order " + resource.getURI(), re);
+        } catch (AccessControlException ace) {
+            // rethrow access control issues
+            throw ace;
+        } catch (Exception ex) {
+            throw new SlingException("Problem ordering resource " + path
+                + " before " + afterName, ex);
         }
     }
 
     /**
-     * @return
+     * Returns <code>true</code> if this manager has unsaved changes or if an
+     * error occurrs checking for such changes.
      */
     public boolean hasChanges() {
         try {
-            return this.getSession().hasPendingChanges();
+            return getSession().hasPendingChanges();
         } catch (RepositoryException re) {
-            throw new ObjectContentManagerException(
-                "Problem checking for pending changes", re);
+            log.error(
+                "hasChanges: Problem checking for session changes, assuming true",
+                re);
+            return true;
         }
     }
 
@@ -425,7 +451,7 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         try {
             getSession().save();
         } catch (RepositoryException re) {
-            throw new SlingException("Cannot save changes", re);
+            throw new SlingException("Problems while saving changes", re);
         }
     }
 
@@ -433,79 +459,89 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         try {
             getSession().refresh(false);
         } catch (RepositoryException re) {
-            throw new ObjectContentManagerException("Cannot rollback changes",
-                re);
+            log.error("rollback: Problem rolling back changes", re);
         }
-    }
-
-    // ---------- Persistence Support -----------------------------------------
-
-    /**
-     * Loads the content of the repository node at the given <code>path</code>
-     * into a <code>Content</code> object. If no mapping exists for an
-     * existing node, the node's content is loaded into a new instance of the
-     * {@link #DEFAULT_CONTENT_CLASS default content class}.
-     *
-     * @return the <code>Content</code> object loaded from the node or
-     *         <code>null</code> if no node exists at the given path.
-     * @throws JcrMappingException If an error occurrs loading the node into a
-     *             <code>Content</code> object.
-     * @throws AccessControlException If the item really exists but this content
-     *             manager's session has no read access to it.
-     */
-    public Object getObject(String path, Class<?> type) {
-        if (this.itemExists(path)) {
-
-            ObjectContentManager ocm = getObjectContentManager();
-
-            // load object with explicite type, fail completely if not possible
-            if (type != null) {
-                return ocm.getObject(type, path);
-            }
-
-            // have the mapper find a type or fall back to default type
-            try {
-                Object loaded = ocm.getObject(path);
-                if (loaded != null) {
-                    return loaded;
-                }
-            } catch (JcrMappingException jme) {
-
-                // fall back to default content
-                try {
-                    return ocm.getObject(DEFAULT_CONTENT_CLASS, path);
-                } catch (Throwable t) {
-                    // don't care for this exception, use initial one
-                    throw jme;
-                }
-            }
-        }
-
-        // item does not exist or is no content
-        return null;
     }
 
     // ---------- implementation helper ----------------------------------------
 
-    private Resource transformURL(String url) throws SlingException {
+    /**
+     * Loads the object to which the repository node at the given
+     * <code>path</code> is mapping. If no mapping exists for an existing
+     * node, the node's content is loaded into a new instance of the
+     * {@link #DEFAULT_CONTENT_CLASS default content class}.
+     *
+     * @param type Load the node's content into an object of the given type if
+     *      not <code>null</code>.
+     *
+     * @return the <code>Content</code> object loaded from the node or
+     *         <code>null</code> if no node exists at the given path.
+     */
+    public Object getObject(String path, Class<?> type) {
+        try {
+            if (itemExists(path)) {
+
+                ObjectContentManager ocm = getObjectContentManager();
+
+                // load object with explicit type, fail if not possible
+                if (type != null) {
+                    return ocm.getObject(type, path);
+                }
+
+                // have the mapper find a type or fall back to default type
+                try {
+
+                    return ocm.getObject(path);
+
+                } catch (JcrMappingException jme) {
+
+                    // fall back to default content
+                    try {
+                        return ocm.getObject(DEFAULT_CONTENT_CLASS, path);
+                    } catch (Throwable t) {
+                        // don't care for this exception, use initial one
+                        throw jme;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.error("getObject: Problem while mapping resource {}", ex);
+        }
+
+        // item does not exist or is no content or errors mapping item
+        return null;
+    }
+
+    protected Session getSession() {
+        return session;
+    }
+
+    protected ObjectContentManager getObjectContentManager() {
+        if (objectContentManager == null) {
+            objectContentManager = factory.getObjectContentManager(getSession());
+        }
+        return objectContentManager;
+    }
+
+    private Resource transformURL(String uri) throws SlingException {
         Mapping[] mappings = factory.getMappings();
         for (int i = 0; i < mappings.length; i++) {
             // exchange the 'to'-portion with the 'from' portion and check
-            String href = mappings[i].mapUri(url);
-            if (href == null) {
-                log.debug("Mapping {} cannot map {}", mappings[i], url);
+            String mappedUri = mappings[i].mapUri(uri);
+            if (mappedUri == null) {
+                log.debug("Mapping {} cannot map {}", mappings[i], uri);
                 continue;
             }
 
-            Resource resource = scanPath(href);
+            Resource resource = scanPath(mappedUri);
             if (resource != null) {
                 return resource;
             }
 
-            log.debug("Cannot resolve {} to resource", href);
+            log.debug("Cannot resolve {} to resource", mappedUri);
         }
 
-        log.error("Could not resolve URL {} to a Content object", url);
+        log.info("Could not resolve URL {} to a Resource", uri);
         return null;
 
     }
@@ -527,19 +563,23 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         return resource;
     }
 
-    /** Creates a JcrNodeResource with the given path if existing */
+    /**
+     * Creates a JcrNodeResource with the given path if existing
+     *
+     * @throws AccessControlException If an item exists but this manager has no
+     *             read access
+     */
     protected Resource getResourceInternal(String path, Class<?> type)
             throws RepositoryException {
-        Session session = getSession();
-        if (session.itemExists(path)) {
-            Resource result = new JcrNodeResource(this, session, path, type);
+        if (itemExists(path)) {
+            Resource result = new JcrNodeResource(this, getSession(), path, type);
             result.getResourceMetadata().put(ResourceMetadata.RESOLUTION_PATH,
                 path);
             log.info("Found Resource at path '{}'", path);
             return result;
         }
 
-        log.info("Path '{}' does not resolve to an Item", path);
+        log.debug("Path '{}' does not resolve to an Item", path);
         return null;
     }
 
@@ -552,30 +592,30 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      * @return <code>true</code> if the item exists and this content manager's
      *         session has read access. If the item does not exist,
      *         <code>false</code> is returned ignoring access control.
+     * @throws RepositoryException
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
-    protected boolean itemExists(String path) {
-        try {
-            if (factory.itemReallyExists(this.getSession(), path)) {
-                this.checkPermission(path, ACTION_READ);
-                return true;
-            }
-
-            return false;
-        } catch (RepositoryException re) {
-            throw new org.apache.jackrabbit.ocm.exception.RepositoryException(
-                re);
+    protected boolean itemExists(String path) throws RepositoryException {
+        if (factory.itemReallyExists(getSession(), path)) {
+            checkPermission(path, ACTION_READ);
+            return true;
         }
+
+        return false;
     }
 
-    protected void checkPermission(String path, String actions) {
-        try {
-            this.getSession().checkPermission(path, actions);
-        } catch (RepositoryException re) {
-            throw new org.apache.jackrabbit.ocm.exception.RepositoryException(
-                re);
-        }
+    /**
+     *
+     * @param path
+     * @param actions
+     * @throws RepositoryException
+     * @throws AccessControlException if this manager does not have the permission
+     * for the listed action(s).
+     */
+    protected void checkPermission(String path, String actions)
+            throws RepositoryException {
+        getSession().checkPermission(path, actions);
     }
 
     protected void setPath(Object content, String path) {
