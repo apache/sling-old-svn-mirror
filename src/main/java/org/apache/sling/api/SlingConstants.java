@@ -74,66 +74,6 @@ public class SlingConstants {
      */
     public static final String ATTR_REQUEST_CONTENT = "org.apache.sling.api.include.resource";
 
-    /**
-     * The name of the request attribute containing request context path if
-     * Sling (the Sling Servlet actually) is called by the servlet containing as
-     * a result of a standard Servlet request include (value is
-     * "javax.servlet.include.context_path"). Sling never sets this attribute.
-     * <p>
-     * The type of the attribute value is <code>java.lang.String</code>. This
-     * attribute corresponds to the
-     * <code>HttpServletRequest.getContextPath()</code>.
-     */
-    public static final String INCLUDE_CONTEXT_PATH = "javax.servlet.include.context_path";
-
-    /**
-     * The name of the request attribute containing request path info if Sling
-     * (the Sling Servlet actually) is called by the servlet containing as a
-     * result of a standard Servlet request include (value is
-     * "javax.servlet.include.path_info"). Sling never sets this attribute.
-     * <p>
-     * The type of the attribute value is <code>java.lang.String</code>. This
-     * attribute corresponds to the
-     * <code>HttpServletRequest.getPathInfo()</code>.
-     */
-    public static final String INCLUDE_PATH_INFO = "javax.servlet.include.path_info";
-
-    /**
-     * The name of the request attribute containing request query string if
-     * Sling (the Sling Servlet actually) is called by the servlet containing as
-     * a result of a standard Servlet request include (value is
-     * "javax.servlet.include.query_string"). Sling never sets this attribute.
-     * <p>
-     * The type of the attribute value is <code>java.lang.String</code>. This
-     * attribute corresponds to the
-     * <code>HttpServletRequest.getQueryString()</code>.
-     */
-    public static final String INCLUDE_QUERY_STRING = "javax.servlet.include.query_string";
-
-    /**
-     * The name of the request attribute containing request uri if Sling (the
-     * Sling Servlet actually) is called by the servlet containing as a result
-     * of a standard Servlet request include (value is
-     * "javax.servlet.include.request_uri"). Sling never sets this attribute.
-     * <p>
-     * The type of the attribute value is <code>java.lang.String</code>. This
-     * attribute corresponds to the
-     * <code>HttpServletRequest.getRequestURI()</code>.
-     */
-    public static final String INCLUDE_REQUEST_URI = "javax.servlet.include.request_uri";
-
-    /**
-     * The name of the request attribute containing servlet path if Sling (the
-     * Sling Servlet actually) is called by the servlet containing as a result
-     * of a standard Servlet request include (value is
-     * "javax.servlet.include.servlet_path"). Sling never sets this attribute.
-     * <p>
-     * The type of the attribute value is <code>java.lang.String</code>. This
-     * attribute corresponds to the
-     * <code>HttpServletRequest.getServletPath()</code>.
-     */
-    public static final String INCLUDE_SERVLET_PATH = "javax.servlet.include.servlet_path";
-
     // ---------- Error handling -----------------------------------------------
 
     /**
