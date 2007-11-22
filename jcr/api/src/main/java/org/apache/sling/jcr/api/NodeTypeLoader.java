@@ -27,7 +27,6 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeTypeManager;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +76,12 @@ public class NodeTypeLoader {
         } catch (RepositoryException re) {
             log.error("Cannot register node types from " + source, re);
         } finally {
-            IOUtils.closeQuietly(ins);
+            if (ins != null) {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
 
         // fall back to failure, reason has been logged
