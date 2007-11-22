@@ -38,16 +38,22 @@ import org.apache.jackrabbit.core.jndi.RegistryHelper;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /**
-* Utility class for managing JCR repositories.
-*/
+ * Utility class for managing JCR repositories.
+ */
 public class RepositoryUtil {
 
     public static final String REPOSITORY_NAME = "repositoryTest";
+
     public static final String ADMIN_NAME = "admin";
+
     public static final String ADMIN_PASSWORD = "admin";
+
     public static final String CONTEXT_FACTORY = "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory";
+
     public static final String PROVIDER_URL = "localhost";
+
     public static final String CONFIG_FILE = "./src/test/test-config/repository-derby.xml";
+
     public static final String HOME_DIR = "target/repository";
 
     protected static InitialContext getInitialContext() throws NamingException {
@@ -60,36 +66,41 @@ public class RepositoryUtil {
     /**
      * Start a new repository
      *
-     * @throws RepositoryException when it is not possible to start the repository.
+     * @throws RepositoryException when it is not possible to start the
+     *             repository.
      * @throws NamingException
      */
-    public static void startRepository()
-    throws RepositoryException, NamingException {
-        RegistryHelper.registerRepository(getInitialContext(), REPOSITORY_NAME, CONFIG_FILE, HOME_DIR, true);
+    public static void startRepository() throws RepositoryException,
+            NamingException {
+        RegistryHelper.registerRepository(getInitialContext(), REPOSITORY_NAME,
+            CONFIG_FILE, HOME_DIR, true);
     }
-
 
     /**
      * Stop a repository.
      *
-     * @throws RepositoryException when it is not possible to stop the repository
+     * @throws RepositoryException when it is not possible to stop the
+     *             repository
      * @throws NamingException
      */
-    public static void stopRepository() throws RepositoryException, NamingException {
-        RegistryHelper.unregisterRepository(getInitialContext(), REPOSITORY_NAME);
+    public static void stopRepository() throws NamingException {
+        RegistryHelper.unregisterRepository(getInitialContext(),
+            REPOSITORY_NAME);
     }
 
     /**
      * Get a repository
      *
      * @return a JCR repository reference
-     *
-     * @throws RepositoryException when it is not possible to get the repository.
-     *         Before calling this method, the repository has to be registered (@see RepositoryUtil#registerRepository(String, String, String)
+     * @throws RepositoryException when it is not possible to get the
+     *             repository. Before calling this method, the repository has to
+     *             be registered (@see RepositoryUtil#registerRepository(String,
+     *             String, String)
      * @throws NamingException
      */
-    public static SlingRepository getRepository() throws RepositoryException, NamingException {
-        return new RepositoryWrapper((Repository) getInitialContext().lookup(REPOSITORY_NAME));
+    public static SlingRepository getRepository() throws NamingException {
+        return new RepositoryWrapper((Repository) getInitialContext().lookup(
+            REPOSITORY_NAME));
     }
 
     /**
@@ -185,8 +196,9 @@ public class RepositoryUtil {
         }
 
         public Session loginAdministrative(String workspace)
-        throws RepositoryException {
-            final Credentials credentials = new SimpleCredentials(ADMIN_NAME, ADMIN_PASSWORD.toCharArray());
+                throws RepositoryException {
+            final Credentials credentials = new SimpleCredentials(ADMIN_NAME,
+                ADMIN_PASSWORD.toCharArray());
             return this.login(credentials, workspace);
         }
 
