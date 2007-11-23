@@ -29,11 +29,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -124,6 +127,12 @@ public class DefaultServlet extends SlingAllMethodsServlet {
             SlingHttpServletResponse response) throws IOException {
 
         Resource resource = request.getResource();
+
+        // cannot handle the request for missing resources
+        if (resource instanceof NonExistingResource) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
 
         // format response according to extension (use Mime mapping instead)
         String extension = request.getRequestPathInfo().getExtension();
