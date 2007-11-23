@@ -25,11 +25,13 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.core.CoreConstants;
+import org.apache.sling.core.impl.helper.SlingServletConfig;
 import org.apache.sling.core.servlets.DefaultServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -54,6 +56,8 @@ public class SlingServletResolver extends ServletBinder implements
      *               description="%resolver.path.description"
      */
     public static final String PROP_PATH = "path";
+
+    public static final String DEFAULT_SERVLET_NAME = "sling.core.servlet.default";
 
     private String[] path;
 
@@ -165,89 +169,28 @@ public class SlingServletResolver extends ServletBinder implements
     }
 
     private Servlet resolveServlet(Resource resource) {
-        // get the component id
+        // get the servlet by resource type
         String type = resource.getResourceType();
-
-        // if none, try the path of the content as its component id,
-        // this allows direct addressing of components
-        if (type == null) {
-            log.debug(
-                "resolveComponent: Content {} has no componentid, trying path",
-                resource.getURI());
-            type = resource.getURI();
-        }
-
         Servlet servlet = getServlet(type);
         if (servlet != null) {
             return servlet;
         }
 
-        // if the component ID might be a realtive path name, check with path
-        if (!type.startsWith("/")) {
+        // TODO: implement script resolver here
 
-            // apply any path prefixes
-            if (this.path != null) {
-
-                // might be a type name with namespace
-                String relId = type.replace(':', '/');
-
-                for (int i = 0; i < this.path.length; i++) {
-                    String checkid = this.path[i] + relId;
-                    servlet = getServlet(checkid);
-                    if (servlet != null) {
-                        return servlet;
-                    }
-                }
-
-            }
-
-        } else {
-            // absolute path name: remove leading slash for further checks
-            type = type.substring(1);
-        }
-
-        // if the path is mapped from a class name, convert the slashes
-        // to dots to get a potentially fully qualified class name
-        // again, this allows direct addressing of components
-        type = type.replace('/', '.');
-        servlet = this.getServlet(type);
-        if (servlet != null) {
-            return servlet;
-        }
-
-        // next we try a class name mapping convention of the content class
-        type = resource.getObject().getClass().getName();
-        servlet = this.getServlet(type);
-        if (servlet != null) {
-            return servlet;
-        }
-
-        // check whether we have Content suffix to remove
-        if (type.endsWith("Content")) {
-            type = type.substring(0, type.length() - "Content".length());
-            servlet = this.getServlet(type);
-            if (servlet != null) {
-                return servlet;
+        // use default servlet, create one if missing
+        servlet = getServlet(DEFAULT_SERVLET_NAME);
+        if (servlet == null) {
+            try {
+                servlet = new DefaultServlet();
+                servlet.init(new SlingServletConfig(null, null, DEFAULT_SERVLET_NAME));
+                servlets.put(DEFAULT_SERVLET_NAME, servlet);
+            } catch (ServletException se) {
+                log.error("Failed to initiliaze Servlet", se);
             }
         }
 
-        // add "Component" suffix and check again
-        type += "Component";
-        servlet = this.getServlet(type);
-        if (servlet != null) {
-            return servlet;
-        }
-
-        // use default component
-        servlet = getServlet(DefaultServlet.class.getName());
-        if (servlet != null) {
-            return servlet;
-        }
-
-        // we exhausted all possibilities and finally fail
-        log.error("resolveComponent: Could not resolve a component for {}",
-            resource.getURI());
-        return null;
+        return servlet;
     }
 
     // ---------- SCR Integration ----------------------------------------------
