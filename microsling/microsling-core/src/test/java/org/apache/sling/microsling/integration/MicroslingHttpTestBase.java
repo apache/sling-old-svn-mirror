@@ -18,21 +18,30 @@ package org.apache.sling.microsling.integration;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.microsling.integration.helpers.MicroslingIntegrationTestClient;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ScriptableObject;
 
 /** Base class for HTTP-based microsling integration tests */
-class MicroslingHttpTestBase extends TestCase {
+public class MicroslingHttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = System.getProperty("microsling.http.server.url");
     public static final String WEBDAV_BASE_URL = System.getProperty("microsling.webdav.server.url");
     
@@ -86,6 +95,25 @@ class MicroslingHttpTestBase extends TestCase {
         assertHttpStatus(urlString, expectedStatusCode, null);
     }
     
+    /** Execute a POST request and check status */
+    protected void assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
+    throws IOException {
+        final PostMethod post = new PostMethod(url);
+        post.setFollowRedirects(false);
+        
+        if(postParams!=null) {
+            final NameValuePair [] nvp = {};
+            post.setRequestBody(postParams.toArray(nvp));
+        }
+        
+        final int status = httpClient.executeMethod(post);
+        if(assertMessage == null) {
+            assertEquals(expectedStatusCode, status);
+        } else {
+            assertEquals(assertMessage, expectedStatusCode, status);
+        }
+    }
+    
     /** retrieve the contents of given URL and assert its content type
      * @throws IOException
      * @throws HttpException */
@@ -122,4 +150,29 @@ class MicroslingHttpTestBase extends TestCase {
         return url;
     }
 
+    /** Evaluate given code using given jsonData as the "data" object */ 
+    protected void assertJavascript(String expectedOutput, String jsonData, String code) throws IOException {
+        // build the code, something like
+        //  data = <jsonData> ;
+        //  <code>
+        final String jsCode = "data=" + jsonData + ";\n" + code;
+        final Context rhinoContext = Context.enter();
+        final ScriptableObject scope = rhinoContext.initStandardObjects();
+
+        // execute the script, out script variable maps to sw 
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw, true);
+        ScriptableObject.putProperty(scope, "out", Context.javaToJS(pw, scope));
+        final int lineNumber = 1;
+        final Object securityDomain = null;
+        rhinoContext.evaluateString(scope, jsCode, getClass().getSimpleName(), 
+                lineNumber, securityDomain);
+        
+        // check script output
+        pw.flush();
+        final String result = sw.toString().trim();
+        if(!result.equals(expectedOutput)) {
+            fail("Expected '" + expectedOutput + "' but got '" + result + "' for script='" + jsCode + "'");
+        }
+    }
 }
