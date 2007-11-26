@@ -17,10 +17,13 @@
 package org.apache.sling.microsling.slingservlets;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -85,13 +88,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         Session s = null;
         try {
             
-            // Where to redirect to when done
-            String redirectPath = request.getHeader("Referer");
-            
             // select the Resource to process
             Resource currentResource = request.getResource();
             Node currentNode = (Node)currentResource.getRawData();
-            Node newNode = null;
             
             // need a Node, path and Session
             String currentPath = null;
@@ -109,65 +108,14 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 s = rootNode.getSession();
             }
             
-            // process deletes if any
             final String [] pathsToDelete = request.getParameterValues(RP_DELETE_PATH);
             if(pathsToDelete!=null) {
-                processDeletes(s, pathsToDelete, currentPath);
-            }
-            
-            // find out the actual "save prefix" to use - only parameters starting with
-            // this prefix are saved as Properties, when creating nodes, see setPropertiesFromRequest()
-            final String savePrefix = getSavePrefix(request);
-            
-            // compute the path of the node to process, and deep-create if if needed
-            // TODO how to differentiate "create node" and "update node"?
-            // for now we always create a new node
-            final Set<Node> changedNodes = new HashSet<Node>();
-            String pathToCreate = null;
-            if(currentNode!=null) {
-                pathToCreate = currentPath;
+                // process deletes if any, and if so don't do anything else
+                deleteNodes(s, pathsToDelete, currentPath, response);
             } else {
-                pathToCreate = SlingRequestPaths.getPathInfo(request);
+                // if no deletes, create or update nodes
+                createOrUpdateNodesFromRequest(request, response, s);
             }
-            if(!pathToCreate.endsWith("/")) {
-                pathToCreate += "/";
-            }
-            pathToCreate += (createNodeCounter++) + System.currentTimeMillis();
-            if(pathToCreate!=null) {
-                newNode = currentNode = deepCreateNode(s,pathToCreate, changedNodes);
-            }
-            currentPath = currentNode.getPath();
-            
-            // process the "order" command if any
-            final String order = request.getParameter(RP_ORDER);
-            if(order!=null) {
-                processNodeOrder(currentNode,order);
-            }
-            
-            // walk the request parameters, create and save nodes and properties
-            setPropertiesFromRequest(currentNode, request, savePrefix, changedNodes);
-            
-            // sava data and find out where to redirect
-            s.save();
-            final String forcedRedirect = request.getParameter(RP_REDIRECT_TO);
-            final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
-            if(forcedRedirect != null) {
-                redirectPath = forcedRedirect;
-            } else if(newNode != null) {
-                redirectPath = newNode.getPath();
-            }
-            if(redirectExtension!=null) {
-                redirectPath += redirectExtension;
-            }
-            
-            final String redirectUrl = 
-                SlingRequestPaths.getContextPath(request)
-                + SlingRequestPaths.getServletPath(request)
-                + redirectPath; 
-            if(log.isDebugEnabled()) {
-                log.debug("Redirecting to " + redirectUrl);
-            }
-            response.sendRedirect(redirectUrl);
             
         } catch(RepositoryException re) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,re.toString(),re);
@@ -181,6 +129,98 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 log.warn("RepositoryException in finally block: "+ re.getMessage(),re);
             }
         }
+    }
+    
+    /** Delete specified nodes, and send response */
+    protected void deleteNodes(Session s, String [] pathsToDelete, String currentPath, SlingHttpServletResponse response) 
+    throws RepositoryException, IOException {
+        processDeletes(s, pathsToDelete, currentPath);
+        s.save();
+        response.setContentType(getServletContext().getMimeType("dummy.txt"));
+        final PrintWriter pw = new PrintWriter(new OutputStreamWriter(response.getOutputStream()));
+        pw.println("Nodes have been deleted(if they existed):");
+        for(String path : pathsToDelete) {
+            pw.println(path);
+        }
+        pw.flush();
+    }
+    
+    /** Create or update node(s) according to current request , and send response */ 
+    protected void createOrUpdateNodesFromRequest(SlingHttpServletRequest request, SlingHttpServletResponse response, Session s) 
+    throws RepositoryException, IOException {
+        
+        // Where to redirect to when done
+        String redirectPath = request.getHeader("Referer");
+        
+        // find out the actual "save prefix" to use - only parameters starting with
+        // this prefix are saved as Properties, when creating nodes, see setPropertiesFromRequest()
+        final String savePrefix = getSavePrefix(request);
+        
+        // use the request path (disregarding resource resolution)
+        // but remove any extension or selectors
+        String currentPath = SlingRequestPaths.getPathInfo(request);
+        Node currentNode = null;
+        final int dotPos = currentPath.indexOf('.');
+        if(dotPos >= 0) {
+            currentPath = currentPath.substring(0,dotPos);
+        }
+        
+        final String starSuffix = "/*";
+        if(currentPath.endsWith(starSuffix)) {
+            // If the path ends with a *, create a node under its parent, with
+            // a generated node name
+            currentPath = currentPath.substring(0, currentPath.length() - starSuffix.length());
+            currentPath += "/" + (createNodeCounter++) + System.currentTimeMillis();
+            
+        } else if(s.itemExists(currentPath)) {
+            // update to an existing node
+            final Item item = s.getItem(currentPath);
+            if(item.isNode()) {
+                currentNode = (Node)item;
+            } else {
+                throw new HttpStatusCodeException(HttpServletResponse.SC_CONFLICT,"Item at path " + currentPath + " is not a Node");
+            }
+            
+        } else {
+            // request to create a new node at a specific path - use the supplied path as is
+        }
+        
+        Set<Node> changedNodes = new HashSet<Node>();
+        if(currentNode == null) {
+            currentNode = deepCreateNode(s, currentPath, changedNodes);
+        }
+        currentPath = currentNode.getPath();
+        
+        // process the "order" command if any
+        final String order = request.getParameter(RP_ORDER);
+        if(order!=null) {
+            processNodeOrder(currentNode,order);
+        }
+        
+        // walk the request parameters, create and save nodes and properties
+        setPropertiesFromRequest(currentNode, request, savePrefix, changedNodes);
+        
+        // sava data and find out where to redirect
+        s.save();
+        final String forcedRedirect = request.getParameter(RP_REDIRECT_TO);
+        final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
+        if(forcedRedirect != null) {
+            redirectPath = forcedRedirect;
+        } else if(currentNode != null) {
+            redirectPath = currentNode.getPath();
+        }
+        if(redirectExtension!=null) {
+            redirectPath += redirectExtension;
+        }
+        
+        final String redirectUrl = 
+            SlingRequestPaths.getContextPath(request)
+            + SlingRequestPaths.getServletPath(request)
+            + redirectPath; 
+        if(log.isDebugEnabled()) {
+            log.debug("Redirecting to " + redirectUrl);
+        }
+        response.sendRedirect(redirectUrl);
     }
 
     /** Set Node properties from current request 
