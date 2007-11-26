@@ -37,7 +37,7 @@ import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.core.impl.request.RequestData;
 
 public class ParameterSupport {
 

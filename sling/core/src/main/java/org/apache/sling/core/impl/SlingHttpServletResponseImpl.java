@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.helper;
+package org.apache.sling.core.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.RequestUtil;
-import org.apache.sling.core.impl.filter.ErrorHandler;
+import org.apache.sling.core.impl.request.RequestData;
+import org.apache.sling.core.impl.servlets.ErrorHandler;
 import org.apache.sling.jcr.resource.PathResolver;
 
 /**

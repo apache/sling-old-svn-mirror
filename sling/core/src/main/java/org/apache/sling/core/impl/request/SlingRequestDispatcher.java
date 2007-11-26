@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.helper;
+package org.apache.sling.core.impl.request;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 
-class SlingRequestDispatcher implements RequestDispatcher {
+public class SlingRequestDispatcher implements RequestDispatcher {
 
     private Resource resource;
 
@@ -40,14 +40,14 @@ class SlingRequestDispatcher implements RequestDispatcher {
 
     private String path;
 
-    SlingRequestDispatcher(String path) {
+    public SlingRequestDispatcher(String path) {
         this.path = path;
 
         this.resource = null;
         this.options = null;
     }
 
-    SlingRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
+    public SlingRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
         this.resource = resource;
         this.options = options;
         this.path = resource.getURI();
