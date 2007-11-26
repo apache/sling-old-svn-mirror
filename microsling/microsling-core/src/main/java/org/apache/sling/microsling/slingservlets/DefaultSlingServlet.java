@@ -33,6 +33,7 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.microsling.servlet.MicroslingServletConfig;
@@ -92,6 +93,17 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         // make sure we have an Item, and render it via one of our renderingServlets
         final Object data = r.getRawData();
         if(data!=null && (data instanceof Item)) {
+            final String suffix = req.getRequestPathInfo().getSuffix();
+            if(suffix != null && suffix.length() > 0) {
+                // accept exact addressing only for default rendering:
+                // a non-empty suffix means there was extra stuff after the path
+                // of the resource
+                throw new HttpStatusCodeException(
+                        HttpServletResponse.SC_NOT_FOUND,
+                        "Ancestor resource found (" + r.getResourceMetadata().get(ResourceMetadata.RESOLUTION_PATH) + ")"
+                        + " but URL suffix must be empty for default rendering (suffix=" + suffix + ")"
+                );
+            }
             final String contentType = req.getResponseContentType();
             final Servlet s = renderingServlets.get(contentType);
             if(s!=null) {
