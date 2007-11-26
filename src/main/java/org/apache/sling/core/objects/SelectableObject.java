@@ -19,14 +19,14 @@
 package org.apache.sling.core.objects;
 
 /**
- * The <code>SelectableContent</code> interface extends the
+ * The <code>SelectableObject</code> interface extends the
  * <code>Content</code> interface by a method which allows to retrieve a
  * {@link Selector} which may return a different content object than the primary
  * object resolved from the path.
  *
  * @ocm.mapped jcrMixinTypes="sling:Selectable" discriminator="false"
  */
-public interface SelectableContent {
+public interface SelectableObject {
 
     /**
      * Returns the {@link Selector} to call when the request is resolved to a

@@ -23,13 +23,13 @@ import org.apache.sling.jcr.resource.AbstractMappedObject;
 /**
  * The <code>AbstractSelectableMappedObject</code> class extends the
  * <code>BaseContent</code> class by implementing the
- * {@link SelectableContent} interface hence supporting selection as defined by
+ * {@link SelectableObject} interface hence supporting selection as defined by
  * the Sling core bundle.
  *
- * @ocm.mapped jcrType="sling:SelectableContent" discriminator="false"
+ * @ocm.mapped jcrType="sling:SelectableObject" discriminator="false"
  */
 public abstract class AbstractSelectableMappedObject extends AbstractMappedObject implements
-        SelectableContent {
+        SelectableObject {
 
     /** @ocm.bean jcrName="sling:selector" */
     private Selector selector;

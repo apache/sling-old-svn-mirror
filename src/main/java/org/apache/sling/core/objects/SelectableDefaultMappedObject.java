@@ -23,13 +23,13 @@ import org.apache.sling.jcr.resource.DefaultMappedObject;
 /**
  * The <code>SelectableDefaultMappedObject</code> class extends the
  * <code>SimpleContent</code> class by implementing the
- * {@link SelectableContent} interface hence supporting selection as defined by
+ * {@link SelectableObject} interface hence supporting selection as defined by
  * the Sling core bundle.
  *
  * @ocm.mapped discriminator="false"
  */
 public abstract class SelectableDefaultMappedObject extends DefaultMappedObject
-        implements SelectableContent {
+        implements SelectableObject {
 
     /** @ocm.bean fieldName="selector" jcrName="sling:selector" */
     private Selector selector;
