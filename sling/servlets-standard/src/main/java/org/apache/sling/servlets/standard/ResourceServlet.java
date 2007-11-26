@@ -32,20 +32,16 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
- * The <code>ResourceComponent</code> TODO
+ * The <code>ResourceServlet</code> handles nt:resource nodes
  *
  * @scr.component immediate="true" metatype="false"
- * @scr.property name="service.description" value="Component to handle
- *               nt:resource content"
+ * @scr.property name="service.description"
+ *      value="Servlet to handle nt:resource nodes"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.resourceTypes" value="nt:resource"
  * @scr.service
  */
-public class ResourceComponent extends SlingAllMethodsServlet {
-
-    // nothing to do
-    protected void doInit() {
-    }
+public class ResourceServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,

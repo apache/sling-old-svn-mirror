@@ -32,10 +32,11 @@
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Standard Components</name>
+    <name>Sling - Standard Servlets</name>
     <description>
-        Bundle providing reusable standard implementations of the
-        Component and Content interfaces.
+        Bundle providing reusable standard Servlets and mapped objects
+        for well known node types nt:file, nt:folder, nt:resource and
+        nt:hierarchyNode.
     </description>
 
     <scm>

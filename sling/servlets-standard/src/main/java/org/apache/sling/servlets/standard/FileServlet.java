@@ -28,20 +28,16 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
- * The <code>FileComponent</code> TODO
+ * The <code>FileServlet</code> spools nt:file nodes
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *          value="Component to handle nt:file content"
+ *          value="Servlet to handle nt:file nodes"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.resourceTypes" value="nt:file"
  * @scr.service
  */
-public class FileComponent extends SlingAllMethodsServlet {
-
-    // nothing to do
-    protected void doInit() {
-    }
+public class FileServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
