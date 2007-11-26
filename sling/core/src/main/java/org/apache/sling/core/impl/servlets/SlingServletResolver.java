@@ -27,17 +27,21 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.impl.helper.SlingServletConfig;
+import org.apache.sling.core.impl.scripting.DefaultSlingScriptServlet;
 import org.apache.sling.core.servlets.DefaultServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +63,8 @@ public class SlingServletResolver extends ServletBinder implements
 
     public static final String DEFAULT_SERVLET_NAME = "sling.core.servlet.default";
 
+    private ServiceTracker scriptResolver;
+
     private String[] path;
 
     private Map<String, Servlet> servlets = new HashMap<String, Servlet>();
@@ -68,6 +74,10 @@ public class SlingServletResolver extends ServletBinder implements
     public SlingServletResolver(BundleContext bundleContext,
             ServletContext servletContext) {
         super(bundleContext, servletContext, Servlet.class.getName());
+
+        scriptResolver = new ServiceTracker(bundleContext,
+            SlingScriptResolver.class.getName(), null);
+        scriptResolver.open();
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, getClass().getName());
@@ -84,16 +94,42 @@ public class SlingServletResolver extends ServletBinder implements
             registration.unregister();
         }
 
+        if (scriptResolver != null) {
+            scriptResolver.close();
+            scriptResolver = null;
+        }
+
         super.dispose();
     }
     // ---------- ServletResolver interface -----------------------------------
 
     public Servlet resolveServlet(SlingHttpServletRequest request) {
 
-        // 2.3 check Servlet
-        Resource resource = request.getResource();
-        String path = resource.getURI();
-        Servlet servlet = resolveServlet(resource);
+        // get the servlet by resource type
+        Servlet servlet = getServlet(request.getResource().getResourceType());
+
+        // no typed servlet, so lets try scripting
+        if (servlet == null) {
+            try {
+                servlet = getScriptServlet(request);
+            } catch (SlingException se) {
+                log.error("resolveServlet: Error trying to find script", se);
+            }
+        }
+
+        // use default servlet, create one if missing
+        if (servlet == null) {
+            servlet = getServlet(DEFAULT_SERVLET_NAME);
+            if (servlet == null) {
+                try {
+                    servlet = new DefaultServlet();
+                    servlet.init(new SlingServletConfig(null, null, DEFAULT_SERVLET_NAME));
+                    servlets.put(DEFAULT_SERVLET_NAME, servlet);
+                } catch (ServletException se) {
+                    log.error("Failed to initiliaze Servlet", se);
+                }
+            }
+        }
 
         if (servlet != null) {
             String name = servlet.getServletConfig().getServletName();
@@ -168,29 +204,17 @@ public class SlingServletResolver extends ServletBinder implements
         return servlets.get(resourceType);
     }
 
-    private Servlet resolveServlet(Resource resource) {
-        // get the servlet by resource type
-        String type = resource.getResourceType();
-        Servlet servlet = getServlet(type);
-        if (servlet != null) {
-            return servlet;
-        }
-
-        // TODO: implement script resolver here
-
-        // use default servlet, create one if missing
-        servlet = getServlet(DEFAULT_SERVLET_NAME);
-        if (servlet == null) {
-            try {
-                servlet = new DefaultServlet();
-                servlet.init(new SlingServletConfig(null, null, DEFAULT_SERVLET_NAME));
-                servlets.put(DEFAULT_SERVLET_NAME, servlet);
-            } catch (ServletException se) {
-                log.error("Failed to initiliaze Servlet", se);
+    private Servlet getScriptServlet(SlingHttpServletRequest request)
+            throws SlingException {
+        SlingScriptResolver ssr = (SlingScriptResolver) scriptResolver.getService();
+        if (ssr != null) {
+            SlingScript script = ssr.resolveScript(request);
+            if (script != null) {
+                return new DefaultSlingScriptServlet(script);
             }
         }
 
-        return servlet;
+        return null;
     }
 
     // ---------- SCR Integration ----------------------------------------------
