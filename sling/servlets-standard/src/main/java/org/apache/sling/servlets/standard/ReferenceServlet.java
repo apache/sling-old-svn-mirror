@@ -28,23 +28,16 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
- * The <code>ReferenceComponent</code> TODO
+ * The <code>ReferenceServlet</code> handles sling:Reference nodes
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *             value="Component to handle sling:Reference content"
+ *             value="Servlet to handle sling:Reference"
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
  * @scr.property name="sling.resourceTypes" value="sling:Reference"
  * @scr.service
  */
-public class ReferenceComponent extends SlingAllMethodsServlet {
-
-    /**
-     * @see org.apache.sling.core.components.BaseComponent#doInit()
-     */
-    protected void doInit() {
-        // nothing to do
-    }
+public class ReferenceServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,

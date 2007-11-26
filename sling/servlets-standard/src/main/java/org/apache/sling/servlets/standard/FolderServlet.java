@@ -29,19 +29,16 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
- * The <code>FolderComponent</code> TODO
+ * The <code>FolderServlet</code> handles nt:folder nodes
  *
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description"
- *          value="Component to handle nt:folder content"
+ *          value="Servlet to handle nt:folder nodes"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.resourceTypes" value="nt:folder"
  * @scr.service
  */
-public class FolderComponent extends SlingAllMethodsServlet {
-
-    // nothing to do
-    protected void doInit() {}
+public class FolderServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
