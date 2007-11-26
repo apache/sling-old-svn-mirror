@@ -17,14 +17,14 @@
 //  under the License.
 //
 
-<sling = 'http://jackrabbit.apache.org/sling/1.0'>
+<sling = 'http://sling.apache.org/jcr/sling/1.0'>
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 
 //-----------------------------------------------------------------------------
-// Base node type for the specification of content selection. This basic node
+// Base node type for the specification of object selection. This basic node
 // type is of no use by itself. It must be extended.
-// For example, a content selection scheduler might define a
+// For example, an object selection scheduler might define a
 // 'SchedulingSelector' node type, which contains the selection schedule or
 // a 'RuleSelector' node type may contain a Drools rule engine configuration
 // for rule based content selection
