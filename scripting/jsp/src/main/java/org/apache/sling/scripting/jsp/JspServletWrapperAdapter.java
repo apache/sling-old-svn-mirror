@@ -27,19 +27,17 @@ import org.apache.jasper.JasperException;
 import org.apache.jasper.Options;
 import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.jasper.servlet.JspServletWrapper;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.scripting.ComponentRenderer;
+import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 
 /**
  * The <code>JspServletWrapperAdapter</code> TODO
- * 
+ *
  * @author fmeschbe
  * @version $Rev:23741 $, $Date:2006-12-01 16:24:05 +0100 (Fr, 01 Dez 2006) $
  */
-public class JspServletWrapperAdapter extends JspServletWrapper implements
-        ComponentRenderer {
+public class JspServletWrapperAdapter extends JspServletWrapper {
 
     JspServletWrapperAdapter(ServletConfig config, Options options,
             String jspUri, boolean isErrorPage, JspRuntimeContext rctxt)
@@ -47,16 +45,19 @@ public class JspServletWrapperAdapter extends JspServletWrapper implements
         super(config, options, jspUri, isErrorPage, rctxt);
     }
 
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws IOException, ComponentException {
+    public void service(SlingScriptHelper scriptHelper) throws IOException,
+            SlingException {
         try {
-            service(request, response, preCompile(request));
-        } catch (ComponentException ce) {
-            // just rethrow
-            throw ce;
+            SlingHttpServletRequest request = scriptHelper.getRequest();
+            service(request, scriptHelper.getResponse(), preCompile(request));
+        } catch (SlingException se) {
+            // rethrow as is
+            throw se;
         } catch (ServletException se) {
-            // convert to ComponentException
-            throw new ComponentException(se.getMessage(), se);
+            if (se.getCause() != null) {
+                throw new SlingException(se.getMessage(), se.getCause());
+            }
+            throw new SlingException(se);
         }
     }
 
@@ -68,12 +69,12 @@ public class JspServletWrapperAdapter extends JspServletWrapper implements
      * trigger parsing all of the request parameters, and not give a servlet the
      * opportunity to call <code>request.setCharacterEncoding()</code> first.
      * </p>
-     * 
+     *
      * @param request The servlet requset we are processing
      * @exception ServletException if an invalid parameter value for the
      *                <code>jsp_precompile</code> parameter name is specified
      */
-    boolean preCompile(HttpServletRequest request) throws ServletException {
+    boolean preCompile(HttpServletRequest request) throws SlingException {
 
         // assume it is ok to access the parameters here, as we are not a
         // toplevel servlet
@@ -101,7 +102,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper implements
         }
 
         // unexpected value, fail
-        throw new ServletException("Cannot have request parameter "
+        throw new SlingException("Cannot have request parameter "
             + Constants.PRECOMPILE + " set to " + jspPrecompile);
     }
 }

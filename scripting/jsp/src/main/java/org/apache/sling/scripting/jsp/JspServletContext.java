@@ -20,7 +20,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.RequestDispatcher;
@@ -28,7 +27,6 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.sling.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,109 +35,20 @@ import org.slf4j.LoggerFactory;
  */
 public class JspServletContext implements ServletContext {
 
-    public static final Enumeration EMPTY_ENUMERATION = new Enumeration() {
-        public boolean hasMoreElements() {
-            return false;
-        }
-
-        public Object nextElement() {
-            throw new NoSuchElementException();
-        }
-    };
-
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspServletContext.class);
 
-    private final ComponentContext componentContext;
+    private final ServletContext delegatee;
     private final TldLocationsCacheSupport tcs;
     private final RepositoryOutputProvider outputProvider;
 
-    JspServletContext(ComponentContext componentContext, TldLocationsCacheSupport tcs, RepositoryOutputProvider outputProvider) {
-        this.componentContext = componentContext;
+    JspServletContext(ServletContext componentContext, TldLocationsCacheSupport tcs, RepositoryOutputProvider outputProvider) {
+        this.delegatee = componentContext;
         this.tcs = tcs;
         this.outputProvider = outputProvider;
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getAttribute(java.lang.String)
-     */
-    public Object getAttribute(String name) {
-        return this.componentContext.getAttribute(name);
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getAttributeNames()
-     */
-    public Enumeration getAttributeNames() {
-        return this.componentContext.getAttributeNames();
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getContext(java.lang.String)
-     */
-    public ServletContext getContext(String uripath) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getInitParameter(java.lang.String)
-     */
-    public String getInitParameter(String name) {
-        return this.componentContext.getInitParameter(name);
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getInitParameterNames()
-     */
-    public Enumeration getInitParameterNames() {
-        return this.componentContext.getInitParameterNames();
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getMajorVersion()
-     */
-    public int getMajorVersion() {
-        return this.componentContext.getMajorVersion();
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getMimeType(java.lang.String)
-     */
-    public String getMimeType(String file) {
-        return this.componentContext.getMimeType(file);
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getMinorVersion()
-     */
-    public int getMinorVersion() {
-        return this.componentContext.getMinorVersion();
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getNamedDispatcher(java.lang.String)
-     */
-    public RequestDispatcher getNamedDispatcher(String name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getRealPath(java.lang.String)
-     */
-    public String getRealPath(String path) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getRequestDispatcher(java.lang.String)
-     */
-    public RequestDispatcher getRequestDispatcher(String path) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    //---------- implemented methods ------------------------------------------
 
     /* (non-Javadoc)
      * @see javax.servlet.ServletContext#getResource(java.lang.String)
@@ -149,14 +58,14 @@ public class JspServletContext implements ServletContext {
         // path - assuming URLs have no leading slash at all, we don't care
         // for the scheme separating colon here
         if (path.startsWith("/")) {
-            URL url = this.outputProvider.getURL(path);
+            URL url = outputProvider.getURL(path);
             if (url != null) {
                 return url;
             }
         }
 
         // fall back to trying a real URL
-        return this.getUrlForResource(path);
+        return getUrlForResource(path);
     }
 
     /* (non-Javadoc)
@@ -168,7 +77,7 @@ public class JspServletContext implements ServletContext {
         // for the scheme separating colon here
         if (path.startsWith("/")) {
             try {
-                return this.outputProvider.getInputStream(path);
+                return outputProvider.getInputStream(path);
             } catch (Exception e) {
                 log.debug("getResourceAsStream: Cannot get resource {}: {}", path,
                     e.getMessage());
@@ -178,7 +87,7 @@ public class JspServletContext implements ServletContext {
         // check whether we can resolve as an URL ...
         try {
             // create the URL and try to access
-            URL url = this.getUrlForResource(path);
+            URL url = getUrlForResource(path);
             if (url != null) {
                 return url.openStream();
             }
@@ -191,82 +100,98 @@ public class JspServletContext implements ServletContext {
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getResourcePaths(java.lang.String)
-     */
-    public Set getResourcePaths(String path) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getServerInfo()
-     */
-    public String getServerInfo() {
-        return this.componentContext.getServerInfo();
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getServlet(java.lang.String)
-     */
-    public Servlet getServlet(String name) throws ServletException {
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getServletContextName()
-     */
-    public String getServletContextName() {
-        return this.componentContext.getServletContextName();
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getServletNames()
-     */
-    public Enumeration getServletNames() {
-        return EMPTY_ENUMERATION;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#getServlets()
-     */
-    public Enumeration getServlets() {
-        return EMPTY_ENUMERATION;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#log(java.lang.String)
-     */
     public void log(String msg) {
         log.info(msg);
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#log(java.lang.Exception, java.lang.String)
-     */
+    @Deprecated
     public void log(Exception exception, String msg) {
-        this.log(msg, exception);
+        log(msg, exception);
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#log(java.lang.String, java.lang.Throwable)
-     */
     public void log(String message, Throwable throwable) {
         log.error(message, throwable);
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#removeAttribute(java.lang.String)
-     */
-    public void removeAttribute(String name) {
-        this.componentContext.removeAttribute(name);
+    //---------- delegated methods --------------------------------------------
+
+    public Object getAttribute(String name) {
+        return delegatee.getAttribute(name);
     }
 
-    /* (non-Javadoc)
-     * @see javax.servlet.ServletContext#setAttribute(java.lang.String, java.lang.Object)
-     */
+    public Enumeration<?> getAttributeNames() {
+        return delegatee.getAttributeNames();
+    }
+
+    public void removeAttribute(String name) {
+        delegatee.removeAttribute(name);
+    }
+
     public void setAttribute(String name, Object object) {
-        this.componentContext.setAttribute(name, object);
+        delegatee.setAttribute(name, object);
+    }
+
+    public ServletContext getContext(String uripath) {
+        return delegatee.getContext(uripath);
+    }
+
+    public String getInitParameter(String name) {
+        return delegatee.getInitParameter(name);
+    }
+
+    public Enumeration<?> getInitParameterNames() {
+        return delegatee.getInitParameterNames();
+    }
+
+    public int getMajorVersion() {
+        return delegatee.getMajorVersion();
+    }
+
+    public String getMimeType(String file) {
+        return delegatee.getMimeType(file);
+    }
+
+    public int getMinorVersion() {
+        return delegatee.getMinorVersion();
+    }
+
+    public RequestDispatcher getNamedDispatcher(String name) {
+        return delegatee.getNamedDispatcher(name);
+    }
+
+    public String getRealPath(String path) {
+        return delegatee.getRealPath(path);
+    }
+
+    public RequestDispatcher getRequestDispatcher(String path) {
+        return delegatee.getRequestDispatcher(path);
+    }
+
+    public Set<?> getResourcePaths(String path) {
+        return null;
+    }
+
+    public String getServerInfo() {
+        return delegatee.getServerInfo();
+    }
+
+    @Deprecated
+    public Servlet getServlet(String name) throws ServletException {
+        return delegatee.getServlet(name);
+    }
+
+    public String getServletContextName() {
+        return delegatee.getServletContextName();
+    }
+
+    @Deprecated
+    public Enumeration<?> getServletNames() {
+        return delegatee.getServletNames();
+    }
+
+    @Deprecated
+    public Enumeration<?> getServlets() {
+        return delegatee.getServlets();
     }
 
     //---------- internal -----------------------------------------------------
@@ -281,7 +206,7 @@ public class JspServletContext implements ServletContext {
             }
 
             // TODO: tmp workaround while URLStreamHandler support is not available
-            URL url = this.tcs.getTldLocationURL(path);
+            URL url = tcs.getTldLocationURL(path);
             if (url != null) {
                 return url;
             }
