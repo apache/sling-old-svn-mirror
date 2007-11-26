@@ -26,16 +26,17 @@ import javax.servlet.jsp.PageContext;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
 /**
- * The <code>JspComponentResponseWrapper</code> class may be used by tag library
- * implementors to create a <code>RenderResponse</code> object which wraps the
- * writer of the response of a given page context.
+ * The <code>JspSlingHttpServletResponseWrapper</code> class may be used by
+ * tag library implementors to create a <code>RenderResponse</code> object
+ * which wraps the writer of the response of a given page context.
  * <p>
  * Instances of this class only support writers. Trying to get an
  * <code>OutputStream</code> always results in an
  * <code>IllegalStateException</code>. This is the same behaviour as
  * implemented by response wrappers of Apache Jasper.
  */
-public class JspComponentResponseWrapper extends SlingHttpServletResponseWrapper {
+public class JspSlingHttpServletResponseWrapper extends
+        SlingHttpServletResponseWrapper {
 
     // The original JspWriter of the wrapped response
     private JspWriter jspWriter;
@@ -54,7 +55,7 @@ public class JspComponentResponseWrapper extends SlingHttpServletResponseWrapper
      *            original output stream and the delegatee response.
      * @see TagUtil#getResponse(PageContext)
      */
-    public JspComponentResponseWrapper(PageContext pageContext) {
+    public JspSlingHttpServletResponseWrapper(PageContext pageContext) {
         super(TagUtil.getResponse(pageContext));
 
         this.jspWriter = pageContext.getOut();
