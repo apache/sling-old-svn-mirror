@@ -17,7 +17,7 @@
 //  under the License.
 //
 
-<sling = 'http://jackrabbit.apache.org/sling/1.0'>
+<sling = 'http://sling.apache.org/jcr/sling/1.0'>
 
 //-----------------------------------------------------------------------------
 // Node type for references
