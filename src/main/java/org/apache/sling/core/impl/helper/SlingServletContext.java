@@ -32,6 +32,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 
 import org.apache.sling.core.impl.SlingMainServlet;
+import org.apache.sling.core.impl.request.SlingRequestDispatcher;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;

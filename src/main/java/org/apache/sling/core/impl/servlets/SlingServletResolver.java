@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.filter;
+package org.apache.sling.core.impl.servlets;
 
 import java.util.Dictionary;
 import java.util.HashMap;

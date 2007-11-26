@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.helper;
+package org.apache.sling.core.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,6 +43,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
+import org.apache.sling.core.impl.request.RequestData;
+import org.apache.sling.core.impl.request.SlingRequestDispatcher;
 
 /**
  * The <code>SlingHttpServletRequestImpl</code> TODO

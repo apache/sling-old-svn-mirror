@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.helper;
+package org.apache.sling.core.impl.request;
 
 import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_CONTENT;
 import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_SERVLET;
@@ -52,11 +52,12 @@ import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.core.impl.SlingHttpServletRequestImpl;
+import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.core.impl.SlingMainServlet;
 import org.apache.sling.core.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
-import org.apache.sling.core.impl.request.SlingRequestProgressTracker;
 import org.apache.sling.core.theme.Theme;
 import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
 import org.osgi.service.component.ComponentException;
@@ -469,7 +470,7 @@ public class RequestData implements BufferProvider {
 
     // ---------- Parameter support -------------------------------------------
 
-    ServletInputStream getInputStream() throws IOException {
+    public ServletInputStream getInputStream() throws IOException {
         if (parameterSupport != null && parameterSupport.requestDataUsed()) {
             throw new IllegalStateException(
                 "Request Data has already been read");
@@ -480,7 +481,7 @@ public class RequestData implements BufferProvider {
         return getServletRequest().getInputStream();
     }
 
-    BufferedReader getReader() throws UnsupportedEncodingException, IOException {
+    public BufferedReader getReader() throws UnsupportedEncodingException, IOException {
         if (parameterSupport != null && parameterSupport.requestDataUsed()) {
             throw new IllegalStateException(
                 "Request Data has already been read");
@@ -491,7 +492,7 @@ public class RequestData implements BufferProvider {
         return getServletRequest().getReader();
     }
 
-    ParameterSupport getParameterSupport() {
+    public ParameterSupport getParameterSupport() {
         if (parameterSupport == null) {
             parameterSupport = new ParameterSupport(this /* getServletRequest() */);
         }

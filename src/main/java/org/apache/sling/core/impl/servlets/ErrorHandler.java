@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.core.impl.filter;
+package org.apache.sling.core.impl.servlets;
 
 import java.io.IOException;
 
@@ -26,8 +26,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.core.impl.helper.ContentData;
-import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.core.impl.request.ContentData;
+import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.servlets.ErrorHandlerServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentException;
