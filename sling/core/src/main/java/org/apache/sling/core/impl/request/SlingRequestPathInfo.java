@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.core.impl.helper;
+package org.apache.sling.core.impl.request;
 
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;

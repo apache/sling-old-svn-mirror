@@ -29,7 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.sling.core.impl.helper.RequestData;
+import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.locale.LocaleResolver;
 
 /**
