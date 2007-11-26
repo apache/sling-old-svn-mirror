@@ -299,17 +299,31 @@ public class MicroslingResourceResolver implements ResourceResolver {
         throw new SlingException("Session has already been closed");
     }
 
-    /** Creates a JcrNodeResource with the given path if existing */
+    /** Creates a JcrNodeResource object with the given path if existing */
     protected Resource getResource(Session session, String path)
             throws RepositoryException {
-        if (session.itemExists(path)) {
+        
+        boolean exists = false;
+        try {
+            exists = session.itemExists(path);
+        } catch(RepositoryException re) {
+            // usually means an invalid path, consider this
+            // as "resource not found". Invalid paths are used
+            // for example by the MicrojaxPostServlet where a path
+            // ending in /* means "create a new resource here"
+            if(log.isDebugEnabled()) {
+                log.debug("RepositoryException while looking for Item at path '" + path + "' - ignoring exception: " + re);
+            }
+        }
+
+        if(exists) {
             Resource result = new JcrNodeResource(session, path);
             result.getResourceMetadata().put(ResourceMetadata.RESOLUTION_PATH,
                 path);
             log.info("Found Resource at path '{}'", path);
             return result;
         }
-
+    
         log.info("Path '{}' does not resolve to an Item", path);
         return null;
     }
