@@ -43,15 +43,11 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.osgi.service.component.ComponentException;
 
 /**
- * The <code>DefaultServlet</code> TODO
+ * The <code>DefaultServlet</code> is a very simple default resource handler.
  * <p>
  * The default servlet is not registered to handle any concrete resource
  * type. Rather it is used internally on demand.
  *
- * @scr.component immediate="true"
- * @scr.property name="service.description" value="Default Component"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @ not to be used as scr.service
  */
 public class DefaultServlet extends SlingAllMethodsServlet {
 
@@ -243,12 +239,6 @@ public class DefaultServlet extends SlingAllMethodsServlet {
 
     private void renderContentJson(Resource resource,
             SlingHttpServletResponse response) throws IOException {
-        // {"newValue":"test",
-        // "primaryType":"nt:unstructured",
-        // "multi":"[eins, zwei]",
-        // "path":"/test",
-        // "avalue":"a"
-        // }
 
         Map<Object, Object> contentMap = new TreeMap<Object, Object>(
             this.asMap(resource));
