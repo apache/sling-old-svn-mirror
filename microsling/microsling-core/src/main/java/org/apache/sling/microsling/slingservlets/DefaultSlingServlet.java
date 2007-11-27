@@ -49,11 +49,15 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
     private static final long serialVersionUID = -2259461041692895761L;
     private Map<String, Servlet> renderingServlets = new HashMap <String, Servlet>();
     private Servlet postServlet;
+    private Servlet microjaxGetServlet;
 
     @Override
     public void init() throws ServletException {
         postServlet = new MicrojaxPostServlet();
         postServlet.init(new MicroslingServletConfig("Microjax POST servlet",getServletContext()));
+        
+        microjaxGetServlet = new MicrojaxGetServlet();
+        microjaxGetServlet.init(new MicroslingServletConfig("Microjax GET servlet",getServletContext()));
         
         String contentType = null;
         final String ctSuffix = "; charset=UTF-8";
@@ -78,7 +82,11 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(r.getResourceType())) {
 
             String path = r.getURI();
-            if (path.startsWith("/WEB-INF") || path.startsWith("/META-INF")) {
+            if (path.startsWith(MicrojaxGetServlet.URI_PREFIX)) {
+                microjaxGetServlet.service(req, resp);
+                return;
+                
+            } else if (path.startsWith("/WEB-INF") || path.startsWith("/META-INF")) {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_FORBIDDEN,
                         "Access to " + path + " denied");
             }
