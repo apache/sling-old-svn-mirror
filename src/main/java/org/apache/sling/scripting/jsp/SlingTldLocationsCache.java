@@ -18,6 +18,7 @@ package org.apache.sling.scripting.jsp;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,24 +35,25 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 
 /**
- * The <code>TldLocationsCacheSupport</code> TODO
+ * The <code>SlingTldLocationsCache</code> TODO
  */
-public class TldLocationsCacheSupport implements BundleListener {
+public class SlingTldLocationsCache extends TldLocationsCache implements
+        BundleListener {
 
     private static final String TLD_SCHEME = "tld:";
 
-    private Map tldLocations = new HashMap();
+    private Map<String, TldLocationEntry> tldLocations = new HashMap<String, TldLocationEntry>();
 
-    /**
-     * @param ctxt
-     */
-    public TldLocationsCacheSupport(BundleContext context) {
+    public SlingTldLocationsCache(ServletContext servletContext,
+            BundleContext context) {
+        super(servletContext);
+
         context.addBundleListener(this);
 
         Bundle[] bundles = context.getBundles();
-        for (int i=0; i < bundles.length; i++) {
+        for (int i = 0; i < bundles.length; i++) {
             if (bundles[i].getState() == Bundle.ACTIVE) {
-                this.addBundle(bundles[i]);
+                addBundle(bundles[i]);
             }
         }
     }
@@ -59,8 +61,8 @@ public class TldLocationsCacheSupport implements BundleListener {
     void shutdown(BundleContext context) {
         context.removeBundleListener(this);
 
-        synchronized (this.tldLocations) {
-            this.tldLocations.clear();
+        synchronized (tldLocations) {
+            tldLocations.clear();
         }
     }
 
@@ -71,8 +73,8 @@ public class TldLocationsCacheSupport implements BundleListener {
             tldLocation = tldLocation.substring(TLD_SCHEME.length());
 
             TldLocationEntry tle;
-            synchronized (this.tldLocations) {
-                tle = (TldLocationEntry) this.tldLocations.get(tldLocation);
+            synchronized (tldLocations) {
+                tle = tldLocations.get(tldLocation);
             }
 
             if (tle != null) {
@@ -85,19 +87,16 @@ public class TldLocationsCacheSupport implements BundleListener {
 
     // ---------- TldLocationsCache support ------------------------------------
 
-    TldLocationsCache getTldLocationsCache(ServletContext ctxt) {
-        return new TldLocationsCache(ctxt) {
-            public String[] getLocation(String uri) throws JasperException {
-                synchronized (TldLocationsCacheSupport.this.tldLocations) {
-                    if (TldLocationsCacheSupport.this.tldLocations.containsKey(uri)) {
-                        return new String[]{ TLD_SCHEME + uri, null };
-                    }
-                }
-
-                // TODO: Should we fall back to the original implementation at all ??
-                return super.getLocation(uri);
+    public String[] getLocation(String uri) throws JasperException {
+        synchronized (tldLocations) {
+            if (tldLocations.containsKey(uri)) {
+                return new String[] { TLD_SCHEME + uri, null };
             }
-        };
+        }
+
+        // TODO: Should we fall back to the original implementation at
+        // all ??
+        return super.getLocation(uri);
     }
 
     // ---------- BundleListener -----------------------------------------------
@@ -105,29 +104,30 @@ public class TldLocationsCacheSupport implements BundleListener {
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.STARTED) {
             // find and register new TLD
-            this.addBundle(event.getBundle());
+            addBundle(event.getBundle());
 
         } else if (event.getType() == BundleEvent.STOPPED) {
             // unregister TLD
-            this.removeBundle(event.getBundle());
+            removeBundle(event.getBundle());
         }
     }
 
     // ---------- internal -----------------------------------------------------
 
     private void addBundle(Bundle bundle) {
-        // currently only META-INF/taglib.tld is supported, this should
+        // currently only META-INF/*.tld is supported, this should
         // be extended for registration in a Bundle Manifest Header
 
-        String[] tldEntries = { "META-INF/taglib.tld" };
-        for (int i=0; i< tldEntries.length; i++) {
-            URL taglib = bundle.getEntry(tldEntries[i]);
-            if (taglib != null) {
-                // Add map entry only if its uri is not already present in the map
-                String uri = this.getUriFromTld(taglib);
-                synchronized (this.tldLocations) {
-                    if (uri != null && !this.tldLocations.containsKey(uri)) {
-                        this.tldLocations.put(uri, new TldLocationEntry(bundle, tldEntries[i]));
+        Enumeration<?> entries = bundle.findEntries("META-INF", "*.tld", false);
+        if (entries != null) {
+            while (entries.hasMoreElements()) {
+                URL taglib = (URL) entries.nextElement();
+                String uri = getUriFromTld(taglib);
+
+                synchronized (tldLocations) {
+                    if (uri != null && !tldLocations.containsKey(uri)) {
+                        tldLocations.put(uri, new TldLocationEntry(bundle,
+                            taglib.getPath()));
                     }
                 }
             }
@@ -135,10 +135,11 @@ public class TldLocationsCacheSupport implements BundleListener {
     }
 
     private void removeBundle(Bundle bundle) {
-        synchronized (this.tldLocations) {
-            for (Iterator li = this.tldLocations.values().iterator(); li.hasNext();) {
-                TldLocationEntry tle = (TldLocationEntry) li.next();
-                if (tle != null && tle.getBundle().getBundleId() == bundle.getBundleId()) {
+        synchronized (tldLocations) {
+            for (Iterator<TldLocationEntry> li = tldLocations.values().iterator(); li.hasNext();) {
+                TldLocationEntry tle = li.next();
+                if (tle != null
+                    && tle.getBundle().getBundleId() == bundle.getBundleId()) {
                     li.remove();
                 }
             }
@@ -181,6 +182,7 @@ public class TldLocationsCacheSupport implements BundleListener {
 
     private static class TldLocationEntry {
         private Bundle bundle;
+
         private String tldPath;
 
         private TldLocationEntry(Bundle bundle, String tldPath) {
@@ -189,15 +191,15 @@ public class TldLocationsCacheSupport implements BundleListener {
         }
 
         Bundle getBundle() {
-            return this.bundle;
+            return bundle;
         }
 
         String getTldPath() {
-            return this.tldPath;
+            return tldPath;
         }
 
         URL getTldURL() {
-            return this.bundle.getEntry(this.tldPath);
+            return bundle.getEntry(tldPath);
         }
     }
 }

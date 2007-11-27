@@ -17,27 +17,20 @@
 package org.apache.sling.scripting.jsp;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
+
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+
 import org.apache.jasper.JasperException;
 import org.apache.jasper.Options;
 import org.apache.jasper.compiler.JspRuntimeContext;
-import org.apache.jasper.compiler.TldLocationsCache;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,38 +53,37 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.mappedfile" value="true" type="Boolean"
  * @scr.property name="jasper.modificationTestInterval" value="4" type="Integer"
  * @scr.property name="jasper.reloading" value="false" type="Boolean"
- * @scr.property name="jasper.scratchdir" value="/classes"
+ * @scr.property name="jasper.scratchdir" value="classes"
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
+ * @scr.property name="jasper.displaySourceFragments" value="true"
+ *               type="Boolean"
  * @scr.service
  */
-public class JspScriptHandler implements SlingScriptEngine  {
+public class JspScriptHandler implements SlingScriptEngine {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspScriptHandler.class);
 
-    private ComponentContext componentContext;
+    ComponentContext componentContext;
 
-    /**
-     * @scr.reference
-     */
-    private SlingRepository repository;
-
-    /**
-     * @scr.reference
-     */
+    /** @scr.reference */
     private ServletContext slingServletContext;
 
     /**
      * @scr.reference name="RepositoryClassLoaderProvider"
-     *      interface="org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider"
+     *                interface="org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider"
      */
     private ClassLoader jspClassLoader;
 
-    private RepositoryOutputProvider outputProvider;
+    private SlingTldLocationsCache tldLocationsCache;
 
-    private TldLocationsCacheSupport tldLocationsCache;
+    private JspRuntimeContext jspRuntimeContext;
 
-    private JspComponentContext jspComponentContext;
+    private Options options;
+
+    private JspServletContext jspServletContext;
+
+    private ServletConfig servletConfig;
 
     public static final String SCRIPT_TYPE = "jsp";
 
@@ -101,7 +93,7 @@ public class JspScriptHandler implements SlingScriptEngine  {
 
     public String[] getExtensions() {
         // probably also jspx, jspf ?
-        return new String[]{ SCRIPT_TYPE };
+        return new String[] { SCRIPT_TYPE };
     }
 
     public String getEngineName() {
@@ -116,18 +108,23 @@ public class JspScriptHandler implements SlingScriptEngine  {
             throws SlingException, IOException {
         SlingScriptHelper ssh = (SlingScriptHelper) props.get(SLING);
         if (ssh != null) {
-            JspServletWrapperAdapter jsp = getJspWrapperAdapter(ssh.getRequest(), "TODO");
-            jsp.service(ssh);
+            jspServletContext.setRequestResourceResolver(ssh.getRequest().getResourceResolver());
+            try {
+                JspServletWrapperAdapter jsp = getJspWrapperAdapter(ssh);
+                jsp.service(ssh);
+            } finally {
+                jspServletContext.resetRequestResourceResolver();
+            }
         }
     }
 
     private JspServletWrapperAdapter getJspWrapperAdapter(
-            SlingHttpServletRequest component,
-            String scriptName) {
+            SlingScriptHelper scriptHelper) throws SlingException {
 
-        JspComponentContext jcc = getJspRuntimeContext();
-        JspRuntimeContext rctxt = jcc.getRctxt();
+        JspRuntimeContext rctxt = jspRuntimeContext;
 
+        SlingScript script = scriptHelper.getScript();
+        String scriptName = script.getScriptResource().getURI();
         JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
         if (wrapper != null) {
             return wrapper;
@@ -139,29 +136,18 @@ public class JspScriptHandler implements SlingScriptEngine  {
                 return wrapper;
             }
 
-            // Check if the requested JSP page exists, to avoid creating
-            // unnecessary directories and files.
             try {
-                if (jcc.getServletContext().getResource(scriptName) == null) {
-                    log.info("getJspWrapperAdapter: Script {} does not exist",
-                        scriptName);
-                    return null;
-                }
-            } catch (MalformedURLException mue) {
-                log.error("getJspWrapperAdapter: Cannot check script {}",
-                    scriptName, mue);
-            }
 
-            try {
-                wrapper = new JspServletWrapperAdapter(jcc.getServletConfig(),
-                    jcc.getOptions(), scriptName, false, rctxt);
+                wrapper = new JspServletWrapperAdapter(servletConfig, options,
+                    scriptName, false, rctxt);
                 rctxt.addWrapper(scriptName, wrapper);
+
                 return wrapper;
             } catch (JasperException je) {
-                log.error(
-                    "getJspWrapperAdapter: Error creating adapter for script {}",
-                    scriptName, je);
-                return null;
+                if (je.getCause() != null) {
+                    throw new SlingException(je.getMessage(), je.getCause());
+                }
+                throw new SlingException("Cannot create JSP", je);
             }
         }
     }
@@ -170,9 +156,42 @@ public class JspScriptHandler implements SlingScriptEngine  {
 
     protected void activate(ComponentContext componentContext) {
         this.componentContext = componentContext;
-        this.tldLocationsCache = new TldLocationsCacheSupport(
-            componentContext.getBundleContext());
-        this.outputProvider = new RepositoryOutputProvider(repository);
+
+        // set the current class loader as the thread context loader for
+        // the setup of the JspRuntimeContext
+        ClassLoader old = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(jspClassLoader);
+
+        try {
+            tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
+                componentContext.getBundleContext());
+
+            // return options which use the jspClassLoader
+            options = new JspServletOptions(slingServletContext,
+                componentContext, jspClassLoader, tldLocationsCache);
+
+            // Initialize the JSP Runtime Context
+            jspRuntimeContext = new JspRuntimeContext(slingServletContext,
+                options);
+
+            jspServletContext = new JspServletContext(slingServletContext,
+                tldLocationsCache);
+
+            servletConfig = new JspServletConfig(jspServletContext,
+                componentContext.getProperties());
+
+        } finally {
+            // make sure the context loader is reset after setting up the
+            // JSP runtime context
+            Thread.currentThread().setContextClassLoader(old);
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Scratch dir for the JSP engine is: {}",
+                options.getScratchDir().toString());
+            log.debug("IMPORTANT: Do not modify the generated servlets");
+        }
+
     }
 
     protected void deactivate(ComponentContext componentContext) {
@@ -180,10 +199,9 @@ public class JspScriptHandler implements SlingScriptEngine  {
             log.debug("JspScriptHandler.deactivate()");
         }
 
-        if (jspComponentContext != null) {
-            jspComponentContext.getRctxt().setOutputProvider(null);
-            jspComponentContext.getRctxt().destroy();
-            jspComponentContext = null;
+        if (jspRuntimeContext != null) {
+            jspRuntimeContext.destroy();
+            jspRuntimeContext = null;
         }
 
         if (tldLocationsCache != null) {
@@ -191,7 +209,6 @@ public class JspScriptHandler implements SlingScriptEngine  {
             tldLocationsCache = null;
         }
 
-        outputProvider.dispose();
         this.componentContext = null;
     }
 
@@ -214,118 +231,4 @@ public class JspScriptHandler implements SlingScriptEngine  {
 
     // ---------- Internal -----------------------------------------------------
 
-    private JspComponentContext getJspRuntimeContext() {
-        if (jspComponentContext == null) {
-            jspComponentContext = new JspComponentContext(slingServletContext);
-        }
-        return jspComponentContext;
-    }
-
-    private class JspComponentContext {
-
-        private final ServletContext servletContext;
-
-        private final ServletConfig servletConfig;
-
-        private final Options options;
-
-        private final JspRuntimeContext rctxt;
-
-        JspComponentContext(ServletContext slingServletContext) {
-            this.servletContext = new JspServletContext(slingServletContext,
-                tldLocationsCache, outputProvider);
-            this.servletConfig = new JspServletConfig(servletContext);
-
-            // return options which use the jspClassLoader
-            TldLocationsCache tlc = tldLocationsCache.getTldLocationsCache(servletContext);
-            this.options = new JspServletOptions(servletConfig, outputProvider,
-                jspClassLoader, tlc);
-
-            // set the current class loader as the thread context loader for
-            // the setup of the JspRuntimeContext
-            ClassLoader old = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(jspClassLoader);
-
-            try {
-                // Initialize the JSP Runtime Context
-                this.rctxt = new JspRuntimeContext(servletContext, options);
-
-            } finally {
-                // make sure the context loader is reset after setting up the
-                // JSP runtime context
-                Thread.currentThread().setContextClassLoader(old);
-            }
-
-            // by default access the repository
-            rctxt.setOutputProvider(outputProvider);
-
-            if (log.isDebugEnabled()) {
-                log.debug("Scratch dir for the JSP engine is: {}",
-                    options.getScratchDir().toString());
-                log.debug("IMPORTANT: Do not modify the generated servlets");
-            }
-        }
-
-        public ServletConfig getServletConfig() {
-            return servletConfig;
-        }
-
-        public ServletContext getServletContext() {
-            return servletContext;
-        }
-
-        public Options getOptions() {
-            return options;
-        }
-
-        public JspRuntimeContext getRctxt() {
-            return rctxt;
-        }
-    }
-
-    private class JspServletConfig implements ServletConfig {
-        private final ServletContext servletContext;
-
-        private String servletName;
-        private Map<String, String> properties;
-
-        JspServletConfig(ServletContext servletContext) {
-            this.servletContext = servletContext;
-
-            Dictionary<?, ?> props = componentContext.getProperties();
-
-            // set the servlet name
-            servletName = (String) props.get(Constants.SERVICE_DESCRIPTION);
-            if (servletName == null) {
-                servletName = "JSP Script Handler";
-            }
-
-            // copy the "jasper." properties
-            properties = new HashMap<String, String>();
-            for (Enumeration<?> ke = props.keys(); ke.hasMoreElements();) {
-                String key = (String) ke.nextElement();
-                if (key.startsWith("jasper.")) {
-                    properties.put(key.substring("jasper.".length()),
-                        String.valueOf(props.get(key)));
-                }
-            }
-
-        }
-
-        public String getInitParameter(String name) {
-            return properties.get(name);
-        }
-
-        public Enumeration<String> getInitParameterNames() {
-            return Collections.enumeration(properties.keySet());
-        }
-
-        public ServletContext getServletContext() {
-            return servletContext;
-        }
-
-        public String getServletName() {
-            return servletName;
-        }
-    }
 }
