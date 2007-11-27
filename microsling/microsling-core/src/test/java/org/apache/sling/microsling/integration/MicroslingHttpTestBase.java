@@ -52,6 +52,8 @@ public class MicroslingHttpTestBase extends TestCase {
     public static final String CONTENT_TYPE_XML = "text/xml";
     public static final String CONTENT_TYPE_PLAIN = "text/plain";
     public static final String CONTENT_TYPE_JSON = "application/json";
+    public static final String CONTENT_TYPE_JS = "application/x-javascript";
+    public static final String CONTENT_TYPE_CSS = "text/css";
     
     protected MicroslingIntegrationTestClient testClient;
     protected HttpClient httpClient;
@@ -128,7 +130,8 @@ public class MicroslingHttpTestBase extends TestCase {
             }
         } else {
             assertTrue(
-                "Expected Content-Type '" + expectedContentType + "' for " + url,
+                "Expected Content-Type that starts with '" + expectedContentType 
+                + "' for " + url + ", got '" + h.getValue() + "'",
                 h.getValue().startsWith(expectedContentType)
             );
         }
