@@ -28,6 +28,9 @@ import javax.servlet.ServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
 /** Simple script helper providing access to the (wrapped) response, the
@@ -35,15 +38,22 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * class are made available to the scripts as the global <code>sling</code>
  * variable.
  */
-public class ScriptHelper {
+public class ScriptHelper implements SlingScriptHelper {
+
+    private final SlingScript script;
 
     private final SlingHttpServletRequest request;
 
     private final SlingHttpServletResponse response;
 
-    public ScriptHelper(SlingHttpServletRequest request, SlingHttpServletResponse response) {
+    public ScriptHelper(SlingScript script, SlingHttpServletRequest request, SlingHttpServletResponse response) {
+        this.script = script;
         this.request = request;
         this.response = new OnDemandWriterResponse(response);
+    }
+
+    public SlingScript getScript() {
+        return script;
     }
 
     public SlingHttpServletRequest getRequest() {
@@ -55,11 +65,18 @@ public class ScriptHelper {
     }
 
     public void include(String path) throws ServletException, IOException {
+        include(path, null);
+    }
+
+    public void include(String path, RequestDispatcherOptions options)
+            throws ServletException, IOException {
+        // TODO: Implement for options !!
         RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
         if (dispatcher != null) {
             dispatcher.include(getRequest(), getResponse());
         }
     }
+
 
     /** Simple Response wrapper returning an on-demand writer when asked for
      * a writer.
