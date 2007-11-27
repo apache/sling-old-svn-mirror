@@ -185,9 +185,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             // request to create a new node at a specific path - use the supplied path as is
         }
         
-        Set<Node> changedNodes = new HashSet<Node>();
+        Set<Node> createdNodes = new HashSet<Node>();
         if(currentNode == null) {
-            currentNode = deepCreateNode(s, currentPath, changedNodes);
+            currentNode = deepCreateNode(s, currentPath, createdNodes);
         }
         currentPath = currentNode.getPath();
         
@@ -198,7 +198,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         }
         
         // walk the request parameters, create and save nodes and properties
-        setPropertiesFromRequest(currentNode, request, savePrefix, changedNodes);
+        setPropertiesFromRequest(currentNode, request, savePrefix, createdNodes);
         
         // sava data and find out where to redirect
         s.save();
@@ -225,10 +225,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
     /** Set Node properties from current request 
      *  TODO should handle file uploads as well
-     *  @return the Set of changed Nodes, if any (empty Set if none)
      */
-    private Set<Node> setPropertiesFromRequest(Node n, SlingHttpServletRequest request, 
-            String savePrefix, Set<Node> changedNodes)
+    private void setPropertiesFromRequest(Node n, SlingHttpServletRequest request, 
+            String savePrefix, Set<Node> createdNodes)
             throws RepositoryException {
         
         for(Map.Entry<String, RequestParameter[]>  e : request.getRequestParameterMap().entrySet()) {
@@ -237,16 +236,14 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 if(!name.startsWith(savePrefix)) continue;
                 name = name.substring(savePrefix.length());
             }
-            setProperty(n,request,name,e.getValue(),changedNodes);
+            setProperty(n,request,name,e.getValue(),createdNodes);
         }
-        
-        return changedNodes;
     }
     
     /** Set a single Property on node N 
      * @throws RepositoryException */
     private void setProperty(Node n, SlingHttpServletRequest request, String name, 
-            RequestParameter[] values, Set<Node> changedNodes) throws RepositoryException {
+            RequestParameter[] values, Set<Node> createdNodes) throws RepositoryException {
         
         // split the relative path identifying the property to be saved
         String proppath = name;
@@ -280,19 +277,17 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         final Session s = n.getSession();
         Node parent;
         if(name.startsWith("/")) {
-            parent = deepCreateNode(s, parentpath, changedNodes);
-            changedNodes.add(parent);
+            parent = deepCreateNode(s, parentpath, createdNodes);
             
         } else if (!parentpath.equals("")) {
             parent = (Node) s.getItem(path + "/" + parentpath);
         } else {
             parent = (Node) s.getItem(path);
         }
-        changedNodes.add(parent);
         
         // TODO String typehint = request.getParameter(proppath + "@TypeHint");
         final String typeHint = null;
-        final boolean nodeIsNew = changedNodes.contains(parent); 
+        final boolean nodeIsNew = createdNodes.contains(parent); 
         propertyValueSetter.setProperty(parent, propname, values, typeHint, nodeIsNew);
 }
 
