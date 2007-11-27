@@ -131,8 +131,16 @@ public class SlingServletResolver extends ServletBinder implements
             }
         }
 
-        if (servlet != null) {
-            String name = servlet.getServletConfig().getServletName();
+        if (servlet != null && log.isDebugEnabled()) {
+            String name;
+            if (servlet.getServletConfig() != null) {
+                name = servlet.getServletConfig().getServletName();
+            } else {
+                name = servlet.getServletInfo();
+            }
+            if (name == null) {
+                name = servlet.getClass().getName();
+            }
             log.debug("Using Component {} for {}", name, path);
         }
 
