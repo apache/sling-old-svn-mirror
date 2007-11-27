@@ -29,7 +29,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.jcr.resource.SyntheticResource;
-import org.apache.sling.scripting.jsp.util.JspComponentResponseWrapper;
+import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,8 @@ public class IncludeTagHandler extends TagSupport {
                         resource = new SyntheticResource(path, resourceType);
                     }
                 } catch (SlingException e) {
-                    TagUtil.log(log, pageContext, "Problem trying to load content", e);
+                    TagUtil.log(log, pageContext,
+                        "Problem trying to load content", e);
                 }
             }
 
@@ -106,7 +107,7 @@ public class IncludeTagHandler extends TagSupport {
 
             // include the rendered content
             if (dispatcher != null) {
-                SlingHttpServletResponse response = new JspComponentResponseWrapper(
+                SlingHttpServletResponse response = new JspSlingHttpServletResponseWrapper(
                     pageContext);
                 dispatcher.include(request, response);
             } else {

@@ -37,15 +37,15 @@ public class DefineObjectsTag extends TagSupport {
 
     /**
      * Default name for the scripting variable referencing the
-     * <code>SlingHttpServletRequest</code> object (value is "renderRequest").
+     * <code>SlingHttpServletRequest</code> object (value is "slingRequest").
      */
-    public static final String DEFAULT_REQUEST_NAME = "renderRequest";
+    public static final String DEFAULT_REQUEST_NAME = "slingRequest";
 
     /**
      * Default name for the scripting variable referencing the
-     * <code>SlingHttpServletResponse</code> object (value is "renderResponse").
+     * <code>SlingHttpServletResponse</code> object (value is "slingResponse").
      */
-    public static final String DEFAULT_RESPONSE_NAME = "renderResponse";
+    public static final String DEFAULT_RESPONSE_NAME = "slingResponse";
 
     /**
      * Default name for the scripting variable referencing the current

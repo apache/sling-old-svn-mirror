@@ -82,17 +82,17 @@ public class DefineObjectsTEI extends TagExtraInfo {
      * @see javax.servlet.jsp.tagext.TagExtraInfo#getVariableInfo(TagData)
      */
     public VariableInfo[] getVariableInfo(TagData data) {
-        String requestName = this.getValue(data, ATTR_REQUEST_NAME,
+        String requestName = getValue(data, ATTR_REQUEST_NAME,
             DefineObjectsTag.DEFAULT_REQUEST_NAME);
-        String responseName = this.getValue(data, ATTR_RESPONSE_NAME,
+        String responseName = getValue(data, ATTR_RESPONSE_NAME,
             DefineObjectsTag.DEFAULT_RESPONSE_NAME);
-        String resourceName = this.getValue(data, ATTR_RESOURCE_NAME,
+        String resourceName = getValue(data, ATTR_RESOURCE_NAME,
             DefineObjectsTag.DEFAULT_RESOURCE_NAME);
-        String resourceManagerName = this.getValue(data, ATTR_RESOURCE_MANAGER_NAME,
+        String resourceManagerName = getValue(data, ATTR_RESOURCE_MANAGER_NAME,
             DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_NAME);
-        String resourceManagerClass = this.getValue(data, ATTR_RESOURCE_MANAGER_CLASS,
+        String resourceManagerClass = getValue(data, ATTR_RESOURCE_MANAGER_CLASS,
             DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_CLASS);
-        String serviceLocatorName = this.getValue(data, ATTR_SERVICE_LOCATOR_NAME,
+        String serviceLocatorName = getValue(data, ATTR_SERVICE_LOCATOR_NAME,
             DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME);
 
         return new VariableInfo[] {
