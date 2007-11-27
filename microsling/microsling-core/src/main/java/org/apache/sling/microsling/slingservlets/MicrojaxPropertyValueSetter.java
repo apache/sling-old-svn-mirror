@@ -48,13 +48,16 @@ class MicrojaxPropertyValueSetter {
     void setProperty(Node parent, String name, RequestParameter[] values, String typehint, boolean nodeWasJustCreated)
             throws RepositoryException {
 
+        // set the same timestamp for all values, to ease testing
+        final Calendar now = Calendar.getInstance();
+        
         if (valueProvided(values)) {
             // if user provided a value, don't mess with it
             setPropertyAsIs(parent, name, values, typehint);
 
         } else if (CREATED_FIELD.equals(name)) {
             if (nodeWasJustCreated) {
-                setCurrentDate(parent, name);
+                setCurrentDate(parent, name, now);
             }
 
         } else if (CREATED_BY_FIELD.equals(name)) {
@@ -63,7 +66,7 @@ class MicrojaxPropertyValueSetter {
             }
 
         } else if (LAST_MODIFIED_FIELD.equals(name)) {
-            setCurrentDate(parent, name);
+            setCurrentDate(parent, name, now);
 
         } else if (LAST_MODIFIED_BY_FIELD.equals(name)) {
             setCurrentUser(parent, name);
@@ -75,9 +78,9 @@ class MicrojaxPropertyValueSetter {
     }
 
     /** set property to the current Date */
-    private void setCurrentDate(Node parent, String name) throws RepositoryException {
+    private void setCurrentDate(Node parent, String name, Calendar now) throws RepositoryException {
         removePropertyIfExists(parent, name);
-        parent.setProperty(name, Calendar.getInstance());
+        parent.setProperty(name, now);
     }
 
     /** set property to the current User id */
@@ -127,7 +130,8 @@ class MicrojaxPropertyValueSetter {
         boolean result = false;
 
         for (RequestParameter p : values) {
-            if(p!=null && p.getString()!=null) {
+            final String val = p.getString();
+            if(val!=null && val.length() > 0) {
                 result = true;
                 break;
             }
