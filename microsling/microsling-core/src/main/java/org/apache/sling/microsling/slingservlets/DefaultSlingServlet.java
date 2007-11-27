@@ -78,16 +78,18 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(r.getResourceType())) {
 
             String path = r.getURI();
-            if (!path.startsWith("/WEB-INF") && !path.startsWith("/META-INF")) {
-                URL url = getServletContext().getResource(path);
-                if (url != null) {
-                    spool(url, resp);
-                    return;
-                }
+            if (path.startsWith("/WEB-INF") || path.startsWith("/META-INF")) {
+                throw new HttpStatusCodeException(HttpServletResponse.SC_FORBIDDEN,
+                        "Access to " + path + " denied");
             }
-
-            throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
-                "Resource not found: " + r.getURI());
+            
+            URL url = getServletContext().getResource(path);
+            if (url != null) {
+                spool(url, resp);
+            } else {
+                throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
+                        "Resource not found: " + r.getURI());
+            }
         }
 
         // make sure we have an Item, and render it via one of our renderingServlets
@@ -134,9 +136,8 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
     protected void spool(URL url, SlingHttpServletResponse res) throws IOException {
         URLConnection conn = url.openConnection();
 
-        if (conn.getContentType() != null) {
-            res.setContentType(conn.getContentType());
-        }
+        // this previously used conn.getContentType(), but see SLING-112
+        res.setContentType(getServletContext().getMimeType(url.getFile()));
         if (conn.getContentLength() > 0 ) {
             res.setContentLength(conn.getContentLength());
         }
