@@ -16,32 +16,24 @@
  */
 package org.apache.sling.core.impl.scripting;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
-import org.apache.sling.core.impl.scripting.helper.ScriptFilenameBuilder;
+import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.core.impl.scripting.helper.ScriptHelper;
+import org.apache.sling.core.impl.scripting.helper.ScriptPathIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +67,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver {
      */
     public static final String JCR_ENCODING = "jcr:encoding";
 
-    private final ScriptFilenameBuilder scriptFilenameBuilder = new ScriptFilenameBuilder();
+    public static final String SCRIPT_BASE_PATH = "/sling/scripts";
 
     private Map<String, SlingScriptEngine> scriptEngines = new HashMap<String, SlingScriptEngine>();
 
@@ -139,97 +131,51 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver {
      */
     public SlingScript resolveScript(final SlingHttpServletRequest request)
             throws SlingException {
-        try {
-            return resolveScriptInternal(request);
-        } catch (RepositoryException re) {
-            throw new SlingException("Cannot resolve script for request", re);
-        }
-    }
 
-    public SlingScript resolveScriptInternal(
-            final SlingHttpServletRequest request) throws RepositoryException,
-            SlingException {
+        String scriptBaseName = buildScriptFilename(request) + ".";
 
-        final Resource r = request.getResource();
+        SlingScript result = null;
+        Iterator<String> pathIterator = new ScriptPathIterator(request);
+        ResourceResolver resolver = request.getResourceResolver();
+        while (result == null && pathIterator.hasNext()) {
+            Resource scriptRoot = resolver.getResource(pathIterator.next());
+            if (scriptRoot != null) {
 
-        // ensure repository access
-        if (!(r.getRawData() instanceof Item)) {
-            return null;
-        }
+                if (log.isDebugEnabled()) {
+                    log.debug("Looking for script with filename={} under {}",
+                        scriptBaseName, scriptRoot.getURI());
+                }
 
-        final Session s = ((Item) r.getRawData()).getSession();
-        DefaultSlingScript result = null;
+                // offset is parent path + separator + base name
+                final int scriptExtensionOffset = scriptRoot.getURI().length()
+                    + 1 + scriptBaseName.length();
 
-        if (r == null) {
-            return null;
-        }
-
-        String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
-            request.getMethod(),
-            request.getRequestPathInfo().getSelectorString(),
-            request.getRequestPathInfo().getExtension(), "*");
-        String scriptPath = scriptFilenameBuilder.buildScriptPath(r);
-
-        // SLING-72: if the scriptfilename contains a relative path, move that
-        // to the scriptPath and make the scriptFilename a direct child pattern
-        int lastSlash = scriptFilename.lastIndexOf('/');
-        if (lastSlash >= 0) {
-            scriptPath += "/" + scriptFilename.substring(0, lastSlash);
-            scriptFilename = scriptFilename.substring(lastSlash + 1);
-        }
-
-        // this is the location of the trailing asterisk
-        final int scriptExtensionOffset = scriptFilename.length() - 1;
-
-        if (log.isDebugEnabled()) {
-            log.debug("Looking for script with filename=" + scriptFilename
-                + " under " + scriptPath);
-        }
-
-        if (s.itemExists(scriptPath)) {
-
-            // get the item and ensure it is a node
-            final Item i = s.getItem(scriptPath);
-            if (i.isNode()) {
-                Node parent = (Node) i;
-                NodeIterator scriptNodeIterator = parent.getNodes(scriptFilename);
-                while (scriptNodeIterator.hasNext()) {
-                    Node scriptNode = scriptNodeIterator.nextNode();
-
-                    // SLING-72: Require the node to be an nt:file
-                    if (scriptNode.isNodeType("nt:file")) {
-
-                        String scriptName = scriptNode.getName();
-                        String scriptExt = scriptName.substring(scriptExtensionOffset);
-                        SlingScriptEngine scriptEngine = scriptEngines.get(scriptExt);
-                        Resource scriptRes = request.getResourceResolver().getResource(
-                            scriptNode.getPath());
-
-                        if (scriptEngine != null) {
-                            DefaultSlingScript script = new DefaultSlingScript();
-                            script.setScriptResource(scriptRes);
-                            script.setScriptEngine(scriptEngine);
-                            result = script;
-                            break;
-                        }
+                // get the item and ensure it is a node
+                Iterator<Resource> children = resolver.listChildren(scriptRoot);
+                while (result == null && children.hasNext()) {
+                    Resource scriptResource = children.next();
+                    String scriptName = scriptResource.getURI();
+                    String scriptExt = scriptName.substring(scriptExtensionOffset);
+                    SlingScriptEngine scriptEngine = scriptEngines.get(scriptExt);
+                    if (scriptEngine != null) {
+                        result = new DefaultSlingScript(scriptResource,
+                            scriptEngine);
                     }
                 }
             }
         }
 
         if (result != null) {
-            log.info("Found nt:file script node {} for Resource={}",
-                result.getScriptResource().getURI(), r);
+            log.info("Script {} found for Resource={}",
+                result.getScriptResource().getURI(), request.getResource());
         } else {
-            log.debug(
-                "nt:file script node not found at path={} for Resource={}",
-                scriptPath, r);
+            log.debug("No script found for Resource={}", request.getResource());
         }
 
         return result;
     }
 
-    //---------- SCR integration ----------------------------------------------
+    // ---------- SCR integration ----------------------------------------------
 
     protected void bind(SlingScriptEngine slingScriptEngine) {
         String[] extensions = slingScriptEngine.getExtensions();
@@ -249,104 +195,27 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver {
         }
     }
 
-    //---------- inner class --------------------------------------------------
+    // ---------- inner class --------------------------------------------------
 
-    private static class DefaultSlingScript implements SlingScript {
+    private String buildScriptFilename(SlingHttpServletRequest request) {
 
-        private Resource scriptResource;
+        String methodName = request.getMethod();
+        String extension = request.getRequestPathInfo().getExtension();
 
-        private SlingScriptEngine scriptEngine;
+        if (methodName == null || methodName.length() == 0) {
+            // TODO: Shouldn't this be considered an error ??
+            return "NO_METHOD";
 
-        public Resource getScriptResource() {
-            return scriptResource;
-        }
+        } else if (HttpConstants.METHOD_GET.equalsIgnoreCase(methodName)
+            && extension != null && extension.length() > 0) {
 
-        void setScriptResource(Resource scriptResource) {
-            this.scriptResource = scriptResource;
-        }
+            // for GET, we use the request extension
+            return extension;
 
-        public SlingScriptEngine getScriptEngine() {
-            return scriptEngine;
-        }
+        } else {
 
-        void setScriptEngine(SlingScriptEngine scriptEngine) {
-            this.scriptEngine = scriptEngine;
-        }
-
-        public Reader getScriptReader() throws IOException {
-
-            Property property;
-            Value value;
-
-            try {
-
-                if (getScriptResource().getRawData() instanceof Node) {
-                    // SLING-72: Cannot use primary items due to WebDAV creating
-                    // nt:unstructured as jcr:content node. So we just assume
-                    // nt:file and try to use the well-known data path
-                    Node node = (Node) getScriptResource().getRawData();
-                    property = node.getProperty("jcr:content/jcr:data");
-                } else {
-                    throw new IOException("Scriptresource "
-                        + getScriptResource() + " must is not JCR Node based");
-                }
-
-                value = null;
-                if (property.getDefinition().isMultiple()) {
-                    // for a multi-valued property, we take the first non-null
-                    // value (null values are possible in multi-valued
-                    // properties)
-                    // TODO: verify this claim ...
-                    Value[] values = property.getValues();
-                    for (Value candidateValue : values) {
-                        if (candidateValue != null) {
-                            value = candidateValue;
-                            break;
-                        }
-                    }
-
-                    // incase we could not find a non-null value, we bail out
-                    if (value == null) {
-                        throw new IOException("Cannot access "
-                            + getScriptResource().getURI());
-                    }
-                } else {
-                    // for single-valued properties, we just take this value
-                    value = property.getValue();
-                }
-            } catch (RepositoryException re) {
-                throw (IOException) new IOException("Cannot get script "
-                    + getScriptResource().getURI()).initCause(re);
-            }
-
-            // Now know how to get the input stream, we still have to decide
-            // on the encoding of the stream's data. Primarily we assume it is
-            // UTF-8, which is a default in many places in JCR. Secondarily
-            // we try to get a jcr:encoding property besides the data property
-            // to provide a possible encoding
-            String encoding = "UTF-8";
-            try {
-                Node parent = property.getParent();
-                if (parent.hasNode(JCR_ENCODING)) {
-                    encoding = parent.getProperty(JCR_ENCODING).getString();
-                }
-            } catch (RepositoryException re) {
-                // don't care if we fail for any reason here, just assume
-                // default
-            }
-
-            // access the value as a stream and return a buffered reader
-            // converting the stream data using UTF-8 encoding, which is
-            // the default encoding used
-            try {
-                InputStream input = value.getStream();
-                return new BufferedReader(
-                    new InputStreamReader(input, encoding));
-            } catch (RepositoryException re) {
-                throw (IOException) new IOException("Cannot get script "
-                    + getScriptResource().getURI()).initCause(re);
-            }
+            // for other methods use the method name
+            return methodName.toUpperCase();
         }
     }
-
 }
