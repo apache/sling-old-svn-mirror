@@ -20,6 +20,7 @@ package org.apache.sling.jcr.classloader.internal;
 
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Enumeration;
 
 import javax.jcr.RepositoryException;
@@ -32,10 +33,12 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>RepositoryClassLoaderFacade</code> TODO
  */
-class RepositoryClassLoaderFacade extends ClassLoader {
+class RepositoryClassLoaderFacade extends URLClassLoader {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(RepositoryClassLoaderFacade.class);
+
+    private static final URL[] NO_URLS = new URL[0];
 
     private RepositoryClassLoaderProviderImpl classLoaderProvider;
     private ClassLoader parent;
@@ -58,7 +61,9 @@ class RepositoryClassLoaderFacade extends ClassLoader {
             ClassLoader parent,
             String sessionOwner,
             String[] classPath) {
-        super(null); // no parent class loader, we delegate to repository class loaders
+
+        // no parent class loader, we delegate to repository class loaders
+        super(NO_URLS, null);
 
         this.classLoaderProvider = classLoaderProvider;
         this.parent = parent;
@@ -85,6 +90,16 @@ class RepositoryClassLoaderFacade extends ClassLoader {
         return this.classPath.clone();
     }
 
+    @Override
+    public URL[] getURLs() {
+        try {
+            return getDelegateClassLoader().getURLs();
+        } catch (RepositoryException re) {
+            log.error("Cannot get repository class loader to get URLs", re);
+            return NO_URLS;
+        }
+    }
+
     protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
         try {
             return this.getDelegateClassLoader().loadClass(name);
@@ -103,7 +118,7 @@ class RepositoryClassLoaderFacade extends ClassLoader {
         }
     }
 
-    protected Enumeration findResources(String name) throws IOException {
+    public Enumeration findResources(String name) throws IOException {
         try {
             return this.getDelegateClassLoader().getResources(name);
         } catch (RepositoryException re) {
@@ -171,7 +186,7 @@ class RepositoryClassLoaderFacade extends ClassLoader {
         return this.session;
     }
 
-    private ClassLoader getDelegateClassLoader() throws RepositoryException {
+    private DynamicRepositoryClassLoader getDelegateClassLoader() throws RepositoryException {
         if (this.delegate != null) {
             if (this.delegate.isDirty()) {
                 this.delegate = this.delegate.reinstantiate(this.getSession(), this.parent);
