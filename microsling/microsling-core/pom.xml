@@ -222,7 +222,7 @@
                     <exclude>none</exclude>
                   </excludes>
                   <includes>
-                    <include>${integration.test.code.path}/**Test.java</include>
+                    <include>${integration.test.code.path}/**/*Test.java</include>
                   </includes>
                   <systemProperties>
                     <!-- 
@@ -295,7 +295,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <excludes>
-                <exclude>${integration.test.code.path}/**.java</exclude>
+                <exclude>${integration.test.code.path}/**/*.java</exclude>
               </excludes>
             </configuration>
           </plugin>
