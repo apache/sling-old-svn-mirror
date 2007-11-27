@@ -155,32 +155,31 @@ var microjax = null;
 		// but in tests IE6 tends to cache too much
 		var passThroughCacheParam = "?clock=" + new Date().getTime();
 	    var res=microjax.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
+	    return microjax.evalString(res);
+	}
 	
-	    // TODO clarify how we pass objects/arrays via JSON
-	    if(res.indexOf('[')==0) {
-		    eval("obj="+res);
-	    } else if(res.indexOf('{')==0) {
-	        eval("obj="+res);
+	/** eval str, accepting various object delimiters */
+	microjax.evalString = function(str) {
+		var obj = null;
+	    if(str.indexOf('[')==0) {
+		    eval("obj="+str);
+	    } else if(str.indexOf('{')==0) {
+	        eval("obj="+str);
 	    } else {
-		    eval("obj={"+res+"}");
+		    eval("obj={"+str+"}");
 		}
-	    return (obj);
-	    }
-	
+		return obj;
+	}
+	 
 	/** Get "session info" from repository. Mainly answers the question: "Who am I"
 	 *  and "Which workspace am I logged into.
 	 * @return An Object tree containing the session information
 	 * @type Object
 	 */
 	microjax.getSessionInfo = function() {
-	    /** TODO: automatically find the microjax URI without hardcoding, possibly based on
-	    * the assumption that the microjax servlet is deployed relative to the servlet.
-	    */
 	    var res=microjax.httpGet(microjax.baseurl+"/microjax:sessionInfo.json");
-	    var obj;
-	    eval("obj={"+res+"}");
-	    return (obj);
-	    }
+	    return microjax.evalString(res);
+	}
 	
 	/** Replace extension in a path */
 	microjax._replaceExtension = function(path,newExtension) {
