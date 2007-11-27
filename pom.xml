@@ -72,7 +72,7 @@
                         <Private-Package>
                             org.apache.sling.scripting.jsp.*
                         </Private-Package>
-                        <!-- <DynamicImport-Package>*</DynamicImport-Package> -->
+                        <DynamicImport-Package>*</DynamicImport-Package>
 
                         <Import-Package>
                             !org.apache.tools.ant.*, !org.eclipse.*, *
