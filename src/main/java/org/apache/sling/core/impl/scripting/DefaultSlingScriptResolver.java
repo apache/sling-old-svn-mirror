@@ -94,7 +94,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver {
             IOException {
         try {
             // the script helper
-            ScriptHelper helper = new ScriptHelper(req, resp);
+            ScriptHelper helper = new ScriptHelper(script, req, resp);
 
             // prepare the properties for the script
             Map<String, Object> props = new HashMap<String, Object>();
@@ -167,7 +167,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver {
         String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
             request.getMethod(),
             request.getRequestPathInfo().getSelectorString(),
-            request.getResponseContentType(), "*");
+            request.getRequestPathInfo().getExtension(), "*");
         String scriptPath = scriptFilenameBuilder.buildScriptPath(r);
 
         // SLING-72: if the scriptfilename contains a relative path, move that
