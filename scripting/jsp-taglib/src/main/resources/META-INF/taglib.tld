@@ -25,7 +25,7 @@
     <description>A tab library for Sling support</description>
     <tlib-version>1.0</tlib-version>
     <short-name>sling</short-name>
-    <uri>http://sling.apache.org/taglibs/sling/1.0 </uri>
+    <uri>http://sling.apache.org/taglibs/sling/1.0</uri>
 
     <tag>
         <description>
