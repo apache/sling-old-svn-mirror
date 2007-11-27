@@ -64,17 +64,25 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.scripting.jsp.util
+                            org.apache.sling.scripting.jsp.util,
+                            javax.el; javax.servlet.jsp;
+                            javax.servlet.jsp.el;
+                            javax.servlet.jsp.tagext;version=2.1
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scripting.jsp.*,
-                            org.apache.commons.el.*,
-                            org.apache.jasper.*, org.eclipse.jdt.*
+                            org.apache.sling.scripting.jsp.*
                         </Private-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
+                        <!-- <DynamicImport-Package>*</DynamicImport-Package> -->
+
                         <Import-Package>
-                            org.eclipse.*;resolution:=optional, *
+                            !org.apache.tools.ant.*, !org.eclipse.*, *
                         </Import-Package>
+
+                        <!-- Embed Jasper completely -->
+                        <Embed-Dependency>
+                            jasper*,juli,el-api,jsp-api
+                        </Embed-Dependency>
+                        <Embed-StripGroup>true</Embed-StripGroup>
                     </instructions>
                 </configuration>
             </plugin>
@@ -109,15 +117,31 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jdt</groupId>
-            <artifactId>core</artifactId>
-            <version>3.2.0.658</version>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>jasper</artifactId>
+            <version>6.0.14</version>
         </dependency>
         <dependency>
-            <groupId>commons-el</groupId>
-            <artifactId>commons-el</artifactId>
-            <version>1.0</version>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>jasper-el</artifactId>
+            <version>6.0.14</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>jasper-jdt</artifactId>
+            <version>6.0.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>juli</artifactId>
+            <version>6.0.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>el-api</artifactId>
+            <version>6.0.14</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-io</artifactId>
@@ -130,14 +154,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi_R4_compendium</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>jsp-api</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>

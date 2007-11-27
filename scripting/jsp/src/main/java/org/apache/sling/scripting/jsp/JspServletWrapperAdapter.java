@@ -33,9 +33,6 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 
 /**
  * The <code>JspServletWrapperAdapter</code> TODO
- *
- * @author fmeschbe
- * @version $Rev:23741 $, $Date:2006-12-01 16:24:05 +0100 (Fr, 01 Dez 2006) $
  */
 public class JspServletWrapperAdapter extends JspServletWrapper {
 
