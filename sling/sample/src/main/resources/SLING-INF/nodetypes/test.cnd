@@ -17,11 +17,11 @@
 //  under the License.
 //
 
-<sling = 'http://jackrabbit.apache.org/sling/1.0'>
+<sling = 'http://sling.apache.org/jcr/sling/1.0'>
 <nt  = 'http://www.jcp.org/jcr/nt/1.0'>
 
 // Node type for the SampleContent objects
-[sling:SampleContent] > sling:Content
+[sling:SampleContent] > nt:unstructured
 
   - 'title' (String)
     copy
@@ -30,7 +30,7 @@
     copy
 
 // Node type for the SamplePage objects
-[sling:SamplePage] > sling:Content
+[sling:SamplePage] > nt:unstructured
 
   // The page title
   - 'title' (String)
