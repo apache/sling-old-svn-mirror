@@ -73,7 +73,8 @@ public class SlingServletResolver extends ServletBinder implements
 
     public SlingServletResolver(BundleContext bundleContext,
             ServletContext servletContext) {
-        super(bundleContext, servletContext, Servlet.class.getName());
+
+        init(bundleContext, servletContext, Servlet.class.getName());
 
         scriptResolver = new ServiceTracker(bundleContext,
             SlingScriptResolver.class.getName(), null);
@@ -92,6 +93,7 @@ public class SlingServletResolver extends ServletBinder implements
     public void dispose() {
         if (registration != null) {
             registration.unregister();
+            registration = null;
         }
 
         if (scriptResolver != null) {
@@ -124,7 +126,7 @@ public class SlingServletResolver extends ServletBinder implements
                 try {
                     servlet = new DefaultServlet();
                     servlet.init(new SlingServletConfig(null, null, DEFAULT_SERVLET_NAME));
-                    servlets.put(DEFAULT_SERVLET_NAME, servlet);
+                    putServlet(DEFAULT_SERVLET_NAME, servlet);
                 } catch (ServletException se) {
                     log.error("Failed to initiliaze Servlet", se);
                 }
@@ -165,12 +167,12 @@ public class SlingServletResolver extends ServletBinder implements
                 for (String type : types) {
                     log.debug("servletBound: Servlet {} handles type {}", name,
                         type);
-                    servlets.put(type, servlet);
+                    putServlet(type, servlet);
                 }
             } else {
                 log.debug("servletBound: Servlet {} handles type {}", name,
                     typeObject);
-                servlets.put(typeObject.toString(), servlet);
+                putServlet(typeObject.toString(), servlet);
             }
         }
 
@@ -194,12 +196,12 @@ public class SlingServletResolver extends ServletBinder implements
                 for (String type : types) {
                     log.debug("servletBound: Servlet {} unregistered for  {}",
                         name, type);
-                    servlets.remove(type);
+                    removeServlet(type);
                 }
             } else {
                 log.debug("servletBound: Servlet {} unregistered for {}", name,
                     typeObject);
-                servlets.remove(typeObject);
+                removeServlet((String) typeObject);
             }
         }
 
@@ -208,8 +210,16 @@ public class SlingServletResolver extends ServletBinder implements
 
     // ---------- internal helper ---------------------------------------------
 
+    private void putServlet(String resourceType, Servlet servlet) {
+        servlets.put(resourceType, servlet);
+    }
+
     private Servlet getServlet(String resourceType) {
         return servlets.get(resourceType);
+    }
+
+    private void removeServlet(String resourceType) {
+        servlets.remove(resourceType);
     }
 
     private Servlet getScriptServlet(SlingHttpServletRequest request)
