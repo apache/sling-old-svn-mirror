@@ -36,16 +36,16 @@ abstract class ServletBinder implements ServiceTrackerCustomizer {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final BundleContext bundleContext;
+    private BundleContext bundleContext;
 
-    private final ServletContext servletContext;
+    private ServletContext servletContext;
 
-    private final ServiceTracker servletTracker;
+    private ServiceTracker servletTracker;
 
     private Servlet[] servletCache = null;
     private int cacheTracker = -1;
 
-    protected ServletBinder(BundleContext bundleContext, ServletContext servletContext, String clazz) {
+    protected void init(BundleContext bundleContext, ServletContext servletContext, String clazz) {
         this.bundleContext = bundleContext;
         this.servletContext = servletContext;
 
@@ -54,7 +54,9 @@ abstract class ServletBinder implements ServiceTrackerCustomizer {
     }
 
     public void dispose() {
-        servletTracker.close();
+        if (servletTracker != null) {
+            servletTracker.close();
+        }
     }
 
     protected Servlet[] getServlets() {
