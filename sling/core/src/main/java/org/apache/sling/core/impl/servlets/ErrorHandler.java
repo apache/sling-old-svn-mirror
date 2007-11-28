@@ -44,8 +44,7 @@ public class ErrorHandler extends ServletBinder {
 
     public ErrorHandler(BundleContext bundleContext,
             ServletContext servletContext) {
-        super(bundleContext, servletContext,
-            ErrorHandlerServlet.class.getName());
+        init(bundleContext, servletContext, ErrorHandlerServlet.class.getName());
     }
 
     public void handleError(int status, String message,
