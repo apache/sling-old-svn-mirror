@@ -18,36 +18,33 @@
 --%>
 <%@page session="false"%>
 <%@page import="org.apache.sling.sample.*"%>
-<%@page import="org.apache.sling.component.*"%>
-<%@taglib prefix="sling"
-	uri="http://jackrabbit.apache.org/taglibs/sling/1.0"%>
+<%@page import="org.apache.sling.api.*"%>
+<%@page import="org.apache.sling.api.resource.Resource"%>
+<%@page import="org.apache.sling.jcr.resource.SyntheticResource"%>
+<%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
 
 <%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects contentClass="SamplePage" />
-
+<sling:defineObjects />
+<%
+    SamplePage content = (SamplePage) slingRequest.getResource().getObject();
+%>
 <%-- This is a top level component, so we have to draw the html and head tags --%>
 <html>
 <head>
-<title><%= content.getTitle() %></title>
+<title><%=content.getTitle()%></title>
 </head>
 <body>
-<h1><%= content.getTitle() %></h1>
+<h1><%=content.getTitle()%></h1>
 
-<table style="border: none; height: 90%; ">
+<table style="border: none; height: 90%;">
 	<tr valign="top">
-		<td style="padding-top: 20px; padding-right: 20px; background-color: cornsilk">
+		<td
+			style="padding-top: 20px; padding-right: 20px; background-color: cornsilk">
 		<%
-		final String naviRootPath = "/sample/content";
-		Content naviRoot = new Content() {
-		    public String getComponentId() {
-		        return Navigation.class.getName();
-		    }
-		    public String getPath() {
-		        return naviRootPath;
-		    }
-		};
-		%> <sling:include content="<%= naviRoot %>" />
-		</td>
+		    final String naviRootPath = "/sample/content";
+		    Resource naviRoot = new SyntheticResource(naviRootPath,
+		        Navigation.RESOURCE_TYPE);
+		%> <sling:include resource="<%= naviRoot %>" /></td>
 		<td>
 		<table>
 			<tr>
