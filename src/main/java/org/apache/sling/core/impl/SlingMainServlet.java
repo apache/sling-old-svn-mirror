@@ -41,6 +41,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
@@ -55,6 +56,7 @@ import org.apache.sling.core.impl.filter.SlingFilterChainHelper;
 import org.apache.sling.core.impl.helper.AbstractServiceReferenceConfig;
 import org.apache.sling.core.impl.helper.SlingFilterConfig;
 import org.apache.sling.core.impl.helper.SlingServletContext;
+import org.apache.sling.core.impl.request.ContentData;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.impl.services.ServiceLocatorImpl;
 import org.apache.sling.core.impl.servlets.ErrorHandler;
@@ -65,7 +67,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.ComponentException;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
@@ -213,7 +214,7 @@ public class SlingMainServlet extends GenericServlet {
 
     public void includeServlet(ServletRequest request,
             ServletResponse response, String path) throws IOException,
-            ComponentException {
+            ServletException {
 
         // check type of response, don't care actually for the response itself
         RequestData.unwrap(response);
@@ -224,20 +225,15 @@ public class SlingMainServlet extends GenericServlet {
         RequestDispatcher rd = requestData.getServletRequest().getRequestDispatcher(
             path);
         if (rd != null) {
-            try {
-                rd.include(request, response);
-            } catch (ServletException se) {
-                throw new ComponentException(se.getMessage(), se);
-            }
+            rd.include(request, response);
         } else {
-            throw new ComponentException("Got no request dispatcher for "
-                + path);
+            throw new SlingException("Got no request dispatcher for " + path);
         }
     }
 
     public void includeContent(ServletRequest request,
             ServletResponse response, Resource resource,
-            RequestPathInfo resolvedURL) throws IOException, ComponentException {
+            RequestPathInfo resolvedURL) throws IOException, ServletException {
 
         // we need a ComponentRequest/ComponentResponse tupel to continue
         SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
@@ -245,12 +241,14 @@ public class SlingMainServlet extends GenericServlet {
 
         // get the request data (and btw check the correct type)
         RequestData requestData = RequestData.getRequestData(cRequest);
-        requestData.pushContent(resource, resolvedURL);
+        ContentData contentData = requestData.pushContent(resource, resolvedURL);
 
         try {
+            // resolve the servlet
+            Servlet servlet = getServletResolver().resolveServlet(cRequest);
+            contentData.setServlet(servlet);
+
             processRequest(cRequest, cResponse);
-        } catch (ServletException se) {
-            throw new ComponentException(se.getMessage(), se);
         } finally {
             requestData.popContent();
         }
@@ -492,8 +490,8 @@ public class SlingMainServlet extends GenericServlet {
             // register by scope
             getChain(ref).addFilter(filter, serviceId, order);
 
-        } catch (ComponentException ce) {
-            log.error("ComponentFilter " + "" + " failed to initialize", ce);
+        } catch (ServletException ce) {
+            log.error("Filter " + filterName + " failed to initialize", ce);
         } catch (Throwable t) {
             log.error("Unexpected Problem initializing ComponentFilter " + "",
                 t);
