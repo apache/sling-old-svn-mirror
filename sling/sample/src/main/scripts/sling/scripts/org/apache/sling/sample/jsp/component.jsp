@@ -18,21 +18,24 @@
 --%>
 <%@page session="false" %>
 <%@page import="org.apache.sling.sample.*" %>
-<%@page import="org.apache.sling.component.*" %>
 <%@page import="java.util.*" %>
-<%@taglib prefix="sling" uri="http://jackrabbit.apache.org/taglibs/sling/1.0" %>
+<%@page import="org.apache.sling.api.resource.Resource"%>
+<%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %>
 
 <%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects contentClass="SampleContent"/>
+<sling:defineObjects />
+<%
+    SampleContent content = (SampleContent) slingRequest.getResource().getObject();
+%>
 
 <h1><%= content.getTitle() %></h1>
 <p><%= content.getText() %></p>
 <table border="1" cellpadding="3" cellspacing="0">
 <%
-	Enumeration ci = renderRequest.getChildren(content);
-	while (ci.hasMoreElements()) {
-		Content child = (Content) ci.nextElement();
-		%><tr><td><sling:include content="<%= child %>" /></td></tr><%
+	Iterator<Resource> ci = slingRequest.getResourceResolver().listChildren(slingRequest.getResource());
+	while (ci.hasNext()) {
+		Resource child = ci.next();
+		%><tr><td><sling:include resource="<%= child %>" /></td></tr><%
 	}
 %>
 </table>
