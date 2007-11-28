@@ -20,14 +20,15 @@ package org.apache.sling.sample;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Enumeration;
+import java.util.Iterator;
 
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
-import org.apache.sling.component.Content;
-import org.apache.sling.core.Constants;
-import org.apache.sling.core.components.BaseComponent;
+import javax.servlet.ServletException;
+
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * The <code>Navigation</code> class is a very simple navigation component
@@ -38,61 +39,61 @@ import org.apache.sling.core.components.BaseComponent;
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Sample Navigation Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.component.Component"
+ * @scr.property name="sling.core.resourceTypes" value="sling.sample.navigation"
+ * @scr.service
  */
-public class Navigation extends BaseComponent {
+public class Navigation extends SlingSafeMethodsServlet {
+
+    public static final String RESOURCE_TYPE = "sling.sample.navigation";
 
     @Override
-    protected void doInit() {
-        // nothing to do
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
+        listChildren(request, response, request.getResource());
     }
 
-    public void service(ComponentRequest request, ComponentResponse response)
-            throws ComponentException, IOException {
-
-        // start the navigation at the location of the current content
-        listChildren(request, response, request.getContent());
-
-    }
-
-    private void listChildren(ComponentRequest request,
-            ComponentResponse response, Content current)
-            throws ComponentException, IOException {
+    private void listChildren(SlingHttpServletRequest request,
+            SlingHttpServletResponse response, Resource current)
+            throws ServletException, IOException {
 
         // / the children of the current content, terminate if there are none
-        Enumeration<Content> children = request.getChildren(current);
-        if (!children.hasMoreElements()) {
+        Iterator<Resource> children = request.getResourceResolver().listChildren(
+            current);
+        if (!children.hasNext()) {
             return;
         }
 
         // to not draw the link to the content of the current page, we
         // retrieve the path of the page level content
-        Content requestContent = (Content) request.getAttribute(Constants.ATTR_REQUEST_CONTENT);
-        String requestPath = requestContent.getPath();
+        Resource requestContent = (Resource) request.getAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
+        String requestPath = requestContent.getURI();
 
         PrintWriter pw = response.getWriter();
         pw.println("<ul>");
 
-        while (children.hasMoreElements()) {
-            Content child = children.nextElement();
+        while (children.hasNext()) {
+            Resource childResource = children.next();
 
             // if the child is a page, add an entry with optional link and
             // recursively call this method to draw the children of the child
+            Object child = childResource.getObject();
             if (child instanceof SamplePage) {
-                String title = ((SamplePage) child).getTitle();
+                SamplePage page = (SamplePage) child;
+                String title = page.getTitle();
                 pw.print("<li>");
 
-                if (child.getPath().equals(requestPath)) {
+                if (page.getPath().equals(requestPath)) {
                     pw.print(title);
                 } else {
-                    pw.print("<a href=\"" + child.getPath() + ".html\">");
+                    pw.print("<a href=\"" + page.getPath() + ".html\">");
                     pw.print(title);
                     pw.print("</a>");
                 }
                 pw.println("</li>");
 
                 // children of the current page, too
-                listChildren(request, response, child);
+                listChildren(request, response, childResource);
             }
         }
 

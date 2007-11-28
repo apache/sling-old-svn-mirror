@@ -18,14 +18,14 @@
  */
 package org.apache.sling.sample;
 
-import org.apache.sling.content.jcr.BaseContent;
+import org.apache.sling.jcr.resource.AbstractMappedObject;
 
 /**
  * The <code>SamplePage</code> is a page level sample content object
  *
  * @ocm.mapped jcrType="sling:SamplePage"
  */
-public class SamplePage extends BaseContent {
+public class SamplePage extends AbstractMappedObject {
 
     /** @ocm.field */
     private String title;
