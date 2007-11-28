@@ -132,39 +132,42 @@ public class SlingRequestPathInfo implements RequestPathInfo {
 
     public SlingRequestPathInfo merge(RequestDispatcherOptions options) {
 
-        // set to true if any option is set
-        boolean needCreate = false;
+        if (options != null) {
 
-        // replacement selectors
-        String selectors = options.get(RequestDispatcherOptions.OPT_REPLACE_SELECTORS);
-        if (selectors != null) {
-            needCreate = true;
-        } else {
-            selectors = getSelectorString();
-        }
+            // set to true if any option is set
+            boolean needCreate = false;
 
-        // additional selectors
-        String selectorsAdd = options.get(RequestDispatcherOptions.OPT_ADD_SELECTORS);
-        if (selectorsAdd != null) {
+            // replacement selectors
+            String selectors = options.get(RequestDispatcherOptions.OPT_REPLACE_SELECTORS);
             if (selectors != null) {
-                selectors += "." + selectorsAdd;
+                needCreate = true;
             } else {
-                selectors = selectorsAdd;
+                selectors = getSelectorString();
             }
-            needCreate = true;
-        }
 
-        // suffix replacement
-        String suffix = options.get(RequestDispatcherOptions.REPLACE_SUFFIX);
-        if (suffix != null) {
-            needCreate = true;
-        } else {
-            suffix = getSuffix();
-        }
+            // additional selectors
+            String selectorsAdd = options.get(RequestDispatcherOptions.OPT_ADD_SELECTORS);
+            if (selectorsAdd != null) {
+                if (selectors != null) {
+                    selectors += "." + selectorsAdd;
+                } else {
+                    selectors = selectorsAdd;
+                }
+                needCreate = true;
+            }
 
-        if (needCreate) {
-            return new SlingRequestPathInfo(getResourcePath(), selectors,
-                getExtension(), suffix);
+            // suffix replacement
+            String suffix = options.get(RequestDispatcherOptions.REPLACE_SUFFIX);
+            if (suffix != null) {
+                needCreate = true;
+            } else {
+                suffix = getSuffix();
+            }
+
+            if (needCreate) {
+                return new SlingRequestPathInfo(getResourcePath(), selectors,
+                    getExtension(), suffix);
+            }
         }
 
         return this;
