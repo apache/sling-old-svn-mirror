@@ -77,12 +77,15 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             // ensure request path info and optional merges
             SlingRequestPathInfo info = new SlingRequestPathInfo(resource, path);
             info = info.merge(cRequest.getRequestPathInfo());
-            info = info.merge(options);
 
-            // ensure overwritten resource type
-            String rtOverwrite = options.get(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
-            if (rtOverwrite != null && !rtOverwrite.equals(resource.getResourceType())) {
-                resource = new ResourceWrapper(resource, rtOverwrite);
+            if (options != null) {
+                info = info.merge(options);
+
+                // ensure overwritten resource type
+                String rtOverwrite = options.get(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
+                if (rtOverwrite != null && !rtOverwrite.equals(resource.getResourceType())) {
+                    resource = new ResourceWrapper(resource, rtOverwrite);
+                }
             }
 
             rd.getSlingMainServlet().includeContent(request, response,
