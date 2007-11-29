@@ -105,6 +105,47 @@ public class EspReaderTest extends TestCase {
     public void testComment() throws IOException {
         assertEquals("", parse("<%-- test(); --%>"));
     }
+    
+    /** Test a complete template, using all features */
+    public void testCompleteTemplate() throws IOException {
+        final String input =
+            "<html>\n"
+            + "<head><title><%= someExpr %></title></head>\n"
+            + "<!-- some HTML comment -->\n"
+            + "<-- some ESP comment -->\n"
+            + "// some javascript comment\n"
+            + "/* another javascript comment /*\n"
+            + "<%\n"
+            + "expr on\n"
+            + "two lines\n"
+            + "%>\n"
+            + "<verbatim stuff=\"quoted\">xyz</verbatim>\n"
+            + "<moreverbatim stuff=\'single\'>xx</moreverbatim>\n"
+            + "<!-- HTML comment with <% expr.here; %> and EOL\n-->\n"
+            + "</html>"
+        ;
+        
+        final String expected = 
+            "out=response.writer;out.write(\"<html>\\n\");\n"
+            + "out.write(\"<head><title>\");out.write( someExpr );out.write(\"</title></head>\\n\");\n"
+            + "out.write(\"<!-- some HTML comment -->\\n\");\n"
+            + "out.write(\"<-- some ESP comment -->\\n\");\n"
+            + "out.write(\"// some javascript comment\\n\");\n"
+            + "out.write(\"/* another javascript comment /*\\n\");\n"
+            + "\n"
+            + "expr on\n"
+            + "two lines\n"
+            + "out.write(\"\\n\");\n"
+            + "out.write(\"<verbatim stuff=\\\"quoted\\\">xyz</verbatim>\\n\");\n"
+            + "out.write(\"<moreverbatim stuff='single'>xx</moreverbatim>\\n\");\n"
+            + "out.write(\"<!-- HTML comment with \"); expr.here; out.write(\" and EOL\\n\");\n"
+            + "out.write(\"-->\\n\");\n"
+            + "out.write(\"</html>\");"
+        ;
+        
+        final String actual = parse(input);
+        assertEquals(flatten(expected), flatten(actual));
+    }
 
     /** Helper to pass an ESP text through the EspReader and return the result */
     private String parse(String text) throws IOException {
@@ -117,5 +158,10 @@ public class EspReaderTest extends TestCase {
         }
 
         return buf.toString();
+    }
+    
+    /** Replace \n with . in strings to make it easier to compare visually for testing */
+    private static String flatten(String str) {
+        return str.replace('\n', '.');
     }
 }
