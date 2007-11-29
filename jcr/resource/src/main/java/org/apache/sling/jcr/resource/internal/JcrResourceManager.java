@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -41,17 +40,22 @@ import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.DefaultMappedObject;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.PathResolver;
+import org.apache.sling.jcr.resource.internal.helper.BundleResource;
+import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
+import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,22 +130,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             if (path.length() == 0) {
                 // return the base resource
                 return base;
-            } else if (base.getRawData() instanceof Node) {
-                try {
-                    Node baseNode = (Node) base.getRawData();
-                    if (baseNode.hasNode(path)) {
-                        return new JcrNodeResource(this, baseNode.getNode(path));
-                    }
-
-                    log.error("getResource: There is no node at {} below {}",
-                        path, base.getURI());
-                    return null;
-                } catch (RepositoryException re) {
-                    log.error(
-                        "getResource: Problem accessing relative resource at "
-                            + path, re);
-                    return null;
-                }
+            } else if (base instanceof Descendable) {
+                return ((Descendable) base).getDescendent(path);
             }
         }
 
@@ -150,17 +140,18 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         return getResource(path);
     }
 
-    public Iterator<Resource> listChildren(final Resource parent)
-            throws SlingException {
-        if (parent.getRawData() instanceof Node) {
+    public Iterator<Resource> listChildren(Resource parent) {
+        if (parent instanceof Descendable) {
+            return ((Descendable) parent).listChildren();
+        }
 
-            try {
-                return new JcrNodeResourceIterator(this,
-                    ((Node) parent.getRawData()).getNodes());
-            } catch (RepositoryException re) {
-                throw new SlingException("Cannot get children of Resource "
-                    + parent, re);
+        try {
+            parent = getResource(parent.getURI());
+            if (parent instanceof Descendable) {
+                return ((Descendable) parent).listChildren();
             }
+        } catch (SlingException se) {
+            log.warn("listChildren: Error trying to resolve parent resource " + parent.getURI(), se);
         }
 
         // return an empty iterator if parent has no node
@@ -308,14 +299,15 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      */
     public void store(Resource resource) throws SlingException {
         String path = resource.getURI();
-        if (resource.getObject() != null) {
+        if (resource instanceof ObjectProvider) {
+            Object data = ((ObjectProvider) resource).getObject();
             try {
                 if (itemExists(path)) {
                     checkPermission(path, ACTION_SET_PROPERTY);
-                    getObjectContentManager().update(resource.getObject());
+                    getObjectContentManager().update(data);
                 } else {
                     checkPermission(path, ACTION_CREATE);
-                    getObjectContentManager().insert(resource.getObject());
+                    getObjectContentManager().insert(data);
                 }
             } catch (RepositoryException re) {
                 throw new SlingException("Problem storing object for resource "
@@ -370,10 +362,10 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
                 // recursively copy directly in the repository
                 getSession().getWorkspace().copy(source, destination);
             } else {
-                Object copied = getObjectContentManager().getObject(
-                    resource.getObject().getClass(), source);
-                setPath(copied, destination);
-                getObjectContentManager().insert(copied);
+                // TODO: Create node at destination:
+                //     - same primary node type
+                //     - same mixins
+                //     - same non-protected properties
             }
 
         } catch (AccessControlException ace) {
@@ -408,13 +400,13 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             throws SlingException {
 
         String path = resource.getURI();
-        if (!(resource.getRawData() instanceof Item)) {
-            log.info("orderBefore: Resource {} has no attached Item", path);
+        if (!(resource instanceof NodeProvider)) {
+            log.info("orderBefore: Resource {} is not based on a JCR", path);
             return;
         }
 
         try {
-            Node parent = ((Item) resource.getRawData()).getParent();
+            Node parent = ((NodeProvider) resource).getNode().getParent();
 
             // check whether the parent node supports child node ordering
             if (!parent.getPrimaryNodeType().hasOrderableChildNodes()) {
@@ -571,11 +563,22 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      */
     protected Resource getResourceInternal(String path, Class<?> type)
             throws RepositoryException {
+
+        // check bundle resources
+        Bundle bundle = factory.getBundleForResource(path);
+        if (bundle != null) {
+            Resource result = BundleResource.getResource(bundle, path);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        // check JCR repository
         if (itemExists(path)) {
             Resource result = new JcrNodeResource(this, getSession(), path, type);
             result.getResourceMetadata().put(ResourceMetadata.RESOLUTION_PATH,
                 path);
-            log.info("Found Resource at path '{}'", path);
+            log.info("Found JCR Node Resource at path '{}'", path);
             return result;
         }
 

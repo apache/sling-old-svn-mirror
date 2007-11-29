@@ -25,7 +25,6 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.jcr.Item;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.Session;
@@ -38,6 +37,7 @@ import javax.servlet.http.HttpSession;
 import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
@@ -109,8 +109,10 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
-        assertNotNull(res.getRawData());
-        assertTrue(rootNode.isSame((Item) res.getRawData()));
+
+        assertTrue(res instanceof NodeProvider);
+        assertNotNull(((NodeProvider) res).getNode());
+        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
 
         // missing resource
         String path = root + "/missing";
@@ -125,8 +127,10 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
-        assertNotNull(res.getRawData());
-        assertTrue(rootNode.isSame((Item) res.getRawData()));
+
+        assertTrue(res instanceof NodeProvider);
+        assertNotNull(((NodeProvider) res).getNode());
+        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
 
         // missing resource below root should resolve root
         String path = root + "/missing";
@@ -135,8 +139,10 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
-        assertNotNull(res.getRawData());
-        assertTrue(rootNode.isSame((Item) res.getRawData()));
+
+        assertTrue(res instanceof NodeProvider);
+        assertNotNull(((NodeProvider) res).getNode());
+        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
 
         // root with selectors/ext should resolve root
         path = root + ".print.a4.html";
@@ -145,8 +151,10 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
-        assertNotNull(res.getRawData());
-        assertTrue(rootNode.isSame((Item) res.getRawData()));
+
+        assertTrue(res instanceof NodeProvider);
+        assertNotNull(((NodeProvider) res).getNode());
+        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
 
         // missing resource should return NON_EXISTING Resource
         path = root + System.currentTimeMillis();
@@ -155,7 +163,9 @@ public class JcrResourceManagerTest extends TestCase {
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getURI());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
-        assertNull(res.getRawData());
+
+        assertTrue(res instanceof NodeProvider);
+        assertNull(((NodeProvider) res).getNode());
     }
 
     private static class ResourceManagerTestRequest implements HttpServletRequest {

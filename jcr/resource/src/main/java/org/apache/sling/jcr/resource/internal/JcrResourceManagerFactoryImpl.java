@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -199,11 +200,13 @@ public class JcrResourceManagerFactoryImpl implements
             case BundleEvent.STARTING: // STARTED:
                 // register mappings before the bundle gets activated
                 objectContentManagerFactory.registerMapperClient(event.getBundle());
+                addBundleResources(event.getBundle());
                 break;
 
             case BundleEvent.STOPPED:
                 // remove mappings after the bundle has stopped
                 objectContentManagerFactory.unregisterMapperClient(event.getBundle());
+                removeBundleResources(event.getBundle());
                 break;
 
             case BundleEvent.UNINSTALLED:
@@ -308,6 +311,49 @@ public class JcrResourceManagerFactoryImpl implements
         return mappings;
     }
 
+    // ---------- Bundle provided resources -----------------------------------
+
+    private Map<String, Bundle> bundleResourcesByPrefix = new HashMap<String, Bundle>();
+    private Map<Long, String[]> bundleResourcesByBundleId = new HashMap<Long, String[]>();
+
+    private void addBundleResources(Bundle bundle) {
+        String prefixes = (String) bundle.getHeaders().get("Sling-Resource-Prefixes");
+        if (prefixes != null) {
+            StringTokenizer pt = new StringTokenizer(prefixes, ", \t\n\r\f");
+            List<String> prefixList = new ArrayList<String>();
+            while (pt.hasMoreTokens()) {
+                String prefix = pt.nextToken().trim();
+                if (prefix.length() > 0) {
+                    bundleResourcesByPrefix.put(prefix, bundle);
+                    prefixList.add(prefix);
+                }
+            }
+            if (prefixList.size() > 0) {
+                bundleResourcesByBundleId.put(bundle.getBundleId(),
+                    prefixList.toArray(new String[prefixList.size()]));
+            }
+        }
+    }
+
+    private void removeBundleResources(Bundle bundle) {
+        String[] prefixes = bundleResourcesByBundleId.get(bundle.getBundleId());
+        if (prefixes != null) {
+            for (String prefix : prefixes) {
+                bundleResourcesByPrefix.remove(prefix);
+            }
+        }
+    }
+
+    Bundle getBundleForResource(String path) {
+        for (Map.Entry<String, Bundle> entry : bundleResourcesByPrefix.entrySet()) {
+            if (path.startsWith(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+
+        return null;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -323,16 +369,17 @@ public class JcrResourceManagerFactoryImpl implements
             Session session = getAdminSession(null);
 
             Bundle[] bundles = componentContext.getBundleContext().getBundles();
-            for (int i = 0; i < bundles.length; i++) {
-                if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+            for (Bundle bundle : bundles) {
+                if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
-                    initialContentLoader.registerBundle(session, bundles[i]);
+                    initialContentLoader.registerBundle(session, bundle);
                 }
 
-                if (bundles[i].getState() == Bundle.ACTIVE) {
+                if (bundle.getState() == Bundle.ACTIVE) {
                     // register active bundles with the mapper client
-                    objectContentManagerFactory.registerMapperClient(bundles[i]);
+                    objectContentManagerFactory.registerMapperClient(bundle);
+                    addBundleResources(bundle);
                 }
             }
         } catch (Throwable t) {

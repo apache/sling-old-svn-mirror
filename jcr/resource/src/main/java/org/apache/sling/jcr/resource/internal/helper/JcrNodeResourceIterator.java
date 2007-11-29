@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.jcr.resource.internal.JcrResourceManager;
 import org.slf4j.Logger;
@@ -51,6 +53,21 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
+    public JcrNodeResourceIterator(JcrNodeResource parent) {
+        try {
+            NodeIterator nodes = parent.getNode().getNodes();
+
+            this.resourceManager = parent.getResourceManager();
+            this.nodes = nodes;
+            this.nextResult = seek();
+        } catch (RepositoryException re) {
+            log.error("<init>: Cannot get children of resource " + parent, re);
+            this.resourceManager = null;
+            this.nodes = null;
+            this.nextResult = null;
+        }
+    }
+
     public JcrNodeResourceIterator(JcrResourceManager resourceManager,
             NodeIterator nodes) {
         this.resourceManager = resourceManager;
@@ -63,7 +80,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     }
 
     public Resource next() {
-        if (nextResult == null) {
+        if (!hasNext()) {
             throw new NoSuchElementException();
         }
 

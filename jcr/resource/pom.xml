@@ -79,6 +79,7 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.resource.internal.*,
+                            org.apache.jackrabbit.net,
                             org.apache.jackrabbit.ocm.lock,
                             org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl,
                             org.apache.jackrabbit.ocm.manager.beanconverter,
@@ -97,7 +98,9 @@
                             org.kxml2.io, org.xmlpull.v1
                         </Private-Package>
                         <Import-Package>
-                            org.apache.jackrabbit.ocm.mapper.impl.digester;resolution:=optional,*
+                            !org.apache.jackrabbit.classloader,
+                            !org.apache.jackrabbit.ocm.mapper.impl.digester,
+                            *
                         </Import-Package>
 
                         <Sling-Namespaces>
@@ -146,9 +149,16 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-ocm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-classloader</artifactId>
+            <version>1.3.1</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
