@@ -27,28 +27,43 @@ import static org.apache.sling.api.resource.ResourceMetadata.CHARACTER_ENCODING;
 import static org.apache.sling.api.resource.ResourceMetadata.CONTENT_TYPE;
 import static org.apache.sling.api.resource.ResourceMetadata.CREATION_TIME;
 import static org.apache.sling.api.resource.ResourceMetadata.MODIFICATION_TIME;
+import static org.apache.sling.api.resource.ResourceMetadata.RESOLUTION_PATH;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Iterator;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.net.URLFactory;
+import org.apache.sling.api.resource.NodeProvider;
+import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.StreamProvider;
+import org.apache.sling.api.resource.URLProvider;
 import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource implements Resource {
+public class JcrNodeResource implements Resource, NodeProvider, StreamProvider,
+        ObjectProvider, URLProvider, Descendable {
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final Object UNDEFINED = "undefined";
 
     /** The relative path name of the data property of an nt:file node */
     private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;
 
-    private final JcrResourceManager cMgr;
+    private final JcrResourceManager resourceManager;
 
     private final Node node;
 
@@ -62,21 +77,9 @@ public class JcrNodeResource implements Resource {
 
     private final ResourceMetadata metadata;
 
-    public JcrNodeResource(JcrResourceManager cMgr, Session s, String path)
-            throws RepositoryException {
-        this.cMgr = cMgr;
-        node = (Node) s.getItem(path);
-        this.path = node.getPath();
-        metadata = new ResourceMetadata();
-        resourceType = getResourceTypeForNode(node);
-
-        // check for nt:file metadata
-        setMetaData(node, metadata);
-    }
-
     public JcrNodeResource(JcrResourceManager cMgr, Session s, String path,
             Class<?> type) throws RepositoryException {
-        this.cMgr = cMgr;
+        this.resourceManager = cMgr;
         node = (Node) s.getItem(path);
         this.path = node.getPath();
         metadata = new ResourceMetadata();
@@ -87,25 +90,17 @@ public class JcrNodeResource implements Resource {
         setMetaData(node, metadata);
     }
 
-    public JcrNodeResource(JcrResourceManager cMgr, Node node)
+    public JcrNodeResource(JcrResourceManager resourceManager, Node node)
             throws RepositoryException {
-        this.cMgr = cMgr;
+        this.resourceManager = resourceManager;
         this.node = node;
         this.path = node.getPath();
         metadata = new ResourceMetadata();
-        metadata.put(ResourceMetadata.RESOLUTION_PATH, path);
+        metadata.put(RESOLUTION_PATH, path);
         resourceType = getResourceTypeForNode(node);
 
         // check for nt:file metadata
         setMetaData(node, metadata);
-    }
-
-    public String toString() {
-        return "JcrNodeResource, type=" + resourceType + ", path=" + path;
-    }
-
-    public Object getRawData() {
-        return node;
     }
 
     public String getURI() {
@@ -116,18 +111,25 @@ public class JcrNodeResource implements Resource {
         return resourceType;
     }
 
-    public Object getObject() {
-        if (object == UNDEFINED) {
-            // lazy loaded object
-            object = cMgr.getObject(getURI(), objectType);
-        }
-
-        return object;
-    }
-
     public ResourceMetadata getResourceMetadata() {
         return metadata;
     }
+
+    JcrResourceManager getResourceManager() {
+        return resourceManager;
+    }
+
+    public String toString() {
+        return "JcrNodeResource, type=" + resourceType + ", path=" + path;
+    }
+
+    //---------- NodeProvider interface ---------------------------------------
+
+    public Node getNode() {
+        return node;
+    }
+
+    //---------- StreamProvider interface -------------------------------------
 
     /**
      * Returns a stream to the <em>jcr:content/jcr:data</em> property if the
@@ -136,12 +138,11 @@ public class JcrNodeResource implements Resource {
      */
     public InputStream getInputStream() throws IOException {
         // implement this for nt:file only
-        if (!(getRawData() instanceof Node)) {
+        if (getNode() == null) {
             return null;
         }
 
         try {
-            Node node = (Node) getRawData();
             if (node.isNodeType(NT_FILE) && node.hasProperty(FILE_DATA_PROP)) {
                 return node.getProperty(FILE_DATA_PROP).getStream();
             }
@@ -152,6 +153,51 @@ public class JcrNodeResource implements Resource {
 
         // fallback to non-streamable resource
         return null;
+    }
+
+    //---------- ObjectProvider interface ---------------------------------------
+
+    public Object getObject() {
+        if (object == UNDEFINED) {
+            // lazy loaded object
+            object = resourceManager.getObject(getURI(), objectType);
+        }
+
+        return object;
+    }
+
+    //---------- URLProvider interface ----------------------------------------
+
+    public URL getURL() throws MalformedURLException {
+        try {
+            return URLFactory.createURL(node.getSession(), node.getPath());
+        } catch (RepositoryException re) {
+            throw (MalformedURLException) new MalformedURLException(
+                "Cannot create URL for " + this).initCause(re);
+        }
+    }
+
+    //---------- Descendable interface ----------------------------------------
+
+    public Iterator<Resource> listChildren() {
+        return new JcrNodeResourceIterator(this);
+    }
+
+    public Resource getDescendent(String relPath) {
+        try {
+            if (node.hasNode(relPath)) {
+                return new JcrNodeResource(resourceManager, node.getNode(relPath));
+            }
+
+            log.error("getResource: There is no node at {} below {}",
+                path, getURI());
+            return null;
+        } catch (RepositoryException re) {
+            log.error(
+                "getResource: Problem accessing relative resource at "
+                    + path, re);
+            return null;
+        }
     }
 
     /**
