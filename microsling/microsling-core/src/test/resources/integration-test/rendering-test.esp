@@ -2,6 +2,6 @@
 <html>
 	<body>
 		ESP template
-		<p><%= resource.item.text %></p>
+		<p><%= resource.node.text %></p>
 	</body>
 </html>

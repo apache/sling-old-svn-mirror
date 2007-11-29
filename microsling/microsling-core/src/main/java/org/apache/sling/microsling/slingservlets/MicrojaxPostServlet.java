@@ -91,7 +91,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
             // select the Resource to process
             Resource currentResource = request.getResource();
-            Node currentNode = ((NodeProvider)currentResource).getNode();
+            Node currentNode = (currentResource instanceof NodeProvider)
+                    ? ((NodeProvider) currentResource).getNode()
+                    : null;
 
             // need a Node, path and Session
             String currentPath = null;

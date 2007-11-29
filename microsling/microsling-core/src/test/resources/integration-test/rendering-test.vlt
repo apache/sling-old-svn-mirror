@@ -2,6 +2,6 @@
 <html>
 	<body>
 		Velocity template
-		<p><b>$resource.getRawData().getProperty("text").getString()</b></p>
+		<p><b>$resource.getNode().getProperty("text").getString()</b></p>
 	</body>
 </html>

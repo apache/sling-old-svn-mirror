@@ -58,7 +58,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
 
         microjaxGetServlet = new MicrojaxGetServlet();
         microjaxGetServlet.init(new MicroslingServletConfig("Microjax GET servlet",getServletContext()));
-        
+
         String contentType = null;
         final String ctSuffix = "; charset=UTF-8";
 
@@ -85,12 +85,12 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
             if (path.startsWith(MicrojaxGetServlet.URI_PREFIX)) {
                 microjaxGetServlet.service(req, resp);
                 return;
-                
+
             } else if (path.startsWith("/WEB-INF") || path.startsWith("/META-INF")) {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_FORBIDDEN,
                         "Access to " + path + " denied");
             }
-            
+
             URL url = getServletContext().getResource(path);
             if (url != null) {
                 spool(url, resp);
@@ -98,10 +98,9 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                         "Resource not found: " + r.getURI());
             }
-        }
+        } else if(r instanceof NodeProvider) {
 
-        // make sure we have an Item, and render it via one of our renderingServlets
-        if(r instanceof NodeProvider) {
+            // make sure we have an Item, and render it via one of our renderingServlets
             final String suffix = req.getRequestPathInfo().getSuffix();
             if(suffix != null && suffix.length() > 0) {
                 // accept exact addressing only for default rendering:
