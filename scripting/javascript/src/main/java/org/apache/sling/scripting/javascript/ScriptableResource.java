@@ -16,8 +16,8 @@
  */
 package org.apache.sling.scripting.javascript;
 
-import javax.jcr.Node;
-
+import org.apache.sling.api.resource.NodeProvider;
+import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
@@ -44,29 +44,22 @@ public class ScriptableResource extends ScriptableObject {
     }
 
     public Object jsFunction_getObject() {
-        return resource.getObject();
-    }
-
-    public Object jsFunction_getRawData() {
-        return resource.getRawData();
-    }
-
-    /** alias for getRawData */
-    public Object jsGet_item() {
-        if (resource.getRawData() instanceof Node) {
-            return new ScriptableNode((Node) resource.getRawData());
+        if (resource instanceof ObjectProvider) {
+            return ((ObjectProvider) resource).getObject();
         }
         return Undefined.instance;
     }
 
-    public Object jsGet_rawData() {
-        if (resource.getRawData() instanceof Node) {
-            return new ScriptableNode((Node) resource.getRawData());
-        } else if (resource.getRawData() != null) {
-            return Context.javaToJS(resource.getRawData(), this);
-        } else {
-            return Undefined.instance;
+    public Object jsFunction_getNode() {
+        if (resource instanceof NodeProvider) {
+            return new ScriptableNode(((NodeProvider) resource).getNode());
         }
+        return Undefined.instance;
+    }
+
+    /** alias for getNode */
+    public Object jsGet_node() {
+        return jsFunction_getNode();
     }
 
     public String jsFunction_getResourceType() {
