@@ -102,13 +102,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 s = currentNode.getSession();
             } else {
                 currentPath = SlingRequestPaths.getPathInfo(request);
-                // TODO not very convenient way to get a Session...
-                final Resource root = request.getResourceResolver().getResource("/");
-                final Node rootNode = ((NodeProvider)root).getNode();
-                if(rootNode == null) {
-                    throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Root Node not found");
-                }
-                s = rootNode.getSession();
+                s = (Session)request.getAttribute(Session.class.getName());
             }
 
             final String [] pathsToDelete = request.getParameterValues(RP_DELETE_PATH);

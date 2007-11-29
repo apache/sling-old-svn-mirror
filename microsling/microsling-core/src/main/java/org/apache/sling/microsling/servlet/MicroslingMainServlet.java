@@ -167,9 +167,11 @@ public class MicroslingMainServlet extends GenericServlet {
             return;
         }
 
+        // get a Session and make it available as a Request attribute
         Session session = authenticate(req);
+        req.setAttribute(Session.class.getName(), session);
+        
         try {
-
             MicroslingSlingHttpServletRequest request = new MicroslingSlingHttpServletRequest(
                 hReq, session, serviceLocator);
             MicroslingSlingHttpServletResponse response = new MicroslingSlingHttpServletResponse(
