@@ -105,11 +105,6 @@ public class JcrNodeResource implements Resource, NodeProvider, StreamProvider {
         return metadata;
     }
 
-    /**
-     * Returns a stream to the <em>jcr:content/jcr:data</em> property if the
-     * {@link #getRawData() raw data} is an <em>nt:file</em> node. Otherwise
-     * returns <code>null</code>.
-     */
     public InputStream getInputStream() throws IOException {
         // implement this for nt:file only
         if (node == null) {
