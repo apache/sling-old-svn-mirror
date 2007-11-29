@@ -114,6 +114,21 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
+            <name>nodeName</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>mappedObjectName</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>mappedObjectClass</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
             <name>resourceManagerName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
