@@ -55,7 +55,17 @@ public class PostServletCreateTest extends MicroslingHttpTestBase {
         final String location = testClient.createNode(specifiedLocation, null);
         assertHttpStatus(location, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
-        assertTrue("Node (" + location + ") must created at given URL (" + specifiedLocation + ")",
+        assertTrue("Node (" + location + ") must be created at given URL (" + specifiedLocation + ")",
+                location.equals(specifiedLocation));
+    }
+    
+    public void testCreateNodeAtDeepUrl() throws IOException {
+        final long id = System.currentTimeMillis();
+        final String specifiedLocation = postUrl + "/specified-location" + id + "/deepA/deepB/" + id;
+        final String location = testClient.createNode(specifiedLocation, null);
+        assertHttpStatus(location, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must be created (deep) at given URL (" + specifiedLocation + ")",
                 location.equals(specifiedLocation));
     }
     
