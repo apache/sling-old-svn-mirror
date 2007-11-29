@@ -88,6 +88,23 @@ public class EspReaderTest extends TestCase {
         assertEquals("out=response.writer;out.write(\"test\");", parse("test"));
         assertEquals("out=response.writer;out.write(\"test\\n\");\nout.write(\"test2\");", parse("test\ntest2"));
     }
+    
+    /** Test with a custom "out" initialization */
+    public void testOutInit() throws IOException {
+        final String input = "test";
+        final String expected = "out=getOut();out.write(\"test\");";
+            
+        StringBuffer buf = new StringBuffer();
+
+        EspReader r = new EspReader(new StringReader(input));
+        r.setOutInitStatement("out=getOut();");
+        int c;
+        while ( (c=r.read()) >= 0) {
+            buf.append( (char) c);
+        }
+
+        assertEquals(expected, buf.toString());
+    }
 
     /** Test plain JavaScript code */
     public void testCode() throws IOException {
