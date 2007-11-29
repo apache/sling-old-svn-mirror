@@ -77,7 +77,7 @@ public class NodetypeRenderingTest extends RenderingTestBase {
     }
 
     public void testEspPlain() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.esp","plain.esp");
+        final String toDelete = uploadTestScript("rendering-test.esp","txt.esp");
         try {
             final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
             assertTrue("Content includes ESP marker",content.contains("ESP template"));

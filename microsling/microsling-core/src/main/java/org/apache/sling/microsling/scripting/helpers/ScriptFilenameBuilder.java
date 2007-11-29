@@ -41,7 +41,7 @@ public class ScriptFilenameBuilder {
     public static final String SCRIPT_BASE_PATH = "/sling/scripts";
 
     /** @return a name like "html.js" or "print/a4/html.vlt" or "POST.js" */
-    public String buildScriptFilename(String methodName,String selectors,String contentType,String scriptExtension) {
+    public String buildScriptFilename(String methodName,String selectors,String requestExtension,String scriptExtension) {
         final StringBuffer sb = new StringBuffer();
 
         // path before filename:
@@ -57,15 +57,13 @@ public class ScriptFilenameBuilder {
             sb.append("NO_METHOD");
 
         } else if(HttpConstants.METHOD_GET.equalsIgnoreCase(methodName)) {
-            // for the GET method, use the simplified content-type, lowercased,
+            // for the GET method, use the request extension, lowercased,
             // as the filename.
             // TODO: how to handle HEAD?
-            if(contentType == null || contentType.length() == 0) {
-                sb.append("NO_CONTENT_TYPE");
+            if(requestExtension==null || requestExtension.length() == 0) {
+                sb.append(HttpConstants.METHOD_GET);
             } else {
-                // keep only what follows slash in the content-type
-                final String [] splitContentType = contentType.split("/");
-                sb.append(splitContentType[splitContentType.length - 1].toLowerCase());
+                sb.append(requestExtension.toLowerCase());
             }
 
         } else {

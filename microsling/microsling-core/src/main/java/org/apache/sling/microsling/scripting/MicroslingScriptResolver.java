@@ -167,7 +167,8 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
             request.getMethod(),
             request.getRequestPathInfo().getSelectorString(),
-            request.getResponseContentType(), "*");
+            request.getRequestPathInfo().getExtension(), 
+            "*");
         String scriptPath = scriptFilenameBuilder.buildScriptPath(r);
 
         // SLING-72: if the scriptfilename contains a relative path, move that

@@ -193,6 +193,10 @@
     <mime-type>application/vnd.ms-powerpoint</mime-type>
   </mime-mapping>
   <mime-mapping>
+    <extension>xls</extension>
+    <mime-type>application/vnd.ms-excel</mime-type>
+  </mime-mapping>  
+  <mime-mapping>
     <extension>vcd</extension>
     <mime-type>application/x-cdlink</mime-type>
   </mime-mapping>

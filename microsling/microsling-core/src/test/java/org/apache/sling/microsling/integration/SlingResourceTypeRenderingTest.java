@@ -69,6 +69,41 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         }
     }
 
+    public void testEspHtmlUppercase() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
+        try {
+            final String content = getContent(displayUrl + ".HTML", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testEspNoExtension() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.esp","GET.esp");
+        try {
+            final String content = getContent(displayUrl, CONTENT_TYPE_PLAIN);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    /** SLING-107, verify that extension is used instead of Content-Type for script name */
+    public void testEspJs() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.esp","js.esp");
+        try {
+            final String content = getContent(displayUrl + ".js", CONTENT_TYPE_JS);
+            // template makes no JS sense, that's not a problem for this test
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
     public void testEspXml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","xml.esp");
         try {
@@ -81,7 +116,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
     }
 
     public void testEspPlain() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.esp","plain.esp");
+        final String toDelete = uploadTestScript("rendering-test.esp","txt.esp");
         try {
             final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
             assertTrue("Content includes ESP marker",content.contains("ESP template"));
