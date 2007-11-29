@@ -37,6 +37,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -295,12 +296,17 @@ public class DefaultServlet extends SlingAllMethodsServlet {
 
     @SuppressWarnings("unchecked")
     private Map<Object, Object> asMap(Resource resource) {
-        Object object = resource.getObject();
-        if (object instanceof Map) {
-            return (Map<Object, Object>) object; // unchecked cast
+        if (resource instanceof ObjectProvider) {
+            Object object = ((ObjectProvider) resource).getObject();
+            if (object instanceof Map) {
+                return (Map<Object, Object>) object; // unchecked cast
+            }
+
+            return new BeanMap(object); // unchecked cast
         }
 
-        return new BeanMap(object); // unchecked cast
+        // no objects available
+        return null;
     }
 
     private Object toObject(RequestParameter parameter) throws IOException {
