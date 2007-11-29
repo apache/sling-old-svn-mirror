@@ -2,6 +2,6 @@
 <html>
 	<body>
 		FreeMarker template
-		<p><span>${resource.getRawData().getProperty("text").getString()}</span></p>
+		<p><span>${resource.getNode().getProperty("text").getString()}</span></p>
 	</body>
 </html>

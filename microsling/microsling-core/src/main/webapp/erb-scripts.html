@@ -24,7 +24,7 @@
 &lt;html>
   &lt;body>
     &lt;p>&lt;span>This is an example Erb template &lt;%= Time.now %>&lt;/span>&lt;/p>
-    &lt;p>&lt;span>&lt;%= resource.getRawData().getProperty("text").getString() %>&lt;/span>&lt;/p>
+    &lt;p>&lt;span>&lt;%= resource.getNode().getProperty("text").getString() %>&lt;/span>&lt;/p>
     &lt;% unless props.nil? or props.empty? %>
       &lt;table>
         &lt;% for prop, val in props %>

@@ -2,7 +2,7 @@
 <html>
   <body>
     <p><span>Ruby template <%= Time.now %></span></p>
-		<p><span><%= resource.getRawData().getProperty("text").getString() %></span></p>
+		<p><span><%= resource.getNode().getProperty("text").getString() %></span></p>
     <% unless props.nil? or props.empty? %>
       <table>
         <% for prop, val in props %>

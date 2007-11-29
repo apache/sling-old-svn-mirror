@@ -76,10 +76,10 @@
 &lt;p>This page is generated from an ESP template!&lt;/p>
 &lt;h1>&lt;%= resource.getURI() %>&lt;/h1>
 &lt;%
-  for (var prop in resource.rawData) {
+  for (var prop in resource.node) {
     %>
       &lt;p>
-        &lt;%= resource.rawData[prop] %>
+        &lt;%= resource.node[prop] %>
       &lt;/p>
     &lt;%
   }
@@ -98,8 +98,8 @@
 out.println("&lt;html>&lt;body>");
 out.println("&lt;p>This page is generated from a rhino script&lt;/p>");
 out.println("&lt;h1>" + resource.getURI() + "&lt;/h1>");
-out.println("&lt;p>Title: " + resource.getRawData().getProperty('title').getString() + "&lt;/p>");
-out.println("&lt;p>Text: " + resource.getRawData().getProperty('text').getString() + "&lt;/p>");
+out.println("&lt;p>Title: " + resource.getNode().getProperty('title').getString() + "&lt;/p>");
+out.println("&lt;p>Text: " + resource.getNode().getProperty('text').getString() + "&lt;/p>");
 out.println("&lt;/body>&lt;/html>");</pre>
   </p>
   </div>
@@ -119,9 +119,9 @@ out.println("&lt;/body>&lt;/html>");</pre>
 &lt;h1>&lt;%= resource.uri %>&lt;/h1>
 &lt;ol>
 &lt;%
-for (var prop in resource.rawData) {
-    if (resource.rawData[prop]["text"]) {
-        %>&lt;li>&lt;a href="/microsling&lt;%= resource.rawData[prop] %>.html">&lt;%= resource.rawData[prop] %>&lt;/a>&lt;/li>&lt;%
+for (var prop in resource.node) {
+    if (resource.node[prop]["text"]) {
+        %>&lt;li>&lt;a href="/microsling&lt;%= resource.node[prop] %>.html">&lt;%= resource.node[prop] %>&lt;/a>&lt;/li>&lt;%
     }
 }
 %>

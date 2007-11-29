@@ -163,7 +163,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         final Resource r = request.getResource();
 
         // ensure repository access
-        if (r instanceof NodeProvider) {
+        if (!(r instanceof NodeProvider)) {
             return null;
         }
 

@@ -2,22 +2,22 @@
 <html>
 	<body>
 		<h1>ESP template</h1>
-		<p class="main"><%= resource.item.text %></p>
+		<p class="main"><%= resource.node.text %></p>
 		
 		<%
-			if(resource.item.pathToInclude) {
+			if(resource.node.pathToInclude) {
 			  %>
-			  <p>pathToInclude = <%= resource.item.pathToInclude %></p>
-  		  	  <p>Including <%= resource.item.pathToInclude %></p>
+			  <p>pathToInclude = <%= resource.node.pathToInclude %></p>
+  		  	  <p>Including <%= resource.node.pathToInclude %></p>
 			  <%
-			  sling.include(resource.item.pathToInclude + ".html");
+			  sling.include(resource.node.pathToInclude + ".html");
 			}
 		%>
 		
 		<%
-			if(resource.item.testInfiniteLoop) {
+			if(resource.node.testInfiniteLoop) {
 			  %>
-			  <p>testInfiniteLoop = <%= resource.item.testInfiniteLoop %></p>
+			  <p>testInfiniteLoop = <%= resource.node.testInfiniteLoop %></p>
 			  <%
 			  // try to include the item itself, to cause an infinite loop
 			  sling.include(resource.getURI() + ".html");
