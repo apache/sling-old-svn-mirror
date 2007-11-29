@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -29,6 +30,11 @@ import java.net.URL;
  */
 public interface URLProvider {
 
-    URL getURL();
+    /**
+     * Returns the URL to internal data.
+     *
+     * @throws MalformedURLException If an error occurrs building the URL.
+     */
+    URL getURL() throws MalformedURLException;
 
 }
