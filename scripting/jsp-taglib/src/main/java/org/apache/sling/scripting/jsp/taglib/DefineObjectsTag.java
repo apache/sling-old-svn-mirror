@@ -20,18 +20,15 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
+import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.scripting.jsp.util.TagUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  */
 public class DefineObjectsTag extends TagSupport {
-
-    /** default log */
-    private static final Logger log = LoggerFactory.getLogger(DefineObjectsTag.class);
 
     private static final long serialVersionUID = -1858674361149195892L;
 
@@ -43,7 +40,8 @@ public class DefineObjectsTag extends TagSupport {
 
     /**
      * Default name for the scripting variable referencing the
-     * <code>SlingHttpServletResponse</code> object (value is "slingResponse").
+     * <code>SlingHttpServletResponse</code> object (value is
+     * "slingResponse").
      */
     public static final String DEFAULT_RESPONSE_NAME = "slingResponse";
 
@@ -52,6 +50,20 @@ public class DefineObjectsTag extends TagSupport {
      * <code>Resource</code> object (value is "resource").
      */
     public static final String DEFAULT_RESOURCE_NAME = "resource";
+
+    /**
+     * Default name for the scripting variable referencing the JCR node
+     * underlying the current <code>Resource</code> object if it is based on a
+     * JCR node (value is "node").
+     */
+    public static final String DEFAULT_NODE_NAME = "node";
+
+    /**
+     * Default name for the scripting variable referencing the mapped object
+     * underlying the current <code>Resource</code> object (value is
+     * "mappedObject").
+     */
+    public static final String DEFAULT_MAPPED_OBJECT_NAME = "object";
 
     /**
      * Default name for the scripting variable referencing the current
@@ -78,6 +90,12 @@ public class DefineObjectsTag extends TagSupport {
 
     private String resourceName = DEFAULT_RESOURCE_NAME;
 
+    private String nodeName = DEFAULT_NODE_NAME;
+
+    private String mappedObjectName = DEFAULT_MAPPED_OBJECT_NAME;
+
+    private String mappedObjectClass = null;
+
     private String resourceManagerName = DEFAULT_RESOURCE_MANAGER_NAME;
 
     private String resourceManagerClass = DEFAULT_RESOURCE_MANAGER_CLASS;
@@ -96,6 +114,7 @@ public class DefineObjectsTag extends TagSupport {
      * <li><code>SlingHttpServletRequest</code>
      * <li><code>SlingHttpServletResponse</code>
      * <li>current <code>Resource</code>
+     * <li>current <code>Node</code> (if resource is a NodeProvider)
      * <li>current <code>ResourcManager</code>
      * <li>current <code>ServiceLocator</code>
      * </ul>
@@ -111,18 +130,23 @@ public class DefineObjectsTag extends TagSupport {
 
         pageContext.setAttribute(requestName, req);
         pageContext.setAttribute(responseName, res);
+        pageContext.setAttribute(resourceName, resource);
         pageContext.setAttribute(resourceManagerName, resourceManager);
-        pageContext.setAttribute(resourceManagerClass, resourceManager.getClass().getName());
+        pageContext.setAttribute(resourceManagerClass,
+            resourceManager.getClass().getName());
+        pageContext.setAttribute(serviceLocatorName, req.getServiceLocator());
 
-        // content may be null
-        if (resource != null) {
-            pageContext.setAttribute(resourceName, resource);
-        } else {
-            TagUtil.log(log, pageContext, "RenderRequest has no Content !",
-                null);
+        if (resource instanceof NodeProvider) {
+            pageContext.setAttribute(nodeName,
+                ((NodeProvider) resource).getNode());
         }
 
-        pageContext.setAttribute(serviceLocatorName, req.getServiceLocator());
+        if (mappedObjectClass != null && resource instanceof ObjectProvider) {
+            Object mappedObject = ((ObjectProvider) resource).getObject();
+            pageContext.setAttribute(mappedObjectName, mappedObject);
+            pageContext.setAttribute(mappedObjectClass,
+                mappedObject.getClass().getName());
+        }
 
         return EVAL_PAGE;
     }
@@ -139,6 +163,18 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setResourceName(String name) {
         this.resourceName = name;
+    }
+
+    public void setNodeName(String name) {
+        this.nodeName = name;
+    }
+
+    public void setMappedObjectName(String name) {
+        this.mappedObjectName = name;
+    }
+
+    public void setMappedObjectClass(String name) {
+        this.mappedObjectClass = name;
     }
 
     public void setResourceManagerName(String name) {
