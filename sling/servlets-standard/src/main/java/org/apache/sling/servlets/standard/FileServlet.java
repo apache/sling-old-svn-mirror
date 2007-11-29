@@ -24,6 +24,7 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
@@ -45,7 +46,7 @@ public class FileServlet extends SlingAllMethodsServlet {
             IOException {
 
         Resource resource = request.getResource();
-        FileObject file = (FileObject) resource.getObject();
+        FileObject file = (FileObject) ((ObjectProvider) resource).getObject();
         if (file == null) {
             throw new SlingException("Missing mapped object for file "
                 + resource.getURI());
