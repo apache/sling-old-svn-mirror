@@ -163,9 +163,6 @@ public class JcrResourceManagerTest extends TestCase {
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getURI());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
-
-        assertTrue(res instanceof NodeProvider);
-        assertNull(((NodeProvider) res).getNode());
     }
 
     private static class ResourceManagerTestRequest implements HttpServletRequest {
