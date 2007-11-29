@@ -160,19 +160,9 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     public SlingScript resolveScriptInternal(
             final SlingHttpServletRequest request) throws RepositoryException, SlingException {
 
-        final Resource r = request.getResource();
-
-        // ensure repository access
-        if (!(r instanceof NodeProvider)) {
-            return null;
-        }
-
-        final Session s = ((NodeProvider) r).getNode().getSession();
+        final Resource r = request.getResource(); 
+        final Session s = (Session)request.getAttribute(Session.class.getName());
         MicroslingScript result = null;
-
-        if (r == null) {
-            return null;
-        }
 
         String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
             request.getMethod(),

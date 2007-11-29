@@ -87,18 +87,11 @@ public class MicrojaxGetServlet extends SlingSafeMethodsServlet {
     protected Map<String, Object> getSessionInfo(SlingHttpServletRequest request)
     throws RepositoryException, HttpStatusCodeException, SlingException {
         final Map<String, Object> result = new HashMap<String, Object>();
-
-        // TODO not very convenient way to get a Session...
-        final Resource root = request.getResourceResolver().getResource("/");
-        final Node rootNode = ((NodeProvider)root).getNode();
-        if(rootNode == null) {
-            throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Root Node not found");
-        }
-        final Session s = rootNode.getSession();
-
+        
+        final Session s = (Session)request.getAttribute(Session.class.getName());
         result.put("workspace",s.getWorkspace().getName());
         result.put("userID",s.getUserID());
-
+        
         return result;
     }
 
