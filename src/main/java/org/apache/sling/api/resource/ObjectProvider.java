@@ -19,31 +19,20 @@
 package org.apache.sling.api.resource;
 
 /**
- * Simple helper class representing nonexisting resources.
+ * The <code>ObjectProvider</code> interface defines the API to be implemented
+ * by classes which support access to data as some form of Java Object. For
+ * example this interface may be implemented by an implementation of the
+ * {@link Resource} interface if the resource abstract access to a JCR Node. In
+ * this case the provided object might be created from an Object Content mapping
+ * such as Jackrabbit OCM.
  */
-public final class NonExistingResource implements Resource {
+public interface ObjectProvider {
 
-    private final String resourceURI;
-
-    private final ResourceMetadata resourceMetadata;
-
-    public NonExistingResource(String resourceURI) {
-        this.resourceURI = resourceURI;
-
-        resourceMetadata = new ResourceMetadata();
-        resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, resourceURI);
-    }
-
-    public String getURI() {
-        return resourceURI;
-    }
-
-    public String getResourceType() {
-        return RESOURCE_TYPE_NON_EXISTING;
-    }
-
-    public ResourceMetadata getResourceMetadata() {
-        return resourceMetadata;
-    }
+    /**
+     * Returns the object mapped from internal data or <code>null</code>, if
+     * the data cannot be mapped. In a JCR-based implementation, the Jackrabbit
+     * OCM mapping would be used to provide this object.
+     */
+    Object getObject();
 
 }

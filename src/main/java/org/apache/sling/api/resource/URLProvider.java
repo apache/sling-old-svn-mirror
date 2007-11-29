@@ -18,32 +18,17 @@
  */
 package org.apache.sling.api.resource;
 
+import java.net.URL;
+
 /**
- * Simple helper class representing nonexisting resources.
+ * The <code>URLProvider</code> defines the API to be implemented by classes
+ * which provide an URL to some data. For example this interface may be
+ * implemented by an implementation of the {@link Resource} interface if the
+ * resource abstracts access to a JCR Node. In this case the URL may be used to
+ * access the node.
  */
-public final class NonExistingResource implements Resource {
+public interface URLProvider {
 
-    private final String resourceURI;
-
-    private final ResourceMetadata resourceMetadata;
-
-    public NonExistingResource(String resourceURI) {
-        this.resourceURI = resourceURI;
-
-        resourceMetadata = new ResourceMetadata();
-        resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, resourceURI);
-    }
-
-    public String getURI() {
-        return resourceURI;
-    }
-
-    public String getResourceType() {
-        return RESOURCE_TYPE_NON_EXISTING;
-    }
-
-    public ResourceMetadata getResourceMetadata() {
-        return resourceMetadata;
-    }
+    URL getURL();
 
 }
