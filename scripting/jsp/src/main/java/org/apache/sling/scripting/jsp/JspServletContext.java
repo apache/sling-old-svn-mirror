@@ -22,16 +22,16 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Set;
 
-import javax.jcr.Node;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.StreamProvider;
+import org.apache.sling.api.resource.URLProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,14 +72,15 @@ public class JspServletContext implements ServletContext {
         if (path.startsWith("/")) {
             try {
                 Resource res = getResourceInternal(path);
-                if (res != null && res.getRawData() instanceof Node) {
-                    // TODO: if we would have the URLAdapter ....
-                    Node node = (Node) res.getRawData();
-                    return URLFactory.createURL(node.getSession(), node.getPath());
+                if (res instanceof URLProvider) {
+                    return ((URLProvider) res).getURL();
                 }
 
                 // TODO: is this correct or should we try another one ??
                 return null;
+            } catch (MalformedURLException mue) {
+                // rethrow this
+                throw mue;
             } catch (Exception ex) {
                 // SlingException or RepositoryException
                 log.error("getResource: Problem getting resource " + path, ex);
@@ -97,8 +98,8 @@ public class JspServletContext implements ServletContext {
         if (path.startsWith("/")) {
             try {
                 Resource res = getResourceInternal(path);
-                if (res != null) {
-                    return res.getInputStream();
+                if (res instanceof StreamProvider) {
+                    return ((StreamProvider) res).getInputStream();
                 }
 
                 // TODO: is this correct or should we try another one ??

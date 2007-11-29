@@ -67,7 +67,9 @@
                             org.apache.sling.scripting.jsp.util,
                             javax.el; javax.servlet.jsp;
                             javax.servlet.jsp.el;
-                            javax.servlet.jsp.tagext;version=2.1
+                            javax.servlet.jsp.tagext;version=2.1,
+                            org.apache;
+                            org.apache.jasper.runtime
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.scripting.jsp.*
@@ -93,11 +95,6 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
