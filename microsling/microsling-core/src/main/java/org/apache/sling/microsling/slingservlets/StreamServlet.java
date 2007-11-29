@@ -36,6 +36,7 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.microsling.helpers.constants.HttpConstants;
 
@@ -67,7 +68,7 @@ public class StreamServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException, IOException {
 
-        if (!(request.getResource().getRawData() instanceof Node)) {
+        if (!(request.getResource() instanceof NodeProvider)) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                 "Resource " + request.getResource().getURI()
                     + " must be a Node");
@@ -75,7 +76,7 @@ public class StreamServlet extends SlingSafeMethodsServlet {
 
         try {
             // otherwise handle nt:file/nt:resource specially
-            Node node = (Node) request.getResource().getRawData();
+            Node node = ((NodeProvider) request.getResource()).getNode();
             if (node.isNodeType("nt:file")) {
                 Node content = node.getNode("jcr:content");
                 if (content.isNodeType("nt:resource")) {
@@ -166,10 +167,10 @@ public class StreamServlet extends SlingSafeMethodsServlet {
         }
     }
 
-    /** Find the Property that contains the data to spool, under parent */ 
+    /** Find the Property that contains the data to spool, under parent */
     private Property findDataProperty(final Item parent) throws RepositoryException, HttpStatusCodeException {
         Property result = null;
-        
+
         // Following the path of primary items until we find a property
         // should provide us with the file data of the parent
         try {
@@ -182,7 +183,7 @@ public class StreamServlet extends SlingSafeMethodsServlet {
             // TODO: for now we use an alternate method if this fails,
             // there might be a better way (see jackrabbit WebDAV server code?)
         }
-        
+
         if(result==null && parent.isNode()) {
             // primary path didn't work, try the "usual" path to the data Property
             try {
@@ -192,11 +193,11 @@ public class StreamServlet extends SlingSafeMethodsServlet {
                 throw new HttpStatusCodeException(404,parent.getPath() + "/jcr:content" + "/jcr:data");
             }
         }
-        
+
         if(result==null) {
             throw new HttpStatusCodeException(500, "Unable to find data property for parent item " + parent.getPath());
         }
-        
+
         return result;
     }
 

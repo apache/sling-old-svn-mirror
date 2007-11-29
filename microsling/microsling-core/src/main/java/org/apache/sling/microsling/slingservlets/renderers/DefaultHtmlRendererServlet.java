@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
@@ -42,29 +43,25 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
     public DefaultHtmlRendererServlet(String responseContentTypeHeaderValue) {
         this.responseContentType = responseContentTypeHeaderValue;
     }
-    
+
     @Override
-    protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp) 
-    throws ServletException,IOException 
+    protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp)
+    throws ServletException,IOException
     {
         final Resource  r = req.getResource();
-        final Object data = r.getRawData();
+        final Node node = ((NodeProvider) r).getNode();
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
         try {
             pw.println("<html><body>");
-            if (data instanceof Node) {
-                dump(pw, r, (Node) data);
-            } else {
-                dump(pw, r, (Property) data);
-            }
+            dump(pw, r, node);
             pw.println("</body></html>");
         } catch (RepositoryException re) {
             throw new ServletException("Cannot dump contents of "
                 + req.getResource().getURI(), re);
         }
     }
-    
+
     protected void dump(PrintWriter pw, Resource r, Node n) throws RepositoryException {
         pw.println("<h1>Node dumped by " + getClass().getSimpleName() + "</h1>");
         pw.println("<p>Node path: <b>" + n.getPath() + "</b></p>");
@@ -103,7 +100,7 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
         } else {
             pw.print(p.getValue().getString());
         }
-        
+
         pw.print("</b><br/>");
     }
 }

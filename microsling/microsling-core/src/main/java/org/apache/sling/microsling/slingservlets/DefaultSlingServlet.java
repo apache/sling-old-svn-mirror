@@ -24,7 +24,6 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.Item;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -32,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.HttpConstants;
@@ -55,19 +55,19 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
     public void init() throws ServletException {
         postServlet = new MicrojaxPostServlet();
         postServlet.init(new MicroslingServletConfig("Microjax POST servlet",getServletContext()));
-        
+
         microjaxGetServlet = new MicrojaxGetServlet();
         microjaxGetServlet.init(new MicroslingServletConfig("Microjax GET servlet",getServletContext()));
         
         String contentType = null;
         final String ctSuffix = "; charset=UTF-8";
-        
+
         contentType = getServletContext().getMimeType("dummy.txt");
         renderingServlets.put(contentType, new PlainTextRendererServlet(contentType + ctSuffix));
-        
+
         contentType = getServletContext().getMimeType("dummy.html");
         renderingServlets.put(contentType, new DefaultHtmlRendererServlet(contentType + ctSuffix));
-        
+
         contentType = getServletContext().getMimeType("dummy.json");
         renderingServlets.put(contentType, new JsonRendererServlet(contentType + ctSuffix));
     }
@@ -101,8 +101,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         }
 
         // make sure we have an Item, and render it via one of our renderingServlets
-        final Object data = r.getRawData();
-        if(data!=null && (data instanceof Item)) {
+        if(r instanceof NodeProvider) {
             final String suffix = req.getRequestPathInfo().getSuffix();
             if(suffix != null && suffix.length() > 0) {
                 // accept exact addressing only for default rendering:
@@ -132,11 +131,11 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 + " cannot be dumped by " + getClass().getSimpleName());
         }
     }
-    
+
     @Override
     /** delegate to our postServlet */
-    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) 
-    throws ServletException, IOException 
+    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+    throws ServletException, IOException
     {
         postServlet.service(request, response);
     }

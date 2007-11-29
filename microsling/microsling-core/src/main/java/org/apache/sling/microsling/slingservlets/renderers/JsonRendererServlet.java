@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
@@ -59,17 +61,14 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     {
         // Access and check our data
         final Resource  r = req.getResource();
-        final Object data = r.getRawData();
-        if(data == null) {
+        if(r instanceof NonExistingResource) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND, "No data to dump");
         }
-        if(!(data instanceof Node)) {
+        if(!(r instanceof NodeProvider)) {
             throw new HttpStatusCodeException(
-                    HttpServletResponse.SC_NOT_IMPLEMENTED,
-                    "Don't know how to dump a " + data.getClass().getName()
-            );
+                HttpServletResponse.SC_NOT_IMPLEMENTED, "Can only dump nodes");
         }
-        final Node n = (Node)data;
+        final Node n = ((NodeProvider) r).getNode();
 
         // how many levels deep?
         int maxRecursionLevels = 0;
