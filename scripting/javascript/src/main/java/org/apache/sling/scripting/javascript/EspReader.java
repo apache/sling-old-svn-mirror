@@ -178,6 +178,14 @@ public class EspReader extends FilterReader {
      * @see #startWrite(String)
      */
     private boolean outUndefined = true;
+    
+    /**
+     * Javascript statement that sets the "out" variable that's used
+     * to output data. Automatically inserted by the reader in code,
+     * where needed.
+     */
+    public static final String DEFAULT_OUT_INIT_STATEMENT = "out=response.writer;"; 
+    private String outInitStatement = DEFAULT_OUT_INIT_STATEMENT;
 
     /**
      * Create an EspReader on top of the given <code>baseReader</code>. The
@@ -196,6 +204,11 @@ public class EspReader extends FilterReader {
 
         // Start in ESP (template text) state
         pushState(PARSE_STATE_ESP);
+    }
+    
+    /** Set the code fragment used to initialize the "out" variable */
+    public void setOutInitStatement(String statement) {
+        outInitStatement = statement;
     }
 
     /**
@@ -701,7 +714,7 @@ public class EspReader extends FilterReader {
         // if out is not set yet, we also acquire it now setting it
         // globally
         if (outUndefined) {
-            doVerbatim("out=response.writer;");
+            doVerbatim(outInitStatement);
             outUndefined = false;
         }
     }
