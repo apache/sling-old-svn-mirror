@@ -98,7 +98,6 @@
                             org.kxml2.io, org.xmlpull.v1
                         </Private-Package>
                         <Import-Package>
-                            !org.apache.jackrabbit.classloader,
                             !org.apache.jackrabbit.ocm.mapper.impl.digester,
                             *
                         </Import-Package>
