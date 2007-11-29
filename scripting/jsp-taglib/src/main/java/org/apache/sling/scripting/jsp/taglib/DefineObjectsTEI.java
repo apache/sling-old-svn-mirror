@@ -16,6 +16,19 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_MAPPED_OBJECT_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_CLASS;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESPONSE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jcr.Node;
 import javax.servlet.jsp.tagext.TagData;
 import javax.servlet.jsp.tagext.TagExtraInfo;
 import javax.servlet.jsp.tagext.VariableInfo;
@@ -50,8 +63,26 @@ public class DefineObjectsTEI extends TagExtraInfo {
     public static final String ATTR_RESOURCE_NAME = "resourceName";
 
     /**
-     * The name of the tag attribute used to define the name of the ServiceLocator
-     * scripting variable (value is "serviceLocatorName").
+     * The name of the tag attribute used to define the name of the Node
+     * scripting variable (value is "nodeName").
+     */
+    public static final String ATTR_NODE_NAME = "resourceName";
+
+    /**
+     * The name of the tag attribute used to define the name of the mapped
+     * object scripting variable (value is "mappedObjectName").
+     */
+    public static final String ATTR_MAPPED_OBJECT_NAME = "mappedObjectName";
+
+    /**
+     * The name of the tag attribute used to define the type of the scripting
+     * variable to take for the mapped object (value is "mappedObjectClass").
+     */
+    public static final String ATTR_MAPPED_OBJECT_CLASS = "mappedObjectClass";
+
+    /**
+     * The name of the tag attribute used to define the name of the
+     * ServiceLocator scripting variable (value is "serviceLocatorName").
      */
     public static final String ATTR_SERVICE_LOCATOR_NAME = "serviceLocatorName";
 
@@ -73,6 +104,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     private static final String RESOURCE_CLASS = Resource.class.getName();
 
+    private static final String NODE_CLASS = Node.class.getName();
+
     private static final String SERVICE_LOCATOR_CLASS = ServiceLocator.class.getName();
 
     /**
@@ -82,30 +115,43 @@ public class DefineObjectsTEI extends TagExtraInfo {
      * @see javax.servlet.jsp.tagext.TagExtraInfo#getVariableInfo(TagData)
      */
     public VariableInfo[] getVariableInfo(TagData data) {
-        String requestName = getValue(data, ATTR_REQUEST_NAME,
-            DefineObjectsTag.DEFAULT_REQUEST_NAME);
-        String responseName = getValue(data, ATTR_RESPONSE_NAME,
-            DefineObjectsTag.DEFAULT_RESPONSE_NAME);
-        String resourceName = getValue(data, ATTR_RESOURCE_NAME,
-            DefineObjectsTag.DEFAULT_RESOURCE_NAME);
-        String resourceManagerName = getValue(data, ATTR_RESOURCE_MANAGER_NAME,
-            DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_NAME);
-        String resourceManagerClass = getValue(data, ATTR_RESOURCE_MANAGER_CLASS,
-            DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_CLASS);
-        String serviceLocatorName = getValue(data, ATTR_SERVICE_LOCATOR_NAME,
-            DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME);
 
-        return new VariableInfo[] {
-            new VariableInfo(requestName, RENDER_REQUEST_CLASS, true,
-                VariableInfo.AT_END),
-            new VariableInfo(responseName, RENDER_RESPONSE_CLASS, true,
-                VariableInfo.AT_END),
-            new VariableInfo(resourceName, RESOURCE_CLASS, true,
-                VariableInfo.AT_END),
-            new VariableInfo(resourceManagerName, resourceManagerClass, true,
-                VariableInfo.AT_END),
-            new VariableInfo(serviceLocatorName, SERVICE_LOCATOR_CLASS, true,
-                VariableInfo.AT_END) };
+        List<VariableInfo> varInfos = new ArrayList<VariableInfo>();
+
+        addVar(varInfos, data, ATTR_REQUEST_NAME, DEFAULT_REQUEST_NAME,
+            RENDER_REQUEST_CLASS);
+        addVar(varInfos, data, ATTR_RESPONSE_NAME, DEFAULT_RESPONSE_NAME,
+            RENDER_RESPONSE_CLASS);
+
+        addVar(varInfos, data, ATTR_RESOURCE_NAME, DEFAULT_RESOURCE_NAME,
+            RESOURCE_CLASS);
+        addVar(varInfos, data, ATTR_NODE_NAME, DEFAULT_NODE_NAME, NODE_CLASS);
+
+        String mappedObjectClass = getValue(data, ATTR_MAPPED_OBJECT_CLASS,
+            null);
+        addVar(varInfos, data, ATTR_MAPPED_OBJECT_NAME,
+            DEFAULT_MAPPED_OBJECT_NAME, mappedObjectClass);
+
+        String resourceManagerClass = getValue(data,
+            ATTR_RESOURCE_MANAGER_CLASS, DEFAULT_RESOURCE_MANAGER_CLASS);
+        addVar(varInfos, data, ATTR_RESOURCE_MANAGER_NAME,
+            DEFAULT_RESOURCE_MANAGER_NAME, resourceManagerClass);
+
+        addVar(varInfos, data, ATTR_SERVICE_LOCATOR_NAME,
+            DEFAULT_SERVICE_LOCATOR_NAME, SERVICE_LOCATOR_CLASS);
+
+        return varInfos.toArray(new VariableInfo[varInfos.size()]);
+
+    }
+
+    private void addVar(List<VariableInfo> varInfos, TagData data,
+            String attrName, String defaultValue, String varClass) {
+        String value = getValue(data, attrName, defaultValue);
+
+        if (value != null && varClass != null) {
+            varInfos.add(new VariableInfo(value, varClass, true,
+                VariableInfo.AT_END));
+        }
     }
 
     private String getValue(TagData data, String name, String defaultValue) {
