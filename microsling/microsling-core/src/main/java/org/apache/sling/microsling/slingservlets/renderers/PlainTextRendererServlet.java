@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
@@ -42,27 +43,23 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
     public PlainTextRendererServlet(String responseContentTypeHeaderValue) {
         this.responseContentType = responseContentTypeHeaderValue;
     }
-    
+
     @Override
-    protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp) 
-    throws ServletException,IOException 
+    protected void doGet(SlingHttpServletRequest req,SlingHttpServletResponse resp)
+    throws ServletException,IOException
     {
         final Resource  r = req.getResource();
-        final Object data = r.getRawData();
+        final Node node = ((NodeProvider) r).getNode();
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
         try {
-            if (data instanceof Node) {
-                dump(pw, r, (Node) data);
-            } else {
-                dump(pw, r, (Property) data);
-            }
+            dump(pw, r, node);
         } catch (RepositoryException re) {
             throw new ServletException("Cannot dump contents of "
                 + req.getResource().getURI(), re);
         }
     }
-    
+
     protected void dump(PrintWriter pw, Resource r, Node n) throws RepositoryException {
         pw.println("** Node dumped by " + getClass().getSimpleName() + "**");
         pw.println("Node path:" + n.getPath());

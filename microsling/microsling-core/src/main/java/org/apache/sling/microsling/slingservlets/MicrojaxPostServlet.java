@@ -34,6 +34,7 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /** Servlet that implements the microjax POST "protocol", see SLING-92 */
 public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     private static final long serialVersionUID = 1837674988291697074L;
-    
+
     private static final Logger log = LoggerFactory.getLogger(MicrojaxPostServlet.class);
     private final MicrojaxPropertyValueSetter propertyValueSetter = new MicrojaxPropertyValueSetter();
     private int createNodeCounter;
@@ -52,46 +53,46 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
      *  (ujax stands for "microjax", RP_ stands for "request param")
      */
     public static final String RP_PREFIX = "ujax_";
-    
-    /** Optional request parameter: redirect to the specified URL after POST */ 
+
+    /** Optional request parameter: redirect to the specified URL after POST */
     public static final String RP_REDIRECT_TO =  RP_PREFIX + "redirect";
-    
+
     /** Optional request parameter: delete the specified content paths */
     public static final String RP_DELETE_PATH = RP_PREFIX + "delete";
-    
+
     /** Optional request parameter: only request parameters starting with this prefix are
-     *  saved as Properties when creating a Node. Active only if at least one parameter 
+     *  saved as Properties when creating a Node. Active only if at least one parameter
      *  starts with this prefix, and defaults to {@link DEFAULT_SAVE_PARAM_PREFIX}.
      */
     public static final String RP_SAVE_PARAM_PREFIX = RP_PREFIX + "saveParamPrefix";
-    
+
     /** Default value for {@link RP_SAVE_PARAM_PREFIX} */
     public static final String DEFAULT_SAVE_PARAM_PREFIX = "./";
-    
+
     /** Optional request parameter: if value is 0, created node is ordered so as
      *  to be the first child of its parent.
-     */ 
+     */
     public static final String RP_ORDER = RP_PREFIX + "order";
-    
-    /** Code value for RP_ORDER */ 
+
+    /** Code value for RP_ORDER */
     public static final String ORDER_ZERO = "0";
-    
+
     /** Optional request parameter: if provided, added at the end of the computed
      *  (or supplied) redirect URL
      */
     public static final String RP_DISPLAY_EXTENSION = RP_PREFIX + "displayExtension";
-    
+
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
 
         Session s = null;
         try {
-            
+
             // select the Resource to process
             Resource currentResource = request.getResource();
-            Node currentNode = (Node)currentResource.getRawData();
-            
+            Node currentNode = ((NodeProvider)currentResource).getNode();
+
             // need a Node, path and Session
             String currentPath = null;
             if(currentNode != null) {
@@ -101,13 +102,13 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 currentPath = SlingRequestPaths.getPathInfo(request);
                 // TODO not very convenient way to get a Session...
                 final Resource root = request.getResourceResolver().getResource("/");
-                final Node rootNode = (Node)root.getRawData();
+                final Node rootNode = ((NodeProvider)root).getNode();
                 if(rootNode == null) {
                     throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Root Node not found");
                 }
                 s = rootNode.getSession();
             }
-            
+
             final String [] pathsToDelete = request.getParameterValues(RP_DELETE_PATH);
             if(pathsToDelete!=null) {
                 // process deletes if any, and if so don't do anything else
@@ -116,10 +117,10 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 // if no deletes, create or update nodes
                 createOrUpdateNodesFromRequest(request, response, s);
             }
-            
+
         } catch(RepositoryException re) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,re.toString(),re);
-            
+
         } finally {
             try {
                 if (s != null && s.hasPendingChanges()) {
@@ -130,9 +131,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             }
         }
     }
-    
+
     /** Delete specified nodes, and send response */
-    protected void deleteNodes(Session s, String [] pathsToDelete, String currentPath, SlingHttpServletResponse response) 
+    protected void deleteNodes(Session s, String [] pathsToDelete, String currentPath, SlingHttpServletResponse response)
     throws RepositoryException, IOException {
         processDeletes(s, pathsToDelete, currentPath);
         s.save();
@@ -144,18 +145,18 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         }
         pw.flush();
     }
-    
-    /** Create or update node(s) according to current request , and send response */ 
-    protected void createOrUpdateNodesFromRequest(SlingHttpServletRequest request, SlingHttpServletResponse response, Session s) 
+
+    /** Create or update node(s) according to current request , and send response */
+    protected void createOrUpdateNodesFromRequest(SlingHttpServletRequest request, SlingHttpServletResponse response, Session s)
     throws RepositoryException, IOException {
-        
+
         // Where to redirect to when done
         String redirectPath = request.getHeader("Referer");
-        
+
         // find out the actual "save prefix" to use - only parameters starting with
         // this prefix are saved as Properties, when creating nodes, see setPropertiesFromRequest()
         final String savePrefix = getSavePrefix(request);
-        
+
         // use the request path (disregarding resource resolution)
         // but remove any extension or selectors
         String currentPath = SlingRequestPaths.getPathInfo(request);
@@ -164,14 +165,14 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         if(dotPos >= 0) {
             currentPath = currentPath.substring(0,dotPos);
         }
-        
+
         final String starSuffix = "/*";
         if(currentPath.endsWith(starSuffix)) {
             // If the path ends with a *, create a node under its parent, with
             // a generated node name
             currentPath = currentPath.substring(0, currentPath.length() - starSuffix.length());
             currentPath += "/" + (createNodeCounter++) + System.currentTimeMillis();
-            
+
         } else if(s.itemExists(currentPath)) {
             // update to an existing node
             final Item item = s.getItem(currentPath);
@@ -180,26 +181,26 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             } else {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_CONFLICT,"Item at path " + currentPath + " is not a Node");
             }
-            
+
         } else {
             // request to create a new node at a specific path - use the supplied path as is
         }
-        
+
         Set<Node> createdNodes = new HashSet<Node>();
         if(currentNode == null) {
             currentNode = deepCreateNode(s, currentPath, createdNodes);
         }
         currentPath = currentNode.getPath();
-        
+
         // process the "order" command if any
         final String order = request.getParameter(RP_ORDER);
         if(order!=null) {
             processNodeOrder(currentNode,order);
         }
-        
+
         // walk the request parameters, create and save nodes and properties
         setPropertiesFromRequest(currentNode, request, savePrefix, createdNodes);
-        
+
         // sava data and find out where to redirect
         s.save();
         final String forcedRedirect = request.getParameter(RP_REDIRECT_TO);
@@ -212,45 +213,47 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         if(redirectExtension!=null) {
             redirectPath += redirectExtension;
         }
-        
-        final String redirectUrl = 
+
+        final String redirectUrl =
             SlingRequestPaths.getContextPath(request)
             + SlingRequestPaths.getServletPath(request)
-            + redirectPath; 
+            + redirectPath;
         if(log.isDebugEnabled()) {
             log.debug("Redirecting to " + redirectUrl);
         }
         response.sendRedirect(redirectUrl);
     }
 
-    /** Set Node properties from current request 
+    /** Set Node properties from current request
      *  TODO should handle file uploads as well
      */
-    private void setPropertiesFromRequest(Node n, SlingHttpServletRequest request, 
+    private void setPropertiesFromRequest(Node n, SlingHttpServletRequest request,
             String savePrefix, Set<Node> createdNodes)
             throws RepositoryException {
-        
+
         for(Map.Entry<String, RequestParameter[]>  e : request.getRequestParameterMap().entrySet()) {
             String name = e.getKey();
             if(savePrefix!=null) {
-                if(!name.startsWith(savePrefix)) continue;
+                if(!name.startsWith(savePrefix)) {
+                    continue;
+                }
                 name = name.substring(savePrefix.length());
             }
             setProperty(n,request,name,e.getValue(),createdNodes);
         }
     }
-    
-    /** Set a single Property on node N 
+
+    /** Set a single Property on node N
      * @throws RepositoryException */
-    private void setProperty(Node n, SlingHttpServletRequest request, String name, 
+    private void setProperty(Node n, SlingHttpServletRequest request, String name,
             RequestParameter[] values, Set<Node> createdNodes) throws RepositoryException {
-        
+
         // split the relative path identifying the property to be saved
         String proppath = name;
 
         // @ValueFrom can be used to define mappings between form fields and JCR properties
-// TODO        
-//        final int vfIndex = name.indexOf("@ValueFrom"); 
+// TODO
+//        final int vfIndex = name.indexOf("@ValueFrom");
 //        if (vfIndex >= 0) {
 //            // Indirect
 //            proppath = name.substring(0, vfIndex);
@@ -278,16 +281,16 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         Node parent;
         if(name.startsWith("/")) {
             parent = deepCreateNode(s, parentpath, createdNodes);
-            
+
         } else if (!parentpath.equals("")) {
             parent = (Node) s.getItem(path + "/" + parentpath);
         } else {
             parent = (Node) s.getItem(path);
         }
-        
+
         // TODO String typehint = request.getParameter(proppath + "@TypeHint");
         final String typeHint = null;
-        final boolean nodeIsNew = createdNodes.contains(parent); 
+        final boolean nodeIsNew = createdNodes.contains(parent);
         propertyValueSetter.setProperty(parent, propname, values, typeHint, nodeIsNew);
 }
 
@@ -301,7 +304,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         if(log.isDebugEnabled()) {
             log.debug("Deep-creating Node '" + path + "'");
         }
-        
+
         String[] pathelems = path.substring(1).split("/");
         int i = 0;
         String mypath = "";
@@ -318,11 +321,11 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         return (parent);
     }
 
-    /** Delete Items at the provided paths 
+    /** Delete Items at the provided paths
      *  @param pathsToDelete each path that does not start with / is
-     *      prepended with currentPath 
-     */ 
-    private void processDeletes(Session s, String [] pathsToDelete, String currentPath) 
+     *      prepended with currentPath
+     */
+    private void processDeletes(Session s, String [] pathsToDelete, String currentPath)
     throws RepositoryException {
         for(String path : pathsToDelete) {
             if(!path.startsWith("/")) {
@@ -340,14 +343,14 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             }
         }
     }
-    
+
     /** Return the "save prefix" to use, null if none */
     private String getSavePrefix(SlingHttpServletRequest request) {
         String prefix = request.getParameter(RP_SAVE_PARAM_PREFIX);
         if(prefix==null) {
             prefix = DEFAULT_SAVE_PARAM_PREFIX;
         }
-        
+
         // if no parameters start with this prefix, it is not used
         String result = null;
         for(String name : request.getRequestParameterMap().keySet()) {
@@ -356,12 +359,12 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 break;
             }
         }
-        
+
         return result;
     }
-    
+
     /** If orderCode is ORDER_ZERO, move n so that it is the first
-     *  child of its parent 
+     *  child of its parent
      * @throws RepositoryException */
     private void processNodeOrder(Node n, String orderCode) throws RepositoryException {
         if(ORDER_ZERO.equals(orderCode)) {
@@ -370,11 +373,11 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             final String myname=path.substring(path.lastIndexOf('/')+1);
             final String beforename=parent.getNodes().nextNode().getName();
             parent.orderBefore(myname, beforename);
-            
+
             if(log.isDebugEnabled()) {
                 log.debug("Node " + n.getPath() + " moved to be first child of its parent, due to orderCode=" + orderCode);
             }
-            
+
         } else {
             if(log.isDebugEnabled()) {
                 log.debug("orderCode '" + orderCode + "' invalid, ignored");

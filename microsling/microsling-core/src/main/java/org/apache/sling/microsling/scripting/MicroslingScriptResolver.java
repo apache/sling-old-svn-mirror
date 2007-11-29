@@ -36,6 +36,7 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
@@ -162,11 +163,11 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         final Resource r = request.getResource();
 
         // ensure repository access
-        if (!(r.getRawData() instanceof Item)) {
+        if (r instanceof NodeProvider) {
             return null;
         }
 
-        final Session s = ((Item) r.getRawData()).getSession();
+        final Session s = ((NodeProvider) r).getNode().getSession();
         MicroslingScript result = null;
 
         if (r == null) {
@@ -273,11 +274,11 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
             try {
 
-                if (getScriptResource().getRawData() instanceof Node) {
+                if (getScriptResource() instanceof NodeProvider) {
                     // SLING-72: Cannot use primary items due to WebDAV creating
                     // nt:unstructured as jcr:content node. So we just assume
                     // nt:file and try to use the well-known data path
-                    Node node = (Node) getScriptResource().getRawData();
+                    Node node = ((NodeProvider) getScriptResource()).getNode();
                     property = node.getProperty("jcr:content/jcr:data");
                 } else {
                     throw new IOException("Scriptresource " + getScriptResource() + " must is not JCR Node based");

@@ -36,11 +36,13 @@ import java.io.InputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.StreamProvider;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource implements Resource {
+public class JcrNodeResource implements Resource, NodeProvider, StreamProvider {
     private final Node node;
     private final String path;
     private final String resourceType;
@@ -82,7 +84,7 @@ public class JcrNodeResource implements Resource {
         return "JcrNodeResource, type=" + resourceType + ", path=" + path;
     }
 
-    public Object getRawData() {
+    public Node getNode() {
         return node;
     }
 
@@ -110,12 +112,11 @@ public class JcrNodeResource implements Resource {
      */
     public InputStream getInputStream() throws IOException {
         // implement this for nt:file only
-        if (!(getRawData() instanceof Node)) {
+        if (node == null) {
             return null;
         }
 
         try {
-            Node node = (Node) getRawData();
             if (node.isNodeType(NT_FILE) && node.hasProperty(FILE_DATA_PROP)) {
                 return node.getProperty(FILE_DATA_PROP).getStream();
             }

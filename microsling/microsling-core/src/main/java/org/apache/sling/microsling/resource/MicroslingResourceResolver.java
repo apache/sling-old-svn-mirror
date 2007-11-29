@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -140,9 +141,9 @@ public class MicroslingResourceResolver implements ResourceResolver {
             if (path.length() == 0) {
                 // return the base resource
                 return base;
-            } else if (base.getRawData() instanceof Node) {
+            } else if (base instanceof NodeProvider) {
                 try {
-                    Node baseNode = (Node) base.getRawData();
+                    Node baseNode = ((NodeProvider) base).getNode();
                     if (baseNode.hasNode(path)) {
                         return new JcrNodeResource(baseNode.getNode(path));
                     }
@@ -187,10 +188,10 @@ public class MicroslingResourceResolver implements ResourceResolver {
      */
     public Iterator<Resource> listChildren(final Resource parent)
             throws SlingException {
-        if (parent.getRawData() instanceof Node) {
+        if (parent instanceof NodeProvider) {
 
             try {
-                final NodeIterator children = ((Node) parent.getRawData()).getNodes();
+                final NodeIterator children = ((NodeProvider) parent).getNode().getNodes();
                 return new Iterator<Resource>() {
 
                     public boolean hasNext() {
@@ -302,7 +303,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
     /** Creates a JcrNodeResource object with the given path if existing */
     protected Resource getResource(Session session, String path)
             throws RepositoryException {
-        
+
         boolean exists = false;
         try {
             exists = session.itemExists(path);
@@ -323,7 +324,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
             log.info("Found Resource at path '{}'", path);
             return result;
         }
-    
+
         log.info("Path '{}' does not resolve to an Item", path);
         return null;
     }

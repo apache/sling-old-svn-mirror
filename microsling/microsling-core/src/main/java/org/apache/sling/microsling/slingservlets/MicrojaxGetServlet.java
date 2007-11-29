@@ -32,25 +32,26 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 
-/** Servlet that provides some non-repository resources for microjax 
+/** Servlet that provides some non-repository resources for microjax
  *  using GET requests, see SLING-92 */
 public class MicrojaxGetServlet extends SlingSafeMethodsServlet {
     private static final long serialVersionUID = -8406117284723670902L;
-    
+
     /** Handle GET requests starting with this prefix */
     public static final String URI_PREFIX = "/microjax:";
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException,
             IOException {
-        
+
         Map <String, Object> data = null;
-        
+
         if(request.getPathInfo().equals(URI_PREFIX + "sessionInfo.json")) {
             try {
                 data = getSessionInfo(request);
@@ -58,7 +59,7 @@ public class MicrojaxGetServlet extends SlingSafeMethodsServlet {
                 throw new ServletException("RepositoryException in getSessionInfo(): " + re,re);
             }
         }
-        
+
         if(data== null) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,request.getPathInfo());
         } else {
@@ -73,33 +74,33 @@ public class MicrojaxGetServlet extends SlingSafeMethodsServlet {
                     w.value(e.getValue());
                 }
                 w.endObject();
-                
+
             } catch (JSONException jse) {
                 out.write(jse.toString());
-                
+
             } finally {
                 out.flush();
             }
         }
     }
-    
-    protected Map<String, Object> getSessionInfo(SlingHttpServletRequest request) 
+
+    protected Map<String, Object> getSessionInfo(SlingHttpServletRequest request)
     throws RepositoryException, HttpStatusCodeException, SlingException {
         final Map<String, Object> result = new HashMap<String, Object>();
-        
+
         // TODO not very convenient way to get a Session...
         final Resource root = request.getResourceResolver().getResource("/");
-        final Node rootNode = (Node)root.getRawData();
+        final Node rootNode = ((NodeProvider)root).getNode();
         if(rootNode == null) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,"Root Node not found");
         }
         final Session s = rootNode.getSession();
-        
+
         result.put("workspace",s.getWorkspace().getName());
         result.put("userID",s.getUserID());
-        
+
         return result;
     }
-    
-    
+
+
 }
