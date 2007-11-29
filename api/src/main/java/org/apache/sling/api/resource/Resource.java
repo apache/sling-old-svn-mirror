@@ -16,9 +16,6 @@
  */
 package org.apache.sling.api.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 /** Resources are pieces of content on which Sling acts */
 public interface Resource {
 
@@ -51,40 +48,6 @@ public interface Resource {
      * existing, this method returns the {@link #RESOURCE_TYPE_NON_EXISTING}.
      */
     String getResourceType();
-
-    /**
-     * The raw data from the resource repository addressed by the
-     * {@link #getURI() resource URI} or <code>null</code> if the resource URI
-     * does not actually address an item in a repository, or if such data is
-     * not available.
-     * <p>
-     * For a JCR Repository based implementation of this interface, the returned
-     * object will be the <code>javax.jcr.Item</code> addressed by the
-     * resource URI. For a filesystem based implementation it may be the
-     * respective <code>java.io.File</code>.
-     */
-    Object getRawData();
-
-    /**
-     * Returns the object mapped from the {@link #getRawData() raw data} or
-     * <code>null</code>, if the item cannot be mapped or mapping is not
-     * supported by the implementation. In a JCR-based implementation, the
-     * Jackrabbit OCM mapping would be used to provide this object.
-     */
-    Object getObject();
-
-    /**
-     * Returns an <code>InputStream</code> to read the data from this resource
-     * if the resoure can be streamed. Otherwise <code>null</code> is returned.
-     * <p>
-     * For a JCR Repository based implementation this method may return the
-     * stream of the <code>jcr:content/jcr:data</code> property of an
-     * <code>nt:file</code> node.
-     *
-     * @throws IOException May be thrown if an error occurrs trying to create
-     *      the input stream.
-     */
-    InputStream getInputStream() throws IOException;
 
     /**
      * Returns the metadata of this resource. The concrete data contained in the
