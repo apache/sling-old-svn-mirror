@@ -23,14 +23,15 @@ import javax.jcr.RepositoryException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
-import org.apache.jasper.JasperException;
-import org.apache.jasper.Options;
-import org.apache.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
+import org.apache.sling.scripting.jsp.jasper.JasperException;
+import org.apache.sling.scripting.jsp.jasper.Options;
+import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.mappedfile" value="true" type="Boolean"
  * @scr.property name="jasper.modificationTestInterval" value="4" type="Integer"
  * @scr.property name="jasper.reloading" value="false" type="Boolean"
- * @scr.property name="jasper.scratchdir" value="classes"
+ * @scr.property name="jasper.scratchdir" value="/classes"
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.property name="jasper.displaySourceFragments" value="true"
  *               type="Boolean"
@@ -67,6 +68,9 @@ public class JspScriptHandler implements SlingScriptEngine {
     ComponentContext componentContext;
 
     /** @scr.reference */
+    private SlingRepository repository;
+
+    /** @scr.reference */
     private ServletContext slingServletContext;
 
     /**
@@ -74,6 +78,8 @@ public class JspScriptHandler implements SlingScriptEngine {
      *                interface="org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider"
      */
     private ClassLoader jspClassLoader;
+
+    private RepositoryIOProvider ioProvider;
 
     private SlingTldLocationsCache tldLocationsCache;
 
@@ -108,12 +114,12 @@ public class JspScriptHandler implements SlingScriptEngine {
             throws SlingException, IOException {
         SlingScriptHelper ssh = (SlingScriptHelper) props.get(SLING);
         if (ssh != null) {
-            jspServletContext.setRequestResourceResolver(ssh.getRequest().getResourceResolver());
+            ioProvider.setRequestResourceResolver(ssh.getRequest().getResourceResolver());
             try {
                 JspServletWrapperAdapter jsp = getJspWrapperAdapter(ssh);
                 jsp.service(ssh);
             } finally {
-                jspServletContext.resetRequestResourceResolver();
+                ioProvider.resetRequestResourceResolver();
             }
         }
     }
@@ -163,19 +169,25 @@ public class JspScriptHandler implements SlingScriptEngine {
         Thread.currentThread().setContextClassLoader(jspClassLoader);
 
         try {
+            ioProvider = new RepositoryIOProvider(repository);
+
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
                 componentContext.getBundleContext());
 
             // return options which use the jspClassLoader
-            options = new JspServletOptions(slingServletContext,
+            options = new JspServletOptions(slingServletContext, ioProvider,
                 componentContext, jspClassLoader, tldLocationsCache);
 
             // Initialize the JSP Runtime Context
             jspRuntimeContext = new JspRuntimeContext(slingServletContext,
                 options);
 
-            jspServletContext = new JspServletContext(slingServletContext,
-                tldLocationsCache);
+            // by default access the repository
+            jspRuntimeContext.setIOProvider(ioProvider);
+
+
+            jspServletContext = new JspServletContext(ioProvider,
+                slingServletContext, tldLocationsCache);
 
             servletConfig = new JspServletConfig(jspServletContext,
                 componentContext.getProperties());
@@ -194,7 +206,7 @@ public class JspScriptHandler implements SlingScriptEngine {
 
     }
 
-    protected void deactivate(ComponentContext componentContext) {
+    protected void deactivate(ComponentContext oldComponentContext) {
         if (log.isDebugEnabled()) {
             log.debug("JspScriptHandler.deactivate()");
         }
@@ -209,7 +221,8 @@ public class JspScriptHandler implements SlingScriptEngine {
             tldLocationsCache = null;
         }
 
-        this.componentContext = null;
+        ioProvider = null;
+        componentContext = null;
     }
 
     protected void bindRepositoryClassLoaderProvider(

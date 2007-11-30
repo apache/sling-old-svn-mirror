@@ -64,20 +64,21 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.scripting.jsp.util,
+                            org.apache.sling.scripting.jsp.jasper.runtime;
+                            org.apache.sling.scripting.jsp.util;version=${pom.version},
                             javax.el; javax.servlet.jsp;
                             javax.servlet.jsp.el;
                             javax.servlet.jsp.tagext;version=2.1,
-                            org.apache;
-                            org.apache.jasper.runtime
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scripting.jsp.*
+                            org.apache.sling.scripting.jsp,
+                            !org.apache.sling.scripting.jsp.jasper.runtime,
+                            org.apache.sling.scripting.jsp.jasper.*
                         </Private-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
 
                         <Import-Package>
-                            !org.apache.tools.ant.*, !org.eclipse.*, *
+                            !org.eclipse.*, *
                         </Import-Package>
 
                         <!-- Embed Jasper completely -->
@@ -115,7 +116,13 @@
 
         <dependency>
             <groupId>org.apache.tomcat</groupId>
-            <artifactId>jasper</artifactId>
+            <artifactId>servlet-api</artifactId>
+            <version>6.0.14</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>jsp-api</artifactId>
             <version>6.0.14</version>
         </dependency>
         <dependency>

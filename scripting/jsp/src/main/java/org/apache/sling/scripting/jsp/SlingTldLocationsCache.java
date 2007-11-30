@@ -25,10 +25,10 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
-import org.apache.jasper.JasperException;
-import org.apache.jasper.compiler.TldLocationsCache;
-import org.apache.jasper.xmlparser.ParserUtils;
-import org.apache.jasper.xmlparser.TreeNode;
+import org.apache.sling.scripting.jsp.jasper.JasperException;
+import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
+import org.apache.sling.scripting.jsp.jasper.xmlparser.ParserUtils;
+import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
