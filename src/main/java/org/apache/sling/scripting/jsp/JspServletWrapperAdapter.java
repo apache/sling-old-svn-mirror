@@ -22,14 +22,14 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.jasper.Constants;
-import org.apache.jasper.JasperException;
-import org.apache.jasper.Options;
-import org.apache.jasper.compiler.JspRuntimeContext;
-import org.apache.jasper.servlet.JspServletWrapper;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.jsp.jasper.Constants;
+import org.apache.sling.scripting.jsp.jasper.JasperException;
+import org.apache.sling.scripting.jsp.jasper.Options;
+import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
+import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 
 /**
  * The <code>JspServletWrapperAdapter</code> TODO

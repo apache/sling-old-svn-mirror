@@ -27,11 +27,6 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.StreamProvider;
-import org.apache.sling.api.resource.URLProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,23 +38,15 @@ public class JspServletContext implements ServletContext {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspServletContext.class);
 
+    private final RepositoryIOProvider ioProvider;
     private final ServletContext delegatee;
     private final SlingTldLocationsCache tcs;
 
-    private ThreadLocal<ResourceResolver> requestResourceResolver;
-
-    JspServletContext(ServletContext componentContext, SlingTldLocationsCache tcs) {
+    JspServletContext(RepositoryIOProvider ioProvider, ServletContext componentContext,
+            SlingTldLocationsCache tcs) {
+        this.ioProvider = ioProvider;
         this.delegatee = componentContext;
         this.tcs = tcs;
-        this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
-    }
-
-    void setRequestResourceResolver(ResourceResolver resolver) {
-        requestResourceResolver.set(resolver);
-    }
-
-    void resetRequestResourceResolver() {
-        requestResourceResolver.remove();
     }
 
     //---------- implemented methods ------------------------------------------
@@ -70,20 +57,9 @@ public class JspServletContext implements ServletContext {
     public URL getResource(String path) throws MalformedURLException {
 
         if (path.startsWith("/")) {
-            try {
-                Resource res = getResourceInternal(path);
-                if (res instanceof URLProvider) {
-                    return ((URLProvider) res).getURL();
-                }
-
-                // TODO: is this correct or should we try another one ??
-                return null;
-            } catch (MalformedURLException mue) {
-                // rethrow this
-                throw mue;
-            } catch (Exception ex) {
-                // SlingException or RepositoryException
-                log.error("getResource: Problem getting resource " + path, ex);
+            URL url = ioProvider.getURL(path);
+            if (url != null) {
+                return url;
             }
         }
 
@@ -95,18 +71,16 @@ public class JspServletContext implements ServletContext {
      * @see javax.servlet.ServletContext#getResourceAsStream(java.lang.String)
      */
     public InputStream getResourceAsStream(String path) {
+        // path might be an URL, so only check resource provider in case of an
+        // absolute path - assuming URLs have no leading slash at all, we
+        // don't care for the scheme separating colon here
         if (path.startsWith("/")) {
             try {
-                Resource res = getResourceInternal(path);
-                if (res instanceof StreamProvider) {
-                    return ((StreamProvider) res).getInputStream();
-                }
-
-                // TODO: is this correct or should we try another one ??
-                return null;
+                return ioProvider.getInputStream(path);
             } catch (Exception ex) {
-                // SlingException or IOException
-                log.error("getResource: Problem getting resource " + path, ex);
+                // FileNotFoundException or IOException
+                log.debug("getResourceAsStream: Cannot get resource {}: {}",
+                    path, ex.getMessage());
             }
         }
 
@@ -124,6 +98,10 @@ public class JspServletContext implements ServletContext {
         }
 
         return null;
+    }
+
+    public Set<?> getResourcePaths(String path) {
+        return ioProvider.getResourcePaths(path);
     }
 
     public void log(String msg) {
@@ -193,10 +171,6 @@ public class JspServletContext implements ServletContext {
         return delegatee.getRequestDispatcher(path);
     }
 
-    public Set<?> getResourcePaths(String path) {
-        return null;
-    }
-
     public String getServerInfo() {
         return delegatee.getServerInfo();
     }
@@ -226,15 +200,6 @@ public class JspServletContext implements ServletContext {
     }
 
     //---------- internal -----------------------------------------------------
-
-    private Resource getResourceInternal(String path) throws SlingException {
-        ResourceResolver resolver = requestResourceResolver.get();
-        if (resolver != null) {
-            return resolver.getResource(path);
-        }
-
-        return null;
-    }
 
     private URL getUrlForResource(String path) {
         int cs = path.indexOf(":/");
