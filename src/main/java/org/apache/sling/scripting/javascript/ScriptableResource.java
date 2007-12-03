@@ -16,8 +16,8 @@
  */
 package org.apache.sling.scripting.javascript;
 
-import org.apache.sling.api.resource.NodeProvider;
-import org.apache.sling.api.resource.ObjectProvider;
+import javax.jcr.Node;
+
 import org.apache.sling.api.resource.Resource;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
@@ -44,15 +44,14 @@ public class ScriptableResource extends ScriptableObject {
     }
 
     public Object jsFunction_getObject() {
-        if (resource instanceof ObjectProvider) {
-            return ((ObjectProvider) resource).getObject();
-        }
-        return Undefined.instance;
+        Object object = resource.adaptTo(Object.class);
+        return (object != null) ? object : Undefined.instance;
     }
 
     public Object jsFunction_getNode() {
-        if (resource instanceof NodeProvider) {
-            return new ScriptableNode(((NodeProvider) resource).getNode());
+        Node node = resource.adaptTo(Node.class);
+        if (node != null) {
+            return new ScriptableNode(node);
         }
         return Undefined.instance;
     }
@@ -81,9 +80,13 @@ public class ScriptableResource extends ScriptableObject {
     public Object jsFunction_getMetadata() {
         return resource.getResourceMetadata();
     }
-
+    
     public Object jsGet_meta() {
         return resource.getResourceMetadata();
+    }
+
+    public Object jsFunction_adaptTo(Class<?> type) {
+        return resource.adaptTo(type);
     }
 
     @Override
