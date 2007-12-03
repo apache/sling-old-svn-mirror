@@ -21,10 +21,10 @@ public interface Resource {
 
     /**
      * The special resource type for resource instances representing nonexisting
-     * resources (value is "sling:nonexisting"). This resource type is used
-     * by {@link ResourceResolver} instances to mark a resource which could not
+     * resources (value is "sling:nonexisting"). This resource type is used by
+     * {@link ResourceResolver} instances to mark a resource which could not
      * actually be resolved.
-     *
+     * 
      * @see #getResourceType()
      * @see ResourceResolver#resolve(javax.servlet.ServletRequest)
      */
@@ -55,8 +55,22 @@ public interface Resource {
      * except for the {@link ResourceMetadata#RESOLUTION_PATH} property which is
      * required to be set to the part of the request URI used to resolve the
      * resource.
-     *
+     * 
      * @see ResourceMetadata
      */
     ResourceMetadata getResourceMetadata();
+
+    /**
+     * Adapts this resource to another type. A JCR based resource might provided
+     * adapters to the JCR Node on which the resource is based.
+     * 
+     * @param <AdapterType> The generic type to which this resource is adapted
+     *            to
+     * @param type The Class object of the target type, such as
+     *            <code>Node.class</code>
+     * @return The adapter target or <code>null</code> if the resource cannot
+     *         adapt to the requested type
+     */
+    <AdapterType> AdapterType adaptTo(Class<AdapterType> type);
+
 }
