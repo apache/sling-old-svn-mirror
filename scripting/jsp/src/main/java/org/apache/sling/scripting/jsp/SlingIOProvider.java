@@ -45,12 +45,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>RepositoryIOProvider</code> TODO
+ * The <code>SlingIOProvider</code> TODO
  */
-class RepositoryIOProvider implements IOProvider {
+class SlingIOProvider implements IOProvider {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(RepositoryIOProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
 
     private final SlingRepository repository;
 
@@ -59,7 +59,7 @@ class RepositoryIOProvider implements IOProvider {
     // private session for write access
     private ThreadLocal<Session> privateSession;
 
-    RepositoryIOProvider(SlingRepository repository) {
+    SlingIOProvider(SlingRepository repository) {
         this.repository = repository;
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
         this.privateSession = new ThreadLocal<Session>();
@@ -304,11 +304,11 @@ class RepositoryIOProvider implements IOProvider {
 
     private static class RepositoryOutputStream extends ByteArrayOutputStream {
 
-        private final RepositoryIOProvider repositoryOutputProvider;
+        private final SlingIOProvider repositoryOutputProvider;
 
         private final String fileName;
 
-        RepositoryOutputStream(RepositoryIOProvider repositoryOutputProvider,
+        RepositoryOutputStream(SlingIOProvider repositoryOutputProvider,
                 String fileName) {
             this.repositoryOutputProvider = repositoryOutputProvider;
             this.fileName = fileName;
