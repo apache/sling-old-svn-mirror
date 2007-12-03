@@ -38,11 +38,11 @@ public class JspServletContext implements ServletContext {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspServletContext.class);
 
-    private final RepositoryIOProvider ioProvider;
+    private final SlingIOProvider ioProvider;
     private final ServletContext delegatee;
     private final SlingTldLocationsCache tcs;
 
-    JspServletContext(RepositoryIOProvider ioProvider, ServletContext componentContext,
+    JspServletContext(SlingIOProvider ioProvider, ServletContext componentContext,
             SlingTldLocationsCache tcs) {
         this.ioProvider = ioProvider;
         this.delegatee = componentContext;

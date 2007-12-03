@@ -79,7 +79,7 @@ public class JspScriptHandler implements SlingScriptEngine {
      */
     private ClassLoader jspClassLoader;
 
-    private RepositoryIOProvider ioProvider;
+    private SlingIOProvider ioProvider;
 
     private SlingTldLocationsCache tldLocationsCache;
 
@@ -169,7 +169,7 @@ public class JspScriptHandler implements SlingScriptEngine {
         Thread.currentThread().setContextClassLoader(jspClassLoader);
 
         try {
-            ioProvider = new RepositoryIOProvider(repository);
+            ioProvider = new SlingIOProvider(repository);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
                 componentContext.getBundleContext());
