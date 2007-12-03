@@ -25,7 +25,6 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
@@ -47,7 +46,7 @@ public class FolderServlet extends SlingAllMethodsServlet {
             IOException {
 
         Resource resource = request.getResource();
-        FolderObject content = (FolderObject) ((ObjectProvider) resource).getObject();
+        FolderObject content = resource.adaptTo(FolderObject.class);
         if (content == null) {
             throw new SlingException("Missing mapped object for folder "
                 + resource.getURI());

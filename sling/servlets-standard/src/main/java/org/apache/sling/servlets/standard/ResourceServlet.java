@@ -25,10 +25,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.jcr.RepositoryException;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
@@ -49,7 +49,7 @@ public class ResourceServlet extends SlingAllMethodsServlet {
             SlingHttpServletResponse response) throws IOException {
 
         Resource resource = request.getResource();
-        ResourceObject content = (ResourceObject) ((ObjectProvider) resource).getObject();
+        ResourceObject content = resource.adaptTo(ResourceObject.class);
 
         // check the last modification time and If-Modified-Since header
         long modifTime = content.getLastModificationTime();
