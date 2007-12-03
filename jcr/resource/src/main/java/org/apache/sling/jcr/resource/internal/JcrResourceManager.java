@@ -49,7 +49,6 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.DefaultMappedObject;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.PathResolver;
-import org.apache.sling.jcr.resource.internal.helper.BundleResource;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResourceIterator;
@@ -563,15 +562,6 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      */
     protected Resource getResourceInternal(String path, Class<?> type)
             throws RepositoryException {
-
-        // check bundle resources
-        Bundle bundle = factory.getBundleForResource(path);
-        if (bundle != null) {
-            Resource result = BundleResource.getResource(bundle, path);
-            if (result != null) {
-                return result;
-            }
-        }
 
         // check JCR repository
         if (itemExists(path)) {
