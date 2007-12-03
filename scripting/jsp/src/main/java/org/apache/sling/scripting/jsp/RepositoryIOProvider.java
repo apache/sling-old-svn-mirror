@@ -39,8 +39,6 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.StreamProvider;
-import org.apache.sling.api.resource.URLProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.scripting.jsp.jasper.IOProvider;
 import org.slf4j.Logger;
@@ -95,11 +93,12 @@ class RepositoryIOProvider implements IOProvider {
             throws FileNotFoundException, IOException {
         try {
             Resource resource = getResourceInternal(fileName);
-            if (!(resource instanceof StreamProvider)) {
+            InputStream stream = resource.adaptTo(InputStream.class);
+            if (stream == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
             }
 
-            return ((StreamProvider) resource).getInputStream();
+            return stream;
 
         } catch (SlingException se) {
             throw (IOException) new IOException(
@@ -231,17 +230,11 @@ class RepositoryIOProvider implements IOProvider {
 
     /* package */URL getURL(String path) throws MalformedURLException {
         try {
-            Resource resource = getResourceInternal(path);
-            if (resource instanceof URLProvider) {
-                return ((URLProvider) resource).getURL();
-            }
-
+            return getResourceInternal(path).adaptTo(URL.class);
         } catch (SlingException se) {
             throw (MalformedURLException) new MalformedURLException(
                 "Cannot get URL for " + path).initCause(se);
         }
-
-        return null;
     }
 
     /* package */ Set<String> getResourcePaths(String path) {
