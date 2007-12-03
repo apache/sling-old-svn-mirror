@@ -45,6 +45,7 @@
 			        "name": "content",
 					"primaryNodeType": "sling:SampleContent",
 					"properties": {
+					    "sling:resourceType": "org/apache/sling/sample",
 						"title": "JSP Rendered Content",
 						"text": "This Content is rendered by a JSP script embeded in the Bundle."
 					}

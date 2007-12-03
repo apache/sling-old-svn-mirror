@@ -77,9 +77,8 @@ public class Navigation extends SlingSafeMethodsServlet {
 
             // if the child is a page, add an entry with optional link and
             // recursively call this method to draw the children of the child
-            Object child = childResource.getObject();
-            if (child instanceof SamplePage) {
-                SamplePage page = (SamplePage) child;
+            SamplePage page = childResource.adaptTo(SamplePage.class);
+            if (page != null) {
                 String title = page.getTitle();
                 pw.print("<li>");
 

@@ -23,16 +23,13 @@
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %>
 
 <%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects />
-<%
-    SampleContent content = (SampleContent) slingRequest.getResource().getObject();
-%>
+<sling:defineObjects mappedObjectName="sampleContent" mappedObjectClass="SampleContent" />
 
-<h1><%= content.getTitle() %></h1>
-<p><%= content.getText() %></p>
+<h1><%= sampleContent.getTitle() %></h1>
+<p><%= sampleContent.getText() %></p>
 <table border="1" cellpadding="3" cellspacing="0">
 <%
-	Iterator<Resource> ci = slingRequest.getResourceResolver().listChildren(slingRequest.getResource());
+	Iterator<Resource> ci = resourceManager.listChildren(resource);
 	while (ci.hasNext()) {
 		Resource child = ci.next();
 		%><tr><td><sling:include resource="<%= child %>" /></td></tr><%
