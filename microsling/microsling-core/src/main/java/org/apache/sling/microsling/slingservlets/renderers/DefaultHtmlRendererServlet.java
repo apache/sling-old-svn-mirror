@@ -20,10 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -38,9 +35,11 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = -5815904221043005085L;
     private final String responseContentType;
+    private final DefaultHtmlRenderer renderer;
 
     public DefaultHtmlRendererServlet(String responseContentTypeHeaderValue) {
         this.responseContentType = responseContentTypeHeaderValue;
+        this.renderer = new DefaultHtmlRenderer();
     }
 
     @Override
@@ -53,53 +52,11 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
         final PrintWriter pw = resp.getWriter();
         try {
             pw.println("<html><body>");
-            dump(pw, r, node);
+            renderer.render(pw, r, node);
             pw.println("</body></html>");
         } catch (RepositoryException re) {
             throw new ServletException("Cannot dump contents of "
                 + req.getResource().getURI(), re);
         }
-    }
-
-    protected void dump(PrintWriter pw, Resource r, Node n) throws RepositoryException {
-        pw.println("<h1>Node dumped by " + getClass().getSimpleName() + "</h1>");
-        pw.println("<p>Node path: <b>" + n.getPath() + "</b></p>");
-        pw.println("<p>Resource metadata: <b>" + r.getResourceMetadata() + "</b></p>");
-
-        pw.println("<h2>Node properties</h2>");
-        for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
-            final Property p = pi.nextProperty();
-            printPropertyValue(pw, p);
-        }
-    }
-
-    protected void dump(PrintWriter pw, Resource r, Property p) throws RepositoryException {
-        pw.println("<h2>Property dumped by " + getClass().getSimpleName() + "</h1>");
-        pw.println("<p>Property path:" + p.getPath() + "</p>");
-        pw.println("<p>Resource metadata: " + r.getResourceMetadata() + "</p>");
-
-        printPropertyValue(pw, p);
-    }
-
-    protected void printPropertyValue(PrintWriter pw, Property p)
-            throws RepositoryException {
-
-        pw.print(p.getName() + ": <b>");
-
-        if (p.getDefinition().isMultiple()) {
-            Value[] values = p.getValues();
-            pw.print('[');
-            for (int i = 0; i < values.length; i++) {
-                if (i > 0) {
-                    pw.print(", ");
-                }
-                pw.print(values[i].getString());
-            }
-            pw.print(']');
-        } else {
-            pw.print(p.getValue().getString());
-        }
-
-        pw.print("</b><br/>");
     }
 }

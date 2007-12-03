@@ -77,7 +77,8 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
           "org.apache.sling.scripting.javascript.RhinoJavasSriptEngine",
           "org.apache.sling.scripting.velocity.VelocityTemplatesScriptEngine",
           "org.apache.sling.scripting.freemarker.FreemarkerScriptEngine",
-          "org.apache.sling.scripting.ruby.ErbScriptEngine"
+          "org.apache.sling.scripting.ruby.ErbScriptEngine",
+          "org.apache.sling.microsling.experimental.EctScriptEngine"
        };
 
     public MicroslingScriptResolver() throws SlingException {

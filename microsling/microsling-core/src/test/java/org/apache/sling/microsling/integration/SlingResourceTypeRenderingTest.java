@@ -55,7 +55,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content includes DefaultHtmlRendererServlet marker",content.contains("dumped by DefaultHtmlRendererServlet"));
+        assertTrue("Content contains default rendering",content.contains("Node dumped by DefaultHtmlRenderer"));
     }
 
     public void testEspHtml() throws IOException {
@@ -64,6 +64,19 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes ESP marker",content.contains("ESP template"));
             assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testEctHtml() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.ect","html.ect");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ECT marker",content.contains("ECT template"));
+            assertTrue("Content contains JSON data",content.contains("\"text\":\"" + testText + "\""));
+            assertTrue("Content contains default rendering",content.contains("div id=\"EctDefaultRendering"));
+            assertTrue("Content contains javascript rendering code",content.contains("out.write( currentNode.text )"));
         } finally {
             testClient.delete(toDelete);
         }
