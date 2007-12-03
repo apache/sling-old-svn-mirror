@@ -204,7 +204,11 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             redirectPath = currentNode.getPath();
         }
         if(redirectExtension!=null) {
-            redirectPath += redirectExtension;
+            if(redirectExtension.startsWith(".")) {
+                redirectPath += redirectExtension;
+            } else {
+                redirectPath += "." + redirectExtension;
+            }
         }
 
         final String redirectUrl =
