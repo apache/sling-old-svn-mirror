@@ -85,10 +85,6 @@ public class ScriptableResource extends ScriptableObject {
         return resource.getResourceMetadata();
     }
 
-    public Object jsFunction_adaptTo(Class<?> type) {
-        return resource.adaptTo(type);
-    }
-
     @Override
     public Object getDefaultValue(Class typeHint) {
         return resource.getURI();
