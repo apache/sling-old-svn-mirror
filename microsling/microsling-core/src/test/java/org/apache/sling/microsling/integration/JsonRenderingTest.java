@@ -23,6 +23,7 @@ import java.util.Map;
 /** Test creating Nodes and rendering them in JSON */
 public class JsonRenderingTest extends MicroslingHttpTestBase {
 
+    private String postUrl; 
     private String testText;
     private String jsonUrl;
     
@@ -34,10 +35,10 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
         testText = "This is a test " + System.currentTimeMillis();
         
         // create the test node, under a path that's specific to this class to allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis();
+        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/*";
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
-        jsonUrl = testClient.createNode(url, props) + ".json";
+        jsonUrl = testClient.createNode(postUrl, props) + ".json";
     }
     
     /** test our assertJavascript method with static json */ 
@@ -51,7 +52,31 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
         assertJavascript(testText, json ,"out.println(data.text)");
     }
     
-    public void TODOneedToTestMoreJsonStuff() {
-        // TODO - test recursive JSON retrieval, property filters, etc...
+    public void testEscapedStrings() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("dq", "Some text with \"double quotes\"");
+        props.put("sq", "Some text with 'single quotes'");
+        props.put("cb", "Some text with {curly brackets}");
+        props.put("sb", "Some text with [square brackets]");
+        
+        final String location = testClient.createNode(postUrl, props);
+        final String json = getContent(location + ".json", CONTENT_TYPE_JSON);
+        
+        for(String key : props.keySet()) {
+            assertJavascript(props.get(key),json,"out.println(data." + key + ")");
+        }
+    }
+    
+    public void testAccentedStrings() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("a", "Les amis en \u000C9t\u000C9 au ch\u000Eteau");
+        props.put("b", "The \u000B0 degree sign and \u000F5 ntilde");
+        
+        final String location = testClient.createNode(postUrl, props);
+        final String json = getContent(location + ".json", CONTENT_TYPE_JSON);
+        
+        for(String key : props.keySet()) {
+            assertJavascript(props.get(key),json,"out.println(data." + key + ")");
+        }
     }
  }
