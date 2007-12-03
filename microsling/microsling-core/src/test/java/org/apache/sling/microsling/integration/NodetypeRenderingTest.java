@@ -51,7 +51,7 @@ public class NodetypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content includes DefaultHtmlRendererServlet marker",content.contains("dumped by DefaultHtmlRendererServlet"));
+        assertTrue("Content contains default rendering",content.contains("Node dumped by DefaultHtmlRenderer"));
     }
 
     public void testEspHtml() throws IOException {
