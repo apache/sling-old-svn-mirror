@@ -94,10 +94,9 @@ public class EctScriptEngine implements SlingScriptEngine {
             final JsonItemWriter j = new JsonItemWriter(null);
             final int maxRecursionLevels = 1;
             w.println("<script language='javascript'>");
-            w.print("var str='");
+            w.print("var currentNode=");
             j.dump(n, w, maxRecursionLevels);
-            w.println("';");
-            w.print("eval(\"var currentNode=\" + str );");
+            w.println(";");
             w.println("</script>");
             w.println("</head><body onLoad=\"ectOnLoad()\">");
             
