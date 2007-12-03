@@ -25,20 +25,6 @@
   <display-name>Microsling Web Application</display-name>
 
   <servlet>
-    <servlet-name>Logging</servlet-name>
-    <description>Configures the Log4J logging facility.</description>
-    <servlet-class>org.apache.jackrabbit.j2ee.LoggingServlet</servlet-class>
-
-    <init-param>
-      <param-name>log4j-config</param-name>
-      <param-value>/WEB-INF/log4j.xml</param-value>
-      <description>initial log4j configuration</description>
-    </init-param>
-
-    <load-on-startup>10</load-on-startup>
-  </servlet>
-
-  <servlet>
     <servlet-name>JackrabbitRepository</servlet-name>
     <description>
       Creates a Jackrabbit repository (or opens it if already created) and makes it available as

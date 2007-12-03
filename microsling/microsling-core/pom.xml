@@ -52,6 +52,12 @@
       started. Useful to manually test the integration testing webapp.
      -->
      <integration.test.wait>false</integration.test.wait>
+     
+     <!-- 
+      log levels
+      -->
+      <sling.log.level>info</sling.log.level>
+      <root.log.level>info</root.log.level>
   </properties>
 
   <dependencies>
@@ -97,7 +103,19 @@
       <artifactId>commons-httpclient</artifactId>
       <version>3.1</version>
       <scope>test</scope>
+      <exclusions>
+        <!-- 
+          Same problem as JCR-683: commons-httpclient depends on commons-logging. Since 
+          this webapp uses log4j (see the slf4j-log4j12 dependency below), we need to
+          override this dependency with jcl104-over-sflf4j, found below
+        -->
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>    
     </dependency>
+    
     <!-- Sling Scripting: This is a temporary solution until we have implemented the lookup mechanism
          for script engines in microsling. -->
     <dependency>
@@ -120,9 +138,26 @@
       <artifactId>org.apache.sling.scripting.ruby</artifactId>
       <version>2.0.0-incubator-SNAPSHOT</version>
     </dependency>
+    
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.3.0</version>
+     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl104-over-slf4j</artifactId>
+      <version>1.3.0</version>
+    </dependency>  
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
