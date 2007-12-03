@@ -40,9 +40,7 @@ import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.NonExistingResource;
-import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -54,7 +52,6 @@ import org.apache.sling.jcr.resource.internal.helper.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.helper.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
-import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -298,8 +295,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      */
     public void store(Resource resource) throws SlingException {
         String path = resource.getURI();
-        if (resource instanceof ObjectProvider) {
-            Object data = ((ObjectProvider) resource).getObject();
+        Object data = resource.adaptTo(Object.class);
+        if (data != null) {
             try {
                 if (itemExists(path)) {
                     checkPermission(path, ACTION_SET_PROPERTY);
@@ -399,13 +396,14 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             throws SlingException {
 
         String path = resource.getURI();
-        if (!(resource instanceof NodeProvider)) {
+        Node node = resource.adaptTo(Node.class);
+        if (node == null) {
             log.info("orderBefore: Resource {} is not based on a JCR", path);
             return;
         }
 
         try {
-            Node parent = ((NodeProvider) resource).getNode().getParent();
+            Node parent = node.getParent();
 
             // check whether the parent node supports child node ordering
             if (!parent.getPrimaryNodeType().hasOrderableChildNodes()) {
