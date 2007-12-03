@@ -34,7 +34,6 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
@@ -91,9 +90,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
             // select the Resource to process
             Resource currentResource = request.getResource();
-            Node currentNode = (currentResource instanceof NodeProvider)
-                    ? ((NodeProvider) currentResource).getNode()
-                    : null;
+            Node currentNode = currentResource.adaptTo(Node.class);
 
             // need a Node, path and Session
             String currentPath = null;

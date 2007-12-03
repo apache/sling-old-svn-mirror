@@ -28,7 +28,6 @@ import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
@@ -49,7 +48,7 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
     throws ServletException,IOException
     {
         final Resource  r = req.getResource();
-        final Node node = ((NodeProvider) r).getNode();
+        final Node node = r.adaptTo(Node.class);
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
         try {

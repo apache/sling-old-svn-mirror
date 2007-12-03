@@ -261,6 +261,10 @@ public class MicroslingRequestPathInfoTest extends TestCase {
         public ResourceMetadata getResourceMetadata() {
             return metadata;
         }
+        
+        public <Type> Type adaptTo(Class<Type> type) {
+            return null;
+        }
 
     }
 

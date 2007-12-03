@@ -36,17 +36,20 @@ import java.io.InputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.StreamProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource implements Resource, NodeProvider, StreamProvider {
+public class JcrNodeResource implements Resource {
+    
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final Node node;
     private final String path;
     private final String resourceType;
-    private Object object;
     private final ResourceMetadata metadata;
 
     /** JCR Property that defines the resource type of this node */
@@ -76,16 +79,8 @@ public class JcrNodeResource implements Resource, NodeProvider, StreamProvider {
         setMetaData(node, metadata);
     }
 
-    public void setObject(Object object) {
-        this.object = object;
-    }
-
     public String toString() {
         return "JcrNodeResource, type=" + resourceType + ", path=" + path;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public String getURI() {
@@ -96,13 +91,29 @@ public class JcrNodeResource implements Resource, NodeProvider, StreamProvider {
         return resourceType;
     }
 
-    // no object mapping yet
-    public Object getObject() {
-        return object;
+    @SuppressWarnings("unchecked")
+    public <Type> Type adaptTo(Class<Type> type) {
+        if (type == Node.class) {
+            return (Type) getNode(); // unchecked cast
+        } else if (type == InputStream.class) {
+            try {
+                return (Type) getInputStream(); // unchecked cast
+            } catch (IOException ioe) {
+                log.error("adaptTo: Error getting input stream for " + this, ioe);
+            }
+        }
+        
+        return null;
     }
-
+    
     public ResourceMetadata getResourceMetadata() {
         return metadata;
+    }
+
+    // --- helpers, public for scripting ----
+    
+    public Node getNode() {
+        return node;
     }
 
     public InputStream getInputStream() throws IOException {

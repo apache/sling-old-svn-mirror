@@ -24,6 +24,7 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.Node;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -31,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.HttpConstants;
@@ -98,7 +98,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                         "Resource not found: " + r.getURI());
             }
-        } else if(r instanceof NodeProvider) {
+        } else if(r.adaptTo(Node.class) != null) {
 
             // make sure we have an Item, and render it via one of our renderingServlets
             final String suffix = req.getRequestPathInfo().getSuffix();
