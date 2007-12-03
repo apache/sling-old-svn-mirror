@@ -40,7 +40,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -141,14 +140,17 @@ public class MicroslingResourceResolver implements ResourceResolver {
             if (path.length() == 0) {
                 // return the base resource
                 return base;
-            } else if (base instanceof NodeProvider) {
+            }
+            
+            Node baseNode = base.adaptTo(Node.class);
+            if (baseNode != null) {
                 try {
-                    Node baseNode = ((NodeProvider) base).getNode();
                     if (baseNode.hasNode(path)) {
                         return new JcrNodeResource(baseNode.getNode(path));
                     }
 
-                    log.error("getResource: There is no node at {} below {}",
+                    log.error(
+                        "getResource: There is no node at {} below {}",
                         path, base.getURI());
                     return null;
                 } catch (RepositoryException re) {
@@ -188,10 +190,11 @@ public class MicroslingResourceResolver implements ResourceResolver {
      */
     public Iterator<Resource> listChildren(final Resource parent)
             throws SlingException {
-        if (parent instanceof NodeProvider) {
+        Node parentNode = parent.adaptTo(Node.class);
+        if (parentNode != null) {
 
             try {
-                final NodeIterator children = ((NodeProvider) parent).getNode().getNodes();
+                final NodeIterator children = parentNode.getNodes();
                 return new Iterator<Resource>() {
 
                     public boolean hasNext() {
@@ -221,8 +224,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
 
         // return an empty iterator if parent has no node
-        List<Resource> empty = Collections.emptyList();
-        return empty.iterator();
+        return Collections.<Resource>emptyList().iterator();
     }
 
     /**

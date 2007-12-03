@@ -36,7 +36,6 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.microsling.helpers.constants.HttpConstants;
 
@@ -68,7 +67,8 @@ public class StreamServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException, IOException {
 
-        if (!(request.getResource() instanceof NodeProvider)) {
+        Node node = request.getResource().adaptTo(Node.class);
+        if (node == null) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                 "Resource " + request.getResource().getURI()
                     + " must be a Node");
@@ -76,7 +76,6 @@ public class StreamServlet extends SlingSafeMethodsServlet {
 
         try {
             // otherwise handle nt:file/nt:resource specially
-            Node node = ((NodeProvider) request.getResource()).getNode();
             if (node.isNodeType("nt:file")) {
                 Node content = node.getNode("jcr:content");
                 if (content.isNodeType("nt:resource")) {

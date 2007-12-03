@@ -36,8 +36,8 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
@@ -263,44 +263,11 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             Property property;
             Value value;
 
-            try {
-
-                if (getScriptResource() instanceof NodeProvider) {
-                    // SLING-72: Cannot use primary items due to WebDAV creating
-                    // nt:unstructured as jcr:content node. So we just assume
-                    // nt:file and try to use the well-known data path
-                    Node node = ((NodeProvider) getScriptResource()).getNode();
-                    property = node.getProperty("jcr:content/jcr:data");
-                } else {
-                    throw new IOException("Scriptresource " + getScriptResource() + " must is not JCR Node based");
-                }
-
-                value = null;
-                if (property.getDefinition().isMultiple()) {
-                    // for a multi-valued property, we take the first non-null
-                    // value (null values are possible in multi-valued
-                    // properties)
-                    // TODO: verify this claim ...
-                    Value[] values = property.getValues();
-                    for (Value candidateValue : values) {
-                        if (candidateValue != null) {
-                            value = candidateValue;
-                            break;
-                        }
-                    }
-
-                    // incase we could not find a non-null value, we bail out
-                    if (value == null) {
-                        throw new IOException("Cannot access "
-                            + getScriptResource().getURI());
-                    }
-                } else {
-                    // for single-valued properties, we just take this value
-                    value = property.getValue();
-                }
-            } catch (RepositoryException re) {
-                throw (IOException) new IOException("Cannot get script "
-                    + getScriptResource().getURI()).initCause(re);
+            InputStream stream = getScriptResource().adaptTo(InputStream.class);
+            if (stream == null) {
+                throw new IOException(
+                    "Cannot get a stream to the script resource "
+                        + getScriptResource());
             }
 
             // Now know how to get the input stream, we still have to decide
@@ -308,28 +275,16 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             // UTF-8, which is a default in many places in JCR. Secondarily
             // we try to get a jcr:encoding property besides the data property
             // to provide a possible encoding
-            String encoding = "UTF-8";
-            try {
-                Node parent = property.getParent();
-                if (parent.hasNode(JCR_ENCODING)) {
-                    encoding = parent.getProperty(JCR_ENCODING).getString();
-                }
-            } catch (RepositoryException re) {
-                // don't care if we fail for any reason here, just assume
-                // default
+            ResourceMetadata meta = getScriptResource().getResourceMetadata();
+            String encoding = (String) meta.get(ResourceMetadata.CHARACTER_ENCODING);
+            if (encoding == null) {
+                encoding = "UTF-8";
             }
 
             // access the value as a stream and return a buffered reader
             // converting the stream data using UTF-8 encoding, which is
             // the default encoding used
-            try {
-                InputStream input = value.getStream();
-                return new BufferedReader(
-                    new InputStreamReader(input, encoding));
-            } catch (RepositoryException re) {
-                throw (IOException) new IOException("Cannot get script "
-                    + getScriptResource().getURI()).initCause(re);
-            }
+            return new BufferedReader(new InputStreamReader(stream, encoding));
         }
     }
 
