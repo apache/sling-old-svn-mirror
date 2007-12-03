@@ -26,7 +26,6 @@ import java.io.Reader;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.StreamProvider;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
 
@@ -51,9 +50,10 @@ class DefaultSlingScript implements SlingScript {
 
     public Reader getScriptReader() throws IOException {
 
-        if (!(getScriptResource() instanceof StreamProvider)) {
-            throw new IOException("Scriptresource " + getScriptResource()
-                + " is not a StreamProvider");
+        InputStream input = getScriptResource().adaptTo(InputStream.class);
+        if (input == null) {
+            throw new IOException("Cannot get a stream to the script resource "
+                + getScriptResource());
         }
 
         // Now know how to get the input stream, we still have to decide
@@ -70,7 +70,6 @@ class DefaultSlingScript implements SlingScript {
         // access the value as a stream and return a buffered reader
         // converting the stream data using UTF-8 encoding, which is
         // the default encoding used
-        InputStream input = ((StreamProvider) getScriptResource()).getInputStream();
         return new BufferedReader(new InputStreamReader(input, encoding));
     }
 }
