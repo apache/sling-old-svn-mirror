@@ -66,7 +66,7 @@ public class DefineObjectsTEI extends TagExtraInfo {
      * The name of the tag attribute used to define the name of the Node
      * scripting variable (value is "nodeName").
      */
-    public static final String ATTR_NODE_NAME = "resourceName";
+    public static final String ATTR_NODE_NAME = "nodeName";
 
     /**
      * The name of the tag attribute used to define the name of the mapped
