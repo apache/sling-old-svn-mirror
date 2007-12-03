@@ -24,17 +24,14 @@
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
 
 <%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects />
-<%
-    SamplePage content = (SamplePage) slingRequest.getResource().getObject();
-%>
+<sling:defineObjects mappedObjectName="samplePage" mappedObjectClass="SamplePage" />
 <%-- This is a top level component, so we have to draw the html and head tags --%>
 <html>
 <head>
-<title><%=content.getTitle()%></title>
+<title><%= samplePage.getTitle() %></title>
 </head>
 <body>
-<h1><%=content.getTitle()%></h1>
+<h1><%= samplePage.getTitle() %></h1>
 
 <table style="border: none; height: 90%;">
 	<tr valign="top">
