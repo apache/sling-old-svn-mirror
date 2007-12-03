@@ -16,12 +16,11 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import javax.jcr.Node;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NodeProvider;
-import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.scripting.jsp.util.TagUtil;
@@ -118,7 +117,7 @@ public class DefineObjectsTag extends TagSupport {
      * <li>current <code>ResourcManager</code>
      * <li>current <code>ServiceLocator</code>
      * </ul>
-     *
+     * 
      * @return always {@link #EVAL_PAGE}.
      */
     public int doEndTag() {
@@ -132,20 +131,19 @@ public class DefineObjectsTag extends TagSupport {
         pageContext.setAttribute(responseName, res);
         pageContext.setAttribute(resourceName, resource);
         pageContext.setAttribute(resourceManagerName, resourceManager);
-        pageContext.setAttribute(resourceManagerClass,
-            resourceManager.getClass().getName());
         pageContext.setAttribute(serviceLocatorName, req.getServiceLocator());
 
-        if (resource instanceof NodeProvider) {
-            pageContext.setAttribute(nodeName,
-                ((NodeProvider) resource).getNode());
+        Node node = resource.adaptTo(Node.class);
+        if (node != null) {
+            pageContext.setAttribute(nodeName, node);
         }
 
-        if (mappedObjectClass != null && resource instanceof ObjectProvider) {
-            Object mappedObject = ((ObjectProvider) resource).getObject();
-            pageContext.setAttribute(mappedObjectName, mappedObject);
-            pageContext.setAttribute(mappedObjectClass,
-                mappedObject.getClass().getName());
+        // only access the mappedObject if the class is set
+        if (mappedObjectClass != null) {
+            Object mappedObject = resource.adaptTo(Object.class);
+            if (mappedObject != null) {
+                pageContext.setAttribute(mappedObjectName, mappedObject);
+            }
         }
 
         return EVAL_PAGE;
