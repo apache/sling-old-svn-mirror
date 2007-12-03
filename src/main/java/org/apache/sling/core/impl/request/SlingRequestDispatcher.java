@@ -19,11 +19,7 @@
 package org.apache.sling.core.impl.request;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 
-import javax.jcr.Node;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -31,13 +27,9 @@ import javax.servlet.ServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.resource.NodeProvider;
-import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.StreamProvider;
-import org.apache.sling.api.resource.URLProvider;
 
 public class SlingRequestDispatcher implements RequestDispatcher {
 
@@ -123,7 +115,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         return uri + '/' + path;
     }
 
-    private static class ResourceWrapper implements Resource, NodeProvider, ObjectProvider, StreamProvider, URLProvider {
+    private static class ResourceWrapper implements Resource {
 
         private final Resource delegatee;
         private final String resourceType;
@@ -145,33 +137,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             return delegatee.getURI();
         }
 
-        public InputStream getInputStream() throws IOException {
-            if (delegatee instanceof StreamProvider) {
-                return ((StreamProvider) delegatee).getInputStream();
-            }
-            return null;
+        public <Type> Type adaptTo(Class<Type> type) {
+            return delegatee.adaptTo(type);
         }
-
-        public Object getObject() {
-            if (delegatee instanceof ObjectProvider) {
-                return ((ObjectProvider) delegatee).getObject();
-            }
-            return null;
-        }
-
-        public Node getNode() {
-            if (delegatee instanceof NodeProvider) {
-                return ((NodeProvider) delegatee).getNode();
-            }
-            return null;
-        }
-
-        public URL getURL() throws MalformedURLException {
-            if (delegatee instanceof URLProvider) {
-                return ((URLProvider) delegatee).getURL();
-            }
-            return null;
-        }
-
     }
 }
