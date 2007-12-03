@@ -46,4 +46,11 @@ public final class NonExistingResource implements Resource {
         return resourceMetadata;
     }
 
+    /**
+     * Returns <code>null</code> because a non-existing resource cannot adapt
+     * to anything.
+     */
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        return null;
+    }
 }
