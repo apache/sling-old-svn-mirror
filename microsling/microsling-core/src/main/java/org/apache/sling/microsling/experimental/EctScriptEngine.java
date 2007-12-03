@@ -32,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
@@ -70,11 +69,11 @@ public class EctScriptEngine implements SlingScriptEngine {
         try {
             // access our data (need a Node)
             final Resource r = (Resource)props.get(SlingScriptEngine.RESOURCE);
-            if( !(r instanceof NodeProvider) ) {
+            final Node n = r.adaptTo(Node.class);
+            if(n == null) {
                 throw new HttpStatusCodeException(
-                        HttpServletResponse.SC_NOT_FOUND,"Resource is not a NodeProvider, cannot render");
+                        HttpServletResponse.SC_NOT_FOUND,"Resource does not provide a Node, cannot render");
             }
-            final Node n = ((NodeProvider)r).getNode();
             
             // output HEAD with javascript initializations
             w.println("<html><head><title id=\"EctPageTitle\">");
