@@ -37,7 +37,6 @@ import javax.servlet.http.HttpSession;
 import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.NodeProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
@@ -110,9 +109,8 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
-        assertTrue(res instanceof NodeProvider);
-        assertNotNull(((NodeProvider) res).getNode());
-        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // missing resource
         String path = root + "/missing";
@@ -128,9 +126,8 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
-        assertTrue(res instanceof NodeProvider);
-        assertNotNull(((NodeProvider) res).getNode());
-        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // missing resource below root should resolve root
         String path = root + "/missing";
@@ -140,9 +137,8 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
-        assertTrue(res instanceof NodeProvider);
-        assertNotNull(((NodeProvider) res).getNode());
-        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // root with selectors/ext should resolve root
         path = root + ".print.a4.html";
@@ -152,9 +148,8 @@ public class JcrResourceManagerTest extends TestCase {
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
-        assertTrue(res instanceof NodeProvider);
-        assertNotNull(((NodeProvider) res).getNode());
-        assertTrue(rootNode.isSame(((NodeProvider) res).getNode()));
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // missing resource should return NON_EXISTING Resource
         path = root + System.currentTimeMillis();
