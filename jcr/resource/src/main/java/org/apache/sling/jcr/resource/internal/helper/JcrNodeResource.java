@@ -41,19 +41,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.net.URLFactory;
-import org.apache.sling.api.resource.NodeProvider;
-import org.apache.sling.api.resource.ObjectProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.StreamProvider;
-import org.apache.sling.api.resource.URLProvider;
 import org.apache.sling.jcr.resource.internal.JcrResourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource implements Resource, NodeProvider, StreamProvider,
-        ObjectProvider, URLProvider, Descendable {
+public class JcrNodeResource implements Resource, Descendable {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -115,49 +110,60 @@ public class JcrNodeResource implements Resource, NodeProvider, StreamProvider,
         return metadata;
     }
 
-    JcrResourceManager getResourceManager() {
-        return resourceManager;
+    @SuppressWarnings("unchecked")
+    public <Type> Type adaptTo(Class<Type> type) {
+        if (type == Node.class) {
+            return (Type) node; // unchecked cast
+        } else if (type == InputStream.class) {
+            return (Type) getInputStream(); // unchecked cast
+        } else if (type == URL.class) {
+            return (Type) getURL(); // unchecked cast
+        } else if (type.isInstance(getObject())) {
+            return (Type) getObject(); // unchecked cast
+        }
+
+        // fall back to nothing
+        return null;
     }
 
     public String toString() {
         return "JcrNodeResource, type=" + resourceType + ", path=" + path;
     }
 
-    //---------- NodeProvider interface ---------------------------------------
-
-    public Node getNode() {
-        return node;
+    JcrResourceManager getResourceManager() {
+        return resourceManager;
     }
 
-    //---------- StreamProvider interface -------------------------------------
+    Node getNode() {
+        return node;
+    }
+    
+    // ---------- internal -----------------------------------------------------
 
     /**
      * Returns a stream to the <em>jcr:content/jcr:data</em> property if the
      * {@link #getRawData() raw data} is an <em>nt:file</em> node. Otherwise
      * returns <code>null</code>.
      */
-    public InputStream getInputStream() throws IOException {
+    private InputStream getInputStream() {
         // implement this for nt:file only
-        if (getNode() == null) {
-            return null;
-        }
-
-        try {
-            if (node.isNodeType(NT_FILE) && node.hasProperty(FILE_DATA_PROP)) {
-                return node.getProperty(FILE_DATA_PROP).getStream();
+        if (node != null) {
+            try {
+                if (node.isNodeType(NT_FILE)
+                    && node.hasProperty(FILE_DATA_PROP)) {
+                    return node.getProperty(FILE_DATA_PROP).getStream();
+                }
+            } catch (RepositoryException re) {
+                log.error("getInputStream: Cannot get InputStream for " + this,
+                    re);
             }
-        } catch (RepositoryException re) {
-            throw (IOException) new IOException("Cannot get InputStream for "
-                + getURI()).initCause(re);
         }
 
         // fallback to non-streamable resource
         return null;
     }
 
-    //---------- ObjectProvider interface ---------------------------------------
-
-    public Object getObject() {
+    private Object getObject() {
         if (object == UNDEFINED) {
             // lazy loaded object
             object = resourceManager.getObject(getURI(), objectType);
@@ -166,18 +172,17 @@ public class JcrNodeResource implements Resource, NodeProvider, StreamProvider,
         return object;
     }
 
-    //---------- URLProvider interface ----------------------------------------
-
-    public URL getURL() throws MalformedURLException {
+    private URL getURL() {
         try {
             return URLFactory.createURL(node.getSession(), node.getPath());
-        } catch (RepositoryException re) {
-            throw (MalformedURLException) new MalformedURLException(
-                "Cannot create URL for " + this).initCause(re);
+        } catch (Exception ex) {
+            log.error("getURL: Cannot create URL for " + this, ex);
         }
+        
+        return null;
     }
 
-    //---------- Descendable interface ----------------------------------------
+    // ---------- Descendable interface ----------------------------------------
 
     public Iterator<Resource> listChildren() {
         return new JcrNodeResourceIterator(this);
@@ -186,16 +191,16 @@ public class JcrNodeResource implements Resource, NodeProvider, StreamProvider,
     public Resource getDescendent(String relPath) {
         try {
             if (node.hasNode(relPath)) {
-                return new JcrNodeResource(resourceManager, node.getNode(relPath));
+                return new JcrNodeResource(resourceManager,
+                    node.getNode(relPath));
             }
 
-            log.error("getResource: There is no node at {} below {}",
-                path, getURI());
+            log.error("getResource: There is no node at {} below {}", path,
+                getURI());
             return null;
         } catch (RepositoryException re) {
-            log.error(
-                "getResource: Problem accessing relative resource at "
-                    + path, re);
+            log.error("getResource: Problem accessing relative resource at "
+                + path, re);
             return null;
         }
     }
