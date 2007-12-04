@@ -26,7 +26,7 @@
   <groupId>org.apache.sling</groupId>
   <artifactId>microsling-core</artifactId>
   <packaging>war</packaging>
-  <name>microsling</name>
+  <name>microsling core</name>
   <!--
     WARNING: if changing this, change microsling.http.server.url below as well 
    -->
