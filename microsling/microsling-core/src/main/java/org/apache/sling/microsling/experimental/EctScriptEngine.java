@@ -32,9 +32,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptEngine;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.microsling.helpers.json.JsonItemWriter;
 import org.apache.sling.microsling.slingservlets.renderers.DefaultHtmlRenderer;
@@ -81,8 +83,14 @@ public class EctScriptEngine implements SlingScriptEngine {
             w.println("</title>");
             
             // library scripts
+            final SlingHttpServletRequest request = (SlingHttpServletRequest)props.get(SlingScriptEngine.REQUEST);
             for(String lib : libraryScripts) {
-                w.println("<script src=\"" + lib + "\"></script>");  
+                final String fullScriptPath =             
+                    SlingRequestPaths.getContextPath(request)
+                    + SlingRequestPaths.getServletPath(request)
+                    + lib
+                ;
+                w.println("<script src=\"" + fullScriptPath + "\"></script>");  
             }
             
             // onLoad method
