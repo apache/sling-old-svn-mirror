@@ -41,16 +41,8 @@ public class ScriptFilenameBuilder {
     public static final String SCRIPT_BASE_PATH = "/sling/scripts";
 
     /** @return a name like "html.js" or "print/a4/html.vlt" or "POST.js" */
-    public String buildScriptFilename(String methodName,String selectors,String requestExtension,String scriptExtension) {
+    public String buildScriptFilename(String methodName,String requestExtension,String scriptExtension) {
         final StringBuffer sb = new StringBuffer();
-
-        // path before filename:
-        // add selectors in front of the filename if any, replacing dots in them by slashes
-        // so that print.a4 becomes print/a4/
-        if(selectors != null) {
-            sb.append(selectors.toLowerCase().replace('.','/'));
-            sb.append('/');
-        }
 
         // filename:
         if(methodName==null || methodName.length() == 0) {

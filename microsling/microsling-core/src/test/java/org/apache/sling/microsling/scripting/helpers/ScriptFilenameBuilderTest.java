@@ -32,62 +32,50 @@ public class ScriptFilenameBuilderTest extends TestCase {
     }
 
     public void testNull() {
-        assertEquals("NO_METHOD.NO_EXT",builder.buildScriptFilename(null,null,null,null));
+        assertEquals("NO_METHOD.NO_EXT",builder.buildScriptFilename(null,null,null));
     }
     
     public void testSimpleGet() {
-        assertEquals("html.js",builder.buildScriptFilename("GET",null,"html","js"));
+        assertEquals("html.js",builder.buildScriptFilename("GET","html","js"));
     }
     
     public void testGetAndNulls() {
-        assertEquals("GET.NO_EXT",builder.buildScriptFilename("GET",null,null,null));
+        assertEquals("GET.NO_EXT",builder.buildScriptFilename("GET",null,null));
     }
     
     public void testSimpleHead() {
-        assertEquals("HEAD.js",builder.buildScriptFilename("HEAD",null,"text/html","js"));
-    }
-    
-    public void testGetOneSelector() {
-        assertEquals("print/html.js",builder.buildScriptFilename("GET","print","html","js"));
-    }
-    
-    public void testGetTwoSelectors() {
-        assertEquals("print/a4/xml.vlt",builder.buildScriptFilename("GET","print.a4","xml","vlt"));
+        assertEquals("HEAD.js",builder.buildScriptFilename("HEAD","text/html","js"));
     }
     
     public void testSimplePost() {
-        assertEquals("POST.js",builder.buildScriptFilename("POST",null,"html","js"));
+        assertEquals("POST.js",builder.buildScriptFilename("POST","html","js"));
     }
     
     public void testSimplePut() {
-        assertEquals("PUT.js",builder.buildScriptFilename("PUT",null,"html","js"));
+        assertEquals("PUT.js",builder.buildScriptFilename("PUT","html","js"));
     }
     
     public void testSimpleDelete() {
-        assertEquals("DELETE.js",builder.buildScriptFilename("DELETE",null,"html","js"));
+        assertEquals("DELETE.js",builder.buildScriptFilename("DELETE","html","js"));
     }
     
     public void testGetTextMimeType() {
-        assertEquals("txt.js",builder.buildScriptFilename("GET",null,"txt","js"));
+        assertEquals("txt.js",builder.buildScriptFilename("GET","txt","js"));
     }
     
     public void testGetWhateverMimeType() {
-        assertEquals("whatever.js",builder.buildScriptFilename("GET",null,"whatever","js"));
+        assertEquals("whatever.js",builder.buildScriptFilename("GET","whatever","js"));
     }
     
     public void testGetNoSlashMimeType() {
-        assertEquals("bar.js",builder.buildScriptFilename("GET",null,"bar","js"));
+        assertEquals("bar.js",builder.buildScriptFilename("GET","bar","js"));
     }
     
     public void testCaseCleanupOne() {
-        assertEquals("POST.js",builder.buildScriptFilename("posT",null,"html","jS"));
+        assertEquals("POST.js",builder.buildScriptFilename("posT","html","jS"));
     }
     
     public void testCaseCleanupTwo() {
-        assertEquals("html.js",builder.buildScriptFilename("get",null,"HTML","JS"));
-    }
-    
-    public void testCaseCleanupThree() {
-        assertEquals("print/a4/html.js",builder.buildScriptFilename("get","PRInT.A4","HTML","JS"));
+        assertEquals("html.js",builder.buildScriptFilename("get","HTML","JS"));
     }
 }
