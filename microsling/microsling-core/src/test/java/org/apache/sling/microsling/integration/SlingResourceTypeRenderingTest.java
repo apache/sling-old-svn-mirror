@@ -37,7 +37,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         testText = "This is a test " + System.currentTimeMillis();
 
         // create the test node, under a path that's specific to this class to allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis();
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/*";
         final Map<String,String> props = new HashMap<String,String>();
         props.put("sling:resourceType", slingResourceType);
         props.put("text", testText);
@@ -66,6 +66,35 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
         } finally {
             testClient.delete(toDelete);
+        }
+    }
+
+    public void testEspHtmlWithSelectors() throws IOException {
+        final String toDeleteA = uploadTestScript("rendering-test.esp","html.esp");
+        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath + "/a4/print");
+        final String toDeleteB = uploadTestScript(scriptPath + "/a4","rendering-test-2.esp","html.esp");
+        final String toDeleteC = uploadTestScript(scriptPath + "/a4/print","rendering-test-3.esp","html.esp");
+        
+        try {
+            String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Without selectors, content includes standard marker",content.contains("ESP template"));
+            assertTrue("Without selectors, content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            
+            content = getContent(displayUrl + ".a4.print.html", CONTENT_TYPE_HTML);
+            assertTrue("With a4.print selectors, content includes marker 3",content.contains("Template #3 for ESP tests"));
+            assertTrue("With a4.print selectors, content contains italic text",content.contains("<em>" + testText + "</em>"));
+            
+            content = getContent(displayUrl + ".a4.html", CONTENT_TYPE_HTML);
+            assertTrue("With a4 selector, content includes marker 2",content.contains("Template #2 for ESP tests"));
+            assertTrue("With a4 selector, content contains bold text",content.contains("<b>" + testText + "</b>"));
+            
+            content = getContent(displayUrl + ".different.html", CONTENT_TYPE_HTML);
+            assertTrue("With different selector only, content includes standard marker",content.contains("ESP template"));
+            assertTrue("With different selector only, content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDeleteA);
+            testClient.delete(toDeleteB);
+            testClient.delete(toDeleteC);
         }
     }
 
