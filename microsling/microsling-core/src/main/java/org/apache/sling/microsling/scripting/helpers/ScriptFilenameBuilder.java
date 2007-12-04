@@ -18,8 +18,6 @@
  */
 package org.apache.sling.microsling.scripting.helpers;
 
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.microsling.helpers.constants.HttpConstants;
 
 /** Builds the names of script files based on the current input:
@@ -71,17 +69,5 @@ public class ScriptFilenameBuilder {
             sb.append(scriptExtension.toLowerCase());
         }
         return sb.toString();
-    }
-
-    /** Returns the script root path constructed from the {@link #SCRIPT_BASE_PATH}
-     * and the resource type, where all backslashes and colons are replaced by
-     * forward slashes.
-     */
-    public String buildScriptPath(Resource resource) throws SlingException {
-        if(resource.getResourceType() == null) {
-            throw new SlingException("resource.getResourceType()==null, cannot build script path");
-        }
-        String typePath = resource.getResourceType().replaceAll("\\:","/");
-        return SCRIPT_BASE_PATH + "/" + typePath.trim();
     }
 }
