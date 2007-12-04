@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +45,7 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
 import org.apache.sling.microsling.scripting.helpers.ScriptHelper;
+import org.apache.sling.microsling.scripting.helpers.ScriptSearchPathsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +72,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     public static final String JCR_ENCODING = "jcr:encoding";
 
     private final ScriptFilenameBuilder scriptFilenameBuilder = new ScriptFilenameBuilder();
+    private final ScriptSearchPathsBuilder scriptSearchPathsBuilder = new ScriptSearchPathsBuilder();
 
     private Map<String, SlingScriptEngine> scriptEngines;
 
@@ -167,32 +168,16 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         final Session s = (Session)request.getAttribute(Session.class.getName());
         MicroslingScript result = null;
 
-        String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
+        final String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
             request.getMethod(),
             request.getRequestPathInfo().getExtension(), 
             "*");
-        String scriptPath = scriptFilenameBuilder.buildScriptPath(r);
         
         // this is the location of the trailing asterisk
         final int scriptExtensionOffset = scriptFilename.length() - 1;
 
-        // if there are selectors A and B, look for a script first at
-        // A/B/scriptFilename, then A/scriptFilename, then scriptFilename
-        final List<String> possiblePaths = new LinkedList<String> ();
-        final String [] selectors = request.getRequestPathInfo().getSelectors();
-        if(selectors!=null) {
-            final StringBuffer sb = new StringBuffer();
-            sb.append(scriptPath);
-            for(int i=selectors.length - 1; i >= 0; i--) {
-                for(int j=0; j <= i; j++) {
-                    sb.append("/");
-                    sb.append(selectors[j]);
-                }
-                possiblePaths.add(sb.toString());
-            }
-        }
-        possiblePaths.add(scriptPath);
-        
+        final List<String> possiblePaths = scriptSearchPathsBuilder.getScriptSearchPaths(
+                request.getResource(), request.getRequestPathInfo().getSelectors());
         for(String currentPath : possiblePaths) {
             
             if(result != null) {
@@ -201,7 +186,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             
             if (log.isDebugEnabled()) {
                 log.debug("Looking for script with filename=" + scriptFilename
-                    + " under " + scriptPath);
+                    + " under " + currentPath);
             }
             
             if (s.itemExists(currentPath)) {
@@ -239,8 +224,9 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 result.getScriptResource().getURI(), r);
         } else {
             log.debug(
-                "nt:file script node not found at path={} for Resource={}",
-                scriptPath, r);
+                "nt:file script node not found under path={} for Resource={}",
+                possiblePaths.get(possiblePaths.size() - 1)
+            );
         }
 
         return result;
