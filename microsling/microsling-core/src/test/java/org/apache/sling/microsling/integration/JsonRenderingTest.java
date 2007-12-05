@@ -58,6 +58,7 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
         props.put("sq", "Some text with 'single quotes'");
         props.put("cb", "Some text with {curly brackets}");
         props.put("sb", "Some text with [square brackets]");
+        props.put("eol", "Some text with end\nof\nlines\nand\ttabs");
         
         final String location = testClient.createNode(postUrl, props);
         final String json = getContent(location + ".json", CONTENT_TYPE_JSON);
