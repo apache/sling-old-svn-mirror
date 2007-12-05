@@ -62,6 +62,7 @@ public class QuartzJobExecutor implements Job {
                 final BundleContext bundleContext = (BundleContext)data.get(QuartzScheduler.DATA_MAP_BUNDLE_CONTEXT);
                 final ServiceLocatorImpl serviceLocator = new ServiceLocatorImpl(bundleContext);
 
+                @SuppressWarnings("unchecked")
                 final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
                 final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
 
