@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import junit.framework.TestCase;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.testhelper.MockNode;
 import org.apache.sling.jcr.resource.testhelper.MockNodeIterator;
 

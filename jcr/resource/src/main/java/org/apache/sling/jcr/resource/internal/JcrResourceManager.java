@@ -48,10 +48,11 @@ import org.apache.sling.jcr.resource.DefaultMappedObject;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.PathResolver;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
-import org.apache.sling.jcr.resource.internal.helper.JcrNodeResource;
-import org.apache.sling.jcr.resource.internal.helper.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -147,7 +148,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
                 return ((Descendable) parent).listChildren();
             }
         } catch (SlingException se) {
-            log.warn("listChildren: Error trying to resolve parent resource " + parent.getURI(), se);
+            log.warn("listChildren: Error trying to resolve parent resource "
+                + parent.getURI(), se);
         }
 
         // return an empty iterator if parent has no node
@@ -158,7 +160,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
     public Iterator<Resource> findResources(String query, String language)
             throws SlingException {
         try {
-            QueryResult res = JcrResourceUtil.query(getSession(), query, language);
+            QueryResult res = JcrResourceUtil.query(getSession(), query,
+                language);
             return new JcrNodeResourceIterator(this, res.getNodes());
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new SlingException(iqe);
@@ -170,7 +173,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
     public Iterator<Map<String, Object>> queryResources(String query,
             String language) throws SlingException {
         try {
-            QueryResult result = JcrResourceUtil.query(getSession(), query, language);
+            QueryResult result = JcrResourceUtil.query(getSession(), query,
+                language);
             final String[] colNames = result.getColumnNames();
             final RowIterator rows = result.getRows();
             return new Iterator<Map<String, Object>>() {
@@ -207,7 +211,7 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
 
     /**
      * @throws AccessControlException If an item would exist but is not readable
-     *      to this manager's session.
+     *             to this manager's session.
      */
     public Resource resolve(String uri) throws SlingException {
 
@@ -219,7 +223,6 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         } catch (Exception e) {
             log.error("Failed to decode request URI " + uri, e);
         }
-
 
         // resolve virtual uri
         String realUrl = factory.virtualToRealUri(uri);
@@ -322,10 +325,14 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         path = JcrResourceUtil.normalize(path);
         if (path != null) {
             try {
-                return getResourceInternal(path, type);
-            } catch (RepositoryException re) {
+                Resource resource = getResourceInternal(path);
+                if (type != null && resource instanceof JcrNodeResource) {
+                    ((JcrNodeResource) resource).setObjectType(type);
+                }
+                return resource;
+            } catch (Exception ex) {
                 throw new SlingException("Problem accessing resource" + path,
-                    re);
+                    ex);
             }
         }
 
@@ -359,9 +366,9 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
                 getSession().getWorkspace().copy(source, destination);
             } else {
                 // TODO: Create node at destination:
-                //     - same primary node type
-                //     - same mixins
-                //     - same non-protected properties
+                // - same primary node type
+                // - same mixins
+                // - same non-protected properties
             }
 
         } catch (AccessControlException ace) {
@@ -461,8 +468,7 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      * {@link #DEFAULT_CONTENT_CLASS default content class}.
      *
      * @param type Load the node's content into an object of the given type if
-     *      not <code>null</code>.
-     *
+     *            not <code>null</code>.
      * @return the <code>Content</code> object loaded from the node or
      *         <code>null</code> if no node exists at the given path.
      */
@@ -501,7 +507,7 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         return null;
     }
 
-    protected Session getSession() {
+    public Session getSession() {
         return session;
     }
 
@@ -542,11 +548,11 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
             final ResourcePathIterator it = new ResourcePathIterator(uriPath);
             while (it.hasNext() && resource == null) {
                 curPath = it.next();
-                resource = getResourceInternal(curPath, null);
+                resource = getResourceInternal(curPath);
             }
-        } catch (RepositoryException re) {
+        } catch (Exception ex) {
             throw new SlingException("Problem trying " + curPath
-                + " for request path " + uriPath, re);
+                + " for request path " + uriPath, ex);
         }
 
         return resource;
@@ -558,19 +564,21 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      * @throws AccessControlException If an item exists but this manager has no
      *             read access
      */
-    protected Resource getResourceInternal(String path, Class<?> type)
-            throws RepositoryException {
+    protected Resource getResourceInternal(String path) throws Exception {
 
-        // check JCR repository
-        if (itemExists(path)) {
-            Resource result = new JcrNodeResource(this, getSession(), path, type);
-            result.getResourceMetadata().put(ResourceMetadata.RESOLUTION_PATH,
-                path);
-            log.info("Found JCR Node Resource at path '{}'", path);
-            return result;
+        ResourceProvider rp = factory.getResourceProvider(path);
+        Resource resource = rp.getResource(this, path);
+        if (resource == null && rp != factory) {
+            resource = factory.getResource(this, path);
         }
 
-        log.debug("Path '{}' does not resolve to an Item", path);
+        if (resource != null) {
+            resource.getResourceMetadata().put(
+                ResourceMetadata.RESOLUTION_PATH, path);
+            return resource;
+        }
+
+        log.debug("Cannot resolve path '{}' to a resource", path);
         return null;
     }
 
@@ -587,7 +595,7 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
-    protected boolean itemExists(String path) throws RepositoryException {
+    public boolean itemExists(String path) throws RepositoryException {
         if (factory.itemReallyExists(getSession(), path)) {
             checkPermission(path, ACTION_READ);
             return true;
@@ -597,12 +605,11 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
     }
 
     /**
-     *
      * @param path
      * @param actions
      * @throws RepositoryException
-     * @throws AccessControlException if this manager does not have the permission
-     * for the listed action(s).
+     * @throws AccessControlException if this manager does not have the
+     *             permission for the listed action(s).
      */
     protected void checkPermission(String path, String actions)
             throws RepositoryException {

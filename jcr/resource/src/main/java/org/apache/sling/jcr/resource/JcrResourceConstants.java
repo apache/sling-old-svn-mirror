@@ -88,5 +88,17 @@ public class JcrResourceConstants {
      */
     public static final String MAPPING_NODE_TYPE = "MAPPED_NODE_TYPE";
 
+    /**
+     * The name of the bundle manifest header listing the bundle entries
+     * providing Object Content Mapping configurations (value is
+     * "Sling-Mappings").
+     */
     public static final String MAPPER_BUNDLE_HEADER = "Sling-Mappings";
+
+    /**
+     * The name of the bundle manifest header listing the resource provider root
+     * paths provided by the bundle (value is "Sling-Bundle-Resources").
+     */
+    public static final String BUNDLE_RESOURCE_ROOTS = "Sling-Bundle-Resources";
+
 }

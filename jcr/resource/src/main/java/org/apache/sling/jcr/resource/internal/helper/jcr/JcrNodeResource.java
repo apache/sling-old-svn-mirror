@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
 import static org.apache.jackrabbit.JcrConstants.JCR_CREATED;
@@ -30,20 +30,17 @@ import static org.apache.sling.api.resource.ResourceMetadata.MODIFICATION_TIME;
 import static org.apache.sling.api.resource.ResourceMetadata.RESOLUTION_PATH;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,14 +69,13 @@ public class JcrNodeResource implements Resource, Descendable {
 
     private final ResourceMetadata metadata;
 
-    public JcrNodeResource(JcrResourceManager cMgr, Session s, String path,
-            Class<?> type) throws RepositoryException {
+    public JcrNodeResource(JcrResourceManager cMgr, String path)
+            throws RepositoryException {
         this.resourceManager = cMgr;
-        node = (Node) s.getItem(path);
+        node = (Node) cMgr.getSession().getItem(path);
         this.path = node.getPath();
         metadata = new ResourceMetadata();
         resourceType = getResourceTypeForNode(node);
-        objectType = type;
 
         // check for nt:file metadata
         setMetaData(node, metadata);
@@ -137,7 +133,7 @@ public class JcrNodeResource implements Resource, Descendable {
     Node getNode() {
         return node;
     }
-    
+
     // ---------- internal -----------------------------------------------------
 
     /**
@@ -178,7 +174,7 @@ public class JcrNodeResource implements Resource, Descendable {
         } catch (Exception ex) {
             log.error("getURL: Cannot create URL for " + this, ex);
         }
-        
+
         return null;
     }
 
@@ -203,6 +199,10 @@ public class JcrNodeResource implements Resource, Descendable {
                 + path, re);
             return null;
         }
+    }
+
+    public void setObjectType(Class<?> objectType) {
+        this.objectType = objectType;
     }
 
     /**
