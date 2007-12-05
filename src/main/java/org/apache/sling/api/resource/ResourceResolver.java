@@ -41,9 +41,9 @@ public interface ResourceResolver {
      * {@link Resource} object is returned whose
      * {@link Resource#getResourceType() resource type} is set to
      * {@link Resource#RESOURCE_TYPE_NON_EXISTING} and the
-     * {@link Resource#getURI() resource URI} set to the request URI. Both the
-     * {@link Resource#getRawData() raw data} and
-     * {@link Resource#getObject() object} fields will be <code>null</code>.
+     * {@link Resource#getURI() resource URI} set to the request URI.
+     * {@link Resource#adaptTo(Class) object} returns <code>null</code>
+     * for all classes.
      *
      * @param request The servlet request object used to resolve the resource
      *            for.

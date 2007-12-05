@@ -24,7 +24,8 @@ import org.apache.sling.api.SlingException;
  * The <code>ResourceManager</code> interface extends the
  * {@link ResourceResolver} in case the Sling Framework supports Object Content
  * Mapping of some sort and thus able to manage the
- * {@link Resource#getObject() data field of the resource}.
+ * {@link Resource#adaptTo(Class) data field of the resource} (The class argument
+ * for the {@link Resource#adaptTo(Class)} method would be <code>Object.class</code.
  * <p>
  * Any data modification operations executed through objects of this interface
  * must be persisted explicitly by calling the {@link #save()} method. Likewise
@@ -33,13 +34,14 @@ import org.apache.sling.api.SlingException;
  * Implementations of this interface will (of course) also implement the methods
  * of the base interface. In addition to just loading the {@link Resource}
  * instances, though, implementations of this interface are expected to also try
- * to set the {@link Resource#getObject() data field} of the resource if possible.
+ * to provide the {@link Resource#adaptTo(Class) Resource.adaptTo(Object.class) data field}
+ * of the resource if possible.
  */
 public interface ResourceManager extends ResourceResolver {
 
     /**
-     * Stores the {@link Resource#getObject() resource data} mapping the Java
-     * object back into the underlying persistence structure.
+     * Stores the {@link Resource#adaptTo(Class) Resource.adaptTo(Object.class) resource data}
+     * mapping the Java object back into the underlying persistence structure.
      * <p>
      * This method may be used to update existing data or to create new data in
      * the persistence. The implementation of the method must make care to
@@ -58,7 +60,8 @@ public interface ResourceManager extends ResourceResolver {
 
     /**
      * Returns a <code>Resource</code> object whose
-     * {@link Resource#getObject() data field} is mapped from the persistent data
+     * {@link Resource#adaptTo(Class) Resource.adaptTo(Object.class) data field}
+     * is mapped from the persistent data
      * to an instance of the given <code>type</code>. If persistent data can
      * be found at the requested path which cannot be mapped into an object of
      * the requested type a <code>ResourceNotFoundException</code> is thrown
