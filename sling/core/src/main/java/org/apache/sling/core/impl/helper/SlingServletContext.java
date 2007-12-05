@@ -312,13 +312,13 @@ public class SlingServletContext implements ServletContext {
         return null;
     }
 
-    /** Returns <code>null</code> as defined in Servlet API 2.4 */
+    /** Returns an empty enumeration as defined in Servlet API 2.4 */
     @Deprecated
     public Enumeration<?> getServletNames() {
         return Collections.enumeration(Collections.emptyList());
     }
 
-    /** Returns <code>null</code> as defined in Servlet API 2.4 */
+    /** Returns an empty enumeration as defined in Servlet API 2.4 */
     @Deprecated
     public Enumeration<?> getServlets() {
         return Collections.enumeration(Collections.emptyList());
