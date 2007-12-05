@@ -18,12 +18,7 @@ package org.apache.sling.maven.jspc;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -41,20 +36,19 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.logging.impl.LogFactoryImpl;
 import org.apache.commons.logging.impl.SimpleLog;
-import org.apache.jasper.JasperException;
-import org.apache.jasper.JspCompilationContext;
-import org.apache.jasper.Options;
-import org.apache.jasper.compiler.Compiler;
-import org.apache.jasper.compiler.JspConfig;
-import org.apache.jasper.compiler.JspRuntimeContext;
-import org.apache.jasper.compiler.TagPluginManager;
-import org.apache.jasper.compiler.TldLocationsCache;
-import org.apache.jasper.xmlparser.TreeNode;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
-import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.scripting.jsp.jasper.JasperException;
+import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
+import org.apache.sling.scripting.jsp.jasper.Options;
+import org.apache.sling.scripting.jsp.jasper.compiler.Compiler;
+import org.apache.sling.scripting.jsp.jasper.compiler.JspConfig;
+import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
+import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
+import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
+import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
 
 /**
  * The <code>JspcMojo</code> is implements the Sling Maven JspC goal
@@ -208,8 +202,19 @@ public class JspcMojo extends AbstractMojo implements Options {
             uriSourceRoot = new File(sourceDirectory).getAbsolutePath();
         }
 
-        // scan all JSP file
-        // scanFiles(new File(sourceDirectory));
+        // ensure output directory
+        File outputDirectoryFile = new File(outputDirectory);
+        if (!outputDirectoryFile.isDirectory()) {
+            if (outputDirectoryFile.exists()) {
+                throw new MojoExecutionException(outputDirectory
+                    + " exists but is not a directory");
+            }
+
+            if (!outputDirectoryFile.mkdirs()) {
+                throw new MojoExecutionException(
+                    "Cannot create output directory " + outputDirectory);
+            }
+        }
 
         // have the files compiled
         String oldValue = System.getProperty(LogFactoryImpl.LOG_PROPERTY);
@@ -271,8 +276,6 @@ public class JspcMojo extends AbstractMojo implements Options {
             getLog().debug("execute() starting for " + pages.size() + " pages.");
         }
 
-        StringWriter serviceComponentWriter = new StringWriter();
-
         try {
             if (context == null) {
                 initServletContext();
@@ -308,10 +311,8 @@ public class JspcMojo extends AbstractMojo implements Options {
                     nextjsp = nextjsp.substring(2);
                 }
 
-                processFile(nextjsp, serviceComponentWriter);
+                processFile(nextjsp);
             }
-
-            printServiceComponents(serviceComponentWriter);
 
         } catch (JasperException je) {
             Throwable rootCause = je;
@@ -329,8 +330,7 @@ public class JspcMojo extends AbstractMojo implements Options {
         }
     }
 
-    private void processFile(String file, Writer serviceComponentWriter)
-            throws JasperException {
+    private void processFile(String file) throws JasperException {
         ClassLoader originalClassLoader = null;
 
         try {
@@ -366,11 +366,6 @@ public class JspcMojo extends AbstractMojo implements Options {
             } else if (showSuccess) {
                 getLog().info("File up to date: " + file);
             }
-
-            // write the OSGi component descriptor
-            writeJspServiceComponent(serviceComponentWriter, jspUri,
-                clctxt.getServletPackageName() + "."
-                    + clctxt.getServletClassName());
 
             // remove the java source and smap file
             new File(clctxt.getClassFileName() + ".smap").delete();
@@ -468,99 +463,6 @@ public class JspcMojo extends AbstractMojo implements Options {
         loader = new URLClassLoader(urlsA, getClass().getClassLoader());
     }
 
-    private void writeJspServiceComponent(Writer out, String componentName,
-            String className) {
-
-        try {
-            out.write("<scr:component enabled=\"true\" immediate=\"true\" name=\"");
-            out.write(componentName);
-            out.write("\">\r\n");
-
-            // the implementation is of course the compiled JSP
-            out.write("<scr:implementation class=\"");
-            out.write(className);
-            out.write("\"/>\r\n");
-
-            // the JSP registers as a Servlet
-            out.write("<scr:service>\r\n");
-            out.write("<scr:provide interface=\"javax.servlet.Servlet\"/>\r\n");
-            out.write("</scr:service>\r\n");
-
-            // use the JSP's id as the service.pid
-            out.write("<scr:property name=\"service.pid\" value=\"");
-            out.write(componentName);
-            out.write("\"/>\r\n");
-
-            // if the project defines an organization name, add it
-            if (project.getOrganization() != null
-                && project.getOrganization().getName() != null) {
-                out.write("<scr:property name=\"service.vendor\" value=\"");
-                out.write(project.getOrganization().getName());
-                out.write("\"/>\r\n");
-            }
-
-            out.write("</scr:component>\r\n");
-
-            out.flush();
-        } catch (IOException ignore) {
-            // don't care
-        }
-    }
-
-    private void printServiceComponents(StringWriter serviceComponentWriter)
-            throws IOException {
-        FileOutputStream out = null;
-        try {
-
-            String target = "OSGI-INF/jspServiceComponents.xml";
-            File targetFile = new File(outputDirectory, target);
-            targetFile.getParentFile().mkdirs();
-
-            out = new FileOutputStream(targetFile);
-            PrintWriter pw = new PrintWriter(new OutputStreamWriter(out,
-                "UTF-8"));
-
-            pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            pw.println("<components xmlns:scr=\"http://www.osgi.org/xmlns/scr/v1.0.0\">");
-
-            pw.print(serviceComponentWriter.toString());
-
-            pw.println("</components>");
-
-            pw.flush();
-            pw.close();
-
-            // now add the descriptor file to the maven resources
-            final String ourRsrcPath = new File(outputDirectory).getAbsolutePath();
-            boolean found = false;
-            final Iterator<?> rsrcIterator = project.getResources().iterator();
-            while (!found && rsrcIterator.hasNext()) {
-                final Resource rsrc = (Resource) rsrcIterator.next();
-                found = rsrc.getDirectory().equals(ourRsrcPath);
-            }
-            if (!found) {
-                final Resource resource = new Resource();
-                resource.setDirectory(new File(outputDirectory).getAbsolutePath());
-                project.addResource(resource);
-            }
-
-            // and set include accordingly
-            String svcComp = project.getProperties().getProperty(
-                "Service-Component");
-            svcComp = (svcComp == null) ? target : svcComp + ", " + target;
-            project.getProperties().setProperty("Service-Component", svcComp);
-
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ignore) {
-                    // don't care
-                }
-            }
-        }
-    }
-
     // ---------- Options interface --------------------------------------------
 
     /*
@@ -628,6 +530,11 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getCompiler()
      */
     public String getCompiler() {
+        // use JDTCompiler, which is the default
+        return null;
+    }
+
+    public String getCompilerClassName() {
         // use JDTCompiler, which is the default
         return null;
     }
@@ -826,5 +733,10 @@ public class JspcMojo extends AbstractMojo implements Options {
     public boolean isXpoweredBy() {
         // no XpoweredBy setting please
         return false;
+    }
+
+    public boolean getDisplaySourceFragment() {
+        // Display the source fragment on errors for maven compilation
+        return true;
     }
 }
