@@ -25,7 +25,7 @@ public interface JobContext {
 
     /**
      * Get the name of the scheduled job.
-     * @return
+     * @return The name of the job.
      */
     String getName();
 
@@ -33,7 +33,7 @@ public interface JobContext {
 
     /**
      * Get the service locator.
-     * @return
+     * @return The service locator.
      */
     ServiceLocator getServiceLocator();
 }
