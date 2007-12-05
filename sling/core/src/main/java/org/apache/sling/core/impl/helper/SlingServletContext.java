@@ -324,7 +324,13 @@ public class SlingServletContext implements ServletContext {
         return Collections.enumeration(Collections.emptyList());
     }
 
+    /** Returns the context path of the web application. (Servlet API 2.5) */
+    public String getContextPath() {
+        return getServletContext().getContextPath();
+    }
+
     // ---------- internal -----------------------------------------------------
+
 
     /**
      * Returns the real servlet context of the servlet container in which the
