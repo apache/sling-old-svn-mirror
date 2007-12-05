@@ -86,7 +86,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * Target folder for the compiled classes.
      *
      * @parameter expression="${jspc.outputDirectory}"
-     *            default-value="${project.build.directory}/jspc-plugin-generated"
+     *            default-value="${project.build.outputDirectory}"
      * @required
      * @readonly
      */
