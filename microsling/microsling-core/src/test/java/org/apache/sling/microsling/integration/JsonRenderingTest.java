@@ -52,19 +52,44 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
         assertJavascript(testText, json ,"out.println(data.text)");
     }
     
+    /**  Create a node with children, verify that we get them back in JSON format */ 
     public void testRecursiveOneLevel() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
         
         final String parentNodeUrl = testClient.createNode(postUrl, props);
-        for(String child : new String [] { "A", "B", "C" }) {
+        final String [] children = { "A", "B", "C" };
+        for(String child : children) {
             props.put("child", child);
             testClient.createNode(parentNodeUrl + "/" + child, props);
         }
         
-        // TODO fails if recursion level=1
+        final String json = getContent(parentNodeUrl + ".json?slingItemDumpRecursionLevel=1", CONTENT_TYPE_JSON);
+        assertJavascript(testText, json, "out.print(data.text)");
+        for(String child : children) {
+            assertJavascript(child, json, "out.print(data['" + child + "'].child)");
+            assertJavascript(testText, json, "out.print(data['" + child + "'].text)");
+        }
+    }
+    
+    /**  Create a node with children, verify that we do not get them back in 
+     *   JSON format if using recursion level=0 */ 
+    public void testRecursiveZeroLevels() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("text", testText);
+        
+        final String parentNodeUrl = testClient.createNode(postUrl, props);
+        final String [] children = { "A", "B", "C" };
+        for(String child : children) {
+            props.put("child", child);
+            testClient.createNode(parentNodeUrl + "/" + child, props);
+        }
+        
         final String json = getContent(parentNodeUrl + ".json?slingItemDumpRecursionLevel=0", CONTENT_TYPE_JSON);
         assertJavascript(testText, json, "out.print(data.text)");
+        for(String child : children) {
+            assertJavascript("undefined", json, "out.print(typeof data['" + child + "'])");
+        }
     }
     
     public void testEscapedStrings() throws IOException {

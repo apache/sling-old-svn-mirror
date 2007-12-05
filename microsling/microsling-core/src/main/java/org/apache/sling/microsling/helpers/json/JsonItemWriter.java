@@ -93,10 +93,12 @@ public class JsonItemWriter {
         }
 
         // the child nodes
-        final NodeIterator children = node.getNodes();
-        while(children.hasNext()) {
-            final Node n = children.nextNode();
-            dumpSingleNode(n, w, currentRecursionLevel, maxRecursionLevels);
+        if(recursionLevelActive(currentRecursionLevel, maxRecursionLevels)) {
+            final NodeIterator children = node.getNodes();
+            while(children.hasNext()) {
+                final Node n = children.nextNode();
+                dumpSingleNode(n, w, currentRecursionLevel, maxRecursionLevels);
+            }
         }
 
         w.endObject();
@@ -105,10 +107,15 @@ public class JsonItemWriter {
     /** Dump a single node */
     protected void dumpSingleNode(Node n, JSONWriter w, int currentRecursionLevel, int maxRecursionLevels)
     throws RepositoryException, JSONException {
-        w.key(n.getName());
-        if (maxRecursionLevels == 0 || currentRecursionLevel + 1 < maxRecursionLevels) {
+        if (recursionLevelActive(currentRecursionLevel, maxRecursionLevels)) {
+            w.key(n.getName());
             dump(n, w, currentRecursionLevel + 1, maxRecursionLevels);
         }
+    }
+    
+    /** true if the current recursion level is active */
+    protected boolean recursionLevelActive(int currentRecursionLevel, int maxRecursionLevels) {
+        return currentRecursionLevel < maxRecursionLevels;
     }
 
     /**
