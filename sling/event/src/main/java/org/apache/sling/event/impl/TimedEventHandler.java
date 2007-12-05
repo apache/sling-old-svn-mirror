@@ -356,6 +356,7 @@ public class TimedEventHandler
      */
     public void execute(JobContext context) {
         final String topic = (String) context.getConfiguration().get(JOB_TOPIC);
+        @SuppressWarnings("unchecked")
         final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get(JOB_CONFIG);
         if ( this.eventAdmin != null ) {
             try {
