@@ -52,6 +52,21 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
         assertJavascript(testText, json ,"out.println(data.text)");
     }
     
+    public void testRecursiveOneLevel() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("text", testText);
+        
+        final String parentNodeUrl = testClient.createNode(postUrl, props);
+        for(String child : new String [] { "A", "B", "C" }) {
+            props.put("child", child);
+            testClient.createNode(parentNodeUrl + "/" + child, props);
+        }
+        
+        // TODO fails if recursion level=1
+        final String json = getContent(parentNodeUrl + ".json?slingItemDumpRecursionLevel=0", CONTENT_TYPE_JSON);
+        assertJavascript(testText, json, "out.print(data.text)");
+    }
+    
     public void testEscapedStrings() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
         props.put("dq", "Some text with \"double quotes\"");
