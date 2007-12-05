@@ -299,6 +299,13 @@ public class JspCServletContext implements ServletContext {
     }
 
     /**
+     * Return "/" as the context path for compilation.
+     */
+    public String getContextPath() {
+        return "/";
+    }
+
+    /**
      * Return an empty enumeration of servlet names.
      *
      * @deprecated This method has been deprecated with no replacement
