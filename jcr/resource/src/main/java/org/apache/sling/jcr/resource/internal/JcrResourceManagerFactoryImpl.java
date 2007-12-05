@@ -18,13 +18,14 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.BUNDLE_RESOURCE_ROOTS;
+
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -32,11 +33,16 @@ import javax.jcr.Session;
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
+import org.apache.sling.jcr.resource.internal.helper.bundle.BundleResourceProvider;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.loader.Loader;
 import org.apache.sling.jcr.resource.internal.mapping.ObjectContentManagerFactory;
 import org.osgi.framework.Bundle;
@@ -69,7 +75,7 @@ import org.slf4j.LoggerFactory;
  * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceManagerFactory"
  */
 public class JcrResourceManagerFactoryImpl implements
-        JcrResourceManagerFactory, SynchronousBundleListener {
+        JcrResourceManagerFactory, SynchronousBundleListener, ResourceProvider {
 
     /**
      * @scr.property value="true" type="Boolean"
@@ -119,7 +125,10 @@ public class JcrResourceManagerFactoryImpl implements
      */
     private MimeTypeService mimeTypeService;
 
-    /** This services ServiceReference for use in {@link #fireEvent(Bundle, String, Map)} */
+    /**
+     * This services ServiceReference for use in
+     * {@link #fireEvent(Bundle, String, Map)}
+     */
     private ServiceReference serviceReference;
 
     /** all mappings */
@@ -151,6 +160,14 @@ public class JcrResourceManagerFactoryImpl implements
      * into the repository when the providing bundle is installed.
      */
     private Loader initialContentLoader;
+
+    private ResourceProviderEntry rootProviderEntry;
+
+    private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
+
+    public JcrResourceManagerFactoryImpl() {
+        this.rootProviderEntry = new ResourceProviderEntry("/", this);
+    }
 
     // ---------- JcrResourceManagerFactory ------------------------------------
 
@@ -200,19 +217,36 @@ public class JcrResourceManagerFactoryImpl implements
             case BundleEvent.STARTING: // STARTED:
                 // register mappings before the bundle gets activated
                 objectContentManagerFactory.registerMapperClient(event.getBundle());
-                addBundleResources(event.getBundle());
+                addBundleResourceProvider(event.getBundle());
                 break;
 
             case BundleEvent.STOPPED:
                 // remove mappings after the bundle has stopped
                 objectContentManagerFactory.unregisterMapperClient(event.getBundle());
-                removeBundleResources(event.getBundle());
+                removeBundleResourceProvider(event.getBundle());
                 break;
 
             case BundleEvent.UNINSTALLED:
                 initialContentLoader.unregisterBundle(event.getBundle());
                 break;
         }
+    }
+
+    // ---------- ResourceProvider ---------------------------------------------
+
+    public String[] getRoots() {
+        return new String[] { "/" };
+    }
+
+    public Resource getResource(JcrResourceManager jcrResourceManager,
+            String path) throws RepositoryException {
+
+        if (jcrResourceManager.itemExists(path)) {
+            log.info("getResource: Found JCR Node Resource at path '{}'", path);
+            return new JcrNodeResource(jcrResourceManager, path);
+        }
+
+        return null;
     }
 
     // ---------- EventAdmin Event Dispatching ---------------------------------
@@ -313,45 +347,26 @@ public class JcrResourceManagerFactoryImpl implements
 
     // ---------- Bundle provided resources -----------------------------------
 
-    private Map<String, Bundle> bundleResourcesByPrefix = new HashMap<String, Bundle>();
-    private Map<Long, String[]> bundleResourcesByBundleId = new HashMap<Long, String[]>();
-
-    private void addBundleResources(Bundle bundle) {
-        String prefixes = (String) bundle.getHeaders().get("Sling-Resource-Prefixes");
+    private void addBundleResourceProvider(Bundle bundle) {
+        String prefixes = (String) bundle.getHeaders().get(
+            BUNDLE_RESOURCE_ROOTS);
         if (prefixes != null) {
-            StringTokenizer pt = new StringTokenizer(prefixes, ", \t\n\r\f");
-            List<String> prefixList = new ArrayList<String>();
-            while (pt.hasMoreTokens()) {
-                String prefix = pt.nextToken().trim();
-                if (prefix.length() > 0) {
-                    bundleResourcesByPrefix.put(prefix, bundle);
-                    prefixList.add(prefix);
-                }
-            }
-            if (prefixList.size() > 0) {
-                bundleResourcesByBundleId.put(bundle.getBundleId(),
-                    prefixList.toArray(new String[prefixList.size()]));
-            }
+            BundleResourceProvider brp = new BundleResourceProvider(bundle,
+                prefixes);
+            rootProviderEntry.addResourceProvider(brp);
+            bundleResourceProviderMap.put(bundle.getBundleId(), brp);
         }
     }
 
-    private void removeBundleResources(Bundle bundle) {
-        String[] prefixes = bundleResourcesByBundleId.get(bundle.getBundleId());
-        if (prefixes != null) {
-            for (String prefix : prefixes) {
-                bundleResourcesByPrefix.remove(prefix);
-            }
+    private void removeBundleResourceProvider(Bundle bundle) {
+        BundleResourceProvider brp = bundleResourceProviderMap.get(bundle.getBundleId());
+        if (brp != null) {
+            rootProviderEntry.removeResourceProvider(brp);
         }
     }
 
-    Bundle getBundleForResource(String path) {
-        for (Map.Entry<String, Bundle> entry : bundleResourcesByPrefix.entrySet()) {
-            if (path.startsWith(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
-
-        return null;
+    ResourceProvider getResourceProvider(String path) {
+        return rootProviderEntry.getResourceProvider(path);
     }
 
     // ---------- SCR Integration ---------------------------------------------
@@ -379,14 +394,13 @@ public class JcrResourceManagerFactoryImpl implements
                 if (bundle.getState() == Bundle.ACTIVE) {
                     // register active bundles with the mapper client
                     objectContentManagerFactory.registerMapperClient(bundle);
-                    addBundleResources(bundle);
+                    addBundleResourceProvider(bundle);
                 }
             }
         } catch (Throwable t) {
             log.error("activate: Problem while loading initial content and"
                 + " registering mappings for existing bundles", t);
         }
-
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
