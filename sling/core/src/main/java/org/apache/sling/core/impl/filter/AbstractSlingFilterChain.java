@@ -38,8 +38,7 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentFilterChain#doFilter(org.apache.sling.core.component.ComponentRequest,
-     *      org.apache.sling.core.component.ComponentResponse)
+     * @see javax.servlet.FilterChain#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
      */
     public void doFilter(ServletRequest request, ServletResponse response)
             throws ServletException, IOException {

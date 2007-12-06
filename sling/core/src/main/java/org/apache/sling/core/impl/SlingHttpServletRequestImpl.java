@@ -33,6 +33,7 @@ import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
@@ -88,7 +89,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getRequestDispatcher(org.apache.sling.core.component.Content)
+     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestDispatcher(org.apache.sling.api.resource.Resource)
      */
     public RequestDispatcher getRequestDispatcher(Resource resource) {
         return getRequestDispatcher(resource, null);
@@ -144,28 +145,28 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getRequestParameter(java.lang.String)
+     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameter(java.lang.String)
      */
     public RequestParameter getRequestParameter(String name) {
         return this.getParameterSupport().getRequestParameter(name);
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getRequestParameters(java.lang.String)
+     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameters(java.lang.String)
      */
     public RequestParameter[] getRequestParameters(String name) {
         return this.getParameterSupport().getRequestParameters(name);
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getRequestParameterMap()
+     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameterMap()
      */
     public RequestParameterMap getRequestParameterMap() {
         return this.getParameterSupport().getRequestParameterMap();
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getCookie(java.lang.String)
+     * @see org.apache.sling.api.SlingHttpServletRequest#getCookie(java.lang.String)
      */
     public Cookie getCookie(String name) {
         Cookie[] cookies = getCookies();
@@ -181,12 +182,15 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         return null;
     }
 
+    /**
+     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestPathInfo()
+     */
     public RequestPathInfo getRequestPathInfo() {
         return getRequestData().getContentData().getRequestPathInfo();
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getResourceBundle(java.util.Locale)
+     * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(java.util.Locale)
      */
     public ResourceBundle getResourceBundle(Locale locale) {
         // TODO should use our resource bundle !!
@@ -194,7 +198,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getResponseContentType()
+     * @see org.apache.sling.api.SlingHttpServletRequest#getResponseContentType()
      */
     public String getResponseContentType() {
         // TODO Auto-generated method stub
@@ -202,7 +206,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see org.apache.sling.core.component.ComponentRequest#getResponseContentTypes()
+     * @see org.apache.sling.api.SlingHttpServletRequest#getResponseContentTypes()
      */
     @SuppressWarnings("unchecked")
     public Enumeration<String> getResponseContentTypes() {

@@ -87,7 +87,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * <td><code>null</code>
      * <td>no user details were contained in the request </tr>
      * <tr>
-     * <td>{@link #DOING_AUTH}
+     * <td>{@link AuthenticationInfo#DOING_AUTH}
      * <td>the handler is in an ongoing authentication exchange with the
      * client. The request handling is terminated.
      * <tr>
