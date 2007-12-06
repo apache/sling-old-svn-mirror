@@ -58,9 +58,7 @@ public class LocaleResolverFilter implements Filter {
     private Locale defaultLocale;
 
     /**
-     * @see org.apache.sling.core.component.ComponentFilter#doFilter(org.apache.sling.core.component.ComponentRequest,
-     *      org.apache.sling.core.component.ComponentResponse,
-     *      org.apache.sling.core.component.ComponentFilterChain)
+     * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain filterChain) throws IOException, ServletException {

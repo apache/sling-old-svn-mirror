@@ -59,7 +59,7 @@ public class ThemeResolverFilter implements Filter {
     private ThemeResolver themeResolver;
 
     /**
-     * Calls the {@link ThemeResolver#resolveTheme(RenderRequest)} method if a
+     * Calls the {@link ThemeResolver#resolveTheme(ServletRequest)} method if a
      * theme resolver is assigned to set the {@link Theme} for the current
      * request. If no theme resolver is assigned, this method just forwards the
      * request to the next filter.
