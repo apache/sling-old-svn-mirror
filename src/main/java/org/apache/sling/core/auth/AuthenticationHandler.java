@@ -43,7 +43,7 @@ public interface AuthenticationHandler {
      * <td>no user details were contained in the request or the handler is not
      * capable or willing to extract credentials from the request</tr>
      * <tr>
-     * <td>{@link #DOING_AUTH}
+     * <td>{@link AuthenticationInfo#DOING_AUTH}
      * <td>the handler is in an ongoing authentication transaction with the
      * client. Request processing should be aborted at this stage.
      * <tr>
@@ -61,10 +61,10 @@ public interface AuthenticationHandler {
      * @param response The response object which may be used to send the
      *            information on the request failure to the user.
      * @return A valid <code>AuthenticationInfo</code> instance identifying
-     *         the request user, {@link #DOING_AUTH} if the handler is in an
+     *         the request user, {@link AuthenticationInfo#DOING_AUTH} if the handler is in an
      *         authentication transaction with the client or null if the request
      *         does not contain authentication information. In case of
-     *         {@link #DOING_AUTH}, the method must have sent a response
+     *         {@link AuthenticationInfo#DOING_AUTH}, the method must have sent a response
      *         indicating that fact to the client.
      */
     AuthenticationInfo authenticate(HttpServletRequest request,
