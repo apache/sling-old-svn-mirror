@@ -77,6 +77,9 @@
         <!-- The JCR sub project -->
         <module>jcr/api</module>
         <module>jcr/resource</module>
+        <module>jcr/classloader</module>
+        <module>jcr/jackrabbit-client</module>
+        <module>jcr/jackrabbit-server</module>
         
         <!-- Sling -->
         <module>sling/core</module>
