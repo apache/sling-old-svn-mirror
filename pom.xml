@@ -64,7 +64,7 @@
 
         <!-- The Maven Plugins -->
         <module>maven/maven-jcrocm-plugin</module>
-<!--         <module>maven/maven-jspc-plugin</module>    -->
+        <module>maven/maven-jspc-plugin</module>
         <module>maven/maven-sling-plugin</module>
 
         <!-- The Sling API -->
@@ -86,6 +86,8 @@
         <!-- Scripting Support -->
         <module>scripting/freemarker</module>
         <module>scripting/javascript</module>
+        <module>scripting/jsp</module>
+        <module>scripting/jsp-taglib</module>
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
     </modules>
