@@ -28,10 +28,8 @@ import java.util.Map;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
@@ -99,10 +97,6 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
     /**
      * @param req
-     * @param scriptExtension
-     * @return <code>true</code> if a MicroslingScript and a ScriptEngine to
-     *         evaluate it could be found. Otherwise <code>false</code> is
-     *         returned.
      * @throws ServletException
      * @throws IOException
      */
@@ -164,33 +158,33 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     public SlingScript resolveScriptInternal(
             final SlingHttpServletRequest request) throws RepositoryException, SlingException {
 
-        final Resource r = request.getResource(); 
+        final Resource r = request.getResource();
         final Session s = (Session)request.getAttribute(Session.class.getName());
         MicroslingScript result = null;
 
         final String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
             request.getMethod(),
-            request.getRequestPathInfo().getExtension(), 
+            request.getRequestPathInfo().getExtension(),
             "*");
-        
+
         // this is the location of the trailing asterisk
         final int scriptExtensionOffset = scriptFilename.length() - 1;
 
         final List<String> possiblePaths = scriptSearchPathsBuilder.getScriptSearchPaths(
                 request.getResource(), request.getRequestPathInfo().getSelectors());
         for(String currentPath : possiblePaths) {
-            
+
             if(result != null) {
                 break;
             }
-            
+
             if (log.isDebugEnabled()) {
                 log.debug("Looking for script with filename=" + scriptFilename
                     + " under " + currentPath);
             }
-            
+
             if (s.itemExists(currentPath)) {
-    
+
                 // get the item and ensure it is a node
                 final Item i = s.getItem(currentPath);
                 if (i.isNode()) {
@@ -198,14 +192,14 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                     NodeIterator scriptNodeIterator = parent.getNodes(scriptFilename);
                     while (scriptNodeIterator.hasNext()) {
                         Node scriptNode = scriptNodeIterator.nextNode();
-    
+
                         // SLING-72: Require the node to be an nt:file
                         if (scriptNode.isNodeType("nt:file")) {
-    
+
                             String scriptName = scriptNode.getName();
                             String scriptExt = scriptName.substring(scriptExtensionOffset);
                             SlingScriptEngine scriptEngine = scriptEngines.get(scriptExt);
-    
+
                             if (scriptEngine != null) {
                                 MicroslingScript script = new MicroslingScript();
                                 script.setScriptResource(new JcrNodeResource(scriptNode));
@@ -263,9 +257,6 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         }
 
         public Reader getScriptReader() throws IOException {
-
-            Property property;
-            Value value;
 
             InputStream stream = getScriptResource().adaptTo(InputStream.class);
             if (stream == null) {

@@ -61,11 +61,11 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
     /** Optional request parameter: only request parameters starting with this prefix are
      *  saved as Properties when creating a Node. Active only if at least one parameter
-     *  starts with this prefix, and defaults to {@link DEFAULT_SAVE_PARAM_PREFIX}.
+     *  starts with this prefix, and defaults to {@link #DEFAULT_SAVE_PARAM_PREFIX}.
      */
     public static final String RP_SAVE_PARAM_PREFIX = RP_PREFIX + "saveParamPrefix";
 
-    /** Default value for {@link RP_SAVE_PARAM_PREFIX} */
+    /** Default value for {@link #RP_SAVE_PARAM_PREFIX} */
     public static final String DEFAULT_SAVE_PARAM_PREFIX = "./";
 
     /** Optional request parameter: if value is 0, created node is ordered so as
@@ -200,7 +200,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
         if(forcedRedirect != null) {
             redirectPath = forcedRedirect;
-        } else if(currentNode != null) {
+        } else {
             redirectPath = currentNode.getPath();
         }
         if(redirectExtension!=null) {
