@@ -22,7 +22,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletException;
@@ -32,7 +31,6 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -59,38 +57,37 @@ public class MicrojaxGetServlet extends SlingSafeMethodsServlet {
             }
         }
 
-        if(data== null) {
+        if (data== null) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,request.getPathInfo());
-        } else {
-            // render data in JSON format
-            response.setContentType(getServletContext().getMimeType("dummy.json"));
-            final Writer out = new OutputStreamWriter(response.getOutputStream());
-            final JSONWriter w = new JSONWriter(out);
-            try {
-                w.object();
-                for(Map.Entry<String, Object> e : data.entrySet()) {
-                    w.key(e.getKey());
-                    w.value(e.getValue());
-                }
-                w.endObject();
-
-            } catch (JSONException jse) {
-                out.write(jse.toString());
-
-            } finally {
-                out.flush();
+        }
+        // render data in JSON format
+        response.setContentType(getServletContext().getMimeType("dummy.json"));
+        final Writer out = new OutputStreamWriter(response.getOutputStream());
+        final JSONWriter w = new JSONWriter(out);
+        try {
+            w.object();
+            for(Map.Entry<String, Object> e : data.entrySet()) {
+                w.key(e.getKey());
+                w.value(e.getValue());
             }
+            w.endObject();
+
+        } catch (JSONException jse) {
+            out.write(jse.toString());
+
+        } finally {
+            out.flush();
         }
     }
 
     protected Map<String, Object> getSessionInfo(SlingHttpServletRequest request)
     throws RepositoryException, HttpStatusCodeException, SlingException {
         final Map<String, Object> result = new HashMap<String, Object>();
-        
+
         final Session s = (Session)request.getAttribute(Session.class.getName());
         result.put("workspace",s.getWorkspace().getName());
         result.put("userID",s.getUserID());
-        
+
         return result;
     }
 

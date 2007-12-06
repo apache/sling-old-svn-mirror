@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.jcr.NamespaceException;
@@ -141,7 +140,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
                 // return the base resource
                 return base;
             }
-            
+
             Node baseNode = base.adaptTo(Node.class);
             if (baseNode != null) {
                 try {
