@@ -156,7 +156,7 @@ public class RequestLoggerFilter implements Filter {
      * configuration has already been done by the
      * {@link #activate(org.osgi.service.component.ComponentContext)} method.
      *
-     * @param context Not used.
+     * @param config Not used.
      */
     public void init(FilterConfig config) {
     }
@@ -174,15 +174,15 @@ public class RequestLoggerFilter implements Filter {
      * <li>Calls loggers configured to be used at request exit time.</li>
      * </ol>
      *
-     * @param request The <code>ComponentRequest</code> representing the
+     * @param sRequest The <code>ServletRequest</code> representing the
      *            request input sent from the client.
-     * @param response The <code>ComponentResponse</code> representing the
+     * @param response The <code>ServletResponse</code> representing the
      *            response to be sent back to the client.
-     * @param filterChain The <code>ComponentFilterChain</code> used to
+     * @param filterChain The <code>FilterChain</code> used to
      *            forward the request on to the next filter.
      * @throws IOException Forwarded if thrown by any filter in the chain or by
      *             the Component called to handle the request.
-     * @throws ComponentException Forwarded if thrown by any filter in the chain
+     * @throws ServletException Forwarded if thrown by any filter in the chain
      *             or by the Component called to handle the request.
      */
     public void doFilter(ServletRequest sRequest, ServletResponse response,

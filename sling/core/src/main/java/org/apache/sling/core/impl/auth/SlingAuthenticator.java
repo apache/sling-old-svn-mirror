@@ -45,6 +45,8 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sun.security.krb5.internal.Ticket;
+
 /**
  * The <code>SlingAuthenticator</code> class is the default implementation of
  * the {@link SlingAuthenticator} interface. This class supports :
@@ -271,8 +273,8 @@ public class SlingAuthenticator implements ManagedService {
      * Any response sent by the handler is also handled by the error handler
      * infrastructure.
      *
-     * @param req The request object
-     * @param res The response object to which to send the request
+     * @param request The request object
+     * @param response The response object to which to send the request
      */
     public void requestAuthentication(HttpServletRequest request,
             HttpServletResponse response) {
