@@ -55,7 +55,6 @@ class SessionPool {
      * The default upper limit of simultaneously active sessions created by this
      * instance (value is Integer.MAX_VALUE).
      *
-     * @see #PARAM_MAX_ACTIVE_SESSIONS
      * @see #setMaxActiveSessions(int)
      * @see #getMaxActiveSessions()
      */
@@ -65,9 +64,8 @@ class SessionPool {
      * The default maximum time in seconds to wait for the number of active
      * sessions to drop below the maximum.
      *
-     * @see #PARAM_MAX_ACTIVE_SESSIONS_WAIT
      * @see #getMaxActiveSessionsWait()
-     * @see #setMaxActiveSessionsWait(long)
+     * @see #setMaxActiveSessionsWait(int)
      */
     public static final int DEFAULT_MAX_ACTIVE_SESSIONS_WAIT = 10;
 
@@ -75,7 +73,6 @@ class SessionPool {
      * The default upper limit for the number of idle sessions to keep in the
      * pool (valie is "10").
      *
-     * @see #PARAM_MAX_IDLE_SESSIONS
      * @see #setMaxIdleSessions(int)
      * @see #getMaxIdleSessions()
      */
@@ -351,7 +348,6 @@ class SessionPool {
      * This method is not part of the public API of this class and is present
      * solely for the purposes of JMX support.
      *
-     * @see #PARAM_MAX_ACTIVE_SESSIONS
      * @see #DEFAULT_MAX_ACTIVE_SESSIONS
      * @see #setMaxActiveSessions(int)
      */
@@ -369,7 +365,6 @@ class SessionPool {
      *          less than or equal to zero, the default value (Integer.MAX_VALUE)
      *          is assumed.
      *
-     * @see #PARAM_MAX_ACTIVE_SESSIONS
      * @see #DEFAULT_MAX_ACTIVE_SESSIONS
      * @see #getMaxActiveSessions()
      */
@@ -385,7 +380,6 @@ class SessionPool {
      * This method is not part of the public API of this class and is present
      * solely for the purposes of JMX support.
      *
-     * @see #PARAM_MAX_IDLE_SESSIONS
      * @see #DEFAULT_MAX_IDLE_SESSIONS
      * @see #getMaxIdleSessions()
      */
@@ -403,7 +397,6 @@ class SessionPool {
      *          than zero, the default value of 10 is assumed. If zero, session
      *          pooling will actually be disabled.
      *
-     * @see #PARAM_MAX_IDLE_SESSIONS
      * @see #DEFAULT_MAX_IDLE_SESSIONS
      * @see #getMaxIdleSessions()
      */
