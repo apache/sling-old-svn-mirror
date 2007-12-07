@@ -191,34 +191,46 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         // walk the request parameters, create and save nodes and properties
         setPropertiesFromRequest(currentNode, request, savePrefix, createdNodes);
 
-        // sava data and find out where to redirect
+        // sava data and send redirect
         s.save();
-        final String forcedRedirect = request.getParameter(RP_REDIRECT_TO);
-        final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
-
-        // Where to redirect to when done
-        String redirectPath;
-        if(forcedRedirect != null) {
-            redirectPath = forcedRedirect;
-        } else {
-            redirectPath = currentNode.getPath();
+        response.sendRedirect(getRedirectUrl(request,currentNode.getPath()));
+    }
+    
+    /** compute redirect URL (SLING-126) */
+    protected String getRedirectUrl(SlingHttpServletRequest request, String currentNodePath) {
+        
+        // redirect param has priority
+        String result = request.getParameter(RP_REDIRECT_TO);
+        
+        if(result==null || result.trim().length()==0) {
+            // try Referer
+            result = request.getHeader("Referer");
         }
-        if(redirectExtension!=null) {
-            if(redirectExtension.startsWith(".")) {
-                redirectPath += redirectExtension;
-            } else {
-                redirectPath += "." + redirectExtension;
+        
+        if(result==null || result.trim().length()==0) {
+            // use path of current node, with optional extension 
+            final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
+            result = currentNodePath;
+            
+            if(redirectExtension!=null) {
+                if(redirectExtension.startsWith(".")) {
+                    result += redirectExtension;
+                } else {
+                    result += "." + redirectExtension;
+                }
             }
+            
+            result =
+                SlingRequestPaths.getContextPath(request)
+                + SlingRequestPaths.getServletPath(request)
+                + result;
         }
-
-        final String redirectUrl =
-            SlingRequestPaths.getContextPath(request)
-            + SlingRequestPaths.getServletPath(request)
-            + redirectPath;
+        
         if(log.isDebugEnabled()) {
-            log.debug("Redirecting to " + redirectUrl);
+            log.debug("Will redirect to " + result);
         }
-        response.sendRedirect(redirectUrl);
+        
+        return result;
     }
 
     /** Set Node properties from current request
