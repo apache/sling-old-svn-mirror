@@ -64,7 +64,7 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
             testClient.createNode(parentNodeUrl + "/" + child, props);
         }
         
-        final String json = getContent(parentNodeUrl + ".json?slingItemDumpRecursionLevel=1", CONTENT_TYPE_JSON);
+        final String json = getContent(parentNodeUrl + ".json?maxlevels=1", CONTENT_TYPE_JSON);
         assertJavascript(testText, json, "out.print(data.text)");
         for(String child : children) {
             assertJavascript(child, json, "out.print(data['" + child + "'].child)");
@@ -85,7 +85,7 @@ public class JsonRenderingTest extends MicroslingHttpTestBase {
             testClient.createNode(parentNodeUrl + "/" + child, props);
         }
         
-        final String json = getContent(parentNodeUrl + ".json?slingItemDumpRecursionLevel=0", CONTENT_TYPE_JSON);
+        final String json = getContent(parentNodeUrl + ".json?maxlevels=0", CONTENT_TYPE_JSON);
         assertJavascript(testText, json, "out.print(data.text)");
         for(String child : children) {
             assertJavascript("undefined", json, "out.print(typeof data['" + child + "'])");
