@@ -60,7 +60,7 @@ var microjax = null;
 	/**
 	 * HTTP GET XHR Helper
 	 * @param {String} url The URL
-	 * @return The response body
+	 * @return the XHR object, use .responseText for the data
 	 * @type String
 	 */
 	microjax.httpGet = function(url) {
@@ -68,9 +68,9 @@ var microjax = null;
 	    if (httpcon) {
 			httpcon.open('GET', url, false);
 			httpcon.send(null);
-			return httpcon.responseText;
+			return httpcon;
 	    } else {
-			return "";
+			return null;
 	    }
 	}
 	/**
@@ -131,7 +131,7 @@ var microjax = null;
 	 * @param {String} path Path into the current workspace
 	 * @param {int} maxlevel maximum depth to traverse to
 	 * @param {Array} filters filter only these properties
-	 * @return An Object tree of content nodes and properties
+	 * @return An Object tree of content nodes and properties, null if not found
 	 * @type Object
 	 */
 	microjax.getContent = function(path, maxlevels) {
@@ -155,7 +155,29 @@ var microjax = null;
 		// but in tests IE6 tends to cache too much
 		var passThroughCacheParam = "?clock=" + new Date().getTime();
 	    var res=microjax.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
-	    return microjax.evalString(res);
+	    
+	    if(res.status == 200) {
+	    	return microjax.evalString(res.responseText);
+	    }
+	    return null; 
+	}
+	
+	/** Remove content by path */
+	microjax.removeContent = function(path) {
+		var httpcon = microjax.getXHR();
+		if (httpcon) {
+			var params = "ujax_delete="+path;
+			httpcon.open('POST', microjax.baseurl + microjax.currentPath, false);
+
+			// Send the proper header information along with the request
+			httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			httpcon.setRequestHeader("Content-length", params.length);
+			httpcon.setRequestHeader("Connection", "close");
+			httpcon.send(params);
+			return httpcon;
+		} else {
+			return false;
+		}
 	}
 	
 	/** eval str, accepting various object delimiters */
@@ -173,12 +195,15 @@ var microjax = null;
 	 
 	/** Get "session info" from repository. Mainly answers the question: "Who am I"
 	 *  and "Which workspace am I logged into.
-	 * @return An Object tree containing the session information
+	 * @return An Object tree containing the session information, null if server status <> 200
 	 * @type Object
 	 */
 	microjax.getSessionInfo = function() {
 	    var res=microjax.httpGet(microjax.baseurl+"/microjax:sessionInfo.json");
-	    return microjax.evalString(res);
+	    if(res.status == 200) {
+	    	return microjax.evalString(res.responseText);
+	    }
+	    return null;
 	}
 	
 	/** Replace extension in a path */

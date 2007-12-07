@@ -102,6 +102,20 @@
 	    assert("session.workspace contains 'default'",session.workspace.indexOf('default') >= 0);
 	  }
 	  
+	  function testRemoveContent() {
+		var deletePath = "/microjax-test/testhtml-nodes/delete-" + now;
+	    var c = microjaxPost(deletePath,"title=hello&created=&dummy=&time=" + now);
+	    assert("Expected 200 status for POST",c.status == 200);
+	    
+	    var data = microjax.getContent(deletePath,1);
+	    assertNotNull("data must be found before removeContent",data);
+	    
+	    var d = microjax.removeContent(deletePath);
+	    assert("Expected 200 status for removeContent, got " + d.status,d.status == 200);
+	    data = microjax.getContent(deletePath,1);
+	    assertNull("data should be gone after deletePath",data);
+	  }
+	  
 	  function runTests() {
 	    var out = document.getElementById("output");
 	    out.innerHTML = "Tests are running...";
@@ -109,6 +123,7 @@
 	    testPost();
 	    verifyPostedElement();
 	    testGetSessionInfo();
+	    testRemoveContent();
 	    out.innerHTML = "<b>Done running tests, at " + new Date() + "</b>";
 	  }
 	</script>

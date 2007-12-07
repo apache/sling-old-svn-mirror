@@ -38,3 +38,9 @@ function assertNotNull(message,o) {
     alert("assertNotNull failed: " + message);
   }
 }
+
+function assertNull(message,o) {
+  if(o!=null) {
+    alert("assertNull failed: " + message);
+  }
+}
