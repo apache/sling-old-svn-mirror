@@ -51,4 +51,16 @@ public class PostRedirectTest extends MicroslingHttpTestBase {
         final String location = testClient.createNode(postUrl, null, headers);
         assertEquals("With Referer, redirect must point to referer","http://referer/",location);
     }
+    
+    public void testMagicStarRedirect() throws IOException {
+        final Map<String,String> params = new HashMap<String,String>();
+        params.put("ujax_redirect","*");
+        final Map<String,String> headers = new HashMap<String,String>();
+        headers.put("Referer", "http://referer/");
+        final String location = testClient.createNode(postUrl, params, headers);
+        assertTrue(
+                "With magic star, redirect (" + location 
+                + ") must point to created node (path=" + postPath + ")",
+                location.contains(postPath));
+    }
 }
