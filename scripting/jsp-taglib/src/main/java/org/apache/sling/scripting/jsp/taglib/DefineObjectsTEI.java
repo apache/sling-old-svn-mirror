@@ -16,14 +16,7 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_MAPPED_OBJECT_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_CLASS;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_MANAGER_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESPONSE_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,18 +79,6 @@ public class DefineObjectsTEI extends TagExtraInfo {
      */
     public static final String ATTR_SERVICE_LOCATOR_NAME = "serviceLocatorName";
 
-    /**
-     * The name of the tag attribute used to define the name of the
-     * ResourceManager scripting variable (value is "resourceManagerName").
-     */
-    public static final String ATTR_RESOURCE_MANAGER_NAME = "resourceManagerName";
-
-    /**
-     * The name of the tag attribute used to define the type of the
-     * ResourceManager scripting variable (value is "resourceManagerClass").
-     */
-    public static final String ATTR_RESOURCE_MANAGER_CLASS = "resourceManagerClass";
-
     private static final String RENDER_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
 
     private static final String RENDER_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
@@ -131,11 +112,6 @@ public class DefineObjectsTEI extends TagExtraInfo {
             null);
         addVar(varInfos, data, ATTR_MAPPED_OBJECT_NAME,
             DEFAULT_MAPPED_OBJECT_NAME, mappedObjectClass);
-
-        String resourceManagerClass = getValue(data,
-            ATTR_RESOURCE_MANAGER_CLASS, DEFAULT_RESOURCE_MANAGER_CLASS);
-        addVar(varInfos, data, ATTR_RESOURCE_MANAGER_NAME,
-            DEFAULT_RESOURCE_MANAGER_NAME, resourceManagerClass);
 
         addVar(varInfos, data, ATTR_SERVICE_LOCATOR_NAME,
             DEFAULT_SERVICE_LOCATOR_NAME, SERVICE_LOCATOR_CLASS);

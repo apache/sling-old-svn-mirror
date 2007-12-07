@@ -129,16 +129,6 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>resourceManagerName</name>
-            <required>false</required>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>resourceManagerClass</name>
-            <required>false</required>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
             <name>serviceLocatorName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
