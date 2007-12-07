@@ -47,7 +47,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     /** This optional request parameter sets the recursion level
      *  (into chldren) when dumping a node */
-    public static final String PARAM_RECURSION_LEVEL = "slingItemDumpRecursionLevel";
+    public static final String PARAM_RECURSION_LEVEL = "maxlevels";
 
     public JsonRendererServlet(String responseContentTypeHeaderValue) {
         this.responseContentType = responseContentTypeHeaderValue;

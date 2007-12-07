@@ -54,7 +54,7 @@ public class PostServletOrderTest extends MicroslingHttpTestBase {
         }
 
         // check that nodes appear in creation order in their parent's list of children
-        final String json = getContent(postUrl + ".json?slingItemDumpRecursionLevel=2", CONTENT_TYPE_JSON);
+        final String json = getContent(postUrl + ".json?maxlevels=1", CONTENT_TYPE_JSON);
         for(int i = 0;  i < nodeUrl.length - 1; i++) {
             final int posA = json.indexOf(nodeName[i]);
             final int posB = json.indexOf(nodeName[i + 1]);
@@ -81,7 +81,7 @@ public class PostServletOrderTest extends MicroslingHttpTestBase {
         }
 
         // check that nodes appear in reverse creation order in their parent's list of children
-        final String json = getContent(postUrl + ".json?slingItemDumpRecursionLevel=2", CONTENT_TYPE_JSON);
+        final String json = getContent(postUrl + ".json?maxlevels=1", CONTENT_TYPE_JSON);
         for(int i = 0;  i < nodeUrl.length - 1; i++) {
             final int posA = json.indexOf(nodeName[i]);
             final int posB = json.indexOf(nodeName[i + 1]);
