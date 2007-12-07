@@ -37,6 +37,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
+import org.apache.sling.microsling.helpers.nodenames.NodeNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     private static final Logger log = LoggerFactory.getLogger(MicrojaxPostServlet.class);
     private final MicrojaxPropertyValueSetter propertyValueSetter = new MicrojaxPropertyValueSetter();
     private int createNodeCounter;
+    private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
 
     /** Prefix for parameter names which control this POST
      *  (ujax stands for "microjax", RP_ stands for "request param")
@@ -161,7 +163,24 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             // If the path ends with a *, create a node under its parent, with
             // a generated node name
             currentPath = currentPath.substring(0, currentPath.length() - starSuffix.length());
-            currentPath += "/" + (createNodeCounter++) + System.currentTimeMillis();
+            currentPath += "/" + nodeNameGenerator.getNodeName(request.getRequestParameterMap(), savePrefix);
+            
+            // if resulting path exists, add a suffix until it's not the case anymore
+            if(s.itemExists(currentPath)) {
+                String newPath = currentPath;
+                for(int suffix = 0; suffix < 100; suffix++) {
+                    newPath = currentPath + "_" + suffix;
+                    if(!s.itemExists(newPath)) {
+                        currentPath = newPath;
+                        break;
+                    }
+                }
+            }
+            
+            if(s.itemExists(currentPath)) {
+                throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Collision in generated node names for path=" + currentPath);
+            }
 
         } else if(s.itemExists(currentPath)) {
             // update to an existing node
