@@ -27,6 +27,7 @@ import java.util.Map;
 public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     private String slingResourceType;
+    private String secondFolderOfContentPath;
 
     @Override
     protected void setUp() throws Exception {
@@ -37,7 +38,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         testText = "This is a test " + System.currentTimeMillis();
 
         // create the test node, under a path that's specific to this class to allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/*";
+        secondFolderOfContentPath = "" + System.currentTimeMillis();
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + secondFolderOfContentPath + "/*";
         final Map<String,String> props = new HashMap<String,String>();
         props.put("sling:resourceType", slingResourceType);
         props.put("text", testText);
@@ -60,6 +62,47 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     public void testEspHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testEspHtmlInAppsFolder() throws IOException {
+        // make sure there's no leftover rendering script
+        {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertFalse("Content must not include ESP marker before test",content.contains("ESP template"));
+        }
+
+        // put our script under /apps/<resource type>
+        final String path = "/apps/" + slingResourceType;
+        testClient.mkdirs(WEBDAV_BASE_URL, path);
+        final String toDelete = uploadTestScript(path,"rendering-test.esp","html.esp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testEspHtmlWithContentBasedPath() throws IOException {
+        
+        // make sure there's no leftover rendering script
+        {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertFalse("Content must not include ESP marker before test",content.contains("ESP template"));
+        }
+        
+        // put our script in the /apps/<second folder level of content> (SLING-125)
+        final String path = "/apps/" + secondFolderOfContentPath;
+        testClient.mkdirs(WEBDAV_BASE_URL, path);
+        final String toDelete = uploadTestScript(path,"rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes ESP marker",content.contains("ESP template"));

@@ -36,8 +36,6 @@ import org.apache.sling.microsling.helpers.constants.HttpConstants;
  */
 public class ScriptFilenameBuilder {
 
-    public static final String SCRIPT_BASE_PATH = "/sling/scripts";
-
     /** @return a name like "html.js" or "print/a4/html.vlt" or "POST.js" */
     public String buildScriptFilename(String methodName,String requestExtension,String scriptExtension) {
         final StringBuffer sb = new StringBuffer();

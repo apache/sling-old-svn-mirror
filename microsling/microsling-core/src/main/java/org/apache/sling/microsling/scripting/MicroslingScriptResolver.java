@@ -57,8 +57,9 @@ import org.slf4j.LoggerFactory;
  * <pre>
  *      /sling/scripts/some/type/get.html.js
  * </pre>
- *
- * in the repository.
+ * 
+ * in the repository. In the above example, "/sling/scripts" is a script search path,
+ * which is provided by {#ScriptSearchPathsBuilder} 
  */
 public class MicroslingScriptResolver implements SlingScriptResolver {
 
@@ -182,9 +183,19 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 log.debug("Looking for script with filename=" + scriptFilename
                     + " under " + currentPath);
             }
+            
+            // do not throw exceptions if path is invalid, that might happen
+            // depending on the resource type / search path values
+            boolean pathExists = false;
+            try {
+                pathExists = s.itemExists(currentPath);
+            } catch(Exception e) {
+                if(log.isDebugEnabled()) {
+                    log.debug("itemExists(" + currentPath + ") call fails, exception ignored: " + e);
+                }
+            }
 
-            if (s.itemExists(currentPath)) {
-
+            if (pathExists) {
                 // get the item and ensure it is a node
                 final Item i = s.getItem(currentPath);
                 if (i.isNode()) {
