@@ -126,7 +126,8 @@ public abstract class AbstractSlingRepository
     protected final SessionPoolManager getPoolManager()
             throws RepositoryException {
         if (this.poolManager == null) {
-            Dictionary properties = this.componentContext.getProperties();
+            @SuppressWarnings("unchecked")
+            Dictionary<String, Object> properties = this.componentContext.getProperties();
             int maxActiveSessions = this.getIntProperty(properties,
                 PARAM_MAX_ACTIVE_SESSIONS);
             int maxIdleSessions = this.getIntProperty(properties,
@@ -142,7 +143,7 @@ public abstract class AbstractSlingRepository
     }
 
     /**
-     * @see org.apache.sling.jcr.SlingRepository#getDefaultWorkspace()
+     * @see org.apache.sling.jcr.api.SlingRepository#getDefaultWorkspace()
      */
     public String getDefaultWorkspace() {
         return this.defaultWorkspace;
@@ -284,7 +285,8 @@ public abstract class AbstractSlingRepository
     protected void activate(ComponentContext componentContext) throws Exception {
         this.componentContext = componentContext;
 
-        Dictionary properties = componentContext.getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> properties = componentContext.getProperties();
         this.defaultWorkspace = this.getProperty(properties, PROPERTY_DEFAULT_WORKSPACE,
             DEFAULT_WORKSPACE);
 
@@ -361,13 +363,13 @@ public abstract class AbstractSlingRepository
 
     // ---------- internal -----------------------------------------------------
 
-    private String getProperty(Dictionary properties, String name,
+    private String getProperty(Dictionary<String, Object> properties, String name,
             String defaultValue) {
         Object prop = properties.get(name);
         return (prop instanceof String) ? (String) prop : defaultValue;
     }
 
-    private int getIntProperty(Dictionary properties, String name) {
+    private int getIntProperty(Dictionary<String, Object> properties, String name) {
         Object prop = properties.get(name);
         if (prop instanceof Number) {
             return ((Number) prop).intValue();

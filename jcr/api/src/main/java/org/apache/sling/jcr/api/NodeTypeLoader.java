@@ -56,7 +56,7 @@ public class NodeTypeLoader {
      *
      * @param session The <code>Session</code> providing the node type manager
      *            through which the node type is to be registered.
-     * @param URL The URL from which to read the CND file
+     * @param source The URL from which to read the CND file
      * @return <code>true</code> if registration of all node types succeeded.
      */
     public static boolean registerNodeType(Session session, URL source) {

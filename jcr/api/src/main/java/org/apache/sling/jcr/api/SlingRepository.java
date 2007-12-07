@@ -49,8 +49,7 @@ public interface SlingRepository extends Repository {
      * <b><i>NOTE: This method is intended for use by infrastructure bundles to
      * access the repository and provide general services. This method MUST not
      * be used to handle client requests of whatever kinds. To handle client
-     * requests, either an anonymous session retrieved by
-     * {@link #loginAnonymous()} or a regular authenticated session retrieved
+     * requests a regular authenticated session retrieved
      * through {@link #login(javax.jcr.Credentials, String)} or
      * {@link Session#impersonate(javax.jcr.Credentials)} must be used.</i></b>
      *
