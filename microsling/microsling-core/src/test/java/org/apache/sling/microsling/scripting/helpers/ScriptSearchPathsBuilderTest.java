@@ -32,8 +32,8 @@ public class ScriptSearchPathsBuilderTest extends TestCase {
     
     private final ScriptSearchPathsBuilder builder = new ScriptSearchPathsBuilder();
     
-    private void testBuilder(String resourceType,String [] selectors, String [] paths) throws SlingException {
-        final Resource r = new MockResource(resourceType);
+    private void testBuilder(String resourceType,String resourcePath, String [] selectors, String [] paths) throws SlingException {
+        final Resource r = new MockResource(resourceType,resourcePath);
         
         final List<String> actual = builder.getScriptSearchPaths(r, selectors);
         
@@ -48,34 +48,44 @@ public class ScriptSearchPathsBuilderTest extends TestCase {
     
     public void testNoSelectorsA() throws SlingException {
         final String [] selectors = null;
-        final String [] expected = { "/sling/scripts/rt" }; 
-        testBuilder("rt", selectors, expected);
+        final String [] expected = { "/sling/scripts/rt", "/apps/rt", "/apps/blog" }; 
+        testBuilder("rt", "/content/blog", selectors, expected);
     }
     
     public void testNoSelectorsB() throws SlingException {
         final String [] selectors = null;
-        final String [] expected = { "/sling/scripts/rt/something" }; 
-        testBuilder("rt/something", selectors, expected);
+        final String [] expected = { "/sling/scripts/rt/something", "/apps/rt/something", "/apps/blog" }; 
+        testBuilder("rt/something", "/content/blog/a/b/c", selectors, expected);
     }
     
     public void testWithSelectorsA() throws SlingException {
         final String [] selectors = { "a4" };
-        final String [] expected = { "/sling/scripts/rt/a4", "/sling/scripts/rt" }; 
-        testBuilder("rt", selectors, expected);
+        final String [] expected = { 
+                "/sling/scripts/rt/a4", "/sling/scripts/rt", 
+                "/apps/rt/a4", "/apps/rt", 
+                "/apps/blog/a4", "/apps/blog", 
+                }; 
+        testBuilder("rt", "/content/blog", selectors, expected);
     }
     
     public void testWithSelectorsB() throws SlingException {
         final String [] selectors = { "a4", "print" };
-        final String [] expected = { "/sling/scripts/rt/x/a4/print", "/sling/scripts/rt/x/a4", "/sling/scripts/rt/x" }; 
-        testBuilder("rt/x", selectors, expected);
+        final String [] expected = { 
+                "/sling/scripts/rt/x/a4/print", "/sling/scripts/rt/x/a4", "/sling/scripts/rt/x", 
+                "/apps/rt/x/a4/print", "/apps/rt/x/a4", "/apps/rt/x", 
+                "/apps/banking/a4/print", "/apps/banking/a4", "/apps/banking", 
+        }; 
+        testBuilder("rt/x", "/somewhere/banking/blog", selectors, expected);
     }
     
     static class MockResource implements Resource {
 
         private final String resourceType;
+        private final String path;
         
-        MockResource(String resourceType) {
+        MockResource(String resourceType, String path) {
             this.resourceType = resourceType;
+            this.path = path;
         }
 
         public String getResourceType() {
@@ -83,7 +93,7 @@ public class ScriptSearchPathsBuilderTest extends TestCase {
         }
 
         public String getURI() {
-            throw new Error("MockResource does not implement this method");
+            return path;
         }
 
         public ResourceMetadata getResourceMetadata() {
