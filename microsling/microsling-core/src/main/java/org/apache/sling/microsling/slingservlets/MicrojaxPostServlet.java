@@ -143,9 +143,6 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     protected void createOrUpdateNodesFromRequest(SlingHttpServletRequest request, SlingHttpServletResponse response, Session s)
     throws RepositoryException, IOException {
 
-        // Where to redirect to when done
-        String redirectPath = request.getHeader("Referer");
-
         // find out the actual "save prefix" to use - only parameters starting with
         // this prefix are saved as Properties, when creating nodes, see setPropertiesFromRequest()
         final String savePrefix = getSavePrefix(request);
@@ -198,6 +195,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         s.save();
         final String forcedRedirect = request.getParameter(RP_REDIRECT_TO);
         final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
+
+        // Where to redirect to when done
+        String redirectPath;
         if(forcedRedirect != null) {
             redirectPath = forcedRedirect;
         } else {
