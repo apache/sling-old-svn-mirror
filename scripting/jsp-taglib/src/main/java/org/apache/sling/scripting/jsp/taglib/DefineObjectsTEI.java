@@ -29,6 +29,7 @@ import javax.servlet.jsp.tagext.VariableInfo;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.services.ServiceLocator;
 
 /**
@@ -79,11 +80,19 @@ public class DefineObjectsTEI extends TagExtraInfo {
      */
     public static final String ATTR_SERVICE_LOCATOR_NAME = "serviceLocatorName";
 
+    /**
+     * The name of the tag attribute used to define the name of the
+     * ResourceManager scripting variable (value is "resourceManagerName").
+     */
+    public static final String ATTR_RESOURCE_MANAGER_NAME = "resourceManagerName";
+
     private static final String RENDER_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
 
     private static final String RENDER_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
 
     private static final String RESOURCE_CLASS = Resource.class.getName();
+
+    private static final String RESOURCE_MANAGER_CLASS = ResourceManager.class.getName();
 
     private static final String NODE_CLASS = Node.class.getName();
 
@@ -112,6 +121,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
             null);
         addVar(varInfos, data, ATTR_MAPPED_OBJECT_NAME,
             DEFAULT_MAPPED_OBJECT_NAME, mappedObjectClass);
+
+        addVar(varInfos, data, ATTR_RESOURCE_MANAGER_NAME,
+            DEFAULT_RESOURCE_MANAGER_NAME, RESOURCE_MANAGER_CLASS);
 
         addVar(varInfos, data, ATTR_SERVICE_LOCATOR_NAME,
             DEFAULT_SERVICE_LOCATOR_NAME, SERVICE_LOCATOR_CLASS);

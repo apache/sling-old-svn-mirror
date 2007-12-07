@@ -22,6 +22,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 
 /**
@@ -65,6 +66,12 @@ public class DefineObjectsTag extends TagSupport {
 
     /**
      * Default name for the scripting variable referencing the current
+     * <code>ResourceManager</code> (value is "resourceManager").
+     */
+    public static final String DEFAULT_RESOURCE_MANAGER_NAME = "resourceManager";
+
+    /**
+     * Default name for the scripting variable referencing the current
      * <code>ServiceLocator</code> (value is "serviceLocator").
      */
     public static final String DEFAULT_SERVICE_LOCATOR_NAME = "serviceLocator";
@@ -81,6 +88,8 @@ public class DefineObjectsTag extends TagSupport {
 
     private String mappedObjectClass = null;
 
+    private String resourceManagerName = DEFAULT_RESOURCE_MANAGER_NAME;
+
     private String serviceLocatorName = DEFAULT_SERVICE_LOCATOR_NAME;
 
     /**
@@ -96,6 +105,7 @@ public class DefineObjectsTag extends TagSupport {
      * <li><code>SlingHttpServletResponse</code>
      * <li>current <code>Resource</code>
      * <li>current <code>Node</code> (if resource is a NodeProvider)
+     * <li>current <code>ResourceManager</code>
      * <li>current <code>ServiceLocator</code>
      * </ul>
      *
@@ -106,10 +116,12 @@ public class DefineObjectsTag extends TagSupport {
         SlingHttpServletRequest req = TagUtil.getRequest(pageContext);
         SlingHttpServletResponse res = TagUtil.getResponse(pageContext);
         Resource resource = req.getResource();
+        ResourceManager resourceManager = TagUtil.getResourceManager(pageContext);
 
         pageContext.setAttribute(requestName, req);
         pageContext.setAttribute(responseName, res);
         pageContext.setAttribute(resourceName, resource);
+        pageContext.setAttribute(resourceManagerName, resourceManager);
         pageContext.setAttribute(serviceLocatorName, req.getServiceLocator());
 
         Node node = resource.adaptTo(Node.class);
@@ -152,6 +164,10 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setMappedObjectClass(String name) {
         this.mappedObjectClass = name;
+    }
+
+    public void setResourceManagerName(String name) {
+        this.resourceManagerName = name;
     }
 
     public void setServiceLocatorName(String name) {
