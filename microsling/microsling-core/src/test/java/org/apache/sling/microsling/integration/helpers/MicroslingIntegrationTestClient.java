@@ -86,18 +86,30 @@ public class MicroslingIntegrationTestClient {
             throw new IOException("Expected status 200, got " + status + " for URL=" + url);
         }
     }
+
+    /** Call the other createNode method with headers==null */
+    public String createNode(String url, Map<String,String> nodeProperties) throws IOException {
+        return createNode(url, nodeProperties, null);
+    }
     
     /** Create a node under given path, using a POST to microsling
      *  @param url under which node is created 
      *  @return the URL that microsling provides to display the node 
      */
-    public String createNode(String url, Map<String,String> nodeProperties) throws IOException {
+    public String createNode(String url, Map<String,String> nodeProperties, Map<String,String> requestHeaders) 
+    throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
         
-        if(nodeProperties!=null) {
+        if(nodeProperties != null) {
             for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
                 post.addParameter(e.getKey(),e.getValue());
+            }
+        }
+        
+        if(requestHeaders != null) {
+            for(Map.Entry<String,String> e : requestHeaders.entrySet()) {
+                post.addRequestHeader(e.getKey(), e.getValue());
             }
         }
         
