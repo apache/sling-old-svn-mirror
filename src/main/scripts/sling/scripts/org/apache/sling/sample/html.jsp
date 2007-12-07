@@ -29,7 +29,7 @@
 <p><%= sampleContent.getText() %></p>
 <table border="1" cellpadding="3" cellspacing="0">
 <%
-	Iterator<Resource> ci = slingRequest.getResourceResolver().listChildren(resource);
+	Iterator<Resource> ci = resourceManager.listChildren(resource);
 	while (ci.hasNext()) {
 		Resource child = ci.next();
 		%><tr><td><sling:include resource="<%= child %>" /></td></tr><%
