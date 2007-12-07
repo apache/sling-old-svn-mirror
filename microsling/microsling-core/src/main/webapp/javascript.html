@@ -1,52 +1,40 @@
 <html>
 <head>
-  <title>microsling server-side javascript and ESP templates</title>
+  <title>Use of javascript in microsling</title>
   <link rel="stylesheet" href="microsling.css"/>
 </head>
 <body>
-  <h1>microsling server-side javascript and ESP templates</h1>
+  <h1>Use of javascript in microsling</h1>
   
   <div class="note">
     <a href="index.html">back to homepage</a>
   </div>
   
+  <h2>Scripting basics</h2>
   <p>
-    Server-side javascript code and javascript-based ESP templates can be used by microsling to process requests. 
-    The scripts are located by the
-    <a href="http://svn.apache.org/viewvc/incubator/sling/trunk/microsling/microsling-core/src/main/java/org/apache/sling/microsling/scripting/MicroslingScriptResolver.java?view=markup">MicroslingScriptResolver</a>
-    , as for the <a href="velocity-scripts.html">Velocity templates</a> (see that
-    page for more details about how this resolution works).  
+  	Scripts are located based on the <em>sling:resourceType</em> property of nodes (and some other variants, but for
+  	now we'll leave it at that).
   </p>
   <p>
-  	Scripts can either:
-  	<ul>
-  	  <li>
-  	  	Have the <em>.esp</em> extension to use the microsling <em>ECMAscript Server Pages</em> syntax
-  	  	described below.
-  	  </li>
-  	  <li>
-  	  	Have the <em>.js</em> extension to use "raw" javascript.
-  	  </li>
-  	</ul>
+  	If you created content with the microsling test content creation form, rendering scripts should be stored
+  	in the repository under <em>/sling/scripts/microsling/example/</em>. Mount the repository with WebDAV to
+  	do that, see the WebDAV link on the <a href="index.html">homepage</a>.
   </p>
   <p>
-    Server-side javascript support is implemented by the 
-    <a href="http://svn.apache.org/viewvc/incubator/sling/trunk/microsling/microsling-core/src/main/java/org/apache/sling/microsling/scripting/engines/rhino/RhinoJavascriptEngine.java?view=markup">RhinoJavascriptEngine</a>.
-  </p>
-  <p>
-  	To test this, remove or rename <a href="velocity-scripts.html">Velocity templates</a>
-    if you played with them before (Velocity has priority due to the order in which the SlingServlet classes
-    are setup),  and store one of the scripts shown
-  	below under <em>/sling/scripts/microsling/example/</em>, using the filenames shown in comments in the scripts below.
+  	To activate a script, remove or rename any existing templates in there, and store one of the scripts shown
+  	below there, using the filenames shown in comments in the scripts below.
   </p>
   <p>
   	Content nodes created with the <a href="content-creation-forms.html">Content creation forms</a>
     should then be displayed in HTML, with a layout defined by the example scripts.
   </p>
   <p>
-    As for the Velocity templates, other output formats can be generated, for example by renaming the ESP template 
-    to <em>plain.esp</em> (as the Content-type for text is <em>text/plain</em>), modifying it to output plain text 
-    and using a <em>.txt</em> extension in the request.
+    Other output formats can be generated, for example by renaming the ESP template 
+    to <em>txt.esp</em>, modifying it to output plain text 
+    and using a <em>.txt</em> extension in the request. Or xml, or any other extension.
+  </p>
+  <p>
+  	TODO explain selectors, default scripts location, non-GET requests, etc.
   </p>
   
   <h2>ECMAscript Server Pages (ESP)</h2>
@@ -86,9 +74,37 @@
 %>
 &lt;/body>
 &lt;/html></pre>
+
+  <h2>Ecmascript Client Templates (ECT)</h2>
+  <p>
+  	If you prefer to waste your client's CPUs for rendering, ECT templates use the same syntax as ESP, but generate
+  	javascript rendering code that's executed on the client, and include in the response both a JSON version of the
+  	data and a basic HTML rendering that is used for search engines, for example.
+  </p>
+  <p>
+  	See <a href="https://issues.apache.org/jira/browse/SLING-114">SLING-114</a> for more info.
+  </p>
+  <p>
+  	For now, here's a simplistic ECT example. Make sure to have a look at what's sent to the browser!  
+  </p>
+  <pre>&lt;!-- Store this as html.ect in the appropriate scripts directory -->
+  currentNode.title = &lt;b> &lt;%= currentNode.title %> &lt;/b>
+&lt;/p>
+&lt;p>
+  currentNode.text = &lt;em> &lt;%= currentNode.text %> &lt;/em> (changed)
+&lt;/p>
+
+&lt;%
+  // if present, this function is called by body.onLoad
+  function onLoad() {
+    document.title = currentNode.title;
+  }
+%></pre>
+  
   <h2>Raw javascript</h2>
   <p>
-  	Raw javascript is probably more useful to handle the POST, PUT or DELETE methods.
+  	Raw javascript is probably more useful to handle the POST, PUT or DELETE methods. To do that, name
+  	the script after the method name, uppercased, i.e. <em>POST.js</em>.
   </p>
   
   <h3>Javascript example</h3>
@@ -107,7 +123,7 @@ out.println("&lt;/body>&lt;/html>");</pre>
   <h2>Directory listing example</h2>
   <p>
     Store the following template under 
-    <code>sling/scripts/NODETYPES/nt/unstructured/html.esp</code> to render a simple
+    <code>sling/scripts/nt/unstructured/html.esp</code> to render a simple
     directory listing for <em>nt:unstructured</em> nodes which do not have a 
     <code>slingComponentId</code> property.
   </p>
