@@ -16,7 +16,10 @@
   
   <div>
     <form class="testbox" action="content/testing/*" method="POST">
+    
+      <!-- these parameters mean "redirect to created node with .html extension" -->
       <input type="hidden" name="ujax_displayExtension" value="html"/>
+      <input type="hidden" name="ujax_redirect" value="*"/>
       
       <h1>SlingPostServlet content creation form</h1>
       <p>

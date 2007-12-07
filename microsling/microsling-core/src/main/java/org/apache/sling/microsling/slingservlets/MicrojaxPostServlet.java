@@ -218,15 +218,18 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     /** compute redirect URL (SLING-126) */
     protected String getRedirectUrl(SlingHttpServletRequest request, String currentNodePath) {
         
-        // redirect param has priority
+        // redirect param has priority (but see below, magic star)
         String result = request.getParameter(RP_REDIRECT_TO);
+        final boolean magicStar = "*".equals(result);
         
         if(result==null || result.trim().length()==0) {
             // try Referer
             result = request.getHeader("Referer");
         }
         
-        if(result==null || result.trim().length()==0) {
+        // redirect param = star means "redirect to current node", useful in browsers
+        // when you don't want to use the Referer
+        if(magicStar || result==null || result.trim().length()==0) {
             // use path of current node, with optional extension 
             final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
             result = currentNodePath;
