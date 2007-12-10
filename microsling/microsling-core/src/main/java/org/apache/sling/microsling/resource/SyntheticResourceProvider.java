@@ -56,7 +56,9 @@ public class SyntheticResourceProvider {
     Resource getSyntheticResource(String pathInfo) {
         Resource result = null;
         
-        final ResourcePathIterator it = new ResourcePathIterator(pathInfo);
+        // for synthetic resources, the ResourcePathIterator must go up the path
+        // like for POST methods, even if the actual method is a GET
+        final ResourcePathIterator it = new ResourcePathIterator(pathInfo,"POST");
         while (it.hasNext() && result == null) {
             final String path = it.next();
             for(Pattern p : pathPattern) {

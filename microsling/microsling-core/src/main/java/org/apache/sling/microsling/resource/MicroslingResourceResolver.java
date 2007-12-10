@@ -102,18 +102,22 @@ public class MicroslingResourceResolver implements ResourceResolver {
     /**
      * Resolves the Resource from the request
      */
-    public Resource resolve(ServletRequest request) throws SlingException {
+    public Resource resolve(ServletRequest servletRequest) throws SlingException {
         Resource result = null;
         String path = null;
         
         // look for a real JCR Resource
-        String pathInfo = SlingRequestPaths.getPathInfo((HttpServletRequest)request);
+        final HttpServletRequest request = (HttpServletRequest)servletRequest;
+        String pathInfo = SlingRequestPaths.getPathInfo(request);
         try {
             Session session = getSession();
-            final ResourcePathIterator it = new ResourcePathIterator(pathInfo);
+            final ResourcePathIterator it = new ResourcePathIterator(pathInfo,request.getMethod());
+            String resolutionPath = "";
             while (it.hasNext() && result == null) {
-                result = getResource(session, it.next());
+                resolutionPath = it.next();
+                result = getResource(session, resolutionPath);
             }
+            
         } catch (RepositoryException re) {
             throw new SlingException("RepositoryException for path=" + path, re);
         }
