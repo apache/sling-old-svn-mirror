@@ -145,6 +145,7 @@ public class LogSupport implements BundleListener, ServiceListener,
         }
     }
 
+    @SuppressWarnings("unchecked")
     private final Enumeration EMPTY = new Enumeration() {
         public boolean hasMoreElements() {
             return false;
@@ -155,7 +156,8 @@ public class LogSupport implements BundleListener, ServiceListener,
         }
     };
 
-    /* package */Enumeration getLog() {
+    /* package */@SuppressWarnings("unchecked")
+    Enumeration getLog() {
         return this.EMPTY;
     }
 
@@ -307,11 +309,11 @@ public class LogSupport implements BundleListener, ServiceListener,
 
     // ---------- Effective logging --------------------------------------------
 
-    private Map loggers = new HashMap();
+    private Map<Long, Logger> loggers = new HashMap<Long, Logger>();
 
     private Logger getLogger(Bundle bundle) {
         Long bundleId = new Long((bundle == null) ? 0 : bundle.getBundleId());
-        Logger log = (Logger) this.loggers.get(bundleId);
+        Logger log = this.loggers.get(bundleId);
         if (log == null) {
             // TODO: use systembundle for bundle==null
             String name = (bundle == null)
