@@ -154,6 +154,22 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         }
     }
 
+    public void testEctHtmlScriptTag() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.ect","html.ect");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ECT marker",content.contains("ECT template"));
+            assertTrue("Content contains scripted stuff (" + content + ")",
+                    content.contains("something scripted"));
+            assertFalse("Script opening tag must be broken in two in content (" + content + ")",
+                    content.contains("<script>something")); 
+            assertFalse("Script closing tag must be broken in two in content (" + content + ")",
+                    content.contains("scripted</script>")); 
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
     public void testEspHtmlUppercase() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
