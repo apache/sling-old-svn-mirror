@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource;
 
-import java.io.InputStream;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 
