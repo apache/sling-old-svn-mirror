@@ -39,6 +39,7 @@ import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.microsling.helpers.json.JsonItemWriter;
+import org.apache.sling.microsling.resource.SyntheticResourceData;
 import org.apache.sling.microsling.slingservlets.renderers.DefaultHtmlRenderer;
 import org.apache.sling.scripting.javascript.EspReader;
 
@@ -72,15 +73,19 @@ public class EctScriptEngine implements SlingScriptEngine {
         try {
             // access our data (need a Node)
             final Resource r = (Resource)props.get(SlingScriptEngine.RESOURCE);
+            
+            // to render we must have either a Node or a SyntheticResourceData
             final Node n = r.adaptTo(Node.class);
-            if(n == null) {
+            final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class);
+            if(srd==null && n == null) {
                 throw new HttpStatusCodeException(
-                        HttpServletResponse.SC_NOT_FOUND,"Resource does not provide a Node, cannot render");
+                        HttpServletResponse.SC_NOT_FOUND,
+                        "Resource does not provide a Node or a SyntheticResourceData, cannot render");
             }
             
             // output HEAD with javascript initializations
             w.println("<html><head><title id=\"EctPageTitle\">");
-            w.println("ECT rendering of " + n.getPath());
+            w.println("ECT rendering of " + r.getURI());
             w.println("</title>");
             
             // library scripts
@@ -99,12 +104,16 @@ public class EctScriptEngine implements SlingScriptEngine {
             w.println("function ectOnLoad() { if(typeof onLoad == \"function\") { onLoad(); } }");
             w.println("</script>");
             
-            // node data in JSON format
+            // data in JSON format
             final JsonItemWriter j = new JsonItemWriter(null);
             final int maxRecursionLevels = 1;
             w.println("<script language='javascript'>");
             w.print("var currentNode=");
-            j.dump(n, w, maxRecursionLevels);
+            if(n!=null) {
+                j.dump(n, w, maxRecursionLevels);
+            } else {
+                w.print("{}");
+            }
             w.println(";");
             w.println("</script>");
             w.println("</head><body onLoad=\"ectOnLoad()\">");
@@ -117,7 +126,11 @@ public class EctScriptEngine implements SlingScriptEngine {
             // default rendering, turned off automatically from the javascript that 
             // follows, if javascript is enabled
             w.println("<div id=\"EctDefaultRendering\">");
-            htmlRenderer.render(w, r, n);
+            if(n!=null) {
+                htmlRenderer.render(w, r, n);
+            } else {
+                htmlRenderer.render(w, r, srd);
+            }
             w.println("</div>");
             w.println("<script language=\"javascript\">");
             w.println("document.getElementById(\"EctDefaultRendering\").setAttribute(\"style\",\"display:none\");");

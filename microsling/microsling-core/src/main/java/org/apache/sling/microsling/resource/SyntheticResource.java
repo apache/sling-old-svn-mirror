@@ -43,7 +43,7 @@ public class SyntheticResource implements Resource {
     private ResourceMetadata resourceMetadata;
     
     /** default resource type for these resources */
-    public static String DEFAULT_RESOURCE_TYPE = "/sling/synthetic-resource";
+    public static String DEFAULT_RESOURCE_TYPE = "sling/synthetic-resource";
 
     /**
      * Creates a synthetic content with the given path and component Id.
