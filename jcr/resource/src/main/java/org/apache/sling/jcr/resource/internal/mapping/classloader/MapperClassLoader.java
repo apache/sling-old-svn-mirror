@@ -42,7 +42,7 @@ import org.osgi.framework.Bundle;
 public class MapperClassLoader extends ClassLoader {
 
     // Map of class loaders indexed by fully qualified class className
-    private Map delegateeLoaders;
+    private Map<String, LoaderDelegate> delegateeLoaders;
 
     private Loader[] delegatees;
 
@@ -52,7 +52,7 @@ public class MapperClassLoader extends ClassLoader {
     public MapperClassLoader() {
         super(null);
 
-        this.delegateeLoaders = new HashMap();
+        this.delegateeLoaders = new HashMap<String, LoaderDelegate>();
         this.delegatees = new Loader[0];
     }
 
@@ -104,10 +104,11 @@ public class MapperClassLoader extends ClassLoader {
      *
      * @throws ClassNotFoundException If the given class cannot be returned.
      */
+    @SuppressWarnings("unchecked")
     protected synchronized Class loadClass(String name, boolean resolve)
             throws ClassNotFoundException {
         // 1. check whether we already know the class
-        LoaderDelegate dele = (LoaderDelegate) this.delegateeLoaders.get(name);
+        LoaderDelegate dele = this.delegateeLoaders.get(name);
         if (dele != null) {
             return dele.loadClass();
         }
@@ -158,8 +159,8 @@ public class MapperClassLoader extends ClassLoader {
 
     private void unregisterLoaderInternal(Object loader) {
         // remove classes registered with the class loader
-        for (Iterator di = this.delegateeLoaders.values().iterator(); di.hasNext();) {
-            LoaderDelegate dele = (LoaderDelegate) di.next();
+        for (Iterator<LoaderDelegate> di = this.delegateeLoaders.values().iterator(); di.hasNext();) {
+            LoaderDelegate dele = di.next();
 
             // remove the entry if the class loaders are the same
             if (dele.getLoader() == loader) {

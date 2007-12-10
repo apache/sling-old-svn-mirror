@@ -134,7 +134,7 @@ public class Mapping {
      *            by the <em>from</em> prefix.
      * @return The string after replacement or <code>null</code> if the
      *         <code>uriPath</code> does not start with the <em>to</em>
-     *         prefix, or {@link #mapsInwards} returns <code>false</code>.
+     *         prefix, or {@link #mapsInbound()} returns <code>false</code>.
      */
     public String mapUri(String uriPath) {
         return (this.mapsInbound() && uriPath.startsWith(this.to)) ? this.from
@@ -152,7 +152,7 @@ public class Mapping {
      *            prefix by the <em>to</em> prefix.
      * @return The string after replacement or <code>null</code> if the
      *         <code>handle</code> does not start with the <em>from</em>
-     *         prefix, or {@link #mapsOutwards} returns <code>false</code>.
+     *         prefix, or {@link #mapsOutbound()} returns <code>false</code>.
      */
     public String mapHandle(String handle) {
         return (this.mapsOutbound() && handle.startsWith(this.from)) ? this.to
