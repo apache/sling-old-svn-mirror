@@ -80,7 +80,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @parameter expression="${jspc.sourceDirectory}"
      *            default-value="${project.build.scriptSourceDirectory}"
      */
-    private String sourceDirectory;
+    private File sourceDirectory;
 
     /**
      * Target folder for the compiled classes.
@@ -197,9 +197,9 @@ public class JspcMojo extends AbstractMojo implements Options {
     public void execute() throws MojoExecutionException {
 
         try {
-            uriSourceRoot = new File(sourceDirectory).getCanonicalPath();
+            uriSourceRoot = sourceDirectory.getCanonicalPath();
         } catch (Exception e) {
-            uriSourceRoot = new File(sourceDirectory).getAbsolutePath();
+            uriSourceRoot = sourceDirectory.getAbsolutePath();
         }
 
         // ensure output directory
@@ -283,7 +283,7 @@ public class JspcMojo extends AbstractMojo implements Options {
 
             // No explicit pages, we'll process all .jsp in the webapp
             if (pages.size() == 0) {
-                scanFiles(new File(sourceDirectory));
+                scanFiles(sourceDirectory);
             }
 
             File uriRootF = new File(uriSourceRoot);
