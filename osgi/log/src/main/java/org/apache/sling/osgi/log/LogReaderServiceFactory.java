@@ -75,6 +75,7 @@ public class LogReaderServiceFactory implements ServiceFactory {
             LogReaderServiceFactory.this.logSupport.removeLogListener(listener);
         }
 
+        @SuppressWarnings("unchecked")
         public Enumeration getLog() {
             return LogReaderServiceFactory.this.logSupport.getLog();
         }
