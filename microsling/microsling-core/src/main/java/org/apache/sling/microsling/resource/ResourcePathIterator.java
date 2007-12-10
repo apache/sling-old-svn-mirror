@@ -39,13 +39,21 @@ import java.util.Iterator;
  *      /some
  *    </li>
  *  </ol>
+ *  
+ *  The above rules are not valid for GET or HEAD requests, where
+ *  we do not go up the path: for those requests, the path is
+ *  only split at dots that follow the last slash
  */
 class ResourcePathIterator implements Iterator<String> {
 
     private String nextPath;
+    private final String httpMethod;
+    private final int lastSlashPos;
     
-    ResourcePathIterator(String path) {
+    ResourcePathIterator(String path,String httpMethod) {
         nextPath = path;
+        this.httpMethod = httpMethod;
+        lastSlashPos = (path == null ? -1 : path.lastIndexOf('/'));
     }
     
     public boolean hasNext() {
@@ -54,7 +62,19 @@ class ResourcePathIterator implements Iterator<String> {
 
     public String next() {
         final String result = nextPath;
-        final int pos = Math.max(result.lastIndexOf('.'),result.lastIndexOf('/'));
+        
+        int pos = -1;
+        if("GET".equals(httpMethod) || "HEAD".equals(httpMethod)) {
+            // SLING-117: for GET and POST, do not go up the path to resolve resources,
+            // only split at dots that follow the last slash
+            pos = result.lastIndexOf('.');
+            if(pos < lastSlashPos) {
+                pos = -1;
+            }
+        } else {
+            pos = Math.max(result.lastIndexOf('.'),result.lastIndexOf('/'));
+        }
+        
         if(pos < 0) {
             nextPath = null;
         } else {
