@@ -62,6 +62,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
         + "jcr/sling/1.0";
 
     private Session session;
+    private final SyntheticResourceProvider syntheticResourceProvider = new SyntheticResourceProvider();
 
     // package private default constructor for unit tests, DO NOT USE
     MicroslingResourceResolver() {
@@ -104,6 +105,8 @@ public class MicroslingResourceResolver implements ResourceResolver {
     public Resource resolve(ServletRequest request) throws SlingException {
         Resource result = null;
         String path = null;
+        
+        // look for a real JCR Resource
         String pathInfo = SlingRequestPaths.getPathInfo((HttpServletRequest)request);
         try {
             Session session = getSession();
@@ -114,7 +117,13 @@ public class MicroslingResourceResolver implements ResourceResolver {
         } catch (RepositoryException re) {
             throw new SlingException("RepositoryException for path=" + path, re);
         }
-
+        
+        // not found -> try synthetic resource
+        if (result == null) {
+            result = syntheticResourceProvider.getSyntheticResource(pathInfo);
+        }
+        
+        // not found -> NonExistingResource
         if (result == null) {
             result = new NonExistingResource(pathInfo);
         }

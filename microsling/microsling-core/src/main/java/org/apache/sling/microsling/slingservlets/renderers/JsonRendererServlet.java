@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.microsling.helpers.json.JsonItemWriter;
+import org.apache.sling.microsling.resource.SyntheticResourceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         if(r instanceof NonExistingResource) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND, "No data to dump");
         }
+        
+        if(r.adaptTo(SyntheticResourceData.class) != null) {
+            renderSyntheticResource(req, resp);
+            return;
+        }
+        
         final Node n = r.adaptTo(Node.class);
         if(n == null) {
             throw new HttpStatusCodeException(
@@ -91,6 +98,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         } catch(RepositoryException re) {
             reportException(re);
         }
+    }
+
+    /** Render synthetic resources as empty JSON objects */ 
+    private void renderSyntheticResource(SlingHttpServletRequest req,SlingHttpServletResponse resp) throws IOException {
+        resp.setContentType(responseContentType);
+        resp.getOutputStream().write("{}".getBytes());
     }
 
     private void reportException(Exception e) throws HttpStatusCodeException {

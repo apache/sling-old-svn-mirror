@@ -30,6 +30,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.microsling.resource.SyntheticResourceData;
 
 /** A SlingSafeMethodsServlet that renders the current Resource
  *  as plain text.
@@ -48,6 +49,12 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
     throws ServletException,IOException
     {
         final Resource  r = req.getResource();
+        final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class); 
+        if(srd != null) {
+            renderSyntheticResource(req, resp, srd);
+            return;
+        }
+        
         final Node node = r.adaptTo(Node.class);
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
@@ -59,6 +66,13 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         }
     }
 
+    /** Render synthetic resource */ 
+    private void renderSyntheticResource(SlingHttpServletRequest req,SlingHttpServletResponse resp,SyntheticResourceData data) 
+    throws IOException {
+        resp.setContentType(responseContentType);
+        resp.getOutputStream().write(data.toString().getBytes());
+    }
+    
     protected void dump(PrintWriter pw, Resource r, Node n) throws RepositoryException {
         pw.println("** Node dumped by " + getClass().getSimpleName() + "**");
         pw.println("Node path:" + n.getPath());
