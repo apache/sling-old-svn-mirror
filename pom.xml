@@ -85,6 +85,7 @@
         <module>sling/core</module>
         <module>sling/event</module>
         <module>sling/scheduler</module>
+        <module>sling/sample</module>
         
         <!-- Scripting Support -->
         <module>scripting/freemarker</module>
@@ -93,5 +94,10 @@
         <module>scripting/jsp-taglib</module>
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
+        
+        <!-- Microsling 
+        <module>microsling/microsling-core</module>
+        <module>microsling/microsling-standalone</module>
+        -->
     </modules>
 </project>
