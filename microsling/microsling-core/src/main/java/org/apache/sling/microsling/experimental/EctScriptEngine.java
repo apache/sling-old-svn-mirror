@@ -51,6 +51,7 @@ public class EctScriptEngine implements SlingScriptEngine {
     public static final String ECT_SCRIPT_EXTENSION = "ect";
     private final List<String> libraryScripts = new LinkedList<String>();
     private final DefaultHtmlRenderer htmlRenderer;
+    private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
     
     public EctScriptEngine() {
         // TODO hardcoded for now...
@@ -66,7 +67,7 @@ public class EctScriptEngine implements SlingScriptEngine {
         // client run the script
         final PrintWriter w = (PrintWriter)(props.get(SlingScriptEngine.OUT));
         final EspReader er = new EspReader(script.getScriptReader());
-        er.setOutInitStatement("out=document;");
+        er.setOutInitStatement("out=document;\n");
         
         try {
             // access our data (need a Node)
@@ -110,7 +111,7 @@ public class EctScriptEngine implements SlingScriptEngine {
             
             // output our parsed script, first in body
             w.println("<div id=\"EctRenderingScript\">\n<script language='javascript'>");
-            copy(er,w);
+            copier.copy(er,w);
             w.println("</script>\n</div>");
             
             // default rendering, turned off automatically from the javascript that 
@@ -146,12 +147,4 @@ public class EctScriptEngine implements SlingScriptEngine {
         return new String [] { ECT_SCRIPT_EXTENSION };
     }
     
-    private static void copy(Reader r, Writer w) throws IOException {
-        final int bufsize = 16384;
-        final char [] buffer = new char[bufsize];
-        int n = 0;
-        while( (n = r.read(buffer, 0, bufsize)) > 0) {
-            w.write(buffer, 0, n);
-        }
-    }
 }
