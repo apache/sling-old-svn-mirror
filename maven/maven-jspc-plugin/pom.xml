@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/maven-jspc-plugin
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/maven/maven-jspc-plugin
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/maven-jspc-plugin
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/maven/maven-jspc-plugin
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/maven-jspc-plugin
+            http://svn.apache.org/viewvc/incubator/sling/trunk/maven/maven-jspc-plugin
         </url>
     </scm>
 
