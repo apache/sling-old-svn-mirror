@@ -58,6 +58,13 @@
       -->
       <sling.log.level>info</sling.log.level>
       <root.log.level>info</root.log.level>
+      
+      <!-- 
+        Set this to 0 to disable automatic Jetty reloading
+        (which gets in the way when running integration tests
+        that touch target resources)
+       -->
+       <jetty.scan.interval.seconds>10</jetty.scan.interval.seconds>
   </properties>
 
   <dependencies>
@@ -191,7 +198,7 @@
         <version>6.1.5</version>
         <configuration>
           <contextPath>/</contextPath>
-          <scanIntervalSeconds>10</scanIntervalSeconds>
+          <scanIntervalSeconds>${jetty.scan.interval.seconds}</scanIntervalSeconds>
           <connectors>
             <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
               <port>8080</port>

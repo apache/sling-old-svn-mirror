@@ -20,6 +20,7 @@ package org.apache.sling.microsling.integration;
 
 import java.io.IOException;
 
+import org.apache.sling.microsling.resource.SyntheticResource;
 import org.apache.sling.microsling.resource.SyntheticResourceProvider;
 
 /** Test the SLING-129 {@link SyntheticResources}, by requesting
@@ -74,4 +75,23 @@ public class SyntheticResourceTest extends MicroslingHttpTestBase {
         final String basePath = "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/" + (int)(Math.random() * Integer.MAX_VALUE);
         assertDeepGetStatus(basePath,10,404,"");
     }
+    
+    public void testSyntheticResourceWithEctTemplate() throws IOException {
+        final String synthResourceUrl = HTTP_BASE_URL + "/search/something.html";
+        {
+            final String content = getContent(synthResourceUrl, CONTENT_TYPE_HTML);
+            assertFalse("Content must not include ECT marker before test",content.contains("ECT template"));
+        }
+        
+        final String scriptPath = "/apps/" + SyntheticResource.DEFAULT_RESOURCE_TYPE;
+        final String toDelete = uploadTestScript(scriptPath,"rendering-test.ect","html.ect");
+        try {
+            final String content = getContent(synthResourceUrl, CONTENT_TYPE_HTML);
+            assertTrue("Content includes ECT marker: " + content,content.contains("ECT template"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+
 }

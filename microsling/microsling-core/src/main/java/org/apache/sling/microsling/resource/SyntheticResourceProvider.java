@@ -41,7 +41,7 @@ public class SyntheticResourceProvider {
      *  created if the given path matches one of these.
      */
     public static String [] DEFAULT_PATH_REGEXP = {
-        "/search(/.*)?",   // everything under /search
+        "/search(/[^\\.]*)?",   // everything under /search, path=up to last dot
         ".*\\*$"          // everything ending with *
     };
     
