@@ -184,7 +184,7 @@ public class EspReader extends FilterReader {
      * to output data. Automatically inserted by the reader in code,
      * where needed.
      */
-    public static final String DEFAULT_OUT_INIT_STATEMENT = "out=response.writer;"; 
+    public static final String DEFAULT_OUT_INIT_STATEMENT = "out=response.writer;\n"; 
     private String outInitStatement = DEFAULT_OUT_INIT_STATEMENT;
 
     /**
@@ -399,7 +399,7 @@ public class EspReader extends FilterReader {
                 // if a template text line is still incomplete, inject
                 // proper line ending and continue until this has been returned
                 if (!lineStart && state == PARSE_STATE_ESP) {
-                    doVerbatim("\");"); // line ending injection
+                    doVerbatim("\");\n"); // line ending injection
                     lineStart = true; // mark the line having ended
                     continue; // let's start read the injection
                 }
@@ -432,7 +432,7 @@ public class EspReader extends FilterReader {
                                 pushState(PARSE_STATE_ECMA_EXPR);
                                 startWrite(null);
                                 if (!lineStart) {
-                                    doVerbatim("\");");
+                                    doVerbatim("\");\n");
                                 }
                                 continue;
 
@@ -454,7 +454,7 @@ public class EspReader extends FilterReader {
                             input.unread(c3);
                             pushState(PARSE_STATE_ECMA);
                             if (!lineStart) {
-                                doVerbatim("\");");
+                                doVerbatim("\");\n");
                             }
                             continue;
 
@@ -527,7 +527,7 @@ public class EspReader extends FilterReader {
 
                             // An expression is wrapped in out.write()
                             if (popState() == PARSE_STATE_ECMA_EXPR) {
-                                doVerbatim(");");
+                                doVerbatim(");\n");
                             }
 
                             // next ESP needs out.write(
@@ -595,7 +595,7 @@ public class EspReader extends FilterReader {
                         // terminate an open template line
                         if (!lineStart) {
                             input.unread(c); // push back the character
-                            doVerbatim("\");"); // insert ");
+                            doVerbatim("\");\n"); // insert ");
                             lineStart = true; // mark the line start
                             continue; // Force read of the "
                         }
