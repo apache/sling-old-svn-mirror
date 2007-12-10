@@ -77,13 +77,14 @@ public class SyntheticResourceTest extends MicroslingHttpTestBase {
     }
     
     public void testSyntheticResourceWithEctTemplate() throws IOException {
-        final String synthResourceUrl = HTTP_BASE_URL + "/search/something.html";
+        final String synthResourceUrl = HTTP_BASE_URL + "/search/something.SyntheticResourceTest.html";
         {
             final String content = getContent(synthResourceUrl, CONTENT_TYPE_HTML);
             assertFalse("Content must not include ECT marker before test",content.contains("ECT template"));
         }
         
-        final String scriptPath = "/apps/" + SyntheticResource.DEFAULT_RESOURCE_TYPE;
+        final String scriptPath = "/apps/" + SyntheticResource.DEFAULT_RESOURCE_TYPE + "/SyntheticResourceTest";
+        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
         final String toDelete = uploadTestScript(scriptPath,"rendering-test.ect","html.ect");
         try {
             final String content = getContent(synthResourceUrl, CONTENT_TYPE_HTML);
