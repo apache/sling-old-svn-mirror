@@ -25,6 +25,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.microsling.resource.SyntheticResourceData;
 
 /** Reusable default HTML rendering of a Node
  */
@@ -40,6 +41,11 @@ public class DefaultHtmlRenderer {
             final Property p = pi.nextProperty();
             printPropertyValue(pw, p);
         }
+    }
+
+    public void render(PrintWriter pw, Resource r, SyntheticResourceData data) {
+        pw.println("<h1>SyntheticResourceData</h1>");
+        pw.println("<p>" + data.toString() + "</p>");
     }
 
     protected void dump(PrintWriter pw, Resource r, Property p) throws RepositoryException {

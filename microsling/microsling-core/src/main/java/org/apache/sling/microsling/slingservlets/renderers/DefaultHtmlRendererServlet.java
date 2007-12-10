@@ -27,6 +27,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.microsling.resource.SyntheticResourceData;
 
 /** A SlingSafeMethodsServlet that renders the current Resource
  *  as simple HTML
@@ -47,16 +48,23 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
     throws ServletException,IOException
     {
         final Resource  r = req.getResource();
-        final Node node = r.adaptTo(Node.class);
+        
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
-        try {
-            pw.println("<html><body>");
-            renderer.render(pw, r, node);
-            pw.println("</body></html>");
-        } catch (RepositoryException re) {
-            throw new ServletException("Cannot dump contents of "
-                + req.getResource().getURI(), re);
+        
+        final Node node = r.adaptTo(Node.class);
+        final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class); 
+        if(srd != null) {
+            renderer.render(pw, r, srd);
+        } else {
+            try {
+                pw.println("<html><body>");
+                renderer.render(pw, r, node);
+                pw.println("</body></html>");
+            } catch (RepositoryException re) {
+                throw new ServletException("Cannot dump contents of "
+                    + req.getResource().getURI(), re);
+            }
         }
     }
 }
