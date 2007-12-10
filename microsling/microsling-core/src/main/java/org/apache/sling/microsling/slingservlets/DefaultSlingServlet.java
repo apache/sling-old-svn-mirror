@@ -101,22 +101,6 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
             }
         } else if(r.adaptTo(Node.class) != null || r.adaptTo(SyntheticResourceData.class) != null) {
 
-            if(r.adaptTo(Node.class) != null) {
-                // When rendering Nodes,
-                // make sure we have an Item, and render it via one of our renderingServlets
-                final String suffix = req.getRequestPathInfo().getSuffix();
-                if(suffix != null && suffix.length() > 0) {
-                    // accept exact addressing only for default rendering:
-                    // a non-empty suffix means there was extra stuff after the path
-                    // of the resource
-                    throw new HttpStatusCodeException(
-                            HttpServletResponse.SC_NOT_FOUND,
-                            "Ancestor resource found (" + r.getResourceMetadata().get(ResourceMetadata.RESOLUTION_PATH) + ")"
-                            + " but URL suffix must be empty for default rendering (suffix=" + suffix + ")"
-                    );
-                }
-            }
-            
             final String contentType = req.getResponseContentType();
             final Servlet s = renderingServlets.get(contentType);
             if(s!=null) {
