@@ -80,7 +80,7 @@ import org.osgi.service.url.URLStreamHandlerService;
  * <li>The <code>com/day/osgi/servlet/Sling.properties</code> is read from
  * the servlet class path. This properties file contains default settings.</li>
  * <li>Extensions of this servlet may provide additional properties to be
- * loaded overwriting the {@link #loadPropertiesOverride(Properties)} method.
+ * loaded overwriting the {@link #loadPropertiesOverride(Map)} method.
  * <li>Finally, web application init parameters are added to the properties and
  * may overwrite existing properties of the same name(s).
  * </ol>
@@ -168,7 +168,7 @@ public class Sling implements BundleActivator {
      * Felix framework properties (value is "sling.ignoreSystemProperties"). If
      * this is property is set to <code>true</code> (case does not matter),
      * the system properties will not be used by
-     * {@link #loadConfigProperties(Properties)}.
+     * {@link #loadConfigProperties(Map)}.
      */
     public static final String SLING_IGNORE_SYSTEM_PROPERTIES = "sling.ignoreSystemProperties";
 
@@ -207,7 +207,7 @@ public class Sling implements BundleActivator {
      * system bundle context and the <code>Felix</code> instance as servlet
      * context attributes.
      *
-     * @throws ServletException if the framework cannot be initialized.
+     * @throws BundleException if the framework cannot be initialized.
      */
     public Sling(Logger logger, ResourceProvider resourceProvider,
             Map<String, String> propOverwrite) throws BundleException {
