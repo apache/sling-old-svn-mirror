@@ -30,6 +30,8 @@ import org.apache.sling.api.resource.ResourceMetadata;
  * <p>
  * Clients may call the {@link #setRawData(Object)} and
  * {@link #setObject(Object)} method as appropriate.
+ * TODO: a similar interface exists in microsling, we might want to
+ * consolidate (see SLING-129).
  */
 public class SyntheticResource implements Resource {
 
