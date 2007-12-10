@@ -85,14 +85,14 @@ public class EspReaderTest extends TestCase {
 
     /** Test standard template text */
     public void testTemplate() throws IOException {
-        assertEquals("out=response.writer;\nout.write(\"test\");\n", parse("test"));
-        assertEquals("out=response.writer;\nout.write(\"test\\n\");\nout.write(\"test2\");\n", parse("test\ntest2"));
+        assertEquals("out=response.writer;out.write(\"test\");", parse("test"));
+        assertEquals("out=response.writer;out.write(\"test\\n\");\nout.write(\"test2\");", parse("test\ntest2"));
     }
     
     /** Test with a custom "out" initialization */
     public void testOutInit() throws IOException {
         final String input = "test";
-        final String expected = "out=getOut();out.write(\"test\");\n";
+        final String expected = "out=getOut();out.write(\"test\");";
             
         StringBuffer buf = new StringBuffer();
 
@@ -114,8 +114,8 @@ public class EspReaderTest extends TestCase {
 
     /** Test JavaScript expressions */
     public void testExpr() throws IOException {
-        assertEquals("out=response.writer;\nout.write( x + 1 );\n", parse("<%= x + 1 %>"));
-        assertEquals("out=response.writer;\nout.write(\"<!-- \");\nout.write( x + 1 );\nout.write(\" -->\");\n", parse("<!-- <%= x + 1 %> -->"));
+        assertEquals("out=response.writer;out.write( x + 1 );", parse("<%= x + 1 %>"));
+        assertEquals("out=response.writer;out.write(\"<!-- \");out.write( x + 1 );out.write(\" -->\");", parse("<!-- <%= x + 1 %> -->"));
     }
 
     /** Test JavaScript comment */
@@ -143,11 +143,8 @@ public class EspReaderTest extends TestCase {
         ;
         
         final String expected = 
-            "out=response.writer;\n"
-            + "out.write(\"<html>\\n\");\n"
-            + "out.write(\"<head><title>\");\n"
-            + "out.write( someExpr );\n"
-            + "out.write(\"</title></head>\\n\");\n"
+            "out=response.writer;out.write(\"<html>\\n\");\n"
+            + "out.write(\"<head><title>\");out.write( someExpr );out.write(\"</title></head>\\n\");\n"
             + "out.write(\"<!-- some HTML comment -->\\n\");\n"
             + "out.write(\"<-- some ESP comment -->\\n\");\n"
             + "out.write(\"// some javascript comment\\n\");\n"
@@ -158,10 +155,9 @@ public class EspReaderTest extends TestCase {
             + "out.write(\"\\n\");\n"
             + "out.write(\"<verbatim stuff=\\\"quoted\\\">xyz</verbatim>\\n\");\n"
             + "out.write(\"<moreverbatim stuff='single'>xx</moreverbatim>\\n\");\n"
-            + "out.write(\"<!-- HTML comment with \");\n"
-            + " expr.here; out.write(\" and EOL\\n\");\n"
+            + "out.write(\"<!-- HTML comment with \"); expr.here; out.write(\" and EOL\\n\");\n"
             + "out.write(\"-->\\n\");\n"
-            + "out.write(\"</html>\");\n"
+            + "out.write(\"</html>\");"
         ;
         
         final String actual = parse(input);
