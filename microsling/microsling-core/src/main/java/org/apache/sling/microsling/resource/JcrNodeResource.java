@@ -58,16 +58,6 @@ public class JcrNodeResource implements Resource {
     /** The relative path name of the data property of an nt:file node */
     private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;
 
-    JcrNodeResource(javax.jcr.Session s,String path) throws RepositoryException {
-        node = (Node)s.getItem(path);
-        this.path = node.getPath();
-        metadata = new ResourceMetadata();
-        resourceType = getResourceTypeForNode(node);
-
-        // check for nt:file metadata
-        setMetaData(node, metadata);
-    }
-
     public JcrNodeResource(Node node) throws RepositoryException {
         this.node = node;
         this.path = node.getPath();
@@ -79,8 +69,9 @@ public class JcrNodeResource implements Resource {
         setMetaData(node, metadata);
     }
 
+    @Override
     public String toString() {
-        return "JcrNodeResource, type=" + resourceType + ", path=" + path;
+        return getClass().getSimpleName() + ", type=" + resourceType + ", path=" + path;
     }
 
     public String getURI() {

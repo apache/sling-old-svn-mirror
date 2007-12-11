@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -33,7 +34,6 @@ import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.microsling.resource.SyntheticResourceData;
@@ -99,8 +99,8 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                         "Resource not found: " + r.getURI());
             }
-        } else if(r.adaptTo(Node.class) != null || r.adaptTo(SyntheticResourceData.class) != null) {
-
+            
+        } else if(canRender(r)) {
             final String contentType = req.getResponseContentType();
             final Servlet s = renderingServlets.get(contentType);
             if(s!=null) {
@@ -118,6 +118,17 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 "Not implemented: resource " + req.getResource().getURI()
                 + " cannot be dumped by " + getClass().getSimpleName());
         }
+    }
+    
+    /** True if our rendering servlets can render Resource r */
+    protected boolean canRender(Resource r) {
+        return 
+            r!=null && 
+            (
+                    r.adaptTo(Node.class) != null 
+                    || r.adaptTo(Property.class) != null
+                    || r.adaptTo(SyntheticResourceData.class) != null
+            );
     }
 
     @Override

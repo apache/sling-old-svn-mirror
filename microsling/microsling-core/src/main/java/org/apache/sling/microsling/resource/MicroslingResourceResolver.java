@@ -23,10 +23,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.jcr.Item;
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -332,10 +334,17 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
 
         if(exists) {
-            Resource result = new JcrNodeResource(session, path);
+            Resource result = null;
+            final Item i = session.getItem(path);
+            if(i.isNode()) {
+                result = new JcrNodeResource((Node)i);
+            } else {
+                result = new JcrPropertyResource((Property)i);
+            }
+            
             result.getResourceMetadata().put(ResourceMetadata.RESOLUTION_PATH,
                 path);
-            log.info("Found Resource at path '{}'", path);
+            log.info("Found Resource " + result);
             return result;
         }
 

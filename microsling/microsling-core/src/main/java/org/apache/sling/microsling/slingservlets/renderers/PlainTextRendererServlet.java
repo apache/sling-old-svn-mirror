@@ -55,14 +55,28 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
             return;
         }
         
-        final Node node = r.adaptTo(Node.class);
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
         try {
-            dump(pw, r, node);
+            renderItem(pw, r);
         } catch (RepositoryException re) {
-            throw new ServletException("Cannot dump contents of "
-                + req.getResource().getURI(), re);
+            throw new ServletException("Exception while rendering Resource " + req.getResource(), re);
+        }
+    }
+    
+    /** Render a Node or Property  */
+    private void renderItem(PrintWriter pw, Resource r) throws ServletException, RepositoryException {
+        Node n = null;
+        Property p = null;
+        
+        if ( (n = r.adaptTo(Node.class)) != null) {
+            dump(pw, r, n);
+            
+        } else if( (p = r.adaptTo(Property.class)) != null) {
+            dump(pw, r, p);
+            
+        } else {
+            throw new ServletException("Resource " + r + " does not adapt to a Node or a Property");
         }
     }
 
@@ -81,22 +95,21 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         pw.println("\n** Node properties **");
         for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
             final Property p = pi.nextProperty();
-            printPropertyValue(pw, p);
+            printPropertyValue(pw, p, true);
+            pw.println();
         }
     }
 
     protected void dump(PrintWriter pw, Resource r, Property p) throws RepositoryException {
-        pw.println("** Property dumped by " + getClass().getSimpleName() + "**");
-        pw.println("Property path:" + p.getPath());
-        pw.println("Resource metadata: " + r.getResourceMetadata());
-
-        printPropertyValue(pw, p);
+        printPropertyValue(pw, p, false);
     }
 
-    protected void printPropertyValue(PrintWriter pw, Property p)
+    protected void printPropertyValue(PrintWriter pw, Property p, boolean includeName)
             throws RepositoryException {
 
-        pw.print(p.getName() + ": ");
+        if(includeName) {
+            pw.print(p.getName() + ": ");
+        }
 
         if (p.getDefinition().isMultiple()) {
             Value[] values = p.getValues();
@@ -107,9 +120,9 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
                 }
                 pw.print(values[i].getString());
             }
-            pw.println(']');
+            pw.print(']');
         } else {
-            pw.println(p.getValue().getString());
+            pw.print(p.getValue().getString());
         }
     }
 }

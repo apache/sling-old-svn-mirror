@@ -23,6 +23,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.microsling.resource.SyntheticResourceData;
@@ -46,6 +47,10 @@ public class DefaultHtmlRenderer {
     public void render(PrintWriter pw, Resource r, SyntheticResourceData data) {
         pw.println("<h1>SyntheticResourceData</h1>");
         pw.println("<p>" + data.toString() + "</p>");
+    }
+
+    public void render(PrintWriter pw, Resource r, Property p) throws RepositoryException {
+        pw.print(p.getValue().getString());
     }
 
     protected void dump(PrintWriter pw, Resource r, Property p) throws RepositoryException {
