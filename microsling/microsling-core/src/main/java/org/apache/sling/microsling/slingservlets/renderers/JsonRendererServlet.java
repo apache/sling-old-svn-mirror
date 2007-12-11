@@ -19,7 +19,9 @@ package org.apache.sling.microsling.slingservlets.renderers;
 import java.io.IOException;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -65,11 +67,26 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND, "No data to dump");
         }
         
+        // Do we have a SyntheticResourceData?
         if(r.adaptTo(SyntheticResourceData.class) != null) {
             renderSyntheticResource(req, resp);
             return;
         }
         
+        // Do we have a Property?
+        final Property p = r.adaptTo(Property.class);
+        if(p!=null) {
+            try {
+                renderProperty(p, resp);
+            } catch(JSONException je) {
+                reportException(je);
+            } catch(RepositoryException re) {
+                reportException(re);
+            }
+            return;
+        }
+        
+        // Do we have a Node?
         final Node n = r.adaptTo(Node.class);
         if(n == null) {
             throw new HttpStatusCodeException(
@@ -98,6 +115,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         } catch(RepositoryException re) {
             reportException(re);
         }
+    }
+    
+    /** Render a Property by dumping its String value */ 
+    private void renderProperty(Property p, SlingHttpServletResponse resp) throws JSONException, RepositoryException, IOException {
+        resp.setContentType(responseContentType);
+        new JsonItemWriter(null).dump(p, resp.getWriter());
     }
 
     /** Render synthetic resources as empty JSON objects */ 

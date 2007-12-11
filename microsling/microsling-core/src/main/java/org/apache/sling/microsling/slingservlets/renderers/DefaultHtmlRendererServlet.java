@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 
@@ -53,18 +54,24 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
         final PrintWriter pw = resp.getWriter();
         
         final Node node = r.adaptTo(Node.class);
-        final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class); 
-        if(srd != null) {
-            renderer.render(pw, r, srd);
-        } else {
-            try {
+        final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class);
+        final Property p = r.adaptTo(Property.class);
+        
+        try {
+            if(srd != null) {
+                renderer.render(pw, r, srd);
+            } else if(node!=null) {
                 pw.println("<html><body>");
                 renderer.render(pw, r, node);
                 pw.println("</body></html>");
-            } catch (RepositoryException re) {
-                throw new ServletException("Cannot dump contents of "
-                    + req.getResource().getURI(), re);
+            } else {
+                // for properties, we just output the String value
+                renderer.render(pw, r, p);
             }
+        
+        } catch (RepositoryException re) {
+            throw new ServletException("Cannot dump contents of "
+                + req.getResource().getURI(), re);
         }
     }
 }
