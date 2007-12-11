@@ -29,7 +29,7 @@ public class PostRedirectTest extends MicroslingHttpTestBase {
     
     public void testForcedRedirect() throws IOException {
         final Map<String,String> params = new HashMap<String,String>();
-        params.put("ujax_redirect","http://forced/");
+        params.put("ujax:redirect","http://forced/");
         final Map<String,String> headers = new HashMap<String,String>();
         headers.put("Referer", "http://referer/");
         
@@ -54,7 +54,7 @@ public class PostRedirectTest extends MicroslingHttpTestBase {
     
     public void testMagicStarRedirect() throws IOException {
         final Map<String,String> params = new HashMap<String,String>();
-        params.put("ujax_redirect","*");
+        params.put("ujax:redirect","*");
         final Map<String,String> headers = new HashMap<String,String>();
         headers.put("Referer", "http://referer/");
         final String location = testClient.createNode(postUrl, params, headers);

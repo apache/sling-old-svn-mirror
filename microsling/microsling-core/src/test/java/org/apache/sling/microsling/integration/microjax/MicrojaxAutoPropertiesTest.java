@@ -30,7 +30,7 @@ import org.apache.sling.microsling.integration.MicroslingHttpTestBase;
 
 public class MicrojaxAutoPropertiesTest extends MicroslingHttpTestBase {
 
-    public static final String TEST_BASE_PATH = "/microjax-tests";
+    public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     
     @Override

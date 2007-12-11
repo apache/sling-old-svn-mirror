@@ -27,11 +27,11 @@ public class StaticContentTest extends MicroslingHttpTestBase {
     }
     
     public void testContentTypeCss() throws IOException {
-        getContent(HTTP_BASE_URL + "/microsling.css", CONTENT_TYPE_CSS);
+        getContent(HTTP_BASE_URL + "/usling.css", CONTENT_TYPE_CSS);
     }
     
     public void testContentTypeJs() throws IOException {
-        getContent(HTTP_BASE_URL + "/microjax/microjax.js", CONTENT_TYPE_JS);
+        getContent(HTTP_BASE_URL + "/ujax/ujax.js", CONTENT_TYPE_JS);
     }
     
     public void testWebInfForbidden() throws IOException {

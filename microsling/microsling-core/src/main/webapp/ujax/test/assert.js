@@ -16,7 +16,7 @@
  */
 
 /* 
-	Minimal javascript assertion framework, used for microjax automated testing.
+	Minimal javascript assertion framework, used for ujax automated testing.
 	
 	$Id$
  */

@@ -27,7 +27,7 @@ import org.apache.sling.microsling.integration.MicroslingHttpTestBase;
 
 /** Test node deletion via the MicrojaxPostServlet */
 public class PostServletDeleteTest extends MicroslingHttpTestBase {
-    public static final String TEST_BASE_PATH = "/microjax-tests";
+    public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     
     @Override
@@ -55,7 +55,7 @@ public class PostServletDeleteTest extends MicroslingHttpTestBase {
         
         // delete one and check
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
-        final String deleteCmd = "ujax_delete";
+        final String deleteCmd = "ujax:delete";
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlA)));
         assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return status OK (1)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");

@@ -54,7 +54,7 @@ public class JstScriptEngine implements SlingScriptEngine {
     
     public JstScriptEngine() {
         // TODO hardcoded for now...
-        libraryScripts.add("/microjax/microjax.js");
+        libraryScripts.add("/ujax/ujax.js");
         htmlRenderer = new DefaultHtmlRenderer();
     }
     

@@ -1,27 +1,27 @@
 <html>
 <head>
-  <title>microsling content creation forms</title>
-  <link rel="stylesheet" href="microsling.css"/>
+  <title>&micro;sling content creation forms</title>
+  <link rel="stylesheet" href="usling.css"/>
 </head>
 <body>
-  <h1>microsling content creation forms</h1>
+  <h1>&micro;sling content creation forms</h1>
   
   <div class="note">
     <a href="index.html">back to homepage</a>
   </div>
   
   <p>
-    Use these forms to test the microsling request processing and rendering SlingServlets. 
+    Use these forms to test the &micro;sling request processing and rendering SlingServlets. 
   </p>
   
   <div>
     <form class="testbox" action="content/testing/*" method="POST">
     
       <!-- these parameters mean "redirect to created node with .html extension" -->
-      <input type="hidden" name="ujax_displayExtension" value="html"/>
-      <input type="hidden" name="ujax_redirect" value="*"/>
+      <input type="hidden" name="ujax:displayExtension" value="html"/>
+      <input type="hidden" name="ujax:redirect" value="*"/>
       
-      <h1>SlingPostServlet content creation form</h1>
+      <h1>&micro;jaxPostServlet content creation form</h1>
       <p>
         Submitting this form creates an <em>nt:unstructured</em> node under content/testing, 
         and displays it using an <em>html</em> extension. 
@@ -42,7 +42,7 @@
           sling:resourceType:
           <span class="note">(leave this empty to use the JCR node type for script resolution)</span>
           <br/>
-          <input name="sling:resourceType" type="text" size="80" value="microsling/example"/>
+          <input name="sling:resourceType" type="text" size="80" value="usling/example"/>
           <br/>
 	      <input type="submit" value="Create and display node"/> 
       </p>

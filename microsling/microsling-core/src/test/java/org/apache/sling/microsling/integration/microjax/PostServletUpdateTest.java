@@ -26,7 +26,7 @@ import org.apache.sling.microsling.integration.MicroslingHttpTestBase;
 
 /** Test node updates via the MicrojaxPostServlet */
 public class PostServletUpdateTest extends MicroslingHttpTestBase {
-    public static final String TEST_BASE_PATH = "/microjax-tests";
+    public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     
     @Override

@@ -26,7 +26,7 @@ import org.apache.sling.microsling.integration.MicroslingHttpTestBase;
 
 /** Test node creation via the MicrojaxPostServlet */
 public class PostServletCreateTest extends MicroslingHttpTestBase {
-    public static final String TEST_BASE_PATH = "/microjax-tests";
+    public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     
     @Override
@@ -101,7 +101,7 @@ public class PostServletCreateTest extends MicroslingHttpTestBase {
         props.put("++a","123");
         props.put("++b","456");
         props.put("c","not saved");
-        props.put("ujax_saveParamPrefix","++");
+        props.put("ujax:saveParamPrefix","++");
         final String createdNodeUrl = testClient.createNode(postUrl + "/*", props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");

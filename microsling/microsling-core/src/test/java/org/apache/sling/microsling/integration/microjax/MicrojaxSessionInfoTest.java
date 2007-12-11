@@ -22,16 +22,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.microsling.integration.MicroslingHttpTestBase;
 
-/** Test the microjax:sessionInfo resource */
+/** Test the ujax:sessionInfo resource */
 
 public class MicrojaxSessionInfoTest extends MicroslingHttpTestBase {
     
     public void testSessionInfo() throws IOException {
-        final String content = getContent(HTTP_BASE_URL + "/microjax:sessionInfo.json", CONTENT_TYPE_JSON);
+        final String content = getContent(HTTP_BASE_URL + "/ujax:sessionInfo.json", CONTENT_TYPE_JSON);
         assertJavascript("admin.default", content, "out.println(data.userID + '.' + data.workspace)");
     }
     
     public void testNonexistentMicrojaxUrl() throws IOException {
-        assertHttpStatus(HTTP_BASE_URL + "/microjax:nothing", HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + "/ujax:nothing", HttpServletResponse.SC_NOT_FOUND);
     }
 }
