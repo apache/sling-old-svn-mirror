@@ -141,24 +141,24 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         }
     }
 
-    public void testEctHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.ect","html.ect");
+    public void testJstHtml() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ECT marker",content.contains("ECT template"));
+            assertTrue("Content includes JST marker",content.contains("JST template"));
             assertTrue("Content contains JSON data",content.contains("\"text\":\"" + testText + "\""));
-            assertTrue("Content contains default rendering",content.contains("div id=\"EctDefaultRendering"));
+            assertTrue("Content contains default rendering",content.contains("div id=\"JstDefaultRendering"));
             assertTrue("Content contains javascript rendering code",content.contains("out.write( currentNode.text )"));
         } finally {
             testClient.delete(toDelete);
         }
     }
 
-    public void testEctHtmlScriptTagA() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.ect","html.ect");
+    public void testJstScriptTagA() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ECT marker",content.contains("ECT template"));
+            assertTrue("Content includes JST marker",content.contains("JST template"));
             assertTrue("Content contains scripted stuff (" + content + ")",
                     content.contains("something scripted"));
             assertFalse("Script opening tag must be broken in two in content (" + content + ")",
@@ -171,11 +171,11 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
     }
 
     /** TODO this test currently fails, see SLING-114
-    public void testEctHtmlScriptTagB() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.ect","html.ect");
+    public void testJstHtmlScriptTagB() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ECT marker",content.contains("ECT template"));
+            assertTrue("Content includes JST marker",content.contains("JST template"));
             assertTrue("Content contains scripted stuff (" + content + ")",
                     content.contains("more scripting"));
             assertFalse("Script opening tag must be broken in two in content (" + content + ")",

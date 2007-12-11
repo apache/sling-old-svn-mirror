@@ -20,8 +20,6 @@ package org.apache.sling.microsling.experimental;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,18 +41,18 @@ import org.apache.sling.microsling.resource.SyntheticResourceData;
 import org.apache.sling.microsling.slingservlets.renderers.DefaultHtmlRenderer;
 import org.apache.sling.scripting.javascript.EspReader;
 
-/** Experimental ECT script engine: converts an ECT template (using the 
+/** Experimental JST script engine: converts a JST template (using the 
  *  same templating syntax as ESP) to client-side javascript code
  *  that renders the page.
  */
-public class EctScriptEngine implements SlingScriptEngine {
+public class JstScriptEngine implements SlingScriptEngine {
 
-    public static final String ECT_SCRIPT_EXTENSION = "ect";
+    public static final String JST_SCRIPT_EXTENSION = "jst";
     private final List<String> libraryScripts = new LinkedList<String>();
     private final DefaultHtmlRenderer htmlRenderer;
     private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
     
-    public EctScriptEngine() {
+    public JstScriptEngine() {
         // TODO hardcoded for now...
         libraryScripts.add("/microjax/microjax.js");
         htmlRenderer = new DefaultHtmlRenderer();
@@ -84,8 +82,10 @@ public class EctScriptEngine implements SlingScriptEngine {
             }
             
             // output HEAD with javascript initializations
-            w.println("<html><head><title id=\"EctPageTitle\">");
-            w.println("ECT rendering of " + r.getURI());
+            // TODO we should instead parse (at least minimally) the template file, and inject our
+            // stuff in the right places
+            w.println("<html><head><title id=\"JstPageTitle\">");
+            w.println("JST rendering of " + r.getURI());
             w.println("</title>");
             
             // library scripts
@@ -101,7 +101,7 @@ public class EctScriptEngine implements SlingScriptEngine {
             
             // onLoad method
             w.println("<script language=\"javascript\">");
-            w.println("function ectOnLoad() { if(typeof onLoad == \"function\") { onLoad(); } }");
+            w.println("function jstOnLoad() { if(typeof onLoad == \"function\") { onLoad(); } }");
             w.println("</script>");
             
             // data in JSON format
@@ -116,16 +116,16 @@ public class EctScriptEngine implements SlingScriptEngine {
             }
             w.println(";");
             w.println("</script>");
-            w.println("</head><body onLoad=\"ectOnLoad()\">");
+            w.println("</head><body onLoad=\"jstOnLoad()\">");
             
             // output our parsed script, first in body
-            w.println("<div id=\"EctRenderingScript\">\n<script language='javascript'>");
+            w.println("<div id=\"JstRenderingScript\">\n<script language='javascript'>");
             copier.copy(er,w);
             w.println("</script>\n</div>");
             
             // default rendering, turned off automatically from the javascript that 
             // follows, if javascript is enabled
-            w.println("<div id=\"EctDefaultRendering\">");
+            w.println("<div id=\"JstDefaultRendering\">");
             if(n!=null) {
                 htmlRenderer.render(w, r, n);
             } else {
@@ -133,23 +133,23 @@ public class EctScriptEngine implements SlingScriptEngine {
             }
             w.println("</div>");
             w.println("<script language=\"javascript\">");
-            w.println("document.getElementById(\"EctDefaultRendering\").setAttribute(\"style\",\"display:none\");");
+            w.println("document.getElementById(\"JstDefaultRendering\").setAttribute(\"style\",\"display:none\");");
             w.println("</script>");
             
             // all done
             w.println("</body></html>");
             
         } catch(RepositoryException re) {
-            throw new SlingException("RepositoryException in EctScriptEngine.eval()",re);
+            throw new SlingException("RepositoryException in JstScriptEngine.eval()",re);
             
         } catch(JSONException je) {
-            throw new SlingException("JSONException in EctScriptEngine.eval()",je);
+            throw new SlingException("JSONException in JstScriptEngine.eval()",je);
             
         }
     }
 
     public String getEngineName() {
-        return "ECT script engine (Ecmascript Client Templates)";
+        return "JST script engine (sling JavaScript Templates)";
     }
 
     public String getEngineVersion() {
@@ -157,7 +157,7 @@ public class EctScriptEngine implements SlingScriptEngine {
     }
 
     public String[] getExtensions() {
-        return new String [] { ECT_SCRIPT_EXTENSION };
+        return new String [] { JST_SCRIPT_EXTENSION };
     }
     
 }

@@ -80,7 +80,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
           "org.apache.sling.scripting.velocity.VelocityTemplatesScriptEngine",
           "org.apache.sling.scripting.freemarker.FreemarkerScriptEngine",
           "org.apache.sling.scripting.ruby.ErbScriptEngine",
-          "org.apache.sling.microsling.experimental.EctScriptEngine"
+          "org.apache.sling.microsling.experimental.JstScriptEngine"
        };
 
     public MicroslingScriptResolver() throws SlingException {
