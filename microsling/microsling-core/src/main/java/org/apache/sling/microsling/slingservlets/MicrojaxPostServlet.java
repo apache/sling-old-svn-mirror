@@ -41,7 +41,9 @@ import org.apache.sling.microsling.helpers.nodenames.NodeNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Servlet that implements the microjax POST "protocol", see SLING-92 */
+import freemarker.ext.ant.UnlinkedJythonOperationsImpl;
+
+/** Servlet that implements the ujax POST "protocol", see SLING-92 */
 public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     private static final long serialVersionUID = 1837674988291697074L;
 
@@ -52,7 +54,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     /** Prefix for parameter names which control this POST
      *  (ujax stands for "microjax", RP_ stands for "request param")
      */
-    public static final String RP_PREFIX = "ujax_";
+    public static final String RP_PREFIX = "ujax:";
 
     /** Optional request parameter: redirect to the specified URL after POST */
     public static final String RP_REDIRECT_TO =  RP_PREFIX + "redirect";
@@ -266,6 +268,12 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
         for(Map.Entry<String, RequestParameter[]>  e : request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
+            
+            if(paramName.startsWith(RP_PREFIX)) {
+                // do not store parameters with names starting with ujax:  
+                continue;
+            }
+            
             String propertyName = paramName;
             if(savePrefix!=null) {
                 if(!paramName.startsWith(savePrefix)) {

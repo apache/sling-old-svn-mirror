@@ -1,47 +1,48 @@
 <html>
 <head>
-  <title>microsling homepage</title>
-  <link rel="stylesheet" href="microsling.css"/>
+  <title>&micro;sling homepage</title>
+  <link rel="stylesheet" href="usling.css"/>
 </head>
 <body>
-  <h1>microsling homepage</h1>
+  <h1>&micro;sling homepage</h1>
   
   <h2>Overview</h2>
   <p>
-  	microsling started as "back to basics" rewrite of Sling (which is heavier, using OSGi, and
-  	at the time was much harder to understand).
+  	&micro;sling (pronounced <em>microsling</em>) started as "back to basics" rewrite of Sling, which is heavier, using OSGi, and
+  	at the time was much harder to understand.
   </p>
   <p>
-  	As I write this (early December 2007), microsling is perfectly usable to create scripted 
+  	As I write this (early December 2007), &micro;sling is perfectly usable to create scripted 
   	JCR-based applications (it runs <a href="http://dev.day.com">dev.day.com</a> for example). 
   	We have decided to focus on javascript, using it for either server-side
   	or client side templates (see links below), or for handling other HTTP requests besides GET.
   </p>
   <p>
-  	The microjax.js client-side javascript library provides a simple javascript "proxy" on the
-  	JCR repository. 
+  	The ujax.js client-side javascript library provides a simple javascript "proxy" on the
+  	JCR repository. The name ujax should really by written &micro;jax (<em>microjax</em>), but for all
+    filenames and technical names (parameters etc.) with use "ujax" to avoid encoding problems.
   </p>
   <p>
   	Documentation and examples are scarce for now, but the automated tests (both unit and integration tests)
   	are extensive and up to date, if you can read simple java code they might help. 
   </p>
   
-  <h2>microsling main test links</h2>
+  <h2>&micro;sling main test links</h2>
   <ul>
     <li>
       <a href="content-creation-forms.html">
         Content creation forms
-      </a>. Start here: use this page to create content and test the rendering mechanisms, and then have a look
+      </a>: start here, use this page to create content and test the rendering mechanisms, and then have a look
       at the <a href="javascript.html">javascript</a> info page for rendering.
     </li>
     <li>
       <a href="javascript.html">
-        Server-side and client-side javascript templates
+        Use of javascript in &micro;sling
       </a>: explains how to use server-side javascript and javascript-based ESP and ECT templates to render content
     </li>
     <li>
-      Automated testing of the <a href="microjax/test/microjax-test.html">
-        microjax
+      Automated testing of the <a href="ujax/test/ujax-test.html">
+        &micro;jax
       </a> client-side javascript "JCR proxy" library. 
     </li>
   </ul>

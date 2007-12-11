@@ -1,10 +1,10 @@
 <html>
 <head>
-  <title>Use of javascript in microsling</title>
-  <link rel="stylesheet" href="microsling.css"/>
+  <title>Use of javascript in &micro;sling</title>
+  <link rel="stylesheet" href="usling.css"/>
 </head>
 <body>
-  <h1>Use of javascript in microsling</h1>
+  <h1>Use of javascript in &micro;sling</h1>
   
   <div class="note">
     <a href="index.html">back to homepage</a>
@@ -16,8 +16,8 @@
   	now we'll leave it at that).
   </p>
   <p>
-  	If you created content with the microsling test content creation form, rendering scripts should be stored
-  	in the repository under <em>/sling/scripts/microsling/example/</em>. Mount the repository with WebDAV to
+  	If you created content with the &micro;sling test content creation form, rendering scripts should be stored
+  	in the repository under <em>/sling/scripts/usling/example/</em>. Mount the repository with WebDAV to
   	do that, see the WebDAV link on the <a href="index.html">homepage</a>.
   </p>
   <p>
@@ -51,14 +51,14 @@
       	<em>&lt;%= ... %&gt;</em> tags include the result of a javascript expression in the output.
       </li>
       <li>
-      	Several standard objects are available in javascript to access microsling data
+      	Several standard objects are available in javascript to access &micro;sling data
       	(TODO: document these objects - for now see the RhinoJavascriptServlet source code)
       </li>
     </ul>
   </p>
   <h3>ESP template example</h3>
     <pre>
-&lt;%-- microsling ESP template example, store this as html.esp --%>
+&lt;%-- ESP template example, store this as html.esp --%>
 &lt;html>
 &lt;body>
 &lt;p>This page is generated from an ESP template!&lt;/p>
@@ -128,7 +128,7 @@ out.println("&lt;/body>&lt;/html>");</pre>
     <code>slingComponentId</code> property.
   </p>
   <pre>
-&lt;%-- microsling ESP directory listing example -%>
+&lt;%-- ESP directory listing example -%>
 &lt;html>
 &lt;body>
 &lt;p>This HTML directory listing is generated from an ESP template!&lt;/p>
@@ -137,7 +137,7 @@ out.println("&lt;/body>&lt;/html>");</pre>
 &lt;%
 for (var prop in resource.node) {
     if (resource.node[prop]["text"]) {
-        %>&lt;li>&lt;a href="/microsling&lt;%= resource.node[prop] %>.html">&lt;%= resource.node[prop] %>&lt;/a>&lt;/li>&lt;%
+        %>&lt;li>&lt;a href="/&lt;%= resource.node[prop] %>.html">&lt;%= resource.node[prop] %>&lt;/a>&lt;/li>&lt;%
     }
 }
 %>

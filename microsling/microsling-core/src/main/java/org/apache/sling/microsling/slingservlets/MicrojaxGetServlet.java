@@ -35,13 +35,13 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 
-/** Servlet that provides some non-repository resources for microjax
+/** Servlet that provides some non-repository resources for ujax
  *  using GET requests, see SLING-92 */
 public class MicrojaxGetServlet extends SlingSafeMethodsServlet {
     private static final long serialVersionUID = -8406117284723670902L;
 
     /** Handle GET requests starting with this prefix */
-    public static final String URI_PREFIX = "/microjax:";
+    public static final String URI_PREFIX = "/ujax:";
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException,

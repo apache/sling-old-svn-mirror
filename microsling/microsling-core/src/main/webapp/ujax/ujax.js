@@ -16,44 +16,44 @@
  */
 
 /**
- * 	The microjax javascript client gives access to a JCR repository
+ * 	The ujax javascript client gives access to a JCR repository
  *	from client-side java code, using microsling as a back-end.	   
  *	 
  * @version $Rev: $, $Date: 2007-03-27 16:30:52 +0200 (Tue, 27 Mar 2007) $
  */
 
-var microjax = null;
+var ujax = null;
 
-// start microjax code scope
+// start ujax code scope
 (function() {
 
-	microjax = new Object();
-	microjax.NAME_OF_THIS_FILE = "microjax.js";
+	ujax = new Object();
+	ujax.NAME_OF_THIS_FILE = "ujax.js";
 	
 	/** This method tries to figure out what to do with a page */
-	microjax.wizard = function() {
+	ujax.wizard = function() {
 	    //TODO add lots of magic here
-	    var form=document.getElementById("microjaxform");
+	    var form=document.getElementById("ujaxform");
 	    if (!form) form=document.forms[0];
 	    if (form) {
 	        var sp=new Object();
 	        sp.formElement=form;
-	        microjax.setupPage(sp);
+	        ujax.setupPage(sp);
 	    }
 	
 	}
-	/** Call this to merge microjax data in an HTML page
+	/** Call this to merge ujax data in an HTML page
 		TODO deprecate other functions
 	*/
-	microjax.setupPage = function(options) {
-	  var tree = microjax.getContent(microjax._getJsonUrl(),1);
+	ujax.setupPage = function(options) {
+	  var tree = ujax.getContent(ujax._getJsonUrl(),1);
 	  
 	  if(options.formElement) {
-		microjax._setFormValues(options.formElement,microjax._getJsonUrl(),tree);
+		ujax._setFormValues(options.formElement,ujax._getJsonUrl(),tree);
 	  }
 	  
 	  if(options.displayElement) {
-	  	microjax.displayValues(options.displayElement,tree);
+	  	ujax.displayValues(options.displayElement,tree);
 	  }
 	}
 	
@@ -63,8 +63,8 @@ var microjax = null;
 	 * @return the XHR object, use .responseText for the data
 	 * @type String
 	 */
-	microjax.httpGet = function(url) {
-	    var httpcon = microjax.getXHR();
+	ujax.httpGet = function(url) {
+	    var httpcon = ujax.getXHR();
 	    if (httpcon) {
 			httpcon.open('GET', url, false);
 			httpcon.send(null);
@@ -81,14 +81,14 @@ var microjax = null;
 	 * @return The result
 	 * @type String
 	 */
-	microjax.dumpObj = function(obj, level) {
+	ujax.dumpObj = function(obj, level) {
 		var res="";
 		for (var a in obj) {
 			if (typeof(obj[a])!="object") {
 				res+=a+":"+obj[a]+"  ";
 			} else {
 				res+=a+": { ";
-				res+=microjax.dumpObj(obj[a])+"} ";
+				res+=ujax.dumpObj(obj[a])+"} ";
 			}
 		}
 		return (res);
@@ -102,7 +102,7 @@ var microjax = null;
 	 * @return An Array of names of properties that exist in a tree
 	 * @type Array
 	 */
-	microjax.getAllPropNames = function(obj, names) {
+	ujax.getAllPropNames = function(obj, names) {
 		var root=false;
 	    if (!names) {
 	        names=new Object();
@@ -134,10 +134,10 @@ var microjax = null;
 	 * @return An Object tree of content nodes and properties, null if not found
 	 * @type Object
 	 */
-	microjax.getContent = function(path, maxlevels) {
+	ujax.getContent = function(path, maxlevels) {
 	    var obj=new Object();
 	    if (!path)  {
-	        path=microjax.currentPath;
+	        path=ujax.currentPath;
 	    }
 	    if (path.indexOf("/")==0) {
 			/*
@@ -146,7 +146,7 @@ var microjax = null;
 			and therefore need some additions before they are sent
 			to the server
 			*/
-			path=microjax.baseurl+path+".json";
+			path=ujax.baseurl+path+".json";
 		}
 	    //checking for a trailing "/*"
 	    if (path.indexOf("/*")>=0) return obj;
@@ -154,20 +154,20 @@ var microjax = null;
 		// TODO for now we explicitely defeat caching on this...there must be a better way
 		// but in tests IE6 tends to cache too much
 		var passThroughCacheParam = "?clock=" + new Date().getTime();
-	    var res=microjax.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
+	    var res=ujax.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
 	    
 	    if(res.status == 200) {
-	    	return microjax.evalString(res.responseText);
+	    	return ujax.evalString(res.responseText);
 	    }
 	    return null; 
 	}
 	
 	/** Remove content by path */
-	microjax.removeContent = function(path) {
-		var httpcon = microjax.getXHR();
+	ujax.removeContent = function(path) {
+		var httpcon = ujax.getXHR();
 		if (httpcon) {
-			var params = "ujax_delete="+path;
-			httpcon.open('POST', microjax.baseurl + microjax.currentPath, false);
+			var params = "ujax:delete="+path;
+			httpcon.open('POST', ujax.baseurl + ujax.currentPath, false);
 
 			// Send the proper header information along with the request
 			httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -181,7 +181,7 @@ var microjax = null;
 	}
 	
 	/** eval str, accepting various object delimiters */
-	microjax.evalString = function(str) {
+	ujax.evalString = function(str) {
 		var obj = null;
 	    if(str.indexOf('[')==0) {
 		    eval("obj="+str);
@@ -198,16 +198,16 @@ var microjax = null;
 	 * @return An Object tree containing the session information, null if server status <> 200
 	 * @type Object
 	 */
-	microjax.getSessionInfo = function() {
-	    var res=microjax.httpGet(microjax.baseurl+"/microjax:sessionInfo.json");
+	ujax.getSessionInfo = function() {
+	    var res=ujax.httpGet(ujax.baseurl+"/ujax:sessionInfo.json");
 	    if(res.status == 200) {
-	    	return microjax.evalString(res.responseText);
+	    	return ujax.evalString(res.responseText);
 	    }
 	    return null;
 	}
 	
 	/** Replace extension in a path */
-	microjax._replaceExtension = function(path,newExtension) {
+	ujax._replaceExtension = function(path,newExtension) {
 		var i = path.lastIndexOf(".");
 		if(i >= 0) path = path.substring(0,i);
 		i = path.lastIndexOf(".");
@@ -218,17 +218,17 @@ var microjax = null;
 	/** Get the JSON data URL that for the current page
 	 *	(assuming a .extension for the current page, .html or something else)	
 	 */
-	microjax._getJsonUrl = function() {
-	  return microjax._replaceExtension(window.location.href,".json");
+	ujax._getJsonUrl = function() {
+	  return ujax._replaceExtension(window.location.href,".json");
 	}
 	
 	/** Get the content repository path from the URL
 	 *	(assuming a .extension for the current page, .html or something else)
 	 */
-	microjax._getPath = function() {
+	ujax._getPath = function() {
 	
-	    var noextensions=microjax._replaceExtension(window.location.href,"");
-	    var path=noextensions.substring(microjax.baseurl.length);
+	    var noextensions=ujax._replaceExtension(window.location.href,"");
+	    var path=noextensions.substring(ujax.baseurl.length);
 	    return (path);
 	}
 	
@@ -236,15 +236,15 @@ var microjax = null;
 	 *	with an id like ./stuff, has its innerHTML set to the value of stuff
 	 *	in the tree, if it exists.
 	 */
-	microjax.displayValues = function(container,tree) {
+	ujax.displayValues = function(container,tree) {
 	  if(!tree) {
-	    tree = microjax.getContent(microjax._getJsonUrl(),1);
+	    tree = ujax.getContent(ujax._getJsonUrl(),1);
 	  }
 	  
 	  var elements = container.getElementsByTagName("*"); 
 	  var toSet = new Array();
 	  for (var i = 0; i < elements.length; i++) { 
-	    var value = microjax._getElementValue(elements[i],tree);
+	    var value = ujax._getElementValue(elements[i],tree);
 	    if(value) {
 	      toSet[toSet.length] = { e:elements[i], v:value };
 	    }
@@ -256,7 +256,7 @@ var microjax = null;
 	}
 	
 	/** If e has an ID that matches a property of tree, set e's innerHTML accordingly */
-	microjax._getElementValue = function(e,tree) {
+	ujax._getElementValue = function(e,tree) {
 	  var id = e.getAttribute("id");
 	  if(id) {
 	    return tree[id.substring(2)];
@@ -273,7 +273,7 @@ var microjax = null;
 	 * Returns an object indicating whether data was found on the server.
 	 *
 	 */
-	microjax._setFormValues = function(form, path, tree) {
+	ujax._setFormValues = function(form, path, tree) {
 		var result = new Object();
 		
 	    /** TODO: deal with abolute paths?
@@ -284,7 +284,7 @@ var microjax = null;
 	    form.setAttribute("action", path);
 	
 	    if (!tree) {
-			tree=microjax.getContent(path,1);
+			tree=ujax.getContent(path,1);
 	    }
 	
 	    var elems=form.elements;
@@ -338,7 +338,7 @@ var microjax = null;
 	 *  @return The Path parameter isolated from the URL
 	 *  @type String
 	 */
-	microjax.TODO_NOT_USED_isolatePathFromUrl = function(url) {
+	ujax.TODO_NOT_USED_isolatePathFromUrl = function(url) {
 	  var pattern = "[\\?&]Path=([^&#]*)";
 	  var regex = new RegExp( pattern );
 	  var results = regex.exec( url );
@@ -354,7 +354,7 @@ var microjax = null;
 	 *	Get an XMLHttpRequest in a portable way
 	 *		
 	 */
-	microjax.getXHR = function () {
+	ujax.getXHR = function () {
 		var xhr=null;
 		
 		if(!xhr) {
@@ -385,18 +385,18 @@ var microjax = null;
 		}
 		
 		if(!xhr) {
-			alert("Unable to access XMLHttpRequest object, microjax will not work!");
+			alert("Unable to access XMLHttpRequest object, ujax will not work!");
 		}
 		
 		return xhr;
 	}
 	
-	// obtain the base_url to communicate with microjax on the server
+	// obtain the base_url to communicate with ujax on the server
 	var scripts = document.getElementsByTagName("SCRIPT")
 	var script = scripts[scripts.length-1].src
-	microjax.baseurl = script.substring(0,script.length - ("/" + microjax.NAME_OF_THIS_FILE.length));
-	microjax.currentPath = microjax._getPath();
-	microjax.isNew  = (microjax.currentPath.indexOf("/*")>=0)?true:false;
+	ujax.baseurl = script.substring(0,script.length - ("/" + ujax.NAME_OF_THIS_FILE.length));
+	ujax.currentPath = ujax._getPath();
+	ujax.isNew  = (ujax.currentPath.indexOf("/*")>=0)?true:false;
 
-// end microjax code scope	
+// end ujax code scope	
 })();

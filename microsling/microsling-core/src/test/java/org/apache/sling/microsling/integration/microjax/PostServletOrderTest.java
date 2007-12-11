@@ -26,7 +26,7 @@ import org.apache.sling.microsling.integration.MicroslingHttpTestBase;
 
 /** Test the order option for node creation via the MicrojaxPostServlet */
 public class PostServletOrderTest extends MicroslingHttpTestBase {
-    public static final String TEST_BASE_PATH = "/microjax-tests";
+    public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     
     @Override
@@ -67,7 +67,7 @@ public class PostServletOrderTest extends MicroslingHttpTestBase {
     /** Create several nodes with the order option, and check ordering */
     public void testZeroOrder() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax_order","0");
+        props.put("ujax:order","0");
         
         final String [] nodeUrl = new String[4];
         nodeUrl[0] = testClient.createNode(postUrl + "/*", props);

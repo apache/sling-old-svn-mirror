@@ -17,9 +17,9 @@
 	  -->
 
 	<head>
-		<title>microjax test page</title>
-		<link rel="stylesheet" type="text/css" href="../../microsling.css"/>
-		<script src="../microjax.js"></script>
+		<title>&micro;jax test page</title>
+		<link rel="stylesheet" type="text/css" href="../../usling.css"/>
+		<script src="../ujax.js"></script>
 		<script src="assert.js"></script>
     
         <style type="text/css">
@@ -33,9 +33,9 @@
 	
 	<body onLoad="runTests()">
  
-	 <h1>Automated microjax tests</h1>
+	 <h1>Automated &micro;jax tests</h1>
 	 <p>
-	   Loading this page executes some simple automated javascript tests of the microjax library.
+	   Loading this page executes some simple automated javascript tests of the &micro;jax library.
 	 </p>
 	 
 	 <h2>Test results</h2>
@@ -55,7 +55,7 @@
 	 <h2>More info</h2>
 	 <p>
 	 	After running the tests at least once,
-		<a href="/microjax-test/testhtml-nodes.json">/microjax-test/testhtml-nodes.json</a>
+		<a href="/ujax-test/testhtml-nodes.json">/ujax-test/testhtml-nodes.json</a>
 		should show the JSON data of the nodes created by the test cases.
 	 </p>
 	 <p>
@@ -64,8 +64,8 @@
 	   
  
 	<script language="javascript">
-	  function microjaxPost(url,params) {
-	    var httpcon = microjax.getXHR();
+	  function ujaxPost(url,params) {
+	    var httpcon = ujax.getXHR();
 	    httpcon.open("POST", url, false);
 	    httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	    httpcon.setRequestHeader("Content-length", params.length);
@@ -75,15 +75,15 @@
 	  }
 	  
 	  var now = new Date().getTime();
-	  var testPath = "/microjax-test/testhtml-nodes/test-" + now;
+	  var testPath = "/ujax-test/testhtml-nodes/test-" + now;
 	  
 	  function testPost() {
-	    var c = microjaxPost(testPath,"title=hello&created=&dummy=&time=" + now);
+	    var c = ujaxPost(testPath,"title=hello&created=&dummy=&time=" + now);
 	    assert("Expected 200 status for POST",c.status == 200);
 	  }
 	  
 	  function verifyPostedElement() {
-	    var data = microjax.getContent(testPath,1);
+	    var data = ujax.getContent(testPath,1);
 	    assertNotNull("data",data);
 	    assertEquals("title matches","hello",data.title);
 	    assertEquals("time matches",now,data.time);
@@ -95,7 +95,7 @@
 	  }
 	  
 	  function testGetSessionInfo() {
-	    var session = microjax.getSessionInfo();
+	    var session = ujax.getSessionInfo();
 	    assertEquals("session.userID is a string","string",typeof(session.userID));
         assertEquals("session.userID == 'admin'","admin",session.userID);
 	    assertEquals("session.workspace is a string","string",typeof(session.workspace));
@@ -103,17 +103,17 @@
 	  }
 	  
 	  function testRemoveContent() {
-		var deletePath = "/microjax-test/testhtml-nodes/delete-" + now;
-	    var c = microjaxPost(deletePath,"title=hello&created=&dummy=&time=" + now);
+		var deletePath = "/ujax-test/testhtml-nodes/delete-" + now;
+	    var c = ujaxPost(deletePath,"title=hello&created=&dummy=&time=" + now);
 	    assert("Expected 200 status for POST",c.status == 200);
 	    
-	    var data = microjax.getContent(deletePath,1);
+	    var data = ujax.getContent(deletePath,1);
 	    assertNotNull("data must be found before removeContent",data);
 	    
-	    var d = microjax.removeContent(deletePath);
+	    var d = ujax.removeContent(deletePath);
 	    assert("Expected 200 status for removeContent, got " + d.status,d.status == 200);
-	    data = microjax.getContent(deletePath,1);
-	    assertNull("data should be gone after deletePath",data);
+	    data = ujax.getContent(deletePath,1);
+	    assertNull("data should be gone after deletePath (" + deletePath + ")",data);
 	  }
 	  
 	  function runTests() {
