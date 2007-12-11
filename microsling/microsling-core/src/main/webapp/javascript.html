@@ -75,9 +75,9 @@
 &lt;/body>
 &lt;/html></pre>
 
-  <h2>Ecmascript Client Templates (ECT)</h2>
+  <h2>Sling Javascript Templates (JST)</h2>
   <p>
-  	If you prefer to waste your client's CPUs for rendering, ECT templates use the same syntax as ESP, but generate
+  	If you prefer to waste your client's CPUs for rendering, JST templates use the same syntax as ESP, but generate
   	javascript rendering code that's executed on the client, and include in the response both a JSON version of the
   	data and a basic HTML rendering that is used for search engines, for example.
   </p>
@@ -85,9 +85,9 @@
   	See <a href="https://issues.apache.org/jira/browse/SLING-114">SLING-114</a> for more info.
   </p>
   <p>
-  	For now, here's a simplistic ECT example. Make sure to have a look at what's sent to the browser!  
+  	For now, here's a simplistic JST example. Make sure to have a look at what's sent to the browser!  
   </p>
-  <pre>&lt;!-- Store this as html.ect in the appropriate scripts directory -->
+  <pre>&lt;!-- Store this as html.jst in the appropriate scripts directory -->
   currentNode.title = &lt;b> &lt;%= currentNode.title %> &lt;/b>
 &lt;/p>
 &lt;p>

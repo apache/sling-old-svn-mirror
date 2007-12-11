@@ -76,19 +76,19 @@ public class SyntheticResourceTest extends MicroslingHttpTestBase {
         assertDeepGetStatus(basePath,10,404,"");
     }
     
-    public void testSyntheticResourceWithEctTemplate() throws IOException {
+    public void testSyntheticResourceWithJstTemplate() throws IOException {
         final String synthResourceUrl = HTTP_BASE_URL + "/search/something.SyntheticResourceTest.html";
         {
             final String content = getContent(synthResourceUrl, CONTENT_TYPE_HTML);
-            assertFalse("Content must not include ECT marker before test",content.contains("ECT template"));
+            assertFalse("Content must not include JST marker before test",content.contains("JST template"));
         }
         
         final String scriptPath = "/apps/" + SyntheticResource.DEFAULT_RESOURCE_TYPE + "/SyntheticResourceTest";
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        final String toDelete = uploadTestScript(scriptPath,"rendering-test.ect","html.ect");
+        final String toDelete = uploadTestScript(scriptPath,"rendering-test.jst","html.jst");
         try {
             final String content = getContent(synthResourceUrl, CONTENT_TYPE_HTML);
-            assertTrue("Content includes ECT marker: " + content,content.contains("ECT template"));
+            assertTrue("Content includes JST marker: " + content,content.contains("JST template"));
         } finally {
             testClient.delete(toDelete);
         }
