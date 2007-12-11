@@ -71,8 +71,8 @@ class JsonReader implements NodeReader {
         Object propertiesObject = nodeDescriptor.opt("properties");
         if (propertiesObject instanceof JSONObject) {
             JSONObject properties = (JSONObject) propertiesObject;
-            for (Iterator pi=properties.keys(); pi.hasNext(); ) {
-                String propName = (String) pi.next();
+            for (Iterator<String> pi=properties.keys(); pi.hasNext(); ) {
+                String propName = pi.next();
                 Property prop = this.createProperty(propName, properties.get(propName));
                 node.addProperty(prop);
             }

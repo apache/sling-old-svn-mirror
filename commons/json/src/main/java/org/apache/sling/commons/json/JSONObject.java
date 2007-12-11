@@ -128,7 +128,7 @@ public class JSONObject {
     /**
      * The hash map where the JSONObject's properties are kept.
      */
-    private HashMap myHashMap;
+    private HashMap<String, Object> myHashMap;
 
 
     /**
@@ -144,7 +144,7 @@ public class JSONObject {
      * Construct an empty JSONObject.
      */
     public JSONObject() {
-        this.myHashMap = new HashMap();
+        this.myHashMap = new HashMap<String, Object>();
     }
 
 
@@ -229,10 +229,10 @@ public class JSONObject {
      * @param map A map object that can be used to initialize the contents of
      *  the JSONObject.
      */
-    public JSONObject(Map map) {
+    public JSONObject(Map<String, Object> map) {
         this.myHashMap = (map == null) ?
-        	new HashMap() :
-        	new HashMap(map);
+        	new HashMap<String, Object>() :
+        	new HashMap<String, Object>(map);
     }
 
 
@@ -524,7 +524,7 @@ public class JSONObject {
      *
      * @return An iterator of the keys.
      */
-    public Iterator keys() {
+    public Iterator<String> keys() {
         return this.myHashMap.keySet().iterator();
     }
 
@@ -547,7 +547,7 @@ public class JSONObject {
      */
     public JSONArray names() {
         JSONArray ja = new JSONArray();
-        Iterator  keys = keys();
+        Iterator<String>  keys = keys();
         while (keys.hasNext()) {
             ja.put(keys.next());
         }
@@ -1036,15 +1036,15 @@ public class JSONObject {
      */
     public String toString() {
         try {
-            Iterator     keys = keys();
+            Iterator<String>     keys = keys();
             StringBuffer sb = new StringBuffer("{");
 
             while (keys.hasNext()) {
                 if (sb.length() > 1) {
                     sb.append(',');
                 }
-                Object o = keys.next();
-                sb.append(quote(o.toString()));
+                String o = keys.next();
+                sb.append(quote(o));
                 sb.append(':');
                 sb.append(valueToString(this.myHashMap.get(o)));
             }
@@ -1092,13 +1092,13 @@ public class JSONObject {
         if (n == 0) {
             return "{}";
         }
-        Iterator     keys = keys();
+        Iterator<String>     keys = keys();
         StringBuffer sb = new StringBuffer("{");
         int          newindent = indent + indentFactor;
-        Object       o;
+        String       o;
         if (n == 1) {
             o = keys.next();
-            sb.append(quote(o.toString()));
+            sb.append(quote(o));
             sb.append(": ");
             sb.append(valueToString(this.myHashMap.get(o), indentFactor,
                     indent));
@@ -1230,15 +1230,15 @@ public class JSONObject {
      public Writer write(Writer writer) throws JSONException {
         try {
             boolean  b = false;
-            Iterator keys = keys();
+            Iterator<String> keys = keys();
             writer.write('{');
 
             while (keys.hasNext()) {
                 if (b) {
                     writer.write(',');
                 }
-                Object k = keys.next();
-                writer.write(quote(k.toString()));
+                String k = keys.next();
+                writer.write(quote(k));
                 writer.write(':');
                 Object v = this.myHashMap.get(k);
                 if (v instanceof JSONObject) {
