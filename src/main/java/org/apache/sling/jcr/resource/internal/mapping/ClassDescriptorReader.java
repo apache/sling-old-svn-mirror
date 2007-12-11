@@ -24,9 +24,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -83,16 +81,15 @@ public class ClassDescriptorReader {
     /**
      * @throws IllegalStateException If no descriptors are available
      * @throws XmlPullParserException If an error occurrs validating the descriptors
-     * @return
+     * @return The mapping descriptor.
      */
     public MappingDescriptor getMappingDescriptor() throws XmlPullParserException {
         this.verify();
         return this.descriptors;
     }
 
-    public void parse(List urlList) throws IOException, XmlPullParserException {
-        for (Iterator ui=urlList.iterator(); ui.hasNext(); ) {
-            URL url = (URL) ui.next();
+    public void parse(List<URL> urlList) throws IOException, XmlPullParserException {
+        for (URL url : urlList) {
             InputStream ins = null;
             try {
                 ins = url.openStream();
@@ -427,8 +424,8 @@ public class ClassDescriptorReader {
             throw new IllegalStateException("Nothing has been read yet");
         }
 
-        List errors = new ArrayList();
-        List rootClassDescriptors = new ArrayList();
+        List<String> errors = new ArrayList<String>();
+        List<ClassDescriptor> rootClassDescriptors = new ArrayList<ClassDescriptor>();
         errors = this.solveReferences(errors, rootClassDescriptors);
         errors = this.validateDescriptors(errors, rootClassDescriptors);
 
@@ -438,11 +435,9 @@ public class ClassDescriptorReader {
         }
     }
 
-    private List solveReferences(List errors, List rootClassDescriptors) {
-        Set toRemove = new HashSet();
-        for (Iterator it = this.descriptors.getClassDescriptorsByClassName().entrySet().iterator(); it.hasNext();) {
-            Map.Entry entry = (Map.Entry) it.next();
-            ClassDescriptor cd = (ClassDescriptor) entry.getValue();
+    private List<String> solveReferences(List<String> errors, List<ClassDescriptor> rootClassDescriptors) {
+        Set<ClassDescriptor> toRemove = new HashSet<ClassDescriptor>();
+        for( ClassDescriptor cd : (Collection<ClassDescriptor>)this.descriptors.getClassDescriptorsByClassName().values() ) {
 
             if (null != cd.getExtend() && !"".equals(cd.getExtend())) {
                 ClassDescriptor superClassDescriptor = this.descriptors.getClassDescriptorByName(cd.getExtend());
@@ -462,34 +457,31 @@ public class ClassDescriptorReader {
                 rootClassDescriptors.add(cd);
             }
 
-            Collection interfaces = cd.getImplements();
-            if (interfaces.size() > 0) {
-                for (Iterator iterator = interfaces.iterator(); iterator.hasNext();) {
-                    String interfaceName = (String) iterator.next();
-                    ClassDescriptor interfaceClassDescriptor = this.descriptors.getClassDescriptorByName(interfaceName);
+            @SuppressWarnings("unchecked")
+            Collection<String> interfaces = cd.getImplements();
+            for (String interfaceName : interfaces) {
+                ClassDescriptor interfaceClassDescriptor = this.descriptors.getClassDescriptorByName(interfaceName);
 
-                    if (interfaceClassDescriptor == null) {
-                        log.warn("Dropping class {}: Interface class {} not registered", cd.getClassName(), interfaceName);
-                        toRemove.add(cd);
+                if (interfaceClassDescriptor == null) {
+                    log.warn("Dropping class {}: Interface class {} not registered", cd.getClassName(), interfaceName);
+                    toRemove.add(cd);
 //                        errors.add("Cannot find mapping for interface "
 //                            + interfaceName + " referenced as implements from "
 //                            + cd.getClassName());
-                    } else {
-                        log.debug("Class " + cd.getClassName() + " implements "
-                            + interfaceName);
-                        //cd.setSuperClassDescriptor(interfaceClassDescriptor);
-                        interfaceClassDescriptor.addDescendantClassDescriptor(cd);
-                    }
-
+                } else {
+                    log.debug("Class " + cd.getClassName() + " implements "
+                        + interfaceName);
+                    //cd.setSuperClassDescriptor(interfaceClassDescriptor);
+                    interfaceClassDescriptor.addDescendantClassDescriptor(cd);
                 }
+
             }
 
         }
 
         if (!toRemove.isEmpty()) {
             log.info("Removing dropped classes from map");
-            for (Iterator ci=toRemove.iterator(); ci.hasNext(); ) {
-                ClassDescriptor cd = (ClassDescriptor) ci.next();
+            for (ClassDescriptor cd : toRemove) {
                 this.dropClassDescriptor(cd);
             }
         }
@@ -502,8 +494,7 @@ public class ClassDescriptorReader {
         this.descriptors.getClassDescriptorsByNodeType().remove(cd.getJcrType());
 
         if (cd.hasDescendants()) {
-            for (Iterator di=cd.getDescendantClassDescriptors().iterator(); di.hasNext(); ) {
-                ClassDescriptor desc = (ClassDescriptor) di.next();
+            for( ClassDescriptor desc : (Collection<ClassDescriptor>)cd.getDescendantClassDescriptors()) {
                 log.warn("Dropping class {}: Depends on non-resolvable class {}", desc.getClassName(), cd.getClassName());
                 this.dropClassDescriptor(desc);
             }
@@ -518,9 +509,8 @@ public class ClassDescriptorReader {
      * @param classDescriptors the ancestor classdescriptors
      * @return
      */
-    private List validateDescriptors(List errors, Collection classDescriptors) {
-        for (Iterator it = classDescriptors.iterator(); it.hasNext();) {
-            ClassDescriptor classDescriptor = (ClassDescriptor) it.next();
+    private List<String> validateDescriptors(List<String> errors, Collection<ClassDescriptor> classDescriptors) {
+        for (ClassDescriptor classDescriptor : classDescriptors) {
             try {
                 classDescriptor.afterPropertiesSet();
                 if (classDescriptor.hasDescendants()) {
@@ -538,11 +528,11 @@ public class ClassDescriptorReader {
     }
 
 
-    private String getErrorMessage(List errors) {
+    private String getErrorMessage(List<String> errors) {
         final String lineSep = System.getProperty("line.separator");
         StringBuffer buf = new StringBuffer();
-        for(Iterator it = errors.iterator(); it.hasNext();) {
-            buf.append(lineSep).append(it.next());
+        for(String msg : errors) {
+            buf.append(lineSep).append(msg);
         }
 
         return buf.toString();
