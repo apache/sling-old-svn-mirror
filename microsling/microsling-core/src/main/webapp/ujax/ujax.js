@@ -134,7 +134,7 @@ var ujax = null;
 	 * @return An Object tree of content nodes and properties, null if not found
 	 * @type Object
 	 */
-	ujax.getContent = function(path, maxlevels) {
+	ujax.getContent = function(path, maxlevels, filter) {
 	    var obj=new Object();
 	    if (!path)  {
 	        path=ujax.currentPath;
@@ -157,7 +157,13 @@ var ujax = null;
 	    var res=ujax.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
 	    
 	    if(res.status == 200) {
-	    	return ujax.evalString(res.responseText);
+	    	var obj=ujax.evalString(res.responseText);
+			if (!filter) {
+				for (var a in obj) {
+					if (a.indexOf("jcr:")==0) delete(obj[a]);
+				}
+			}
+			return obj;
 	    }
 	    return null; 
 	}
