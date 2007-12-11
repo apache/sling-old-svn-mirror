@@ -47,7 +47,6 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
     private static final Logger log = LoggerFactory.getLogger(MicrojaxPostServlet.class);
     private final MicrojaxPropertyValueSetter propertyValueSetter = new MicrojaxPropertyValueSetter();
-    private int createNodeCounter;
     private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
 
     /** Prefix for parameter names which control this POST
@@ -82,6 +81,9 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
      *  (or supplied) redirect URL
      */
     public static final String RP_DISPLAY_EXTENSION = RP_PREFIX + "displayExtension";
+    
+    /** SLING-130, suffix that maps form field names to different JCR property names */
+    public static final String VALUE_FROM_SUFFIX = "@ValueFrom";
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -263,14 +265,38 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             throws RepositoryException {
 
         for(Map.Entry<String, RequestParameter[]>  e : request.getRequestParameterMap().entrySet()) {
-            String name = e.getKey();
+            final String paramName = e.getKey();
+            String propertyName = paramName;
             if(savePrefix!=null) {
-                if(!name.startsWith(savePrefix)) {
+                if(!paramName.startsWith(savePrefix)) {
                     continue;
                 }
-                name = name.substring(savePrefix.length());
+                propertyName = paramName.substring(savePrefix.length());
             }
-            setProperty(n,request,name,e.getValue(),createdNodes);
+            
+            // SLING-130: VALUE_FROM_SUFFIX means take the value of this
+            // property from a different field
+            RequestParameter[] values = e.getValue();
+            final int vfIndex = propertyName.indexOf(VALUE_FROM_SUFFIX);
+            if(vfIndex >= 0) {
+                // @ValueFrom example:
+                // <input name="./Text@ValueFrom" type="hidden" value="fulltext" /> 
+                // causes the JCR Text property to be set to the value of the fulltext form field. 
+                propertyName = propertyName.substring(0, vfIndex);
+                final RequestParameter[] rp = request.getRequestParameterMap().get(paramName);
+                if(rp == null || rp.length > 1) {
+                    // @ValueFrom params must have exactly one value, else ignored
+                    continue;
+                }
+                String mappedName = rp[0].getString();
+                values = request.getRequestParameterMap().get(mappedName);
+                if(values==null) {
+                    // no value for "fulltext" in our example, ignore parameter
+                    continue;
+                }
+            }
+            
+            setProperty(n,request,propertyName,values,createdNodes);
         }
     }
 
