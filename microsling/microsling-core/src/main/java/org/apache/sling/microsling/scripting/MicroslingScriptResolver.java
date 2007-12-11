@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletException;
@@ -162,6 +163,12 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         final Resource r = request.getResource();
         final Session s = (Session)request.getAttribute(Session.class.getName());
         MicroslingScript result = null;
+        
+        // SLING-133: do not resolve scripts for Properties, we want to use our default
+        // renderers for them (TODO: having that test here is really a temp fix)
+        if(r.adaptTo(Property.class) != null) {
+            return null;
+        }
 
         final String scriptFilename = scriptFilenameBuilder.buildScriptFilename(
             request.getMethod(),
