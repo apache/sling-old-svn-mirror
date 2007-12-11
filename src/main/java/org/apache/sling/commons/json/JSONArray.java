@@ -86,14 +86,14 @@ public class JSONArray {
     /**
      * The arrayList where the JSONArray's properties are kept.
      */
-    private ArrayList myArrayList;
+    private ArrayList<Object> myArrayList;
 
 
     /**
      * Construct an empty JSONArray.
      */
     public JSONArray() {
-        this.myArrayList = new ArrayList();
+        this.myArrayList = new ArrayList<Object>();
     }
 
     /**
@@ -151,10 +151,10 @@ public class JSONArray {
      * Construct a JSONArray from a Collection.
      * @param collection     A Collection.
      */
-    public JSONArray(Collection collection) {
+    public JSONArray(Collection<Object> collection) {
         this.myArrayList = (collection == null) ?
-        	new ArrayList() :
-	        new ArrayList(collection);
+        	new ArrayList<Object>() :
+	        new ArrayList<Object>(collection);
     }
 
 
@@ -210,7 +210,7 @@ public class JSONArray {
         Object o = get(index);
         try {
             return o instanceof Number ?
-                ((Number)o).doubleValue() : 
+                ((Number)o).doubleValue() :
                 Double.valueOf((String)o).doubleValue();
         } catch (Exception e) {
             throw new JSONException("JSONArray[" + index +
@@ -546,7 +546,7 @@ public class JSONArray {
         put(new JSONArray(value));
         return this;
     }
-    
+
 
     /**
      * Append a double value. This increases the array's length by one.
@@ -597,8 +597,8 @@ public class JSONArray {
         put(new JSONObject(value));
         return this;
     }
-    
-    
+
+
     /**
      * Append an object value. This increases the array's length by one.
      * @param value An object value.  The value should be a
@@ -626,7 +626,7 @@ public class JSONArray {
         return this;
     }
 
-    
+
     /**
      * Put a value in the JSONArray, where the value will be a
      * JSONArray which is produced from a Collection.
@@ -641,7 +641,7 @@ public class JSONArray {
         return this;
     }
 
-    
+
     /**
      * Put or replace a double value. If the index is greater than the length of
      *  the JSONArray, then null elements will be added as necessary to pad
@@ -701,8 +701,8 @@ public class JSONArray {
         put(index, new JSONObject(value));
         return this;
     }
-    
-    
+
+
     /**
      * Put or replace an object value in the JSONArray. If the index is greater
      *  than the length of the JSONArray, then null elements will be added as
