@@ -16,6 +16,7 @@
  */
 package org.apache.sling.microsling.slingservlets;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -138,12 +139,33 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
     {
         postServlet.service(request, response);
     }
+    
+    /** SLING-135, find Content-Type for given URL, in a safe way 
+     *  TODO: use the MimeTypeService from sling-commons?
+     * */
+    protected String getContentType(URL url) {
+        String result = null;
+        
+        // get the filename from the URL
+        String filename = url.getPath();
+        filename = new File(filename).getName();
+        
+        // get content-type, avoid null
+        // previously used conn.getContentType(), but see SLING-112
+        if(filename!=null) {
+            result = getServletContext().getMimeType(filename);
+        }
+        if(result==null) {
+            result = "application/octet-stream";
+        }
+        
+        return result;
+    }
 
     protected void spool(URL url, SlingHttpServletResponse res) throws IOException {
         URLConnection conn = url.openConnection();
 
-        // this previously used conn.getContentType(), but see SLING-112
-        res.setContentType(getServletContext().getMimeType(url.getFile()));
+        res.setContentType(getContentType(url));
         if (conn.getContentLength() > 0 ) {
             res.setContentLength(conn.getContentLength());
         }
