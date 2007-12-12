@@ -81,6 +81,12 @@
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
         
+        <!-- OSGi -->
+        <module>osgi/assembly</module>
+        <module>osgi/console-web</module>
+        <module>osgi/log</module>
+        <module>osgi/obr</module>
+
         <!-- Sling -->
         <module>sling/core</module>
         <module>sling/event</module>
@@ -95,6 +101,10 @@
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
         
+        <!-- Launcher -->
+        <module>launcher/app</module>
+        <module>launcher/webapp</module>
+
         <!-- Microsling 
         <module>microsling/microsling-core</module>
         <module>microsling/microsling-standalone</module>
