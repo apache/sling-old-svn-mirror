@@ -71,6 +71,17 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         }
     }
 
+    public void testEspJavaCode() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains java code output",content.contains("TestLinkedListTest"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
     public void testEspHtmlInAppsFolder() throws IOException {
         // make sure there's no leftover rendering script
         {

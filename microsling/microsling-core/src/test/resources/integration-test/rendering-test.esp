@@ -4,4 +4,11 @@
 		ESP template
 		<p><%= resource.node.text %></p>
 	</body>
+	
+	<!-- test access to microsling java classes -->
+	<%
+		var list = new Packages.java.util.LinkedList();
+		list.add("LinkedListTest");
+	%>
+	<p>Test<%= list.get(0) %></p>
 </html>
