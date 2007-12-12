@@ -65,6 +65,34 @@ public class ResourcePathIteratorTest extends TestCase {
         assertEquals("/root/child", rpi.next());
         assertEquals("/root", rpi.next());
         assertFalse(rpi.hasNext());
+        
+        try {
+            rpi.next();
+            fail("Expected NoSuchElementException after end of iterator");
+        } catch (NoSuchElementException nsee) {
+            // expected
+        }
+    }
+    
+    public void testSlashedTrailingSlash1() {
+        ResourcePathIterator rpi = new ResourcePathIterator("/root/child/");
+        assertEquals("/root/child", rpi.next());
+        assertEquals("/root", rpi.next());
+        assertFalse(rpi.hasNext());
+        
+        try {
+            rpi.next();
+            fail("Expected NoSuchElementException after end of iterator");
+        } catch (NoSuchElementException nsee) {
+            // expected
+        }
+    }
+    
+    public void testSlashedTrailingSlash2() {
+        ResourcePathIterator rpi = new ResourcePathIterator("/root/child//");
+        assertEquals("/root/child", rpi.next());
+        assertEquals("/root", rpi.next());
+        assertFalse(rpi.hasNext());
 
         try {
             rpi.next();

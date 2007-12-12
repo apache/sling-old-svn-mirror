@@ -40,9 +40,21 @@ public class ResourcePathIterator implements Iterator<String> {
     private String nextPath;
 
     public ResourcePathIterator(String path) {
-        nextPath = (path != null && path.length() > 0 && !path.equals("/"))
-                ? path
-                : null;
+        if (path != null) {
+            int i = path.length() - 1;
+            while (i >= 0 && path.charAt(i) == '/') {
+                i--;
+            }
+            if (i < 0) {
+                nextPath = null;
+            } else if (i < path.length() - 1) {
+                nextPath = path.substring(0, i + 1);
+            } else {
+                nextPath = path;
+            }
+        } else {
+            nextPath = null;
+        }
     }
 
     public boolean hasNext() {
