@@ -33,7 +33,6 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
@@ -99,8 +98,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
 
     // ---------- ResourceResolver interface ----------------------------------
 
-    public Resource resolve(ServletRequest request) throws SlingException {
-        String pathInfo = ((HttpServletRequest) request).getPathInfo();
+    public Resource resolve(HttpServletRequest request) throws SlingException {
+        String pathInfo = request.getPathInfo();
         Resource result = resolve(pathInfo);
 
         if (result == null) {
