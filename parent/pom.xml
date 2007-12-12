@@ -543,6 +543,7 @@
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
         <snapshotRepository>
+            <uniqueVersion>false</uniqueVersion>
             <id>apache.incubating</id>
             <name>Apache Incubating Repository</name>
             <url>
