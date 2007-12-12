@@ -21,7 +21,7 @@ package org.apache.sling.api.resource;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 
@@ -35,7 +35,7 @@ import org.apache.sling.api.SlingException;
 public interface ResourceResolver {
 
     /**
-     * Resolves the resource from the given <code>ServletRequest</code>.
+     * Resolves the resource from the given <code>HttpServletRequest</code>.
      * <p>
      * If the request cannot be resolved to an existing resource, a
      * {@link Resource} object is returned whose
@@ -45,12 +45,12 @@ public interface ResourceResolver {
      * {@link Resource#adaptTo(Class) object} returns <code>null</code>
      * for all classes.
      *
-     * @param request The servlet request object used to resolve the resource
+     * @param request The http servlet request object used to resolve the resource
      *            for.
      * @return The {@link Resource} for the request.
      * @throws SlingException May be thrown if another error occurrs.
      */
-    Resource resolve(ServletRequest request) throws SlingException;
+    Resource resolve(HttpServletRequest request) throws SlingException;
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
