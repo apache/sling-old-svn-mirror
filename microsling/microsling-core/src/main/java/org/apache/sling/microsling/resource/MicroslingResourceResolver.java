@@ -36,7 +36,6 @@ import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
@@ -104,12 +103,11 @@ public class MicroslingResourceResolver implements ResourceResolver {
     /**
      * Resolves the Resource from the request
      */
-    public Resource resolve(ServletRequest servletRequest) throws SlingException {
+    public Resource resolve(HttpServletRequest request) throws SlingException {
         Resource result = null;
         String path = null;
-        
+
         // look for a real JCR Resource
-        final HttpServletRequest request = (HttpServletRequest)servletRequest;
         String pathInfo = SlingRequestPaths.getPathInfo(request);
         try {
             Session session = getSession();
@@ -119,16 +117,16 @@ public class MicroslingResourceResolver implements ResourceResolver {
                 resolutionPath = it.next();
                 result = getResource(session, resolutionPath);
             }
-            
+
         } catch (RepositoryException re) {
             throw new SlingException("RepositoryException for path=" + path, re);
         }
-        
+
         // not found -> try synthetic resource
         if (result == null) {
             result = syntheticResourceProvider.getSyntheticResource(pathInfo);
         }
-        
+
         // not found -> NonExistingResource
         if (result == null) {
             result = new NonExistingResource(pathInfo);
@@ -341,7 +339,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
             } else {
                 result = new JcrPropertyResource((Property)i);
             }
-            
+
             result.getResourceMetadata().put(ResourceMetadata.RESOLUTION_PATH,
                 path);
             log.info("Found Resource " + result);

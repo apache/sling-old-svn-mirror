@@ -19,7 +19,7 @@ package org.apache.sling.microsling.services;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import junit.framework.TestCase;
 
@@ -61,7 +61,7 @@ public class MicroslingServiceLocatorTest extends TestCase {
                 return null;
             }
 
-            public Resource resolve(ServletRequest request) {
+            public Resource resolve(HttpServletRequest request) {
                 return null;
             }
 
