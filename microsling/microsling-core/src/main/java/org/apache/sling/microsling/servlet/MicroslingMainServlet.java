@@ -28,6 +28,7 @@ import javax.jcr.SimpleCredentials;
 import javax.servlet.Filter;
 import javax.servlet.GenericServlet;
 import javax.servlet.Servlet;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -108,6 +109,7 @@ public class MicroslingMainServlet extends GenericServlet {
     /** init our serviceLocator */
     protected void initServiceLocator() throws ServletException {
         serviceLocator = new MicroslingServiceLocator();
+        serviceLocator.registerService(ServletContext.class, getServletContext());
     }
 
     /** init our scriptResolver */
