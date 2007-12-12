@@ -1,0 +1,20 @@
+<%-- used by ScriptBuiltinObjectsTest --%>
+<html>
+	<body>
+		ESP template
+		<p><%= resource.node.text %></p>
+	</body>
+	
+	<!-- test access request and to ServletContext -->
+	<%
+		var scClass = Packages.javax.servlet.ServletContext;
+		var sc = request.getServiceLocator().getService(scClass);
+	%>
+	<p>ServletContext:<%= sc.getMimeType('foo.txt') %></p>
+	
+	<!-- test access to Response -->
+	<p>SlingHttpServletResponse:<%= response.containsHeader('NOT_A_HEADER') %></p>
+	
+	<!-- sling object is tested elsewhere (IncludeTest) -->
+	
+</html>
