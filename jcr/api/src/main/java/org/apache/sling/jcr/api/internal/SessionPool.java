@@ -43,13 +43,12 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * The <code>SessionPool</code> class extends the
- * {@link AbstractPoolingUserMappin} class actually
- * implementing  pooling and reusing sessions with the limits defined by the
- * base class. See {@link #acquireSession(Repository, SimpleCredentials, String)}
- * and {@link #acquireSession(Session, String)} for details.
+ * The <code>SessionPool</code> class
+ * implementins pooling and reusing sessions with the defined limits.
+ * See {@link #acquireSession(SimpleCredentials, String)}
+ * and {@link #acquireSession(Session, Credentials)} for details.
  */
-class SessionPool {
+public class SessionPool {
 
     /**
      * The default upper limit of simultaneously active sessions created by this
