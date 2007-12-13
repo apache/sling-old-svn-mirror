@@ -77,7 +77,7 @@ public class PooledSession implements Session {
      * @param delegatee The <code>Session</code> to which all calls are
      *          delegated.
      */
-    protected PooledSession(SessionPool sessionPool, Session delegatee) {
+    public PooledSession(SessionPool sessionPool, Session delegatee) {
         this.sessionPool = sessionPool;
         this.delegatee = delegatee;
     }
