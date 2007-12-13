@@ -151,13 +151,18 @@ public abstract class AbstractSlingRepository
 
             public SessionPool createPool(final SessionPoolManager mgr, final SimpleCredentials credentials) {
                 // create and configure the new pool
-                final SessionPool pool = new SessionPool(mgr, credentials);
+                final SessionPool pool = createSessionPool(mgr, credentials);
                 pool.setMaxActiveSessions(maxActiveSessions);
                 pool.setMaxActiveSessionsWait(maxActiveSessionsWait);
                 pool.setMaxIdleSessions(maxIdleSessions);
                 return pool;
             }
         };
+    }
+
+    protected SessionPool createSessionPool(final SessionPoolManager mgr, final SimpleCredentials credentials) {
+        final SessionPool pool = new SessionPool(mgr, credentials);
+        return pool;
     }
 
     /**

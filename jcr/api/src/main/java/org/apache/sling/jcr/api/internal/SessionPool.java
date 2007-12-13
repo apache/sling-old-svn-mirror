@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
  * implementins pooling and reusing sessions with the defined limits.
  * See {@link #acquireSession(SimpleCredentials, String)}
  * and {@link #acquireSession(Session, Credentials)} for details.
+ *
  */
 public class SessionPool {
 
@@ -98,7 +99,7 @@ public class SessionPool {
     /**
      * Active sessions issued by this session pool.
      */
-    private final IdentityHashMap<PooledSession, Session> activeSessions;
+    protected final IdentityHashMap<PooledSession, Session> activeSessions;
 
     /**
      * The maximum number of active sessions for this mapping.
@@ -680,7 +681,7 @@ public class SessionPool {
      * @param delegatee The <code>Session</code> to wrap as a pooled session.
      * @see PooledSession
      */
-    private PooledSession createPooledSession(Session delegatee) throws RepositoryException {
+    protected PooledSession createPooledSession(Session delegatee) throws RepositoryException {
         PooledSession pooledSession = new PooledSession(this, delegatee);
 
         // keep the pooled session
