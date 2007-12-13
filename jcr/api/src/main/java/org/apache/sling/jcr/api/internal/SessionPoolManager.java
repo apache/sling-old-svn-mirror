@@ -50,36 +50,15 @@ public class SessionPoolManager {
 
     private final NamespaceMapper namespaceMapper;
 
-    /**
-     * The maximum number of active sessions per session pool, that is per user.
-     */
-    private int poolMaxActiveSessions;
-
-    /** The maximum number of idle sessions stored in the sessionPool */
-    private int poolMaxIdleSessions;
-
-    /**
-     * The number of seconds to wait for the number of currently active sessions
-     * from this pool to drop below the configured number of maximum active
-     * sessions.
-     */
-    private int poolMaxActiveSessionsWait;
+    private final SessionPoolFactory sessionPoolFactory;
 
     public SessionPoolManager(Repository repository,
             NamespaceMapper mapper,
-            int maxActiveSessions,
-            int maxActiveSessionsWait,
-            int maxIdleSessions) {
+            SessionPoolFactory factory) {
 
         this.repository = repository;
         this.sessionPools = new HashMap<String, SessionPool>();
-
-        // default session pool configuration (actual values will be checked
-        // for validity by the SessionPool instances themselves when
-        // configuring)
-        this.poolMaxActiveSessions = maxActiveSessions;
-        this.poolMaxActiveSessionsWait = maxActiveSessionsWait;
-        this.poolMaxIdleSessions = maxIdleSessions;
+        this.sessionPoolFactory = factory;
 
         this.namespaceMapper = mapper;
     }
@@ -164,11 +143,7 @@ public class SessionPoolManager {
         String userName = credentials.getUserID();
         SessionPool pool = this.sessionPools.get(userName);
         if (pool == null) {
-            // create and configure the new pool
-            pool = new SessionPool(this, credentials);
-            pool.setMaxActiveSessions(this.poolMaxActiveSessions);
-            pool.setMaxActiveSessionsWait(this.poolMaxActiveSessionsWait);
-            pool.setMaxIdleSessions(this.poolMaxIdleSessions);
+            pool = this.sessionPoolFactory.createPool(this, credentials);
             this.sessionPools.put(userName, pool);
         }
 
