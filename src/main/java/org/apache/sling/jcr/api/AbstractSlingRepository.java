@@ -30,6 +30,8 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.sling.jcr.api.internal.SessionPool;
+import org.apache.sling.jcr.api.internal.SessionPoolFactory;
 import org.apache.sling.jcr.api.internal.SessionPoolManager;
 import org.apache.sling.jcr.api.internal.loader.Loader;
 import org.osgi.framework.Bundle;
@@ -126,20 +128,36 @@ public abstract class AbstractSlingRepository
     protected final SessionPoolManager getPoolManager()
             throws RepositoryException {
         if (this.poolManager == null) {
-            @SuppressWarnings("unchecked")
-            Dictionary<String, Object> properties = this.componentContext.getProperties();
-            int maxActiveSessions = this.getIntProperty(properties,
-                PARAM_MAX_ACTIVE_SESSIONS);
-            int maxIdleSessions = this.getIntProperty(properties,
-                PARAM_MAX_IDLE_SESSIONS);
-            int maxActiveSessionsWait = this.getIntProperty(properties,
-                PARAM_MAX_ACTIVE_SESSIONS_WAIT);
-
             this.poolManager = new SessionPoolManager(this.getDelegatee(), this.loader,
-                maxActiveSessions, maxActiveSessionsWait, maxIdleSessions);
+                this.getSessionPoolFactory());
         }
 
         return this.poolManager;
+    }
+
+    /**
+     * @return
+     */
+    protected SessionPoolFactory getSessionPoolFactory() {
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> properties = this.componentContext.getProperties();
+        final int maxActiveSessions = this.getIntProperty(properties,
+            PARAM_MAX_ACTIVE_SESSIONS);
+        final int maxIdleSessions = this.getIntProperty(properties,
+            PARAM_MAX_IDLE_SESSIONS);
+        final int maxActiveSessionsWait = this.getIntProperty(properties,
+            PARAM_MAX_ACTIVE_SESSIONS_WAIT);
+        return new SessionPoolFactory() {
+
+            public SessionPool createPool(final SessionPoolManager mgr, final SimpleCredentials credentials) {
+                // create and configure the new pool
+                final SessionPool pool = new SessionPool(mgr, credentials);
+                pool.setMaxActiveSessions(maxActiveSessions);
+                pool.setMaxActiveSessionsWait(maxActiveSessionsWait);
+                pool.setMaxIdleSessions(maxIdleSessions);
+                return pool;
+            }
+        };
     }
 
     /**
