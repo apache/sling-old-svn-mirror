@@ -56,7 +56,7 @@ import org.xml.sax.SAXException;
  * this session is attached and {@link #impersonate(Credentials)} which also
  * tries to return a pooled session for the impersonated user.
  */
-class PooledSession implements Session {
+public class PooledSession implements Session {
 
     /**
      * The {@link SessionPool session pool} to which this session belongs.
