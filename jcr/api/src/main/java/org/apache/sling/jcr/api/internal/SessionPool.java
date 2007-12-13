@@ -153,9 +153,8 @@ public class SessionPool {
      * Creates a new instance of this class presetting internal counters
      * and data structures.
      *
-     * @param repository The <code>Repository</code> to login to.
      */
-    SessionPool(SessionPoolManager poolManager, SimpleCredentials credentials) {
+    public SessionPool(SessionPoolManager poolManager, SimpleCredentials credentials) {
         this.poolManager = poolManager;
         this.userName = credentials.getUserID();
         this.passData = this.getPassData(credentials);
