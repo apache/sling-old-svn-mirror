@@ -326,7 +326,11 @@ public class SlingServletContext implements ServletContext {
 
     /** Returns the context path of the web application. (Servlet API 2.5) */
     public String getContextPath() {
-        return getServletContext().getContextPath();
+        try {
+            return (String) getServletContext().getClass().getMethod("getContextPath", null).invoke(getServletContext(), null);
+        } catch (Exception ignore) {
+            return null;
+        }
     }
 
     // ---------- internal -----------------------------------------------------
