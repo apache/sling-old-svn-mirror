@@ -79,6 +79,10 @@ public abstract class AbstractScriptEngineFactory implements
 
         setEngineName(name);
         setEngineVersion(version);
+        
+        setExtensions((String[]) null);
+        setMimeTypes((String[]) null);
+        setNames((String[]) null);
     }
 
     public String getEngineName() {
