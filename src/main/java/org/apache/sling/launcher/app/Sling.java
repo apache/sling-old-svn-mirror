@@ -39,7 +39,6 @@ import java.util.UUID;
 import java.util.Map.Entry;
 
 import org.apache.felix.framework.Felix;
-import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -180,6 +179,12 @@ public class Sling implements BundleActivator {
      * file through Web Application parameters or other properties files.
      */
     public static final String CONFIG_PROPERTIES = "sling.properties";
+
+    /**
+     * The property name prefix for the launcher's auto-start property.
+     * FIXME - This is just a temporary solution to get this module compilable.
+     **/
+    public static final String AUTO_START_PROP = "felix.auto.start";
 
     /**
      * The simple logger to log messages during startup and shutdown to
@@ -563,7 +568,7 @@ public class Sling implements BundleActivator {
 
     private void setAutoStartBundles(Map<String, String> props) {
 
-        String propName = FelixConstants.AUTO_START_PROP + ".1";
+        String propName = AUTO_START_PROP + ".1";
         StringBuffer buf = new StringBuffer();
 
         // take over the current value
