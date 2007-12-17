@@ -16,84 +16,81 @@
  */
 package org.apache.sling.scripting.velocity;
 
-import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import javax.jcr.Node;
+import javax.script.AbstractScriptEngine;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptEngine;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
 /**
  * A ScriptEngine that uses Velocity templates to render a Resource.
- *
- * @scr.component
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling Velocity Script Engine"
- * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
-public class VelocityTemplatesScriptEngine implements SlingScriptEngine {
-
-    public final static String VELOCITY_SCRIPT_EXTENSION = "vlt";
+public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
 
     private final VelocityEngine velocity;
 
-    public VelocityTemplatesScriptEngine() throws SlingException {
+    public VelocityTemplatesScriptEngine(ScriptEngineFactory factory) {
+        super(factory);
+
         velocity = new VelocityEngine();
         try {
             velocity.init();
         } catch (Exception e) {
-            throw new SlingException("Exception in Velocity.init() "
+            throw new RuntimeException("Exception in Velocity.init() "
                 + e.getMessage(), e);
         }
     }
 
-    public String[] getExtensions() {
-        return new String[] { VELOCITY_SCRIPT_EXTENSION };
-    }
-
-    public String getEngineName() {
-        return "Velocity Template Script Engine";
-    }
-
-    public String getEngineVersion() {
-        return "0.9";
-    }
-
-    public void eval(SlingScript script, Map<String, Object> props)
-            throws SlingException, IOException {
-
-        // ensure get method
-        HttpServletRequest request = (HttpServletRequest) props.get(REQUEST);
-        if (!"GET".equals(request.getMethod())) {
-            throw new HttpStatusCodeException(
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                "Velocity templates only support GET requests");
+    public Object eval(Reader script, ScriptContext scriptContext)
+            throws ScriptException {
+        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+        SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+        if (helper == null) {
+            throw new ScriptException("SlingScriptHelper missing from bindings");
         }
+        
+        // ensure GET request
+        if (!"GET".equals(helper.getRequest().getMethod())) {
+            throw new ScriptException(
+                "FreeMarker templates only support GET requests");
+        }
+
+        String scriptName = helper.getScript().getScriptResource().getURI();
 
         // initialize the Velocity context
         final VelocityContext c = new VelocityContext();
-        for (Entry<String, Object> entry : props.entrySet()) {
-            c.put(entry.getKey(), entry.getValue());
+        for (Object entryObj : bindings.entrySet()) {
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) entryObj;
+            c.put((String) entry.getKey(), entry.getValue());
         }
 
         // let Velocity evaluate the script, and send the output to the browser
         final String logTag = getClass().getSimpleName();
+        Writer w = scriptContext.getWriter();
         try {
-            Writer w = ((HttpServletResponse) props.get(RESPONSE)).getWriter();
-            velocity.evaluate(c, w, logTag, script.getScriptReader());
-        } catch (IOException ioe) {
-            throw ioe;
+            velocity.evaluate(c, w, logTag, script);
+            w.toString();
         } catch (Throwable t) {
-            throw new SlingException("Failure running script "
-                + script.getScriptResource().getURI(), t);
+            throw new ScriptException("Failure running script " + scriptName
+                + ": " + t);
         }
+        
+        return null;
     }
+
 }

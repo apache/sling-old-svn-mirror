@@ -17,16 +17,24 @@
 package org.apache.sling.scripting.freemarker;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
-import java.util.Map;
 
+import javax.script.AbstractScriptEngine;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptEngine;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -34,57 +42,43 @@ import freemarker.template.Template;
 /**
  * A ScriptEngine that uses {@link http://freemarker.org/ FreeMarker} templates
  * to render a Resource in HTML.
- *
- * @scr.component
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling FreeMarker Script Engine"
- * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
-public class FreemarkerScriptEngine implements SlingScriptEngine {
-
-    public final static String FREEMARKER_SCRIPT_EXTENSION = "ftl";
+public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
+    private static final Logger log = LoggerFactory.getLogger(FreemarkerScriptEngine.class);
 
     private final Configuration configuration;
 
-    public FreemarkerScriptEngine() {
+    public FreemarkerScriptEngine(ScriptEngineFactory factory) {
+        super(factory);
         configuration = new Configuration();
     }
 
-    public String[] getExtensions() {
-        return new String[] { FREEMARKER_SCRIPT_EXTENSION };
-    }
-
-    public String getEngineName() {
-        return "Freemarker Script Engine";
-    }
-
-    public String getEngineVersion() {
-        return "0.9";
-    }
-
-    public void eval(SlingScript script, Map<String, Object> props)
-            throws SlingException, IOException {
-
-        // ensure get method
-        HttpServletRequest request = (HttpServletRequest) props.get(REQUEST);
-        if (!"GET".equals(request.getMethod())) {
-            throw new HttpStatusCodeException(
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+    public Object eval(Reader reader, ScriptContext scriptContext)
+            throws ScriptException {
+        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
+        SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+        if (helper == null) {
+            throw new ScriptException("SlingScriptHelper missing from bindings");
+        }
+        
+        // ensure GET request
+        if (!"GET".equals(helper.getRequest().getMethod())) {
+            throw new ScriptException(
                 "FreeMarker templates only support GET requests");
         }
 
-        String scriptName = script.getScriptResource().getURI();
-        Template tmpl = new Template(scriptName, script.getScriptReader(),
-            configuration);
-
+        String scriptName = helper.getScript().getScriptResource().getURI();
+        
         try {
-            Writer w = ((HttpServletResponse) props.get(RESPONSE)).getWriter();
-            tmpl.process(props, w);
-        } catch (IOException ioe) {
-            throw ioe;
+            Template tmpl = new Template(scriptName, reader, configuration);
+            tmpl.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
-            throw new SlingException("Failure running FreeMarker script "
-                + scriptName, t);
+            log.error("Failure running Freemarker script.", t);
+            throw new ScriptException("Failure running FreeMarker script "
+                + scriptName);
         }
+
+        return null;
     }
+
 }

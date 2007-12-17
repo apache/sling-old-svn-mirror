@@ -17,19 +17,20 @@
 package org.apache.sling.scripting.ruby;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.Writer;
-import java.util.Map;
+import java.io.Reader;
+import java.io.StringReader;
 
+import javax.script.AbstractScriptEngine;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptEngine;
+import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.jruby.Ruby;
 import org.jruby.RubyModule;
 import org.jruby.RubySymbol;
@@ -38,22 +39,19 @@ import org.jruby.runtime.builtin.IRubyObject;
 
 /**
  * A ScriptEngine that uses ruby erb templates to render a Resource.
- *
- * @scr.component
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling Ruby Script Engine"
- * @scr.service interface="org.apache.sling.api.scripting.SlingScriptEngine"
  */
-public class ErbScriptEngine implements SlingScriptEngine {
+public class ErbScriptEngine extends AbstractSlingScriptEngine {
 
-    public static final String RUBY_SCRIPT_EXTENSION = "erb";
-    public Ruby runtime;
-    RubySymbol bindingSym;
-    RubyModule erbModule;
+    private Ruby runtime = null;
 
-    public ErbScriptEngine() throws SlingException {
+    private RubySymbol bindingSym = null;
+
+    private RubyModule erbModule = null;
+
+    public ErbScriptEngine(ErbScriptEngineFactory factory) {
+        super(factory);
+
         runtime = Ruby.getDefaultInstance();
-
         runtime.evalScript("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
             + "for name,v in @props;instance_eval \"def #{name}; @props['#{name}'];end\";end;end;end;");
 
@@ -61,68 +59,52 @@ public class ErbScriptEngine implements SlingScriptEngine {
         bindingSym = RubySymbol.newSymbol(runtime, "get_binding");
     }
 
-    public String[] getExtensions() {
-        return new String[]{RUBY_SCRIPT_EXTENSION};
-    }
+    public Object eval(Reader script, ScriptContext scriptContext)
+            throws ScriptException {
+        Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
 
-    public String getEngineName() {
-        return "Ruby Erb Script Engine";
-    }
+        SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+        if (helper == null) {
+            throw new ScriptException("SlingScriptHelper missing from bindings");
+        }
 
-    public String getEngineVersion() {
-        return "0.9";
-    }
-
-    public void eval(SlingScript script, Map<String, Object> props)
-        throws SlingException, IOException {
-        // ensure get method
-        HttpServletRequest request = (HttpServletRequest) props.get(REQUEST);
-        if(!"GET".equals(request.getMethod())) {
-            throw new HttpStatusCodeException(
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                "Ruby templates only support GET requests");
+        // ensure GET request
+        if (!"GET".equals(helper.getRequest().getMethod())) {
+            throw new ScriptException(
+                "FreeMarker templates only support GET requests");
         }
 
         try {
-            final Writer w = ((HttpServletResponse) props.get(RESPONSE)).getWriter();
-            PrintStream stream = new PrintStream(new OutputStream() {
-                public void write(int b) {
-                    try {
-                        w.write(b);
-                    } catch(IOException ex) {
-                    }
-                }
-            });
-
             StringBuffer scriptString = new StringBuffer();
-            BufferedReader bufferedScript = (BufferedReader) script.getScriptReader();
+            BufferedReader bufferedScript = new BufferedReader(script);
             String nextLine = bufferedScript.readLine();
-            while(nextLine != null) {
+            while (nextLine != null) {
                 scriptString.append(nextLine);
                 scriptString.append("\n");
                 nextLine = bufferedScript.readLine();
             }
 
-            IRubyObject scriptRubyString = JavaEmbedUtils.javaToRuby(runtime, scriptString.toString());
-            IRubyObject erb = (IRubyObject) JavaEmbedUtils
-                .invokeMethod(runtime, erbModule, "new", new Object[]{scriptRubyString}, IRubyObject.class);
+            IRubyObject scriptRubyString = JavaEmbedUtils.javaToRuby(runtime,
+                scriptString.toString());
+            IRubyObject erb = (IRubyObject) JavaEmbedUtils.invokeMethod(
+                runtime, erbModule, "new", new Object[] { scriptRubyString },
+                IRubyObject.class);
 
             JavaEmbedUtils.invokeMethod(runtime, erb, "set_props",
-                new Object[]{JavaEmbedUtils.javaToRuby(runtime, props)}, IRubyObject.class);
+                new Object[] { JavaEmbedUtils.javaToRuby(runtime, bindings) },
+                IRubyObject.class);
 
-            IRubyObject binding = (IRubyObject) JavaEmbedUtils
-                .invokeMethod(runtime, erb, "send", new Object[]{bindingSym}, IRubyObject.class);
+            IRubyObject binding = (IRubyObject) JavaEmbedUtils.invokeMethod(
+                runtime, erb, "send", new Object[] { bindingSym },
+                IRubyObject.class);
 
-            String out = (String) JavaEmbedUtils.invokeMethod(runtime, erb, "result",
-                new Object[]{binding}, String.class);
-
-            stream.println(out);
-            stream.flush();
-
-        } catch(IOException ioe) {
-            throw ioe;
-        } catch(Throwable t) {
-            throw new SlingException("Failure running Ruby script ", t);
+            scriptContext.getWriter().write(
+                (String) JavaEmbedUtils.invokeMethod(runtime, erb, "result",
+                    new Object[] { binding }, String.class));
+        } catch (Throwable t) {
+            throw new ScriptException("Failure running Ruby script:"
+                + t.getMessage());
         }
+        return null;
     }
 }
