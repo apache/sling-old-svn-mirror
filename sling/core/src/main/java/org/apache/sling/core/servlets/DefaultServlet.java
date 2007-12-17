@@ -21,10 +21,8 @@ package org.apache.sling.core.servlets;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -34,13 +32,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.request.RequestParameterMap;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceManager;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.osgi.service.component.ComponentException;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * The <code>DefaultServlet</code> is a very simple default resource handler.
@@ -49,74 +43,7 @@ import org.osgi.service.component.ComponentException;
  * type. Rather it is used internally on demand.
  *
  */
-public class DefaultServlet extends SlingAllMethodsServlet {
-
-    protected void doInit() {
-    }
-
-    @Override
-    protected void doPost(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
-
-        RequestParameterMap parameters = request.getRequestParameterMap();
-        if (parameters == null || parameters.isEmpty()) {
-            // just redirect to display the resource
-            response.sendRedirect(request.getRequestURI());
-            return;
-        }
-
-        Resource resource = request.getResource();
-        Map<Object, Object> contentMap = asMap(resource);
-
-        // special _delete property to remove a property
-        RequestParameter[] toRemove = parameters.get("_delete");
-        for (int i = 0; toRemove != null && i < toRemove.length; i++) {
-            String[] names = toRemove[i].getString().split("[, ]");
-            for (int j = 0; j < names.length; j++) {
-                contentMap.remove(names[j]);
-            }
-        }
-
-        for (Iterator<Map.Entry<String, RequestParameter[]>> pi = parameters.entrySet().iterator(); pi.hasNext();) {
-            Map.Entry<String, RequestParameter[]> pEntry = pi.next();
-            String name = pEntry.getKey();
-            if ("_delete".equals(name)) {
-                continue;
-            }
-
-            RequestParameter[] values = pEntry.getValue();
-
-            try {
-                if (values == null || values.length == 0) {
-                    contentMap.remove(name);
-                } else if (values.length == 1) {
-                    contentMap.put(name, this.toObject(values[0]));
-                } else {
-                    List<Object> valueList = new ArrayList<Object>();
-                    for (int i = 0; i < values.length; i++) {
-                        valueList.add(this.toObject(values[i]));
-                    }
-                    contentMap.put(name, valueList);
-                }
-            } catch (Throwable t) {
-                // should actually handle
-            }
-        }
-
-        try {
-            ResourceManager rm = (ResourceManager) request.getResourceResolver();
-            if (rm != null) {
-                rm.store(resource);
-                rm.save();
-            }
-        } catch (Throwable t) {
-            throw new ComponentException("Cannot update " + resource.getURI(),
-                t);
-        }
-
-        // have the resource rendered now
-        response.sendRedirect(request.getRequestURI());
-    }
+public class DefaultServlet extends SlingSafeMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -307,13 +234,5 @@ public class DefaultServlet extends SlingAllMethodsServlet {
 
         // no objects available
         return null;
-    }
-
-    private Object toObject(RequestParameter parameter) throws IOException {
-        if (parameter.isFormField()) {
-            return parameter.getString();
-        }
-
-        return parameter.getInputStream();
     }
 }
