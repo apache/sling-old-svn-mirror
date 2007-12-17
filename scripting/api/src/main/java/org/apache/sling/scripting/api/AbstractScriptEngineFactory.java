@@ -21,6 +21,7 @@ package org.apache.sling.scripting.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -32,11 +33,15 @@ public abstract class AbstractScriptEngineFactory implements
         ScriptEngineFactory {
 
     private String engineName;
+
     private String engineVersion;
+
     private List<String> extensions;
+
     private List<String> mimeTypes;
+
     private List<String> names;
-    
+
     protected AbstractScriptEngineFactory() {
         String name = null;
         String version = null;
@@ -75,7 +80,7 @@ public abstract class AbstractScriptEngineFactory implements
         setEngineName(name);
         setEngineVersion(version);
     }
-    
+
     public String getEngineName() {
         return engineName;
     }
@@ -83,7 +88,7 @@ public abstract class AbstractScriptEngineFactory implements
     protected void setEngineName(String engineName) {
         this.engineName = engineName;
     }
-    
+
     public String getEngineVersion() {
         return engineVersion;
     }
@@ -91,31 +96,43 @@ public abstract class AbstractScriptEngineFactory implements
     protected void setEngineVersion(String engineVersion) {
         this.engineVersion = engineVersion;
     }
-    
+
     public List<String> getExtensions() {
         return extensions;
     }
 
     protected void setExtensions(String... extensions) {
-        this.extensions = Arrays.asList(extensions);
+        if (extensions == null) {
+            this.extensions = Collections.emptyList();
+        } else {
+            this.extensions = Arrays.asList(extensions);
+        }
     }
-    
+
     public List<String> getMimeTypes() {
         return mimeTypes;
     }
 
     protected void setMimeTypes(String... mimeTypes) {
-        this.mimeTypes = Arrays.asList(mimeTypes);
+        if (mimeTypes == null) {
+            this.mimeTypes = Collections.emptyList();
+        } else {
+            this.mimeTypes = Arrays.asList(mimeTypes);
+        }
     }
-    
+
     public List<String> getNames() {
         return names;
     }
 
     protected void setNames(String... names) {
-        this.names = Arrays.asList(names);
+        if (names == null) {
+            this.names = Collections.emptyList();
+        } else {
+            this.names = Arrays.asList(names);
+        }
     }
-    
+
     public String getMethodCallSyntax(String obj, String m, String[] args) {
         StringBuffer callSyntax = new StringBuffer();
         callSyntax.append(obj).append('.').append(m).append('(');

@@ -18,8 +18,17 @@
  */
 package sun.misc;
 
+import java.awt.image.ImagingOpException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * The <code>Service</code> class is a primitive stub of the original
@@ -36,9 +45,99 @@ import java.util.Iterator;
  */
 public class Service {
 
+    private static final String PREFIX = "META-INF/services/";
+    
     /** Returns an empty iterator */
-    public static Iterator<String> providers(Class<?> type, ClassLoader loader) {
+    public static Iterator<String> providers(Class<?> type, ClassLoader loader) throws IOException {
+        if (loader != null) {
+            try {
+                String name = PREFIX + type.getName();
+                Enumeration<?> files = loader.getResources(name);
+                return new NameIterator(files);
+            } catch (IOException ignore) {
+            }
+        }
+
         return Collections.<String> emptyList().iterator();
     }
 
+    private static class NameIterator implements Iterator<String> {
+        
+        private final Enumeration<?> files;
+
+        private Iterator<String> currentFile;
+        
+        private String nextName;
+        
+        public NameIterator(Enumeration<?> files) {
+            this.files = files;
+            seek();
+        }
+        
+        public boolean hasNext() {
+            return nextName != null;
+        }
+        
+        public String next() {
+            if (nextName == null) {
+                throw new NoSuchElementException();
+            }
+            
+            String result = nextName;
+            seek();
+            return result;
+        }
+        
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+        
+        private void seek() {
+            if (currentFile == null || !currentFile.hasNext()) {
+                currentFile = getNames();
+            }
+            
+            nextName = (currentFile != null && currentFile.hasNext())
+                    ? currentFile.next()
+                    : null;
+        }
+        
+        private Iterator<String> getNames() {
+            while (files.hasMoreElements()) {
+                URL fileUrl = (URL) files.nextElement();
+                InputStream ins = null;
+                try {
+                    ArrayList<String> names = new ArrayList<String>();
+                    ins = fileUrl.openStream();
+                    BufferedReader br = new BufferedReader(new InputStreamReader(ins));
+                    String name;
+                    while ( (name = br.readLine()) != null) {
+                        int hash = name.indexOf('#');
+                        if (hash >= 0) {
+                            name = name.substring(0, hash);
+                        }
+                        name = name.trim();
+                        
+                        if (name.length() > 0) {
+                            names.add(name);
+                        }
+                    }
+                    
+                    return names.iterator();
+                } catch (IOException ioe) {
+                    
+                } finally {
+                    if (ins != null) {
+                        try {
+                            ins.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
+                }
+            }
+
+            // exhausted search
+            return null;
+        }
+    }
 }
