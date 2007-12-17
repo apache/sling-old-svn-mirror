@@ -157,7 +157,6 @@ public class JSONObject {
      * @exception JSONException If a value is a non-finite number.
      */
     public JSONObject(JSONObject jo, String[] sa) throws JSONException {
-        this();
         for (int i = 0; i < sa.length; i += 1) {
             putOpt(sa[i], jo.opt(sa[i]));
         }
@@ -170,7 +169,6 @@ public class JSONObject {
      * @throws JSONException If there is a syntax error in the source string.
      */
     public JSONObject(JSONTokener x) throws JSONException {
-        this();
         char c;
         String key;
 
@@ -248,8 +246,7 @@ public class JSONObject {
      * from the object.
      */
     public JSONObject(Object object, String names[]) {
-    	this();
-    	Class c = object.getClass();
+    	Class<? extends Object> c = object.getClass();
     	for (int i = 0; i < names.length; i += 1) {
     		try {
     			String name = names[i];
@@ -257,7 +254,7 @@ public class JSONObject {
     			Object value = field.get(object);
 	    		this.put(name, value);
     		} catch (Exception e) {
-    			/* forget about it */
+    			// forget about it
     		}
     	}
     }
@@ -341,7 +338,7 @@ public class JSONObject {
         	return "null";
         }
 
-// Shave off trailing zeros and decimal point, if possible.
+        // Shave off trailing zeros and decimal point, if possible.
 
         String s = Double.toString(d);
         if (s.indexOf('.') > 0 && s.indexOf('e') < 0 && s.indexOf('E') < 0) {
@@ -567,7 +564,7 @@ public class JSONObject {
         }
         testValidity(n);
 
-// Shave off trailing zeros and decimal point, if possible.
+        // Shave off trailing zeros and decimal point, if possible.
 
         String s = n.toString();
         if (s.indexOf('.') > 0 && s.indexOf('e') < 0 && s.indexOf('E') < 0) {
@@ -631,7 +628,7 @@ public class JSONObject {
      * @return		this.
      * @throws JSONException
      */
-    public JSONObject put(String key, Collection value) throws JSONException {
+    public JSONObject put(String key, Collection<Object> value) throws JSONException {
         put(key, new JSONArray(value));
         return this;
     }
@@ -857,7 +854,7 @@ public class JSONObject {
      * @return		this.
      * @throws JSONException
      */
-    public JSONObject put(String key, Map value) throws JSONException {
+    public JSONObject put(String key, Map<String, Object> value) throws JSONException {
         put(key, new JSONObject(value));
         return this;
     }
