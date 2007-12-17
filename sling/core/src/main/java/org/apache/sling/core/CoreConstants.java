@@ -34,7 +34,7 @@ public class CoreConstants {
      * <p>
      * This property is available calling the
      * <code>BundleContext.getProperty(String)</code> method.
-     *
+     * 
      * @see #SLING_HOME_URL
      */
     public static final String SLING_HOME = "sling.home";
@@ -49,7 +49,7 @@ public class CoreConstants {
      * <p>
      * This property is available calling the
      * <code>BundleContext.getProperty(String)</code> method.
-     *
+     * 
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
@@ -83,5 +83,13 @@ public class CoreConstants {
      * is missing or empty the Servlet is ignored.
      */
     public static final String SLING_RESOURCE_TYPES = "sling.core.resourceTypes";
+
+    /**
+     * The name of the registered servlet used as the default servlet if no
+     * other servlet or script could be selected (value is
+     * "sling.core.servlet.default"). If no servlet is registered under this
+     * name, the {@link org.apache.sling.core.servlets.DefaultServlet} is used.
+     */
+    public static final String DEFAULT_SERVLET_NAME = "sling.core.servlet.default";
 
 }
