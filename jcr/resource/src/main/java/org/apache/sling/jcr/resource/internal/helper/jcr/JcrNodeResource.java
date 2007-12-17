@@ -108,8 +108,8 @@ public class JcrNodeResource implements Resource, Descendable {
 
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
-        if (type == Node.class) {
-            return (Type) node; // unchecked cast
+        if (type.isInstance(getNode())) {
+            return (Type) getNode(); // unchecked cast
         } else if (type == InputStream.class) {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
