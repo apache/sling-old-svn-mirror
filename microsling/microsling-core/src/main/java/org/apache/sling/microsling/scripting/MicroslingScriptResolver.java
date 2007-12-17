@@ -259,7 +259,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 ScriptHelper helper = new ScriptHelper(req, res, this);
 
                 // prepare the properties for the script
-                Bindings bindings = new SimpleBindings(); // getScriptEngine().createBindings();
+                SimpleBindings bindings = new SimpleBindings(); // getScriptEngine().createBindings();
                 
                 bindings.put(SlingBindings.SLING, helper);
                 bindings.put(SlingBindings.RESOURCE, helper.getRequest().getResource());
