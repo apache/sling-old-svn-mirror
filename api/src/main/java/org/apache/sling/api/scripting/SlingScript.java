@@ -19,21 +19,23 @@
 package org.apache.sling.api.scripting;
 
 import java.io.IOException;
-import java.io.Reader;
+
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.resource.Resource;
 
 /**
  * The <code>SlingScript</code> defines the API for objects which encapsulate
  * a script resolved by the {@link SlingScriptResolver}. To have a script
- * evaluated by its {@link SlingScriptEngine} prepare a
- * <code>Map&lt;<String, Object&gt;</code> of properties used as top level
- * (global) variables to the script and call the
- * {@link SlingScriptEngine#eval(SlingScript, java.util.Map)} method.
+ * evaluated prepare a {@link SlingBindings} instance of variables used as
+ * global variables to the script and call the {@link #eval(SlingBindings)}
+ * method.
  * <p>
  * Objects implementing this interface are returned by the
  * {@link SlingScriptResolver#resolveScript(org.apache.sling.api.SlingHttpServletRequest)}
- * method.
+ * and
+ * {@link SlingScriptResolver#findScript(org.apache.sling.api.resource.ResourceResolver, String)}
+ * methods.
  */
 public interface SlingScript {
 
@@ -43,20 +45,20 @@ public interface SlingScript {
     Resource getScriptResource();
 
     /**
-     * Returns the {@link SlingScriptEngine} used to evaluate this script.
+     * Evaluates this script using the bound variables as global variables to
+     * the script.
+     * 
+     * @param props The {@link SlingBindings} providing the bound variables for
+     *            evaluating the script. Any bound variables must conform to the
+     *            requirements of the {@link SlingBindings} predefined variables
+     *            set.
+     * @throws IOException if an input or output error occurrs.
+     * @throws ServletException if another error occurrs evaluating the script.
+     *             The exception should encapsulate the error cause. This
+     *             exception is also called if the <code>props</code>
+     *             predefined bindings are not compliant with the definition in
+     *             the {@link SlingBindings} class.
      */
-    SlingScriptEngine getScriptEngine();
+    void eval(SlingBindings props) throws IOException, ServletException;
 
-    /**
-     * Returns a <code>java.io.Reader</code> from which the scripting engine
-     * may read the script source to be evaluated.
-     * <p>
-     * The <code>Reader</code> returned need not be buffered. Any buffering
-     * used for enhanced performance is expected to be implemented by consumers
-     * of this method.
-     *
-     * @throws IOException If an error occurrs acquiring the <code>Reader</code>
-     *             for the script source.
-     */
-    Reader getScriptReader() throws IOException;
 }

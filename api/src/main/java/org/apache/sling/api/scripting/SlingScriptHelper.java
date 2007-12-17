@@ -29,7 +29,7 @@ import org.apache.sling.api.request.RequestDispatcherOptions;
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
  * class which is provided to the scripts called from sling through the global
- * <code>{@link SlingScriptEngine#SLING sling}</code> variable.
+ * <code>{@link SlingBindings#SLING sling}</code> variable.
  */
 public interface SlingScriptHelper {
 
@@ -47,10 +47,16 @@ public interface SlingScriptHelper {
 
     /**
      * Returns the {@link SlingScript} being called to handle the request. This
-     * is the same instance as given to the {@link SlingScriptEngine} for
-     * evaluation.
+     * is the same instance as given to the {@link javax.script.ScriptEngine}
+     * for evaluation.
      */
     SlingScript getScript();
+
+    /**
+     * Same as {@link #include(String,RequestDispatcherOptions)}, but using
+     * empty options.
+     */
+    void include(String path) throws ServletException, IOException;
 
     /**
      * Helper method to include the result of processing the request for the
@@ -65,14 +71,11 @@ public interface SlingScriptHelper {
      * </pre>
      *
      * @param path The path to the resource to include.
-     * @param options influence the rendering of the included Resource            
+     * @param options influence the rendering of the included Resource
      * @throws ServletException Forwarded from including the resource
      * @throws IOException Forwarded from including the resource
      */
-    void include(String path,RequestDispatcherOptions options) throws ServletException, IOException;
+    void include(String path, RequestDispatcherOptions options)
+            throws ServletException, IOException;
 
-    /** Same as {@link #include(String,RequestDispatcherOptions)}, but using 
-     *  empty options.
-     */
-    void include(String path) throws ServletException, IOException;
 }
