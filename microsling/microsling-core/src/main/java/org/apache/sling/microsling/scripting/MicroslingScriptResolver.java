@@ -21,9 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -31,6 +29,11 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.SimpleScriptContext;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
@@ -38,9 +41,11 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptResolver;
+import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
 import org.apache.sling.microsling.scripting.helpers.ScriptHelper;
@@ -74,70 +79,19 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     private final ScriptFilenameBuilder scriptFilenameBuilder = new ScriptFilenameBuilder();
     private final ScriptSearchPathsBuilder scriptSearchPathsBuilder = new ScriptSearchPathsBuilder();
 
-    private Map<String, SlingScriptEngine> scriptEngines;
-
-    private static final String[] DEFAULT_SCRIPT_ENGINES = new String[] {
-          "org.apache.sling.scripting.javascript.RhinoJavasSriptEngine",
-          "org.apache.sling.scripting.velocity.VelocityTemplatesScriptEngine",
-          "org.apache.sling.scripting.freemarker.FreemarkerScriptEngine",
-          "org.apache.sling.scripting.ruby.ErbScriptEngine",
-          "org.apache.sling.microsling.experimental.JstScriptEngine"
-       };
-
+    private final ScriptEngineManager scriptEngineManager;
+    
     public MicroslingScriptResolver() throws SlingException {
-        scriptEngines = new HashMap<String, SlingScriptEngine>();
-        for(String engineName : DEFAULT_SCRIPT_ENGINES) {
-            try {
-                final Class engineClass = this.getClass().getClassLoader().loadClass(engineName);
-                final SlingScriptEngine engine = (SlingScriptEngine)engineClass.newInstance();
-                addScriptEngine(engine);
-            } catch (Exception ignore) {
-                log.warn("Unable to instantiate script engine " + engineName, ignore);
-            }
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null) {
+            loader = getClass().getClassLoader();
         }
+        
+        scriptEngineManager = new ScriptEngineManager(loader);
     }
 
-    /**
-     * @param req
-     * @throws ServletException
-     * @throws IOException
-     */
-    public static void evaluateScript(final SlingScript script, final SlingHttpServletRequest req,
-            final SlingHttpServletResponse resp) throws ServletException,
-            IOException {
-        try {
-            // the script helper
-            ScriptHelper helper = new ScriptHelper(req, resp);
-
-            // prepare the properties for the script
-            Map<String, Object> props = new HashMap<String, Object>();
-            props.put(SlingScriptEngine.SLING, helper);
-            props.put(SlingScriptEngine.RESOURCE, helper.getRequest().getResource());
-            props.put(SlingScriptEngine.REQUEST, helper.getRequest());
-            props.put(SlingScriptEngine.RESPONSE, helper.getResponse());
-            props.put(SlingScriptEngine.OUT, helper.getResponse().getWriter());
-            props.put(SlingScriptEngine.LOG, LoggerFactory.getLogger(script.getScriptResource().getURI()));
-
-            resp.setContentType(req.getResponseContentType()
-                + "; charset=UTF-8");
-
-            // evaluate the script now using the ScriptEngine
-            script.getScriptEngine().eval(script, props);
-
-            // ensure data is flushed to the underlying writer in case
-            // anything has been written
-            helper.getResponse().getWriter().flush();
-        } catch (IOException ioe) {
-            throw ioe;
-        } catch (ServletException se) {
-            throw se;
-        } catch (Exception e) {
-            throw new SlingException("Cannot get MicroslingScript: "
-                + e.getMessage(), e);
-        }
-    }
-
-    public SlingScript findScript(String path) throws SlingException {
+    public SlingScript findScript(ResourceResolver resourceResolver, String name)
+            throws SlingException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -216,7 +170,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
                             String scriptName = scriptNode.getName();
                             String scriptExt = scriptName.substring(scriptExtensionOffset);
-                            SlingScriptEngine scriptEngine = scriptEngines.get(scriptExt);
+                            ScriptEngine scriptEngine = scriptEngineManager.getEngineByExtension(scriptExt);
 
                             if (scriptEngine != null) {
                                 MicroslingScript script = new MicroslingScript();
@@ -244,19 +198,11 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         return result;
     }
 
-    private void addScriptEngine(SlingScriptEngine scriptEngine) {
-        String[] extensions = scriptEngine.getExtensions();
-        for (String extension : extensions) {
-            log.debug("Adding script engine {} for extension {}.", scriptEngine, extension);
-            scriptEngines.put(extension, scriptEngine);
-        }
-    }
-
     private static class MicroslingScript implements SlingScript {
 
         private Resource scriptResource;
 
-        private SlingScriptEngine scriptEngine;
+        private ScriptEngine scriptEngine;
 
         public Resource getScriptResource() {
             return scriptResource;
@@ -266,11 +212,11 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             this.scriptResource = scriptResource;
         }
 
-        public SlingScriptEngine getScriptEngine() {
+        public ScriptEngine getScriptEngine() {
             return scriptEngine;
         }
 
-        void setScriptEngine(SlingScriptEngine scriptEngine) {
+        void setScriptEngine(ScriptEngine scriptEngine) {
             this.scriptEngine = scriptEngine;
         }
 
@@ -298,6 +244,47 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             // converting the stream data using UTF-8 encoding, which is
             // the default encoding used
             return new BufferedReader(new InputStreamReader(stream, encoding));
+        }
+        
+        public void eval(SlingBindings props) throws IOException,
+                ServletException {
+            try {
+                
+                SlingHttpServletRequest req = (SlingHttpServletRequest) props.get(SlingBindings.REQUEST);
+                SlingHttpServletResponse res = (SlingHttpServletResponse) props.get(SlingBindings.RESPONSE);
+                
+                // the script helper
+                ScriptHelper helper = new ScriptHelper(req, res);
+
+                // prepare the properties for the script
+                Bindings bindings = getScriptEngine().createBindings();
+                
+                bindings.put(SlingBindings.SLING, helper);
+                bindings.put(SlingBindings.RESOURCE, helper.getRequest().getResource());
+                bindings.put(SlingBindings.REQUEST, helper.getRequest());
+                bindings.put(SlingBindings.RESPONSE, helper.getResponse());
+                bindings.put(SlingBindings.OUT, helper.getResponse().getWriter());
+                bindings.put(SlingBindings.LOG, LoggerFactory.getLogger(getScriptResource().getURI()));
+
+                res.setContentType(req.getResponseContentType()
+                    + "; charset=UTF-8");
+
+                ScriptContext context = new SimpleScriptContext();
+                
+                // evaluate the script now using the ScriptEngine
+                getScriptEngine().eval(getScriptReader(), context);
+
+                // ensure data is flushed to the underlying writer in case
+                // anything has been written
+                helper.getResponse().getWriter().flush();
+            } catch (IOException ioe) {
+                throw ioe;
+//            } catch (ServletException se) {
+//                throw se;
+            } catch (Exception e) {
+                throw new SlingException("Cannot get MicroslingScript: "
+                    + e.getMessage(), e);
+            }
         }
     }
 
