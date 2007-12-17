@@ -31,8 +31,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * The <code>ServiceX</code> class is a primitive stub of the original
- * <code>sun.misc.ServiceX</code> class used by the
+ * The <code>Service</code> class is a primitive stub of the original
+ * <code>sun.misc.Service</code> class used by the
  * <code>javax.script.ScriptEngineManager</code> to find script engine
  * factories in factory service files.
  * <p>
@@ -41,49 +41,52 @@ import java.util.NoSuchElementException;
  * class would be available on the Java platform, it may not be visible inside
  * the OSGi framework. Finally, the <em>org.apache.sling.scripting.resolver</em>
  * bundle implements its own resolution of script engine factories and thus the
- * <code>ServiceX</code> method is not used.
+ * <code>Service</code> method is not used.
  */
-public class ServiceX {
+public class Service {
 
     private static final String PREFIX = "META-INF/services/";
     
     /** Returns an empty iterator */
-    public static Iterator<String> providers(Class<?> type, ClassLoader loader) throws IOException {
+    public static <ProviderType> Iterator<ProviderType> providers(Class<ProviderType> type, ClassLoader loader) throws IOException {
         if (loader != null) {
             try {
                 String name = PREFIX + type.getName();
                 Enumeration<?> files = loader.getResources(name);
-                return new NameIterator(files);
+                return new NameIterator<ProviderType>(loader, files);
             } catch (IOException ignore) {
             }
         }
 
-        return Collections.<String> emptyList().iterator();
+        return Collections.<ProviderType> emptyList().iterator();
     }
 
-    private static class NameIterator implements Iterator<String> {
+    private static class NameIterator<ProviderType> implements Iterator<ProviderType> {
+        
+        private final ClassLoader loader;
         
         private final Enumeration<?> files;
 
         private Iterator<String> currentFile;
         
-        private String nextName;
+        private ProviderType nextProvider;
         
-        public NameIterator(Enumeration<?> files) {
+        public NameIterator(ClassLoader loader, Enumeration<?> files) {
+            this.loader = loader;
             this.files = files;
             seek();
         }
         
         public boolean hasNext() {
-            return nextName != null;
+            return nextProvider != null;
         }
         
-        public String next() {
-            if (nextName == null) {
+        public ProviderType next() {
+            if (nextProvider == null) {
                 throw new NoSuchElementException();
             }
             
-            String result = nextName;
+            ProviderType result = nextProvider;
             seek();
             return result;
         }
@@ -97,9 +100,7 @@ public class ServiceX {
                 currentFile = getNames();
             }
             
-            nextName = (currentFile != null && currentFile.hasNext())
-                    ? currentFile.next()
-                    : null;
+            nextProvider = getClass(currentFile);
         }
         
         private Iterator<String> getNames() {
@@ -137,6 +138,21 @@ public class ServiceX {
             }
 
             // exhausted search
+            return null;
+        }
+        
+        @SuppressWarnings("unchecked")
+        private ProviderType getClass(Iterator<String> currentFile) {
+            if (currentFile != null && currentFile.hasNext()) {
+                String name = currentFile.next();
+                try {
+                    Class<?> clazz = Class.forName(name, true, loader);
+                    return (ProviderType) clazz.newInstance();
+                } catch (Throwable t) {
+                    // 
+                }
+            }
+            
             return null;
         }
     }
