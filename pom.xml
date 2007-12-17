@@ -64,7 +64,7 @@
                         </Private-Package>
 
                         <Embed-Dependency>
-                            velocity,oro,commons-lang
+                            velocity;oro;commons-lang;inline=true
                         </Embed-Dependency>
                         <Import-Package>
                             com.werken.xpath; javax.sql;
