@@ -63,7 +63,7 @@
                             org.apache.sling.scripting.ruby
                         </Private-Package>
                         
-                        <Embed-Dependency>jruby-complete</Embed-Dependency>
+                        <Embed-Dependency>jruby-complete;inline=true</Embed-Dependency>
                         <Import-Package>
                             javax.swing.*;
                             org.apache.bsf.*;
