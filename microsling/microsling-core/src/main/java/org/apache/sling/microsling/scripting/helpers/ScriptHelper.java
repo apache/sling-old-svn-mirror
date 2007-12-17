@@ -29,6 +29,9 @@ import javax.servlet.ServletResponse;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.slf4j.Logger;
@@ -39,13 +42,15 @@ import org.slf4j.LoggerFactory;
  * class are made available to the scripts as the global <code>sling</code>
  * variable.
  */
-public class ScriptHelper {
+public class ScriptHelper implements SlingScriptHelper {
 
     private static final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
     
     private final SlingHttpServletRequest request;
 
     private final SlingHttpServletResponse response;
+    
+    private final SlingScript script;
     
     public static final String INCLUDE_COUNTER = "ScriptHelper.include.counter";
     public static final int MAX_INCLUDE_RECURSION_LEVEL = 20;
@@ -56,9 +61,10 @@ public class ScriptHelper {
         }
     }
 
-    public ScriptHelper(SlingHttpServletRequest request, SlingHttpServletResponse response) {
+    public ScriptHelper(SlingHttpServletRequest request, SlingHttpServletResponse response, SlingScript script) {
         this.request = request;
         this.response = new OnDemandWriterResponse(response);
+        this.script = script;
     }
 
     public SlingHttpServletRequest getRequest() {
@@ -99,6 +105,15 @@ public class ScriptHelper {
         }
     }
 
+    public void include(String path, RequestDispatcherOptions options)
+            throws ServletException, IOException {
+        include(path);
+    }
+    
+    public SlingScript getScript() {
+        return script;
+    }
+    
     /** Simple Response wrapper returning an on-demand writer when asked for
      * a writer.
      */
