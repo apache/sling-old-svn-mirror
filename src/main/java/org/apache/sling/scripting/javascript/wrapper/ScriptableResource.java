@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scripting.javascript;
+package org.apache.sling.scripting.javascript.wrapper;
 
 import javax.jcr.Node;
 
@@ -29,9 +29,16 @@ import org.mozilla.javascript.Undefined;
  * [String] getURI(); [String] uri
  */
 public class ScriptableResource extends ScriptableObject {
+    
+    public static final String CLASSNAME = "Resource";
+    
     private Resource resource;
 
     public ScriptableResource() {
+    }
+    
+    public ScriptableResource(Resource resource) {
+        this.resource = resource;
     }
 
     public void jsConstructor(Object res) {
@@ -40,7 +47,7 @@ public class ScriptableResource extends ScriptableObject {
 
     @Override
     public String getClassName() {
-        return "Resource";
+        return CLASSNAME;
     }
 
     public Object jsFunction_getObject() {
@@ -50,10 +57,7 @@ public class ScriptableResource extends ScriptableObject {
 
     public Object jsFunction_getNode() {
         Node node = resource.adaptTo(Node.class);
-        if (node != null) {
-            return new ScriptableNode(node);
-        }
-        return Undefined.instance;
+        return node != null ? node : Undefined.instance;
     }
 
     /** alias for getNode */
