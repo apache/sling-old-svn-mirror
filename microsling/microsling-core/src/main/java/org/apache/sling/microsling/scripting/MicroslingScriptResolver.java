@@ -29,10 +29,12 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.naming.Context;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 import javax.servlet.ServletException;
 
@@ -254,10 +256,10 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 SlingHttpServletResponse res = (SlingHttpServletResponse) props.get(SlingBindings.RESPONSE);
                 
                 // the script helper
-                ScriptHelper helper = new ScriptHelper(req, res);
+                ScriptHelper helper = new ScriptHelper(req, res, this);
 
                 // prepare the properties for the script
-                Bindings bindings = getScriptEngine().createBindings();
+                Bindings bindings = new SimpleBindings(); // getScriptEngine().createBindings();
                 
                 bindings.put(SlingBindings.SLING, helper);
                 bindings.put(SlingBindings.RESOURCE, helper.getRequest().getResource());
@@ -270,6 +272,10 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                     + "; charset=UTF-8");
 
                 ScriptContext context = new SimpleScriptContext();
+                context.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+                context.setWriter(helper.getResponse().getWriter());
+//                context.setReader();
+//                context.setErrorWriter(arg0);
                 
                 // evaluate the script now using the ScriptEngine
                 getScriptEngine().eval(getScriptReader(), context);
