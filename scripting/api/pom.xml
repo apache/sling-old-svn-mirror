@@ -84,7 +84,7 @@
         <dependency>
             <groupId>org.apache.bsf</groupId>
             <artifactId>bsf-api</artifactId>
-            <version>3.0-beta2</version>
+            <version>3.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
 
