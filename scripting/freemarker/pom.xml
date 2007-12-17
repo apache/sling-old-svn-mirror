@@ -67,7 +67,7 @@
                             org.apache.sling.scripting.freemarker
                         </Private-Package>
 
-                        <Embed-Dependency>freemarker</Embed-Dependency>
+                        <Embed-Dependency>freemarker;inline=true</Embed-Dependency>
                         <Import-Package>
                             javax.servlet.jsp.*; javax.swing.*;
                             org.apache.log; org.apache.log4j;
