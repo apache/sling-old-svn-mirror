@@ -26,8 +26,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 
 public class MicroslingScriptServlet implements Servlet {
@@ -40,8 +39,11 @@ public class MicroslingScriptServlet implements Servlet {
 
     public void service(ServletRequest req, ServletResponse res)
             throws ServletException, IOException {
-        MicroslingScriptResolver.evaluateScript(script,
-            (SlingHttpServletRequest) req, (SlingHttpServletResponse) res);
+
+        SlingBindings bindings = new SlingBindings();
+        bindings.put(SlingBindings.REQUEST, req);
+        bindings.put(SlingBindings.RESPONSE, res);
+        script.eval(bindings);
     }
 
     public ServletConfig getServletConfig() {
