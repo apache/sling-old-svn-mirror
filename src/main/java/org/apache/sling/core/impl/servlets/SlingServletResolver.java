@@ -18,6 +18,9 @@
  */
 package org.apache.sling.core.impl.servlets;
 
+import static org.apache.sling.core.CoreConstants.DEFAULT_SERVLET_NAME;
+import static org.apache.sling.core.CoreConstants.SLING_RESOURCE_TYPES;
+
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -34,7 +37,6 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.impl.helper.SlingServletConfig;
-import org.apache.sling.core.impl.scripting.DefaultSlingScriptServlet;
 import org.apache.sling.core.servlets.DefaultServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -61,13 +63,13 @@ public class SlingServletResolver extends ServletBinder implements
      */
     public static final String PROP_PATH = "path";
 
-    public static final String DEFAULT_SERVLET_NAME = "sling.core.servlet.default";
-
     private ServiceTracker scriptResolver;
 
     private String[] path;
 
     private Map<String, Servlet> servlets = new HashMap<String, Servlet>();
+    
+    private Servlet coreDefaultServlet;
 
     private ServiceRegistration registration;
 
@@ -122,15 +124,11 @@ public class SlingServletResolver extends ServletBinder implements
         // use default servlet, create one if missing
         if (servlet == null) {
             servlet = getServlet(DEFAULT_SERVLET_NAME);
-            if (servlet == null) {
-                try {
-                    servlet = new DefaultServlet();
-                    servlet.init(new SlingServletConfig(null, null, DEFAULT_SERVLET_NAME));
-                    putServlet(DEFAULT_SERVLET_NAME, servlet);
-                } catch (ServletException se) {
-                    log.error("Failed to initiliaze Servlet", se);
-                }
-            }
+        }
+
+        // last resort, use the core bundle default servlet
+        if (servlet == null) {
+            servlet = getCoreDefaultServlet();
         }
 
         if (servlet != null && log.isDebugEnabled()) {
@@ -151,7 +149,7 @@ public class SlingServletResolver extends ServletBinder implements
 
     @Override
     public Object addingService(ServiceReference reference) {
-        Object typeObject = reference.getProperty(CoreConstants.SLING_RESOURCE_TYPES);
+        Object typeObject = reference.getProperty(SLING_RESOURCE_TYPES);
         if (typeObject == null) {
             log.info(
                 "addingService: Ignoring Servlet service {} without resource types",
@@ -187,7 +185,7 @@ public class SlingServletResolver extends ServletBinder implements
 
     @Override
     public void removedService(ServiceReference reference, Object service) {
-        Object typeObject = reference.getProperty(CoreConstants.SLING_RESOURCE_TYPES);
+        Object typeObject = reference.getProperty(SLING_RESOURCE_TYPES);
 
         if (typeObject != null) {
             String name = ((Servlet) service).getServletConfig().getServletName();
@@ -228,13 +226,26 @@ public class SlingServletResolver extends ServletBinder implements
         if (ssr != null) {
             SlingScript script = ssr.resolveScript(request);
             if (script != null) {
-                return new DefaultSlingScriptServlet(script);
+                return new SlingScriptServlet(script);
             }
         }
 
         return null;
     }
 
+    private Servlet getCoreDefaultServlet() {
+        if (coreDefaultServlet == null) {
+            try {
+                Servlet servlet = new DefaultServlet();
+                servlet.init(new SlingServletConfig(null, null, "Sling Core Default Servlet"));
+                coreDefaultServlet = servlet;
+            } catch (ServletException se) {
+                log.error("Failed to initiliaze Servlet", se);
+            }
+        }
+        
+        return coreDefaultServlet;
+    }
     // ---------- SCR Integration ----------------------------------------------
 
     public void updated(Dictionary properties) {
