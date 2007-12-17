@@ -59,7 +59,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
     private final DefaultHtmlRenderer htmlRenderer;
     private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
     
-    public JstScriptEngine(ScriptEngineFactory scriptEngineFactory) {
+    JstScriptEngine(ScriptEngineFactory scriptEngineFactory) {
         super(scriptEngineFactory);
         
         // TODO hardcoded for now...

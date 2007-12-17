@@ -26,7 +26,7 @@ public class JstScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public static final String JST_SCRIPT_EXTENSION = "jst";
 
-    JstScriptEngineFactory() {
+    public JstScriptEngineFactory() {
         setExtensions(JST_SCRIPT_EXTENSION);
     }
     
