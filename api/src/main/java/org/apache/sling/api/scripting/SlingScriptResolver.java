@@ -18,6 +18,7 @@ package org.apache.sling.api.scripting;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ResourceResolver;
 
 /**
  * The <code>ScriptResolver</code> interface defines the API for a service
@@ -41,8 +42,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
  * through a <code>RequestDispatcher</code> is handled by the Sling Framework.
  * <p>
  * The servlet resolver service is available from the
- * {@link org.apache.sling.api.services.ServiceLocator} using the interface class as
- * parameter.
+ * {@link org.apache.sling.api.services.ServiceLocator} using the interface
+ * class as parameter.
  */
 public interface SlingScriptResolver {
 
@@ -62,15 +63,18 @@ public interface SlingScriptResolver {
      * Finds the given name to a {@link SlingScript}.
      * <p>
      * The semantic meaning of the name is implementation specific: It may be an
-     * absolute path to a JCR respository Item providing the script source or it
-     * may be a relative path resolved according to some path settings. Finally,
-     * the name may also just be used as an itentifier to find the script in
-     * some registry.
+     * absolute path to a <code>Resource</code> providing the script source or
+     * it may be a relative path resolved according to some path settings.
+     * Finally, the name may also just be used as an itentifier to find the
+     * script in some registry.
      *
+     * @param resourceResolver The <code>ResourceResolver</code> used to
+     *            access the script.
      * @param name The script name. Must not be <code>null</code>.
      * @return The {@link SlingScript} to which the name resolved or
      *         <code>null</code> otherwise.
      * @throws SlingException If an error occurrs trying to resolve the name.
      */
-    SlingScript findScript(String name) throws SlingException;
+    SlingScript findScript(ResourceResolver resourceResolver, String name)
+            throws SlingException;
 }
