@@ -31,8 +31,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * The <code>Service</code> class is a primitive stub of the original
- * <code>sun.misc.Service</code> class used by the
+ * The <code>ServiceX</code> class is a primitive stub of the original
+ * <code>sun.misc.ServiceX</code> class used by the
  * <code>javax.script.ScriptEngineManager</code> to find script engine
  * factories in factory service files.
  * <p>
@@ -41,9 +41,9 @@ import java.util.NoSuchElementException;
  * class would be available on the Java platform, it may not be visible inside
  * the OSGi framework. Finally, the <em>org.apache.sling.scripting.resolver</em>
  * bundle implements its own resolution of script engine factories and thus the
- * <code>Service</code> method is not used.
+ * <code>ServiceX</code> method is not used.
  */
-public class Service {
+public class ServiceX {
 
     private static final String PREFIX = "META-INF/services/";
     
