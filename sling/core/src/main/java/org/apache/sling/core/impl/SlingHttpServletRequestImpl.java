@@ -77,7 +77,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     public ResourceResolver getResourceResolver() {
-        return getRequestData().getResourceManager();
+        return getRequestData().getResourceResolver();
     }
 
     public ServiceLocator getServiceLocator() {

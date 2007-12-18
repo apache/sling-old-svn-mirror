@@ -47,7 +47,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
@@ -59,7 +59,7 @@ import org.apache.sling.core.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.core.theme.Theme;
-import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +94,7 @@ public class RequestData implements BufferProvider {
     /** The parameter support class */
     private ParameterSupport parameterSupport;
 
-    private ResourceManager resourceManager;
+    private ResourceResolver resourceResolver;
 
     private RequestProgressTracker requestProgressTracker;
 
@@ -122,18 +122,18 @@ public class RequestData implements BufferProvider {
         this.requestProgressTracker = new SlingRequestProgressTracker();
 
         // the resource manager factory may be missing
-        JcrResourceManagerFactory rmf = slingMainServlet.getResourceManagerFactory();
+        JcrResourceResolverFactory rmf = slingMainServlet.getResourceResolverFactory();
         if (rmf == null) {
-            log.error("RequestData: Missing JcrResourceManagerFactory");
+            log.error("RequestData: Missing JcrResourceResolverFactory");
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
                 "No resource can be found");
         }
 
         // officially, getting the manager may fail, but not i this implementation
-        this.resourceManager = rmf.getResourceManager(session);
+        this.resourceResolver = rmf.getResourceResolver(session);
 
         // resolve the resource and the request path info, will never be null
-        Resource resource = resourceManager.resolve(request);
+        Resource resource = resourceResolver.resolve(request);
         RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource,
             request.getPathInfo());
         ContentData contentData = pushContent(resource, requestPathInfo);
@@ -167,7 +167,7 @@ public class RequestData implements BufferProvider {
         currentContentData = null;
         servletRequest = null;
         servletResponse = null;
-        resourceManager = null;
+        resourceResolver = null;
     }
 
     public SlingMainServlet getSlingMainServlet() {
@@ -423,8 +423,8 @@ public class RequestData implements BufferProvider {
         this.locale = locale;
     }
 
-    public ResourceManager getResourceManager() {
-        return resourceManager;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     public RequestProgressTracker getRequestProgressTracker() {

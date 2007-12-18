@@ -61,7 +61,7 @@ import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.impl.services.ServiceLocatorImpl;
 import org.apache.sling.core.impl.servlets.ErrorHandler;
 import org.apache.sling.core.impl.servlets.SlingServletResolver;
-import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -121,7 +121,7 @@ public class SlingMainServlet extends GenericServlet {
     private HttpService httpService;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private JcrResourceManagerFactory resourceManagerFactory;
+    private JcrResourceResolverFactory resourceManagerFactory;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private MimeTypeService mimeTypeService;
@@ -291,7 +291,7 @@ public class SlingMainServlet extends GenericServlet {
         return slingAuthenticator;
     }
 
-    public JcrResourceManagerFactory getResourceManagerFactory() {
+    public JcrResourceResolverFactory getResourceResolverFactory() {
         return resourceManagerFactory;
     }
 
