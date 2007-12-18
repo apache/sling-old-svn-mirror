@@ -16,7 +16,13 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.*;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_MAPPED_OBJECT_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_RESOLVER_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESPONSE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +35,7 @@ import javax.servlet.jsp.tagext.VariableInfo;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
 
 /**
@@ -82,9 +88,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     /**
      * The name of the tag attribute used to define the name of the
-     * ResourceManager scripting variable (value is "resourceManagerName").
+     * ResourceResolver scripting variable (value is "resourceResolverName").
      */
-    public static final String ATTR_RESOURCE_MANAGER_NAME = "resourceManagerName";
+    public static final String ATTR_RESOURCE_RESOLVER_NAME = "resourceResolverName";
 
     private static final String RENDER_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
 
@@ -92,7 +98,7 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     private static final String RESOURCE_CLASS = Resource.class.getName();
 
-    private static final String RESOURCE_MANAGER_CLASS = ResourceManager.class.getName();
+    private static final String RESOURCE_RESOLVER_CLASS = ResourceResolver.class.getName();
 
     private static final String NODE_CLASS = Node.class.getName();
 
@@ -122,8 +128,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
         addVar(varInfos, data, ATTR_MAPPED_OBJECT_NAME,
             DEFAULT_MAPPED_OBJECT_NAME, mappedObjectClass);
 
-        addVar(varInfos, data, ATTR_RESOURCE_MANAGER_NAME,
-            DEFAULT_RESOURCE_MANAGER_NAME, RESOURCE_MANAGER_CLASS);
+        addVar(varInfos, data, ATTR_RESOURCE_RESOLVER_NAME,
+            DEFAULT_RESOURCE_RESOLVER_NAME, RESOURCE_RESOLVER_CLASS);
 
         addVar(varInfos, data, ATTR_SERVICE_LOCATOR_NAME,
             DEFAULT_SERVICE_LOCATOR_NAME, SERVICE_LOCATOR_CLASS);
