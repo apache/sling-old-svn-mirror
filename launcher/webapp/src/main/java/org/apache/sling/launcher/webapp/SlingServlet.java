@@ -23,7 +23,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.GenericServlet;
@@ -73,7 +72,7 @@ import org.osgi.framework.ServiceEvent;
  * <li>The <code>com/day/osgi/servlet/SlingServlet.properties</code> is read
  * from the servlet class path. This properties file contains default settings.</li>
  * <li>Extensions of this servlet may provide additional properties to be
- * loaded overwriting the {@link #loadPropertiesOverride(Properties)} method.
+ * loaded overwriting the {@link #loadConfigProperties()} method.
  * <li>Finally, web application init parameters are added to the properties and
  * may overwrite existing properties of the same name(s).
  * </ol>
@@ -247,6 +246,7 @@ public class SlingServlet extends GenericServlet {
         props.put("sling.include.jcr-client", "jcr-client.properties");
 
         // copy context init parameters
+        @SuppressWarnings("unchecked")
         Enumeration<String> pe = getServletContext().getInitParameterNames();
         while (pe.hasMoreElements()) {
             String name = pe.nextElement();
