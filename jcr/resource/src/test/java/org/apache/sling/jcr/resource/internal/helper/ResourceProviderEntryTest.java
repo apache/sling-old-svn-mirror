@@ -157,7 +157,7 @@ public class ResourceProviderEntryTest extends TestCase {
             roots = new String[] { root };
         }
 
-        public Resource getResource(JcrResourceResolver jcrResourceManager, String path) {
+        public Resource getResource(JcrResourceResolver jcrResourceResolver, String path) {
             return null;
         }
 

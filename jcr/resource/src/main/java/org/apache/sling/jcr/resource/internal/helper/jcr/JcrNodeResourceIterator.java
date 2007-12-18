@@ -41,7 +41,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** resource manager used to create resources from nodes */
-    private JcrResourceResolver resourceManager;
+    private JcrResourceResolver resourceResolver;
 
     /** underlying node iterator to be used for resources */
     private NodeIterator nodes;
@@ -57,20 +57,20 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         try {
             NodeIterator nodes = parent.getNode().getNodes();
 
-            this.resourceManager = parent.getResourceManager();
+            this.resourceResolver = parent.getResourceResolver();
             this.nodes = nodes;
             this.nextResult = seek();
         } catch (RepositoryException re) {
             log.error("<init>: Cannot get children of resource " + parent, re);
-            this.resourceManager = null;
+            this.resourceResolver = null;
             this.nodes = null;
             this.nextResult = null;
         }
     }
 
-    public JcrNodeResourceIterator(JcrResourceResolver resourceManager,
+    public JcrNodeResourceIterator(JcrResourceResolver resourceResolver,
             NodeIterator nodes) {
-        this.resourceManager = resourceManager;
+        this.resourceResolver = resourceResolver;
         this.nodes = nodes;
         this.nextResult = seek();
     }
@@ -100,7 +100,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (nodes.hasNext()) {
             try {
-                return new JcrNodeResource(resourceManager, nodes.nextNode());
+                return new JcrNodeResource(resourceResolver, nodes.nextNode());
             } catch (Throwable t) {
                 log.error(
                     "seek: Problem creating Resource for next node, skipping",

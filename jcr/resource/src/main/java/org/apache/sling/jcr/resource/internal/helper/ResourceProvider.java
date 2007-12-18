@@ -47,7 +47,7 @@ public interface ResourceProvider {
      * @throws Exception may be thrown in case of any problem creating the
      *             <code>Resource</code> instance.
      */
-    Resource getResource(JcrResourceResolver jcrResourceManager, String path)
+    Resource getResource(JcrResourceResolver jcrResourceResolver, String path)
             throws Exception;
 
 }
