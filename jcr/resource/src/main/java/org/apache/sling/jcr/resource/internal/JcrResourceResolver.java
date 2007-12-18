@@ -208,9 +208,9 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        if (type.isInstance(getSession())) {
+        if (type == Session.class) {
             return (AdapterType) getSession();
-        } else if (type.isInstance(objectContentManager)) {
+        } else if (type == ObjectContentManager.class) {
             return (AdapterType) objectContentManager;
         } else if (type == PathResolver.class) {
             return (AdapterType) this;
