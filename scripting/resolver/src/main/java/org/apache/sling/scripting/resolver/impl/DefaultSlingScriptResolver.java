@@ -63,6 +63,9 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Default SlingScriptResolver"
  * @scr.service
+ * @scr.reference name="ScriptEngineFactory"
+ *                interface="javax.script.ScriptEngineFactory"
+ *                cardinality="0..n" policy="dynamic"
  */
 public class DefaultSlingScriptResolver implements SlingScriptResolver,
         BundleListener {
@@ -83,6 +86,10 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
     private ScriptEngineManager scriptEngineManager;
 
     private String[] scriptPath;
+
+    private List<Bundle> engineSpiBundles = new LinkedList<Bundle>();
+
+    private List<ScriptEngineFactory> engineSpiServices = new LinkedList<ScriptEngineFactory>();
 
     /**
      * Try to find a script Node that can process the given request, based on
@@ -158,16 +165,27 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
 
     private ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
-            ScriptEngineManager tmp = new ScriptEngineManager();
+            
+            // create (empty) script engine manager
+            ClassLoader loader = getClass().getClassLoader();
+            ScriptEngineManager tmp = new ScriptEngineManager(loader);
+            
+            // register script engines from bundles
             for (Bundle bundle : engineSpiBundles) {
-                addFactories(tmp, bundle);
+                registerFactories(tmp, bundle);
             }
+            
+            // register script engines from registered services
+            for (ScriptEngineFactory factory : engineSpiServices) {
+                registerFactory(tmp, factory);
+            }
+            
             scriptEngineManager = tmp;
         }
         return scriptEngineManager;
     }
 
-    private void addFactories(ScriptEngineManager mgr, Bundle bundle) {
+    private void registerFactories(ScriptEngineManager mgr, Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
         InputStream ins = null;
         try {
@@ -180,22 +198,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
                     @SuppressWarnings("unchecked")
                     Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
                     ScriptEngineFactory spi = clazz.newInstance();
-
-                    log.info("Adding ScriptEngine {}, {} for language {}, {}",
-                        new Object[] { spi.getEngineName(),
-                            spi.getEngineVersion(), spi.getLanguageName(),
-                            spi.getLanguageVersion() });
-
-                    for (Object ext : spi.getExtensions()) {
-                        mgr.registerEngineExtension((String) ext, spi);
-                    }
-                    for (Object mime : spi.getMimeTypes()) {
-                        mgr.registerEngineMimeType((String) mime, spi);
-                    }
-                    for (Object name : spi.getNames()) {
-                        mgr.registerEngineName((String) name, spi);
-                    }
-
+                    registerFactory(mgr, spi);
                 } catch (Throwable t) {
                     log.error("Cannot register ScriptEngineFactory " + line, t);
                 }
@@ -211,9 +214,26 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
         }
     }
 
-    // ---------- BundleListener interface -------------------------------------
+    private void registerFactory(ScriptEngineManager mgr,
+            ScriptEngineFactory factory) {
+        log.info("Adding ScriptEngine {}, {} for language {}, {}",
+            new Object[] { factory.getEngineName(), factory.getEngineVersion(),
+                factory.getLanguageName(), factory.getLanguageVersion() });
 
-    private List<Bundle> engineSpiBundles = new LinkedList<Bundle>();
+        for (Object ext : factory.getExtensions()) {
+            mgr.registerEngineExtension((String) ext, factory);
+        }
+
+        for (Object mime : factory.getMimeTypes()) {
+            mgr.registerEngineMimeType((String) mime, factory);
+        }
+
+        for (Object name : factory.getNames()) {
+            mgr.registerEngineName((String) name, factory);
+        }
+    }
+
+    // ---------- BundleListener interface -------------------------------------
 
     public void bundleChanged(BundleEvent event) {
         if (event.getType() == BundleEvent.STARTED
@@ -265,6 +285,19 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
         context.getBundleContext().removeBundleListener(this);
 
         engineSpiBundles.clear();
+        engineSpiServices.clear();
+        scriptEngineManager = null;
+    }
+
+    protected void bindScriptEngineFactory(
+            ScriptEngineFactory scriptEngineFactory) {
+        engineSpiServices.add(scriptEngineFactory);
+        scriptEngineManager = null;
+    }
+
+    protected void unbindScriptEngineFactory(
+            ScriptEngineFactory scriptEngineFactory) {
+        engineSpiServices.remove(scriptEngineFactory);
         scriptEngineManager = null;
     }
 
