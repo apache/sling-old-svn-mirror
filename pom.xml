@@ -94,6 +94,8 @@
         <module>sling/sample</module>
         
         <!-- Scripting Support -->
+        <module>scripting/api</module>
+        <module>scripting/resolver</module>
         <module>scripting/freemarker</module>
         <module>scripting/javascript</module>
         <module>scripting/jsp</module>
