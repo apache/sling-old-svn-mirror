@@ -121,7 +121,7 @@ public class SlingMainServlet extends GenericServlet {
     private HttpService httpService;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private JcrResourceResolverFactory resourceManagerFactory;
+    private JcrResourceResolverFactory resourceResolverFactory;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private MimeTypeService mimeTypeService;
@@ -292,7 +292,7 @@ public class SlingMainServlet extends GenericServlet {
     }
 
     public JcrResourceResolverFactory getResourceResolverFactory() {
-        return resourceManagerFactory;
+        return resourceResolverFactory;
     }
 
     public ServletResolver getServletResolver() {
