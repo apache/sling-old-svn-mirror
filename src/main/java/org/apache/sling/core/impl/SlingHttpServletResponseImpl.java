@@ -159,7 +159,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         url = makeAbsolutePath(url);
 
         // resolve the url to as if it would be a resource path
-        url = getPathResolver().pathToURL(url);
+        url = pathToURL(url);
 
         // have the servlet container to further encodings
         return super.encodeURL(url);
@@ -171,7 +171,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         url = makeAbsolutePath(url);
 
         // resolve the url to as if it would be a resource path
-        url = getPathResolver().pathToURL(url);
+        url = pathToURL(url);
 
         // have the servlet container to further encodings
         return super.encodeRedirectURL(url);
@@ -228,7 +228,9 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
         return path;
     }
-    private PathResolver getPathResolver() {
-        return (PathResolver) getRequestData().getResourceManager();
+    
+    private String pathToURL(String url) {
+        PathResolver pr = getRequestData().getResourceResolver().adaptTo(PathResolver.class);
+        return (pr != null) ? pr.pathToURL(url) : url;
     }
 }
