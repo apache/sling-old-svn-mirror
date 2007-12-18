@@ -23,7 +23,7 @@ import java.util.StringTokenizer;
 /**
  * The <code>Mapping</code> class conveys the mapping configuration used by
  * the
- * {@link org.apache.sling.jcr.resource.internal.JcrResourceManagerFactoryImpl}.
+ * {@link org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl}.
  */
 public class Mapping {
 

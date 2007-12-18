@@ -34,10 +34,10 @@ import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceManagerFactory;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
@@ -57,25 +57,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>JcrResourceManagerFactoryImpl</code> is the
- * {@link JcrResourceManagerFactory} service providing the following
+ * The <code>JcrResourceResolverFactoryImpl</code> is the
+ * {@link JcrResourceResolverFactory} service providing the following
  * functionality:
  * <ul>
- * <li><code>JcrResourceManagerFactory</code> service
+ * <li><code>JcrResourceResolverFactory</code> service
  * <li>Bundle listener to load initial content and manage OCM mapping
  * descriptors provided by bundles.
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
- *
+ * 
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  * @scr.property name="service.description" value="Sling
- *               JcrResourceManagerFactory Implementation"
+ *               JcrResourceResolverFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceManagerFactory"
+ * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceResolverFactory"
  */
-public class JcrResourceManagerFactoryImpl implements
-        JcrResourceManagerFactory, SynchronousBundleListener, ResourceProvider {
+public class JcrResourceResolverFactoryImpl implements
+        JcrResourceResolverFactory, SynchronousBundleListener, ResourceProvider {
 
     /**
      * @scr.property value="true" type="Boolean"
@@ -87,7 +87,7 @@ public class JcrResourceManagerFactoryImpl implements
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
-     *
+     * 
      * @scr.property values.1="/-/"
      */
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
@@ -105,14 +105,14 @@ public class JcrResourceManagerFactoryImpl implements
 
     /**
      * The JCR Repository we access to resolve resources
-     *
+     * 
      * @scr.reference
      */
     private SlingRepository repository;
 
     /**
      * The OSGi EventAdmin service used to dispatch events
-     *
+     * 
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
     private EventAdmin eventAdmin;
@@ -120,7 +120,7 @@ public class JcrResourceManagerFactoryImpl implements
     /**
      * The MimeTypeService used by the initial content initialContentLoader to
      * resolve MIME types for files to be installed.
-     *
+     * 
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
     private MimeTypeService mimeTypeService;
@@ -144,14 +144,14 @@ public class JcrResourceManagerFactoryImpl implements
      * Map of administrative sessions used to check item existence. Indexed by
      * workspace name. The map is filled on-demand. The sessions are closed when
      * the factory is deactivated.
-     *
+     * 
      * @see #itemReallyExists(Session, String)
      */
     private Map<String, Session> adminSessions = new HashMap<String, Session>();
 
     /**
      * The {@link ObjectContentManagerFactory} used retrieve object content
-     * managers on-demand on behalf of {@link JcrResourceManager} instances.
+     * managers on-demand on behalf of {@link JcrResourceResolver} instances.
      */
     private ObjectContentManagerFactory objectContentManagerFactory;
 
@@ -165,21 +165,21 @@ public class JcrResourceManagerFactoryImpl implements
 
     private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
 
-    public JcrResourceManagerFactoryImpl() {
+    public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", this);
     }
 
-    // ---------- JcrResourceManagerFactory ------------------------------------
+    // ---------- JcrResourceResolverFactory -----------------------------------
 
     /**
-     * Returns a new <code>ResourceManager</code> for the given session. Note
+     * Returns a new <code>ResourceResolve</code> for the given session. Note
      * that each call to this method returns a new resource manager instance.
      * The resource manager returned also implements the
      * {@link org.apache.sling.jcr.resource.PathResolver} interface to which it
      * may be cast.
      */
-    public ResourceManager getResourceManager(Session session) {
-        return new JcrResourceManager(this, session);
+    public ResourceResolver getResourceResolver(Session session) {
+        return new JcrResourceResolver(this, session);
     }
 
     // ---------- BundleListener -----------------------------------------------
@@ -188,7 +188,7 @@ public class JcrResourceManagerFactoryImpl implements
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     *
+     * 
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -238,7 +238,7 @@ public class JcrResourceManagerFactoryImpl implements
         return new String[] { "/" };
     }
 
-    public Resource getResource(JcrResourceManager jcrResourceManager,
+    public Resource getResource(JcrResourceResolver jcrResourceManager,
             String path) throws RepositoryException {
 
         if (jcrResourceManager.itemExists(path)) {
@@ -253,7 +253,7 @@ public class JcrResourceManagerFactoryImpl implements
 
     /**
      * Fires an OSGi event through the EventAdmin service.
-     *
+     * 
      * @param sourceBundle The Bundle from which the event originates. This may
      *            be <code>null</code> if there is no originating bundle.
      * @param eventName The name of the event
@@ -271,7 +271,7 @@ public class JcrResourceManagerFactoryImpl implements
         // get a private copy of the properties
         Dictionary<String, Object> table = new Hashtable<String, Object>(props);
 
-        // service information of this JcrResourceManagerFactoryImpl service
+        // service information of this JcrResourceResolverFactoryImpl service
         ServiceReference sr = serviceReference;
         if (sr != null) {
             table.put(EventConstants.SERVICE, sr);
@@ -301,12 +301,12 @@ public class JcrResourceManagerFactoryImpl implements
 
     // ---------- Implementation helpers --------------------------------------
 
-    /** return the ObjectContentManager, used by JcrResourceManager */
+    /** return the ObjectContentManager, used by JcrResourceResolver */
     ObjectContentManager getObjectContentManager(Session session) {
         return objectContentManagerFactory.getObjectContentManager(session);
     }
 
-    /** check existence of an item with admin session, used by JcrResourceManager */
+    /** check existence of an item with admin session, used by JcrResourceResolver */
     boolean itemReallyExists(Session clientSession, String path)
             throws RepositoryException {
 

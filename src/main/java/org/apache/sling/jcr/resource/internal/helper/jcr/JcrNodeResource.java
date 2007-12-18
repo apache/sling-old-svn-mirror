@@ -39,7 +39,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class JcrNodeResource implements Resource, Descendable {
     /** The relative path name of the data property of an nt:file node */
     private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;
 
-    private final JcrResourceManager resourceManager;
+    private final JcrResourceResolver resourceManager;
 
     private final Node node;
 
@@ -69,7 +69,7 @@ public class JcrNodeResource implements Resource, Descendable {
 
     private final ResourceMetadata metadata;
 
-    public JcrNodeResource(JcrResourceManager cMgr, String path)
+    public JcrNodeResource(JcrResourceResolver cMgr, String path)
             throws RepositoryException {
         this.resourceManager = cMgr;
         node = (Node) cMgr.getSession().getItem(path);
@@ -81,7 +81,7 @@ public class JcrNodeResource implements Resource, Descendable {
         setMetaData(node, metadata);
     }
 
-    public JcrNodeResource(JcrResourceManager resourceManager, Node node)
+    public JcrNodeResource(JcrResourceResolver resourceManager, Node node)
             throws RepositoryException {
         this.resourceManager = resourceManager;
         this.node = node;
@@ -126,7 +126,7 @@ public class JcrNodeResource implements Resource, Descendable {
         return "JcrNodeResource, type=" + resourceType + ", path=" + path;
     }
 
-    JcrResourceManager getResourceManager() {
+    JcrResourceResolver getResourceManager() {
         return resourceManager;
     }
 
