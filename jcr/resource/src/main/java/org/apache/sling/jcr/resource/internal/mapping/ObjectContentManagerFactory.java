@@ -49,7 +49,7 @@ import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
-import org.apache.sling.jcr.resource.internal.JcrResourceManagerFactoryImpl;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.apache.sling.jcr.resource.internal.mapping.classloader.MapperClassLoader;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
@@ -64,7 +64,7 @@ public class ObjectContentManagerFactory {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactory.class);
 
-    private JcrResourceManagerFactoryImpl jcrResourceManagerFactory;
+    private JcrResourceResolverFactoryImpl jcrResourceManagerFactory;
 
     /**
      * The class loader used by the Jackrabbit OCM ReflectionUtils class to load
@@ -82,7 +82,7 @@ public class ObjectContentManagerFactory {
     private AtomicTypeConverterProvider converterProvider;
 
     public ObjectContentManagerFactory(
-            JcrResourceManagerFactoryImpl jcrResourceManagerFactory) {
+            JcrResourceResolverFactoryImpl jcrResourceManagerFactory) {
         this.jcrResourceManagerFactory = jcrResourceManagerFactory;
 
         // prepare the data converters and query manager
