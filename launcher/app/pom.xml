@@ -381,6 +381,16 @@
                 </dependency>
                 <dependency>
                     <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.scripting.api</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.scripting.resolver</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
                     <artifactId>org.apache.sling.scripting.jsp</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                 </dependency>
