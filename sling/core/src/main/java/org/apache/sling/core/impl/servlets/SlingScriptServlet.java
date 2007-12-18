@@ -33,10 +33,8 @@ import javax.servlet.ServletResponse;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingScriptServlet</code> is a servlet encapsulating a
