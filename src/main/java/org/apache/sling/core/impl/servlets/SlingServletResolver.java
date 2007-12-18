@@ -35,7 +35,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.ServletResolver;
-import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.impl.helper.SlingServletConfig;
 import org.apache.sling.core.servlets.DefaultServlet;
 import org.osgi.framework.BundleContext;
