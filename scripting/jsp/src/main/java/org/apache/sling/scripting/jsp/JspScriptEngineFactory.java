@@ -16,19 +16,27 @@
  */
 package org.apache.sling.scripting.jsp;
 
+import static org.apache.sling.api.scripting.SlingBindings.SLING;
+
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptEngine;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
+import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
@@ -38,8 +46,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The JSP engine (a.k.a Jasper).
- *
- * @scr.component immediate="false" label="%jsphandler.name"
+ * 
+ * @scr.component scr="no" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
@@ -58,12 +66,12 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.property name="jasper.displaySourceFragments" value="true"
  *               type="Boolean"
- * @scr.service
+ * @scr.service              
  */
-public class JspScriptHandler implements SlingScriptEngine {
+public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(JspScriptHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
     ComponentContext componentContext;
 
@@ -93,34 +101,31 @@ public class JspScriptHandler implements SlingScriptEngine {
 
     public static final String SCRIPT_TYPE = "jsp";
 
-    public String getType() {
-        return SCRIPT_TYPE;
+    public JspScriptEngineFactory() {
+        setExtensions(SCRIPT_TYPE);
     }
 
-    public String[] getExtensions() {
-        // probably also jspx, jspf ?
-        return new String[] { SCRIPT_TYPE };
+    public ScriptEngine getScriptEngine() {
+        return new JspScriptEngine();
     }
 
-    public String getEngineName() {
-        return "JSP ScriptEngine (Jasper, Eclipse)";
+    public String getLanguageName() {
+        return "Java Server Pages";
     }
 
-    public String getEngineVersion() {
-        return "0.9";
+    public String getLanguageVersion() {
+        return "2.1";
     }
 
-    public void eval(SlingScript script, Map<String, Object> props)
-            throws SlingException, IOException {
-        SlingScriptHelper ssh = (SlingScriptHelper) props.get(SLING);
-        if (ssh != null) {
-            ioProvider.setRequestResourceResolver(ssh.getRequest().getResourceResolver());
-            try {
-                JspServletWrapperAdapter jsp = getJspWrapperAdapter(ssh);
-                jsp.service(ssh);
-            } finally {
-                ioProvider.resetRequestResourceResolver();
-            }
+    private void callJsp(SlingScriptHelper scriptHelper) throws SlingException,
+            IOException {
+
+        ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
+        try {
+            JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
+            jsp.service(scriptHelper);
+        } finally {
+            ioProvider.resetRequestResourceResolver();
         }
     }
 
@@ -185,7 +190,6 @@ public class JspScriptHandler implements SlingScriptEngine {
             // by default access the repository
             jspRuntimeContext.setIOProvider(ioProvider);
 
-
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
 
@@ -208,7 +212,7 @@ public class JspScriptHandler implements SlingScriptEngine {
 
     protected void deactivate(ComponentContext oldComponentContext) {
         if (log.isDebugEnabled()) {
-            log.debug("JspScriptHandler.deactivate()");
+            log.debug("JspScriptEngine.deactivate()");
         }
 
         if (jspRuntimeContext != null) {
@@ -243,5 +247,34 @@ public class JspScriptHandler implements SlingScriptEngine {
     }
 
     // ---------- Internal -----------------------------------------------------
+
+    private class JspScriptEngine extends AbstractSlingScriptEngine {
+
+        JspScriptEngine() {
+            super(JspScriptEngineFactory.this);
+        }
+
+        public void eval(SlingScript script, Map<String, Object> props)
+                throws SlingException, IOException {
+            eval(script, props);
+        }
+
+        public Object eval(Reader script, ScriptContext context)
+                throws ScriptException {
+            Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
+            SlingScriptHelper scriptHelper = (SlingScriptHelper) props.get(SLING);
+            if (scriptHelper != null) {
+                try {
+                    callJsp(scriptHelper);
+                    // } catch (IOException ioe) {
+                    // } catch (ServletException se) {
+                } catch (Exception e) {
+                    throw new ScriptException(e);
+                } catch (Throwable t) {
+                }
+            }
+            return null;
+        }
+    }
 
 }
