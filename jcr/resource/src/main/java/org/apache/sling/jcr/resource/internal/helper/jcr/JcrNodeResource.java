@@ -34,8 +34,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -108,7 +110,7 @@ public class JcrNodeResource implements Resource, Descendable {
 
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
-        if (type.isInstance(getNode())) {
+        if (type == Node.class || type == Item.class) {
             return (Type) getNode(); // unchecked cast
         } else if (type == InputStream.class) {
             return (Type) getInputStream(); // unchecked cast
