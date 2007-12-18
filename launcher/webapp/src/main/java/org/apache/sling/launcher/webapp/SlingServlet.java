@@ -23,6 +23,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.GenericServlet;
@@ -38,6 +39,7 @@ import org.apache.sling.launcher.app.Logger;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
+import org.osgi.framework.ServiceEvent;
 
 /**
  * The <code>SlingServlet</code> serves as a basic servlet for Project Sling.
@@ -232,9 +234,11 @@ public class SlingServlet extends GenericServlet {
         // Try to load it from one of these places.
         Map<String, String> props = new HashMap<String, String>();
 
+        final String servletVersion = getServletContext().getMajorVersion() + "." +
+                                      getServletContext().getMinorVersion();
         props.put(
             Sling.PROP_SYSTEM_PACKAGES,
-            ",javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.3,javax.portlet");
+            "javax.servlet;javax.servlet.http;javax.servlet.resources; version=" + servletVersion);
 
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");
