@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
 import org.osgi.framework.Bundle;
 
@@ -61,10 +61,10 @@ public class BundleResourceProvider implements ResourceProvider {
 
     /**
      * Returns a BundleResource for the path if such an entry exists in the
-     * bundle of this provider. The JcrResourceManager is ignored by this
+     * bundle of this provider. The JcrResourceResolver is ignored by this
      * implementation.
      */
-    public Resource getResource(JcrResourceManager jrm, String path) {
+    public Resource getResource(JcrResourceResolver jrm, String path) {
         return BundleResource.getResource(bundle, path);
     }
 

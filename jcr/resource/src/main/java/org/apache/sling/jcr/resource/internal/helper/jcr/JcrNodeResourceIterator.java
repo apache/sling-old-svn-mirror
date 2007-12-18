@@ -25,7 +25,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** resource manager used to create resources from nodes */
-    private JcrResourceManager resourceManager;
+    private JcrResourceResolver resourceManager;
 
     /** underlying node iterator to be used for resources */
     private NodeIterator nodes;
@@ -68,7 +68,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         }
     }
 
-    public JcrNodeResourceIterator(JcrResourceManager resourceManager,
+    public JcrNodeResourceIterator(JcrResourceResolver resourceManager,
             NodeIterator nodes) {
         this.resourceManager = resourceManager;
         this.nodes = nodes;

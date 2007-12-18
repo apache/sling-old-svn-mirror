@@ -39,13 +39,13 @@ import junit.framework.TestCase;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.testhelper.RepositoryUtil;
 
-public class JcrResourceManagerTest extends TestCase {
+public class JcrResourceResolverTest extends TestCase {
 
     private Session session;
 
@@ -53,13 +53,13 @@ public class JcrResourceManagerTest extends TestCase {
 
     private Node rootNode;
 
-    private ResourceManager resMgr;
+    private ResourceResolver resResolver;
 
     protected void setUp() throws Exception {
         RepositoryUtil.startRepository();
         SlingRepository repository = RepositoryUtil.getRepository();
 
-        JcrResourceManagerFactoryImpl resFac = new JcrResourceManagerFactoryImpl();
+        JcrResourceResolverFactoryImpl resFac = new JcrResourceResolverFactoryImpl();
 
         Field repoField = resFac.getClass().getDeclaredField("repository");
         repoField.setAccessible(true);
@@ -79,7 +79,7 @@ public class JcrResourceManagerTest extends TestCase {
             // don't care for now
         }
 
-        resMgr = resFac.getResourceManager(session);
+        resResolver = resFac.getResourceResolver(session);
 
         root = "/test" + System.currentTimeMillis();
         rootNode = session.getRootNode().addNode(root.substring(1),
@@ -103,7 +103,7 @@ public class JcrResourceManagerTest extends TestCase {
 
     public void testGetResource() throws Exception {
         // existing resource
-        Resource res = resMgr.getResource(root);
+        Resource res = resResolver.getResource(root);
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -114,13 +114,13 @@ public class JcrResourceManagerTest extends TestCase {
 
         // missing resource
         String path = root + "/missing";
-        res = resMgr.getResource(path);
+        res = resResolver.getResource(path);
         assertNull(res);
     }
 
     public void testResolveResource() throws Exception {
         // existing resource
-        Resource res = resMgr.resolve(new ResourceManagerTestRequest(root));
+        Resource res = resResolver.resolve(new ResourceManagerTestRequest(root));
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -131,7 +131,7 @@ public class JcrResourceManagerTest extends TestCase {
 
         // missing resource below root should resolve root
         String path = root + "/missing";
-        res = resMgr.resolve(new ResourceManagerTestRequest(path));
+        res = resResolver.resolve(new ResourceManagerTestRequest(path));
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -142,7 +142,7 @@ public class JcrResourceManagerTest extends TestCase {
 
         // root with selectors/ext should resolve root
         path = root + ".print.a4.html";
-        res = resMgr.resolve(new ResourceManagerTestRequest(path));
+        res = resResolver.resolve(new ResourceManagerTestRequest(path));
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -153,7 +153,7 @@ public class JcrResourceManagerTest extends TestCase {
 
         // missing resource should return NON_EXISTING Resource
         path = root + System.currentTimeMillis();
-        res = resMgr.resolve(new ResourceManagerTestRequest(path));
+        res = resResolver.resolve(new ResourceManagerTestRequest(path));
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getURI());

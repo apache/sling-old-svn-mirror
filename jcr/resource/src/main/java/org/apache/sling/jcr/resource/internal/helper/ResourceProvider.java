@@ -19,16 +19,16 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 
 /**
- * API for providers of resources. Used by the {@link JcrResourceManager} and
- * {@link org.apache.sling.jcr.resource.internal.JcrResourceManagerFactoryImpl}
+ * API for providers of resources. Used by the {@link JcrResourceResolver} and
+ * {@link org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl}
  * classes to transparently access resources from different locations such as a
  * JCR repository (the default) or OSGi bundles.
  * <p>
  * This is an internal interface not available outside this bundle. It refers to
- * the internal {@link JcrResourceManager} class, which is also not visible from
+ * the internal {@link JcrResourceResolver} class, which is also not visible from
  * outside of this bundle.
  */
 public interface ResourceProvider {
@@ -47,7 +47,7 @@ public interface ResourceProvider {
      * @throws Exception may be thrown in case of any problem creating the
      *             <code>Resource</code> instance.
      */
-    Resource getResource(JcrResourceManager jcrResourceManager, String path)
+    Resource getResource(JcrResourceResolver jcrResourceManager, String path)
             throws Exception;
 
 }

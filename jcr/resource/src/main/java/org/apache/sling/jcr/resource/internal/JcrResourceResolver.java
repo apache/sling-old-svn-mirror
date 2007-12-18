@@ -41,8 +41,8 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceManager;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.DefaultMappedObject;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.PathResolver;
@@ -56,14 +56,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>JcrResourceManager</code> class implements the Sling
+ * The <code>JcrResourceResolver</code> class implements the Sling
  * <code>ResourceManager</code> and <code>ResourceResolver</code> interfaces
  * and in addition is a {@link PathResolver}. Instances of this class are
  * retrieved through the
- * {@link org.apache.sling.jcr.resource.JcrResourceManagerFactory#getResourceManager(Session)}
+ * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceManager(Session)}
  * method.
  */
-public class JcrResourceManager implements ResourceManager, PathResolver {
+public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -84,13 +84,13 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
 
     protected static final String ACTION_REMOVE = "remove";
 
-    private final JcrResourceManagerFactoryImpl factory;
+    private final JcrResourceResolverFactoryImpl factory;
 
     private final Session session;
 
     private ObjectContentManager objectContentManager;
 
-    public JcrResourceManager(JcrResourceManagerFactoryImpl factory,
+    public JcrResourceResolver(JcrResourceResolverFactoryImpl factory,
             Session session) {
         this.factory = factory;
         this.session = session;
@@ -206,6 +206,20 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type.isInstance(getSession())) {
+            return (AdapterType) getSession();
+        } else if (type.isInstance(objectContentManager)) {
+            return (AdapterType) objectContentManager;
+        } else if (type == PathResolver.class) {
+            return (AdapterType) this;
+        }
+        
+        // no adapter available
+        return null;
+    }
+    
     // ---------- PathResolver interface --------------------------------------
 
     /**
@@ -234,7 +248,8 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
         try {
 
             // translate url to a mapped url structure
-            return transformURL(uri);
+            Resource result = transformURL(uri);
+            return result;
 
         } catch (AccessControlException ace) {
             // rethrow AccessControlExceptions to be handled
@@ -529,6 +544,16 @@ public class JcrResourceManager implements ResourceManager, PathResolver {
 
             Resource resource = scanPath(mappedUri);
             if (resource != null) {
+                
+                ResourceMetadata rm = resource.getResourceMetadata();
+                String path = (String) rm.get(ResourceMetadata.RESOLUTION_PATH);
+                String uriPath = mappings[i].mapHandle(path);
+                if (uriPath != null && !uriPath.equals(path)) {
+                    resource.getResourceMetadata().put(
+                        ResourceMetadata.RESOLUTION_PATH, uriPath);
+                }
+
+
                 return resource;
             }
 

@@ -21,7 +21,7 @@ package org.apache.sling.jcr.resource.internal.helper;
 import junit.framework.TestCase;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.jcr.resource.internal.JcrResourceManager;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
@@ -157,7 +157,7 @@ public class ResourceProviderEntryTest extends TestCase {
             roots = new String[] { root };
         }
 
-        public Resource getResource(JcrResourceManager jcrResourceManager, String path) {
+        public Resource getResource(JcrResourceResolver jcrResourceManager, String path) {
             return null;
         }
 
