@@ -157,6 +157,8 @@ public class JSONObject {
      * @exception JSONException If a value is a non-finite number.
      */
     public JSONObject(JSONObject jo, String[] sa) throws JSONException {
+        this(); // basic setup
+
         for (int i = 0; i < sa.length; i += 1) {
             putOpt(sa[i], jo.opt(sa[i]));
         }
@@ -169,6 +171,8 @@ public class JSONObject {
      * @throws JSONException If there is a syntax error in the source string.
      */
     public JSONObject(JSONTokener x) throws JSONException {
+        this(); // basic setup
+
         char c;
         String key;
 
@@ -246,7 +250,9 @@ public class JSONObject {
      * from the object.
      */
     public JSONObject(Object object, String names[]) {
-    	Class<? extends Object> c = object.getClass();
+        this(); // basic setup
+
+        Class<? extends Object> c = object.getClass();
     	for (int i = 0; i < names.length; i += 1) {
     		try {
     			String name = names[i];
