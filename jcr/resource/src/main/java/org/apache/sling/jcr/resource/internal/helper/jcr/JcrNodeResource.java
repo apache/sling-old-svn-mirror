@@ -55,7 +55,7 @@ public class JcrNodeResource implements Resource, Descendable {
     /** The relative path name of the data property of an nt:file node */
     private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;
 
-    private final JcrResourceResolver resourceManager;
+    private final JcrResourceResolver resourceResolver;
 
     private final Node node;
 
@@ -71,7 +71,7 @@ public class JcrNodeResource implements Resource, Descendable {
 
     public JcrNodeResource(JcrResourceResolver cMgr, String path)
             throws RepositoryException {
-        this.resourceManager = cMgr;
+        this.resourceResolver = cMgr;
         node = (Node) cMgr.getSession().getItem(path);
         this.path = node.getPath();
         metadata = new ResourceMetadata();
@@ -81,9 +81,9 @@ public class JcrNodeResource implements Resource, Descendable {
         setMetaData(node, metadata);
     }
 
-    public JcrNodeResource(JcrResourceResolver resourceManager, Node node)
+    public JcrNodeResource(JcrResourceResolver resourceResolver, Node node)
             throws RepositoryException {
-        this.resourceManager = resourceManager;
+        this.resourceResolver = resourceResolver;
         this.node = node;
         this.path = node.getPath();
         metadata = new ResourceMetadata();
@@ -126,8 +126,8 @@ public class JcrNodeResource implements Resource, Descendable {
         return "JcrNodeResource, type=" + resourceType + ", path=" + path;
     }
 
-    JcrResourceResolver getResourceManager() {
-        return resourceManager;
+    JcrResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     Node getNode() {
@@ -162,7 +162,7 @@ public class JcrNodeResource implements Resource, Descendable {
     private Object getObject() {
         if (object == UNDEFINED) {
             // lazy loaded object
-            object = resourceManager.getObject(getURI(), objectType);
+            object = resourceResolver.getObject(getURI(), objectType);
         }
 
         return object;
@@ -187,7 +187,7 @@ public class JcrNodeResource implements Resource, Descendable {
     public Resource getDescendent(String relPath) {
         try {
             if (node.hasNode(relPath)) {
-                return new JcrNodeResource(resourceManager,
+                return new JcrNodeResource(resourceResolver,
                     node.getNode(relPath));
             }
 

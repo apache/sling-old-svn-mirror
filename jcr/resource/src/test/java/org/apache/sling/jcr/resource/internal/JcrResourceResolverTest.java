@@ -120,7 +120,7 @@ public class JcrResourceResolverTest extends TestCase {
 
     public void testResolveResource() throws Exception {
         // existing resource
-        Resource res = resResolver.resolve(new ResourceManagerTestRequest(root));
+        Resource res = resResolver.resolve(new ResourceResolverTestRequest(root));
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -131,7 +131,7 @@ public class JcrResourceResolverTest extends TestCase {
 
         // missing resource below root should resolve root
         String path = root + "/missing";
-        res = resResolver.resolve(new ResourceManagerTestRequest(path));
+        res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -142,7 +142,7 @@ public class JcrResourceResolverTest extends TestCase {
 
         // root with selectors/ext should resolve root
         path = root + ".print.a4.html";
-        res = resResolver.resolve(new ResourceManagerTestRequest(path));
+        res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
         assertEquals(root, res.getURI());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -153,18 +153,18 @@ public class JcrResourceResolverTest extends TestCase {
 
         // missing resource should return NON_EXISTING Resource
         path = root + System.currentTimeMillis();
-        res = resResolver.resolve(new ResourceManagerTestRequest(path));
+        res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getURI());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
     }
 
-    private static class ResourceManagerTestRequest implements HttpServletRequest {
+    private static class ResourceResolverTestRequest implements HttpServletRequest {
 
         private String pathInfo;
 
-        ResourceManagerTestRequest(String pathInfo) {
+        ResourceResolverTestRequest(String pathInfo) {
             this.pathInfo = pathInfo;
         }
 
