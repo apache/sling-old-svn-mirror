@@ -238,12 +238,12 @@ public class JcrResourceResolverFactoryImpl implements
         return new String[] { "/" };
     }
 
-    public Resource getResource(JcrResourceResolver jcrResourceManager,
+    public Resource getResource(JcrResourceResolver jcrResourceResolver,
             String path) throws RepositoryException {
 
-        if (jcrResourceManager.itemExists(path)) {
+        if (jcrResourceResolver.itemExists(path)) {
             log.info("getResource: Found JCR Node Resource at path '{}'", path);
-            return new JcrNodeResource(jcrResourceManager, path);
+            return new JcrNodeResource(jcrResourceResolver, path);
         }
 
         return null;

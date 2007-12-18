@@ -57,10 +57,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceResolver</code> class implements the Sling
- * <code>ResourceManager</code> and <code>ResourceResolver</code> interfaces
+ * <code>ResourceResolver</code> and <code>ResourceResolver</code> interfaces
  * and in addition is a {@link PathResolver}. Instances of this class are
  * retrieved through the
- * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceManager(Session)}
+ * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
  * method.
  */
 public class JcrResourceResolver implements ResourceResolver, PathResolver {
@@ -304,7 +304,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
         return href;
     }
 
-    // ---------- ResourceManager interface -----------------------------------
+    // ---------- former ResourceManager interface -----------------------------------
 
     /**
      * @throws AccessControlException If this manager has does not have enough

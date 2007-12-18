@@ -64,7 +64,7 @@ public class ObjectContentManagerFactory {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactory.class);
 
-    private JcrResourceResolverFactoryImpl jcrResourceManagerFactory;
+    private JcrResourceResolverFactoryImpl jcrResourceResolverFactory;
 
     /**
      * The class loader used by the Jackrabbit OCM ReflectionUtils class to load
@@ -82,8 +82,8 @@ public class ObjectContentManagerFactory {
     private AtomicTypeConverterProvider converterProvider;
 
     public ObjectContentManagerFactory(
-            JcrResourceResolverFactoryImpl jcrResourceManagerFactory) {
-        this.jcrResourceManagerFactory = jcrResourceManagerFactory;
+            JcrResourceResolverFactoryImpl jcrResourceResolverFactory) {
+        this.jcrResourceResolverFactory = jcrResourceResolverFactory;
 
         // prepare the data converters and query manager
         this.converterProvider = new SlingAtomicTypeConverterProvider();
@@ -257,7 +257,7 @@ public class ObjectContentManagerFactory {
             Map<String, Object> props = new HashMap<String, Object>();
             props.put(MAPPING_CLASS, mapper.getMappedClasses());
             props.put(MAPPING_NODE_TYPE, mapper.getMappedNodeTypes());
-            jcrResourceManagerFactory.fireEvent(sourceBundle, eventName, props);
+            jcrResourceResolverFactory.fireEvent(sourceBundle, eventName, props);
         }
     }
 }
