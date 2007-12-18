@@ -16,13 +16,14 @@
  */
 package org.apache.sling.launcher.app;
 
+import static org.apache.felix.framework.util.FelixConstants.EMBEDDED_EXECUTION_PROP;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -181,12 +182,6 @@ public class Sling implements BundleActivator {
     public static final String CONFIG_PROPERTIES = "sling.properties";
 
     /**
-     * The property name prefix for the launcher's auto-start property.
-     * FIXME - This is just a temporary solution to get this module compilable.
-     **/
-    public static final String AUTO_START_PROP = "felix.auto.start";
-
-    /**
      * The simple logger to log messages during startup and shutdown to
      */
     protected final Logger logger;
@@ -227,7 +222,6 @@ public class Sling implements BundleActivator {
 
         // check for auto-start bundles
         this.setInstallBundles(props);
-        this.setAutoStartBundles(props);
 
         // ensure execution environment
         this.setExecutionEnvironment(props);
@@ -236,11 +230,12 @@ public class Sling implements BundleActivator {
         props.put(SLING_ID, getInstanceId(props));
 
         // make sure Felix does not exit the VM when terminating ...
-        props.put("felix.embedded.execution", "true");
+        props.put(EMBEDDED_EXECUTION_PROP, "true");
 
         // the custom activator list just contains this servlet
         List<BundleActivator> activators = new ArrayList<BundleActivator>();
         activators.add(this);
+        activators.add(new BootstrapInstaller(logger, resourceProvider));
 
         // create the framework and start it
         Felix tmpFelix = new Felix(props, activators);
@@ -566,36 +561,6 @@ public class Sling implements BundleActivator {
         props.put(prefix + "bundles", buf.toString());
     }
 
-    private void setAutoStartBundles(Map<String, String> props) {
-
-        String propName = AUTO_START_PROP + ".1";
-        StringBuffer buf = new StringBuffer();
-
-        // take over the current value
-        String autostart = props.get(propName);
-        if (autostart != null) {
-            buf.append(autostart);
-        }
-
-        this.listBundles(buf, "resources/corebundles");
-        this.listBundles(buf, "resources/bundles");
-
-        props.put(propName, buf.toString());
-    }
-
-    private void listBundles(StringBuffer list, String path) {
-        Iterator<String> res = this.resourceProvider.getChildren(path);
-        while (res.hasNext()) {
-            String name = res.next();
-            if (name.endsWith(".jar")) {
-                URL url = this.resourceProvider.getResource(name);
-                if (url != null) {
-                    list.append(" ").append(this.toString(url));
-                }
-            }
-        }
-    }
-
     /**
      * Ensures sensible Execution Environment setting. If the
      * <code>org.osgi.framework.executionenvironment</code> property is set in
@@ -699,41 +664,6 @@ public class Sling implements BundleActivator {
         }
 
         return slingId;
-    }
-
-    /**
-     * Convert the URL into a string. If the URL string contains blank spaces,
-     * which may happen if the <code>File.toURL()</code> method is used on
-     * files whose path contains blank spaces, this method replaces the blank
-     * spaces with their URL encoding <code>%20</code>. No other encoding
-     * takes place.
-     * <p>
-     * Note: This is a quick solution to a problem with the CQSE servlet
-     * container which uses the File.toURL() method to return an URL for a web
-     * application contained resource.
-     *
-     * @param url The <code>URL</code> to convert into a string
-     * @return The URL string with any blanks replaced by "%20"
-     */
-    private String toString(URL url) {
-        String urlS = url.toExternalForm();
-
-        // return unmodified, if there is no blank
-        if (urlS.indexOf(' ') < 0) {
-            return urlS;
-        }
-
-        // otherwise replace all blanks with "%20"
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < urlS.length(); i++) {
-            char c = urlS.charAt(i);
-            if (c == ' ') {
-                buf.append("%20");
-            } else {
-                buf.append(c);
-            }
-        }
-        return buf.toString();
     }
 
     // ---------- Extension support --------------------------------------------
