@@ -61,8 +61,8 @@ public interface Resource {
     ResourceMetadata getResourceMetadata();
 
     /**
-     * Adapts this resource to another type. A JCR based resource might provided
-     * adapters to the JCR Node on which the resource is based.
+     * Adapts this resource to another type. A JCR based resource might support
+     * adapting to the JCR Node on which the resource is based.
      * 
      * @param <AdapterType> The generic type to which this resource is adapted
      *            to
