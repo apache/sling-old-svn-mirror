@@ -129,7 +129,7 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>resourceManagerName</name>
+            <name>resourceResolverName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
         </attribute>

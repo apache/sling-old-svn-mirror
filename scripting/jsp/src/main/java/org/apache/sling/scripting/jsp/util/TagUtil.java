@@ -25,7 +25,7 @@ import javax.servlet.jsp.PageContext;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.ResourceManager;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 
 /**
@@ -113,10 +113,10 @@ public final class TagUtil {
         return (SlingHttpServletResponse) req;
     }
 
-    public static ResourceManager getResourceManager(PageContext pageContext) {
+    public static ResourceResolver getResourceResolver(PageContext pageContext) {
         try {
             SlingHttpServletRequest request = getRequest(pageContext);
-            return (ResourceManager) request.getResourceResolver();
+            return request.getResourceResolver();
         } catch (ClassCastException cce) {
             throw new IllegalStateException("resource resolver wrong class");
         }
