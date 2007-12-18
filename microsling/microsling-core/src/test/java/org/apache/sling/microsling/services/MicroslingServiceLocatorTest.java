@@ -64,6 +64,10 @@ public class MicroslingServiceLocatorTest extends TestCase {
             public Resource resolve(HttpServletRequest request) {
                 return null;
             }
+            
+            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+                return null;
+            }
 
         });
         serviceLocator = sl;

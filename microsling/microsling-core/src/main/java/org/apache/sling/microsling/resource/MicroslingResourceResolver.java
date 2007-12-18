@@ -305,6 +305,20 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
     }
 
+    /** Returns an adapter for the given class */
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type == Session.class) {
+            try {
+                return (AdapterType) getSession();
+            } catch (SlingException se) {
+                log.warn("Cannot get Session", se);
+            }
+        }
+        
+        return null;
+    }
+    
     /** Returns the session used by this resolver */
     protected Session getSession() throws SlingException {
         if (session != null && session.isLive()) {
