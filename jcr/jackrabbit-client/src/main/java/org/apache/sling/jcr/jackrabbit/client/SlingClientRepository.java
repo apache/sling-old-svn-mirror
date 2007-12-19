@@ -103,8 +103,8 @@ public class SlingClientRepository extends AbstractSlingRepository
     //---------- Repository Publication ---------------------------------------
 
     private Repository getRepository() throws RepositoryException {
-
-        Dictionary environment = this.getComponentContext().getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> environment = this.getComponentContext().getProperties();
 
         String repoName = (String) environment.get(REPOSITORY_NAME);
         if (repoName == null) {
@@ -112,7 +112,7 @@ public class SlingClientRepository extends AbstractSlingRepository
         }
 
         // try JNDI
-        Hashtable jndiContext = this.fromDictionary(environment);
+        Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
         ClassLoader old = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
@@ -146,10 +146,10 @@ public class SlingClientRepository extends AbstractSlingRepository
 
     //---------- internal -----------------------------------------------------
 
-    private Hashtable fromDictionary(Dictionary source) {
-        Hashtable table = new Hashtable();
-        for (Enumeration ke=source.keys(); ke.hasMoreElements(); ) {
-            Object key = ke.nextElement();
+    private Hashtable<String, Object> fromDictionary(Dictionary<String, Object> source) {
+        Hashtable<String, Object> table = new Hashtable<String, Object>();
+        for (Enumeration<String> ke=source.keys(); ke.hasMoreElements(); ) {
+            String key = ke.nextElement();
             table.put(key, source.get(key));
         }
         return table;
