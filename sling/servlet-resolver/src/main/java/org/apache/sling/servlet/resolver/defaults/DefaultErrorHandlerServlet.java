@@ -70,13 +70,9 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
     }
 
     /**
-     * Returns the stack trace for the root exception in this. If this does not
-     * contain exception - as is the case if not handling a thrown exception,
-     * the method returned the undefined value.
-     *
-     * @return The stacktrace for the rootException or the undefined value if
-     *         this has no rootException, that is if not handling a thrown
-     *         exception.
+     * Print the stack trace for the root exception if the throwable is a
+     * {@link ServletException}. If this does not contain an exception,
+     * the throwable itself is printed.
      */
     private void printStackTrace(PrintWriter pw, Throwable t) {
         // nothing to do, if there is no exception
@@ -123,11 +119,11 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
         pw.println("<h1>" + statusMessage + " (" + statusCode + ")</h1>");
         pw.print("<p>The requested URL " + requestUri
             + " resulted in an error");
-        
+
         if (servletName != null) {
             pw.print(" in " + servletName);
         }
-        
+
         pw.println(".</p>");
 
         return pw;
