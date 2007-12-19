@@ -63,7 +63,7 @@ public class LocaleResolverFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
             FilterChain filterChain) throws IOException, ServletException {
 
-        // assert request data on request (may throw ComponentException if none)
+        // assert request data on request (may throw SlingException if none)
         RequestData requestData = RequestData.getRequestData(request);
 
         // get locale from Servlet request or locale resolver
