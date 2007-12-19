@@ -21,7 +21,6 @@ package org.apache.sling.scripting.javascript;
 import javax.script.ScriptEngine;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
-import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.mozilla.javascript.Context;
@@ -38,7 +37,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
     public final static String ESP_SCRIPT_EXTENSION = "esp";
 
     private final String languageVersion;
-    
+
     private Scriptable rootScope;
 
     public RhinoJavaScriptEngineFactory() {
@@ -71,7 +70,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
         if (rootScope == null) {
             final Context rhinoContext = Context.enter();
             rootScope = rhinoContext.initStandardObjects();
-            
+
             try {
                 ScriptableObject.defineClass(rootScope, ScriptableResource.class);
                 ScriptableObject.defineClass(rootScope, ScriptableNode.class);
@@ -79,7 +78,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
                 // TODO: log
             }
         }
-        
+
         return rootScope;
     }
 }

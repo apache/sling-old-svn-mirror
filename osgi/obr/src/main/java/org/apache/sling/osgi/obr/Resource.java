@@ -48,7 +48,7 @@ import aQute.lib.osgi.Analyzer;
  * @author fmeschbe
  * @version $Rev$, $Date: 2007-07-02 16:13:58 +0200 (Mon, 02 Jul 2007) $
  */
-public class Resource implements Serializable, Comparable {
+public class Resource implements Serializable, Comparable<Resource> {
 
     /**
      * The name of the bundle manifest header providing the specification(s) of
@@ -75,8 +75,8 @@ public class Resource implements Serializable, Comparable {
     private String source;
     private SortedSet<String> categories;
 
-    private SortedMap capabilities;
-    private SortedMap requirements;
+    private SortedMap<String, List<Object>> capabilities;
+    private SortedMap<String, List<Object>> requirements;
 
     private BundleSpec[] bundleSpecs;
 
@@ -103,8 +103,8 @@ public class Resource implements Serializable, Comparable {
     private Resource(URL resourceURL, Attributes attrs, long size)
             throws IOException {
 
-        this.capabilities = new TreeMap();
-        this.requirements = new TreeMap();
+        this.capabilities = new TreeMap<String, List<Object>>();
+        this.requirements = new TreeMap<String, List<Object>>();
 
         this.resourceURL = resourceURL;
         this.name = this.getName(resourceURL.getPath());
@@ -162,7 +162,7 @@ public class Resource implements Serializable, Comparable {
         this.addToMapList(this.capabilities, capability.getName(), capability);
     }
 
-    public Iterator getCapabilities() {
+    public Iterator<Object> getCapabilities() {
         return this.getMapListIterator(this.capabilities);
     }
 
@@ -170,11 +170,11 @@ public class Resource implements Serializable, Comparable {
         this.addToMapList(this.requirements, requirement.getName(), requirement);
     }
 
-    public Iterator getRequirements() {
+    public Iterator<Object> getRequirements() {
         return this.getMapListIterator(this.requirements);
     }
 
-    public SortedSet getCategories() {
+    public SortedSet<String> getCategories() {
         return this.categories;
     }
 
@@ -341,8 +341,7 @@ public class Resource implements Serializable, Comparable {
         this.printElement(out, childIndent, "license", this.license);
         this.printElement(out, childIndent, "source", this.source);
 
-        for (Iterator ci=this.getCategories().iterator(); ci.hasNext(); ) {
-            String cat = (String) ci.next();
+        for (String cat : this.getCategories() ) {
             out.print("<category");
             this.printAttribute(out, "id", cat);
             out.println("/>");
@@ -358,14 +357,13 @@ public class Resource implements Serializable, Comparable {
     //---------- Comparable interface -----------------------------------------
 
     /**
-     * @throws ClassCastException if <code>obj</code> is not <code>Resource</code>
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(Object obj) {
-        if (this.equals(obj)) {
+    public int compareTo(Resource other) {
+        if (this.equals(other)) {
             return 0;
         }
 
-        Resource other = (Resource) obj;
         if (this.getSymbolicName().equals(other.getSymbolicName())) {
             // compare version
             Version thisVersion = new Version(this.getVersion());
@@ -475,10 +473,10 @@ public class Resource implements Serializable, Comparable {
         }
     }
 
-    private void addToMapList(Map map, String name, Object value) {
-        List current = (List) map.get(name);
+    private void addToMapList(Map<String, List<Object>> map, String name, Object value) {
+        List<Object> current = map.get(name);
         if (current == null) {
-            current = new ArrayList();
+            current = new ArrayList<Object>();
             map.put(name, current);
         }
         current.add(value);
@@ -490,7 +488,7 @@ public class Resource implements Serializable, Comparable {
             this.bundleSpecs = new BundleSpec[0];
         } else {
             spec = spec.trim();
-            List specs = new ArrayList();
+            List<BundleSpec> specs = new ArrayList<BundleSpec>();
             boolean quoted = false;
             int start = 0;
             for (int i = 0; i < spec.length(); i++) {
@@ -516,14 +514,14 @@ public class Resource implements Serializable, Comparable {
             if (start < spec.length()) {
                 specs.add(new BundleSpec(spec.substring(start)));
             }
-            this.bundleSpecs = (BundleSpec[]) specs.toArray(new BundleSpec[specs.size()]);
+            this.bundleSpecs = specs.toArray(new BundleSpec[specs.size()]);
         }
     }
 
-    private Iterator getMapListIterator(final Map map) {
-        return new Iterator() {
-            private Iterator mapIter;
-            private Iterator listIter;
+    private Iterator<Object> getMapListIterator(final Map<String, List<Object>> map) {
+        return new Iterator<Object>() {
+            private Iterator<List<Object>> mapIter;
+            private Iterator<Object> listIter;
             private Object next;
 
             {
@@ -548,7 +546,7 @@ public class Resource implements Serializable, Comparable {
             private Object seek() {
                 while (this.listIter == null || !this.listIter.hasNext()) {
                     if (this.mapIter.hasNext()) {
-                        List nextlist = (List) this.mapIter.next();
+                        List<Object> nextlist = this.mapIter.next();
                         this.listIter = nextlist.iterator();
                     } else {
                         return null;
