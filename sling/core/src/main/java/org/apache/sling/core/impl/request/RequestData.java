@@ -140,8 +140,10 @@ public class RequestData implements BufferProvider {
 
         // finally resolve the servlet for the resource
         ServletResolver sr = slingMainServlet.getServletResolver();
-        Servlet servlet = sr.resolveServlet(slingRequest);
-        contentData.setServlet(servlet);
+        if (sr != null) {
+            Servlet servlet = sr.resolveServlet(slingRequest);
+            contentData.setServlet(servlet);
+        }
     }
 
     public void dispose() {
