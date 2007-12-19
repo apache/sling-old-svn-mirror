@@ -19,6 +19,7 @@
 package org.apache.sling.core.impl;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.security.AccessControlException;
 import java.util.ArrayList;
@@ -53,14 +54,13 @@ import org.apache.sling.core.impl.auth.SlingAuthenticator;
 import org.apache.sling.core.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.core.impl.filter.SlingComponentFilterChain;
 import org.apache.sling.core.impl.filter.SlingFilterChainHelper;
-import org.apache.sling.core.impl.helper.AbstractServiceReferenceConfig;
 import org.apache.sling.core.impl.helper.SlingFilterConfig;
 import org.apache.sling.core.impl.helper.SlingServletContext;
 import org.apache.sling.core.impl.request.ContentData;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.impl.services.ServiceLocatorImpl;
-import org.apache.sling.core.impl.servlets.ErrorHandler;
-import org.apache.sling.core.impl.servlets.SlingServletResolver;
+import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
+import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -83,7 +83,7 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
  *                cardinality="0..n" policy="dynamic"
  */
-public class SlingMainServlet extends GenericServlet {
+public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
@@ -126,6 +126,12 @@ public class SlingMainServlet extends GenericServlet {
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private MimeTypeService mimeTypeService;
 
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private ServletResolver servletResolver;
+
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private ErrorHandler errorHandler;
+    
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
@@ -135,10 +141,6 @@ public class SlingMainServlet extends GenericServlet {
     private ServiceLocatorImpl slingServiceLocator;
 
     private SlingAuthenticator slingAuthenticator;
-
-    private SlingServletResolver servletResolver;
-
-    private ErrorHandler errorHandler;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -158,7 +160,7 @@ public class SlingMainServlet extends GenericServlet {
     // ---------- Request Handling on behalf of the servlet -------------------
 
     public void service(HttpServletRequest clientRequest,
-            HttpServletResponse clientResponse) throws IOException {
+            HttpServletResponse clientResponse) throws ServletException, IOException {
 
         Session session = (Session) clientRequest.getAttribute(SlingHttpContext.SESSION);
         if (session != null) {
@@ -269,10 +271,94 @@ public class SlingMainServlet extends GenericServlet {
         } else {
             log.debug("service: No Resource level filters, calling servlet");
             Servlet servlet = RequestData.getRequestData(request).getContentData().getServlet();
-            servlet.service(request, response);
+            if (servlet != null) {
+                servlet.service(request, response);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                    "No Servlet or Script to handle request to "
+                        + request.getResource().getURI());
+            }
         }
     }
 
+    // ---------- ErrorHandler interface (default implementation) --------------
+    
+    // reset the response, set the status and write a simple message
+    public void handleError(int status, String message,
+            HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        if (message == null) {
+            message = String.valueOf(status);
+        } else {
+            message = status + " - " + message;
+        }
+        
+        if (response.isCommitted()) {
+            log.error("handleError: Response already committed; cannot send error "
+                + status + message);
+        } else {
+        
+            // reset anything in the response first
+            response.reset();
+            
+            // set the status, content type and encoding
+            response.setStatus(status);
+            response.setContentType("text/html; charset=UTF-8");
+            
+            PrintWriter pw = response.getWriter();
+            pw.println("<html><head><title>");
+            pw.println(message);
+            pw.println("</title></head><body><h1>");
+            pw.println("HTTP ERROR:" + message);
+            pw.println("</h1><p>");
+            pw.println("RequestURI=" + request.getRequestURI());
+            pw.println("</p><hr /><address>");
+            pw.println(getServerInfo());
+            pw.println("</address></body></html>");
+
+            // commit the response
+            response.flushBuffer();
+
+        }
+    }
+
+    // just rethrow the exception as explained in the class comment
+    public void handleError(Throwable throwable, HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+
+        if (response.isCommitted()) {
+            log.error(
+                "handleError: Response already committed; cannot send error",
+                throwable);
+        } else {
+        
+            // reset anything in the response first
+            response.reset();
+            
+            // set the status, content type and encoding
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("text/html; charset=UTF-8");
+
+            PrintWriter pw = response.getWriter();
+            pw.println("<html><head><title>");
+            pw.println(throwable.getMessage());
+            pw.println("</title></head><body><h1>");
+            pw.println(throwable.toString());
+            pw.println("</h1><p>");
+            pw.println("RequestURI=" + request.getRequestURI());
+            pw.println("</p><pre>");
+            throwable.printStackTrace(pw);
+            pw.println("</pre><hr /><address>");
+            pw.println(getServerInfo());
+            pw.println("</address></body></html>");
+            
+            // commit the response
+            response.flushBuffer();
+
+        }
+    }
+    
     // ---------- Internal helper ----------------------------------------------
 
     public String getServerInfo() {
@@ -300,7 +386,8 @@ public class SlingMainServlet extends GenericServlet {
     }
 
     public ErrorHandler getErrorHandler() {
-        return errorHandler;
+        ErrorHandler eh = errorHandler;
+        return (eh != null) ? eh : this;
     }
 
     // ---------- Property Setter for SCR --------------------------------------
@@ -349,9 +436,6 @@ public class SlingMainServlet extends GenericServlet {
         SlingServletContext tmpServletContext = new SlingServletContext(this);
         slingServiceLocator = new ServiceLocatorImpl(bundleContext);
         slingAuthenticator = new SlingAuthenticator(bundleContext);
-        servletResolver = new SlingServletResolver(bundleContext,
-            tmpServletContext);
-        errorHandler = new ErrorHandler(bundleContext, tmpServletContext);
 
         // register the servlet and resources
         try {
@@ -410,14 +494,6 @@ public class SlingMainServlet extends GenericServlet {
         destroyFilters(innerFilterChain);
         destroyFilters(requestFilterChain);
 
-        if (errorHandler != null) {
-            errorHandler.dispose();
-            errorHandler = null;
-        }
-        if (servletResolver != null) {
-            servletResolver.dispose();
-            servletResolver = null;
-        }
         if (slingAuthenticator != null) {
             slingAuthenticator.dispose();
             slingAuthenticator = null;

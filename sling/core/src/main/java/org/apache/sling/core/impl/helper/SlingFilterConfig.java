@@ -21,9 +21,11 @@ package org.apache.sling.core.impl.helper;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 
+import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
 import org.osgi.framework.ServiceReference;
 
-public class SlingFilterConfig extends AbstractServiceReferenceConfig implements FilterConfig {
+public class SlingFilterConfig extends AbstractServiceReferenceConfig implements
+        FilterConfig {
 
     public SlingFilterConfig(ServletContext servletContext,
             ServiceReference reference, String filterName) {
