@@ -18,7 +18,6 @@
  */
 package sun.misc;
 
-import java.awt.image.ImagingOpException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +45,7 @@ import java.util.NoSuchElementException;
 public class Service {
 
     private static final String PREFIX = "META-INF/services/";
-    
+
     /** Returns an empty iterator */
     public static <ProviderType> Iterator<ProviderType> providers(Class<ProviderType> type, ClassLoader loader) throws IOException {
         if (loader != null) {
@@ -62,47 +61,47 @@ public class Service {
     }
 
     private static class NameIterator<ProviderType> implements Iterator<ProviderType> {
-        
+
         private final ClassLoader loader;
-        
+
         private final Enumeration<?> files;
 
         private Iterator<String> currentFile;
-        
+
         private ProviderType nextProvider;
-        
+
         public NameIterator(ClassLoader loader, Enumeration<?> files) {
             this.loader = loader;
             this.files = files;
             seek();
         }
-        
+
         public boolean hasNext() {
             return nextProvider != null;
         }
-        
+
         public ProviderType next() {
             if (nextProvider == null) {
                 throw new NoSuchElementException();
             }
-            
+
             ProviderType result = nextProvider;
             seek();
             return result;
         }
-        
+
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
         private void seek() {
             if (currentFile == null || !currentFile.hasNext()) {
                 currentFile = getNames();
             }
-            
+
             nextProvider = getClass(currentFile);
         }
-        
+
         private Iterator<String> getNames() {
             while (files.hasMoreElements()) {
                 URL fileUrl = (URL) files.nextElement();
@@ -118,15 +117,15 @@ public class Service {
                             name = name.substring(0, hash);
                         }
                         name = name.trim();
-                        
+
                         if (name.length() > 0) {
                             names.add(name);
                         }
                     }
-                    
+
                     return names.iterator();
                 } catch (IOException ioe) {
-                    
+
                 } finally {
                     if (ins != null) {
                         try {
@@ -140,7 +139,7 @@ public class Service {
             // exhausted search
             return null;
         }
-        
+
         @SuppressWarnings("unchecked")
         private ProviderType getClass(Iterator<String> currentFile) {
             if (currentFile != null && currentFile.hasNext()) {
@@ -149,10 +148,10 @@ public class Service {
                     Class<?> clazz = Class.forName(name, true, loader);
                     return (ProviderType) clazz.newInstance();
                 } catch (Throwable t) {
-                    // 
+                    //
                 }
             }
-            
+
             return null;
         }
     }
