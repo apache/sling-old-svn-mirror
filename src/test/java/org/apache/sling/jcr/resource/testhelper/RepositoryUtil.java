@@ -79,7 +79,7 @@ public class RepositoryUtil {
     /**
      * Stop a repository.
      *
-     * @throws RepositoryException when it is not possible to stop the
+     * @throws NamingException when it is not possible to stop the
      *             repository
      * @throws NamingException
      */
@@ -92,7 +92,7 @@ public class RepositoryUtil {
      * Get a repository
      *
      * @return a JCR repository reference
-     * @throws RepositoryException when it is not possible to get the
+     * @throws NamingException when it is not possible to get the
      *             repository. Before calling this method, the repository has to
      *             be registered (@see RepositoryUtil#registerRepository(String,
      *             String, String)
