@@ -22,19 +22,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.Servlet;
+
 public class RequestUtil {
 
     /**
      * Parses a header of the form:
-     *
+     * 
      * <pre>
      *            Header = Token { &quot;,&quot; Token } .
      *            Token = name { &quot;;&quot; Parameter } .
      *            Paramter = name [ &quot;=&quot; value ] .
      * </pre>
-     *
+     * 
      * "," and ";" are not allowed within name and value
-     *
+     * 
      * @param value
      * @return A Map indexed by the Token names where the values are Map
      *         instances indexed by parameter name
@@ -66,15 +68,15 @@ public class RequestUtil {
 
     /**
      * Parses an <code>Accept-*</code> header of the form:
-     *
+     * 
      * <pre>
      *            Header = Token { &quot;,&quot; Token } .
      *            Token = name { &quot;;&quot; &quot;q&quot; [ &quot;=&quot; value ] } .
      *            Paramter =  .
      * </pre>
-     *
+     * 
      * "," and ";" are not allowed within name and value
-     *
+     * 
      * @param value
      * @return A Map indexed by the Token names where the values are
      *         <code>Double</code> instances providing the value of the
@@ -104,5 +106,32 @@ public class RequestUtil {
             }
         }
         return result;
+    }
+
+    /**
+     * Utility method to return a name for the given servlet. This method
+     * applies the following algorithm to find a non-<code>null</code>,
+     * non-empty name:
+     * <ol>
+     * <li>If the servlet has a servlet config, the servlet name from the
+     * servlet config is taken.
+     * <li>Otherwise check the servlet info
+     * <li>Otherwise use the fully qualified name of the servlet class
+     * </ol>
+     */
+    public static String getServletName(Servlet servlet) {
+        String name = null;
+
+        if (servlet.getServletConfig() != null) {
+            name = servlet.getServletConfig().getServletName();
+        }
+        if (name == null || name.length() == 0) {
+            name = servlet.getServletInfo();
+        }
+        if (name == null || name.length() == 0) {
+            name = servlet.getClass().getName();
+        }
+
+        return name;
     }
 }
