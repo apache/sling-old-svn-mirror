@@ -71,7 +71,7 @@ public class SlingServletContext implements ServletContext {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** The {@link SlingMainServlet} to which some calls are delegated */
-    private final SlingMainServlet requestHandler;
+    private final SlingMainServlet slingMainServlet;
 
     /** The service registration of this service as a ManagedService */
     private final ServiceRegistration registration;
@@ -82,14 +82,14 @@ public class SlingServletContext implements ServletContext {
      * a <code>ManagedService</code> and <code>ServletContext</code> to
      * receive configuration information.
      */
-    public SlingServletContext(SlingMainServlet requestHandler) {
-        this.requestHandler = requestHandler;
+    public SlingServletContext(SlingMainServlet slingMainServlet) {
+        this.slingMainServlet = slingMainServlet;
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Sling ServletContext");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        registration = requestHandler.getBundleContext().registerService(
+        registration = slingMainServlet.getBundleContext().registerService(
             ServletContext.class.getName(), this, props);
     }
 
@@ -111,6 +111,15 @@ public class SlingServletContext implements ServletContext {
      */
     public String getServletContextName() {
         return getServletContext().getServletContextName();
+    }
+
+    /** Returns the context path of the web application. (Servlet API 2.5) */
+    public String getContextPath() {
+        try {
+            return (String) getServletContext().getClass().getMethod("getContextPath", (Class<?>[]) null).invoke(getServletContext(), (Object[]) null);
+        } catch (Exception ignore) {
+            return null;
+        }
     }
 
     /**
@@ -178,7 +187,7 @@ public class SlingServletContext implements ServletContext {
      * string as returned by the servlet context in which Sling is configured.
      */
     public String getServerInfo() {
-        return requestHandler.getServerInfo();
+        return slingMainServlet.getServerInfo();
     }
 
     /**
@@ -324,24 +333,14 @@ public class SlingServletContext implements ServletContext {
         return Collections.enumeration(Collections.emptyList());
     }
 
-    /** Returns the context path of the web application. (Servlet API 2.5) */
-    public String getContextPath() {
-        try {
-            return (String) getServletContext().getClass().getMethod("getContextPath", null).invoke(getServletContext(), null);
-        } catch (Exception ignore) {
-            return null;
-        }
-    }
-
     // ---------- internal -----------------------------------------------------
-
 
     /**
      * Returns the real servlet context of the servlet container in which the
      * Sling Servlet is running.
      */
     private ServletContext getServletContext() {
-        return requestHandler.getServletContext();
+        return slingMainServlet.getServletContext();
     }
 
 }
