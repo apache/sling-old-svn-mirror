@@ -33,7 +33,7 @@ public class ServletResolverConstants {
      * The name of the registered servlet used as the default servlet if no
      * other servlet or script could be selected (value is
      * "sling.core.servlet.default"). If no servlet is registered under this
-     * name, the {@link org.apache.sling.core.servlets.DefaultServlet} is used.
+     * name, the {@link org.apache.sling.servlet.resolver.defaults.DefaultServlet} is used.
      */
     public static final String DEFAULT_SERVLET_NAME = "sling.core.servlet.default";
 

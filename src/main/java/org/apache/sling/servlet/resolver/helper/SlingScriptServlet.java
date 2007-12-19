@@ -18,10 +18,8 @@
  */
 package org.apache.sling.servlet.resolver.helper;
 
-import static java.lang.Boolean.TRUE;
-import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
-import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
-import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
+import static java.lang.Boolean.*;
+import static org.apache.sling.api.scripting.SlingBindings.*;
 
 import java.io.IOException;
 
@@ -39,12 +37,12 @@ import org.apache.sling.api.scripting.SlingScript;
 /**
  * The <code>SlingScriptServlet</code> is a servlet encapsulating a
  * <code>SlingScript</code> instance for unified use in the
- * {@link SlingServletResolver}.
+ * {@link org.apache.sling.servlet.resolver.SlingServletResolver}.
  */
 public class SlingScriptServlet implements Servlet {
 
     private ServletConfig servletConfig;
-    
+
     /**
      * The script to call in the
      * {@link #service(ServletRequest, ServletResponse)} method.
