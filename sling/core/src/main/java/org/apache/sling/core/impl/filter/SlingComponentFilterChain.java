@@ -21,13 +21,11 @@ package org.apache.sling.core.impl.filter;
 import java.io.IOException;
 
 import javax.servlet.Filter;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.impl.request.RequestData;
-
 
 /**
  * The <code>SlingComponentFilterChain</code> implements the filter chain for
@@ -41,9 +39,9 @@ public class SlingComponentFilterChain extends AbstractSlingFilterChain {
         super(filters);
     }
 
-    protected void render(ServletRequest request, ServletResponse response)
-            throws IOException, ServletException {
-        Servlet servlet = RequestData.getRequestData(request).getContentData().getServlet();
-        servlet.service(request, response);
+    protected void render(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException,
+            ServletException {
+        RequestData.service(request, response);
     }
 }

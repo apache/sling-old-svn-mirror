@@ -66,6 +66,15 @@ public class CoreConstants {
     public static final String SLING_ID = "sling.id";
 
     /**
+     * The name of the request attribute providing the name of the currently
+     * executing servlet (value is "sling.core.current.servletName"). This
+     * attribute is set immediately before calling the
+     * <code>Servlet.service()</code> method and reset to any previously
+     * stored value after the service method returns.
+     */
+    public static final String SLING_CURRENT_SERVLET_NAME = "sling.core.current.servletName";
+
+    /**
      * The name of the service registration property of a Servlet registered as
      * a service containing the name of the servlet (value is
      * "sling.core.servletName"). If this property is missing or empty, the
