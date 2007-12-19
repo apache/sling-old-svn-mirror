@@ -26,6 +26,9 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+
 public abstract class AbstractSlingFilterChain implements FilterChain {
 
     private Filter[] filters;
@@ -38,7 +41,8 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
     }
 
     /**
-     * @see javax.servlet.FilterChain#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
+     * @see javax.servlet.FilterChain#doFilter(javax.servlet.ServletRequest,
+     *      javax.servlet.ServletResponse)
      */
     public void doFilter(ServletRequest request, ServletResponse response)
             throws ServletException, IOException {
@@ -47,10 +51,12 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
         if (this.current < this.filters.length) {
             this.filters[this.current].doFilter(request, response, this);
         } else {
-            this.render(request, response);
+            this.render((SlingHttpServletRequest) request,
+                (SlingHttpServletResponse) response);
         }
     }
 
-    protected abstract void render(ServletRequest request,
-            ServletResponse response) throws IOException, ServletException;
+    protected abstract void render(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException,
+            ServletException;
 }
