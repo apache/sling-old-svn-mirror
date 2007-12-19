@@ -18,11 +18,7 @@
  */
 package org.apache.sling.scripting.velocity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 

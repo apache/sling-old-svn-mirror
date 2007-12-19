@@ -18,15 +18,10 @@ package org.apache.sling.scripting.ruby;
 
 import java.io.BufferedReader;
 import java.io.Reader;
-import java.io.StringReader;
 
-import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
-import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;

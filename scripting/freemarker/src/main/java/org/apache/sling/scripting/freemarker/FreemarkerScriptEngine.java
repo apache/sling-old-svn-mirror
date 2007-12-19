@@ -16,20 +16,13 @@
  */
 package org.apache.sling.scripting.freemarker;
 
-import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
 
-import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -60,7 +53,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
         if (helper == null) {
             throw new ScriptException("SlingScriptHelper missing from bindings");
         }
-        
+
         // ensure GET request
         if (!"GET".equals(helper.getRequest().getMethod())) {
             throw new ScriptException(
@@ -68,7 +61,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
         }
 
         String scriptName = helper.getScript().getScriptResource().getURI();
-        
+
         try {
             Template tmpl = new Template(scriptName, reader, configuration);
             tmpl.process(bindings, scriptContext.getWriter());

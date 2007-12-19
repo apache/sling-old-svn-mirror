@@ -18,9 +18,7 @@ package org.apache.sling.scripting.javascript.wrapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -31,7 +29,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
-import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
@@ -42,9 +39,9 @@ import org.mozilla.javascript.Undefined;
  * as properties of a Javascript object.
  */
 public class ScriptableNode extends ScriptableObject {
-    
+
     public static final String CLASSNAME = "Node";
-    
+
 	private Node node;
 
 	public ScriptableNode() {
@@ -62,7 +59,7 @@ public class ScriptableNode extends ScriptableObject {
 	public String getClassName() {
 		return CLASSNAME;
 	}
-	
+
 	/**
 	 * Gets the value of a (Javascript) property. If there is a single single-value
 	 * JCR property of this node, return its string value. If there are multiple properties
@@ -71,7 +68,7 @@ public class ScriptableNode extends ScriptableObject {
 	@Override
 	public Object get(String name, Scriptable start) {
 		List<Scriptable> items = new ArrayList<Scriptable>();
-		
+
 		// add all matching nodes
 		try {
 			NodeIterator it = node.getNodes(name);
@@ -112,7 +109,7 @@ public class ScriptableNode extends ScriptableObject {
 	        return result;
 		}
 	}
-	
+
 	private Scriptable wrap(Value value, int type) throws ValueFormatException, IllegalStateException, RepositoryException {
 	    Object valObj;
 		if (type==PropertyType.BINARY) {
@@ -124,7 +121,7 @@ public class ScriptableNode extends ScriptableObject {
 		} else {
 		    valObj = value.getString();
 		}
-		
+
 		return ScriptRuntime.toObject(this, valObj);
 	}
 

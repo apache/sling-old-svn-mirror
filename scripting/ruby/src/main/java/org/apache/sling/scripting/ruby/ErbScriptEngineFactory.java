@@ -18,15 +18,10 @@
  */
 package org.apache.sling.scripting.ruby;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.jruby.runtime.Constants;
-import org.w3c.dom.views.AbstractView;
 
 public class ErbScriptEngineFactory extends AbstractScriptEngineFactory {
 
