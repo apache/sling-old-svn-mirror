@@ -23,8 +23,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.osgi.assembly.installer.BundleRepositoryAdmin;
+import org.apache.sling.osgi.assembly.installer.Repository;
 import org.osgi.framework.Version;
-import org.osgi.service.obr.Repository;
 import org.osgi.service.obr.RepositoryAdmin;
 import org.osgi.service.obr.Resource;
 
@@ -61,15 +61,15 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      *
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getRepositories()
      */
-    public Iterator getRepositories() {
+    public Iterator<Repository> getRepositories() {
         Object lock = this.installerService.acquireLock(0);
         try {
-            Repository[] repos = this.getRepositoryAdmin().listRepositories();
+            org.osgi.service.obr.Repository[] repos = this.getRepositoryAdmin().listRepositories();
             if (repos == null || repos.length == 0) {
                 return Collections.EMPTY_LIST.iterator();
             }
 
-            SortedSet urlSet = new TreeSet();
+            SortedSet<Repository> urlSet = new TreeSet<Repository>();
             for (int i = 0; i < repos.length; i++) {
                 urlSet.add(new RepositoryImpl(repos[i]));
             }
@@ -87,7 +87,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     public Iterator<org.apache.sling.osgi.assembly.installer.Resource> getResources() {
         Object lock = this.installerService.acquireLock(0);
         try {
-            Repository[] repos = this.getRepositoryAdmin().listRepositories();
+            org.osgi.service.obr.Repository[] repos = this.getRepositoryAdmin().listRepositories();
             if (repos == null || repos.length == 0) {
                 return Collections.EMPTY_LIST.iterator();
             }
@@ -116,7 +116,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
         // note: refreshing is implemented by re-adding the repositories
         Object lock = this.installerService.acquireLock(0);
         try {
-            Repository[] repos = this.getRepositoryAdmin().listRepositories();
+            org.osgi.service.obr.Repository[] repos = this.getRepositoryAdmin().listRepositories();
             for (int i = 0; repos != null && i < repos.length; i++) {
                 this.addRepository(repos[i].getURL());
             }
@@ -148,7 +148,7 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     // ---------- internal classes ---------------------------------------------
 
     private static class ResourceImpl implements
-            org.apache.sling.osgi.assembly.installer.Resource, Comparable {
+            org.apache.sling.osgi.assembly.installer.Resource, Comparable<ResourceImpl> {
 
         private final Resource delegatee;
 
@@ -174,13 +174,10 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
 
         // ---------- Comparable -----------------------------------------------
 
-        public int compareTo(Object obj) {
-            if (this == obj) {
+        public int compareTo(ResourceImpl other) {
+            if (this == other) {
                 return 0;
             }
-
-            // ClassCastException is allowed to be thrown here
-            ResourceImpl other = (ResourceImpl) obj;
 
             if (this.getSymbolicName().equals(other.getSymbolicName())) {
                 return this.getVersion().compareTo(other.getVersion());
@@ -212,11 +209,11 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
     }
 
     private static class RepositoryImpl implements
-            org.apache.sling.osgi.assembly.installer.Repository, Comparable {
+            Repository, Comparable<RepositoryImpl> {
 
-        private final Repository delegatee;
+        private final org.osgi.service.obr.Repository delegatee;
 
-        RepositoryImpl(Repository delegatee) {
+        RepositoryImpl(org.osgi.service.obr.Repository delegatee) {
             this.delegatee = delegatee;
         }
 
@@ -234,13 +231,10 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
 
         // ---------- Comparable -----------------------------------------------
 
-        public int compareTo(Object obj) {
-            if (this == obj) {
+        public int compareTo(RepositoryImpl other) {
+            if (this == other) {
                 return 0;
             }
-
-            // ClassCastException is allowed to be thrown here
-            RepositoryImpl other = (RepositoryImpl) obj;
 
             if (this.getName().equals(other.getName())) {
                 return this.getURL().toString().compareTo(other.getURL().toString());

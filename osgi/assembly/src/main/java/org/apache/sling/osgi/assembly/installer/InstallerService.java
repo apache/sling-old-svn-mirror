@@ -32,7 +32,7 @@ public interface InstallerService {
      * <p>
      * Each call to this method returns a new installer instance.
      *
-     * @return
+     * @return An installer.
      */
     Installer getInstaller();
 

@@ -117,7 +117,7 @@ public interface Installer {
     /**
      * Install the bundles added to this installer via the
      * {@link #addBundle(String, InputStream, int)} and
-     * {@link #addBundle(String, String, int)} methods. Bundles from
+     * {@link #addBundle(String, URL, int)} methods. Bundles from
      * InputStreams are installed before bundles retrieved from an OSGi Bundle
      * Repository. For each bundle installed, the respective start level is set
      * and the bundles are started (or persistently marked started if the
@@ -129,7 +129,7 @@ public interface Installer {
      * @retrun An array of bundles installed. This is the complete list of
      *         bundles installed, which may exceed the bundles added through the
      *         {@link #addBundle(String, InputStream, int)} and
-     *         {@link #addBundle(String, String, int)} method as some bundles
+     *         {@link #addBundle(String, URL, int)} method as some bundles
      *         might have been added to resolve dependencies. If no bundles have
      *         been added, this method returns <code>null</code>.
      * @throws InstallerException
