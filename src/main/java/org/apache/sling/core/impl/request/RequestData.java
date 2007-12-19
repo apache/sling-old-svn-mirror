@@ -20,6 +20,7 @@ package org.apache.sling.core.impl.request;
 
 import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_CONTENT;
 import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_SERVLET;
+import static org.apache.sling.core.CoreConstants.SLING_CURRENT_SERVLET_NAME;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -53,6 +54,8 @@ import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.core.CoreConstants;
+import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.core.impl.SlingMainServlet;
@@ -68,7 +71,7 @@ import org.slf4j.LoggerFactory;
  * The <code>RequestData</code> class provides access to objects which are set
  * on a Servlet Request wide basis such as the repository session, the
  * persistence manager, etc.
- *
+ * 
  * @see ContentData
  */
 public class RequestData implements BufferProvider {
@@ -107,17 +110,34 @@ public class RequestData implements BufferProvider {
 
     /** the stack of ContentData objects */
     private LinkedList<ContentData> contentDataStack;
+    
+    /**
+     * the number of servlets called by
+     * {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
+     */
+    private int servletCallCounter;
+
+    /**
+     * The name of the currently active serlvet.
+     * 
+     * @see #setActiveServletName(String)
+     * @see #getActiveServletName()
+     */
+    private String activeServletName;
 
     public RequestData(SlingMainServlet slingMainServlet, Session session,
-            HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+            HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
         this.slingMainServlet = slingMainServlet;
 
         this.servletRequest = request;
         this.servletResponse = response;
 
-        this.slingRequest = new SlingHttpServletRequestImpl(this, servletRequest);
-        this.slingResponse = new SlingHttpServletResponseImpl(this, servletResponse);
+        this.slingRequest = new SlingHttpServletRequestImpl(this,
+            servletRequest);
+        this.slingResponse = new SlingHttpServletResponseImpl(this,
+            servletResponse);
 
         this.requestProgressTracker = new SlingRequestProgressTracker();
 
@@ -129,7 +149,8 @@ public class RequestData implements BufferProvider {
                 "No resource can be found");
         }
 
-        // officially, getting the manager may fail, but not i this implementation
+        // officially, getting the manager may fail, but not i this
+        // implementation
         this.resourceResolver = rmf.getResourceResolver(session);
 
         // resolve the resource and the request path info, will never be null
@@ -223,7 +244,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps the SlingHttpServletRequest to a SlingHttpServletRequestImpl
-     *
+     * 
      * @param request
      * @return
      * @throws SlingException
@@ -238,8 +259,7 @@ public class RequestData implements BufferProvider {
             return (SlingHttpServletRequestImpl) request;
         }
 
-        throw new SlingException(
-            "SlingHttpServletRequest not of correct type");
+        throw new SlingException("SlingHttpServletRequest not of correct type");
     }
 
     /**
@@ -271,7 +291,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps a SlingHttpServletResponse to a SlingHttpServletResponseImpl
-     *
+     * 
      * @param response
      * @return
      * @throws SlingException
@@ -286,8 +306,7 @@ public class RequestData implements BufferProvider {
             return (SlingHttpServletResponseImpl) response;
         }
 
-        throw new SlingException(
-            "SlingHttpServletResponse not of correct type");
+        throw new SlingException("SlingHttpServletResponse not of correct type");
     }
 
     public static RequestData getRequestData(SlingHttpServletRequest request)
@@ -347,6 +366,67 @@ public class RequestData implements BufferProvider {
         // otherwise, we create a new response wrapping the servlet response
         // and unwrapped component response
         return null;
+    }
+    
+    /**
+     * Helper method to call the servlet for the current content data. If the
+     * current content data has no servlet, <em>NOT_FOUND</em> (404) error is
+     * sent and the method terminates.
+     * <p>
+     * If the the servlet exists, the
+     * {@link CoreConstants#SLING_CURRENT_SERVLET_NAME} request attribute is set
+     * to the name of that servlet and that servlet name is also set as the
+     * {@link #setActiveServletName(String) currently active servlet}. After
+     * the termination of the servlet (normal or throwing a Throwable) the
+     * request attribute is reset to the previous value. The name of the
+     * currently active servlet is only reset to the previous value if the
+     * servlet terminates normally. In case of a Throwable, the active servlet
+     * name is not reset and indicates which servlet caused the potential abort
+     * of the request.
+     * 
+     * @param request The request object for the service method
+     * @param response The response object for the service method
+     * @throws IOException May be thrown by the servlet's service method
+     * @throws ServletException May be thrown by the servlet's service method
+     */
+    public static void service(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException,
+            ServletException {
+
+        RequestData requestData = RequestData.getRequestData(request);
+        Servlet servlet = requestData.getContentData().getServlet();
+        if (servlet == null) {
+
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                "No Servlet to handle request");
+
+        } else {
+
+            String name = RequestUtil.getServletName(servlet);
+            Object oldValue = request.getAttribute(SLING_CURRENT_SERVLET_NAME);
+            request.setAttribute(SLING_CURRENT_SERVLET_NAME, name);
+
+            String timerName = name + "#" + requestData.servletCallCounter;
+            requestData.servletCallCounter++;
+            requestData.getRequestProgressTracker().startTimer(timerName);
+
+            try {
+
+                String callerServlet = requestData.setActiveServletName(name);
+
+                servlet.service(request, response);
+
+                requestData.setActiveServletName(callerServlet);
+
+            } finally {
+
+                request.setAttribute(SLING_CURRENT_SERVLET_NAME, oldValue);
+
+                requestData.getRequestProgressTracker().logTimer(timerName);
+                requestData.servletCallCounter--;
+
+            }
+        }
     }
 
     // ---------- Content inclusion stacking -----------------------------------
@@ -454,6 +534,27 @@ public class RequestData implements BufferProvider {
         servletRequest.setAttribute(Theme.class.getName(), theme);
     }
 
+    /**
+     * Sets the name of the currently active servlet and returns the name of the
+     * previously active servlet.
+     */
+    public String setActiveServletName(String servletName) {
+        String old = activeServletName;
+        activeServletName = servletName;
+        return old;
+    }
+
+    /**
+     * Returns the name of the currently active servlet. If this name is not
+     * <code>null</code> at the end of request processing, more precisly in
+     * the case of an uncaught <code>Throwable</code> at the end of request
+     * processing, this is the name of the servlet causing the uncaught
+     * <code>Throwable</code>.
+     */
+    public String getActiveServletName() {
+        return activeServletName;
+    }
+
     // ---------- BufferProvider -----------------------------------------
 
     public BufferProvider getBufferProvider() {
@@ -483,7 +584,8 @@ public class RequestData implements BufferProvider {
         return getServletRequest().getInputStream();
     }
 
-    public BufferedReader getReader() throws UnsupportedEncodingException, IOException {
+    public BufferedReader getReader() throws UnsupportedEncodingException,
+            IOException {
         if (parameterSupport != null && parameterSupport.requestDataUsed()) {
             throw new IllegalStateException(
                 "Request Data has already been read");

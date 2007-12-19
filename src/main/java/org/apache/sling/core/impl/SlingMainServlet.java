@@ -18,6 +18,9 @@
  */
 package org.apache.sling.core.impl;
 
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
@@ -42,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -182,8 +186,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
                 } else {
                     log.error("service: No Request Handling filters, cannot process request");
-                    response.sendError(
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    response.sendError(SC_INTERNAL_SERVER_ERROR,
                         "Cannot process Request");
                 }
 
@@ -199,6 +202,15 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                     hsce.getMessage(), clientRequest, clientResponse);
 
             } catch (Throwable t) {
+                
+                // if we have request data and a non-null active servlet name
+                // we assume, that this is the name of the causing servlet
+                if (requestData != null
+                    && requestData.getActiveServletName() != null) {
+                    clientRequest.setAttribute(ERROR_SERVLET_NAME,
+                        requestData.getActiveServletName());
+                }
+                
                 getErrorHandler().handleError(t, clientRequest, clientResponse);
 
             } finally {
@@ -270,14 +282,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             processor.doFilter(request, response);
         } else {
             log.debug("service: No Resource level filters, calling servlet");
-            Servlet servlet = RequestData.getRequestData(request).getContentData().getServlet();
-            if (servlet != null) {
-                servlet.service(request, response);
-            } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                    "No Servlet or Script to handle request to "
-                        + request.getResource().getURI());
-            }
+            RequestData.service(request, response);
         }
     }
 
