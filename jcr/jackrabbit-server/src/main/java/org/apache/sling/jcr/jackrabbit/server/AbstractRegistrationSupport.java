@@ -58,13 +58,13 @@ abstract class AbstractRegistrationSupport {
      * The (possibly empty) map of repositories which have been bound to the
      * registry before the registry has been activated.
      */
-    private final Map repositoryRegistrationBacklog = new HashMap();
+    private final Map<String, ServiceReference> repositoryRegistrationBacklog = new HashMap<String, ServiceReference>();
 
     /**
      * The map of repositories which have been bound to the registry component
      * and which are actually registered with the registry.
      */
-    private final Map registeredRepositories = new HashMap();
+    private final Map<String, Object> registeredRepositories = new HashMap<String, Object>();
 
     /**
      * A lock to serialize access to the registry management in this class.
@@ -224,11 +224,11 @@ abstract class AbstractRegistrationSupport {
 
             if (this.doActivate()) {
                 // register all repositories in the tmp map
-                for (Iterator ri = this.repositoryRegistrationBacklog.entrySet().iterator(); ri.hasNext();) {
-                    Map.Entry entry = (Map.Entry) ri.next();
+                for (Iterator<Map.Entry<String, ServiceReference>> ri = this.repositoryRegistrationBacklog.entrySet().iterator(); ri.hasNext();) {
+                    Map.Entry<String, ServiceReference> entry = ri.next();
 
-                    this.bindRepositoryInternal((String) entry.getKey(),
-                        (ServiceReference) entry.getValue());
+                    this.bindRepositoryInternal(entry.getKey(),
+                        entry.getValue());
 
                     ri.remove();
                 }
@@ -258,10 +258,10 @@ abstract class AbstractRegistrationSupport {
         synchronized (this.registryLock) {
 
             // unregister all repositories in the tmp map
-            for (Iterator ri = this.registeredRepositories.entrySet().iterator(); ri.hasNext();) {
-                Map.Entry entry = (Map.Entry) ri.next();
+            for (Iterator<Map.Entry<String, Object>> ri = this.registeredRepositories.entrySet().iterator(); ri.hasNext();) {
+                Map.Entry<String, Object> entry = ri.next();
 
-                this.unbindRepository((String) entry.getKey(), entry.getValue());
+                this.unbindRepository(entry.getKey(), entry.getValue());
 
                 ri.remove();
             }

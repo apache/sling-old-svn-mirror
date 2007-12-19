@@ -21,7 +21,6 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.Properties;
 
 import javax.jcr.Repository;
@@ -65,10 +64,11 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
     // ---------- SCR intergration ---------------------------------------------
 
     protected boolean doActivate() {
-        Dictionary props = this.getComponentContext().getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> props = this.getComponentContext().getProperties();
         Properties env = new Properties();
-        for (Enumeration pe = props.keys(); pe.hasMoreElements();) {
-            String key = (String) pe.nextElement();
+        for (Enumeration<String> pe = props.keys(); pe.hasMoreElements();) {
+            String key = pe.nextElement();
             if (key.startsWith("java.naming.")) {
                 env.setProperty(key, (String) props.get(key));
             }
@@ -106,10 +106,10 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
         }
     }
 
-    private Context createInitialContext(final Hashtable env) throws NamingException {
+    private Context createInitialContext(final Properties env) throws NamingException {
         try {
-            return (Context) AccessController.doPrivileged(new PrivilegedExceptionAction() {
-                public Object run() throws NamingException {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<Context>() {
+                public Context run() throws NamingException {
                     Thread currentThread = Thread.currentThread();
                     ClassLoader old = currentThread.getContextClassLoader();
                     currentThread.setContextClassLoader(JndiRegistrationSupport.this.getClass().getClassLoader());

@@ -101,7 +101,7 @@ public class Activator implements BundleActivator {
             SlingServerRepository.copyFile(context.getBundle(), "repository.xml", configFile);
 
             // we have no configuration, create from default settings
-            Hashtable props = new Hashtable();
+            Hashtable<String, String> props = new Hashtable<String, String>();
             props.put(SLING_CONTEXT, slingContext);
             props.put(SlingServerRepository.REPOSITORY_CONFIG_URL, configFile.getPath());
             props.put(SlingServerRepository.REPOSITORY_HOME_DIR, homeDir.getPath());
