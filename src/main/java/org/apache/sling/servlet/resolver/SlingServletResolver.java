@@ -18,13 +18,9 @@
  */
 package org.apache.sling.servlet.resolver;
 
-import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
-import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
-import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
-import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
-import static org.apache.sling.core.CoreConstants.SLING_CURRENT_SERVLET_NAME;
-import static org.apache.sling.servlet.resolver.ServletResolverConstants.DEFAULT_SERVLET_NAME;
-import static org.apache.sling.servlet.resolver.ServletResolverConstants.SLING_RESOURCE_TYPES;
+import static org.apache.sling.api.SlingConstants.*;
+import static org.apache.sling.core.CoreConstants.*;
+import static org.apache.sling.servlet.resolver.ServletResolverConstants.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +42,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.ServletResolver;
-import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.servlet.resolver.defaults.DefaultErrorHandlerServlet;
@@ -62,7 +57,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingServletResolver</code> TODO
- * 
+ *
  * @scr.component label="%servletresolver.name"
  *                description="%servletresolver.description"
  * @scr.property name="service.description" value="Sling Servlet Resolver and
@@ -161,7 +156,7 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
             request.setAttribute(ERROR_STATUS, new Integer(
                 status));
             request.setAttribute(ERROR_MESSAGE, message);
-            
+
             // the servlet name for a sendError handling is still stored
             // as the request attribute
             Object servletName = request.getAttribute(SLING_CURRENT_SERVLET_NAME);
@@ -366,20 +361,20 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
 
         boolean destroy;
         Collection<ServiceReference> refs;
-        
+
         synchronized (this) {
-            
+
             if (this.servletContext == null) {
-                
+
                 refs = pendingServlets;
                 pendingServlets = new ArrayList<ServiceReference>();
                 destroy = false;
-                
+
             } else {
-                
+
                 refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
                 destroy = true;
-                
+
             }
 
             this.servletContext = newServletContext;
