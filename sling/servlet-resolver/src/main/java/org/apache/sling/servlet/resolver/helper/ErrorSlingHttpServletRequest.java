@@ -18,21 +18,14 @@
  */
 package org.apache.sling.servlet.resolver.helper;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.Principal;
 import java.util.Enumeration;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpSession;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -63,7 +56,7 @@ public class ErrorSlingHttpServletRequest extends
     public void setMethod(String methodName) {
         this.methodName = methodName.toLowerCase();
     }
-    
+
     @Override
     public String getMethod() {
         return methodName;
