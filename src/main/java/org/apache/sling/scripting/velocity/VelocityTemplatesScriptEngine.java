@@ -17,20 +17,14 @@
 package org.apache.sling.scripting.velocity;
 
 import java.io.Reader;
-import java.io.StringReader;
 import java.io.Writer;
 import java.util.Map;
 
-import javax.jcr.Node;
-import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -63,7 +57,7 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
         if (helper == null) {
             throw new ScriptException("SlingScriptHelper missing from bindings");
         }
-        
+
         // ensure GET request
         if (!"GET".equals(helper.getRequest().getMethod())) {
             throw new ScriptException(
@@ -89,7 +83,7 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
             throw new ScriptException("Failure running script " + scriptName
                 + ": " + t);
         }
-        
+
         return null;
     }
 
