@@ -74,22 +74,4 @@ public class CoreConstants {
      * ignored.
      */
     public static final String SLING_SERLVET_NAME = "sling.core.servletName";
-
-    /**
-     * The name of the service registration property of a Servlet registered as
-     * a service containing the resource type(s) supported by the servlet (value
-     * is "sling.core.resourceTypes"). The type of this property is a String or
-     * String[] (array of strings) denoting the resource types. If this property
-     * is missing or empty the Servlet is ignored.
-     */
-    public static final String SLING_RESOURCE_TYPES = "sling.core.resourceTypes";
-
-    /**
-     * The name of the registered servlet used as the default servlet if no
-     * other servlet or script could be selected (value is
-     * "sling.core.servlet.default"). If no servlet is registered under this
-     * name, the {@link org.apache.sling.core.servlets.DefaultServlet} is used.
-     */
-    public static final String DEFAULT_SERVLET_NAME = "sling.core.servlet.default";
-
 }

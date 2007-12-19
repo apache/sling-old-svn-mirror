@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.request.RequestData;
-import org.apache.sling.core.impl.servlets.ErrorHandler;
+import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.jcr.resource.PathResolver;
 
 /**
