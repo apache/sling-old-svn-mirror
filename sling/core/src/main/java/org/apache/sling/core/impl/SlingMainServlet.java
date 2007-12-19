@@ -19,6 +19,7 @@
 package org.apache.sling.core.impl;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 
 import java.io.IOException;
@@ -304,6 +305,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                 + status + message);
         } else {
         
+            // error situation
+            String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
+            String requestURI = (String) request.getAttribute(ERROR_REQUEST_URI);
+            if (requestURI == null) {
+                requestURI = request.getRequestURI();
+            }
+
             // reset anything in the response first
             response.reset();
             
@@ -317,7 +325,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             pw.println("</title></head><body><h1>");
             pw.println("HTTP ERROR:" + message);
             pw.println("</h1><p>");
-            pw.println("RequestURI=" + request.getRequestURI());
+            pw.println("RequestURI=" + requestURI);
+            if (servletName != null) {
+                pw.println("</p>Servlet=" + servletName + "<p>");
+            }
             pw.println("</p><hr /><address>");
             pw.println(getServerInfo());
             pw.println("</address></body></html>");
@@ -338,6 +349,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                 throwable);
         } else {
         
+            // error situation
+            String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
+            String requestURI = (String) request.getAttribute(ERROR_REQUEST_URI);
+            if (requestURI == null) {
+                requestURI = request.getRequestURI();
+            }
+
             // reset anything in the response first
             response.reset();
             
@@ -352,6 +370,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             pw.println(throwable.toString());
             pw.println("</h1><p>");
             pw.println("RequestURI=" + request.getRequestURI());
+            if (servletName != null) {
+                pw.println("</p>Servlet=" + servletName + "<p>");
+            }
             pw.println("</p><pre>");
             throwable.printStackTrace(pw);
             pw.println("</pre><hr /><address>");
