@@ -28,13 +28,13 @@ public interface BundleRepositoryAdmin {
     void refreshRepositories();
 
     // Iterator of Repository instances
-    Iterator getRepositories();
+    Iterator<Repository> getRepositories();
 
     void addRepository(URL url);
 
     void removeRepository(URL url);
 
     // Iterator of Resource instances
-    Iterator getResources();
+    Iterator<Resource> getResources();
 
 }

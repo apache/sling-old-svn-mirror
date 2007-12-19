@@ -81,20 +81,20 @@ public class AssemblyManager implements Runnable {
      * The queue of bundle events posted by the {@link #put(BundleEvent)} method
      * and retrieved from by the {@link #take()} method.
      */
-    private LinkedList queue = new LinkedList();
+    private LinkedList<BundleEvent> queue = new LinkedList<BundleEvent>();
 
     /**
      * The map of {@link Assembly} instances indexed by the bundle location of
      * the respective Assembly Bundle.
      */
-    private Map assemblies = new HashMap();
+    private Map<String, Assembly> assemblies = new HashMap<String, Assembly>();
 
     /**
      * The map of {@link InstalledBundle} instances indexed by the bundle
      * specification common location. This map contains all installed bundles
      * installed by all assemblies.
      */
-    private Map installedBundles = new HashMap();
+    private Map<String, InstalledBundle> installedBundles = new HashMap<String, InstalledBundle>();
 
     /**
      * The service tracker keeping the <code>StartLevel</code> service.
@@ -270,7 +270,7 @@ public class AssemblyManager implements Runnable {
                 }
             }
 
-            return (BundleEvent) this.queue.removeFirst();
+            return this.queue.removeFirst();
         }
     }
 
@@ -309,15 +309,15 @@ public class AssemblyManager implements Runnable {
     // ---------- InstalledBundle registry -------------------------------------
 
     InstalledBundle putInstalledBundle(String key, InstalledBundle bundle) {
-        return (InstalledBundle) this.installedBundles.put(key, bundle);
+        return this.installedBundles.put(key, bundle);
     }
 
     InstalledBundle getInstalledBundle(String key) {
-        return (InstalledBundle) this.installedBundles.get(key);
+        return this.installedBundles.get(key);
     }
 
     InstalledBundle removeInstalledBundle(String key) {
-        return (InstalledBundle) this.installedBundles.remove(key);
+        return this.installedBundles.remove(key);
     }
 
     // ---------- internal helpers ---------------------------------------------
@@ -355,7 +355,7 @@ public class AssemblyManager implements Runnable {
     // ---------- internal helpers ---------------------------------------------
 
     private Assembly getOrCreateAssembly(Bundle bundle) {
-        Assembly assembly = (Assembly) this.assemblies.get(bundle.getLocation());
+        Assembly assembly = this.assemblies.get(bundle.getLocation());
         if (assembly == null) {
             assembly = new Assembly(this, bundle);
             this.assemblies.put(bundle.getLocation(), assembly);

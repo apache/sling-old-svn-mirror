@@ -64,7 +64,7 @@ public class AssemblyActivator implements BundleActivator, BundleListener {
         InstallerService installerService = new InstallerServiceImpl(context);
 
         // register myself as the factory for the installer service
-        Dictionary props = new Hashtable();
+        Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Project Sling Bundle Installler Service");
         context.registerService(InstallerService.class.getName(),
