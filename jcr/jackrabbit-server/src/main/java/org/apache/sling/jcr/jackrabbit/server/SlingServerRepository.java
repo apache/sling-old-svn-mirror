@@ -165,8 +165,8 @@ public class SlingServerRepository extends AbstractSlingRepository
     //---------- Repository Publication ---------------------------------------
 
     private Repository getRepository() throws RepositoryException, IOException {
-
-        Dictionary environment = this.getComponentContext().getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> environment = this.getComponentContext().getProperties();
 
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
         String home = (String) environment.get(REPOSITORY_HOME_DIR);
