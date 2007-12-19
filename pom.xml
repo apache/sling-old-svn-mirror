@@ -89,6 +89,7 @@
 
         <!-- Sling -->
         <module>sling/core</module>
+        <module>sling/servlet-resolver</module>
         <module>sling/event</module>
         <module>sling/scheduler</module>
         <module>sling/sample</module>
