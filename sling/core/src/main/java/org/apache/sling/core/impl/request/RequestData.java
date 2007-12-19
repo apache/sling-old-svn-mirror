@@ -42,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
@@ -60,7 +61,6 @@ import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.core.theme.Theme;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
-import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,7 +196,7 @@ public class RequestData implements BufferProvider {
      * Unwraps the ServletRequest to a SlingHttpServletRequest.
      */
     public static SlingHttpServletRequest unwrap(ServletRequest request)
-            throws ComponentException {
+            throws SlingException {
 
         // early check for most cases
         if (request instanceof SlingHttpServletRequest) {
@@ -215,7 +215,7 @@ public class RequestData implements BufferProvider {
 
         // if we unwrapped everything and did not find a
         // SlingHttpServletRequest, we lost
-        throw new ComponentException(
+        throw new SlingException(
             "ServletRequest not wrapping SlingHttpServletRequest");
     }
 
@@ -224,10 +224,10 @@ public class RequestData implements BufferProvider {
      *
      * @param request
      * @return
-     * @throws ComponentException
+     * @throws SlingException
      */
     public static SlingHttpServletRequestImpl unwrap(
-            SlingHttpServletRequest request) throws ComponentException {
+            SlingHttpServletRequest request) throws SlingException {
         while (request instanceof SlingHttpServletRequestWrapper) {
             request = ((SlingHttpServletRequestWrapper) request).getSlingRequest();
         }
@@ -236,7 +236,7 @@ public class RequestData implements BufferProvider {
             return (SlingHttpServletRequestImpl) request;
         }
 
-        throw new ComponentException(
+        throw new SlingException(
             "SlingHttpServletRequest not of correct type");
     }
 
@@ -244,7 +244,7 @@ public class RequestData implements BufferProvider {
      * Unwraps the ServletRequest to a SlingHttpServletRequest.
      */
     public static SlingHttpServletResponse unwrap(ServletResponse response)
-            throws ComponentException {
+            throws SlingException {
 
         // early check for most cases
         if (response instanceof SlingHttpServletResponse) {
@@ -263,7 +263,7 @@ public class RequestData implements BufferProvider {
 
         // if we unwrapped everything and did not find a
         // SlingHttpServletResponse, we lost
-        throw new ComponentException(
+        throw new SlingException(
             "ServletResponse not wrapping SlingHttpServletResponse");
     }
 
@@ -272,10 +272,10 @@ public class RequestData implements BufferProvider {
      *
      * @param response
      * @return
-     * @throws ComponentException
+     * @throws SlingException
      */
     public static SlingHttpServletResponseImpl unwrap(
-            SlingHttpServletResponse response) throws ComponentException {
+            SlingHttpServletResponse response) throws SlingException {
         while (response instanceof SlingHttpServletResponseWrapper) {
             response = ((SlingHttpServletResponseWrapper) response).getSlingResponse();
         }
@@ -284,22 +284,22 @@ public class RequestData implements BufferProvider {
             return (SlingHttpServletResponseImpl) response;
         }
 
-        throw new ComponentException(
+        throw new SlingException(
             "SlingHttpServletResponse not of correct type");
     }
 
     public static RequestData getRequestData(SlingHttpServletRequest request)
-            throws ComponentException {
+            throws SlingException {
         return unwrap(request).getRequestData();
     }
 
     public static RequestData getRequestData(ServletRequest request)
-            throws ComponentException {
+            throws SlingException {
         return unwrap(unwrap(request)).getRequestData();
     }
 
     public static SlingHttpServletRequest toSlingHttpServletRequest(
-            ServletRequest request) throws ComponentException {
+            ServletRequest request) throws SlingException {
         // unwrap to SlingHttpServletRequest
         SlingHttpServletRequest cRequest = unwrap(request);
 
@@ -314,7 +314,7 @@ public class RequestData implements BufferProvider {
 
         // ensure the request is a HTTP request
         if (!(request instanceof HttpServletRequest)) {
-            throw new ComponentException("Request is not an HTTP request");
+            throw new SlingException("Request is not an HTTP request");
         }
 
         // otherwise, we create a new response wrapping the servlet response
@@ -324,7 +324,7 @@ public class RequestData implements BufferProvider {
     }
 
     public static SlingHttpServletResponse toSlingHttpServletResponse(
-            ServletResponse response) throws ComponentException {
+            ServletResponse response) throws SlingException {
         // unwrap to SlingHttpServletResponse
         SlingHttpServletResponse cResponse = unwrap(response);
 
@@ -339,7 +339,7 @@ public class RequestData implements BufferProvider {
 
         // ensure the response is a HTTP response
         if (!(response instanceof HttpServletResponse)) {
-            throw new ComponentException("Response is not an HTTP response");
+            throw new SlingException("Response is not an HTTP response");
         }
 
         // otherwise, we create a new response wrapping the servlet response
