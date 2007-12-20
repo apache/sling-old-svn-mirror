@@ -18,7 +18,7 @@ package org.apache.sling.launcher.webapp;
 
 import java.util.Map;
 
-import org.apache.sling.launcher.app.Logger;
+import org.apache.felix.framework.Logger;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.eclipse.equinox.http.servlet.internal.Activator;
@@ -53,7 +53,8 @@ public class SlingBridge extends Sling {
             try {
                 this.httpServiceActivator.stop(this.getBundleContext());
             } catch (Exception e) {
-                logger.log("Unexpected problem stopping HttpService", e);
+                logger.log(Logger.LOG_ERROR,
+                    "Unexpected problem stopping HttpService", e);
             }
             this.httpServiceActivator = null;
         }
