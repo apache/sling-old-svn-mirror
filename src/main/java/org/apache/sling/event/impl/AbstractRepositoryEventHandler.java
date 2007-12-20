@@ -36,7 +36,6 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.core.CoreConstants;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -59,6 +58,12 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractRepositoryEventHandler
     implements EventHandler, EventListener, Runnable {
+
+    /** FIXME - This is a copy from the sling core constants to avoid
+     * a dependency just for the constant. We will move this into an
+     * OSGi helper bundle
+     */
+    public static final String SLING_ID = "sling.id";
 
     /** Default log. */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -100,7 +105,7 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void activate(final ComponentContext context)
     throws RepositoryException {
-        this.applicationId = context.getBundleContext().getProperty(CoreConstants.SLING_ID);
+        this.applicationId = context.getBundleContext().getProperty(SLING_ID);
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
         final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
         if ( i != null ) {
