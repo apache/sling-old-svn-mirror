@@ -40,6 +40,7 @@ import java.util.UUID;
 import java.util.Map.Entry;
 
 import org.apache.felix.framework.Felix;
+import org.apache.felix.framework.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -215,7 +216,7 @@ public class Sling implements BundleActivator {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
 
-        this.logger.log("Starting Sling");
+        this.logger.log(Logger.LOG_INFO, "Starting Sling");
 
         // read the default parameters
         Map<String, String> props = this.loadConfigProperties(propOverwrite);
@@ -238,14 +239,15 @@ public class Sling implements BundleActivator {
         activators.add(new BootstrapInstaller(logger, resourceProvider));
 
         // create the framework and start it
-        Felix tmpFelix = new Felix(props, activators);
+        Felix tmpFelix = new Felix(logger, props, activators);
         tmpFelix.start();
 
         // only assign field if start succeeds
         this.felix = tmpFelix;
 
         // log sucess message
-        this.logger.log("Sling Instance " + props.get(SLING_ID) + " started");
+        this.logger.log(Logger.LOG_INFO, "Sling Instance "
+            + props.get(SLING_ID) + " started");
     }
 
     /**
@@ -257,9 +259,9 @@ public class Sling implements BundleActivator {
         if (felix != null) {
             String label = "Sling Instance "
                 + felix.getBundleContext().getProperty(SLING_ID);
-            logger.log("Shutting down " + label);
+            logger.log(Logger.LOG_INFO, "Shutting down " + label);
             felix.stopAndWait();
-            logger.log(label + " stopped");
+            logger.log(Logger.LOG_INFO, label + " stopped");
             felix = null;
         }
     }
@@ -307,7 +309,7 @@ public class Sling implements BundleActivator {
         try {
             this.doStopBundle();
         } catch (Exception e) {
-            this.logger.log("Unexpected exception caught", e);
+            this.logger.log(Logger.LOG_ERROR, "Unexpected exception caught", e);
         }
 
         // drop bundle context reference
@@ -358,8 +360,8 @@ public class Sling implements BundleActivator {
             slingHome = props.get(SLING_HOME);
             if (slingHome == null || slingHome.length() == 0) {
                 slingHome = "sling";
-                this.logger.log("sling.home is not defined. Using '"
-                    + slingHome + "'");
+                this.logger.log(Logger.LOG_INFO,
+                    "sling.home is not defined. Using '" + slingHome + "'");
             }
         }
 
@@ -369,7 +371,7 @@ public class Sling implements BundleActivator {
         slingHome = slingHomeFile.getAbsolutePath();
 
         // overlay with ${sling.home}/sling.properties
-        this.logger.log("Starting sling in " + slingHome);
+        this.logger.log(Logger.LOG_INFO, "Starting sling in " + slingHome);
         File propFile = new File(slingHome, CONFIG_PROPERTIES);
         this.load(props, propFile);
 
@@ -442,8 +444,8 @@ public class Sling implements BundleActivator {
                         origProps.put(name, "${sling.home}" + path);
 
                     } catch (IOException ioe) {
-                        this.logger.log("Cannot copy file " + value + " to "
-                            + target, ioe);
+                        this.logger.log(Logger.LOG_ERROR, "Cannot copy file "
+                            + value + " to " + target, ioe);
                     } finally {
                         if (dest != null) {
                             try {
@@ -473,7 +475,7 @@ public class Sling implements BundleActivator {
             tmp.putAll(origProps);
             tmp.store(os, "Overlay properties for configuration");
         } catch (Exception ex) {
-            this.logger.log(
+            this.logger.log(Logger.LOG_ERROR,
                 "Error loading overlay properties from " + propFile, ex);
         } finally {
             if (os != null) {
@@ -596,10 +598,12 @@ public class Sling implements BundleActivator {
                 }
             }
 
-            this.logger.log("Using Execution Environment setting: " + ee);
+            this.logger.log(Logger.LOG_INFO,
+                "Using Execution Environment setting: " + ee);
             props.put(Constants.FRAMEWORK_EXECUTIONENVIRONMENT, ee);
         } else {
-            this.logger.log("Not using Execution Environment setting");
+            this.logger.log(Logger.LOG_INFO,
+                "Not using Execution Environment setting");
         }
     }
 
@@ -628,8 +632,9 @@ public class Sling implements BundleActivator {
                     slingId = UUID.fromString(rawString).toString();
                 }
             } catch (Throwable t) {
-                logger.log("Failed reading UUID from id file " + idFile
-                    + ", creating new id", t);
+                logger.log(Logger.LOG_ERROR,
+                    "Failed reading UUID from id file " + idFile
+                        + ", creating new id", t);
             } finally {
                 if (fin != null) {
                     try {
@@ -652,7 +657,8 @@ public class Sling implements BundleActivator {
                 fout.write(slingId.getBytes("ISO-8859-1"));
                 fout.flush();
             } catch (Throwable t) {
-                logger.log("Failed writing UUID to id file " + idFile, t);
+                logger.log(Logger.LOG_ERROR, "Failed writing UUID to id file "
+                    + idFile, t);
             } finally {
                 if (fout != null) {
                     try {
@@ -803,8 +809,8 @@ public class Sling implements BundleActivator {
                         this.load(props, is);
                     }
                 } catch (IOException ioe) {
-                    this.logger.log("Error loading config properties from "
-                        + file, ioe);
+                    this.logger.log(Logger.LOG_ERROR,
+                        "Error loading config properties from " + file, ioe);
                 }
             }
         }
@@ -825,8 +831,8 @@ public class Sling implements BundleActivator {
             try {
                 this.load(props, is);
             } catch (IOException ioe) {
-                this.logger.log("Error loading config properties from "
-                    + resource, ioe);
+                this.logger.log(Logger.LOG_ERROR,
+                    "Error loading config properties from " + resource, ioe);
             }
         }
     }
@@ -844,8 +850,9 @@ public class Sling implements BundleActivator {
             try {
                 this.load(props, new FileInputStream(file));
             } catch (IOException ioe) {
-                this.logger.log("Error loading config properties from "
-                    + file.getAbsolutePath(), ioe);
+                this.logger.log(Logger.LOG_ERROR,
+                    "Error loading config properties from "
+                        + file.getAbsolutePath(), ioe);
             }
         }
     }

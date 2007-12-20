@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.framework.Logger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -110,7 +111,7 @@ class BootstrapInstaller implements BundleActivator {
     /**
      * Install the Bundles from JAR files found in the given <code>parent</code>
      * path.
-     * 
+     *
      * @param context The <code>BundleContext</code> used to install the new
      *            Bundles.
      * @param currentBundles The currently installed Bundles indexed by their
@@ -124,12 +125,12 @@ class BootstrapInstaller implements BundleActivator {
     private void installBundles(BundleContext context,
             Map<String, Bundle> currentBundles, String parent,
             List<Bundle> installed) {
-        
+
         Iterator<String> res = resourceProvider.getChildren(parent);
         while (res.hasNext()) {
-            
+
             String path = res.next();
-            
+
             if (path.endsWith(".jar")) {
 
                 // check for an already installed Bundle with the given location
@@ -149,11 +150,12 @@ class BootstrapInstaller implements BundleActivator {
                 Bundle newBundle;
                 try {
                     newBundle = context.installBundle(location, ins);
-                    logger.log("Bundle " + newBundle.getSymbolicName()
-                        + " installed from " + location);
+                    logger.log(Logger.LOG_INFO, "Bundle "
+                        + newBundle.getSymbolicName() + " installed from "
+                        + location);
                 } catch (BundleException be) {
-                    logger.log("Bundle installation from " + location
-                        + " failed", be);
+                    logger.log(Logger.LOG_ERROR, "Bundle installation from "
+                        + location + " failed", be);
                     continue;
                 }
 
@@ -186,8 +188,8 @@ class BootstrapInstaller implements BundleActivator {
             try {
                 bundle.start();
             } catch (BundleException be) {
-                logger.log("Bundle " + bundle.getSymbolicName()
-                    + " could not be started", be);
+                logger.log(Logger.LOG_ERROR, "Bundle "
+                    + bundle.getSymbolicName() + " could not be started", be);
             }
         }
 

@@ -16,10 +16,12 @@
  */
 package org.apache.sling.launcher.app.main;
 
+import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.launcher.app.Logger;
+import org.apache.felix.framework.Logger;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.apache.sling.osgi.log.LogbackManager;
@@ -71,6 +73,9 @@ public class Main {
     /** The Sling configuration property name setting the initial log file */
     private static final String PROP_LOG_FILE = LogbackManager.LOG_FILE;
 
+    /** Default log level setting if no set on command line (value is "INFO"). */
+    private static final int DEFAULT_LOG_LEVEL = Logger.LOG_INFO;
+
     /**
      * The configuration property setting the port on which the HTTP service
      * listens
@@ -101,8 +106,18 @@ public class Main {
         // line arguments unconditionally. These will not be persisted in any
         // properties file, though
 
+        // set up and configure Felix Logger
+        int logLevel;
+        if (!commandLine.containsKey(PROP_LOG_LEVEL)) {
+            logLevel = DEFAULT_LOG_LEVEL;
+        } else {
+            logLevel = toLogLevelInt(commandLine.get(PROP_LOG_LEVEL), DEFAULT_LOG_LEVEL);
+            commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
+        }
+        Logger logger = new Logger();
+        logger.setLogLevel(logLevel);
+
         try {
-            Logger logger = new SimpleLogger();
             ResourceProvider resProvider = new ClassLoaderResourceProvider(
                 Main.class.getClassLoader());
             Sling sling = new Sling(logger, resProvider, props) {
@@ -153,7 +168,8 @@ public class Main {
                 }
 
                 // option argument is following the current option
-                String value = argc < args.length ? args[argc++] : null;
+                argc++;
+                String value = argc < args.length ? args[argc] : null;
 
                 switch (arg.charAt(1)) {
                     case 'l':
@@ -271,5 +287,16 @@ public class Main {
 
         usage("Bad log level: " + level, 1);
         return null;
+    }
+
+    /** Return the log level code for the string */
+    private static int toLogLevelInt(String level, int defaultLevel) {
+        for (int i = 0; i < logLevels.length; i++) {
+            if (logLevels[i].equalsIgnoreCase(level)) {
+                return i;
+            }
+        }
+
+        return defaultLevel;
     }
 }
