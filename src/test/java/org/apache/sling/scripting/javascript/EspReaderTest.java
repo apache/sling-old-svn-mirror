@@ -125,6 +125,34 @@ public class EspReaderTest extends TestCase {
         assertEquals("", parse("<%-- test(); --%>"));
     }
     
+    public void testCompactExpressionsDouble() throws IOException {
+    	final String input = "<html version=\"${1+1}\">\n";
+    	final String expected = "out=response.writer;out.write(\"<html version=\\\"\");out.write(1+1);out.write(\"\\\">\\n\");\n";
+    	final String actual = parse(input);
+        assertEquals(flatten(expected), flatten(actual));
+    }
+    
+    public void testCompactExpressionsDoubleNegative() throws IOException {
+    	final String input = "<html version=\"{1+1}\">\n";
+    	final String expected = "out=response.writer;out.write(\"<html version=\\\"{1+1}\\\">\\n\");\n";
+    	final String actual = parse(input);
+        assertEquals(flatten(expected), flatten(actual));
+    }
+    
+    public void testCompactExpressionsSingle() throws IOException {
+    	final String input = "<html version='${1+1}'>\n";
+    	final String expected = "out=response.writer;out.write(\"<html version='\");out.write(1+1);out.write(\"'>\\n\");\n";
+    	final String actual = parse(input);
+        assertEquals(flatten(expected), flatten(actual));
+    }
+    
+    public void testCompactExpressionsSingleNegative() throws IOException {
+    	final String input = "<html version='{1+1}'>\n";
+    	final String expected = "out=response.writer;out.write(\"<html version='{1+1}'>\\n\");\n";
+    	final String actual = parse(input);
+        assertEquals(flatten(expected), flatten(actual));
+    }
+    
     /** Test a complete template, using all features */
     public void testCompleteTemplate() throws IOException {
         final String input =
