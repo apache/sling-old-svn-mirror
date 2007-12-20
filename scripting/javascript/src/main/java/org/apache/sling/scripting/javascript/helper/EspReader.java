@@ -122,6 +122,23 @@ public class EspReader extends FilterReader {
      * comment is read (and completely returned).
      */
     private static final byte PARSE_STATE_ECMA_COMMENTL = 10;
+    
+    /**
+     * Attribute value (single quote) reading state. This is needed for identifying the compact
+     * syntax which is only allowed in attributes.
+     */
+    private static final byte PARSE_STATE_ATTRIBUTE_SINGLE = 11;
+    
+    /**
+     * Attribute value (double quote) reading state. This is needed for identifying the compact
+     * syntax which is only allowed in attributes.
+     */
+    private static final byte PARSE_STATE_ATTRIBUTE_DOUBLE = 12;
+    
+    /**
+     * Compact JSP expression syntax to be used in attributes.
+     */
+    private static final byte PARSE_STATE_COMPACT_ATTRIBUTE = 13;
 
     /**
      * To work with lookahead and character insertion, we use a PushbackReader.
@@ -416,14 +433,26 @@ public class EspReader extends FilterReader {
 
                 // Template text state - text is wrapped in out.write()
                 case PARSE_STATE_ESP:
-
-                    // might start ECMA code/expr, ESP comment or JSP comment
-                    if (c == '<') {
+                    if (c == '=') { //might start HTML attribute definition
+                    	int c2 = input.read();
+                    	if (c2 == '"') {
+                    		pushState(PARSE_STATE_ATTRIBUTE_DOUBLE);
+                    		//input.unread(c2);
+                    		doVerbatim("=\\\"");
+                    		continue;
+                    	} else if (c2 == '\'') {
+                    		pushState(PARSE_STATE_ATTRIBUTE_SINGLE);
+                    		doVerbatim("='");
+                    		continue;
+                    	} else {
+                    		input.unread(c2);
+                    		continue;
+                    	}
+                    } else  if (c == '<') { // might start ECMA code/expr, ESP comment or JSP comment
                         int c2 = input.read();
                         int c3 = input.read();
 
                         if (c2 == '%') {
-
                             // ECMA or JSP comment
 
                             if (c3 == '=') {
@@ -662,6 +691,64 @@ public class EspReader extends FilterReader {
                     }
 
                     break;
+                    
+                case PARSE_STATE_ATTRIBUTE_DOUBLE:
+                	if (c == '"') {
+                		input.unread(c);
+                		popState();
+                		continue;
+                	} else if (c == '$') {
+                		int c2 = input.read();
+                		if (c2 == '{') {
+	                		// ECMA expression attribute="bla${1+1}"
+	                        pushState(PARSE_STATE_COMPACT_ATTRIBUTE);
+	                        startWrite(null);
+	                        if (!lineStart) {
+	                            doVerbatim("\");");
+	                        }
+	                        continue;
+                		} else {
+                			//false alarm
+                			input.unread(c2);
+                		}
+                	}
+                	break;
+                	
+                case PARSE_STATE_ATTRIBUTE_SINGLE:
+                	if (c == '\'') {
+                		input.unread(c);
+                		popState();
+                		continue;
+                	} else if (c == '$') {
+                		int c2 = input.read();
+                		if (c2 == '{') {
+	                		// ECMA expression attribute="bla${1+1}"
+	                        pushState(PARSE_STATE_COMPACT_ATTRIBUTE);
+	                        startWrite(null);
+	                        if (!lineStart) {
+	                            doVerbatim("\");");
+	                        }
+	                        continue;
+                		} else {
+                			//false alarm
+                			input.unread(c2);
+                		}
+                	}
+                	break;
+            	
+                case PARSE_STATE_COMPACT_ATTRIBUTE:
+                	if (c == '}') { //might be the end of a compact expression
+                        // An expression is wrapped in out.write()
+            			popState();
+                        doVerbatim(");");
+
+                        // next ESP needs out.write(
+                        lineStart = true;
+
+                        continue;
+
+                    }
+                	break;
 
                 // What ???!!!
                 default:
