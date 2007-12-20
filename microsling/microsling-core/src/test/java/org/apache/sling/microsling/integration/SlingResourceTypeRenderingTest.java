@@ -66,6 +66,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes ESP marker",content.contains("ESP template"));
             assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertTrue("Content (" + content + ") contains attribute generated with simplified syntax",
+                    content.contains("<div class=\"SLING-142\" id=\"22\"/>"));
         } finally {
             testClient.delete(toDelete);
         }
