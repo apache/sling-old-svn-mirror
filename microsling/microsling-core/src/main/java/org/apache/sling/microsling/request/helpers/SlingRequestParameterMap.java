@@ -21,13 +21,21 @@ package org.apache.sling.microsling.request.helpers;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 
 /**
  * The <code>SlingRequestParameterMap</code> implements the
@@ -39,14 +47,16 @@ public class SlingRequestParameterMap extends
 
     /** Create from the HTTP request parameters */
     public SlingRequestParameterMap(HttpServletRequest request) {
-        Map<?, ?> parameters = request.getParameterMap();
-        for (Map.Entry<?, ?> entry : parameters.entrySet()) {
-            String[] values = (String[]) entry.getValue();
-            RequestParameter[] rpValues = new RequestParameter[values.length];
-            for (int i = 0; i < values.length; i++) {
-                rpValues[i] = new SimpleRequestParameter(values[i]);
+        if (ServletFileUpload.isMultipartContent(request)) {
+            try {
+                initializeMultipart(request);
+            } catch (UnsupportedEncodingException e) {
+                // ignore for the moment
+            } catch (FileUploadException e) {
+                // ignore for the moment
             }
-            put((String) entry.getKey(), rpValues);
+        } else {
+            initializeStandard(request);
         }
     }
 
@@ -59,15 +69,56 @@ public class SlingRequestParameterMap extends
         return (values != null && values.length > 0) ? values[0] : null;
     }
 
+    /** initialize from a non-multipart request */
+    private void initializeStandard(HttpServletRequest request) {
+        Map<?, ?> parameters = request.getParameterMap();
+        for (Map.Entry<?, ?> entry : parameters.entrySet()) {
+            String[] values = (String[]) entry.getValue();
+            RequestParameter[] rpValues = new RequestParameter[values.length];
+            for (int i = 0; i < values.length; i++) {
+                rpValues[i] = new SimpleRequestParameter(values[i]);
+            }
+            put((String) entry.getKey(), rpValues);
+        }
+    }
+
+    /** initialize from a multipart request */
+    private void initializeMultipart(HttpServletRequest request)
+            throws FileUploadException,UnsupportedEncodingException {
+        // use commons fileupload to parse request
+        FileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        List items = upload.parseRequest(request);
+
+        for(Iterator it = items.iterator(); it.hasNext(); ) {
+            final FileItem fi = (FileItem)it.next();
+            put(fi.getFieldName(), new RequestParameter[] {new SimpleRequestParameter(fi)});
+        }
+    }
+
     /** Simple implementation of the RequestParameter interface */
     private static class SimpleRequestParameter implements RequestParameter {
 
         private String value;
 
+        private FileItem fileItem;
+
         private byte[] cachedBytes;
 
         SimpleRequestParameter(String value) {
             this.value = value;
+        }
+
+        SimpleRequestParameter(FileItem fi) {
+            if(fi.isFormField()) {
+              // TODO: FileItem does not seem to support multiple values
+              // if there are multiple values we lose them
+              value = fi.getString();
+              fileItem = null;
+            } else {
+              value = null;
+              fileItem = fi;
+            }
         }
 
         /**
@@ -92,11 +143,18 @@ public class SlingRequestParameterMap extends
         }
 
         public String getFileName() {
-            return null;
+            return fileItem.getName();
         }
 
         public InputStream getInputStream() {
-            return new ByteArrayInputStream(get());
+            if (value != null) {
+                return new ByteArrayInputStream(get());
+            } else {
+                try {
+                    return fileItem.getInputStream();
+                } catch (IOException ioe) {}
+            }
+            return new ByteArrayInputStream(new byte[0]);
         }
 
         public long getSize() {
