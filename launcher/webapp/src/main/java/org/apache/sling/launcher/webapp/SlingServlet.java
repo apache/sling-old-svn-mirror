@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launcher.webapp;
 
+import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,11 +36,13 @@ import javax.servlet.ServletResponse;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launcher.app.Logger;
+import org.apache.felix.framework.Logger;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
+import org.apache.sling.osgi.log.LogbackManager;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
-import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>SlingServlet</code> serves as a basic servlet for Project Sling.
@@ -101,6 +105,13 @@ public class SlingServlet extends GenericServlet {
 
     /** Pseduo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
+
+    /** Mapping between log level numbers and names */
+    private static final String[] logLevels = { "FATAL", "ERROR", "WARN",
+        "INFO", "DEBUG" };
+
+    /** The Sling configuration property name setting the initial log level */
+    private static final String PROP_LOG_LEVEL = LogbackManager.LOG_LEVEL;
 
     /**
      * The name of the configuration property defining the obr repository.
@@ -260,6 +271,9 @@ public class SlingServlet extends GenericServlet {
             props.put(name, getInitParameter(name));
         }
 
+        // ensure the Felix Logger loglevel matches the Sling log level
+        checkLogSettings(props);
+
         // if the specified obr location is not a url and starts with a '/', we
         // assume that this location is inside the webapp and create the correct
         // full url
@@ -267,8 +281,7 @@ public class SlingServlet extends GenericServlet {
         if (repoLocation != null && repoLocation.indexOf(":/") < 1
             && repoLocation.startsWith("/")) {
             try {
-                final URL url = getServletContext().getResource(
-                    repoLocation);
+                final URL url = getServletContext().getResource(repoLocation);
                 // only if we get back a resource url, we update it
                 if (url != null) {
                     props.put(OBR_REPOSITORY_URL, url.toExternalForm());
@@ -280,6 +293,25 @@ public class SlingServlet extends GenericServlet {
         return props;
     }
 
+    private void checkLogSettings(Map<String, String> props) {
+        String logLevelString = props.get(PROP_LOG_LEVEL);
+        if (logLevelString != null) {
+            int logLevel = 1;
+            try {
+                logLevel = Integer.parseInt(logLevelString);
+            } catch (NumberFormatException nfe) {
+                // might be a loglevel name
+                for (int i=0; i < logLevels.length; i++) {
+                    if (logLevels[i].equalsIgnoreCase(logLevelString)) {
+                        logLevel = i;
+                        break;
+                    }
+                }
+            }
+            props.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
+        }
+    }
+
     private static class ServletContextLogger extends Logger {
         private ServletContext servletContext;
 
@@ -287,11 +319,35 @@ public class SlingServlet extends GenericServlet {
             this.servletContext = servletContext;
         }
 
-        public void log(String message, Throwable throwable) {
-            if (throwable == null) {
-                servletContext.log(message);
-            } else {
-                servletContext.log(message, throwable);
+        @Override
+        protected void doLog(ServiceReference sr, int level, String msg,
+                Throwable throwable) {
+
+            // unwind throwable if it is a BundleException
+            if ((throwable instanceof BundleException)
+                && (((BundleException) throwable).getNestedException() != null)) {
+                throwable = ((BundleException) throwable).getNestedException();
+            }
+
+            String s = (sr == null) ? null : "SvcRef " + sr;
+            s = (s == null) ? msg : s + " " + msg;
+            s = (throwable == null) ? s : s + " (" + throwable + ")";
+
+            switch (level) {
+                case LOG_DEBUG:
+                    servletContext.log("DEBUG: " + s);
+                    break;
+                case LOG_ERROR:
+                    servletContext.log("ERROR: " + s, throwable);
+                    break;
+                case LOG_INFO:
+                    servletContext.log("INFO: " + s);
+                    break;
+                case LOG_WARNING:
+                    servletContext.log("WARNING: " + s);
+                    break;
+                default:
+                    servletContext.log("UNKNOWN[" + level + "]: " + s);
             }
         }
     }
