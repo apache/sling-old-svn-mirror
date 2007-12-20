@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.sling.api.services.ServiceLocator;
-import org.apache.sling.core.impl.services.ServiceLocatorImpl;
 import org.apache.sling.scheduler.JobContext;
 import org.osgi.framework.BundleContext;
 import org.quartz.Job;
