@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.javascript;
+package org.apache.sling.scripting.javascript.helper;
 
 import java.io.IOException;
 import java.io.Reader;
