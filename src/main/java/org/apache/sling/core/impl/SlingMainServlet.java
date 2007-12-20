@@ -175,19 +175,19 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                 // prepare internal request stuff
                 requestData = new RequestData(this, session, clientRequest,
                     clientResponse);
-                SlingHttpServletRequest request = requestData.getSlingRequest();
-                SlingHttpServletResponse response = requestData.getSlingResponse();
+                clientRequest = requestData.getSlingRequest();
+                clientResponse = requestData.getSlingResponse();
 
                 Filter[] filters = requestFilterChain.getFilters();
                 if (filters != null) {
                     FilterChain processor = new RequestSlingFilterChain(this,
                         filters);
 
-                    processor.doFilter(request, response);
+                    processor.doFilter(clientRequest, clientResponse);
 
                 } else {
                     log.error("service: No Request Handling filters, cannot process request");
-                    response.sendError(SC_INTERNAL_SERVER_ERROR,
+                    clientResponse.sendError(SC_INTERNAL_SERVER_ERROR,
                         "Cannot process Request");
                 }
 
