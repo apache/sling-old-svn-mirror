@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launcher.webapp;
 
-import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
+import static org.apache.felix.framework.util.FelixConstants.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -42,6 +42,7 @@ import org.apache.sling.launcher.app.Sling;
 import org.apache.sling.osgi.log.LogbackManager;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -244,11 +245,12 @@ public class SlingServlet extends GenericServlet {
         // Try to load it from one of these places.
         Map<String, String> props = new HashMap<String, String>();
 
+        // The following property must start with a comma!
         final String servletVersion = getServletContext().getMajorVersion() + "." +
                                       getServletContext().getMinorVersion();
         props.put(
             Sling.PROP_SYSTEM_PACKAGES,
-            "javax.servlet;javax.servlet.http;javax.servlet.resources; version=" + servletVersion);
+            ",javax.servlet;javax.servlet.http;javax.servlet.resources; version=" + servletVersion);
 
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");
