@@ -45,6 +45,8 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sun.security.krb5.internal.Ticket;
+
 /**
  * The <code>SlingAuthenticator</code> class is the default implementation of
  * the {@link SlingAuthenticator} interface. This class supports :
@@ -294,9 +296,11 @@ public class SlingAuthenticator implements ManagedService {
             }
         }
 
-        // no handler could send an authentication request, fail with FORBIDDEN
-        log.info("requestAuthentication: No handler for request, sending FORBIDDEN");
-        sendFailure(response);
+        if ( !done ) {
+            // no handler could send an authentication request, fail with FORBIDDEN
+            log.info("requestAuthentication: No handler for request, sending FORBIDDEN");
+            sendFailure(response);
+        }
     }
 
     // ----------- ManagedService interface -----------------------------------
