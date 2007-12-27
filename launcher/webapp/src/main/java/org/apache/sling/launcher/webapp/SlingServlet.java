@@ -21,6 +21,7 @@ import static org.apache.felix.framework.util.FelixConstants.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -378,10 +379,13 @@ public class SlingServlet extends GenericServlet {
             }
 
             Set resources = servletContext.getResourcePaths(path); // unchecked
-            if (resources.isEmpty()) {
+            if (resources == null || resources.isEmpty()) {
                 resources = servletContext.getResourcePaths(WEB_INF + path); // unchecked
             }
 
+            if ( resources == null ) {
+                return Collections.EMPTY_LIST.iterator();
+            }
             return resources.iterator(); // unchecked
         }
 
