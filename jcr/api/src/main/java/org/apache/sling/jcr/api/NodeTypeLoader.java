@@ -20,6 +20,8 @@ package org.apache.sling.jcr.api;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 
 import javax.jcr.RepositoryException;
@@ -109,35 +111,75 @@ public class NodeTypeLoader {
     public static boolean registerNodeType(Session session, InputStream source)
             throws IOException, RepositoryException {
 
+        // this is a temporary workaround as the instanceof test seems to fail
+        // in some cases (FIXME)
         Workspace workspace = session.getWorkspace();
         NodeTypeManager ntm = workspace.getNodeTypeManager();
-        if (ntm instanceof JackrabbitNodeTypeManager) {
-            log.debug("Using Jackrabbit to import node types");
-            JackrabbitNodeTypeManager jntm = (JackrabbitNodeTypeManager) ntm;
+        try {
+            final Method m = ntm.getClass().getMethod("registerNodeTypes", new Class[] {InputStream.class, String.class});
+            log.debug("Using Jackrabbit via reflection to import node types");
             try {
-                jntm.registerNodeTypes(source,
-                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+                m.invoke(ntm, new Object[] {source, JackrabbitNodeTypeManager.TEXT_X_JCR_CND});
                 return true;
-            } catch (RepositoryException re) {
-                Throwable t = re.getCause();
-                if (t != null
-                    && t.getClass().getName().endsWith(
-                        ".InvalidNodeTypeDefException")) {
+            } catch (InvocationTargetException e) {
+                final Throwable targetE = e.getTargetException();
+                if ( targetE instanceof RepositoryException ) {
+                    Throwable t = ((RepositoryException)targetE).getCause();
+                    if (t != null
+                        && t.getClass().getName().endsWith(
+                            ".InvalidNodeTypeDefException")) {
+                        // hacky wacky: interpret message to check whether it is for
+                        // duplicate node type -> very bad, that this is the only
+                        // way to check !!!
+                        if (t.getCause().getMessage().indexOf("already exists") >= 0) {
+                            // alright, node types are already registered, ignore
+                            // this
+                            log.debug("Node types already registered...");
+                            return true;
+                        }
+                    }
+
+                    // get here to rethrow the RepositoryException
+                    throw (RepositoryException)targetE;
+                }
+                // we ignore it
+            } catch (IllegalArgumentException e) {
+                // we ignore it
+            } catch (IllegalAccessException e) {
+                // we ignore it
+            }
+        } catch (SecurityException e) {
+            // we ignore it
+        } catch (NoSuchMethodException e) {
+            // we ignore it
+        }
+//        if (ntm instanceof JackrabbitNodeTypeManager) {
+//            log.debug("Using Jackrabbit to import node types");
+//            JackrabbitNodeTypeManager jntm = (JackrabbitNodeTypeManager) ntm;
+//            try {
+//                jntm.registerNodeTypes(source,
+//                    JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
+//                return true;
+//            } catch (RepositoryException re) {
+//                Throwable t = re.getCause();
+//                if (t != null
+//                    && t.getClass().getName().endsWith(
+//                        ".InvalidNodeTypeDefException")) {
                     // hacky wacky: interpret message to check whether it is for
                     // duplicate node type -> very bad, that this is the only
                     // way to check !!!
-                    if (re.getCause().getMessage().indexOf("already exists") >= 0) {
+//                    if (re.getCause().getMessage().indexOf("already exists") >= 0) {
                         // alright, node types are already registered, ignore
                         // this
-                        log.debug("Node types already registered...");
-                        return true;
-                    }
-                }
+//                        log.debug("Node types already registered...");
+//                        return true;
+//                    }
+//                }
 
                 // get here to rethrow the RepositoryException
-                throw re;
-            }
-        }
+//                throw re;
+//            }
+//        }
 
         log.warn("Repository is not Jackrabbit based, cannot import node types");
         return false;

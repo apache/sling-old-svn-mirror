@@ -203,14 +203,16 @@ public class Loader implements NamespaceMapper {
                     // if we are retrying we already logged this message once, so we won't log it again
                     if ( !isRetry ) {
                         log.warn("Cannot read node types {} from bundle {}: {}",
-                            new Object[]{ nodeTypeFile, bundle.getSymbolicName()}, ioe);
+                            new Object[]{ nodeTypeFile, bundle.getSymbolicName(), ioe });
+                        log.warn("Stacktrace ", ioe);
                     }
                 } catch (Exception e) {
                     success = false;
                     // if we are retrying we already logged this message once, so we won't log it again
                     if ( !isRetry ) {
                         log.error("Error loading node types {} from bundle {}: {}",
-                            new Object[]{ nodeTypeFile, bundle.getSymbolicName()}, e);
+                            new Object[]{ nodeTypeFile, bundle.getSymbolicName(), e });
+                        log.error("Stacktrace ", e);
                     }
                 } finally {
                     if (ins != null) {
