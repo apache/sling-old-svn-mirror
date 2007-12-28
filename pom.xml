@@ -85,7 +85,7 @@
                             org.apache.sling.core.impl.*
                         </Private-Package>
                         <Sling-Nodetypes>
-                            SLING-INF/nodetypes/command.cnd,SLING-INF/nodetypes/component.cnd,SLING-INF/nodetypes/selection.cnd,SLING-INF/nodetypes/references.cnd
+                            SLING-INF/nodetypes/selection.cnd,SLING-INF/nodetypes/references.cnd
                         </Sling-Nodetypes>
                     </instructions>
                 </configuration>
