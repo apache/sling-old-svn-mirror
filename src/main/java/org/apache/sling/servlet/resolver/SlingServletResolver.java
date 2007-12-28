@@ -342,7 +342,7 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
     }
 
     protected synchronized void bindServlet(ServiceReference reference) {
-        if (servletContext == null) {
+        if (context == null || servletContext == null) {
             pendingServlets.add(reference);
         } else {
             createServlet(servletContext, reference);
@@ -350,7 +350,7 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
     }
 
     protected synchronized void unbindServlet(ServiceReference reference) {
-        if (servletContext == null) {
+        if (context == null || servletContext == null) {
             pendingServlets.remove(reference);
         } else {
             destroyServlet(reference);
