@@ -131,7 +131,7 @@ public class NodeTypeLoader {
                         // hacky wacky: interpret message to check whether it is for
                         // duplicate node type -> very bad, that this is the only
                         // way to check !!!
-                        if (t.getCause().getMessage().indexOf("already exists") >= 0) {
+                        if (t.getCause() != null && t.getCause().getMessage().indexOf("already exists") >= 0) {
                             // alright, node types are already registered, ignore
                             // this
                             log.debug("Node types already registered...");
