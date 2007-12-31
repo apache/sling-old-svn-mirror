@@ -49,6 +49,10 @@ public class Activator implements BundleActivator {
      */
     public static final String SLING_CONTEXT_DEFAULT = "sling.context.default";
 
+    protected String getRepositoryName() {
+        return "jackrabbit";
+    }
+
     /* (non-Javadoc)
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
@@ -87,7 +91,7 @@ public class Activator implements BundleActivator {
             String slingHome = context.getProperty("sling.home");
 
             // make sure jackrabbit home exists
-            File homeDir = new File(slingHome, "jackrabbit");
+            File homeDir = new File(slingHome, this.getRepositoryName());
             if (!homeDir.isDirectory()) {
                 if (!homeDir.mkdirs()) {
                     log.info("Activator: Cannot create Jackrabbit home " + homeDir
@@ -105,7 +109,7 @@ public class Activator implements BundleActivator {
             props.put(SLING_CONTEXT, slingContext);
             props.put(SlingServerRepository.REPOSITORY_CONFIG_URL, configFile.getPath());
             props.put(SlingServerRepository.REPOSITORY_HOME_DIR, homeDir.getPath());
-            props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME, "jackrabbit");
+            props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME, this.getRepositoryName());
 
             // create the factory and set the properties
             ca.createFactoryConfiguration(SERVER_REPOSITORY_FACTORY_PID).update(props);
