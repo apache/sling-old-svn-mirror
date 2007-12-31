@@ -40,7 +40,7 @@ import org.osgi.service.log.LogService;
  * <p>
  * To ensure this thread-safeness, said methods should not be overwritten.
  */
-abstract class AbstractRegistrationSupport {
+abstract public class AbstractRegistrationSupport {
 
     /**
      * The LogService for logging. Extensions of this class must declare the log
