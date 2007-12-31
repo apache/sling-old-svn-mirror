@@ -86,7 +86,7 @@ public class Activator implements BundleActivator {
 
             String slingHome = context.getProperty("sling.home");
 
-            // make sure CRX home exists
+            // make sure jackrabbit home exists
             File homeDir = new File(slingHome, "jackrabbit");
             if (!homeDir.isDirectory()) {
                 if (!homeDir.mkdirs()) {
