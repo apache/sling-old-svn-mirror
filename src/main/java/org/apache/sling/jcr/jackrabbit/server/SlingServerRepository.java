@@ -187,7 +187,7 @@ public class SlingServerRepository extends AbstractSlingRepository
 
     //---------- Helper -------------------------------------------------------
 
-    static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException, IOException {
+    public static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException, IOException {
         if (destFile.canRead()) {
             // nothing to do, file exists
             return;
