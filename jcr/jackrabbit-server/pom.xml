@@ -69,7 +69,7 @@
                             org.apache.sling.jcr.jackrabbit.server.Activator
                         </Bundle-Activator>
                         <!-- 
-                            Export the crx-core package for CRXModule
+                            Export the jackrabbit-core package for module
                             implementations to have access. It is not intended
                             for clients to import any of these packages into
                             their bundles as this export may change without
@@ -121,11 +121,6 @@
                         </Export-Package>
                         <Private-Package>
                             <!-- !org.apache.jackrabbit.*, -->
-                            <!--
-                                issue of split packages between crx-commons
-                                and day-commons-misc. Hence, include com.day.util
-                                here and forget about the rest ....
-                            -->
                             org.apache.sling.jcr.jackrabbit.server.*,
                             META-INF.services.*;-split-package:=merge-first,
 
