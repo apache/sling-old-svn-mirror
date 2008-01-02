@@ -57,8 +57,6 @@ import org.osgi.service.log.LogService;
  * @scr.property value="-1" type="Integer" name="pool.maxActive"
  * @scr.property value="10" type="Integer" name="pool.maxIdle"
  * @scr.property value="1" type="Integer" name="pool.maxActiveWait"
- *
- * @author fmeschbe
  */
 public class SlingServerRepository extends AbstractSlingRepository
         implements Repository, SlingRepository {
@@ -150,16 +148,6 @@ public class SlingServerRepository extends AbstractSlingRepository
 
         // deactivate the base class (session pooling etc.)
         super.deactivate(componentContext);
-    }
-
-    // set logger
-    protected void bindLogService(LogService log) {
-        this.log = log;
-    }
-
-    // remove logger
-    protected void unbindLogService(LogService log) {
-        this.log = null;
     }
 
     //---------- Repository Publication ---------------------------------------
