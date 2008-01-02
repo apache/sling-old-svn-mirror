@@ -24,14 +24,17 @@
 [slingevent:Events] > nt:base, mix:lockable
   + * (slingevent:Event)
 
+[slingevent:TimedEvents] > nt:base, mix:lockable
+ + * (slingevent:TimedEvent)
+
+[slingevent:Jobs] > nt:base, mix:lockable
+  + * (slingevent:Job)
+  
 [slingevent:Event] > nt:base
   - slingevent:topic (string)
   - slingevent:application (string)
   - slingevent:created (date)
   - slingevent:properties (binary)
-  
-[slingevent:Jobs] > slingevent:Events, mix:lockable
-  + * (slingevent:Job)
   
 [slingevent:Job] > slingevent:Event, mix:lockable
   - slingevent:processor (string)
@@ -39,8 +42,6 @@
   - slingevent:id (string)
   - slingevent:finished (date)
 
-[slingevent:TimedEvents] > slingevent:Events, mix:lockable
- + * (slingevent:TimedEvent)
  
 [slingevent:TimedEvent] > slingevent:Event, mix:lockable
   - slingevent:processor (string)
