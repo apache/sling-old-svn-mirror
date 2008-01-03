@@ -39,6 +39,3 @@
 	
   + sling:selector (sling:Selector)
     copy
-
-    
-[sling:SelectableContent] > sling:Content,sling:Selectable
