@@ -33,7 +33,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Sling - Maven Plugin for Compiling JSP sources into Bundles Development</name>
+    <name>Sling - Maven Plugin for Compiling JSP Sources into Bundles</name>
     <description>
         Maven Plugin compiling JSPs
     </description>
