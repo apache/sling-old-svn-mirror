@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -222,7 +223,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
 
     @SuppressWarnings("unchecked")
     private Map<Object, Object> asMap(Resource resource) {
-        
+
         Object object = resource.adaptTo(Object.class);
         if (object != null) {
             if (object instanceof Map) {
@@ -233,6 +234,6 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         }
 
         // no objects available
-        return null;
+        return Collections.EMPTY_MAP; // unchecked cast
     }
 }
