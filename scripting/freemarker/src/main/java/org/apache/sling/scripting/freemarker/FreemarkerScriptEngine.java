@@ -33,7 +33,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 
 /**
- * A ScriptEngine that uses {@link http://freemarker.org/ FreeMarker} templates
+ * A ScriptEngine that uses <a href="http://freemarker.org/">FreeMarker</a> templates
  * to render a Resource in HTML.
  */
 public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
