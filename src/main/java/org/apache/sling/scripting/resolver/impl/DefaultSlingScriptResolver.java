@@ -37,7 +37,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
-import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.scripting.resolver.ScriptPathSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -52,13 +51,13 @@ import org.slf4j.LoggerFactory;
  * by the extension of the current request and the desired script extension. For
  * example, a "js" script for a GET request on a Resource of type some/type with
  * request extension "html" should be stored as
- * 
+ *
  * <pre>
  *      /sling/scripts/some/type/get.html.js
  * </pre>
- * 
+ *
  * in the repository.
- * 
+ *
  * @scr.component metatype="no"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Default SlingScriptResolver"
@@ -94,7 +93,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
     /**
      * Try to find a script Node that can process the given request, based on
      * the rules defined above.
-     * 
+     *
      * @return null if not found.
      */
     public SlingScript resolveScript(final SlingHttpServletRequest request)
@@ -165,21 +164,21 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
 
     private ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
-            
+
             // create (empty) script engine manager
             ClassLoader loader = getClass().getClassLoader();
             ScriptEngineManager tmp = new ScriptEngineManager(loader);
-            
+
             // register script engines from bundles
             for (Bundle bundle : engineSpiBundles) {
                 registerFactories(tmp, bundle);
             }
-            
+
             // register script engines from registered services
             for (ScriptEngineFactory factory : engineSpiServices) {
                 registerFactory(tmp, factory);
             }
-            
+
             scriptEngineManager = tmp;
         }
         return scriptEngineManager;

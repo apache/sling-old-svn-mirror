@@ -18,7 +18,6 @@
  */
 package org.apache.sling.scripting.resolver.impl;
 
-import java.io.IOException;
 import java.io.Writer;
 
 import org.slf4j.Logger;
