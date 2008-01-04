@@ -86,6 +86,7 @@ public class Loader {
     }
 
     public void registerBundle(Session session, Bundle bundle) {
+        log.debug("Registering bundle {} for content loading.", bundle.getSymbolicName());
         if (this.registerBundleInternal(session, bundle, false)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
@@ -142,7 +143,7 @@ public class Loader {
         }
 
         try {
-            log.debug("Installing Initial Content of Bundle {}", bundle.getSymbolicName());
+            log.debug("Installing initial content from bundle {}", bundle.getSymbolicName());
             StringTokenizer tokener = new StringTokenizer(root, ",");
             while (tokener.hasMoreTokens()) {
                 String path = tokener.nextToken().trim();
@@ -166,16 +167,16 @@ public class Loader {
     }
 
     private void install(Bundle bundle, String path, javax.jcr.Node parent) throws RepositoryException {
-        Set<URL> ignoreEntry = new HashSet<URL>();
-
-        Enumeration<?> entries = bundle.getEntryPaths(path);
+        @SuppressWarnings("unchecked")
+        Enumeration<String> entries = bundle.getEntryPaths(path);
         if (entries == null) {
             log.info("install: No entries at {}", path);
             return;
         }
 
+        Set<URL> ignoreEntry = new HashSet<URL>();
         while (entries.hasMoreElements()) {
-            String entry = (String) entries.nextElement();
+            final String entry = entries.nextElement();
             if (entry.endsWith("/")) {
                 // dir, check for node descriptor , else create dir
                 String base = entry.substring(0, entry.length()-1);
