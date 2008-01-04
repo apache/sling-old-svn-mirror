@@ -1,0 +1,215 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.osgi.commons;
+
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventConstants;
+
+/**
+ * The <code>OsgiUtil</code> is a utility class providing some usefull utility
+ * methods.
+ */
+public class OsgiUtil {
+
+    /**
+     * Returns the boolean value of the named service reference property or the
+     * <code>defaultValue</code> if no such service reference property exist.
+     * If the service property is not a <code>Boolean</code> it is converted
+     * by calling <code>Boolean.valueOf</code> on the string value of the
+     * property.
+     */
+    public static boolean getProperty(ServiceReference reference, String name,
+            boolean defaultValue) {
+        Object propValue = getPropertyObject(reference, name);
+        if (propValue instanceof Boolean) {
+            return (Boolean) propValue;
+        } else if (propValue != null) {
+            return Boolean.valueOf(String.valueOf(propValue));
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Returns the named service reference property as a string or the
+     * <code>defaultValue</code> if no such reference property exists.
+     */
+    public static String getProperty(ServiceReference reference, String name,
+            String defaultValue) {
+        Object propValue = getPropertyObject(reference, name);
+        return (propValue != null) ? propValue.toString() : defaultValue;
+    }
+
+    /**
+     * Returns the named service reference property as an integer or the
+     * <code>defaultValue</code> if no such reference property exists or if
+     * the property is not an <code>Integer</code> and cannot be converted to
+     * an <code>Integer</code> from the property's string value.
+     */
+    public static int getProperty(ServiceReference reference, String name,
+            int defaultValue) {
+        Object propValue = getPropertyObject(reference, name);
+        if (propValue instanceof Integer) {
+            return (Integer) propValue;
+        } else if (propValue != null) {
+            try {
+                return Integer.valueOf(String.valueOf(propValue));
+            } catch (NumberFormatException nfe) {
+                // don't care, fall through to default value
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Returns the named service reference property as a double or the
+     * <code>defaultValue</code> if no such reference property exists or if
+     * the property is not an <code>Double</code> and cannot be converted to
+     * an <code>Double</code> from the property's string value.
+     */
+    public static double getProperty(ServiceReference reference, String name,
+            double defaultValue) {
+        Object propValue = getPropertyObject(reference, name);
+        if (propValue instanceof Double) {
+            return (Double) propValue;
+        } else if (propValue != null) {
+            try {
+                return Double.valueOf(String.valueOf(propValue));
+            } catch (NumberFormatException nfe) {
+                // don't care, fall through to default value
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Returns the named service reference property as a single value. If the
+     * property is neither an array nor a <code>java.util.Vector</code> the
+     * property is returned unmodified. If the property is a non-empty array,
+     * the first array element is returned. If the property is a non-empty
+     * <code>java.util.Vector</code>, the first vector element is returned.
+     * Otherwise <code>null</code> is returned.
+     */
+    public static Object getPropertyObject(ServiceReference reference,
+            String name) {
+        Object propValue = reference.getProperty(name);
+        if (propValue == null) {
+            return null;
+        } else if (propValue.getClass().isArray()) {
+            Object[] prop = (Object[]) propValue;
+            return prop.length > 0 ? prop[0] : null;
+        } else if (propValue instanceof Vector) {
+            Vector<?> prop = (Vector<?>) propValue;
+            return prop.isEmpty() ? null : prop.get(0);
+        } else {
+            return propValue;
+        }
+    }
+
+    /**
+     * Returns the named service reference property as an array of Strings. If
+     * the property is a scalar value its string value is returned as a single
+     * element array. If the property is an array, the elements are converted to
+     * String objects and returned as an array. If the property is a vector, the
+     * vector elements are converted to String objects and returned as an array.
+     * Otherwise (if the property does not exist) <code>null</code> is
+     * returned.
+     */
+    public static String[] getProperty(ServiceReference reference, String name) {
+        Object propValue = reference.getProperty(name);
+        if (propValue instanceof String) {
+            // single string
+            return new String[] { (String) propValue };
+            
+        } else if (propValue instanceof String[]) {
+            // String[]
+            return (String[]) propValue;
+            
+        } else if (propValue.getClass().isArray()) {
+            // other array
+            Object[] valueArray = (Object[]) propValue;
+            List<String> values = new ArrayList<String>(valueArray.length);
+            for (Object value : valueArray) {
+                if (value != null) {
+                    values.add(value.toString());
+                }
+            }
+            return values.toArray(new String[values.size()]);
+            
+        } else if (propValue instanceof Vector) {
+            // vector
+            Vector<?> valueVector = (Vector<?>) propValue;
+            List<String> values = new ArrayList<String>(valueVector.size());
+            for (Object value : valueVector) {
+                if (value != null) {
+                    values.add(value.toString());
+                }
+            }
+            return values.toArray(new String[values.size()]);
+        }
+
+        return null;
+    }
+
+    public static Event createEvent(Bundle sourceBundle, ServiceReference sourceService, String eventName,
+            Map<String, Object> props) {
+
+        // get a private copy of the properties
+        Dictionary<String, Object> table = new Hashtable<String, Object>(props);
+
+        // service information of this JcrResourceResolverFactoryImpl service
+        if (sourceService != null) {
+            table.put(EventConstants.SERVICE, sourceService);
+            table.put(EventConstants.SERVICE_ID,
+                sourceService.getProperty(org.osgi.framework.Constants.SERVICE_ID));
+            table.put(EventConstants.SERVICE_OBJECTCLASS,
+                sourceService.getProperty(org.osgi.framework.Constants.OBJECTCLASS));
+            if (sourceService.getProperty(org.osgi.framework.Constants.SERVICE_PID) != null) {
+                table.put(EventConstants.SERVICE_PID,
+                    sourceService.getProperty(org.osgi.framework.Constants.SERVICE_PID));
+            }
+        }
+
+        // source bundle information (if available)
+        if (sourceBundle != null) {
+            table.put(EventConstants.BUNDLE_SYMBOLICNAME,
+                sourceBundle.getSymbolicName());
+        }
+
+        // timestamp the event
+        table.put(EventConstants.TIMESTAMP,
+            new Long(System.currentTimeMillis()));
+
+        // create the event
+        return new Event(eventName, table);
+    }
+
+}
