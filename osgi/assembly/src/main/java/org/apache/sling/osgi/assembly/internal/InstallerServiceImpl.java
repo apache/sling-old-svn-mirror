@@ -290,36 +290,37 @@ public class InstallerServiceImpl implements InstallerService,
 
     protected RepositoryAdmin getRepositoryAdmin() {
         if (this.repositoryAdmin == null) {
-            this.repositoryAdmin = (RepositoryAdmin) this.getService(RepositoryAdmin.class);
+            this.repositoryAdmin = this.getService(RepositoryAdmin.class);
         }
         return this.repositoryAdmin;
     }
 
     protected StartLevel getStartLevel() {
         if (this.startLevel == null) {
-            this.startLevel = (StartLevel) this.getService(StartLevel.class);
+            this.startLevel = this.getService(StartLevel.class);
         }
         return this.startLevel;
     }
 
     protected PackageAdmin getPackageAdmin() {
         if (this.packageAdmin == null) {
-            this.packageAdmin = (PackageAdmin) this.getService(PackageAdmin.class);
+            this.packageAdmin = this.getService(PackageAdmin.class);
         }
         return this.packageAdmin;
     }
 
     protected LogService getLogService() {
         if (this.log == null) {
-            this.log = (LogService) this.getService(LogService.class);
+            this.log = this.getService(LogService.class);
         }
         return this.log;
     }
 
-    private Object getService(Class serviceClass) {
+    @SuppressWarnings("unchecked")
+    private <ServiceType> ServiceType getService(Class<ServiceType> serviceClass) {
         ServiceReference ref = this.bundleContext.getServiceReference(serviceClass.getName());
         if (ref != null) {
-            return this.bundleContext.getService(ref);
+            return (ServiceType) this.bundleContext.getService(ref); // unchecked cast
         }
 
         return null;

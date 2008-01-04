@@ -112,8 +112,8 @@ class Assembly {
      * State of this assembly after the Assembly Bundle has been installed by
      * the OSGi framework and the <code>BundleEvent.INSTALLED</code> event has
      * been processed by the {@link #install()} method (value is 1). This is
-     * also the state of Assembly instances after the assembly bundle as been
-     * unresolved by the {@link #unresolve()} method.
+     * also the state of Assembly instances after the assembly bundle has been
+     * unresolved.
      */
     public static final int STATE_INSTALLED = 1;
 

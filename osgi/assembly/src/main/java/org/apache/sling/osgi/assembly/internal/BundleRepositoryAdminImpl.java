@@ -61,12 +61,13 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      *
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getRepositories()
      */
+    @SuppressWarnings("unchecked")
     public Iterator<Repository> getRepositories() {
         Object lock = this.installerService.acquireLock(0);
         try {
             org.osgi.service.obr.Repository[] repos = this.getRepositoryAdmin().listRepositories();
             if (repos == null || repos.length == 0) {
-                return Collections.EMPTY_LIST.iterator();
+                return Collections.EMPTY_LIST.iterator(); // unchecked
             }
 
             SortedSet<Repository> urlSet = new TreeSet<Repository>();
@@ -84,12 +85,13 @@ class BundleRepositoryAdminImpl implements BundleRepositoryAdmin {
      *
      * @see org.apache.sling.core.assembly.installer.BundleRepositoryAdmin#getResources()
      */
+    @SuppressWarnings("unchecked")
     public Iterator<org.apache.sling.osgi.assembly.installer.Resource> getResources() {
         Object lock = this.installerService.acquireLock(0);
         try {
             org.osgi.service.obr.Repository[] repos = this.getRepositoryAdmin().listRepositories();
             if (repos == null || repos.length == 0) {
-                return Collections.EMPTY_LIST.iterator();
+                return Collections.EMPTY_LIST.iterator(); // unchecked
             }
 
             SortedSet<org.apache.sling.osgi.assembly.installer.Resource> resSet = new TreeSet<org.apache.sling.osgi.assembly.installer.Resource>();
