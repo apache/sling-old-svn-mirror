@@ -62,6 +62,11 @@ public class SlingException extends ServletException {
      */
     public SlingException(String text, Throwable cause) {
         super(text, cause);
+        
+        // ensure proper JDK 1.4 exception chaining
+        if (getCause() == null) {
+            initCause(cause); 
+        }
     }
 
     /**
@@ -73,5 +78,10 @@ public class SlingException extends ServletException {
      */
     public SlingException(Throwable cause) {
         super(cause);
+
+        // ensure proper JDK 1.4 exception chaining
+        if (getCause() == null) {
+            initCause(cause); 
+        }
     }
 }
