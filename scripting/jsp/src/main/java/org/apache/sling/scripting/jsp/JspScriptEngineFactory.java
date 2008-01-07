@@ -270,7 +270,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                     // } catch (ServletException se) {
                 } catch (Exception e) {
                     throw new ScriptException(e);
-                } catch (Throwable t) {
                 }
             }
             return null;
