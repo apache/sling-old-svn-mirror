@@ -51,8 +51,8 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
             // rethrow as is
             throw se;
         } catch (ServletException se) {
-            if (se.getCause() != null) {
-                throw new SlingException(se.getMessage(), se.getCause());
+            if (se.getRootCause() != null) {
+                throw new SlingException(se.getMessage(), se.getRootCause());
             }
             throw new SlingException(se);
         }
