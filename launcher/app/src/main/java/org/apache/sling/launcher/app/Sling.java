@@ -335,7 +335,7 @@ public class Sling implements BundleActivator {
      *         an error.
      */
     private Map<String, String> loadConfigProperties(
-            Map<String, String> propOverwrite) {
+            Map<String, String> propOverwrite) throws BundleException {
         // The config properties file is either specified by a system
         // property or it is in the same directory as the Felix JAR file.
         // Try to load it from one of these places.
@@ -511,8 +511,12 @@ public class Sling implements BundleActivator {
      * @param prefix The prefix of properties to handle.
      */
     private void resolve(Map<String, String> props, String osgiProp,
-            String prefix) {
-        StringBuffer prop = new StringBuffer(props.get(osgiProp));
+            String prefix) throws BundleException {
+        final String propVal = props.get(osgiProp);
+        if(propVal == null) {
+            throw new BundleException(osgiProp + " property is null, Sling.resolve() fails");
+        }
+        StringBuffer prop = new StringBuffer(propVal);
         boolean mod = false;
         for (Entry<String, String> pEntry : props.entrySet()) {
             String key = pEntry.getKey();
