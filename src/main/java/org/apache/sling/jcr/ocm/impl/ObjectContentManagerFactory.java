@@ -339,7 +339,7 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
         String[] mappedClasses = (mapper != null)
                 ? mapper.getMappedClasses()
                 : new String[0];
-        adapterFactory = new OcmAdapterFactory(
+        adapterFactory = new OcmAdapterFactory(this,
             componentContext.getBundleContext(), mappedClasses);
     }
 
