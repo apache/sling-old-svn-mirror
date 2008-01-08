@@ -94,7 +94,8 @@ public class LocaleResolverFilter implements Filter {
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(org.osgi.service.component.ComponentContext context) {
-        Dictionary configuration = context.getProperties();
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> configuration = context.getProperties();
         String localeString = (String) configuration.get(PAR_DEFAULT_LOCALE);
         this.defaultLocale = this.toLocale(localeString);
     }
