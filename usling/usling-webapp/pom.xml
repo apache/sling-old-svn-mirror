@@ -57,7 +57,23 @@
 
   <build>
     <plugins>
-      <plugin>
+
+    <plugin>
+      <!-- 
+        The clean plugin deletes the sling work directory as well,
+        to avoid confusion with leftovers from previous runs
+      -->
+      <artifactId>maven-clean-plugin</artifactId>
+      <configuration>
+        <filesets>
+          <fileset>
+            <directory>sling</directory>
+          </fileset>
+        </filesets>
+      </configuration>
+    </plugin>
+
+    <plugin>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>maven-jetty-plugin</artifactId>
         <version>6.1.5</version>
@@ -81,12 +97,12 @@
         </configuration>
       </plugin>
 
-      <!-- Unpack the sling-app launcher for inclusion in the web app -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
+            <!-- Unpack the sling-app launcher for inclusion in the web app -->
             <id>unpack-dependencies</id>
             <goals>
               <goal>unpack-dependencies</goal>
@@ -97,6 +113,20 @@
               <outputDirectory>${project.build.directory}/launcher-app</outputDirectory>
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>true</overWriteSnapshots>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Copy bundles that must be initially installed to WEB-INF/resources/bundles -->
+            <id>copy-dependencies</id>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/resources/bundles</outputDirectory>
+              <excludeTransitive>true</excludeTransitive>
+              
+              <!-- List artifact names of bundles to install here -->
+              <includeArtifactIds>org.apache.sling.usling.servlets</includeArtifactIds>
             </configuration>
           </execution>
         </executions>
@@ -139,6 +169,7 @@
           </webResources>
         </configuration>
       </plugin>
+      
     </plugins>
   </build>
 
@@ -170,7 +201,6 @@
       <artifactId>org.apache.sling.launcher.app</artifactId>
       <version>2.0.0-incubator-SNAPSHOT</version>
     </dependency>
-
     <dependency>
       <groupId>org.eclipse.equinox.http</groupId>
       <artifactId>servlet</artifactId>
@@ -184,13 +214,12 @@
       <artifactId>servlet-api</artifactId>
     </dependency>
 
-    <!-- Load the Sling web console bundle -->
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.osgi.console.web</artifactId>
+      <artifactId>org.apache.sling.usling.servlets</artifactId>
       <version>2.0.0-incubator-SNAPSHOT</version>
     </dependency>
-
+    
   </dependencies>
 
 </project>
