@@ -23,7 +23,6 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
  * The <code>ErrorHandler</code> defines the interface of the service used by
@@ -38,7 +37,7 @@ public interface ErrorHandler {
      * <p>
      * If the response has already been committed, an error message should be
      * logged but no further processing should take place.
-     * 
+     *
      * @param status The HTTP status code to set
      * @param message An optional message to write to the response. This message
      *            may be <code>null</code>.
@@ -56,7 +55,7 @@ public interface ErrorHandler {
      * <p>
      * If the response has already been committed, an error message should be
      * logged but no further processing should take place.
-     * 
+     *
      * @param throwable The <code>Throwable</code> causing this method to be
      *            called.
      * @param request The request object providing more information on the

@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
  * not used to locate the Resource, and we split that part in different
  * subparts: selectors, extension and suffix.
  *
- * @see MicroslingRequestPathInfoTest for a number of examples.
+ * @see SlingRequestPathInfoTest for a number of examples.
  */
 public class SlingRequestPathInfo implements RequestPathInfo {
 

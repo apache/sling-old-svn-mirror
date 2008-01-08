@@ -38,12 +38,12 @@ import org.apache.sling.api.request.RequestProgressTracker;
  * The following functionality is provided:
  * <ol>
  * <li>Track the progress of request processing through the
- * {@link #log(String)} and {@link #log(String, String)} methods.
+ * {@link #log(String)} and {@link #log(String, Object...)} methods.
  * <li>Ability to measure and track processing times of parts of request
  * processing through the {@link #startTimer(String)} and
- * {@link #checkTimer(String)} methods.
+ * {@link #logTimer(String)} methods.
  * <li>Dumping the recording messages through the
- * {@link #dumpText(PrintWriter)} method.
+ * {@link #dump(PrintWriter)} method.
  * <li>Resetting the tracker through the {@link #reset()} method.
  * </ol>
  * <p>

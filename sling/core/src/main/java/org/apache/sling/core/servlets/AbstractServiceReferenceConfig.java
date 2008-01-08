@@ -30,7 +30,6 @@ import java.util.List;
 
 import javax.servlet.ServletContext;
 
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -72,7 +71,7 @@ public abstract class AbstractServiceReferenceConfig {
 
     /**
      * Sets up this base configuration object.
-     * 
+     *
      * @param servletContext The <code>ServletContext</code> attached to this
      *            configuration.
      * @param reference The service reference providing the initialization
@@ -113,7 +112,7 @@ public abstract class AbstractServiceReferenceConfig {
     /**
      * Looks for a name value in the service reference properties. See the
      * class comment at the top for the list of properties checked by this
-     * method. 
+     * method.
      */
     public static String getName(ServiceReference reference) {
         String servletName = null;

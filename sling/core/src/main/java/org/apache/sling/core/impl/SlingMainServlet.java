@@ -46,7 +46,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -136,7 +135,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private ErrorHandler errorHandler;
-    
+
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
@@ -203,7 +202,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                     hsce.getMessage(), clientRequest, clientResponse);
 
             } catch (Throwable t) {
-                
+
                 // if we have request data and a non-null active servlet name
                 // we assume, that this is the name of the causing servlet
                 if (requestData != null
@@ -211,7 +210,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                     clientRequest.setAttribute(ERROR_SERVLET_NAME,
                         requestData.getActiveServletName());
                 }
-                
+
                 getErrorHandler().handleError(t, clientRequest, clientResponse);
 
             } finally {
@@ -288,7 +287,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     }
 
     // ---------- ErrorHandler interface (default implementation) --------------
-    
+
     // reset the response, set the status and write a simple message
     public void handleError(int status, String message,
             HttpServletRequest request, HttpServletResponse response)
@@ -299,12 +298,12 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         } else {
             message = status + " - " + message;
         }
-        
+
         if (response.isCommitted()) {
             log.error("handleError: Response already committed; cannot send error "
                 + status + message);
         } else {
-        
+
             // error situation
             String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
             String requestURI = (String) request.getAttribute(ERROR_REQUEST_URI);
@@ -314,11 +313,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
             // reset anything in the response first
             response.reset();
-            
+
             // set the status, content type and encoding
             response.setStatus(status);
             response.setContentType("text/html; charset=UTF-8");
-            
+
             PrintWriter pw = response.getWriter();
             pw.println("<html><head><title>");
             pw.println(message);
@@ -348,7 +347,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                 "handleError: Response already committed; cannot send error",
                 throwable);
         } else {
-        
+
             // error situation
             String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
             String requestURI = (String) request.getAttribute(ERROR_REQUEST_URI);
@@ -358,7 +357,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
             // reset anything in the response first
             response.reset();
-            
+
             // set the status, content type and encoding
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("text/html; charset=UTF-8");
@@ -378,13 +377,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             pw.println("</pre><hr /><address>");
             pw.println(getServerInfo());
             pw.println("</address></body></html>");
-            
+
             // commit the response
             response.flushBuffer();
 
         }
     }
-    
+
     // ---------- Internal helper ----------------------------------------------
 
     public String getServerInfo() {
