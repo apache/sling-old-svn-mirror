@@ -34,7 +34,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
  * @scr.property name="service.description"
  *          value="Servlet to handle nt:file nodes"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.resourceTypes" value="nt:file"
+ * @scr.property name="sling.core.resourceTypes" value="nt:file"
  * @scr.service
  */
 public class FileServlet extends SlingAllMethodsServlet {
