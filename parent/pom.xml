@@ -152,6 +152,11 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.sling</groupId>
+                    <artifactId>maven-sling-plugin</artifactId>
+                    <version>2.0.0-incubator-SNAPSHOT</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.sling</groupId>
                     <artifactId>maven-jcrocm-plugin</artifactId>
                     <version>2.0.0-incubator-SNAPSHOT</version>
                     <executions>
@@ -206,7 +211,39 @@
         </pluginManagement>
     </build>
 
-
+    <profiles>
+        <profile>
+            <id>develop</id>
+            <activation>
+              <property>
+                <name>mode</name>
+                <value>develop</value>
+              </property>
+            </activation>
+            <properties>
+            <test>true</test>
+            </properties>
+<!-- 
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-sling-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install-bundle</id>
+                                <goals>
+                                    <goal>install</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+ -->
+        </profile>
+     </profiles>
+    
     <mailingLists>
         <mailingList>
             <name>Sling Development List</name>
