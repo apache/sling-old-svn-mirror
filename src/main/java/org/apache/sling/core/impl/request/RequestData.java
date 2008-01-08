@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
  * The <code>RequestData</code> class provides access to objects which are set
  * on a Servlet Request wide basis such as the repository session, the
  * persistence manager, etc.
- * 
+ *
  * @see ContentData
  */
 public class RequestData implements BufferProvider {
@@ -110,7 +110,7 @@ public class RequestData implements BufferProvider {
 
     /** the stack of ContentData objects */
     private LinkedList<ContentData> contentDataStack;
-    
+
     /**
      * the number of servlets called by
      * {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
@@ -119,7 +119,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * The name of the currently active serlvet.
-     * 
+     *
      * @see #setActiveServletName(String)
      * @see #getActiveServletName()
      */
@@ -244,9 +244,8 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps the SlingHttpServletRequest to a SlingHttpServletRequestImpl
-     * 
+     *
      * @param request
-     * @return
      * @throws SlingException
      */
     public static SlingHttpServletRequestImpl unwrap(
@@ -291,9 +290,8 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps a SlingHttpServletResponse to a SlingHttpServletResponseImpl
-     * 
+     *
      * @param response
-     * @return
      * @throws SlingException
      */
     public static SlingHttpServletResponseImpl unwrap(
@@ -367,7 +365,7 @@ public class RequestData implements BufferProvider {
         // and unwrapped component response
         return null;
     }
-    
+
     /**
      * Helper method to call the servlet for the current content data. If the
      * current content data has no servlet, <em>NOT_FOUND</em> (404) error is
@@ -383,7 +381,7 @@ public class RequestData implements BufferProvider {
      * servlet terminates normally. In case of a Throwable, the active servlet
      * name is not reset and indicates which servlet caused the potential abort
      * of the request.
-     * 
+     *
      * @param request The request object for the service method
      * @param response The response object for the service method
      * @throws IOException May be thrown by the servlet's service method
