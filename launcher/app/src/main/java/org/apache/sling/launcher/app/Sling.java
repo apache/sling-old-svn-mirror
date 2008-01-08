@@ -513,10 +513,7 @@ public class Sling implements BundleActivator {
     private void resolve(Map<String, String> props, String osgiProp,
             String prefix) throws BundleException {
         final String propVal = props.get(osgiProp);
-        if(propVal == null) {
-            throw new BundleException(osgiProp + " property is null, Sling.resolve() fails");
-        }
-        StringBuffer prop = new StringBuffer(propVal);
+        StringBuffer prop = new StringBuffer(propVal == null ? "" : propVal);
         boolean mod = false;
         for (Entry<String, String> pEntry : props.entrySet()) {
             String key = pEntry.getKey();
