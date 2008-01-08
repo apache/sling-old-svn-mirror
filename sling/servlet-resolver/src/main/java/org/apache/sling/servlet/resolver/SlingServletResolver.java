@@ -18,9 +18,13 @@
  */
 package org.apache.sling.servlet.resolver;
 
-import static org.apache.sling.api.SlingConstants.*;
-import static org.apache.sling.core.CoreConstants.*;
-import static org.apache.sling.servlet.resolver.ServletResolverConstants.*;
+import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
+import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
+import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
+import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
+import static org.apache.sling.core.CoreConstants.SLING_CURRENT_SERVLET_NAME;
+import static org.apache.sling.servlet.resolver.ServletResolverConstants.DEFAULT_SERVLET_NAME;
+import static org.apache.sling.servlet.resolver.ServletResolverConstants.SLING_RESOURCE_TYPES;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -339,6 +343,16 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
                 }
             }
         }
+        List<ServiceReference> refs = null;
+        synchronized (this) {
+            if ( this.servletContext != null ) {
+                refs = this.pendingServlets;
+                this.pendingServlets = new ArrayList<ServiceReference>();
+            }
+        }
+        if ( refs != null ) {
+            this.createAllServlets(this.servletContext, refs);
+        }
     }
 
     protected synchronized void bindServlet(ServiceReference reference) {
@@ -366,8 +380,12 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
 
             if (this.servletContext == null) {
 
-                refs = pendingServlets;
-                pendingServlets = new ArrayList<ServiceReference>();
+                if ( this.context != null ) {
+                    refs = pendingServlets;
+                    pendingServlets = new ArrayList<ServiceReference>();
+                } else {
+                    refs = null;
+                }
                 destroy = false;
 
             } else {
@@ -384,7 +402,9 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
             destroyAllServlets(refs);
         }
 
-        createAllServlets(this.servletContext, refs);
+        if ( refs != null ) {
+            createAllServlets(this.servletContext, refs);
+        }
     }
 
     protected void unbindServletContext(ServletContext oldServletContext) {
