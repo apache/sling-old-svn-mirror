@@ -35,7 +35,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
  * @scr.property name="service.description"
  *          value="Servlet to handle nt:folder nodes"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.resourceTypes" value="nt:folder"
+ * @scr.property name="sling.core.resourceTypes" value="nt:folder"
  * @scr.service
  */
 public class FolderServlet extends SlingAllMethodsServlet {
