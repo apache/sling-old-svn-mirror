@@ -529,6 +529,7 @@ public class Sling implements BundleActivator {
                         Class.forName(className, true,
                             this.getClass().getClassLoader());
                     } catch (Throwable t) {
+                        this.logger.log(Logger.LOG_DEBUG, "Class " + className + " not found. Ignoring '" + pEntry.getValue() + "' for property " + osgiProp);
                         // don't really care, but class checking failed, so we
                         // do not add
                         continue;
@@ -536,6 +537,7 @@ public class Sling implements BundleActivator {
                 }
 
                 // get here if class is known or no checker class
+                this.logger.log(Logger.LOG_DEBUG, "Adding '" + pEntry.getValue() + "' to property " + osgiProp);
                 prop.append(',').append(pEntry.getValue());
                 mod = true;
             }
@@ -543,6 +545,7 @@ public class Sling implements BundleActivator {
 
         // replace the property with the modified property
         if (mod) {
+            this.logger.log(Logger.LOG_DEBUG, "Setting property " + osgiProp + " to " + prop.toString());
             props.put(osgiProp, prop.toString());
         }
     }
