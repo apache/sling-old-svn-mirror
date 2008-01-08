@@ -535,7 +535,10 @@ public class Sling implements BundleActivator {
 
                 // get here if class is known or no checker class
                 this.logger.log(Logger.LOG_DEBUG, "Adding '" + pEntry.getValue() + "' to property " + osgiProp);
-                prop.append(',').append(pEntry.getValue());
+                if ( prop.length() > 0 ) {
+                    prop.append(',');
+                }
+                prop.append(pEntry.getValue());
                 mod = true;
             }
         }
