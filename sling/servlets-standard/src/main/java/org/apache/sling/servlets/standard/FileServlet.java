@@ -48,7 +48,7 @@ public class FileServlet extends SlingAllMethodsServlet {
         FileObject file = resource.adaptTo(FileObject.class);
         if (file == null) {
             throw new SlingException("Missing mapped object for file "
-                + resource.getURI());
+                + resource.getPath());
         }
 
         // just render the child content
@@ -58,7 +58,7 @@ public class FileServlet extends SlingAllMethodsServlet {
             RequestDispatcher rd = request.getRequestDispatcher(jcrContent);
             rd.include(request, response);
         } else {
-            throw new SlingException("File " + resource.getURI()
+            throw new SlingException("File " + resource.getPath()
                 + " has no content");
         }
     }

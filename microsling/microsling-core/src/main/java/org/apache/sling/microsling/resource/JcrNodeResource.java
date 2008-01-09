@@ -119,7 +119,7 @@ public class JcrNodeResource implements Resource {
             }
         } catch (RepositoryException re) {
             throw (IOException) new IOException("Cannot get InputStream for "
-                + getURI()).initCause(re);
+                + getPath()).initCause(re);
         }
 
         // fallback to non-streamable resource

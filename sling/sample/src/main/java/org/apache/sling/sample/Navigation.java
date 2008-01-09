@@ -67,7 +67,7 @@ public class Navigation extends SlingSafeMethodsServlet {
         // to not draw the link to the content of the current page, we
         // retrieve the path of the page level content
         Resource requestContent = (Resource) request.getAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
-        String requestPath = requestContent.getURI();
+        String requestPath = requestContent.getPath();
 
         PrintWriter pw = response.getWriter();
         pw.println("<ul>");

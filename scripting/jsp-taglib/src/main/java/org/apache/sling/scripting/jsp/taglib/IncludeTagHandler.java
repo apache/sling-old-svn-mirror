@@ -71,12 +71,12 @@ public class IncludeTagHandler extends TagSupport {
         if (resource != null) {
             // get the request dispatcher for the content object
             dispatcher = request.getRequestDispatcher(resource);
-            path = resource.getURI();
+            path = resource.getPath();
 
         } else if (path != null) {
             // ensure the child path is absolute and assign the result to path
             if (!path.startsWith("/")) {
-                path = request.getResource().getURI() + "/" + path;
+                path = request.getResource().getPath() + "/" + path;
             }
 
             // if the resourceType is set, try to resolve the path, if no

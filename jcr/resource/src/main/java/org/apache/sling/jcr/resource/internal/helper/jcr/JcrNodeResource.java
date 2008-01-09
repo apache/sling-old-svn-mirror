@@ -164,7 +164,7 @@ public class JcrNodeResource implements Resource, Descendable {
     private Object getObject() {
         if (object == UNDEFINED) {
             // lazy loaded object
-            object = resourceResolver.getObject(getURI(), objectType);
+            object = resourceResolver.getObject(getPath(), objectType);
         }
 
         return object;
@@ -194,7 +194,7 @@ public class JcrNodeResource implements Resource, Descendable {
             }
 
             log.error("getResource: There is no node at {} below {}", path,
-                getURI());
+                    getPath());
             return null;
         } catch (RepositoryException re) {
             log.error("getResource: Problem accessing relative resource at "

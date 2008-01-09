@@ -18,8 +18,10 @@
  */
 package org.apache.sling.servlet.resolver.helper;
 
-import static java.lang.Boolean.*;
-import static org.apache.sling.api.scripting.SlingBindings.*;
+import static java.lang.Boolean.TRUE;
+import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
+import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
+import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
 
 import java.io.IOException;
 
@@ -86,7 +88,7 @@ public class SlingScriptServlet implements Servlet {
     }
 
     public String getServletInfo() {
-        return "Script " + script.getScriptResource().getURI();
+        return "Script " + script.getScriptResource().getPath();
     }
 
     public void init(ServletConfig servletConfig) {

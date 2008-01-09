@@ -29,8 +29,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.naming.Context;
-import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -47,7 +45,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
-import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.microsling.resource.JcrNodeResource;
 import org.apache.sling.microsling.scripting.helpers.ScriptFilenameBuilder;
 import org.apache.sling.microsling.scripting.helpers.ScriptHelper;
@@ -65,9 +62,9 @@ import org.slf4j.LoggerFactory;
  * <pre>
  *      /sling/scripts/some/type/get.html.js
  * </pre>
- * 
+ *
  * in the repository. In the above example, "/sling/scripts" is a script search path,
- * which is provided by {#ScriptSearchPathsBuilder} 
+ * which is provided by {#ScriptSearchPathsBuilder}
  */
 public class MicroslingScriptResolver implements SlingScriptResolver {
 
@@ -82,13 +79,13 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
     private final ScriptSearchPathsBuilder scriptSearchPathsBuilder = new ScriptSearchPathsBuilder();
 
     private final ScriptEngineManager scriptEngineManager;
-    
+
     public MicroslingScriptResolver() throws SlingException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         if (loader == null) {
             loader = getClass().getClassLoader();
         }
-        
+
         scriptEngineManager = new ScriptEngineManager(loader);
     }
 
@@ -119,7 +116,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
         final Resource r = request.getResource();
         final Session s = (Session)request.getAttribute(Session.class.getName());
         MicroslingScript result = null;
-        
+
         // SLING-133: do not resolve scripts for Properties, we want to use our default
         // renderers for them (TODO: having that test here is really a temp fix)
         if(r.adaptTo(Property.class) != null) {
@@ -146,7 +143,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 log.debug("Looking for script with filename=" + scriptFilename
                     + " under " + currentPath);
             }
-            
+
             // do not throw exceptions if path is invalid, that might happen
             // depending on the resource type / search path values
             boolean pathExists = false;
@@ -189,7 +186,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
 
         if (result != null) {
             log.info("Found nt:file script node {} for Resource={}",
-                result.getScriptResource().getURI(), r);
+                result.getScriptResource().getPath(), r);
         } else {
             log.debug(
                 "nt:file script node not found under path={} for Resource={}",
@@ -247,26 +244,26 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
             // the default encoding used
             return new BufferedReader(new InputStreamReader(stream, encoding));
         }
-        
+
         public void eval(SlingBindings props) throws IOException,
                 ServletException {
             try {
-                
+
                 SlingHttpServletRequest req = (SlingHttpServletRequest) props.get(SlingBindings.REQUEST);
                 SlingHttpServletResponse res = (SlingHttpServletResponse) props.get(SlingBindings.RESPONSE);
-                
+
                 // the script helper
                 ScriptHelper helper = new ScriptHelper(req, res, this);
 
                 // prepare the properties for the script
                 SimpleBindings bindings = new SimpleBindings(); // getScriptEngine().createBindings();
-                
+
                 bindings.put(SlingBindings.SLING, helper);
                 bindings.put(SlingBindings.RESOURCE, helper.getRequest().getResource());
                 bindings.put(SlingBindings.REQUEST, helper.getRequest());
                 bindings.put(SlingBindings.RESPONSE, helper.getResponse());
                 bindings.put(SlingBindings.OUT, helper.getResponse().getWriter());
-                bindings.put(SlingBindings.LOG, LoggerFactory.getLogger(getScriptResource().getURI()));
+                bindings.put(SlingBindings.LOG, LoggerFactory.getLogger(getScriptResource().getPath()));
 
                 res.setContentType(req.getResponseContentType()
                     + "; charset=UTF-8");
@@ -276,7 +273,7 @@ public class MicroslingScriptResolver implements SlingScriptResolver {
                 context.setWriter(helper.getResponse().getWriter());
 //                context.setReader();
 //                context.setErrorWriter(arg0);
-                
+
                 // evaluate the script now using the ScriptEngine
                 getScriptEngine().eval(getScriptReader(), context);
 

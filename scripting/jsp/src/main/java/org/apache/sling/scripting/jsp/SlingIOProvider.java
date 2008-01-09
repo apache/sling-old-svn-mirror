@@ -247,7 +247,7 @@ class SlingIOProvider implements IOProvider {
                 if (resource != null) {
                     Iterator<Resource> entries = resolver.listChildren(resource);
                     while (entries.hasNext()) {
-                        paths.add(entries.next().getURI());
+                        paths.add(entries.next().getPath());
                     }
                 }
             } catch (SlingException se) {

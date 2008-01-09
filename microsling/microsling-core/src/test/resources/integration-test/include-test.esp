@@ -20,7 +20,7 @@
 			  <p>testInfiniteLoop = <%= resource.node.testInfiniteLoop %></p>
 			  <%
 			  // try to include the item itself, to cause an infinite loop
-			  sling.include(resource.getURI() + ".html");
+			  sling.include(resource.getPath() + ".html");
 			}
 		%>
 	</body>

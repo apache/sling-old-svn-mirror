@@ -83,16 +83,16 @@ class DefaultSlingScript implements SlingScript {
         try {
             // evaluate the script
             scriptEngine.eval(reader, ctx);
-            
+
             // optionall flush the output channel
             Object flushObject = bindings.get(SlingBindings.FLUSH);
             if (flushObject instanceof Boolean && ((Boolean) flushObject).booleanValue()) {
                 ctx.getWriter().flush();
             }
-            
+
             // allways flush the error channel
             ctx.getErrorWriter().flush();
-            
+
         } catch (ScriptException se) {
             throw new ServletException(se.getMessage(), se);
         }
@@ -208,7 +208,7 @@ class DefaultSlingScript implements SlingScript {
                 bindings.put(entry.getKey(), entry.getValue());
             }
         }
-        
+
         return bindings;
     }
 
@@ -217,7 +217,7 @@ class DefaultSlingScript implements SlingScript {
     }
 
     private String getLoggerName() {
-        String name = getScriptResource().getURI();
+        String name = getScriptResource().getPath();
         name = name.replace('.', '$');
         name = name.replace('/', '.');
         return name;

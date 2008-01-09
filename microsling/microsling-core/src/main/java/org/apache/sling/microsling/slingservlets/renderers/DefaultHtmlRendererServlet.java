@@ -49,14 +49,14 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
     throws ServletException,IOException
     {
         final Resource  r = req.getResource();
-        
+
         resp.setContentType(responseContentType);
         final PrintWriter pw = resp.getWriter();
-        
+
         final Node node = r.adaptTo(Node.class);
         final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class);
         final Property p = r.adaptTo(Property.class);
-        
+
         try {
             if(srd != null) {
                 renderer.render(pw, r, srd);
@@ -68,10 +68,10 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
                 // for properties, we just output the String value
                 renderer.render(pw, r, p);
             }
-        
+
         } catch (RepositoryException re) {
             throw new ServletException("Cannot dump contents of "
-                + req.getResource().getURI(), re);
+                + req.getResource().getPath(), re);
         }
     }
 }
