@@ -83,9 +83,9 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         PrintWriter pw = response.getWriter();
 
         pw.println("<html><head><title>");
-        pw.println(resource.getURI());
+        pw.println(resource.getPath());
         pw.println("</title></head><body bgcolor='white' fgcolor='black'>");
-        pw.println("<h1>Contents of <code>" + resource.getURI()
+        pw.println("<h1>Contents of <code>" + resource.getPath()
             + "</code></h1>");
 
         pw.println("<table>");
@@ -107,7 +107,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         response.setContentType("text/plain; charset=UTF-8");
         PrintWriter pw = response.getWriter();
 
-        pw.println("Contents of " + resource.getURI());
+        pw.println("Contents of " + resource.getPath());
         pw.println();
 
         for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
@@ -129,7 +129,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         response.setContentType("text/plain; charset=ISO-8859-1");
 
         OutputStream out = response.getOutputStream();
-        props.store(out, "Contents of " + resource.getURI());
+        props.store(out, "Contents of " + resource.getPath());
     }
 
     private void renderContentXML(Resource resource,
