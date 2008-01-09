@@ -49,7 +49,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
     public SlingRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
         this.resource = resource;
         this.options = options;
-        this.path = resource.getURI();
+        this.path = resource.getPath();
     }
 
     public void include(ServletRequest request, ServletResponse response)
@@ -105,7 +105,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
 
         // get parent of current request
-        String uri = request.getResource().getURI();
+        String uri = request.getResource().getPath();
         int lastSlash = uri.lastIndexOf('/');
         if (lastSlash >= 0) {
             uri = uri.substring(0, lastSlash);
