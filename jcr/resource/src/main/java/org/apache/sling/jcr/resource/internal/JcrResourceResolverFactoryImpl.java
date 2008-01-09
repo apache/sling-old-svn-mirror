@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * descriptors provided by bundles.
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
- * 
+ *
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  * @scr.property name="service.description" value="Sling
@@ -87,7 +87,7 @@ public class JcrResourceResolverFactoryImpl implements
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
-     * 
+     *
      * @scr.property values.1="/-/"
      */
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
@@ -105,14 +105,14 @@ public class JcrResourceResolverFactoryImpl implements
 
     /**
      * The JCR Repository we access to resolve resources
-     * 
+     *
      * @scr.reference
      */
     private SlingRepository repository;
 
     /**
      * The OSGi EventAdmin service used to dispatch events
-     * 
+     *
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
     private EventAdmin eventAdmin;
@@ -120,7 +120,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * The MimeTypeService used by the initial content initialContentLoader to
      * resolve MIME types for files to be installed.
-     * 
+     *
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
     private MimeTypeService mimeTypeService;
@@ -144,7 +144,7 @@ public class JcrResourceResolverFactoryImpl implements
      * Map of administrative sessions used to check item existence. Indexed by
      * workspace name. The map is filled on-demand. The sessions are closed when
      * the factory is deactivated.
-     * 
+     *
      * @see #itemReallyExists(Session, String)
      */
     private Map<String, Session> adminSessions = new HashMap<String, Session>();
@@ -188,7 +188,7 @@ public class JcrResourceResolverFactoryImpl implements
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     * 
+     *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -200,8 +200,10 @@ public class JcrResourceResolverFactoryImpl implements
         //
 
         switch (event.getType()) {
-            case BundleEvent.INSTALLED:
+            case BundleEvent.STARTING: // STARTED:
                 // register content when the bundle content is available
+                // as node types are registered when the bundle is installed
+                // we can safely add the content at this point.
                 try {
                     Session session = getAdminSession(null);
                     initialContentLoader.registerBundle(session,
@@ -212,9 +214,7 @@ public class JcrResourceResolverFactoryImpl implements
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
                 }
-                break;
 
-            case BundleEvent.STARTING: // STARTED:
                 // register mappings before the bundle gets activated
                 objectContentManagerFactory.registerMapperClient(event.getBundle());
                 addBundleResourceProvider(event.getBundle());
@@ -253,7 +253,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     /**
      * Fires an OSGi event through the EventAdmin service.
-     * 
+     *
      * @param sourceBundle The Bundle from which the event originates. This may
      *            be <code>null</code> if there is no originating bundle.
      * @param eventName The name of the event
