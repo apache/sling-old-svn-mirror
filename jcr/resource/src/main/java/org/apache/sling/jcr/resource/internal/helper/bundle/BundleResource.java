@@ -85,7 +85,7 @@ public class BundleResource implements Resource, Descendable {
         metadata.put(MODIFICATION_TIME, bundle.getLastModified());
     }
 
-    public String getURI() {
+    public String getPath() {
         return path;
     }
 

@@ -96,7 +96,7 @@ public class JcrNodeResource implements Resource, Descendable {
         setMetaData(node, metadata);
     }
 
-    public String getURI() {
+    public String getPath() {
         return path;
     }
 

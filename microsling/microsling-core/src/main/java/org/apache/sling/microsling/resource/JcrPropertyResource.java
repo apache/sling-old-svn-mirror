@@ -31,12 +31,12 @@ public class JcrPropertyResource implements Resource {
      *  for all Resources of this class.
      */
     public static final String DEFAULT_RESOURCE_TYPE = "";
-    
+
     private final Property property;
     private final String path;
     private final ResourceMetadata metadata;
     private final String resourceType;
-    
+
     JcrPropertyResource(Property p) throws RepositoryException {
         property = p;
         path = p.getPath();
@@ -44,7 +44,7 @@ public class JcrPropertyResource implements Resource {
         metadata.put(RESOLUTION_PATH, path);
         resourceType = DEFAULT_RESOURCE_TYPE;
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", type=" + resourceType + ", path=" + path;
@@ -66,7 +66,7 @@ public class JcrPropertyResource implements Resource {
         return resourceType;
     }
 
-    public String getURI() {
+    public String getPath() {
         return path;
     }
 }

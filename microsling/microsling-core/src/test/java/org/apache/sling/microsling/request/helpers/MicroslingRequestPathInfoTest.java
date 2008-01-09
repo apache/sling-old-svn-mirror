@@ -254,14 +254,14 @@ public class MicroslingRequestPathInfoTest extends TestCase {
             throw new Error("MockResource does not implement this method");
         }
 
-        public String getURI() {
+        public String getPath() {
             throw new Error("MockResource does not implement this method");
         }
 
         public ResourceMetadata getResourceMetadata() {
             return metadata;
         }
-        
+
         public <Type> Type adaptTo(Class<Type> type) {
             return null;
         }
