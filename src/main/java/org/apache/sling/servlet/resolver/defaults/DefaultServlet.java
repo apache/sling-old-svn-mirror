@@ -54,7 +54,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
 
         // cannot handle the request for missing resources
         if (resource instanceof NonExistingResource) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,"Resource not found at path " + resource.getPath());
             return;
         }
 
