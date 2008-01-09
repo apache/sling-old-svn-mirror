@@ -163,6 +163,9 @@
                                 <exclude>
                                     resources/bundles/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
+                                <exclude>
+                                    resources/bundles/pax-web-service*.jar
+                                </exclude>
                             </excludes>
                         </resource>
                     </webResources>
