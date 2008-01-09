@@ -112,7 +112,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
             if (scriptRoot != null) {
 
                 log.debug("Looking for script with filename={} under {}",
-                    baseName, scriptRoot.getURI());
+                    baseName, scriptRoot.getPath());
 
                 // get the item and ensure it is a node
                 Iterator<Resource> children = resolver.listChildren(scriptRoot);
@@ -125,7 +125,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
 
         if (result != null) {
             log.info("Script {} found for Resource={}",
-                result.getScriptResource().getURI(), request.getResource());
+                result.getScriptResource().getPath(), request.getResource());
         } else {
             log.debug("No script found for Resource={}", request.getResource());
         }
@@ -150,10 +150,10 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
             SlingScript script = getScript(scriptResource, null);
             if (script == null) {
                 log.error("Cannot handle script {} for path {}",
-                    scriptResource.getURI(), path);
+                    scriptResource.getPath(), path);
             } else {
                 log.debug("Returning script {} for path {}",
-                    scriptResource.getURI(), path);
+                    scriptResource.getPath(), path);
             }
         } else {
             log.error("No resource found at " + path);
@@ -303,7 +303,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
     // ---------- inner class --------------------------------------------------
 
     private SlingScript getScript(Resource resource, String baseName) {
-        String path = resource.getURI();
+        String path = resource.getPath();
         String name = path.substring(path.lastIndexOf('/') + 1);
 
         if (baseName == null || name.startsWith(baseName)) {
