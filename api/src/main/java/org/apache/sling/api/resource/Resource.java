@@ -31,10 +31,10 @@ public interface Resource {
     static final String RESOURCE_TYPE_NON_EXISTING = "sling:nonexisting";
 
     /**
-     * This resource's URI - for now that could be a JCR path, but having an URI
-     * makes it possible to use other data sources.
+     * This resource's path - for now that could be a JCR path. It's also
+     * possible to have an URI for other data sources.
      */
-    String getURI();
+    String getPath();
 
     /**
      * The resource type is meant to point to rendering/processing scripts,

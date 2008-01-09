@@ -43,10 +43,10 @@ import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
 public class JcrNodeResource implements Resource {
-    
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final Node node;
     private final String path;
     private final String resourceType;
@@ -74,7 +74,7 @@ public class JcrNodeResource implements Resource {
         return getClass().getSimpleName() + ", type=" + resourceType + ", path=" + path;
     }
 
-    public String getURI() {
+    public String getPath() {
         return path;
     }
 
@@ -93,16 +93,16 @@ public class JcrNodeResource implements Resource {
                 log.error("adaptTo: Error getting input stream for " + this, ioe);
             }
         }
-        
+
         return null;
     }
-    
+
     public ResourceMetadata getResourceMetadata() {
         return metadata;
     }
 
     // --- helpers, public for scripting ----
-    
+
     public Node getNode() {
         return node;
     }

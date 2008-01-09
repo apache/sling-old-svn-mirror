@@ -41,7 +41,7 @@ public class SyntheticResource implements Resource {
 
     /** The metadata of this resource, contains just the resource path */
     private ResourceMetadata resourceMetadata;
-    
+
     /** default resource type for these resources */
     public static String DEFAULT_RESOURCE_TYPE = "sling/synthetic-resource";
 
@@ -58,13 +58,13 @@ public class SyntheticResource implements Resource {
         this.resourceMetadata = new ResourceMetadata();
         this.resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, path);
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + ", path=" + path + ", resourceType=" + resourceType;
     }
 
-    public String getURI() {
+    public String getPath() {
         return path;
     }
 

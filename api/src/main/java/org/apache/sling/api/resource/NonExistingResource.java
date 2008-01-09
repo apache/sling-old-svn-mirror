@@ -34,7 +34,7 @@ public final class NonExistingResource implements Resource {
         resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, resourceURI);
     }
 
-    public String getURI() {
+    public String getPath() {
         return resourceURI;
     }
 

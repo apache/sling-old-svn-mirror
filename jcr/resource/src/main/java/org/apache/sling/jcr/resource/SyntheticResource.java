@@ -56,7 +56,7 @@ public class SyntheticResource implements Resource {
         this.resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, path);
     }
 
-    public String getURI() {
+    public String getPath() {
         return path;
     }
 
