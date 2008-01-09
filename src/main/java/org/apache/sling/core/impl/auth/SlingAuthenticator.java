@@ -137,6 +137,13 @@ public class SlingAuthenticator implements ManagedService {
 
     /** Whether access without credentials is allowed */
     boolean anonymousAllowed;
+    
+    /** A Repository is required to authenticate - this signals that it's missing */
+    static class MissingRepositoryException extends RuntimeException {
+        MissingRepositoryException(String reason) {
+            super(reason);
+        }
+    }
 
     /**
      * The list of packages from the configuration file. This list is checked
@@ -343,7 +350,12 @@ public class SlingAuthenticator implements ManagedService {
     // ---------- internal ----------------------------------------------------
 
     private Repository getRepository() {
-        return (Repository) repositoryTracker.getService();
+        final Repository repo = (Repository) repositoryTracker.getService();
+        if(repo == null) {
+            throw new MissingRepositoryException(
+                    "No Repository available to " + getClass().getSimpleName() + ", cannot authenticate");
+        }
+        return repo;
     }
 
     private AuthenticationHandler[] getAuthenticationHandlers() {
