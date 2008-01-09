@@ -93,7 +93,8 @@
         <module>sling/event</module>
         <module>sling/scheduler</module>
         <module>sling/sample</module>
-        
+        <module>sling/servlets-standard</module>
+
         <!-- Scripting Support -->
         <module>scripting/api</module>
         <module>scripting/resolver</module>
