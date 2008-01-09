@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The JSP engine (a.k.a Jasper).
- * 
+ *
  * @scr.component scr="no" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.property name="jasper.displaySourceFragments" value="true"
  *               type="Boolean"
- * @scr.service              
+ * @scr.service
  */
 public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
@@ -135,7 +135,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         JspRuntimeContext rctxt = jspRuntimeContext;
 
         SlingScript script = scriptHelper.getScript();
-        String scriptName = script.getScriptResource().getURI();
+        String scriptName = script.getScriptResource().getPath();
         JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
         if (wrapper != null) {
             return wrapper;
