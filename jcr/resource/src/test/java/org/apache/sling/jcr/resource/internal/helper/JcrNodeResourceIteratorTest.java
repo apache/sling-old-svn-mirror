@@ -55,7 +55,7 @@ public class JcrNodeResourceIteratorTest extends TestCase {
 
         assertTrue(ri.hasNext());
         Resource res = ri.next();
-        assertEquals(path, res.getURI());
+        assertEquals(path, res.getPath());
         assertEquals(node.getPrimaryNodeType().getName(), res.getResourceType());
 
         assertFalse(ri.hasNext());
@@ -81,7 +81,7 @@ public class JcrNodeResourceIteratorTest extends TestCase {
         for (int i=0; i < nodes.length; i++) {
             assertTrue(ri.hasNext());
             Resource res = ri.next();
-            assertEquals(pathBase + i, res.getURI());
+            assertEquals(pathBase + i, res.getPath());
             assertEquals(nodes[i].getPrimaryNodeType().getName(), res.getResourceType());
         }
 

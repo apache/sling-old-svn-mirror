@@ -49,7 +49,7 @@ public class FolderServlet extends SlingAllMethodsServlet {
         FolderObject content = resource.adaptTo(FolderObject.class);
         if (content == null) {
             throw new SlingException("Missing mapped object for folder "
-                + resource.getURI());
+                + resource.getPath());
         }
 
         response.setContentType("text/html");
@@ -64,7 +64,7 @@ public class FolderServlet extends SlingAllMethodsServlet {
             Iterator<Resource> entries = request.getResourceResolver().listChildren(resource);
             while (entries.hasNext()) {
                 Resource entry = entries.next();
-                pw.println("<li>" + entry.getURI() + "</li>");
+                pw.println("<li>" + entry.getPath() + "</li>");
             }
         } catch (SlingException ce) {
             // TODO: handle

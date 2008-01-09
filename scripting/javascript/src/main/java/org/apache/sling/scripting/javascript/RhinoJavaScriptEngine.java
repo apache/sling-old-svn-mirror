@@ -42,7 +42,7 @@ import org.mozilla.javascript.ScriptableObject;
 public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
     private Scriptable rootScope;
-    
+
     public RhinoJavaScriptEngine(ScriptEngineFactory factory, Scriptable rootScope) {
         super(factory);
         this.rootScope = rootScope;
@@ -53,7 +53,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
 
         SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        String scriptName = helper.getScript().getScriptResource().getURI();
+        String scriptName = helper.getScript().getScriptResource().getPath();
 
         // wrap the reader in an EspReader for ESP scripts
         if (scriptName.endsWith(RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION)) {
@@ -64,7 +64,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         try {
             final Context rhinoContext = Context.enter();
             final ScriptableObject scope = new NativeObject();
-            
+
             // Set the global scope to be our prototype
             scope.setPrototype(rootScope);
 

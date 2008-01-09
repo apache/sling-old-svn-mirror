@@ -31,14 +31,14 @@ import org.apache.sling.api.resource.Resource;
  */
 public class ScriptSearchPathsBuilder {
 
-    /** hardcoded for now, these could be configurable */ 
+    /** hardcoded for now, these could be configurable */
     public static final String [] DEFAULT_SCRIPT_SEARCH_PATHS = { "/sling/scripts", "/apps" };
 
-    /** Returns the list of paths where scripts can be found, in order, 
+    /** Returns the list of paths where scripts can be found, in order,
      *  for the given request.
-     *  The paths are based on the Request's Resource type, and if the 
+     *  The paths are based on the Request's Resource type, and if the
      *  request contains selectors, they are used to build subpaths of
-     *  the main path, which are searched first. 
+     *  the main path, which are searched first.
      */
     public List<String> getScriptSearchPaths(Resource resource, String [] selectors) throws SlingException {
         if(resource==null) {
@@ -47,10 +47,10 @@ public class ScriptSearchPathsBuilder {
         if(resource.getResourceType() == null) {
             throw new SlingException("resource.getResourceType()==null, cannot build script path");
         }
-        
+
         final String typePath = resource.getResourceType().replaceAll("\\:","/");
         final List<String> result = new LinkedList<String> ();
-        
+
         // use the default script search paths + the path provided by getDynamicDefaultScriptPath
         final List<String> paths = new ArrayList<String>();
         for(String defaultPath : DEFAULT_SCRIPT_SEARCH_PATHS) {
@@ -61,7 +61,7 @@ public class ScriptSearchPathsBuilder {
 
         // and add selector-based paths, which take precedence over the default ones
         for(String basePath : paths) {
-            
+
             // if there are selectors A and B, look for a script first under
             // basePath/A/B, then basePath/A, then basePath
             if(selectors!=null) {
@@ -76,12 +76,12 @@ public class ScriptSearchPathsBuilder {
                 }
             }
             result.add(basePath);
-            
+
         }
-        
+
         return result;
     }
-    
+
     /** Transform the Resource URI into a search path for scripts.
      *  For example, a resource with URI=/content/blog/a/b/c returns
      *  /apps/blog - this allows for simple path-based mapping of
@@ -89,8 +89,8 @@ public class ScriptSearchPathsBuilder {
      */
     protected String getDynamicDefaultScriptPath(Resource r) {
         String result = null;
-        if(r!=null && r.getURI() != null) {
-            final String [] pathFolders = r.getURI().split("/");
+        if(r!=null && r.getPath() != null) {
+            final String [] pathFolders = r.getPath().split("/");
             if(pathFolders.length >= 3) {
                 result ="/apps/" + pathFolders[2];
             }

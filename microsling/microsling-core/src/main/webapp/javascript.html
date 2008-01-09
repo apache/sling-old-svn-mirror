@@ -62,7 +62,7 @@
 &lt;html>
 &lt;body>
 &lt;p>This page is generated from an ESP template!&lt;/p>
-&lt;h1>&lt;%= resource.getURI() %>&lt;/h1>
+&lt;h1>&lt;%= resource.getPath() %>&lt;/h1>
 &lt;%
   for (var prop in resource.node) {
     %>
@@ -113,7 +113,7 @@
 // TODO this is not very useful, rewrite this example
 out.println("&lt;html>&lt;body>");
 out.println("&lt;p>This page is generated from a rhino script&lt;/p>");
-out.println("&lt;h1>" + resource.getURI() + "&lt;/h1>");
+out.println("&lt;h1>" + resource.getPath() + "&lt;/h1>");
 out.println("&lt;p>Title: " + resource.getNode().getProperty('title').getString() + "&lt;/p>");
 out.println("&lt;p>Text: " + resource.getNode().getProperty('text').getString() + "&lt;/p>");
 out.println("&lt;/body>&lt;/html>");</pre>

@@ -148,7 +148,7 @@ public interface RequestPathInfo {
     /**
      * Return the "resource path" part of the URL, what comes before selectors,
      * extension and suffix. This string is part of the request URL and need not
-     * be equal to the {@link org.apache.sling.api.resource.Resource#getURI()}.
+     * be equal to the {@link org.apache.sling.api.resource.Resource#getPath()}.
      * Rather it is equal to the
      * {@link org.apache.sling.api.resource.ResourceMetadata#RESOLUTION_PATH resolution path metadata property}
      * of the resource.

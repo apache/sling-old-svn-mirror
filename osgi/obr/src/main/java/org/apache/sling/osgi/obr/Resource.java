@@ -263,7 +263,7 @@ public class Resource implements Serializable, Comparable<Resource> {
     /**
      * @return the uri
      */
-    public String getUri() {
+    public String getPath() {
         return this.uri;
     }
 

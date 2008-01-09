@@ -163,7 +163,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
 
                     log.error(
                         "getResource: There is no node at {} below {}",
-                        path, base.getURI());
+                        path, base.getPath());
                     return null;
                 } catch (RepositoryException re) {
                     log.error(
@@ -175,7 +175,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
         }
 
         // try (again) with absolute resource path
-        path = base.getURI() + "/" + path;
+        path = base.getPath() + "/" + path;
         return getResource(path);
     }
 
@@ -219,7 +219,7 @@ public class MicroslingResourceResolver implements ResourceResolver {
                         } catch (RepositoryException re) {
                             log.warn(
                                 "Problem while trying to create a resource", re);
-                            return new NonExistingResource(parent.getURI()
+                            return new NonExistingResource(parent.getPath()
                                 + "/?");
                         }
                     }
@@ -315,10 +315,10 @@ public class MicroslingResourceResolver implements ResourceResolver {
                 log.warn("Cannot get Session", se);
             }
         }
-        
+
         return null;
     }
-    
+
     /** Returns the session used by this resolver */
     protected Session getSession() throws SlingException {
         if (session != null && session.isLive()) {

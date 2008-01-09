@@ -105,7 +105,7 @@ public class JcrResourceResolverTest extends TestCase {
         // existing resource
         Resource res = resResolver.getResource(root);
         assertNotNull(res);
-        assertEquals(root, res.getURI());
+        assertEquals(root, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -122,7 +122,7 @@ public class JcrResourceResolverTest extends TestCase {
         // existing resource
         Resource res = resResolver.resolve(new ResourceResolverTestRequest(root));
         assertNotNull(res);
-        assertEquals(root, res.getURI());
+        assertEquals(root, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -133,7 +133,7 @@ public class JcrResourceResolverTest extends TestCase {
         String path = root + "/missing";
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
-        assertEquals(root, res.getURI());
+        assertEquals(root, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -144,7 +144,7 @@ public class JcrResourceResolverTest extends TestCase {
         path = root + ".print.a4.html";
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
-        assertEquals(root, res.getURI());
+        assertEquals(root, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -156,7 +156,7 @@ public class JcrResourceResolverTest extends TestCase {
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
-        assertEquals(path, res.getURI());
+        assertEquals(path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
     }
 

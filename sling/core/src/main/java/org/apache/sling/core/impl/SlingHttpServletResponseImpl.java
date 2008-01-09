@@ -218,7 +218,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
             return path;
         }
 
-        String base = getRequestData().getContentData().getResource().getURI();
+        String base = getRequestData().getContentData().getResource().getPath();
         int lastSlash = base.lastIndexOf('/');
         if (lastSlash >= 0) {
             path = base.substring(0, lastSlash+1) + path;
@@ -228,7 +228,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
         return path;
     }
-    
+
     private String pathToURL(String url) {
         PathResolver pr = getRequestData().getResourceResolver().adaptTo(PathResolver.class);
         return (pr != null) ? pr.pathToURL(url) : url;

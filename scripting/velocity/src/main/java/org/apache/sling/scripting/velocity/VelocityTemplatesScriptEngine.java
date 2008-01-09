@@ -64,7 +64,7 @@ public class VelocityTemplatesScriptEngine extends AbstractSlingScriptEngine {
                 "FreeMarker templates only support GET requests");
         }
 
-        String scriptName = helper.getScript().getScriptResource().getURI();
+        String scriptName = helper.getScript().getScriptResource().getPath();
 
         // initialize the Velocity context
         final VelocityContext c = new VelocityContext();

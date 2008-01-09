@@ -65,7 +65,7 @@ class BundleResourceIterator implements Iterator<Resource> {
 
         } else {
             // trailing slash to enumerate children
-            String parentPath = parent.getURI() + "/";
+            String parentPath = parent.getPath() + "/";
 
             this.bundle = parent.getBundle();
             // unchecked cast

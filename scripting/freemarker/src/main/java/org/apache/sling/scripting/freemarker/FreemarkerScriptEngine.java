@@ -60,7 +60,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
                 "FreeMarker templates only support GET requests");
         }
 
-        String scriptName = helper.getScript().getScriptResource().getURI();
+        String scriptName = helper.getScript().getScriptResource().getPath();
 
         try {
             Template tmpl = new Template(scriptName, reader, configuration);

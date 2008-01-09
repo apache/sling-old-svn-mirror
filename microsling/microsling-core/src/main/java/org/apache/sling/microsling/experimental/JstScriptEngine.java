@@ -35,7 +35,6 @@ import javax.script.ScriptException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.HttpStatusCodeException;
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -49,7 +48,7 @@ import org.apache.sling.microsling.slingservlets.renderers.DefaultHtmlRenderer;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.javascript.helper.EspReader;
 
-/** Experimental JST script engine: converts a JST template (using the 
+/** Experimental JST script engine: converts a JST template (using the
  *  same templating syntax as ESP) to client-side javascript code
  *  that renders the page.
  */
@@ -58,31 +57,31 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
     private final List<String> libraryScripts = new LinkedList<String>();
     private final DefaultHtmlRenderer htmlRenderer;
     private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
-    
+
     JstScriptEngine(ScriptEngineFactory scriptEngineFactory) {
         super(scriptEngineFactory);
-        
+
         // TODO hardcoded for now...
         libraryScripts.add("/ujax/ujax.js");
         htmlRenderer = new DefaultHtmlRenderer();
     }
-    
+
     public Object eval(Reader script, ScriptContext context) throws ScriptException {
-        
+
         // This engine does not really run the script, we simply dump it
         // to the client inside a skeleton HTML document, and let the
         // client run the script
         Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
-        
+
         final SlingScriptHelper helper = (SlingScriptHelper) props.get(SlingBindings.SLING);
-        
+
         try {
             final PrintWriter w = helper.getResponse().getWriter();
             final Reader er = getReader(helper.getScript().getScriptResource());
 
             // access our data (need a Node)
             final Resource r = helper.getRequest().getResource();
-            
+
             // to render we must have either a Node or a SyntheticResourceData
             final Node n = r.adaptTo(Node.class);
             final SyntheticResourceData srd = r.adaptTo(SyntheticResourceData.class);
@@ -91,30 +90,30 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
                         HttpServletResponse.SC_NOT_FOUND,
                         "Resource does not provide a Node or a SyntheticResourceData, cannot render");
             }
-            
+
             // output HEAD with javascript initializations
             // TODO we should instead parse (at least minimally) the template file, and inject our
             // stuff in the right places
             w.println("<html><head><title id=\"JstPageTitle\">");
-            w.println("JST rendering of " + r.getURI());
+            w.println("JST rendering of " + r.getPath());
             w.println("</title>");
-            
+
             // library scripts
-            final SlingHttpServletRequest request = helper.getRequest(); 
+            final SlingHttpServletRequest request = helper.getRequest();
             for(String lib : libraryScripts) {
-                final String fullScriptPath =             
+                final String fullScriptPath =
                     SlingRequestPaths.getContextPath(request)
                     + SlingRequestPaths.getServletPath(request)
                     + lib
                 ;
-                w.println("<script src=\"" + fullScriptPath + "\"></script>");  
+                w.println("<script src=\"" + fullScriptPath + "\"></script>");
             }
-            
+
             // onLoad method
             w.println("<script language=\"javascript\">");
             w.println("function jstOnLoad() { if(typeof onLoad == \"function\") { onLoad(); } }");
             w.println("</script>");
-            
+
             // data in JSON format
             final JsonItemWriter j = new JsonItemWriter(null);
             final int maxRecursionLevels = 1;
@@ -128,13 +127,13 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
             w.println(";");
             w.println("</script>");
             w.println("</head><body onLoad=\"jstOnLoad()\">");
-            
+
             // output our parsed script, first in body
             w.println("<div id=\"JstRenderingScript\">\n<script language='javascript'>");
             copier.copy(er,w);
             w.println("</script>\n</div>");
-            
-            // default rendering, turned off automatically from the javascript that 
+
+            // default rendering, turned off automatically from the javascript that
             // follows, if javascript is enabled
             w.println("<div id=\"JstDefaultRendering\">");
             if(n!=null) {
@@ -146,21 +145,21 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
             w.println("<script language=\"javascript\">");
             w.println("document.getElementById(\"JstDefaultRendering\").setAttribute(\"style\",\"display:none\");");
             w.println("</script>");
-            
+
             // all done
             w.println("</body></html>");
-            
+
         } catch (IOException ioe) {
             throw new ScriptException(ioe);
-            
+
         } catch(RepositoryException re) {
             throw new ScriptException(re);
-            
+
         } catch(JSONException je) {
             throw new ScriptException(je);
-            
+
         }
-        
+
         return null;
     }
 
@@ -171,14 +170,14 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
             if (enc == null) {
                 enc = "UTF-8";
             }
-            
+
             Reader r = new InputStreamReader(ins, enc);
             EspReader er = new EspReader(r);
             er.setOutInitStatement("out=document;\n");
-            
+
             return er;
         }
-        
+
         return null;
     }
 }

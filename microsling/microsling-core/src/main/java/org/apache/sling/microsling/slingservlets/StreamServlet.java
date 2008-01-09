@@ -70,7 +70,7 @@ public class StreamServlet extends SlingSafeMethodsServlet {
         Node node = request.getResource().adaptTo(Node.class);
         if (node == null) {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
-                "Resource " + request.getResource().getURI()
+                "Resource " + request.getResource().getPath()
                     + " must be a Node");
         }
 

@@ -727,7 +727,7 @@ class CustomLogFormat {
 
         protected String getValue(SlingHttpServletRequest request) {
             Resource resource = request.getResource();
-            return (resource != null) ? resource.getURI() : null;
+            return (resource != null) ? resource.getPath() : null;
         }
 
         protected String getValue(LoggerResponse response) {

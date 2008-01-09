@@ -83,7 +83,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         final Resource  r = req.getResource();
         if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(r.getResourceType())) {
 
-            String path = r.getURI();
+            String path = r.getPath();
             if (path.startsWith(MicrojaxGetServlet.URI_PREFIX)) {
                 microjaxGetServlet.service(req, resp);
                 return;
@@ -98,9 +98,9 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
                 spool(url, resp);
             } else {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
-                        "Resource not found: " + r.getURI());
+                        "Resource not found: " + r.getPath());
             }
-            
+
         } else if(canRender(r)) {
             final String contentType = req.getResponseContentType();
             final Servlet s = renderingServlets.get(contentType);
@@ -116,17 +116,17 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
 
         } else {
             throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                "Not implemented: resource " + req.getResource().getURI()
+                "Not implemented: resource " + req.getResource().getPath()
                 + " cannot be dumped by " + getClass().getSimpleName());
         }
     }
-    
+
     /** True if our rendering servlets can render Resource r */
     protected boolean canRender(Resource r) {
-        return 
-            r!=null && 
+        return
+            r!=null &&
             (
-                    r.adaptTo(Node.class) != null 
+                    r.adaptTo(Node.class) != null
                     || r.adaptTo(Property.class) != null
                     || r.adaptTo(SyntheticResourceData.class) != null
             );
@@ -139,17 +139,17 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
     {
         postServlet.service(request, response);
     }
-    
-    /** SLING-135, find Content-Type for given URL, in a safe way 
+
+    /** SLING-135, find Content-Type for given URL, in a safe way
      *  TODO: use the MimeTypeService from sling-commons?
      * */
     protected String getContentType(URL url) {
         String result = null;
-        
+
         // get the filename from the URL
         String filename = url.getPath();
         filename = new File(filename).getName();
-        
+
         // get content-type, avoid null
         // previously used conn.getContentType(), but see SLING-112
         if(filename!=null) {
@@ -158,7 +158,7 @@ public class DefaultSlingServlet extends SlingAllMethodsServlet {
         if(result==null) {
             result = "application/octet-stream";
         }
-        
+
         return result;
     }
 

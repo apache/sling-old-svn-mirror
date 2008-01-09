@@ -51,7 +51,7 @@ public class MicroslingScriptServlet implements Servlet {
     }
 
     public String getServletInfo() {
-        return "Servlet for script " + script.getScriptResource().getURI();
+        return "Servlet for script " + script.getScriptResource().getPath();
     }
 
     public void init(ServletConfig config) {

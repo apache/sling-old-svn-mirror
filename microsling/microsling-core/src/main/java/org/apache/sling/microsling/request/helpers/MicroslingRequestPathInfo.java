@@ -23,7 +23,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 /**
  * microsling request URI parser that provides SlingRequestPathInfo for the
  * current request, based on the path of the Resource. The values provided by
- * this depend on the Resource.getURI() value, as the ResourceResolver might use
+ * this depend on the Resource.getPath() value, as the ResourceResolver might use
  * all or only part of the request URI path to locate the resource (see also
  * SLING-60 ). What we're after is the remainder of the path, the part that was
  * not used to locate the Resource, and we split that part in different
