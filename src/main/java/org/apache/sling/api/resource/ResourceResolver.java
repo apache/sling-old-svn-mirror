@@ -41,10 +41,10 @@ public interface ResourceResolver {
      * {@link Resource} object is returned whose
      * {@link Resource#getResourceType() resource type} is set to
      * {@link Resource#RESOURCE_TYPE_NON_EXISTING} and the
-     * {@link Resource#getURI() resource URI} set to the request URI.
+     * {@link Resource#getPath() resource path} set to the request URI.
      * {@link Resource#adaptTo(Class) object} returns <code>null</code> for
      * all classes.
-     * 
+     *
      * @param request The http servlet request object used to resolve the
      *            resource for.
      * @return The {@link Resource} for the request.
@@ -60,7 +60,7 @@ public interface ResourceResolver {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     * 
+     *
      * @param path The absolute path to the resource object to be loaded. The
      *            path may contain relative path specifiers like <code>.</code>
      *            (current location) and <code>..</code> (parent location),
@@ -86,7 +86,7 @@ public interface ResourceResolver {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     * 
+     *
      * @param base The base {@link Resource} against which a relative path
      *            argument given by <code>path</code> is resolved. This
      *            parameter may be <code>null</code> if the <code>path</code>
@@ -118,7 +118,7 @@ public interface ResourceResolver {
      * reading content from a Java Content Repository, the children could be the
      * {@link Resource} objects loaded from child items of the <code>Item</code>
      * of the given <code>Resource</code>.
-     * 
+     *
      * @param parent The {@link Resource Resource} whose children are requested.
      *            If <code>null</code> the children of this request's Resource
      *            are returned.
@@ -140,7 +140,7 @@ public interface ResourceResolver {
      * create a JCR <code>Query</code> through the <code>QueryManager</code>.
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
-     * 
+     *
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching
@@ -163,7 +163,7 @@ public interface ResourceResolver {
      * the column name and the column value is the JCR <code>Value</code>
      * object converted into the respective Java object, such as
      * <code>Boolean</code> for a value of property type <em>Boolean</em>.
-     * 
+     *
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances
@@ -177,7 +177,7 @@ public interface ResourceResolver {
      * Adapts this resource resolver to another type. A JCR based resource
      * resolver might support adapting to the JCR Session used by the resolver
      * to access the JCR Repository.
-     * 
+     *
      * @param <AdapterType> The generic type to which this resource is adapted
      *            to
      * @param type The Class object of the target type, such as
