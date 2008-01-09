@@ -133,8 +133,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             return delegatee.getResourceMetadata();
         }
 
-        public String getURI() {
-            return delegatee.getURI();
+        public String getPath() {
+            return delegatee.getPath();
         }
 
         public <Type> Type adaptTo(Class<Type> type) {
