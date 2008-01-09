@@ -26,17 +26,17 @@ import org.mozilla.javascript.Undefined;
 /**
  * Resource in JavaScript has following signature: [Object] getData(); [Object]
  * data [Item] getItem(); [Item] item [String] getResourceType(); [String] type
- * [String] getURI(); [String] uri
+ * [String] getPath(); [String] path
  */
 public class ScriptableResource extends ScriptableObject {
-    
+
     public static final String CLASSNAME = "Resource";
-    
+
     private Resource resource;
 
     public ScriptableResource() {
     }
-    
+
     public ScriptableResource(Resource resource) {
         this.resource = resource;
     }
@@ -73,25 +73,25 @@ public class ScriptableResource extends ScriptableObject {
         return this.jsFunction_getResourceType();
     }
 
-    public Object jsFunction_getURI() {
-        return Context.javaToJS(resource.getURI(), this);
+    public Object jsFunction_getPath() {
+        return Context.javaToJS(resource.getPath(), this);
     }
 
-    public Object jsGet_uri() {
-        return this.jsFunction_getURI();
+    public Object jsGet_path() {
+        return this.jsFunction_getPath();
     }
 
     public Object jsFunction_getMetadata() {
         return resource.getResourceMetadata();
     }
-    
+
     public Object jsGet_meta() {
         return resource.getResourceMetadata();
     }
 
     @Override
     public Object getDefaultValue(Class typeHint) {
-        return resource.getURI();
+        return resource.getPath();
     }
 
     public void setResource(Resource entry) {
