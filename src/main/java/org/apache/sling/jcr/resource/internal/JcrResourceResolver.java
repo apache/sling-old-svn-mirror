@@ -132,7 +132,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
         }
 
         // try (again) with absolute resource path
-        path = base.getURI() + "/" + path;
+        path = base.getPath() + "/" + path;
         return getResource(path);
     }
 
@@ -142,13 +142,13 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
         }
 
         try {
-            parent = getResource(parent.getURI());
+            parent = getResource(parent.getPath());
             if (parent instanceof Descendable) {
                 return ((Descendable) parent).listChildren();
             }
         } catch (SlingException se) {
             log.warn("listChildren: Error trying to resolve parent resource "
-                + parent.getURI(), se);
+                + parent.getPath(), se);
         }
 
         // return an empty iterator if parent has no node
@@ -215,11 +215,11 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
         } else if (type == PathResolver.class) {
             return (AdapterType) this;
         }
-        
+
         // no adapter available
         return null;
     }
-    
+
     // ---------- PathResolver interface --------------------------------------
 
     /**
@@ -311,7 +311,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
      *             permisssions to store the resource's object.
      */
     public void store(Resource resource) throws SlingException {
-        String path = resource.getURI();
+        String path = resource.getPath();
         Object data = resource.adaptTo(Object.class);
         if (data != null) {
             try {
@@ -355,7 +355,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
     }
 
     public void delete(Resource resource) throws SlingException {
-        String path = resource.getURI();
+        String path = resource.getPath();
         try {
             checkPermission(path, ACTION_REMOVE);
             getObjectContentManager().remove(path);
@@ -370,7 +370,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
     public void copy(Resource resource, String destination, boolean deep)
             throws SlingException {
 
-        String source = resource.getURI();
+        String source = resource.getPath();
         try {
 
             checkPermission(destination, ACTION_CREATE);
@@ -396,7 +396,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     public void move(Resource resource, String destination)
             throws SlingException {
-        String source = resource.getURI();
+        String source = resource.getPath();
 
         try {
             checkPermission(source, ACTION_REMOVE);
@@ -416,7 +416,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
     public void orderBefore(Resource resource, String afterName)
             throws SlingException {
 
-        String path = resource.getURI();
+        String path = resource.getPath();
         Node node = resource.adaptTo(Node.class);
         if (node == null) {
             log.info("orderBefore: Resource {} is not based on a JCR", path);
@@ -544,7 +544,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
             Resource resource = scanPath(mappedUri);
             if (resource != null) {
-                
+
                 ResourceMetadata rm = resource.getResourceMetadata();
                 String path = (String) rm.get(ResourceMetadata.RESOLUTION_PATH);
                 String uriPath = mappings[i].mapHandle(path);
