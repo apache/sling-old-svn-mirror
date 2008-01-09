@@ -107,6 +107,9 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
 
     // ---------- ServletResolver interface -----------------------------------
 
+    /**
+     * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.SlingHttpServletRequest)
+     */
     public Servlet resolveServlet(SlingHttpServletRequest request) {
 
         // resolve a servlet or script based on the request
@@ -140,6 +143,9 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
 
     // ---------- ErrorHandler interface --------------------------------------
 
+    /**
+     * @see org.apache.sling.core.servlets.ErrorHandler#handleError(int, java.lang.String, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
     public void handleError(int status, String message,
             HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -178,6 +184,9 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
         response.sendError(status, message);
     }
 
+    /**
+     * @see org.apache.sling.core.servlets.ErrorHandler#handleError(java.lang.Throwable, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
     public void handleError(Throwable throwable, HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
 
@@ -343,20 +352,36 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
                 }
             }
         }
-        List<ServiceReference> refs = null;
+
+        Collection<ServiceReference> refs;
         synchronized (this) {
-            if ( this.servletContext != null ) {
-                refs = this.pendingServlets;
-                this.pendingServlets = new ArrayList<ServiceReference>();
-            }
+
+            refs = pendingServlets;
+            pendingServlets = new ArrayList<ServiceReference>();
+
+            // register servlets immediately from now on
+            this.context = context;
+
         }
-        if ( refs != null ) {
-            this.createAllServlets(this.servletContext, refs);
+
+        createAllServlets(refs);
+    }
+
+    protected void deactivate(ComponentContext context) {
+
+        // destroy all active servlets
+        Collection<ServiceReference> refs;
+        synchronized (this) {
+            refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
+            this.context = null;
         }
+
+        // destroy all servlets
+        destroyAllServlets(refs);
     }
 
     protected synchronized void bindServlet(ServiceReference reference) {
-        if (context == null || servletContext == null) {
+        if (context == null) {
             pendingServlets.add(reference);
         } else {
             createServlet(servletContext, reference);
@@ -364,69 +389,13 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
     }
 
     protected synchronized void unbindServlet(ServiceReference reference) {
-        if (context == null || servletContext == null) {
-            pendingServlets.remove(reference);
-        } else {
-            destroyServlet(reference);
-        }
-    }
-
-    protected void bindServletContext(ServletContext newServletContext) {
-
-        boolean destroy;
-        Collection<ServiceReference> refs;
-
-        synchronized (this) {
-
-            if (this.servletContext == null) {
-
-                if ( this.context != null ) {
-                    refs = pendingServlets;
-                    pendingServlets = new ArrayList<ServiceReference>();
-                } else {
-                    refs = null;
-                }
-                destroy = false;
-
-            } else {
-
-                refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
-                destroy = true;
-
-            }
-
-            this.servletContext = newServletContext;
-        }
-
-        if (destroy) {
-            destroyAllServlets(refs);
-        }
-
-        if ( refs != null ) {
-            createAllServlets(this.servletContext, refs);
-        }
-    }
-
-    protected void unbindServletContext(ServletContext oldServletContext) {
-
-        if (this.servletContext == oldServletContext) {
-
-            Collection<ServiceReference> refs;
-            synchronized (this) {
-                refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
-                pendingServlets.addAll(refs);
-                this.servletContext = null;
-            }
-
-            // destroy all servlets
-            destroyAllServlets(refs);
-        }
+        pendingServlets.remove(reference);
+        destroyServlet(reference);
     }
 
     // ---------- Servlet Management -------------------------------------------
 
-    private void createAllServlets(ServletContext servletContext,
-            Collection<ServiceReference> pendingServlets) {
+    private void createAllServlets(Collection<ServiceReference> pendingServlets) {
         for (ServiceReference serviceReference : pendingServlets) {
             createServlet(servletContext, serviceReference);
         }
