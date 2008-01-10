@@ -85,7 +85,7 @@ public class Navigation extends SlingSafeMethodsServlet {
                 if (page.getPath().equals(requestPath)) {
                     pw.print(title);
                 } else {
-                    pw.print("<a href=\"" + page.getPath() + ".html\">");
+                    pw.print("<a href=\"" + request.getContextPath() + page.getPath() + ".html\">");
                     pw.print(title);
                     pw.print("</a>");
                 }
