@@ -238,6 +238,11 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
 
     Servlet resolveServletOrScript(SlingHttpServletRequest request) {
 
+        // if handling errors, resource might be null
+        if(request.getResource() == null) {
+            return null;
+        }
+        
         // get the servlet by resource type
         Servlet servlet = getServlet(request.getResource().getResourceType());
         if (servlet != null) {
