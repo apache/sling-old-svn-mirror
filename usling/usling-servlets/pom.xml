@@ -53,12 +53,45 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>org.apache.sling.usling.servlets.*</Private-Package>
+            <Private-Package>
+              org.apache.sling.usling.servlets.*,
+              org.apache.sling.usling.renderers.*,
+              org.apache.sling.ujax.*
+            </Private-Package>
           </instructions>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  
+  <profiles>
+    <profile>
+      <!-- 
+        Use this profile to deploy the bundle automatically,
+        during development
+      -->
+      <id>autoDeployBundle</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>maven-sling-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-bundle</id>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -72,6 +105,26 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.api</artifactId>
+      <version>2.0.0-incubator-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.core</artifactId>
+      <version>2.0.0-incubator-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.servlet.resolver</artifactId>
+      <version>2.0.0-incubator-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.mime</artifactId>
+      <version>2.0.0-incubator-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
