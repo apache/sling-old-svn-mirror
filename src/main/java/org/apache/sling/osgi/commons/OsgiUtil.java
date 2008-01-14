@@ -28,7 +28,6 @@ import java.util.Vector;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 
 /**
@@ -44,9 +43,8 @@ public class OsgiUtil {
      * by calling <code>Boolean.valueOf</code> on the string value of the
      * property.
      */
-    public static boolean getProperty(ServiceReference reference, String name,
-            boolean defaultValue) {
-        Object propValue = getPropertyObject(reference, name);
+    public static boolean toBoolean(Object propValue, boolean defaultValue) {
+        propValue = toObject(propValue);
         if (propValue instanceof Boolean) {
             return (Boolean) propValue;
         } else if (propValue != null) {
@@ -60,9 +58,8 @@ public class OsgiUtil {
      * Returns the named service reference property as a string or the
      * <code>defaultValue</code> if no such reference property exists.
      */
-    public static String getProperty(ServiceReference reference, String name,
-            String defaultValue) {
-        Object propValue = getPropertyObject(reference, name);
+    public static String toString(Object propValue, String defaultValue) {
+        propValue = toObject(propValue);
         return (propValue != null) ? propValue.toString() : defaultValue;
     }
 
@@ -72,14 +69,13 @@ public class OsgiUtil {
      * the property is not an <code>Integer</code> and cannot be converted to
      * an <code>Integer</code> from the property's string value.
      */
-    public static int getProperty(ServiceReference reference, String name,
-            int defaultValue) {
-        Object propValue = getPropertyObject(reference, name);
-        if (propValue instanceof Integer) {
-            return (Integer) propValue;
+    public static long toLong(Object propValue, long defaultValue) {
+        propValue = toObject(propValue);
+        if (propValue instanceof Long) {
+            return (Long) propValue;
         } else if (propValue != null) {
             try {
-                return Integer.valueOf(String.valueOf(propValue));
+                return Long.valueOf(String.valueOf(propValue));
             } catch (NumberFormatException nfe) {
                 // don't care, fall through to default value
             }
@@ -94,9 +90,8 @@ public class OsgiUtil {
      * the property is not an <code>Double</code> and cannot be converted to
      * an <code>Double</code> from the property's string value.
      */
-    public static double getProperty(ServiceReference reference, String name,
-            double defaultValue) {
-        Object propValue = getPropertyObject(reference, name);
+    public static double getProperty(Object propValue, double defaultValue) {
+        propValue = toObject(propValue);
         if (propValue instanceof Double) {
             return (Double) propValue;
         } else if (propValue != null) {
@@ -118,9 +113,7 @@ public class OsgiUtil {
      * <code>java.util.Vector</code>, the first vector element is returned.
      * Otherwise <code>null</code> is returned.
      */
-    public static Object getPropertyObject(ServiceReference reference,
-            String name) {
-        Object propValue = reference.getProperty(name);
+    public static Object toObject(Object propValue) {
         if (propValue == null) {
             return null;
         } else if (propValue.getClass().isArray()) {
@@ -143,16 +136,15 @@ public class OsgiUtil {
      * Otherwise (if the property does not exist) <code>null</code> is
      * returned.
      */
-    public static String[] getProperty(ServiceReference reference, String name) {
-        Object propValue = reference.getProperty(name);
+    public static String[] toStringArray(Object propValue) {
         if (propValue instanceof String) {
             // single string
             return new String[] { (String) propValue };
-            
+
         } else if (propValue instanceof String[]) {
             // String[]
             return (String[]) propValue;
-            
+
         } else if (propValue.getClass().isArray()) {
             // other array
             Object[] valueArray = (Object[]) propValue;
@@ -163,7 +155,7 @@ public class OsgiUtil {
                 }
             }
             return values.toArray(new String[values.size()]);
-            
+
         } else if (propValue instanceof Vector) {
             // vector
             Vector<?> valueVector = (Vector<?>) propValue;
@@ -179,7 +171,8 @@ public class OsgiUtil {
         return null;
     }
 
-    public static Event createEvent(Bundle sourceBundle, ServiceReference sourceService, String eventName,
+    public static Event createEvent(Bundle sourceBundle,
+            ServiceReference sourceService, String eventName,
             Map<String, Object> props) {
 
         // get a private copy of the properties
@@ -188,12 +181,15 @@ public class OsgiUtil {
         // service information of this JcrResourceResolverFactoryImpl service
         if (sourceService != null) {
             table.put(EventConstants.SERVICE, sourceService);
-            table.put(EventConstants.SERVICE_ID,
+            table.put(
+                EventConstants.SERVICE_ID,
                 sourceService.getProperty(org.osgi.framework.Constants.SERVICE_ID));
-            table.put(EventConstants.SERVICE_OBJECTCLASS,
+            table.put(
+                EventConstants.SERVICE_OBJECTCLASS,
                 sourceService.getProperty(org.osgi.framework.Constants.OBJECTCLASS));
             if (sourceService.getProperty(org.osgi.framework.Constants.SERVICE_PID) != null) {
-                table.put(EventConstants.SERVICE_PID,
+                table.put(
+                    EventConstants.SERVICE_PID,
                     sourceService.getProperty(org.osgi.framework.Constants.SERVICE_PID));
             }
         }

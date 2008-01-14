@@ -21,7 +21,6 @@ package org.apache.sling.osgi.commons.internal;
 import static org.apache.sling.osgi.commons.AdapterFactory.ADAPTABLE_CLASSES;
 import static org.apache.sling.osgi.commons.AdapterFactory.ADAPTER_CLASSES;
 
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -232,8 +231,8 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     private void registerAdapterFactory(ComponentContext context,
             ServiceReference reference) {
-        String[] adaptables = OsgiUtil.getProperty(reference, ADAPTABLE_CLASSES);
-        String[] adapters = OsgiUtil.getProperty(reference, ADAPTER_CLASSES);
+        String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
             || adapters.length == 0) {
@@ -270,7 +269,7 @@ public class AdapterManagerImpl implements AdapterManager {
     private void unregisterAdapterFactory(ServiceReference reference) {
         boundAdapterFactories.remove(reference);
 
-        String[] adaptables = OsgiUtil.getProperty(reference, ADAPTABLE_CLASSES);
+        String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
 
         if (adaptables == null || adaptables.length == 0) {
             return;

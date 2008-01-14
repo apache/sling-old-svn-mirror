@@ -41,7 +41,7 @@ public class AdapterFactoryDescriptorKey implements
 
     public AdapterFactoryDescriptorKey(ServiceReference ref) {
         bundleId = ref.getBundle().getBundleId();
-        serviceId = OsgiUtil.getProperty(ref, Constants.SERVICE_ID, -1);
+        serviceId = OsgiUtil.toLong(ref.getProperty(Constants.SERVICE_ID), -1);
     }
 
     public int compareTo(AdapterFactoryDescriptorKey o) {
