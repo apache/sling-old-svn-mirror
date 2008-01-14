@@ -22,15 +22,14 @@ How to run this
 Once the webapp starts, http://localhost:8080/sling should display the Sling 
 web console.
 
-KNOWN PROBLEM: currently the org.apache.sling.jcr.jackrabbit.server bundle jar
-must be installed manually before running the tests shown below. For some reason 
-the bundle cannot be loaded automatically, see pom.xml
+KNOWN PROBLEM: The org.apache.sling.jcr.jackrabbit.server bundle currently does not
+create the Jackrabbit repository at startup. If you get an error message saying 
 
-Use the "install or update" button of http://localhost:8080/sling/list to load
-the bundle, and start it from that page.
-
-If the bundle is missing you'll get an error saying
-"No Repository available to SlingAuthenticator, cannot authenticate".
+	"No Repository available to SlingAuthenticator, cannot authenticate".
+	
+Try stopping and restarting the "Sling - Jackrabbit Embedded Repository" bundle
+from the http://localhost:8080/sling/list page. When restarting, the log at
+ sling/logs/error.log should indicate that the repository is being created. 	
 
 4) Test node creation and display
 To create a node with curl:
