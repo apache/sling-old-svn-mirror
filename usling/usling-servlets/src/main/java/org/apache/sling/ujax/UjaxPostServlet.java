@@ -46,7 +46,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     private static final long serialVersionUID = 1837674988291697074L;
 
     private static final Logger log = LoggerFactory.getLogger(UjaxPostServlet.class);
-    private final MicrojaxPropertyValueSetter propertyValueSetter = new MicrojaxPropertyValueSetter();
+    private final UjaxPropertyValueSetter propertyValueSetter = new UjaxPropertyValueSetter();
     private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
 
     /** Prefix for parameter names which control this POST

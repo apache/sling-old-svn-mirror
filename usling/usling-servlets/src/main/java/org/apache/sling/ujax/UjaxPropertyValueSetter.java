@@ -31,7 +31,7 @@ import org.apache.sling.api.request.RequestParameter;
  * value. For example, "lastModified" with an empty value is stored as the
  * current Date.
  */
-class MicrojaxPropertyValueSetter {
+class UjaxPropertyValueSetter {
     public static final String CREATED_FIELD = "created";
     public static final String CREATED_BY_FIELD = "createdBy";
     public static final String LAST_MODIFIED_FIELD = "lastModified";
