@@ -55,13 +55,13 @@ public class Activator implements BundleActivator, ServiceListener {
     public static final String SLING_CONTEXT_DEFAULT = "sling.context.default";
 
     // The name of the Configuration Admin Service
-    private static final String CONFIG_ADMIN_NAME = ConfigurationAdmin.class.getName();
+    protected static final String CONFIG_ADMIN_NAME = ConfigurationAdmin.class.getName();
 
     // this bundle's context, used by verifyConfiguration
-    private BundleContext bundleContext;
+    protected BundleContext bundleContext;
 
     // the name of the default sling context
-    private String slingContext;
+    protected String slingContext;
 
     /**
      * Return the PID for the configuration.
