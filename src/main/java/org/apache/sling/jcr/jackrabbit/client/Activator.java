@@ -24,6 +24,10 @@ import javax.naming.Context;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -33,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>Activator</code> TODO
  */
-public class Activator implements BundleActivator {
+public class Activator implements BundleActivator, ServiceListener {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(Activator.class);
@@ -52,26 +56,69 @@ public class Activator implements BundleActivator {
      */
     public static final String SLING_CONTEXT_DEFAULT = "sling.context.default";
 
-    /* (non-Javadoc)
-     * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-     */
-    public void start(BundleContext context) throws Exception {
+    // The name of the Configuration Admin Service
+    private static final String CONFIG_ADMIN_NAME = ConfigurationAdmin.class.getName();
+
+    // this bundle's context, used by verifyConfiguration
+    private BundleContext bundleContext;
+
+    // the name of the default sling context
+    private String slingContext;
+
+    public void start(BundleContext context) {
+
+        this.bundleContext = context;
 
         // check the name of the default context, nothing to do if none
-        String slingContext = context.getProperty(SLING_CONTEXT_DEFAULT);
+        slingContext = context.getProperty(SLING_CONTEXT_DEFAULT);
         if (slingContext == null) {
-            return;
+            slingContext = "default";
         }
 
-        ServiceReference sr = context.getServiceReference(ConfigurationAdmin.class.getName());
-        if (sr == null) {
-            log.info("Activator: Need ConfigurationAdmin Service to ensure configuration");
-            return;
-        }
+        ServiceReference sr = context.getServiceReference(CONFIG_ADMIN_NAME);
+        if (sr != null) {
 
-        ConfigurationAdmin ca = (ConfigurationAdmin) context.getService(sr);
+            // immediately verify the configuration as the service is here
+            verifyConfiguration(sr);
+
+        } else {
+
+            // register as service listener for Configuration Admin to verify
+            // the configuration when the service is registered
+            try {
+                bundleContext.addServiceListener(this, "("
+                    + Constants.OBJECTCLASS + "=" + CONFIG_ADMIN_NAME + ")");
+            } catch (InvalidSyntaxException ise) {
+                log.error(
+                    "start: Failed to register for Configuration Admin Service, will not verify configuration",
+                    ise);
+            }
+        }
+    }
+
+    public void stop(BundleContext arg0) {
+        // nothing to do
+    }
+
+    // ---------- ServiceListener ----------------------------------------------
+
+    public void serviceChanged(ServiceEvent event) {
+        if (event.getType() == ServiceEvent.REGISTERED) {
+
+            // verify the configuration with the newly registered service
+            verifyConfiguration(event.getServiceReference());
+
+            // don't care for any more service state changes
+            bundleContext.removeServiceListener(this);
+        }
+    }
+
+    // ---------- internal -----------------------------------------------------
+
+    private void verifyConfiguration(ServiceReference ref) {
+        ConfigurationAdmin ca = (ConfigurationAdmin) bundleContext.getService(ref);
         if (ca == null) {
-            log.info("Activator: Need ConfigurationAdmin Service to ensure configuration (has gone ?)");
+            log.error("verifyConfiguration: Failed to get Configuration Admin Service from Service Reference");
             return;
         }
 
@@ -81,7 +128,8 @@ public class Activator implements BundleActivator {
                 + ConfigurationAdmin.SERVICE_FACTORYPID + "="
                 + CLIENT_REPOSITORY_FACTORY_PID + ")");
             if (cfgs != null && cfgs.length > 0) {
-                log.info("Activator: {} Configurations available for {}, nothing to do",
+                log.info(
+                    "verifyConfiguration: {} Configurations available for {}, nothing to do",
                     new Object[] { new Integer(cfgs.length),
                         CLIENT_REPOSITORY_FACTORY_PID });
                 return;
@@ -92,22 +140,21 @@ public class Activator implements BundleActivator {
             props.put(SLING_CONTEXT, slingContext);
             props.put(SlingClientRepository.REPOSITORY_NAME, "crx");
             props.put(Context.PROVIDER_URL, "http://jcr.day.com");
-            props.put(Context.INITIAL_CONTEXT_FACTORY, "com.day.util.jndi.provider.MemoryInitialContextFactory");
+            props.put(Context.INITIAL_CONTEXT_FACTORY,
+                "com.day.util.jndi.provider.MemoryInitialContextFactory");
 
             // create the factory and set the properties
-            ca.createFactoryConfiguration(CLIENT_REPOSITORY_FACTORY_PID).update(props);
+            Configuration config = ca.createFactoryConfiguration(CLIENT_REPOSITORY_FACTORY_PID);
+            config.update(props);
+
+            log.debug("verifyConfiguration: Created configuration {} for {}",
+                config.getPid(), config.getFactoryPid());
 
         } catch (Throwable t) {
-            log.error("Activator: Cannot check or define configuration", t);
+            log.error(
+                "verifyConfiguration: Cannot check or define configuration", t);
         } finally {
-            context.ungetService(sr);
+            bundleContext.ungetService(ref);
         }
-    }
-
-    /* (non-Javadoc)
-     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-     */
-    public void stop(BundleContext arg0) throws Exception {
-        // nothing to do
     }
 }
