@@ -40,9 +40,7 @@ import org.slf4j.LoggerFactory;
 public class Activator implements BundleActivator, ServiceListener {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(Activator.class);
-
-    public static final String CLIENT_REPOSITORY_FACTORY_PID = SlingClientRepository.class.getName();
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * The name of the configuration property naming the Sling Context for which
@@ -64,6 +62,14 @@ public class Activator implements BundleActivator, ServiceListener {
 
     // the name of the default sling context
     private String slingContext;
+
+    /**
+     * Return the PID for the configuration.
+     * @return
+     */
+    protected String getClientRepositoryFactoryPID() {
+        return SlingClientRepository.class.getName();
+    }
 
     public void start(BundleContext context) {
 
@@ -126,12 +132,12 @@ public class Activator implements BundleActivator, ServiceListener {
             // find a configuration for theses properties...
             Configuration[] cfgs = ca.listConfigurations("("
                 + ConfigurationAdmin.SERVICE_FACTORYPID + "="
-                + CLIENT_REPOSITORY_FACTORY_PID + ")");
+                + this.getClientRepositoryFactoryPID() + ")");
             if (cfgs != null && cfgs.length > 0) {
                 log.info(
                     "verifyConfiguration: {} Configurations available for {}, nothing to do",
                     new Object[] { new Integer(cfgs.length),
-                        CLIENT_REPOSITORY_FACTORY_PID });
+                        this.getClientRepositoryFactoryPID() });
                 return;
             }
 
@@ -144,7 +150,7 @@ public class Activator implements BundleActivator, ServiceListener {
                 "com.day.util.jndi.provider.MemoryInitialContextFactory");
 
             // create the factory and set the properties
-            Configuration config = ca.createFactoryConfiguration(CLIENT_REPOSITORY_FACTORY_PID);
+            Configuration config = ca.createFactoryConfiguration(this.getClientRepositoryFactoryPID());
             config.update(props);
 
             log.debug("verifyConfiguration: Created configuration {} for {}",
