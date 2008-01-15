@@ -20,6 +20,7 @@ package org.apache.sling.core.impl.parameters;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -132,13 +133,21 @@ public class ParameterSupport {
     }
 
     protected void parseFormEncodedPost(ParameterMap parameters) {
-        try {
-            Util.parse(this.getServletRequest().getInputStream(),
-                this.getServletRequest().getCharacterEncoding(), parameters, false);
-        } catch (IOException ioe) {
-            // TODO: log
-        } catch (Throwable t) {
-            // TODO: log
+        // TODO see SLING-152 - for now this is hardcoded to Util.ENCODING_DEFAULT
+        final Map<?, ?> pMap = this.getServletRequest().getParameterMap();
+        for (Map.Entry<?, ?> entry : pMap.entrySet()) {
+            final String name = (String)entry.getKey();
+            final String[] values = (String[]) entry.getValue();
+            for (int i = 0; i < values.length; i++) {
+                final EncodedRequestParameter rp = new EncodedRequestParameter(Util.ENCODING_DEFAULT);
+                try {
+                    rp.setContent(values[i].getBytes(Util.ENCODING_DEFAULT));
+                } catch(UnsupportedEncodingException ue) {
+                    throw new Error("Unexpected UnsupportedEncodingException for encoding=" + Util.ENCODING_DEFAULT);
+                }
+                parameters.addParameter(name, rp);
+            }
+            
         }
     }
 
