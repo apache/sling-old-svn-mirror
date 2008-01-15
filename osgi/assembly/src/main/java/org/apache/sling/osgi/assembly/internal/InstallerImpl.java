@@ -392,7 +392,9 @@ public class InstallerImpl implements Installer {
              * version range <em>[a.b.c,a.b.d)</em> is returned where
              * <em>d = c + 1</em>.
              */
-            if (versionRange != null && versionRange.getHigh() == null) {
+            if (versionRange != null && versionRange.getHigh() == null
+                && !VersionRange.DEFAULT.equals(versionRange)) {
+                
                 Version low = versionRange.getLow();
                 Version high = new Version(low.getMajor(), low.getMinor(),
                     low.getMicro() + 1);

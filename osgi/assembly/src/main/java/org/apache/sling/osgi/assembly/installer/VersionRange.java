@@ -18,6 +18,8 @@ package org.apache.sling.osgi.assembly.installer;
 
 import org.osgi.framework.Version;
 
+import sun.security.action.GetLongAction;
+
 public class VersionRange {
 
     /**
@@ -184,9 +186,63 @@ public class VersionRange {
         return "(&(version" + op + "=" + v + ")(!(version=" + v + ")))";
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        } else if (!(obj instanceof VersionRange)) {
+            return false;
+        }
+        
+        VersionRange other = (VersionRange) obj;
+        
+        if (!getLow().equals(other.getLow())) {
+            return false;
+        }
+        
+        if (isLowInclusive() != other.isLowInclusive()) {
+            return false;
+        }
+        
+        if (getHigh() == null) {
+            if (other.getHigh() != null) {
+                return false;
+            }
+        } else {
+            if (!getHigh().equals(other.getHigh())) {
+                return false;
+            }
+        }
+        
+        if (isHighInclusive() != other.isHighInclusive()) {
+            return false;
+        }
+        
+        // if all checks succeeded, the ranges are equal
+        return true;
+    }
+    
+    @Override
+    public int hashCode() {
+        int code = 17 * getLow().hashCode();
+        if (isLowInclusive()) {
+            code += 33;
+        }
+        
+        if (getHigh() != null) {
+            code += 41 * getHigh().hashCode();
+            if (isHighInclusive()) {
+                code += 11;
+            }
+        }
+        
+        return code;
+    }
+    
     /**
      * Returns a string representation of this version range.
      */
+    @Override
     public String toString() {
         // return single version if there is no upper bound
         if (this.getHigh() == null) {
