@@ -63,7 +63,7 @@ public class SlingClientRepository extends AbstractSlingRepository
         implements Repository, SlingRepository {
 
     /**
-     * @scr.property value="crx"
+     * @scr.property value="jackrabbit"
      */
     public static final String REPOSITORY_NAME = "name";
 
