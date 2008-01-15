@@ -478,8 +478,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                     return slingAuthenticator.authenticate(request, response);
                 }
             };
+            
+            Dictionary<String, String> servletConfig = toStringConfig(configuration);
+
             this.httpService.registerServlet(this.slingRoot, this,
-                configuration, httpContext);
+                servletConfig, httpContext);
 
             log.info("{} ready to serve requests", this.getServerInfo());
 
@@ -625,4 +628,14 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         // global filter by default
         return requestFilterChain;
     }
+    
+    private Dictionary<String, String> toStringConfig(Dictionary<?, ?> config) {
+        Dictionary<String, String> stringConfig = new Hashtable<String, String>();
+        for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
+            Object key = ke.nextElement();
+            stringConfig.put(key.toString(), String.valueOf(config.get(key)));
+        }
+        return stringConfig;
+    }
+
 }
