@@ -252,11 +252,11 @@
                     -->
                     <property>
                       <name>usling.http.server.url</name>
-                      <value>http://localhost:8080/usling-webapp-2.0.0-incubator-SNAPSHOT</value>
+                      <value>http://localhost:8080/${project.build.finalName}</value>
                     </property>
                     <property>
                       <name>usling.webdav.server.url</name>
-                      <value>http://localhost:8080/usling-webapp-2.0.0-incubator-SNAPSHOT/repository/default</value>
+                      <value>http://localhost:8080/${project.build.finalName}/repository/default</value>
                     </property>
                   </systemProperties>
                 </configuration>
