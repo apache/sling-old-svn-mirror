@@ -137,7 +137,11 @@ public class OsgiUtil {
      * returned.
      */
     public static String[] toStringArray(Object propValue) {
-        if (propValue instanceof String) {
+        if (propValue == null) {
+            // no value at all
+            return null;
+            
+        } else if (propValue instanceof String) {
             // single string
             return new String[] { (String) propValue };
 
