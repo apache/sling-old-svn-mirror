@@ -54,6 +54,17 @@
       Disable Jetty webapp rescan (override with -D) 
     -->
     <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
+    
+    <!-- 
+      Defines which tests are for the "integration-testing" phase
+     -->
+    <integration.test.code.path>**/usling/webapp/integrationtest</integration.test.code.path>
+    
+    <!-- 
+      Set this to true to stop mvn once the integration test Jetty instance is
+      started. Useful to manually test the integration testing webapp.
+     -->
+     <integration.test.wait>false</integration.test.wait>
   </properties>
 
   <build>
@@ -171,8 +182,152 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemProperties>
+            <!-- 
+              WARNING: make sure these URLs are consistent with the
+              cargo-maven2-plugin settings: AFAIK Maven does not
+              expand variables in the <value> element.
+              And WARNING: these properties are duplicated somewhere in this
+              POM with slightly different values...there must be a better way. 
+            -->
+            <property>
+              <name>usling.http.server.url</name>
+              <value>http://localhost:8080</value>
+            </property>
+            <property>
+              <name>usling.webdav.server.url</name>
+              <value>http://localhost:8080/repository/default</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
+      
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!--
+        Run the cargo-based integration tests.
+        This profile is active by default, to deactivate it activate another
+        one, for example " mvn -P nullProfile".
+        
+        TODO there must be a way to control this with "mvn.test.skip", but I haven't
+        found it. 
+      -->
+      <id>cargoIntegrationTesting</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>surefire-integration-test</id>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration>
+                  <excludes>
+                    <exclude>none</exclude>
+                  </excludes>
+                  <includes>
+                    <include>${integration.test.code.path}/**/*Test.java</include>
+                  </includes>
+                  <systemProperties>
+                    <!-- 
+                      WARNING: make sure these URLs are consistent with the
+                      cargo-maven2-plugin settings: AFAIK Maven does not
+                      expand variables in the <value> element.
+                      And WARNING: these properties are duplicated somewhere in this
+                      POM with slightly different values...there must be a better way. 
+                    -->
+                    <property>
+                      <name>usling.http.server.url</name>
+                      <value>http://localhost:8080/usling-webapp-2.0.0-incubator-SNAPSHOT</value>
+                    </property>
+                    <property>
+                      <name>usling.webdav.server.url</name>
+                      <value>http://localhost:8080/usling-webapp-2.0.0-incubator-SNAPSHOT/repository/default</value>
+                    </property>
+                  </systemProperties>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.cargo</groupId>
+            <artifactId>cargo-maven2-plugin</artifactId>
+            <version>0.3.1</version>
+            <executions>
+              <execution>
+                <id>start-container</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>start</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>stop-container</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                  <goal>stop</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <wait>${integration.test.wait}</wait>
+              <container>
+                <containerId>jetty6x</containerId>
+                <type>embedded</type>
+              </container>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!--
+        By default, do not run the integration tests in the test phase, as they have
+        no microsling to talk to.
+        To debug the integration tests faster than with the normal build cycle,
+        deactivate this profile (using -P nullProfile for example) and run a
+        separate instance of microsling that the tests can talk to.
+      -->
+      <id>disableIntegrationTestsInTestPhase</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>${integration.test.code.path}/**/*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!-- 
+        Useful to deactivate other profiles from the command-line
+        Is there a better way? mvn doesn't have a "deactivate profile" option. 
+      -->
+      <id>nullUslingProfile</id>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -203,6 +358,44 @@
       <version>1.0.0-v20070606</version>
       <scope>provided</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.3</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+      <version>3.1</version>
+      <scope>test</scope>
+      <exclusions>
+        <!-- 
+          Same problem as JCR-683: commons-httpclient depends on commons-logging. Since 
+          this webapp uses log4j (see the slf4j-log4j12 dependency below), we need to
+          override this dependency with jcl104-over-sflf4j, found below
+        -->
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>    
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.3.0</version>
+      <scope>test</scope>
+     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl104-over-slf4j</artifactId>
+      <version>1.3.0</version>
+      <scope>test</scope>
+    </dependency>
+    
 
     <!-- The servlet container will have to provide these API classes -->
     <dependency>
