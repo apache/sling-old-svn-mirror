@@ -26,6 +26,9 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 /** Client functions to interact with microsling in integration tests */ 
 public class UslingIntegrationTestClient {
@@ -89,21 +92,31 @@ public class UslingIntegrationTestClient {
 
     /** Call the other createNode method with headers==null */
     public String createNode(String url, Map<String,String> nodeProperties) throws IOException {
-        return createNode(url, nodeProperties, null);
+        return createNode(url, nodeProperties, null, false);
     }
     
     /** Create a node under given path, using a POST to microsling
-     *  @param url under which node is created 
+     *  @param url under which node is created
+     *  @param multiPart if true, does a multipart POST 
      *  @return the URL that microsling provides to display the node 
      */
-    public String createNode(String url, Map<String,String> nodeProperties, Map<String,String> requestHeaders) 
+    public String createNode(String url, Map<String,String> nodeProperties, Map<String,String> requestHeaders,boolean multiPart) 
     throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
         
-        if(nodeProperties != null) {
-            for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
-                post.addParameter(e.getKey(),e.getValue());
+        if(nodeProperties != null && nodeProperties.size() > 0) {
+            if(multiPart) {
+                final Part [] parts = new Part[nodeProperties.size()];
+                int index = 0;
+                for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
+                    parts[index++] = new StringPart(e.getKey().toString(), e.getValue().toString());
+                }
+                post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
+            } else {
+                for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
+                    post.addParameter(e.getKey(),e.getValue());
+                }
             }
         }
         
