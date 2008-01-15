@@ -79,12 +79,12 @@ public class UslingDefaultServlet extends SlingAllMethodsServlet {
         postServlet = new UjaxPostServlet();
         postServlet.init(config);
         
-        defaultGetServlet = new DefaultHtmlRendererServlet("text/html");
+        defaultGetServlet = new PlainTextRendererServlet("text/plain");
         
         getServlets = new HashMap<String, Servlet>();
-        getServlets.put("html", defaultGetServlet);
+        getServlets.put("html", new DefaultHtmlRendererServlet("text/html"));
         getServlets.put("json", new JsonRendererServlet("application/json"));
-        getServlets.put("txt", new PlainTextRendererServlet("text/plain"));
+        getServlets.put("txt", defaultGetServlet);
     }
 
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, ServletException {
@@ -96,11 +96,22 @@ public class UslingDefaultServlet extends SlingAllMethodsServlet {
             return;
         }
         
-        Servlet s = getServlets.get(request.getRequestPathInfo().getExtension());
-        if(s==null) {
-            s = defaultGetServlet;
+        // use default renderer servlet if no extension, else lookup our getServlets 
+        Servlet s = defaultGetServlet;
+        final String ext = request.getRequestPathInfo().getExtension();
+        if(ext!=null && ext.length() > 0) {
+            s = getServlets.get(ext);
         }
-        s.service(request, response);
+
+        // render using s, or fail
+        if(s==null) {
+            response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "No default renderer found for extension='" + ext + "'"
+            );
+        } else {
+            s.service(request, response);
+        }
     }
 
 
