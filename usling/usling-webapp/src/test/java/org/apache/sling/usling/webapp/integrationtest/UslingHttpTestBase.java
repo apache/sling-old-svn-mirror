@@ -57,6 +57,8 @@ public class UslingHttpTestBase extends TestCase {
     protected UslingIntegrationTestClient testClient;
     protected HttpClient httpClient;
     
+    private static long startupTime = System.currentTimeMillis(); 
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -77,6 +79,18 @@ public class UslingHttpTestBase extends TestCase {
         httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
 
         testClient = new UslingIntegrationTestClient(httpClient);
+        
+        waitForSlingStartup();
+    }
+    
+    protected void waitForSlingStartup() throws Exception {
+        // TODO we'll need a better way to make sure integration tests
+        // wait for all bundles to be started!!!
+        final long delta = System.currentTimeMillis() - startupTime;
+        final long minWait = 5000L;
+        if(minWait > delta) {
+            Thread.sleep(minWait - delta);
+        }
     }
 
     /** Verify that given URL returns expectedStatusCode 
