@@ -71,6 +71,16 @@ public class Activator implements BundleActivator, ServiceListener {
         return SlingClientRepository.class.getName();
     }
 
+    protected Hashtable<String, Object>getDefaultConfiguration() {
+        Hashtable<String, Object> props = new Hashtable<String, Object>();
+        props.put(SLING_CONTEXT, slingContext);
+        props.put(SlingClientRepository.REPOSITORY_NAME, "jackrabbit");
+        props.put(Context.PROVIDER_URL, "http://incubator.apache.org/sling");
+        props.put(Context.INITIAL_CONTEXT_FACTORY,
+            "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+        return props;
+    }
+
     public void start(BundleContext context) {
 
         this.bundleContext = context;
@@ -142,12 +152,7 @@ public class Activator implements BundleActivator, ServiceListener {
             }
 
             // we have no configuration, create from default settings
-            Hashtable<String, Object> props = new Hashtable<String, Object>();
-            props.put(SLING_CONTEXT, slingContext);
-            props.put(SlingClientRepository.REPOSITORY_NAME, "crx");
-            props.put(Context.PROVIDER_URL, "http://jcr.day.com");
-            props.put(Context.INITIAL_CONTEXT_FACTORY,
-                "com.day.util.jndi.provider.MemoryInitialContextFactory");
+            final Hashtable<String, Object> props = this.getDefaultConfiguration();
 
             // create the factory and set the properties
             Configuration config = ca.createFactoryConfiguration(this.getClientRepositoryFactoryPID());
