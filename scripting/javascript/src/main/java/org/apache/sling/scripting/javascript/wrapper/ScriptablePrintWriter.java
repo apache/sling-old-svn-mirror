@@ -148,14 +148,18 @@ public class ScriptablePrintWriter extends ScriptableObject implements Wrapper {
     private Locale getLocale() {
         if (locale == null) {
             
-            // check whether we have a request object which has the locale
-            Object reqObj = ScriptRuntime.name(Context.getCurrentContext(),
-                this, SlingBindings.REQUEST);
-            if (reqObj instanceof Wrapper) {
-                Object wrapped = ((Wrapper) reqObj).unwrap();
-                if (wrapped instanceof HttpServletRequest) {
-                    locale = ((HttpServletRequest) wrapped).getLocale();
+            try {
+                // check whether we have a request object which has the locale
+                Object reqObj = ScriptRuntime.name(Context.getCurrentContext(),
+                    this, SlingBindings.REQUEST);
+                if (reqObj instanceof Wrapper) {
+                    Object wrapped = ((Wrapper) reqObj).unwrap();
+                    if (wrapped instanceof HttpServletRequest) {
+                        locale = ((HttpServletRequest) wrapped).getLocale();
+                    }
                 }
+            } catch (Exception e) {
+                // ignore any exceptions resulting from this and use default
             }
 
             // default, if the no request locale or no request is available
