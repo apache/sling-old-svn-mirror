@@ -80,6 +80,7 @@
         <module>jcr/classloader</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
+        <module>jcr/webdav</module>
         
         <!-- OSGi -->
         <module>osgi/assembly</module>
