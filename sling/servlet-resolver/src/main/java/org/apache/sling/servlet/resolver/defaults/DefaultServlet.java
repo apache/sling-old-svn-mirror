@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.beanutils.BeanMap;
@@ -36,6 +38,8 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.servlet.resolver.helper.JsonItemWriter;
 
 /**
  * The <code>DefaultServlet</code> is a very simple default resource handler.
@@ -45,6 +49,10 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  *
  */
 public class DefaultServlet extends SlingSafeMethodsServlet {
+
+    /** This optional request parameter sets the recursion level
+     *  (into chldren) when dumping a node */
+    public static final String PARAM_RECURSION_LEVEL = "maxlevels";
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -67,7 +75,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         } else if ("properties".equals(extension)) {
             this.renderContentProperties(resource, response);
         } else if ("json".equals(extension)) {
-            this.renderContentJson(resource, response);
+            this.renderContentJson(resource, request, response);
         } else {
             // default rendering as plain text
             this.renderContentText(resource, response);
@@ -166,58 +174,31 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
     }
 
     private void renderContentJson(Resource resource,
+            SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException {
-
-        Map<Object, Object> contentMap = new TreeMap<Object, Object>(
-            this.asMap(resource));
-
-        response.setContentType("text/x-json; charset=UTF-8");
-        PrintWriter pw = response.getWriter();
-
-        pw.println("{");
-
-        boolean notFirst = false;
-        for (Map.Entry<Object, Object> entry : contentMap.entrySet()) {
-
-            if (notFirst) {
-                pw.println(',');
-            } else {
-                notFirst = true;
-            }
-
-            pw.print("  \"" + entry.getKey() + "\": ");
-
-            if (entry.getValue() instanceof Collection) {
-                pw.println("[");
-                Collection<?> coll = (Collection<?>) entry.getValue();
-                for (Iterator<?> ci = coll.iterator(); ci.hasNext();) {
-                    pw.print("    ");
-                    this.printObjectJson(pw, ci.next());
-                    if (ci.hasNext()) {
-                        pw.println(',');
-                    }
-                }
-                pw.println();
-                pw.print("  ]");
-
-            } else {
-                this.printObjectJson(pw, entry.getValue());
+        // how many levels deep?
+        int maxRecursionLevels = 1;
+        if (request.getRequestPathInfo().getSelectors().length > 0) {
+            try {
+                maxRecursionLevels = Integer.parseInt(request.getRequestPathInfo().getSelectors()[0]);
+            } catch(Exception e) {
+                // TODO ignore
             }
         }
 
-        pw.println();
-        pw.println("}");
-
-    }
-
-    private void printObjectJson(PrintWriter pw, Object object) {
-        boolean quote = !((object instanceof Boolean) || (object instanceof Number));
-        if (quote) {
-            pw.print('"');
-        }
-        pw.print(object);
-        if (quote) {
-            pw.print('"');
+        response.setContentType("text/x-json");
+        response.setCharacterEncoding("UTF-8");
+        final PrintWriter pw = response.getWriter();
+        final JsonItemWriter itemWriter = new JsonItemWriter(null);
+        try {
+            final Node node =resource.adaptTo(Node.class);
+            if ( node != null ) {
+                itemWriter.dump(node, pw, maxRecursionLevels);
+            }
+        } catch(JSONException je) {
+            throw new IOException(je.getMessage());
+        } catch(RepositoryException re) {
+            throw new IOException(re.getMessage());
         }
     }
 
