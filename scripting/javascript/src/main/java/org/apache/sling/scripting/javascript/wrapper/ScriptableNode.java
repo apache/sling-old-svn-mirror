@@ -34,11 +34,12 @@ import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 /**
  * A wrapper for JCR nodes that exposes all properties and child nodes
  * as properties of a Javascript object.
  */
-public class ScriptableNode extends ScriptableObject {
+public class ScriptableNode extends ScriptableObject implements Wrapper {
 
     public static final String CLASSNAME = "Node";
 
@@ -165,4 +166,10 @@ public class ScriptableNode extends ScriptableObject {
 		}
 	}
 
+	//---------- Wrapper interface --------------------------------------------
+	
+	// returns the wrapped node
+	public Object unwrap() {
+	    return node;
+	}
 }
