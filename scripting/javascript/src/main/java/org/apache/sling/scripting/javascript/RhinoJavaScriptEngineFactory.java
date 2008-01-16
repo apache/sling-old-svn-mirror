@@ -21,9 +21,12 @@ package org.apache.sling.scripting.javascript;
 import javax.script.ScriptEngine;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
+import org.apache.sling.scripting.javascript.helper.SlingContextFactory;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
+import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -41,6 +44,10 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
     private Scriptable rootScope;
 
     public RhinoJavaScriptEngineFactory() {
+        
+        // initialize the Rhino Context Factory
+        SlingContextFactory.setup();
+        
         Context cx = Context.enter();
         setEngineName(getEngineName() + " (" + cx.getImplementationVersion()
             + ")");
@@ -74,6 +81,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
             try {
                 ScriptableObject.defineClass(rootScope, ScriptableResource.class);
                 ScriptableObject.defineClass(rootScope, ScriptableNode.class);
+                ScriptableObject.defineClass(rootScope, ScriptablePrintWriter.class);
             } catch (Throwable t) {
                 // TODO: log
             }
