@@ -79,7 +79,9 @@
                             org.apache.sling.api.servlets,
                             org.apache.sling.core.servlets,
                             org.osgi.framework,
-                            org.osgi.service.component, org.slf4j
+                            org.osgi.service.component, org.slf4j,
+                            javax.jcr, javax.jcr.nodetype, org.apache.sling.commons.json,
+                            org.apache.sling.commons.json.io
                         </Import-Package>
                     </instructions>
                 </configuration>
@@ -99,6 +101,11 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.core</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
