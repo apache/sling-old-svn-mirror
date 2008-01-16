@@ -18,10 +18,13 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
+import java.io.PrintWriter;
+
 import javax.jcr.Node;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
+import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
@@ -54,6 +57,9 @@ public class SlingWrapFactory extends WrapFactory {
                     new Object[] { javaObject });
             } else if (javaObject instanceof Node) {
                 return cx.newObject(scope, ScriptableNode.CLASSNAME,
+                    new Object[] { javaObject });
+            } else if (javaObject instanceof PrintWriter) {
+                return cx.newObject(scope, ScriptablePrintWriter.CLASSNAME,
                     new Object[] { javaObject });
             }
         } catch (Exception e) {
