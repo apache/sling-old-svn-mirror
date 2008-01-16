@@ -211,7 +211,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
         if (type == Session.class) {
             return (AdapterType) getSession();
         } else if (type == ObjectContentManager.class) {
-            return (AdapterType) objectContentManager;
+            return (AdapterType) getObjectContentManager();
         } else if (type == PathResolver.class) {
             return (AdapterType) this;
         }
