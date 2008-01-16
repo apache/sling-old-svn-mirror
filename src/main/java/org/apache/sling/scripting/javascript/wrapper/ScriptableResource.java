@@ -22,13 +22,14 @@ import org.apache.sling.api.resource.Resource;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 
 /**
  * Resource in JavaScript has following signature: [Object] getData(); [Object]
  * data [Item] getItem(); [Item] item [String] getResourceType(); [String] type
  * [String] getPath(); [String] path
  */
-public class ScriptableResource extends ScriptableObject {
+public class ScriptableResource extends ScriptableObject implements Wrapper {
 
     public static final String CLASSNAME = "Resource";
 
@@ -96,6 +97,13 @@ public class ScriptableResource extends ScriptableObject {
 
     public void setResource(Resource entry) {
         this.resource = entry;
+    }
+
+    // ---------- Wrapper interface --------------------------------------------
+
+    // returns the wrapped resource
+    public Object unwrap() {
+        return resource;
     }
 
 }
