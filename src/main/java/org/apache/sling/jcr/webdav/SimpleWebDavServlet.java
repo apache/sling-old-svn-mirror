@@ -18,11 +18,14 @@
  */
 package org.apache.sling.jcr.webdav;
 
+import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import javax.jcr.Repository;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -59,6 +62,26 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
         return repository;
     }
 
+    // ---------- AbstractWebdavServlet overwrite ------------------------------
+
+    @Override
+    protected void service(HttpServletRequest request,
+            HttpServletResponse response) throws ServletException, IOException {
+        
+        // redirect to the default workspace if directly addressing the servlet
+        String pinfo = request.getPathInfo();
+        if (pinfo == null || "/".equals(pinfo)) {
+            String uri = request.getRequestURI();
+            if (pinfo == null) {
+                uri += "/";
+            }
+            uri += repository.getDefaultWorkspace();
+            response.sendRedirect(uri);
+        }
+        
+        super.service(request, response);
+    }
+    
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext componentContext) {
@@ -76,10 +99,10 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
                 + value + "\"");
         }
 
-//        value = getString(props, INIT_PARAM_MISSING_AUTH_MAPPING, null);
-//        if (value != null) {
-//            initparams.put(INIT_PARAM_MISSING_AUTH_MAPPING, value);
-//        }
+        // value = getString(props, INIT_PARAM_MISSING_AUTH_MAPPING, null);
+        // if (value != null) {
+        // initparams.put(INIT_PARAM_MISSING_AUTH_MAPPING, value);
+        // }
 
         try {
             httpService.registerServlet(context, this, initparams, null);
