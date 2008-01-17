@@ -45,10 +45,6 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     private final String responseContentType;
     private final JsonItemWriter itemWriter;
 
-    /** This optional request parameter sets the recursion level
-     *  (into chldren) when dumping a node */
-    public static final String PARAM_RECURSION_LEVEL = "maxlevels";
-
     public JsonRendererServlet(String responseContentTypeHeaderValue) {
         this.responseContentType = responseContentTypeHeaderValue;
         itemWriter = new JsonItemWriter(null);
@@ -92,17 +88,20 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                 HttpServletResponse.SC_NOT_IMPLEMENTED, "Can only dump nodes");
         }
 
-        // how many levels deep?
+        // SLING-167: the last selector, if present, gives the number of
+        // recursion levels, 0 being the default
         int maxRecursionLevels = 0;
-        final String depth = req.getParameter(PARAM_RECURSION_LEVEL);
-        if (depth != null) {
-          try {
-            maxRecursionLevels = Integer.parseInt(depth);
-          } catch(Exception e) {
-            throw new HttpStatusCodeException(HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid value '" + depth + "' for request parameter '" + PARAM_RECURSION_LEVEL + "'"
-            );
-          }
+        final String [] selectors = req.getRequestPathInfo().getSelectors();
+        if(selectors != null && selectors.length > 0) {
+            String level = selectors[selectors.length - 1];
+            try {
+                maxRecursionLevels = Integer.parseInt(level);
+            } catch(NumberFormatException nfe) {
+                throw new HttpStatusCodeException(HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid recursion selector value '" + level + "'"
+                );
+                
+            }
         }
 
         // do the dump

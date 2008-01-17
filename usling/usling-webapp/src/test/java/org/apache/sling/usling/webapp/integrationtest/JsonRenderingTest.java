@@ -20,12 +20,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
 /** Test creating Nodes and rendering them in JSON */
 public class JsonRenderingTest extends UslingHttpTestBase {
 
     private String postUrl; 
     private String testText;
     private String jsonUrl;
+    private String createdNodeUrl;
     
     @Override
     protected void setUp() throws Exception {
@@ -38,7 +41,8 @@ public class JsonRenderingTest extends UslingHttpTestBase {
         postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/UJAX_create";
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
-        jsonUrl = testClient.createNode(postUrl, props) + ".json";
+        createdNodeUrl = testClient.createNode(postUrl, props);
+        jsonUrl = createdNodeUrl + ".json";
     }
     
     /** test our assertJavascript method with static json */ 
@@ -64,7 +68,7 @@ public class JsonRenderingTest extends UslingHttpTestBase {
             testClient.createNode(parentNodeUrl + "/" + child, props);
         }
         
-        final String json = getContent(parentNodeUrl + ".json?maxlevels=1", CONTENT_TYPE_JSON);
+        final String json = getContent(parentNodeUrl + ".1.json", CONTENT_TYPE_JSON);
         assertJavascript(testText, json, "out.print(data.text)");
         for(String child : children) {
             assertJavascript(child, json, "out.print(data['" + child + "'].child)");
@@ -85,11 +89,20 @@ public class JsonRenderingTest extends UslingHttpTestBase {
             testClient.createNode(parentNodeUrl + "/" + child, props);
         }
         
-        final String json = getContent(parentNodeUrl + ".json?maxlevels=0", CONTENT_TYPE_JSON);
-        assertJavascript(testText, json, "out.print(data.text)");
-        for(String child : children) {
-            assertJavascript("undefined", json, "out.print(typeof data['" + child + "'])");
+        // .json and .0.json must both return 0 levels
+        final String [] extensions = { ".json", ".0.json" };
+        for(String extension : extensions) {
+            final String json = getContent(parentNodeUrl + extension, CONTENT_TYPE_JSON);
+            assertJavascript(testText, json, "out.print(data.text)");
+            for(String child : children) {
+                final String testInfo = "extension: " + extension;
+                assertJavascript("undefined", json, "out.print(typeof data['" + child + "'])", testInfo);
+            }
         }
+    }
+    
+    public void testInvalidLevel() throws IOException {
+        assertHttpStatus(createdNodeUrl + ".notAnIntegerOnPurpose.json", HttpServletResponse.SC_BAD_REQUEST);
     }
     
     public void testEscapedStrings() throws IOException {
