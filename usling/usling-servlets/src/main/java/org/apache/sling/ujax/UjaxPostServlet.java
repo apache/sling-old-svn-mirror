@@ -164,7 +164,8 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             currentPath = currentPath.substring(0,dotPos);
         }
 
-        final String starSuffix = "/*";
+        // TODO in microsling this was /* but that causes problems as * is not a valid JCR path - temp fix for now
+        final String starSuffix = "/UJAX_create";
         if(currentPath.endsWith(starSuffix)) {
             // If the path ends with a *, create a node under its parent, with
             // a generated node name
