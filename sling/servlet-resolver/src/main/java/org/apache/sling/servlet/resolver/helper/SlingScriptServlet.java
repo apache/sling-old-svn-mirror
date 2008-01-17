@@ -30,6 +30,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -55,10 +56,11 @@ public class SlingScriptServlet implements Servlet {
         this.script = script;
     }
 
-    public void service(ServletRequest req, ServletResponse res)
+    public void service(ServletRequest req, ServletResponse servletResponse)
             throws ServletException, IOException {
 
         SlingHttpServletRequest request = (SlingHttpServletRequest) req;
+        final HttpServletResponse res = (HttpServletResponse)servletResponse;
 
         try {
             // prepare the properties for the script
@@ -68,7 +70,13 @@ public class SlingScriptServlet implements Servlet {
             props.put(FLUSH, TRUE);
 
             res.setCharacterEncoding("UTF-8");
-            res.setContentType(request.getResponseContentType());
+            final String contentType = request.getResponseContentType();
+            if(contentType == null) {
+                res.addHeader("X-Sling-Warning", request.getClass().getSimpleName() + " does not provide a Content-Type");
+                res.setContentType("text/plain");
+            } else {
+                res.setContentType(contentType);
+            }
 
             // evaluate the script now using the ScriptEngine
             script.eval(props);
