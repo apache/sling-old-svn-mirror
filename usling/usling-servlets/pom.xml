@@ -64,35 +64,6 @@
     </plugins>
   </build>
   
-  <profiles>
-    <profile>
-      <!-- 
-        Use this profile to deploy the bundle automatically,
-        during development
-      -->
-      <id>autoDeployBundle</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>maven-sling-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>install-bundle</id>
-                <goals>
-                  <goal>install</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
   <dependencies>
     <dependency>
       <groupId>org.osgi</groupId>
