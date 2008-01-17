@@ -1,0 +1,21 @@
+<%-- used by ScriptedRenderingTest --%>
+<p>
+	JST template.
+</p>
+
+<p>
+  <%= currentNode.title %> </b>
+</p>
+
+<p>
+  <%= currentNode.text %> </em>
+</p>
+
+<!-- verify that script tag is broken in two when rendering -->
+<!-- (SLING-114) -->
+ 
+<script>something scripted</script>
+
+<% for(i=0; i< 10; i++) {
+} %><script>more scripting</script><% for(i=0; i< 10; i++) {
+} %>
