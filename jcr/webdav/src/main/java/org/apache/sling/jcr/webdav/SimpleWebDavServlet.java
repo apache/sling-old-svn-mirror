@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.webdav;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -27,11 +28,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
-import org.osgi.service.http.NamespaceException;
 
 /**
  * The <code>SimpleWebDavServlet</code>
@@ -61,7 +62,7 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
     public Repository getRepository() {
         return repository;
     }
-
+    
     // ---------- AbstractWebdavServlet overwrite ------------------------------
 
     @Override
@@ -84,7 +85,7 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
     
     // ---------- SCR integration ----------------------------------------------
 
-    protected void activate(ComponentContext componentContext) {
+    protected void activate(ComponentContext componentContext) throws Exception {
         Dictionary<?, ?> props = componentContext.getProperties();
 
         String context = getString(props, PROP_CONTEXT, DEFAULT_CONTEXT);
@@ -98,25 +99,25 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
             initparams.put(INIT_PARAM_AUTHENTICATE_HEADER, "Basic Realm=\""
                 + value + "\"");
         }
+        
+        // for now, the ResourceConfig is fixed
+        final String configPath = "/webdav-resource-config.xml";
+        final ResourceConfig rc = new ResourceConfig();
+        final URL cfg = getClass().getResource(configPath);
+        if(cfg == null) {
+            throw new IOException("ResourceConfig source not found:" + configPath);
+        }
+        rc.parse(cfg);
+        setResourceConfig(rc);
 
         // value = getString(props, INIT_PARAM_MISSING_AUTH_MAPPING, null);
         // if (value != null) {
         // initparams.put(INIT_PARAM_MISSING_AUTH_MAPPING, value);
         // }
 
-        try {
-            httpService.registerServlet(context, this, initparams, null);
-
-            // set the contextPath field to signal successfull registration
-            this.contextPath = context;
-
-        } catch (NamespaceException ne) {
-            // context collision
-
-        } catch (ServletException se) {
-            // servlet initialization failure
-
-        }
+          // Register servlet, and set the contextPath field to signal successful registration
+          httpService.registerServlet(context, this, initparams, null);
+          this.contextPath = context;
     }
 
     protected void deactivate(ComponentContext context) {
