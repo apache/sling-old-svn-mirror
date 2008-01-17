@@ -98,13 +98,13 @@ public class JobEventHandler
                     buffer.append(JobEventHandler.this.repositoryPath);
                     buffer.append("//element(*, ");
                     buffer.append(JobEventHandler.this.getEventNodeType());
-                    buffer.append(") [");
+                    buffer.append(") [@");
                     buffer.append(EventHelper.NODE_PROPERTY_ACTIVE);
-                    buffer.append(" = 'false' and ");
+                    buffer.append(" = 'false' and @");
                     buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
-                    buffer.append(" < '");
+                    buffer.append(" < xs:dateTime('");
                     buffer.append(dateString);
-                    buffer.append("']");
+                    buffer.append("')]");
 
                     final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
                     final NodeIterator iter = q.execute().getNodes();
