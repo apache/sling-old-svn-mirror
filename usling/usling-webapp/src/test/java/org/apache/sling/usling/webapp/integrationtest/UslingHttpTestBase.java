@@ -134,24 +134,42 @@ public class UslingHttpTestBase extends TestCase {
         final Map<String,String> props = new HashMap<String,String>();
         props.put("time", time);
         
-        // POST, get URL of created node and get content 
-        final String urlOfNewNode = testClient.createNode(url, props, null, true);
-        final GetMethod get = new GetMethod(urlOfNewNode);
-        final int status = httpClient.executeMethod(get);
-        if(status!=200) {
-            throw new IOException("Expected status 200 but got " + status + " for URL=" + urlOfNewNode);
+        // POST, get URL of created node and get content
+        {
+            final String urlOfNewNode = testClient.createNode(url, props, null, true);
+            final GetMethod get = new GetMethod(urlOfNewNode);
+            final int status = httpClient.executeMethod(get);
+            if(status!=200) {
+                throw new IOException("Expected status 200 but got " + status + " for URL=" + urlOfNewNode);
+            }
+            
+            final Header h = get.getResponseHeader("Content-Type");
+            final String contentType = h==null ? "" : h.getValue();
+            if(!contentType.startsWith("text/plain")) {
+                throw new IOException("Expected Content-Type=text/plain but got '" + contentType + "' for URL=" + urlOfNewNode);
+            }
+            
+            final String content = get.getResponseBodyAsString();
+            if(!content.contains(time)) {
+                throw new IOException("Content does not contain '" + time + "' (" + content + ") at URL=" + urlOfNewNode);
+            }
         }
         
-        final Header h = get.getResponseHeader("Content-Type");
-        final String contentType = h==null ? "" : h.getValue();
-        if(!contentType.startsWith("text/plain")) {
-            throw new IOException("Expected Content-Type=text/plain but got '" + contentType + "' for URL=" + urlOfNewNode);
+        // Also check that the WebDAV root is ready
+        {
+            final GetMethod get = new GetMethod(WEBDAV_BASE_URL);
+            final int status = httpClient.executeMethod(get);
+            if(status!=200) {
+                throw new IOException("Expected status 200 but got " + status + " for URL=" + WEBDAV_BASE_URL);
+            }
+            
+            final String expected = "jcr:system";
+            final String content = get.getResponseBodyAsString();
+            if(!content.contains(expected)) {
+                throw new IOException("Content does not contain '" + expected + "' (" + content + ") at URL=" + WEBDAV_BASE_URL);
+            }
         }
         
-        final String content = get.getResponseBodyAsString();
-        if(!content.contains(time)) {
-            throw new IOException("Content does not contain '" + time + "' (" + content + ")");
-        }
         
         return true;
     }
