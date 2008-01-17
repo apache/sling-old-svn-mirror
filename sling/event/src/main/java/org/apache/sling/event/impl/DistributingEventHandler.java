@@ -61,18 +61,22 @@ public class DistributingEventHandler
             buffer.append(this.repositoryPath);
             buffer.append("//element(*, ");
             buffer.append(getEventNodeType());
-            buffer.append(") [");
+            buffer.append(")[@");
             buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-            buffer.append(" < '");
+            buffer.append(" < xs:dateTime('");
             buffer.append(dateString);
-            buffer.append("']");
+            buffer.append("')]");
 
+            this.logger.debug("Executing query {}", buffer);
             final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
             final NodeIterator iter = q.execute().getNodes();
+            int count = 0;
             while ( iter.hasNext() ) {
                 final Node eventNode = iter.nextNode();
                 eventNode.remove();
+                count++;
             }
+            this.logger.debug("Removed {} event nodes from the repository.", count);
             parentNode.save();
         } catch (RepositoryException e) {
             // in the case of an error, we just log this as a warning
