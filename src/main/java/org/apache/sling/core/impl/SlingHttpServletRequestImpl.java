@@ -21,6 +21,7 @@ package org.apache.sling.core.impl;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -54,6 +55,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         SlingHttpServletRequest {
 
     private final RequestData requestData;
+    private String responseContentType;
 
     public SlingHttpServletRequestImpl(RequestData requestData,
             HttpServletRequest servletRequest) {
@@ -201,8 +203,12 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
      * @see org.apache.sling.api.SlingHttpServletRequest#getResponseContentType()
      */
     public String getResponseContentType() {
-        // TODO Auto-generated method stub
-        return null;
+        if(responseContentType == null) {
+            final String ext = getRequestPathInfo().getExtension();
+            // TODO use Sling mime-type service??
+            responseContentType = requestData.getSlingMainServlet().getServletContext().getMimeType("dummy." + ext);
+        }
+        return responseContentType;
     }
 
     /**
@@ -210,8 +216,15 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
      */
     @SuppressWarnings("unchecked")
     public Enumeration<String> getResponseContentTypes() {
-        List<String> empty = Collections.emptyList();
-        return Collections.enumeration(empty);
+        List<String> result = new ArrayList<String>();
+        
+        // TODO for now this returns a single value
+        final String singleType = getResponseContentType();
+        if(singleType!=null) {
+            result.add(singleType);
+        }
+        
+        return Collections.enumeration(result);
     }
 
     /**
