@@ -26,6 +26,7 @@ import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
 
 /**
  * This component is resposible to launch a {@link org.apache.sling.scheduler.Job}
@@ -53,10 +54,11 @@ public class QuartzJobExecutor implements Job {
 
         this.setup(data);
 
-
         final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
+        final Logger logger = (Logger)data.get(QuartzScheduler.DATA_MAP_LOGGER);
 
         try {
+            logger.debug("Executing job {} with name {}", job, data.get(QuartzScheduler.DATA_MAP_NAME));
             if (job instanceof org.apache.sling.scheduler.Job) {
                 final BundleContext bundleContext = (BundleContext)data.get(QuartzScheduler.DATA_MAP_BUNDLE_CONTEXT);
                 final ServiceLocatorImpl serviceLocator = new ServiceLocatorImpl(bundleContext);
