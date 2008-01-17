@@ -62,9 +62,6 @@
                         <Export-Package>
                             org.apache.sling.osgi.commons;version=${pom.version}
                         </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.osgi.commons.internal
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
