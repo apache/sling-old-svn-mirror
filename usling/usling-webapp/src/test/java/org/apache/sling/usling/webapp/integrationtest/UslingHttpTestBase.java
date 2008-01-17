@@ -260,8 +260,12 @@ public class UslingHttpTestBase extends TestCase {
         return url;
     }
 
-    /** Evaluate given code using given jsonData as the "data" object */ 
     protected void assertJavascript(String expectedOutput, String jsonData, String code) throws IOException {
+        assertJavascript(expectedOutput, jsonData, code, null);
+    }
+    
+    /** Evaluate given code using given jsonData as the "data" object */ 
+    protected void assertJavascript(String expectedOutput, String jsonData, String code, String testInfo) throws IOException {
         // build the code, something like
         //  data = <jsonData> ;
         //  <code>
@@ -282,7 +286,12 @@ public class UslingHttpTestBase extends TestCase {
         pw.flush();
         final String result = sw.toString().trim();
         if(!result.equals(expectedOutput)) {
-            fail("Expected '" + expectedOutput + "' but got '" + result + "' for script='" + jsCode + "'");
+            fail(
+                    "Expected '" + expectedOutput 
+                    + "' but got '" + result 
+                    + "' for script='" + jsCode + "'"
+                    + (testInfo==null ? "" : ", test info=" + testInfo)
+            );
         }
     }
 }
