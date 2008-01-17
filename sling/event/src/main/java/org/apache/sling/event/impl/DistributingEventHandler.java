@@ -47,6 +47,8 @@ public class DistributingEventHandler
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
      */
     protected void cleanUpRepository() {
+        this.logger.debug("Cleaning up repository, removing all events older than {} minutes.", this.cleanupPeriod);
+
         // we create an own session for concurrency issues
         Session s = null;
         try {

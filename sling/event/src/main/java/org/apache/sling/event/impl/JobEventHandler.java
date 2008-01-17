@@ -82,6 +82,8 @@ public class JobEventHandler
      * Clean up the repository.
      */
     protected void cleanUpRepository() {
+        this.logger.debug("Cleaning up repository, removing all jobs older than {} minutes.", this.cleanupPeriod);
+
         // we create an own session for concurrency issues
         Session s = null;
         try {
@@ -108,11 +110,14 @@ public class JobEventHandler
 
                     final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
                     final NodeIterator iter = q.execute().getNodes();
+                    int count = 0;
                     while ( iter.hasNext() ) {
                         final Node eventNode = iter.nextNode();
                         eventNode.remove();
+                        count++;
                     }
                     parentNode.save();
+                    logger.debug("Removed {} job nodes from the repository.", count);
                     return null;
                 }
             }.with(parentNode, false);

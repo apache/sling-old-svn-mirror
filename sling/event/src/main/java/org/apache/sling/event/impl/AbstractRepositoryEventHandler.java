@@ -127,9 +127,6 @@ public abstract class AbstractRepositoryEventHandler
      */
     public void run() {
         if ( this.cleanupPeriod > 0 ) {
-            if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Cleaning up repository, removing everything older than {} minutes.", this.cleanupPeriod);
-            }
             this.cleanUpRepository();
         }
     }
