@@ -69,15 +69,37 @@
                             org.apache.jackrabbit.server,
                             org.apache.jackrabbit.server.io,
                             org.apache.jackrabbit.server.jcr,
-                            org.apache.jackrabbit.webdav.*, ,
+                            org.apache.jackrabbit.webdav,
+                            org.apache.jackrabbit.webdav.header,
+                            org.apache.jackrabbit.webdav.io,
+                            org.apache.jackrabbit.webdav.jcr,
+                            org.apache.jackrabbit.webdav.jcr.lock,
+                            org.apache.jackrabbit.webdav.jcr.nodetype,
+                            org.apache.jackrabbit.webdav.jcr.observation,
+                            org.apache.jackrabbit.webdav.jcr.property,
+                            org.apache.jackrabbit.webdav.jcr.search,
+                            org.apache.jackrabbit.webdav.jcr.transaction,
+                            org.apache.jackrabbit.webdav.jcr.version,
+                            org.apache.jackrabbit.webdav.jcr.version.report,
+                            org.apache.jackrabbit.webdav.lock,
+                            org.apache.jackrabbit.webdav.observation,
+                            org.apache.jackrabbit.webdav.ordering,
+                            org.apache.jackrabbit.webdav.property,
+                            org.apache.jackrabbit.webdav.search,
+                            org.apache.jackrabbit.webdav.security,
+                            org.apache.jackrabbit.webdav.server,
+                            org.apache.jackrabbit.webdav.transaction,
+                            org.apache.jackrabbit.webdav.util,
+                            org.apache.jackrabbit.webdav.version,
+                            org.apache.jackrabbit.webdav.version.report,
+                            org.apache.jackrabbit.webdav.xml,
                             org.apache.xml.serialize,
                             org.apache.xerces.*
                         </Private-Package>
                         <Import-Package>
                             javax.transaction.xa; javax.xml.*;
                             org.apache.xml.resolver.*;org.w3c.*;
-                            org.xml.sax.*;resolution:=optional,
-                            !sun.*,*
+                            org.xml.sax.*;resolution:=optional, !sun.*,*
                         </Import-Package>
                     </instructions>
                 </configuration>
