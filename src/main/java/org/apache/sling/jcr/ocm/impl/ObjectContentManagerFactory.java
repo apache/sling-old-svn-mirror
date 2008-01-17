@@ -27,7 +27,6 @@ import static org.apache.sling.jcr.ocm.OcmConstants.MAPPING_NODE_TYPE;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
