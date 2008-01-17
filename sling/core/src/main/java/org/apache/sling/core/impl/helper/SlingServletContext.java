@@ -177,7 +177,7 @@ public class SlingServletContext implements ServletContext {
      * {@link SlingMainServlet} is running.
      */
     public void setAttribute(String name, Object object) {
-        getServletContext().removeAttribute(name);
+        getServletContext().setAttribute(name, object);
     }
 
     // ---------- Servlet Container information --------------------------------
