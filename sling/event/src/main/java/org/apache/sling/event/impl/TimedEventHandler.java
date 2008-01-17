@@ -355,6 +355,13 @@ public class TimedEventHandler
      * @see org.apache.sling.scheduler.Job#execute(org.apache.sling.scheduler.JobContext)
      */
     public void execute(JobContext context) {
+        // as we are called periodically as well, we have to check the configuration first
+        if ( context.getConfiguration() == null ) {
+            // period call, just invoke run
+            this.run();
+            return;
+        }
+
         final String topic = (String) context.getConfiguration().get(JOB_TOPIC);
         @SuppressWarnings("unchecked")
         final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get(JOB_CONFIG);
