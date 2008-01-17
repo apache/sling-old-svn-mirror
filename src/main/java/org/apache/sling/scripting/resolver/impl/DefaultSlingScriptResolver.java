@@ -154,6 +154,7 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
             } else {
                 log.debug("Returning script {} for path {}",
                     scriptResource.getPath(), path);
+                return script;
             }
         } else {
             log.error("No resource found at " + path);
@@ -306,15 +307,18 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
         String path = resource.getPath();
         String name = path.substring(path.lastIndexOf('/') + 1);
 
-        if (baseName == null || name.startsWith(baseName)) {
-            String ext = name.substring(baseName.length());
-            ScriptEngine engine = getScriptEngineManager().getEngineByExtension(
-                ext);
+        String ext = null;
+        if (baseName == null && name.indexOf(".")>-1) {
+            ext = name.substring(name.lastIndexOf(".")+1);
+        } else if (name.startsWith(baseName)) {
+            ext = name.substring(baseName.length());
+        }
+        if (ext !=null) {
+            ScriptEngine engine = getScriptEngineManager().getEngineByExtension(ext);
             if (engine != null) {
                 return new DefaultSlingScript(resource, engine);
             }
         }
-
         return null;
     }
 }
