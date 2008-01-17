@@ -18,6 +18,7 @@ package org.apache.sling.usling.webapp.integrationtest.helpers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.File;
 import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -29,6 +30,8 @@ import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.sling.usling.webapp.integrationtest.UslingHttpTestBase;
 
 /** Client functions to interact with microsling in integration tests */ 
 public class UslingIntegrationTestClient {
@@ -130,7 +133,37 @@ public class UslingIntegrationTestClient {
         if(status!=302) {
             throw new IOException("Expected status code 302 for POST, got " + status + ", URL=" + url);
         }
-        final String location = post.getResponseHeader("Location").getValue();
+        String location = post.getResponseHeader("Location").getValue();
+        post.releaseConnection();
+        // simple check if host is missing
+        if (!location.startsWith("http://")) {
+            String host = UslingHttpTestBase.HTTP_BASE_URL;
+            int idx = host.indexOf('/', 8);
+            if (idx > 0) {
+                host = host.substring(0, idx);
+            }
+            location = host + location;
+        }
         return location;
     }
+
+    /** Upload to an file node structure, see SLING-168 */
+    public void uploadToFileNode(String url, File localFile, String fieldName, String typeHint)
+        throws IOException {
+
+        final Part[] parts = new Part[typeHint == null ? 1 : 2];
+        parts[0] = new FilePart(fieldName, localFile);
+        if (typeHint != null) {
+            parts[1] = new StringPart(fieldName + "@TypeHint", typeHint);
+        }
+        final PostMethod post = new PostMethod(url);
+        post.setFollowRedirects(false);
+        post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
+
+        final int status = httpClient.executeMethod(post);
+        if(status!=302) {
+            throw new IOException("Expected status code 302 for POST, got " + status + ", URL=" + url);
+        }
+    }
+
 }

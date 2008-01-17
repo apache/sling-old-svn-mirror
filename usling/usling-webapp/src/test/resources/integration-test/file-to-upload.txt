@@ -1,0 +1,12 @@
+This file is used by UploadFileTest.java.
+
+In must contain http://www.apache.org/licenses/LICENSE-2.0 for tests.
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce semper ipsum et lorem. In hac habitasse 
+platea dictumst. Donec dictum tincidunt purus. Aenean quis nunc. Aliquam rhoncus. Proin sed risus. 
+Maecenas porta arcu in nisi. Pellentesque quis sapien quis lectus vehicula aliquet. Cras ornare elit 
+eget massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed 
+ut justo. Integer porttitor quam. Aliquam aliquet. Nulla interdum arcu vitae nibh. Morbi dapibus odio 
+a sem. Integer dictum. Praesent vel eros nec ipsum venenatis malesuada. Vestibulum rutrum mi ac ligula. 
+Ut nisl ligula, vehicula dignissim, accumsan quis, faucibus sed, sapien. Quisque purus tellus, euismod 
+id, auctor quis, rutrum non, augue.
