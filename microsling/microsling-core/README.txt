@@ -9,7 +9,7 @@ module.
 
 How to build and run this
 ------------------------
-Currently this depends on the Jackrabbit 1.4-SNAPSHOT, mostly
+Currently this depends on the Jackrabbit 1.4, mostly
 because I had a project skeleton around that takes advantage of
 JCR-955 to reuse some Jackrabbit servlets.
 
