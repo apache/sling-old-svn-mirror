@@ -75,12 +75,16 @@ public class QuartzJobExecutor implements Job {
                 }
             } else if (job instanceof Runnable) {
                 ((Runnable) job).run();
+            } else {
+                logger.error("Scheduled job {} is neither a job nor a runnable.", job);
             }
         } catch (final Throwable t) {
-
+            // if this is a quartz exception, rethrow it
             if (t instanceof JobExecutionException) {
                 throw (JobExecutionException) t;
             }
+            // there is nothing we can do here, so we just log
+            logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
         } finally {
 
             this.release(data);
