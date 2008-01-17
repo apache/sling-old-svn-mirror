@@ -39,6 +39,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.sling.usling.webapp.integrationtest.helpers.HttpAnyMethod;
 import org.apache.sling.usling.webapp.integrationtest.helpers.UslingIntegrationTestClient;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
@@ -157,16 +158,20 @@ public class UslingHttpTestBase extends TestCase {
         
         // Also check that the WebDAV root is ready
         {
-            final GetMethod get = new GetMethod(WEBDAV_BASE_URL);
-            final int status = httpClient.executeMethod(get);
+            final HttpAnyMethod options = new HttpAnyMethod("OPTIONS",WEBDAV_BASE_URL);
+            final int status = httpClient.executeMethod(options);
             if(status!=200) {
-                throw new IOException("Expected status 200 but got " + status + " for URL=" + WEBDAV_BASE_URL);
+                throw new IOException("Expected status 200 but got " + status + " for OPTIONS at URL=" + WEBDAV_BASE_URL);
             }
             
-            final String expected = "jcr:system";
-            final String content = get.getResponseBodyAsString();
-            if(!content.contains(expected)) {
-                throw new IOException("Content does not contain '" + expected + "' (" + content + ") at URL=" + WEBDAV_BASE_URL);
+            // The Allow header tells us that we're talking to a WebDAV server
+            final Header h = options.getResponseHeader("Allow");
+            if(h == null) {
+                throw new IOException("Response does not contain Allow header, at URL=" + WEBDAV_BASE_URL);
+            } else if(h.getValue() == null) {
+                throw new IOException("Allow header has null value at URL=" + WEBDAV_BASE_URL);
+            } else if(!h.getValue().contains("PROPFIND")) {
+                throw new IOException("Allow header (" + h.getValue() + " does not contain PROPFIND, at URL=" + WEBDAV_BASE_URL);
             }
         }
         
@@ -179,7 +184,7 @@ public class UslingHttpTestBase extends TestCase {
     protected void assertHttpStatus(String urlString, int expectedStatusCode, String assertMessage) throws IOException {
         final int status = httpClient.executeMethod(new GetMethod(urlString));
         if(assertMessage == null) {
-            assertEquals(expectedStatusCode, status);
+            assertEquals(urlString,expectedStatusCode, status);
         } else {
             assertEquals(assertMessage, expectedStatusCode, status);
         }
@@ -222,6 +227,11 @@ public class UslingHttpTestBase extends TestCase {
             if(h!=null) {
                 fail("Expected null Content-Type, got " + h.getValue());
             }
+        } else if(h==null) {
+            fail(
+                    "Expected Content-Type that starts with '" + expectedContentType 
+                    +" but got no Content-Type header at " + url
+            );
         } else {
             assertTrue(
                 "Expected Content-Type that starts with '" + expectedContentType 
@@ -237,6 +247,9 @@ public class UslingHttpTestBase extends TestCase {
         final String url = WEBDAV_BASE_URL + scriptPath + "/" + filenameOnServer;
         final String testFile = "/integration-test/" + localFilename;
         final InputStream data = getClass().getResourceAsStream(testFile);
+        if(data==null) {
+            fail("Test file not found:" + testFile);
+        }
         try {
             testClient.upload(url, data);
         } finally {

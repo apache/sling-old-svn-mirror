@@ -1,0 +1,19 @@
+<%
+var length = 0;
+if (request.getRequestParameter("file") != null) {
+    var file = null;
+    // store file
+    var reqPara = request.getRequestParameter("file");
+    var is = reqPara.getInputStream();
+    file = Packages.java.io.File.createTempFile("posttest", ".txt");
+    var fout = new Packages.java.io.FileOutputStream(file);
+    var c;
+    while ((c = is.read()) != -1) {
+        fout.write(c);
+    }
+    fout.close();
+
+    // read length
+    length = file.length();
+}
+%><%=  Packages.java.lang.String.valueOf(length) %>
