@@ -71,7 +71,7 @@
                             org.apache.sling.adapter;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.adapter.impl
+                            org.apache.sling.adapter.internal
                         </Private-Package>
                     </instructions>
                 </configuration>
