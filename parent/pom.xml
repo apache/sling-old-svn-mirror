@@ -493,7 +493,7 @@
             <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
                 <artifactId>jackrabbit-ocm</artifactId>
-                <version>1.4-SNAPSHOT</version>
+                <version>1.4</version>
                 <!-- <scope>compile</scope> -->
             </dependency>
 

@@ -46,7 +46,7 @@
       makes it easier to reuse the servlets from the
       jackrabbit-webapp module.
     -->
-    <jackrabbit.version>1.4-SNAPSHOT</jackrabbit.version>
+    <jackrabbit.version>1.4</jackrabbit.version>
     
     <!-- 
       Defines which tests are for the "integration-testing" phase
