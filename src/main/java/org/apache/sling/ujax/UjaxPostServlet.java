@@ -47,6 +47,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
 
     private static final Logger log = LoggerFactory.getLogger(UjaxPostServlet.class);
     private final UjaxPropertyValueSetter propertyValueSetter = new UjaxPropertyValueSetter();
+    private final UjaxFileUploadHandler uploadHandler = new UjaxFileUploadHandler();
     private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
 
     /** Prefix for parameter names which control this POST
@@ -84,6 +85,8 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     
     /** SLING-130, suffix that maps form field names to different JCR property names */
     public static final String VALUE_FROM_SUFFIX = "@ValueFrom";
+
+    public static final String TYPE_HINT_SUFFIX = "@TypeHint";
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -263,7 +266,6 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     }
 
     /** Set Node properties from current request
-     *  TODO should handle file uploads as well
      */
     private void setPropertiesFromRequest(Node n, SlingHttpServletRequest request,
             String savePrefix, Set<Node> createdNodes)
@@ -284,7 +286,12 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 }
                 propertyName = paramName.substring(savePrefix.length());
             }
-            
+
+            // ignore field with a '@TypeHint' suffix. this is dealt in setProperty()
+            if (propertyName.endsWith(TYPE_HINT_SUFFIX)) {
+                continue;
+            }
+
             // SLING-130: VALUE_FROM_SUFFIX means take the value of this
             // property from a different field
             RequestParameter[] values = e.getValue();
@@ -306,15 +313,24 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                     continue;
                 }
             }
-            
-            setProperty(n,request,propertyName,values,createdNodes);
+
+            // @TypeHint example
+            // <input type="text" name="./age" />
+            // <input type="hidden" name="./age@TypeHint" value="long" />
+            // causes the setProperty using the 'long' property type
+            final String thName = e.getKey() + TYPE_HINT_SUFFIX;
+            final RequestParameter rp = request.getRequestParameter(thName);
+            final String typeHint = rp == null ? null : rp.getString();
+            setProperty(n, request, propertyName, values, createdNodes, typeHint);
         }
     }
 
     /** Set a single Property on node N
      * @throws RepositoryException */
-    private void setProperty(Node n, SlingHttpServletRequest request, String name,
-            RequestParameter[] values, Set<Node> createdNodes) throws RepositoryException {
+    private void setProperty(Node n, SlingHttpServletRequest request,
+                             String name, RequestParameter[] values,
+                             Set<Node> createdNodes, String typeHint)
+            throws RepositoryException {
 
         // split the relative path identifying the property to be saved
         String proppath = name;
@@ -356,10 +372,12 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             parent = (Node) s.getItem(path);
         }
 
-        // TODO String typehint = request.getParameter(proppath + "@TypeHint");
-        final String typeHint = null;
-        final boolean nodeIsNew = createdNodes.contains(parent);
-        propertyValueSetter.setProperty(parent, propname, values, typeHint, nodeIsNew);
+        if (values[0].isFormField()) {
+            final boolean nodeIsNew = createdNodes.contains(parent);
+            propertyValueSetter.setProperty(parent, propname, values, typeHint, nodeIsNew);
+        } else {
+            uploadHandler.setFile(request, parent, propname, values, typeHint);
+        }
 }
 
     /**
