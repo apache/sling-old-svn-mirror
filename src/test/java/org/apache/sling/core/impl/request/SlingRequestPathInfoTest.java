@@ -22,7 +22,7 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 
-/** Test the MicroslingRequestPathInfo */
+/** Test the SlingRequestPathInfo class */
 public class SlingRequestPathInfoTest extends TestCase {
 
     public void testSimplePath() {
@@ -239,6 +239,30 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals(0, p.getSelectors().length);
         assertNull(p.getExtension());
         assertEquals("/some/suffix", p.getSuffix());
+    }
+    
+    public void testJIRA_SLING_173_a() {
+        RequestPathInfo p = 
+            new SlingRequestPathInfo(
+                    new MockResource("/ujax-tests"), 
+                    "/ujax-tests/12005879509741.json"
+            );
+        assertEquals("/ujax-tests", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals("json",p.getExtension());
+        assertEquals("12005879509741",p.getSuffix());
+    }
+
+    public void testJIRA_SLING_173_b() {
+        RequestPathInfo p = 
+            new SlingRequestPathInfo(
+                    new MockResource("/ujax-tests"), 
+                    "/ujax-tests/12005879509741.json."
+            );
+        assertEquals("/ujax-tests", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals("",p.getExtension());
+        assertEquals("12005879509741.json",p.getSuffix());
     }
 
     static class MockResource implements Resource {
