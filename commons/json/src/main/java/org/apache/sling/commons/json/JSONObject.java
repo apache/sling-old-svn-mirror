@@ -231,7 +231,7 @@ public class JSONObject {
      * @param map A map object that can be used to initialize the contents of
      *  the JSONObject.
      */
-    public JSONObject(Map<String, Object> map) {
+    public JSONObject(Map<String, ?> map) {
         this.myHashMap = (map == null) ?
         	new LinkedHashMap<String, Object>() :
         	new LinkedHashMap<String, Object>(map);
@@ -634,7 +634,7 @@ public class JSONObject {
      * @return		this.
      * @throws JSONException
      */
-    public JSONObject put(String key, Collection<Object> value) throws JSONException {
+    public JSONObject put(String key, Collection<?> value) throws JSONException {
         put(key, new JSONArray(value));
         return this;
     }
@@ -860,7 +860,7 @@ public class JSONObject {
      * @return		this.
      * @throws JSONException
      */
-    public JSONObject put(String key, Map<String, Object> value) throws JSONException {
+    public JSONObject put(String key, Map<String, ?> value) throws JSONException {
         put(key, new JSONObject(value));
         return this;
     }
