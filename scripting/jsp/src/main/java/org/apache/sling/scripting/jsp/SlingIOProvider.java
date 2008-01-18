@@ -91,8 +91,14 @@ class SlingIOProvider implements IOProvider {
      */
     public InputStream getInputStream(String fileName)
             throws FileNotFoundException, IOException {
+        
         try {
+            
             Resource resource = getResourceInternal(fileName);
+            if (resource == null) {
+                throw new FileNotFoundException("Cannot find " + fileName);
+            }
+            
             InputStream stream = resource.adaptTo(InputStream.class);
             if (stream == null) {
                 throw new FileNotFoundException("Cannot find " + fileName);
@@ -230,14 +236,15 @@ class SlingIOProvider implements IOProvider {
 
     /* package */URL getURL(String path) throws MalformedURLException {
         try {
-            return getResourceInternal(path).adaptTo(URL.class);
+            Resource resource = getResourceInternal(path);
+            return (resource != null) ? resource.adaptTo(URL.class) : null;
         } catch (SlingException se) {
             throw (MalformedURLException) new MalformedURLException(
                 "Cannot get URL for " + path).initCause(se);
         }
     }
 
-    /* package */ Set<String> getResourcePaths(String path) {
+    /* package */Set<String> getResourcePaths(String path) {
         Set<String> paths = new HashSet<String>();
 
         ResourceResolver resolver = requestResourceResolver.get();
@@ -251,7 +258,8 @@ class SlingIOProvider implements IOProvider {
                     }
                 }
             } catch (SlingException se) {
-                log.warn("getResourcePaths: Cannot list children of " + path, se);
+                log.warn("getResourcePaths: Cannot list children of " + path,
+                    se);
             }
         }
 
@@ -355,8 +363,8 @@ class SlingIOProvider implements IOProvider {
                     if (lastSlash <= 0) {
                         parentNode = session.getRootNode();
                     } else {
-                        Item parent = session.getItem(fileName.substring(
-                            0, lastSlash));
+                        Item parent = session.getItem(fileName.substring(0,
+                            lastSlash));
                         if (!parent.isNode()) {
                             // TODO: fail
                         }
