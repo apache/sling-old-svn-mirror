@@ -83,4 +83,14 @@ public class CoreConstants {
      * ignored.
      */
     public static final String SLING_SERLVET_NAME = "sling.core.servletName";
+
+    /**
+     * The name of the request attribute set by the {@link SlingAuthenticator}
+     * when authenticating the request user (value is "javax.jcr.Session").
+     * Existence of this attribute in the request, provided it is a JCR Session,
+     * signals that authentication has already taken place. This may be used
+     * when including through the servlet container.
+     */
+    public static final String SESSION = "javax.jcr.Session";
+
 }
