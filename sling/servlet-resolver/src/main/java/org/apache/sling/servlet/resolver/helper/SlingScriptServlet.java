@@ -71,10 +71,7 @@ public class SlingScriptServlet implements Servlet {
 
             res.setCharacterEncoding("UTF-8");
             final String contentType = request.getResponseContentType();
-            if(contentType == null) {
-                res.addHeader("X-Sling-Warning", request.getClass().getSimpleName() + " does not provide a Content-Type");
-                res.setContentType("text/plain");
-            } else {
+            if(contentType != null) {
                 res.setContentType(contentType);
             }
 
