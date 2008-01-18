@@ -84,7 +84,7 @@ public class ScriptPathSupport {
             }
 
             // path prefixes
-            this.path = resourceTypePath.startsWith("/") ? EMPTY_PATH : path;;
+            this.path = resourceTypePath.startsWith("/") ? EMPTY_PATH : path;
             this.pathIdx = -1;
 
             // prepare the first entry
