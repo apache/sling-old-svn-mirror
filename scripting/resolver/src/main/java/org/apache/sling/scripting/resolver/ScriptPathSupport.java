@@ -31,7 +31,7 @@ public class ScriptPathSupport {
         String extension = request.getRequestPathInfo().getExtension();
 
         if (methodName == null || methodName.length() == 0) {
-            
+
             throw new IllegalArgumentException(
                 "HTTP Method name must not be empty");
 
@@ -54,6 +54,9 @@ public class ScriptPathSupport {
     }
 
     private static class ScriptPathIterator implements Iterator<String> {
+
+        private static final String[] EMPTY_PATH = { "" };
+
         private final String resourceTypePath;
 
         private final String selectorsPath;
@@ -81,7 +84,7 @@ public class ScriptPathSupport {
             }
 
             // path prefixes
-            this.path = path;
+            this.path = resourceTypePath.startsWith("/") ? EMPTY_PATH : path;;
             this.pathIdx = -1;
 
             // prepare the first entry
