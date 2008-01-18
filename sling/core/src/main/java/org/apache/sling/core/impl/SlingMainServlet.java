@@ -54,6 +54,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.core.CoreConstants;
+import org.apache.sling.core.impl.auth.MissingRepositoryException;
 import org.apache.sling.core.impl.auth.SlingAuthenticator;
 import org.apache.sling.core.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.core.impl.filter.SlingComponentFilterChain;
@@ -166,7 +168,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     public void service(HttpServletRequest clientRequest,
             HttpServletResponse clientResponse) throws ServletException, IOException {
 
-        Session session = (Session) clientRequest.getAttribute(SlingHttpContext.SESSION);
+        Session session = (Session) clientRequest.getAttribute(CoreConstants.SESSION);
         if (session != null) {
             RequestData requestData = null;
             try {
@@ -475,7 +477,14 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
                 public boolean handleSecurity(HttpServletRequest request,
                         HttpServletResponse response) {
-                    return slingAuthenticator.authenticate(request, response);
+                    try {
+                        return slingAuthenticator.authenticate(request,
+                            response);
+                    } catch (MissingRepositoryException mre) {
+                        log.error(
+                            "handleSecurity: Cannot authenticate request", mre);
+                        return false;
+                    }
                 }
             };
             
