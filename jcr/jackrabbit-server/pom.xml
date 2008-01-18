@@ -131,15 +131,18 @@
                             org.apache.jackrabbit.rmi.*,
 
                             EDU.oswego.cs.dl.util.concurrent.*,
-                            org.apache.lucene.*, org.apache.derby.*
+                            org.apache.lucene.*, org.apache.derby.*,
+                            
+                            <!-- needed since the move to Jackrabbit 1.4 -->
+                             org.apache.jackrabbit.spi.commons.conversion.*,
+                             org.apache.jackrabbit.spi.commons.namespace.*,
+                             org.apache.jackrabbit.spi.*
                         </Private-Package>
                         <Import-Package>
                             org.apache.sling.jcr.api,
 
                             org.apache.jackrabbit,
-                            org.apache.jackrabbit.name,
                             org.apache.jackrabbit.util,
-                            org.apache.jackrabbit.util.name,
                             org.apache.jackrabbit.uuid,
                             org.apache.jackrabbit.value,
 
