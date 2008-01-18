@@ -103,7 +103,8 @@ public abstract class AbstractRepositoryEventHandler
      * @param context
      * @throws RepositoryException
      */
-    protected void activate(final ComponentContext context) {
+    protected void activate(final ComponentContext context)
+    throws RepositoryException {
         this.applicationId = context.getBundleContext().getProperty(SLING_ID);
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
         final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
