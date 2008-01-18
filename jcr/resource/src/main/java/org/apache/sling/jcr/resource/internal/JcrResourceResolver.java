@@ -27,7 +27,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -52,14 +54,15 @@ import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrPropertyResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceResolver</code> class implements the Sling
- * <code>ResourceResolver</code> and <code>ResourceResolver</code> interfaces
- * and in addition is a {@link PathResolver}. Instances of this class are
- * retrieved through the
+ * <code>ResourceResolver</code> and <code>ResourceResolver</code>
+ * interfaces and in addition is a {@link PathResolver}. Instances of this
+ * class are retrieved through the
  * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
  * method.
  */
@@ -304,7 +307,8 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
         return href;
     }
 
-    // ---------- former ResourceManager interface -----------------------------------
+    // ---------- former ResourceManager interface
+    // -----------------------------------
 
     /**
      * @throws AccessControlException If this manager has does not have enough
@@ -480,7 +484,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
      * <code>path</code> is mapping. If no mapping exists for an existing
      * node, the node's content is loaded into a new instance of the
      * {@link #DEFAULT_CONTENT_CLASS default content class}.
-     *
+     * 
      * @param type Load the node's content into an object of the given type if
      *            not <code>null</code>.
      * @return the <code>Content</code> object loaded from the node or
@@ -553,7 +557,6 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
                         ResourceMetadata.RESOLUTION_PATH, uriPath);
                 }
 
-
                 return resource;
             }
 
@@ -584,7 +587,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     /**
      * Creates a JcrNodeResource with the given path if existing
-     *
+     * 
      * @throws AccessControlException If an item exists but this manager has no
      *             read access
      */
@@ -610,7 +613,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
      * Checks whether the item exists and this content manager's session has
      * read access to the item. If the item does not exist, access control is
      * ignored by this method and <code>false</code> is returned.
-     *
+     * 
      * @param path The path to the item to check
      * @return <code>true</code> if the item exists and this content manager's
      *         session has read access. If the item does not exist,
@@ -619,13 +622,46 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
-    public boolean itemExists(String path) throws RepositoryException {
+    boolean itemExists(String path) throws RepositoryException {
         if (factory.itemReallyExists(getSession(), path)) {
             checkPermission(path, ACTION_READ);
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Creates a <code>Resource</code> instance for the item found at the
+     * given path. If no item exists at that path or the item does not have
+     * read-access for the session of this resolver, <code>null</code> is
+     * returned.
+     * 
+     * @param path The absolute path
+     * @return The <code>Resource</code> for the item at the given path.
+     * @throws RepositoryException If an error occurrs accessingor checking the
+     *             item in the repository.
+     * @throws AccessControlException If the item really exists but this content
+     *             manager's session has no read access to it.
+     */
+    Resource createResource(String path) throws RepositoryException {
+        if (itemExists(path)) {
+            Item item = getSession().getItem(path);
+            if (item.isNode()) {
+                log.debug(
+                    "createResource: Found JCR Node Resource at path '{}'",
+                    path);
+                return new JcrNodeResource(this, (Node) item);
+            }
+
+            log.debug(
+                "createResource: Found JCR Property Resource at path '{}'",
+                path);
+            return new JcrPropertyResource(path, (Property) item);
+        }
+
+        log.debug("createResource: No JCR Item exists at path '{}'", path);
+        return null;
     }
 
     /**
