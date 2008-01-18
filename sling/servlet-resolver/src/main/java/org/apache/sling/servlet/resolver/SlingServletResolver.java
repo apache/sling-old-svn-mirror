@@ -242,7 +242,7 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
         if(request.getResource() == null) {
             return null;
         }
-        
+
         // get the servlet by resource type
         Servlet servlet = getServlet(request.getResource().getResourceType());
         if (servlet != null) {
@@ -325,6 +325,8 @@ public class SlingServletResolver implements ServletResolver, ErrorHandler {
             return true;
         } catch (Throwable t) {
             log.error("Cannot handle error", t);
+            log.error("Original error " + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
+                      (Exception)request.getAttribute(SlingConstants.ERROR_EXCEPTION));
         }
 
         return false;
