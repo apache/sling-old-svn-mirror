@@ -32,9 +32,10 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingException;
+import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.auth.AuthenticationHandler;
 import org.apache.sling.core.auth.AuthenticationInfo;
-import org.apache.sling.core.impl.SlingHttpContext;
 import org.apache.sling.jcr.api.TooManySessionsException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -44,8 +45,6 @@ import org.osgi.service.http.HttpContext;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import sun.security.krb5.internal.Ticket;
 
 /**
  * The <code>SlingAuthenticator</code> class is the default implementation of
@@ -138,13 +137,6 @@ public class SlingAuthenticator implements ManagedService {
     /** Whether access without credentials is allowed */
     boolean anonymousAllowed;
     
-    /** A Repository is required to authenticate - this signals that it's missing */
-    static class MissingRepositoryException extends RuntimeException {
-        MissingRepositoryException(String reason) {
-            super(reason);
-        }
-    }
-
     /**
      * The list of packages from the configuration file. This list is checked
      * for each request. The handler of the first package match is used for the
@@ -209,12 +201,13 @@ public class SlingAuthenticator implements ManagedService {
      *         be assumed, that during this method enough response information
      *         has been sent to the client.
      */
-    public boolean authenticate(HttpServletRequest req, HttpServletResponse res) {
+    public boolean authenticate(HttpServletRequest req, HttpServletResponse res)
+            throws MissingRepositoryException {
 
         // 0. Nothing to do, if the session is also in the request
         // this might be the case if the request is handled as a result
         // of a servlet container include inside another Sling request
-        Object sessionAttr = req.getAttribute(SlingHttpContext.SESSION);
+        Object sessionAttr = req.getAttribute(CoreConstants.SESSION);
         if (sessionAttr instanceof Session) {
             log.debug("authenticate: Request already authenticated, nothing to do");
             return true;
@@ -223,7 +216,7 @@ public class SlingAuthenticator implements ManagedService {
             log.warn(
                 "authenticate: Overwriting existing Session attribute ({})",
                 sessionAttr);
-            req.removeAttribute(SlingHttpContext.SESSION);
+            req.removeAttribute(CoreConstants.SESSION);
         }
 
         // 1. Ask all authentication handlers to try to extract credentials
@@ -349,11 +342,11 @@ public class SlingAuthenticator implements ManagedService {
 
     // ---------- internal ----------------------------------------------------
 
-    private Repository getRepository() {
+    private Repository getRepository() throws MissingRepositoryException {
         final Repository repo = (Repository) repositoryTracker.getService();
-        if(repo == null) {
-            throw new MissingRepositoryException(
-                    "No Repository available to " + getClass().getSimpleName() + ", cannot authenticate");
+        if (repo == null) {
+            throw new MissingRepositoryException("No Repository available to "
+                + getClass().getSimpleName() + ", cannot authenticate");
         }
         return repo;
     }
@@ -390,7 +383,7 @@ public class SlingAuthenticator implements ManagedService {
 
     // TODO
     private boolean getAnonymousSession(HttpServletRequest req,
-            HttpServletResponse res) {
+            HttpServletResponse res) throws MissingRepositoryException {
         // login anonymously, log the exact cause in case of failure
         if (this.anonymousAllowed) {
             try {
@@ -439,7 +432,7 @@ public class SlingAuthenticator implements ManagedService {
             HttpServletRequest request) {
         request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
-        request.setAttribute(SlingHttpContext.SESSION, session);
+        request.setAttribute(CoreConstants.SESSION, session);
     }
 
     /**
