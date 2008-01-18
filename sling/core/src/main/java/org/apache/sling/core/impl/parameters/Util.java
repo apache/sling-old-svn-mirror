@@ -76,65 +76,6 @@ class Util {
         return new ByteArrayInputStream(data);
     }
 
-    static void parse(InputStream input, String encoding,
-            ParameterMap parameterMap, boolean allowSemicolon)
-            throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        int b;
-        boolean readingName = true;
-        EncodedRequestParameter current = null;
-        while ((b = input.read()) >= 0) {
-            if (b == '=' && readingName) {
-                // finished reading the name
-                current = createParameter(parameterMap, bos.toByteArray(),
-                    encoding);
-                bos.reset();
-                readingName = false;
-            } else if (b == '&' || (b == ';' && allowSemicolon)) {
-                // finished reading the value
-                // smicolon allowed as per HTML 4 recommendation for HTML
-                // enclosed URLs with parameters to prevent required encoding
-                // of '&' characters inside HTML
-                // see
-                // http://www.w3.org/TR/html4/appendix/notes.html#ampersands-in-uris
-                if (readingName) {
-                    // still reading the name, have a parameter without value
-                    current = createParameter(parameterMap, bos.toByteArray(),
-                        encoding);
-                } else {
-                    if (current != null) {
-                        current.setContent(bos.toByteArray());
-                    }
-                    readingName = true;
-                }
-                bos.reset();
-            } else {
-                bos.write(b);
-            }
-        }
-
-        // finished reading the value for a potential name
-        if (bos.size() > 0 && current != null) {
-            current.setContent(bos.toByteArray());
-        }
-    }
-
-    private static EncodedRequestParameter createParameter(
-            ParameterMap parameterMap, byte[] rawName, String encoding)
-            throws UnsupportedEncodingException {
-        String name = toIdentityEncodedString(rawName);
-        if (encoding != null) {
-            try {
-                name = URLDecoder.decode(name, encoding);
-            } catch (IllegalArgumentException iae) {
-                // TODO: might log this, for now just ignore
-            }
-        }
-        EncodedRequestParameter erp = new EncodedRequestParameter(encoding);
-        parameterMap.addParameter(name, erp);
-        return erp;
-    }
-
     static void fixEncoding(ParameterMap parameterMap) {
         // default the encoding to ISO-8859-1 (aka direct, 1:1 encoding)
         String formEncoding = ENCODING_DIRECT;

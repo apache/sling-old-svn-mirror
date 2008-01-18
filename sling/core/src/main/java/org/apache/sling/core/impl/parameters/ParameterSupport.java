@@ -97,19 +97,17 @@ public class ParameterSupport {
 
     private ParameterMap getRequestParameterMapInternal() {
         if (this.postParameterMap == null) {
-            // actually we also have to integrate the standard servlet
-            // parameters from the URL queryString !!
-            ParameterMap parameters = new ParameterMap();
-            this.parseQueryString(parameters);
 
-            // read post parametervalues
+            // SLING-152 Get parameters from the servlet Container
+            ParameterMap parameters = new ParameterMap();
+            getContainerParameters(parameters);
+
+            // only read input in case of multipart-POST not handled
+            // by the servlet container
             if ("POST".equals(this.getServletRequest().getMethod())) {
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(
                     this.getServletRequest()))) {
                     this.parseMultiPartPost(parameters);
-                    this.requestDataUsed = true;
-                } else if ("application/x-www-form-urlencoded".equalsIgnoreCase(this.getServletRequest().getContentType())) {
-                    this.parseFormEncodedPost(parameters);
                     this.requestDataUsed = true;
                 }
             }
@@ -122,32 +120,27 @@ public class ParameterSupport {
         return this.postParameterMap;
     }
 
-    private void parseQueryString(ParameterMap parameters) {
-        String queryString = SlingRequestPaths.getQueryString(requestData.getSlingRequest());
-        InputStream input = Util.getInputStream(queryString);
-        try {
-            Util.parse(input, Util.ENCODING_DEFAULT, parameters, true);
-        } catch (IOException ioe) {
-            // TODO: log
-        }
-    }
+    private void getContainerParameters(ParameterMap parameters) {
 
-    protected void parseFormEncodedPost(ParameterMap parameters) {
-        // TODO see SLING-152 - for now this is hardcoded to Util.ENCODING_DEFAULT
-        final Map<?, ?> pMap = this.getServletRequest().getParameterMap();
+        final Map<?, ?> pMap = getServletRequest().getParameterMap();
         for (Map.Entry<?, ?> entry : pMap.entrySet()) {
-            final String name = (String)entry.getKey();
+            
+            final String name = (String) entry.getKey();
             final String[] values = (String[]) entry.getValue();
+            
             for (int i = 0; i < values.length; i++) {
-                final EncodedRequestParameter rp = new EncodedRequestParameter(Util.ENCODING_DEFAULT);
+                final EncodedRequestParameter rp = new EncodedRequestParameter(
+                    Util.ENCODING_DEFAULT);
                 try {
                     rp.setContent(values[i].getBytes(Util.ENCODING_DEFAULT));
-                } catch(UnsupportedEncodingException ue) {
-                    throw new Error("Unexpected UnsupportedEncodingException for encoding=" + Util.ENCODING_DEFAULT);
+                } catch (UnsupportedEncodingException ue) {
+                    throw new Error(
+                        "Unexpected UnsupportedEncodingException for encoding="
+                            + Util.ENCODING_DEFAULT);
                 }
                 parameters.addParameter(name, rp);
             }
-            
+
         }
     }
 
