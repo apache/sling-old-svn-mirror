@@ -37,7 +37,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.core.impl.SlingHttpContext;
+import org.apache.sling.core.CoreConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +106,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 s = currentNode.getSession();
             } else {
                 currentPath = SlingRequestPaths.getPathInfo(request);
-                s = (Session)request.getAttribute(SlingHttpContext.SESSION);
+                s = (Session)request.getAttribute(CoreConstants.SESSION);
             }
             
             if(s==null) {
