@@ -307,7 +307,17 @@ public class JcrResourceResolverFactoryImpl implements
         // assume this session has more access rights than the client Session
         String workSpace = clientSession.getWorkspace().getName();
         Session adminSession = getAdminSession(workSpace);
-        return adminSession.itemExists(path);
+        
+        // SLING-159: Workaround for method throwing when called with
+        //            a malformed path
+        try {
+            return adminSession.itemExists(path);
+        } catch (RepositoryException re) {
+            log.info(
+                "itemReallyExists: Error checking for existence of {}: {}",
+                path, re.toString());
+            return false;
+        }
     }
 
     /** Returns the MIME type from the MimeTypeService for the given name */
