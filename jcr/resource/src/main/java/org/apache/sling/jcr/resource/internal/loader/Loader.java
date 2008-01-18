@@ -117,8 +117,7 @@ public class Loader {
         } catch (RepositoryException re) {
             // if we are retrying we already logged this message once, so we won't log it again
             if ( !isRetry ) {
-                log.error("Cannot load initial content for bundle {}: {}",
-                    bundle.getSymbolicName(), re);
+                log.error("Cannot load initial content for bundle " + bundle.getSymbolicName() + " : " + re.getMessage(), re);
             }
         }
 
