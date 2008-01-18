@@ -74,9 +74,11 @@ public class PostServletCreateTest extends UslingHttpTestBase {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("a","123");
         props.put("b","456");
+        props.put("c","some words");
         final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
+        assertJavascript("some words", content, "out.println(data.c)");
     }
     
     /** Use the default "save prefix" on some parameters, and check that only those
@@ -96,13 +98,27 @@ public class PostServletCreateTest extends UslingHttpTestBase {
     /** Use a custom "save prefix" on some parameters, and check that only those
      *  who have the prefix are saved.
      */
-    public void TODO_FAILS_testCustomSavePrefix() throws IOException {
+    public void testCustomSavePrefix() throws IOException {
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("STUFF_a","123");
+        props.put("STUFF_b","456");
+        props.put("c","not saved");
+        props.put("ujax:saveParamPrefix","STUFF_");
+        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props,null,false);
+        final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+        assertJavascript("123456", content, "out.println(data.a + data.b)");
+        assertJavascript("undefined", content, "out.println(typeof data.c)");
+    }
+    
+    public void TODO_FAILS_testCustomSavePrefixPlusPlus() throws IOException {
+        // for some reason, ++ as a custom save prefix fails
+        // might indicate a weirdness in parameters processing
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("++a","123");
         props.put("++b","456");
         props.put("c","not saved");
         props.put("ujax:saveParamPrefix","++");
-        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props);
+        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("undefined", content, "out.println(typeof data.c)");
