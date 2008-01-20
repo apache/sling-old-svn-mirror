@@ -18,7 +18,9 @@
  */
 package org.apache.sling.event.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -102,6 +104,8 @@ public abstract class AbstractRepositoryEventHandlerTest {
         }});
 
         this.handler.activate(componentContext);
+        // the session is initialized in the background, so let's sleep some seconds
+        Thread.sleep(2 * 1000);
     }
 
     @org.junit.After public void shutdown() throws Exception {
