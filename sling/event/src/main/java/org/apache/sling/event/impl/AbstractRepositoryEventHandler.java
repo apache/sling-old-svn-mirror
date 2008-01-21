@@ -166,7 +166,11 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected Session createSession()
     throws RepositoryException {
-        return this.repository.loginAdministrative(null);
+        final SlingRepository repo = this.repository;
+        if ( repo == null ) {
+            throw new RepositoryException("Repository is currently not available.");
+        }
+        return repo.loginAdministrative(null);
     }
 
     /**
