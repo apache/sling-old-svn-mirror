@@ -106,6 +106,7 @@ public class JobEventHandler
                     buffer.append(dateString);
                     buffer.append("')]");
 
+                    logger.debug("Executing query {}", buffer);
                     final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
                     final NodeIterator iter = q.execute().getNodes();
                     int count = 0;
