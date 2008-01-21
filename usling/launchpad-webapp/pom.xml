@@ -27,21 +27,21 @@
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>org.apache.sling.usling.webapp</artifactId>
+  <artifactId>org.apache.sling.launchpad.webapp</artifactId>
   <packaging>war</packaging>
   <version>2.0.0-incubator-SNAPSHOT</version>
 
-  <name>µsling Web Application</name>
+  <name>Sling Launchpad Web Application</name>
   <description>
-    The µsling webapp packages the standard µsling components in a Sling web application. See SLING-149.
+    The launchpad webapp packages the standard launchpad components in a Sling web application. See SLING-149.
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/usling/usling-webapp</connection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/launchpad-webapp</connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/usling/usling-webapp
+      scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/launchpad-webapp
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/incubator/sling/trunk/usling/usling-webapp</url>
+    <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/launchpad-webapp</url>
   </scm>
 
   <properties>
@@ -195,11 +195,11 @@
               POM with slightly different values...there must be a better way. 
             -->
             <property>
-              <name>usling.http.server.url</name>
+              <name>launchpad.http.server.url</name>
               <value>http://localhost:8080</value>
             </property>
             <property>
-              <name>usling.webdav.server.url</name>
+              <name>launchpad.webdav.server.url</name>
               <value>http://localhost:8080/dav/default</value>
             </property>
           </systemProperties>
@@ -251,11 +251,11 @@
                       POM with slightly different values...there must be a better way. 
                     -->
                     <property>
-                      <name>usling.http.server.url</name>
+                      <name>launchpad.http.server.url</name>
                       <value>http://localhost:8080/${project.build.finalName}</value>
                     </property>
                     <property>
-                      <name>usling.webdav.server.url</name>
+                      <name>launchpad.webdav.server.url</name>
                       <value>http://localhost:8080/${project.build.finalName}/dav/default</value>
                     </property>
                   </systemProperties>
@@ -405,7 +405,7 @@
 
     <dependency>
       <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.usling.servlets</artifactId>
+      <artifactId>org.apache.sling.launchpad.servlets</artifactId>
       <version>2.0.0-incubator-SNAPSHOT</version>
     </dependency>
     <dependency>
