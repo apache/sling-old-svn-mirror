@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.usling.servlets;
+package org.apache.sling.launchpad.servlets;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,14 +32,14 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.launchpad.renderers.DefaultHtmlRendererServlet;
+import org.apache.sling.launchpad.renderers.JsonRendererServlet;
+import org.apache.sling.launchpad.renderers.PlainTextRendererServlet;
 import org.apache.sling.ujax.UjaxPostServlet;
-import org.apache.sling.usling.renderers.DefaultHtmlRendererServlet;
-import org.apache.sling.usling.renderers.JsonRendererServlet;
-import org.apache.sling.usling.renderers.PlainTextRendererServlet;
 
 /**
  * Replaces the Sling default servlet (that bundle must NOT be
- * active) for usling, by delegating to the default usling
+ * active) for the Launchpad, by delegating to our default 
  * renderers for GET requests, and to the ujax POST servlet 
  * for POST requests.
  *
@@ -52,7 +52,7 @@ import org.apache.sling.usling.renderers.PlainTextRendererServlet;
  *  
  * @scr.property 
  *  name="service.description"
- *  value="usling default servlet"
+ *  value="Launchpad Default Servlet"
  *  
  * @scr.property 
  *  name="service.vendor" 
@@ -64,7 +64,7 @@ import org.apache.sling.usling.renderers.PlainTextRendererServlet;
  *  value="sling.core.servlet.default"
  *  
  */
-public class UslingDefaultServlet extends SlingAllMethodsServlet {
+public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
     
     private Servlet postServlet;
     private Servlet defaultGetServlet;
