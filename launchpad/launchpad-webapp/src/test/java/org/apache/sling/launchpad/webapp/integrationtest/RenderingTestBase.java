@@ -20,7 +20,7 @@ import java.io.IOException;
 
 /** Base class for rendering tests
  */
-class RenderingTestBase extends UslingHttpTestBase {
+class RenderingTestBase extends HttpTestBase {
     protected String scriptPath;
     protected String testText;
     protected String displayUrl;

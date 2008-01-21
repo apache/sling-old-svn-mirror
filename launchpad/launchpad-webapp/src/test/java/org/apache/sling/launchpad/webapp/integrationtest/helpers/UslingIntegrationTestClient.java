@@ -31,7 +31,7 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.sling.launchpad.webapp.integrationtest.UslingHttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Client functions to interact with microsling in integration tests */ 
 public class UslingIntegrationTestClient {
@@ -137,7 +137,7 @@ public class UslingIntegrationTestClient {
         post.releaseConnection();
         // simple check if host is missing
         if (!location.startsWith("http://")) {
-            String host = UslingHttpTestBase.HTTP_BASE_URL;
+            String host = HttpTestBase.HTTP_BASE_URL;
             int idx = host.indexOf('/', 8);
             if (idx > 0) {
                 host = host.substring(0, idx);

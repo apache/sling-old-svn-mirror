@@ -20,7 +20,7 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 /** Ping the Sling server to verify that our integration test
  *  setup is ok.
  */
-public class HttpPingTest extends UslingHttpTestBase {
+public class HttpPingTest extends HttpTestBase {
     public void testWebServerRoot() throws Exception
     {
         // The root URL returns a 404, Sling doesn't resolve the root node??
