@@ -46,8 +46,8 @@ import org.mozilla.javascript.ScriptableObject;
 
 /** Base class for HTTP-based usling integration tests */
 public class UslingHttpTestBase extends TestCase {
-    public static final String HTTP_BASE_URL = System.getProperty("usling.http.server.url");
-    public static final String WEBDAV_BASE_URL = System.getProperty("usling.webdav.server.url");
+    public static final String HTTP_BASE_URL = System.getProperty("launchpad.http.server.url");
+    public static final String WEBDAV_BASE_URL = System.getProperty("launchpad.webdav.server.url");
     
     /** base path for test files */
     public static final String TEST_PATH = "/usling-integration-tests";
