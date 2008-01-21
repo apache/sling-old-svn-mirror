@@ -122,6 +122,12 @@ public class Mapping {
                 ? Mapping.INBOUND
                 : ("<".equals(parts[1]) ? Mapping.OUTBOUND : Mapping.BOTH);
     }
+    
+    @Override
+    public String toString() {
+        return "Mapping (from=" + from + ", to=" + to + ", direction=" + direction 
+            + ", lengths=" + fromLength + "/" + toLength;
+    }
 
     /**
      * Replaces the prefix <em>to</em> by the new prefix <em>from</em>, if
