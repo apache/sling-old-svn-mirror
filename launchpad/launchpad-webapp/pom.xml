@@ -58,7 +58,7 @@
     <!-- 
       Defines which tests are for the "integration-testing" phase
      -->
-    <integration.test.code.path>**/usling/webapp/integrationtest</integration.test.code.path>
+    <integration.test.code.path>**/launchpad/webapp/integrationtest</integration.test.code.path>
     
     <!-- 
       Set this to true to stop mvn once the integration test Jetty instance is
