@@ -27,17 +27,17 @@
     <relativePath>../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>org.apache.sling.usling.servlets</artifactId>
+  <artifactId>org.apache.sling.launchpad.servlets</artifactId>
   <packaging>bundle</packaging>
   <version>2.0.0-incubator-SNAPSHOT</version>
 
-  <name>µsling Web Application</name>
-  <description>The µsling servlets implement the standard µsling behaviour. See SLING-149.</description>
+  <name>Sling Launchpad Servlets</name>
+  <description>The launchpad servlets implement the standard launchpad behaviour. See SLING-149.</description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/usling/usling-servlets</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/usling/usling-servlets</developerConnection>
-    <url>http://svn.apache.org/viewvc/incubator/sling/trunk/usling/usling-servlets</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/launchpad-servlets</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/launchpad-servlets</developerConnection>
+    <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/launchpad-servlets</url>
   </scm>
 
   <build>
