@@ -48,6 +48,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
     
     public void testNothing() {
         // TODO remove this once all TODO_FAILS are gone
+        // several tests fail due to SLING-179
     }
     
     public void TODO_FAILS_testWithExactUrl() throws IOException {

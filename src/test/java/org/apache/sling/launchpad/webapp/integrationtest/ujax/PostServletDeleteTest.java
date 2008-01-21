@@ -35,7 +35,7 @@ public class PostServletDeleteTest extends HttpTestBase {
         super.setUp();
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis();
         
-        // TODO_FAILS: the Sling resource renderer currently goes up the path for GETs 
+        // TODO_FAILS (SLING-179): the Sling resource renderer currently goes up the path for GETs 
         //assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
         //        "Path must not exist before test: " + postUrl);
     }
