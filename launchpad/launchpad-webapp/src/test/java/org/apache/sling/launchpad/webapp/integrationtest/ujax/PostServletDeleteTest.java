@@ -23,10 +23,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.launchpad.webapp.integrationtest.UslingHttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Test node deletion via the MicrojaxPostServlet */
-public class PostServletDeleteTest extends UslingHttpTestBase {
+public class PostServletDeleteTest extends HttpTestBase {
     public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     

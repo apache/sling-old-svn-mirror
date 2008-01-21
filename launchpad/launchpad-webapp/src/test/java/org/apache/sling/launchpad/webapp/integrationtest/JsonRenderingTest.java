@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 /** Test creating Nodes and rendering them in JSON */
-public class JsonRenderingTest extends UslingHttpTestBase {
+public class JsonRenderingTest extends HttpTestBase {
 
     private String postUrl; 
     private String testText;

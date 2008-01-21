@@ -23,7 +23,7 @@ import java.io.InputStream;
  *  via WebDAV, as a first step towards testing the
  *  complete content creation and rendering scenario. 
  */
-public class FileUploadTest extends UslingHttpTestBase {
+public class FileUploadTest extends HttpTestBase {
     
     /** This only tests the WebDAV interface. We know it works, so
      *  we're mostly testing our test code here ;-)

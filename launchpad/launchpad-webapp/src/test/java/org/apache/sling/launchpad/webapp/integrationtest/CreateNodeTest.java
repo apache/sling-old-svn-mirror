@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 /** Test creating a Node using the MicroslingIntegrationTestClient */
-public class CreateNodeTest extends UslingHttpTestBase {
+public class CreateNodeTest extends HttpTestBase {
     
     public void testCreateNode() throws IOException {
         final String url = HTTP_BASE_URL + "/CreateNodeTest_1_" + System.currentTimeMillis();
