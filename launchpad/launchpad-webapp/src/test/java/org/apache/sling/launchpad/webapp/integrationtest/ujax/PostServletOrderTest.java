@@ -35,6 +35,7 @@ public class PostServletOrderTest extends HttpTestBase {
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
     
+   /** fails due to SLING-179 */
    public void TODO_FAILS_testPostPathIsUnique() throws IOException {
         assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
                 "Path must not exist before test: " + postUrl);
