@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Test the @ValueFrom field name suffix, SLING-130 */
-public class ValueFromTest extends UslingHttpTestBase {
+public class ValueFromTest extends HttpTestBase {
 
     private String postUrl;
     private String testText;

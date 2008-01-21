@@ -24,7 +24,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 /**
  * Test uploading files using the ujax post servlet (SLING-168)
  */
-public class UploadFileTest extends UslingHttpTestBase {
+public class UploadFileTest extends HttpTestBase {
 
     private static final String TEST_FILE = "src/test/resources/integration-test/file-to-upload.txt";
     

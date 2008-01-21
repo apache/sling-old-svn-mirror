@@ -20,11 +20,11 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launchpad.webapp.integrationtest.UslingHttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Test the ujax:sessionInfo resource */
 
-public class UjaxSessionInfoTest extends UslingHttpTestBase {
+public class UjaxSessionInfoTest extends HttpTestBase {
     
     public void testNothing() {
         // TODO remove this all TODO_FAILS_ are gone 

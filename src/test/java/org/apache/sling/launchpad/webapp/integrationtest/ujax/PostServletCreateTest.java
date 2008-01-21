@@ -22,10 +22,10 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launchpad.webapp.integrationtest.UslingHttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Test node creation via the MicrojaxPostServlet */
-public class PostServletCreateTest extends UslingHttpTestBase {
+public class PostServletCreateTest extends HttpTestBase {
     public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     

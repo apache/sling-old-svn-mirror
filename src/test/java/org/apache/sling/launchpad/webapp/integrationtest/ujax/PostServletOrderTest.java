@@ -22,10 +22,10 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launchpad.webapp.integrationtest.UslingHttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Test the order option for node creation via the MicrojaxPostServlet */
-public class PostServletOrderTest extends UslingHttpTestBase {
+public class PostServletOrderTest extends HttpTestBase {
     public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
     

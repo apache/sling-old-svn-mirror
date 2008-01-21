@@ -21,7 +21,7 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 
 /** Test static content served from the microsling webapp resources */
-public class StaticContentTest extends UslingHttpTestBase {
+public class StaticContentTest extends HttpTestBase {
     public void TODO_FAILS_testContentTypeHtml() throws IOException {
         getContent(HTTP_BASE_URL + "/index.html", CONTENT_TYPE_HTML);
     }

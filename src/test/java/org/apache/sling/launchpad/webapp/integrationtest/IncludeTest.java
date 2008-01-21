@@ -24,7 +24,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 /** Test the {link ScriptHelper#include) functionality */
- public class IncludeTest extends UslingHttpTestBase {
+ public class IncludeTest extends HttpTestBase {
 
     private String nodeUrlA;
     private String testTextA;

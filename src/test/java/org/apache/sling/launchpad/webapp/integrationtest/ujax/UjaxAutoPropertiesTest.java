@@ -22,13 +22,13 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launchpad.webapp.integrationtest.UslingHttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** {#link MicrojaxPropertyValueSetter} sets the value of some properties
  *  automatically if they are empty. This is tested here with various cases.
  */  
 
-public class UjaxAutoPropertiesTest extends UslingHttpTestBase {
+public class UjaxAutoPropertiesTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;

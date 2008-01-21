@@ -19,7 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 import java.io.IOException;
 
 /** Test the MicroslingIntegrationTestClient's mkdir functions */ 
-public class MkdirTest extends UslingHttpTestBase {
+public class MkdirTest extends HttpTestBase {
     
     /** Try creating a directory via WebDAV */
     public void testMkdir() throws IOException {

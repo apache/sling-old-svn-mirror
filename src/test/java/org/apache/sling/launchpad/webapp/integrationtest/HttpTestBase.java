@@ -45,7 +45,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
-public class UslingHttpTestBase extends TestCase {
+public class HttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = System.getProperty("launchpad.http.server.url");
     public static final String WEBDAV_BASE_URL = System.getProperty("launchpad.webdav.server.url");
     

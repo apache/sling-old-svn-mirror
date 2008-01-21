@@ -22,7 +22,7 @@ import java.util.Map;
 
 
 /** Test the various redirect options for POST, SLING-126 */
-public class PostRedirectTest extends UslingHttpTestBase {
+public class PostRedirectTest extends HttpTestBase {
 
     private String postPath = "CreateNodeTest/" + System.currentTimeMillis();
     private String postUrl = HTTP_BASE_URL + "/" + postPath + "/UJAX_create";

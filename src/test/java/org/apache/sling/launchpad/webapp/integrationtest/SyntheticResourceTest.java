@@ -24,7 +24,7 @@ import java.io.IOException;
  *  non-existent Nodes that match the "configured" path
  *  patterns of the  {@link SyntheticResourceProvider}.
  */
-public class SyntheticResourceTest extends UslingHttpTestBase {
+public class SyntheticResourceTest extends HttpTestBase {
 
     /** recurse random URLs under basePath, going nLevels deep,
      *  and check that we get the specified status for every URL
