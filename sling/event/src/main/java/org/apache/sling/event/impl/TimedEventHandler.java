@@ -42,7 +42,6 @@ import org.apache.sling.event.EventUtil;
 import org.apache.sling.scheduler.Job;
 import org.apache.sling.scheduler.JobContext;
 import org.apache.sling.scheduler.Scheduler;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -71,22 +70,14 @@ public class TimedEventHandler
     protected EventAdmin eventAdmin;
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#activate(org.osgi.service.component.ComponentContext)
-     */
-    protected void activate(ComponentContext context)
-    throws RepositoryException {
-        super.activate(context);
-        // load timed events from repository
-        this.loadEvents();
-    }
-
-    /**
      * Start the repository session and add this handler as an observer
      * for new events created on other nodes.
      * @throws RepositoryException
      */
     protected void startSession() throws RepositoryException {
         super.startSession();
+        // load timed events from repository
+        this.loadEvents();
         this.session.getWorkspace().getObservationManager()
             .addEventListener(this, javax.jcr.observation.Event.PROPERTY_CHANGED, this.repositoryPath, true, null, null, true);
     }
