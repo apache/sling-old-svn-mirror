@@ -54,8 +54,8 @@
         <configuration>
           <instructions>
             <Private-Package>
-              org.apache.sling.usling.servlets.*,
-              org.apache.sling.usling.renderers.*,
+              org.apache.sling.launchpad.servlets.*,
+              org.apache.sling.launchpad.renderers.*,
               org.apache.sling.ujax.*
             </Private-Package>
           </instructions>
