@@ -18,14 +18,9 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
-import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.jcr.Node;
-
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
-import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
-import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.WrapFactory;
@@ -34,10 +29,12 @@ import org.slf4j.LoggerFactory;
 
 public class SlingWrapFactory extends WrapFactory {
 
+    public static final SlingWrapFactory INSTANCE = new SlingWrapFactory();
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final WrapFactory INSTANCE = new SlingWrapFactory();
+    private Map<Class<?>, String> wrappers = new HashMap<Class<?>, String>();
 
     /**
      * @param cx the current Context for this thread
@@ -52,14 +49,14 @@ public class SlingWrapFactory extends WrapFactory {
             Object javaObject, Class staticType) {
 
         try {
-            if (javaObject instanceof Resource) {
-                return cx.newObject(scope, ScriptableResource.CLASSNAME,
-                    new Object[] { javaObject });
-            } else if (javaObject instanceof Node) {
-                return cx.newObject(scope, ScriptableNode.CLASSNAME,
-                    new Object[] { javaObject });
-            } else if (javaObject instanceof PrintWriter) {
-                return cx.newObject(scope, ScriptablePrintWriter.CLASSNAME,
+            String hostObjectName = getHostObjectName(staticType);
+
+            if (hostObjectName == null) {
+                hostObjectName = getHostObjectName(javaObject.getClass());
+            }
+
+            if (hostObjectName != null) {
+                return cx.newObject(scope, hostObjectName,
                     new Object[] { javaObject });
             }
         } catch (Exception e) {
@@ -69,4 +66,28 @@ public class SlingWrapFactory extends WrapFactory {
         return super.wrapAsJavaObject(cx, scope, javaObject, staticType);
     }
 
+    private String getHostObjectName(Class<?> javaClass) {
+        String hostObjectName = wrappers.get(javaClass);
+        if (hostObjectName == null) {
+            hostObjectName = getHostObjectName(javaClass.getSuperclass());
+
+            if (hostObjectName == null) {
+                Class<?>[] javaInterfaces = javaClass.getInterfaces();
+                for (int i = 0; i < javaInterfaces.length
+                    && hostObjectName == null; i++) {
+                    hostObjectName = getHostObjectName(javaClass);
+                }
+            }
+        }
+
+        return hostObjectName;
+    }
+
+    public void registerWrapper(Class<?> javaClass, String hostObjectName) {
+        wrappers.put(javaClass, hostObjectName);
+    }
+
+    public void unregisterWrapper(Class<?> javaClass) {
+        wrappers.remove(javaClass);
+    }
 }

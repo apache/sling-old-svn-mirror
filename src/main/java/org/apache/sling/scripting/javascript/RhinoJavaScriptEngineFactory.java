@@ -22,11 +22,13 @@ import javax.script.ScriptEngine;
 
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.javascript.helper.SlingContextFactory;
+import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
+import org.apache.sling.scripting.javascript.wrapper.ScriptableItemMap;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
 import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
+import org.apache.sling.scripting.javascript.wrapper.ScriptableProperty;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -39,15 +41,20 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public final static String ESP_SCRIPT_EXTENSION = "esp";
 
+    private static final Class<?>[] WRAPPER_CLASSES = {
+        ScriptableResource.class, ScriptableNode.class,
+        ScriptableProperty.class, ScriptableItemMap.class,
+        ScriptablePrintWriter.class };
+
     private final String languageVersion;
 
     private Scriptable rootScope;
 
     public RhinoJavaScriptEngineFactory() {
-        
+
         // initialize the Rhino Context Factory
         SlingContextFactory.setup();
-        
+
         Context cx = Context.enter();
         setEngineName(getEngineName() + " (" + cx.getImplementationVersion()
             + ")");
@@ -78,12 +85,17 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
             final Context rhinoContext = Context.enter();
             rootScope = rhinoContext.initStandardObjects();
 
-            try {
-                ScriptableObject.defineClass(rootScope, ScriptableResource.class);
-                ScriptableObject.defineClass(rootScope, ScriptableNode.class);
-                ScriptableObject.defineClass(rootScope, ScriptablePrintWriter.class);
-            } catch (Throwable t) {
-                // TODO: log
+            for (Class<?> clazz : WRAPPER_CLASSES) {
+                try {
+                    ScriptableObject.defineClass(rootScope, clazz);
+
+                    Scriptable hostObject = (Scriptable) clazz.newInstance();
+                    SlingWrapFactory.INSTANCE.registerWrapper(clazz,
+                        hostObject.getClassName());
+
+                } catch (Throwable t) {
+                    // TODO: log
+                }
             }
         }
 
