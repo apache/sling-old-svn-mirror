@@ -74,8 +74,6 @@ public class JobEventHandler
         this.sleepTime = (Long)context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) * 1000;
 
         super.activate(context);
-        // load unprocessed jobs from repository
-        this.loadJobs();
     }
 
     /**
@@ -231,6 +229,8 @@ public class JobEventHandler
      */
     protected void startSession() throws RepositoryException {
         super.startSession();
+        // load unprocessed jobs from repository
+        this.loadJobs();
         this.session.getWorkspace().getObservationManager()
             .addEventListener(this, javax.jcr.observation.Event.PROPERTY_CHANGED, this.repositoryPath, true, null, null, true);
     }
@@ -255,11 +255,10 @@ public class JobEventHandler
     public void handleEvent(final Event event) {
         // we ignore remote job events
         if ( EventUtil.isLocal(event) ) {
-            final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
             final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
 
-            //  job id  and job topic must be set, otherwise we ignore this event!
-            if ( jobId != null && jobTopic != null ) {
+            //  job topic must be set, otherwise we ignore this event!
+            if ( jobTopic != null ) {
                 // queue the event in order to respond quickly
                 final EventInfo info = new EventInfo();
                 info.event = event;
@@ -270,7 +269,7 @@ public class JobEventHandler
                     this.ignoreException(e);
                 }
             } else {
-                this.logger.warn("Event does not contain job topic or job id properties: {}", event);
+                this.logger.warn("Event does not contain job topic: {}", event);
             }
         }
     }
@@ -278,42 +277,54 @@ public class JobEventHandler
     protected void processEvent(final Event event) {
         final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-        // we lock the parent node to ensure that noone else tries to add the same job to the repository
-        // while we are doing it
         Lock lock = null;
-        try {
-            final Node parentNode = (Node)this.session.getItem(this.repositoryPath);
-            lock = (Lock) new Locked() {
+        // if the job has no job id, we can just write the job to the repo and don't
+        // need locking
+        if ( jobId == null ) {
+            try {
+                final Node eventNode = JobEventHandler.this.writeEvent(event);
+                lock = eventNode.lock(false, true);
+            } catch (RepositoryException re ) {
+                // something went wrong, so let's log it
+                this.logger.error("Exception during writing new job to repository.", re);
+            }
+        } else {
+            // we lock the parent node to ensure that noone else tries to add the same job to the repository
+            // while we are doing it
+            try {
+                final Node parentNode = (Node)this.session.getItem(this.repositoryPath);
+                lock = (Lock) new Locked() {
 
-                protected Object run(Node node) throws RepositoryException {
-                    // if there is a node, we know that there is exactly one node
-                    final Node foundNode = JobEventHandler.this.queryJob(jobTopic, jobId);
-                    boolean writeAndSend =false;
-                    // if node is not present, we'll write it, lock it and send the event
-                    if ( foundNode == null ) {
-                        writeAndSend = true;
-                    } else {
-                        // node is already in repository, let's check the application id
-                        if ( foundNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString().equals(JobEventHandler.this.applicationId) ) {
-                            // delete old node (deleting is easier than updating...)
-                            foundNode.remove();
-                            parentNode.save();
+                    protected Object run(Node node) throws RepositoryException {
+                        // if there is a node, we know that there is exactly one node
+                        final Node foundNode = JobEventHandler.this.queryJob(jobTopic, jobId);
+                        boolean writeAndSend =false;
+                        // if node is not present, we'll write it, lock it and send the event
+                        if ( foundNode == null ) {
                             writeAndSend = true;
+                        } else {
+                            // node is already in repository, let's check the application id
+                            if ( foundNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString().equals(JobEventHandler.this.applicationId) ) {
+                                // delete old node (deleting is easier than updating...)
+                                foundNode.remove();
+                                parentNode.save();
+                                writeAndSend = true;
+                            }
                         }
+                        if ( writeAndSend ) {
+                            final Node eventNode = JobEventHandler.this.writeEvent(event);
+                            return eventNode.lock(false, true);
+                        }
+                        return null;
                     }
-                    if ( writeAndSend ) {
-                        final Node eventNode = JobEventHandler.this.writeEvent(event);
-                        return eventNode.lock(false, true);
-                    }
-                    return null;
-                }
-            }.with(parentNode, false);
-        } catch (RepositoryException re ) {
-            // something went wrong, so let's log it
-            this.logger.error("Exception during writing new job to repository.", re);
-        } catch (InterruptedException e) {
-            // This should never happen from the lock, so we ignore it
-            this.ignoreException(e);
+                }.with(parentNode, false);
+            } catch (RepositoryException re ) {
+                // something went wrong, so let's log it
+                this.logger.error("Exception during writing new job to repository.", re);
+            } catch (InterruptedException e) {
+                // This should never happen from the lock, so we ignore it
+                this.ignoreException(e);
+            }
         }
 
         // if we have a lock, we will try to fire the job
@@ -423,7 +434,10 @@ public class JobEventHandler
         super.addNodeProperties(eventNode, event);
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
         eventNode.setProperty(EventHelper.NODE_PROPERTY_ACTIVE, true);
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, (String)event.getProperty(EventUtil.PROPERTY_JOB_ID));
+        final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
+        if ( jobId != null ) {
+            eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, jobId);
+        }
     }
 
     /**
