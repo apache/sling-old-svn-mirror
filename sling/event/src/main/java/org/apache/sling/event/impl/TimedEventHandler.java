@@ -66,9 +66,6 @@ public class TimedEventHandler
     /** @scr.reference */
     protected Scheduler scheduler;
 
-    /** @scr.reference */
-    protected EventAdmin eventAdmin;
-
     /**
      * Start the repository session and add this handler as an observer
      * for new events created on other nodes.
@@ -228,14 +225,15 @@ public class TimedEventHandler
      * @return
      */
     protected boolean processEvent(final Event event, final ScheduleInfo scheduleInfo) {
-        if ( this.scheduler != null ) {
+        final Scheduler localScheduler = this.scheduler;
+        if ( localScheduler != null ) {
             // is this a stop event?
             if ( scheduleInfo.isStopEvent() ) {
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Stopping timed event " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + "(" + scheduleInfo.jobId + ")");
                 }
                 try {
-                    this.scheduler.removeJob(scheduleInfo.jobId);
+                    localScheduler.removeJob(scheduleInfo.jobId);
                 } catch (NoSuchElementException nsee) {
                     // this can happen if the job is scheduled on another node
                     // so we can just ignore this
@@ -266,18 +264,18 @@ public class TimedEventHandler
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with cron expression " + scheduleInfo.expression);
                     }
-                    this.scheduler.addJob(scheduleInfo.jobId, this, config, scheduleInfo.expression, false);
+                    localScheduler.addJob(scheduleInfo.jobId, this, config, scheduleInfo.expression, false);
                 } else if ( scheduleInfo.period != null ) {
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with period " + scheduleInfo.period);
                     }
-                    this.scheduler.addPeriodicJob(scheduleInfo.jobId, this, config, scheduleInfo.period, false);
+                    localScheduler.addPeriodicJob(scheduleInfo.jobId, this, config, scheduleInfo.period, false);
                 } else {
                     // then it must be date
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with date " + scheduleInfo.date);
                     }
-                    this.scheduler.fireJobAt(scheduleInfo.jobId, this, config, scheduleInfo.date);
+                    localScheduler.fireJobAt(scheduleInfo.jobId, this, config, scheduleInfo.date);
                 }
                 return true;
             } catch (Exception e) {
@@ -356,9 +354,10 @@ public class TimedEventHandler
         final String topic = (String) context.getConfiguration().get(JOB_TOPIC);
         @SuppressWarnings("unchecked")
         final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get(JOB_CONFIG);
-        if ( this.eventAdmin != null ) {
+        final EventAdmin ea = this.eventAdmin;
+        if ( ea != null ) {
             try {
-                this.eventAdmin.postEvent(new Event(topic, properties));
+                ea.postEvent(new Event(topic, properties));
             } catch (IllegalArgumentException iae) {
                 this.logger.error("Scheduled event has illegal topic: " + topic, iae);
             }

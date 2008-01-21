@@ -32,6 +32,7 @@ import javax.jcr.query.QueryManager;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.event.EventUtil;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * This event handler distributes events across an application cluster.
@@ -110,7 +111,12 @@ public class DistributingEventHandler
                 } else if ( info.nodePath != null) {
                     try {
                         final Node eventNode = (Node) this.session.getItem(info.nodePath);
-                        this.eventAdmin.postEvent(this.readEvent(eventNode));
+                        final EventAdmin localEA = this.eventAdmin;
+                        if ( localEA != null ) {
+                            localEA.postEvent(this.readEvent(eventNode));
+                        } else {
+                            this.logger.error("Unable to post event as no event admin is available.");
+                        }
                     } catch (Exception ex) {
                         this.logger.error("Exception during reading the event from the repository.", ex);
                     }

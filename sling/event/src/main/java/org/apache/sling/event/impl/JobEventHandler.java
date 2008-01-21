@@ -41,6 +41,7 @@ import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 
 
 /**
@@ -385,9 +386,14 @@ public class JobEventHandler
             final Event jobEvent = this.getJobEvent(event, eventNode, lockToken);
             eventNode.setProperty(EventHelper.NODE_PROPERTY_PROCESSOR, this.applicationId);
             eventNode.save();
-            this.eventAdmin.sendEvent(jobEvent);
-            // do not unlock if sending was successful
-            unlock = false;
+            final EventAdmin localEA = this.eventAdmin;
+            if ( localEA != null ) {
+                localEA.sendEvent(jobEvent);
+                // do not unlock if sending was successful
+                unlock = false;
+            } else {
+                this.logger.error("Job event can't be sent as no event admin is available.");
+            }
         } catch (RepositoryException re) {
             // if an exception occurs, we just log
             this.logger.error("Exception during job processing.", re);
