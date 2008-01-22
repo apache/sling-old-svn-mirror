@@ -42,7 +42,6 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.bundle.BundleResourceProvider;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.apache.sling.jcr.resource.internal.loader.Loader;
 import org.apache.sling.jcr.resource.internal.mapping.ObjectContentManagerFactory;
 import org.osgi.framework.Bundle;
@@ -307,7 +306,7 @@ public class JcrResourceResolverFactoryImpl implements
         // assume this session has more access rights than the client Session
         String workSpace = clientSession.getWorkspace().getName();
         Session adminSession = getAdminSession(workSpace);
-        
+
         // SLING-159: Workaround for method throwing when called with
         //            a malformed path
         try {

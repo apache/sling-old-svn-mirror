@@ -32,7 +32,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.auth.AuthenticationHandler;
 import org.apache.sling.core.auth.AuthenticationInfo;
@@ -45,6 +44,8 @@ import org.osgi.service.http.HttpContext;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import sun.security.krb5.internal.Ticket;
 
 /**
  * The <code>SlingAuthenticator</code> class is the default implementation of
@@ -136,7 +137,7 @@ public class SlingAuthenticator implements ManagedService {
 
     /** Whether access without credentials is allowed */
     boolean anonymousAllowed;
-    
+
     /**
      * The list of packages from the configuration file. This list is checked
      * for each request. The handler of the first package match is used for the
@@ -259,9 +260,9 @@ public class SlingAuthenticator implements ManagedService {
                     log.error("authenticate: Cannot send status 503 to client",
                         ioe);
                 }
-                
+
             } catch (LoginException e) {
-                
+
                 // request authentication information and send 403 (Forbidden)
                 // if no handler can request authentication information.
                 log.info("authenticate: Unable to authenticate: {}",
@@ -269,10 +270,10 @@ public class SlingAuthenticator implements ManagedService {
                 requestAuthentication(req, res);
 
             } catch (RepositoryException re) {
-                
+
                 // general problem, send a 500 Internal Server Error
                 log.error("authenticate: Unable to authenticate", re);
-                
+
                 try {
                     res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "Data Access Failure");
@@ -280,7 +281,7 @@ public class SlingAuthenticator implements ManagedService {
                     log.error("authenticate: Cannot send status 500 to client",
                         ioe);
                 }
-                
+
             }
 
             // end request
