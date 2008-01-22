@@ -41,8 +41,6 @@ import org.apache.sling.microsling.helpers.nodenames.NodeNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import freemarker.ext.ant.UnlinkedJythonOperationsImpl;
-
 /** Servlet that implements the ujax POST "protocol", see SLING-92 */
 public class MicrojaxPostServlet extends SlingAllMethodsServlet {
     private static final long serialVersionUID = 1837674988291697074L;
@@ -83,7 +81,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
      *  (or supplied) redirect URL
      */
     public static final String RP_DISPLAY_EXTENSION = RP_PREFIX + "displayExtension";
-    
+
     /** SLING-130, suffix that maps form field names to different JCR property names */
     public static final String VALUE_FROM_SUFFIX = "@ValueFrom";
 
@@ -168,7 +166,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
             // a generated node name
             currentPath = currentPath.substring(0, currentPath.length() - starSuffix.length());
             currentPath += "/" + nodeNameGenerator.getNodeName(request.getRequestParameterMap(), savePrefix);
-            
+
             // if resulting path exists, add a suffix until it's not the case anymore
             if(s.itemExists(currentPath)) {
                 String newPath = currentPath;
@@ -180,7 +178,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                     }
                 }
             }
-            
+
             if(s.itemExists(currentPath)) {
                 throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "Collision in generated node names for path=" + currentPath);
@@ -218,26 +216,26 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
         s.save();
         response.sendRedirect(getRedirectUrl(request,currentNode.getPath()));
     }
-    
+
     /** compute redirect URL (SLING-126) */
     protected String getRedirectUrl(SlingHttpServletRequest request, String currentNodePath) {
-        
+
         // redirect param has priority (but see below, magic star)
         String result = request.getParameter(RP_REDIRECT_TO);
         final boolean magicStar = "*".equals(result);
-        
+
         if(result==null || result.trim().length()==0) {
             // try Referer
             result = request.getHeader("Referer");
         }
-        
+
         // redirect param = star means "redirect to current node", useful in browsers
         // when you don't want to use the Referer
         if(magicStar || result==null || result.trim().length()==0) {
-            // use path of current node, with optional extension 
+            // use path of current node, with optional extension
             final String redirectExtension = request.getParameter(RP_DISPLAY_EXTENSION);
             result = currentNodePath;
-            
+
             if(redirectExtension!=null) {
                 if(redirectExtension.startsWith(".")) {
                     result += redirectExtension;
@@ -245,17 +243,17 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                     result += "." + redirectExtension;
                 }
             }
-            
+
             result =
                 SlingRequestPaths.getContextPath(request)
                 + SlingRequestPaths.getServletPath(request)
                 + result;
         }
-        
+
         if(log.isDebugEnabled()) {
             log.debug("Will redirect to " + result);
         }
-        
+
         return result;
     }
 
@@ -268,12 +266,12 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
 
         for(Map.Entry<String, RequestParameter[]>  e : request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
-            
+
             if(paramName.startsWith(RP_PREFIX)) {
-                // do not store parameters with names starting with ujax:  
+                // do not store parameters with names starting with ujax:
                 continue;
             }
-            
+
             String propertyName = paramName;
             if(savePrefix!=null) {
                 if(!paramName.startsWith(savePrefix)) {
@@ -281,15 +279,15 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                 }
                 propertyName = paramName.substring(savePrefix.length());
             }
-            
+
             // SLING-130: VALUE_FROM_SUFFIX means take the value of this
             // property from a different field
             RequestParameter[] values = e.getValue();
             final int vfIndex = propertyName.indexOf(VALUE_FROM_SUFFIX);
             if(vfIndex >= 0) {
                 // @ValueFrom example:
-                // <input name="./Text@ValueFrom" type="hidden" value="fulltext" /> 
-                // causes the JCR Text property to be set to the value of the fulltext form field. 
+                // <input name="./Text@ValueFrom" type="hidden" value="fulltext" />
+                // causes the JCR Text property to be set to the value of the fulltext form field.
                 propertyName = propertyName.substring(0, vfIndex);
                 final RequestParameter[] rp = request.getRequestParameterMap().get(paramName);
                 if(rp == null || rp.length > 1) {
@@ -303,7 +301,7 @@ public class MicrojaxPostServlet extends SlingAllMethodsServlet {
                     continue;
                 }
             }
-            
+
             setProperty(n,request,propertyName,values,createdNodes);
         }
     }
