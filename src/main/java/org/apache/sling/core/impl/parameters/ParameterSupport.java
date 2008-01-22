@@ -18,8 +18,6 @@
  */
 package org.apache.sling.core.impl.parameters;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -37,7 +35,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
-import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.core.impl.request.RequestData;
 
 public class ParameterSupport {
@@ -124,10 +121,10 @@ public class ParameterSupport {
 
         final Map<?, ?> pMap = getServletRequest().getParameterMap();
         for (Map.Entry<?, ?> entry : pMap.entrySet()) {
-            
+
             final String name = (String) entry.getKey();
             final String[] values = (String[]) entry.getValue();
-            
+
             for (int i = 0; i < values.length; i++) {
                 final EncodedRequestParameter rp = new EncodedRequestParameter(
                     Util.ENCODING_DEFAULT);
