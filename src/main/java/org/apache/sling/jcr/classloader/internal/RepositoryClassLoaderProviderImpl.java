@@ -111,9 +111,7 @@ public class RepositoryClassLoaderProviderImpl
         try {
             return admin.impersonate(new SimpleCredentials(owner, new char[0]));
         } finally {
-            if (admin != null) {
-                admin.logout();
-            }
+            admin.logout();
         }
     }
 
