@@ -268,11 +268,8 @@
                     Commons Dependencies provided by the Apache Felix project
                 -->
                 <dependency>
-                    <groupId>org.apache.felix.commons</groupId>
-                    <artifactId>
-                        org.apache.felix.commons.commons-io
-                    </artifactId>
-                    <version>1.3.2-0002-SNAPSHOT</version>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
                 </dependency>
 
                 <dependency>
