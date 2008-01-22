@@ -18,16 +18,9 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
-import java.io.InputStream;
-import java.util.Calendar;
-
-import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.PropertyDefinition;
 
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.ScriptableObject;
@@ -37,16 +30,16 @@ import org.mozilla.javascript.Wrapper;
 public class ScriptableProperty extends ScriptableObject implements Wrapper {
 
     public static final String CLASSNAME = "Property";
-    
+
     private Property property;
-    
+
     public ScriptableProperty() {
     }
-    
+
     public ScriptableProperty(Property property) {
         this.property = property;
     }
-    
+
     public void jsConstructor(Object res) {
         this.property = (Property) res;
     }
@@ -218,7 +211,7 @@ public class ScriptableProperty extends ScriptableObject implements Wrapper {
     }
 
     //---------- Wrapper interface --------------------------------------------
-    
+
     public Object unwrap() {
         return property;
     }
