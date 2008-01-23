@@ -73,6 +73,7 @@
         <!-- The commons sub project -->
         <module>commons/json</module>
         <module>commons/mime</module>
+        <module>commons/testing</module>
                 
         <!-- The JCR sub project -->
         <module>jcr/api</module>
