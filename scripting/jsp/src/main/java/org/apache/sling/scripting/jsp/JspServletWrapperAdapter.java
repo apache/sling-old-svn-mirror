@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingIOException;
+import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -42,19 +44,24 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
         super(config, options, jspUri, isErrorPage, rctxt);
     }
 
-    public void service(SlingScriptHelper scriptHelper) throws IOException,
-            SlingException {
+    /**
+     * @param scriptHelper
+     * @throws SlingIOException
+     * @throws SlingServletException
+     * @throws IllegalArgumentException if the Jasper Precompile controller
+     *             request parameter has an illegal value.
+     */
+    public void service(SlingScriptHelper scriptHelper) {
         try {
             SlingHttpServletRequest request = scriptHelper.getRequest();
             service(request, scriptHelper.getResponse(), preCompile(request));
         } catch (SlingException se) {
             // rethrow as is
             throw se;
+        } catch (IOException ioe) {
+            throw new SlingIOException(ioe);
         } catch (ServletException se) {
-            if (se.getRootCause() != null) {
-                throw new SlingException(se.getMessage(), se.getRootCause());
-            }
-            throw new SlingException(se);
+            throw new SlingServletException(se);
         }
     }
 
@@ -66,12 +73,12 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
      * trigger parsing all of the request parameters, and not give a servlet the
      * opportunity to call <code>request.setCharacterEncoding()</code> first.
      * </p>
-     *
+     * 
      * @param request The servlet requset we are processing
-     * @exception ServletException if an invalid parameter value for the
-     *                <code>jsp_precompile</code> parameter name is specified
+     * @throws IllegalArgumentException if an invalid parameter value for the
+     *             <code>jsp_precompile</code> parameter name is specified
      */
-    boolean preCompile(HttpServletRequest request) throws SlingException {
+    boolean preCompile(HttpServletRequest request) {
 
         // assume it is ok to access the parameters here, as we are not a
         // toplevel servlet
@@ -99,7 +106,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
         }
 
         // unexpected value, fail
-        throw new SlingException("Cannot have request parameter "
+        throw new IllegalArgumentException("Cannot have request parameter "
             + Constants.PRECOMPILE + " set to " + jspPrecompile);
     }
 }
