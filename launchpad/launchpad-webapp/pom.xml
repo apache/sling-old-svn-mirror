@@ -214,7 +214,7 @@
       <!--
         Run the cargo-based integration tests.
         This profile is active by default, to deactivate it activate another
-        one, for example " mvn -P nullProfile".
+        one, for example " mvn -P nullLaunchpadProfile".
         
         TODO there must be a way to control this with "mvn.test.skip", but I haven't
         found it. 
@@ -299,7 +299,7 @@
         By default, do not run the integration tests in the test phase, as they have
         no microsling to talk to.
         To debug the integration tests faster than with the normal build cycle,
-        deactivate this profile (using -P nullProfile for example) and run a
+        deactivate this profile (using -P nullLaunchpadProfile for example) and run a
         separate instance of microsling that the tests can talk to.
       -->
       <id>disableIntegrationTestsInTestPhase</id>
@@ -325,7 +325,7 @@
         Useful to deactivate other profiles from the command-line
         Is there a better way? mvn doesn't have a "deactivate profile" option. 
       -->
-      <id>nullUslingProfile</id>
+      <id>nullLaunchpadProfile</id>
     </profile>
   </profiles>
 
