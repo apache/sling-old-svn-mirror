@@ -51,9 +51,13 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
     public Object eval(Reader scriptReader, ScriptContext scriptContext)
             throws ScriptException {
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
-
-        SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        String scriptName = helper.getScript().getScriptResource().getPath();
+        String scriptName = "NO_SCRIPT_NAME";
+        {
+            SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+            if(helper != null) {
+                scriptName = helper.getScript().getScriptResource().getPath();
+            }
+        }
 
         // wrap the reader in an EspReader for ESP scripts
         if (scriptName.endsWith(RhinoJavaScriptEngineFactory.ESP_SCRIPT_EXTENSION)) {
