@@ -42,6 +42,7 @@ import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -166,7 +167,8 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
                 language);
             return new JcrNodeResourceIterator(this, res.getNodes());
         } catch (javax.jcr.query.InvalidQueryException iqe) {
-            throw new SlingException(iqe);
+            throw new QuerySyntaxException(iqe.getMessage(), query, language,
+                iqe);
         } catch (RepositoryException re) {
             throw new SlingException(re.getMessage(), re);
         }
@@ -204,8 +206,11 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
                     throw new UnsupportedOperationException("remove");
                 }
             };
+        } catch (javax.jcr.query.InvalidQueryException iqe) {
+            throw new QuerySyntaxException(iqe.getMessage(), query, language,
+                iqe);
         } catch (RepositoryException re) {
-            throw new SlingException(re);
+            throw new SlingException(re.getMessage(), re);
         }
     }
 
