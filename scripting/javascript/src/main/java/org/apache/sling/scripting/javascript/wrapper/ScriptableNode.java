@@ -23,10 +23,10 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
-import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +34,10 @@ import org.slf4j.LoggerFactory;
  * A wrapper for JCR nodes that exposes all properties and child nodes as
  * properties of a Javascript object.
  */
-public class ScriptableNode extends ScriptableObject implements Wrapper {
+public class ScriptableNode extends ScriptableObject implements SlingWrapper {
 
     public static final String CLASSNAME = "Node";
+    public static final Class<?> [] WRAPPED_CLASSES = { Node.class };
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -59,6 +60,10 @@ public class ScriptableNode extends ScriptableObject implements Wrapper {
         return CLASSNAME;
     }
 
+    public Class<?> [] getWrappedClasses() {
+        return WRAPPED_CLASSES;
+    }
+    
     public ScriptableItemMap jsGet_children() {
         try {
             return new ScriptableItemMap(node.getNodes());
@@ -222,14 +227,14 @@ public class ScriptableNode extends ScriptableObject implements Wrapper {
     }
 
     @Override
-    public Object getDefaultValue(Class typeHint) {
+    public String toString() {
         try {
             return node.getPath();
         } catch (RepositoryException e) {
-            return super.getDefaultValue(typeHint);
+            return node.toString();
         }
     }
-
+    
     // ---------- Wrapper interface --------------------------------------------
 
     // returns the wrapped node

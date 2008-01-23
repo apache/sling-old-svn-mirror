@@ -23,6 +23,7 @@ import javax.script.ScriptEngine;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.javascript.helper.SlingContextFactory;
 import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
+import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableItemMap;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
 import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
@@ -41,7 +42,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public final static String ESP_SCRIPT_EXTENSION = "esp";
 
-    private static final Class<?>[] WRAPPER_CLASSES = {
+    private static final Class<?>[] HOSTOBJECT_CLASSES = {
         ScriptableResource.class, ScriptableNode.class,
         ScriptableProperty.class, ScriptableItemMap.class,
         ScriptablePrintWriter.class };
@@ -85,14 +86,20 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
             final Context rhinoContext = Context.enter();
             rootScope = rhinoContext.initStandardObjects();
 
-            for (Class<?> clazz : WRAPPER_CLASSES) {
+            for (Class<?> clazz : HOSTOBJECT_CLASSES) {
                 try {
+
+                    // register the host object
                     ScriptableObject.defineClass(rootScope, clazz);
 
-                    Scriptable hostObject = (Scriptable) clazz.newInstance();
-                    SlingWrapFactory.INSTANCE.registerWrapper(clazz,
-                        hostObject.getClassName());
-
+                    // only register SlignWrappers with our wrapper factory
+                    if (SlingWrapper.class.isAssignableFrom(clazz)) {
+                        final SlingWrapper hostObject = (SlingWrapper) clazz.newInstance();
+                        for (Class<?> c : hostObject.getWrappedClasses()) {
+                            SlingWrapFactory.INSTANCE.registerWrapper(c,
+                                hostObject.getClassName());
+                        }
+                    }
                 } catch (Throwable t) {
                     // TODO: log
                 }
