@@ -33,25 +33,28 @@ import org.apache.sling.api.SlingException;
  */
 public class ResourceNotFoundException extends SlingException {
 
-    private final int statusCode;
+    private final String resource;
 
-    public ResourceNotFoundException(int statusCode, String message) {
-        super(message);
-        this.statusCode = statusCode;
+    public ResourceNotFoundException(String message) {
+        this(null, message);
     }
-
-    public ResourceNotFoundException(int statusCode, String message,
-            Throwable cause) {
-        super(message, cause);
-        this.statusCode = statusCode;
+    
+    public ResourceNotFoundException(String resource, String message) {
+        super(message);
+        this.resource = resource;
     }
 
     public ResourceNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-        this.statusCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        this(null, message, cause);
     }
 
-    public int getStatusCode() {
-        return statusCode;
+    public ResourceNotFoundException(String resource, String message,
+            Throwable cause) {
+        super(message, cause);
+        this.resource = resource;
+    }
+
+    public String getResource() {
+        return resource;
     }
 }
