@@ -65,7 +65,8 @@
                             org.apache.sling.scripting.resolver;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scripting.resolver.impl
+                            org.apache.sling.scripting.resolver.impl,
+                            org.apache.sling.scripting.resolver.impl.helper
                         </Private-Package>
                     </instructions>
                 </configuration>
