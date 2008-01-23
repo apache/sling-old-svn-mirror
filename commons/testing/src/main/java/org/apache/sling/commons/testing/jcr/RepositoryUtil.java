@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.resource.testhelper;
+package org.apache.sling.commons.testing.jcr;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,8 @@ import org.apache.jackrabbit.core.jndi.RegistryHelper;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /**
- * Utility class for managing JCR repositories.
+ * Utility class for managing JCR repositories, used to
+ * initialize temporary Jackrabbit repositories for testing.
  */
 public class RepositoryUtil {
 
@@ -52,7 +53,7 @@ public class RepositoryUtil {
 
     public static final String PROVIDER_URL = "localhost";
 
-    public static final String CONFIG_FILE = "./src/test/test-config/repository-derby.xml";
+    public static final String CONFIG_FILE = "src/test/test-config/jackrabbit-test-config.xml";
 
     public static final String HOME_DIR = "target/repository";
 

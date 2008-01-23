@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.testhelper;
+package org.apache.sling.commons.testing.jcr;
 
 import java.io.InputStream;
 import java.util.Calendar;
