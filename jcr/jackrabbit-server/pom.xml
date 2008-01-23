@@ -117,7 +117,7 @@
                             org.apache.jackrabbit.core.version;
                             org.apache.jackrabbit.core.virtual;
                             org.apache.jackrabbit.core.xml;
-                            version="1.3.1", javax.transaction.*
+                            version="1.4"
                         </Export-Package>
                         <Private-Package>
                             <!-- !org.apache.jackrabbit.*, -->
@@ -134,17 +134,12 @@
                             org.apache.lucene.*, org.apache.derby.*,
                             
                             <!-- needed since the move to Jackrabbit 1.4 -->
-                             org.apache.jackrabbit.spi.commons.conversion.*,
-                             org.apache.jackrabbit.spi.commons.namespace.*,
-                             org.apache.jackrabbit.spi.*
+                            org.apache.jackrabbit.spi.commons.conversion.*,
+                            org.apache.jackrabbit.spi.commons.namespace.*,
+                            org.apache.jackrabbit.spi.*,
                         </Private-Package>
                         <Import-Package>
                             org.apache.sling.jcr.api,
-
-                            org.apache.jackrabbit,
-                            org.apache.jackrabbit.util,
-                            org.apache.jackrabbit.uuid,
-                            org.apache.jackrabbit.value,
 
                             javax.jcr.*,
 
@@ -164,7 +159,7 @@
                         <!-- Embedd some libraries -->
                         <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Dependency>
-                            jackrabbit-jcr-rmi;jackrabbit-core;inline=true
+                            jackrabbit-jcr-rmi;jackrabbit-core;jackrabbit-jcr-commons;inline=true
                         </Embed-Dependency>
 
                     </instructions>
@@ -187,6 +182,11 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
             <scope>compile</scope>
         </dependency>
 
