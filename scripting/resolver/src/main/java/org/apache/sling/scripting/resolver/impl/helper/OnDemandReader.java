@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.resolver.impl;
+package org.apache.sling.scripting.resolver.impl.helper;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -24,13 +24,13 @@ import java.nio.CharBuffer;
 
 import javax.servlet.ServletRequest;
 
-class LazyRequestReader extends Reader {
+class OnDemandReader extends Reader {
 
     private final ServletRequest request;
 
     private Reader delegatee;
 
-    LazyRequestReader(ServletRequest request) {
+    OnDemandReader(ServletRequest request) {
         this.request = request;
     }
 
