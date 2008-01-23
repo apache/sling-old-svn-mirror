@@ -60,42 +60,42 @@ package org.apache.sling.api.request;
  * <tr>
  * <td>/a/b</td>
  * <td>/a/b</td>
- * <td>""</td>
- * <td>""</td>
- * <td>""</td>
+ * <td>null</td>
+ * <td>null</td>
+ * <td>null</td>
  * </tr>
  * <tr>
  * <td>/a/b.html</td>
  * <td>/a/b</td>
- * <td>""</td>
+ * <td>null</td>
  * <td>html</td>
- * <td>""</td>
+ * <td>null</td>
  * </tr>
  * <tr>
  * <td>/a/b.s1.html</td>
  * <td>/a/b</td>
  * <td>s1</td>
  * <td>html</td>
- * <td>""</td>
+ * <td>null</td>
  * </tr>
  * <tr>
  * <td>/a/b.s1.s2.html</td>
  * <td>/a/b</td>
  * <td>s1.s2</td>
  * <td>html</td>
- * <td>""</td>
+ * <td>null</td>
  * </tr>
  * <tr>
  * <td>/a/b/c/d</td>
  * <td>/a/b</td>
- * <td>""</td>
- * <td>""</td>
+ * <td>null</td>
+ * <td>null</td>
  * <td>/c/d</td>
  * </tr>
  * <tr>
  * <td>/a/b.html/c/d</td>
  * <td>/a/b</td>
- * <td>""</td>
+ * <td>null</td>
  * <td>html</td>
  * <td>/c/d</td>
  * </tr>
@@ -116,14 +116,14 @@ package org.apache.sling.api.request;
  * <tr>
  * <td>/a/b/c/d.s.txt</td>
  * <td>/a/b</td>
- * <td>""</td>
- * <td>""</td>
+ * <td>null</td>
+ * <td>null</td>
  * <td>/c/d.s.txt</td>
  * </tr>
  * <tr>
  * <td>/a/b.html/c/d.s.txt</td>
  * <td>/a/b</td>
- * <td>""</td>
+ * <td>null</td>
  * <td>html</td>
  * <td>/c/d.s.txt</td>
  * </tr>
