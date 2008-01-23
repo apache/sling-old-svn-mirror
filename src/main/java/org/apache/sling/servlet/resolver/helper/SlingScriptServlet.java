@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.scripting.ScriptEvaluationException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 
@@ -56,36 +57,28 @@ public class SlingScriptServlet implements Servlet {
         this.script = script;
     }
 
-    public void service(ServletRequest req, ServletResponse servletResponse)
-            throws ServletException, IOException {
+    /**
+     * @throws ScriptEvaluationException
+     */
+    public void service(ServletRequest req, ServletResponse servletResponse) {
 
         SlingHttpServletRequest request = (SlingHttpServletRequest) req;
         final HttpServletResponse res = (HttpServletResponse)servletResponse;
 
-        try {
-            // prepare the properties for the script
-            SlingBindings props = new SlingBindings();
-            props.put(REQUEST, req);
-            props.put(RESPONSE, res);
-            props.put(FLUSH, TRUE);
+        // prepare the properties for the script
+        SlingBindings props = new SlingBindings();
+        props.put(REQUEST, req);
+        props.put(RESPONSE, res);
+        props.put(FLUSH, TRUE);
 
-            res.setCharacterEncoding("UTF-8");
-            final String contentType = request.getResponseContentType();
-            if(contentType != null) {
-                res.setContentType(contentType);
-            }
-
-            // evaluate the script now using the ScriptEngine
-            script.eval(props);
-
-        } catch (IOException ioe) {
-            throw ioe;
-        } catch (ServletException se) {
-            throw se;
-        } catch (Exception e) {
-            throw new SlingException("Cannot get DefaultSlingScript: "
-                + e.getMessage(), e);
+        res.setCharacterEncoding("UTF-8");
+        final String contentType = request.getResponseContentType();
+        if(contentType != null) {
+            res.setContentType(contentType);
         }
+
+        // evaluate the script now using the ScriptEngine
+        script.eval(props);
     }
 
     public ServletConfig getServletConfig() {
