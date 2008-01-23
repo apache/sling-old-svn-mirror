@@ -112,13 +112,18 @@ public class JsonRenderingTest extends HttpTestBase {
         props.put("cb", "Some text with {curly brackets}");
         props.put("sb", "Some text with [square brackets]");
         props.put("eol", "Some text with end\nof\nlines\nand\ttabs");
+        props.put("html", "Some text with <body class=\"black\" mode=\'none yet\'/> html-like tags");
+        props.put("bs", "Some text with \\backslashes \\here and \\\"there\"");
         
         final String location = testClient.createNode(postUrl, props);
         final String json = getContent(location + ".json", CONTENT_TYPE_JSON);
         
+        int counter=0;
         for(String key : props.keySet()) {
+            counter++;
             assertJavascript(props.get(key),json,"out.println(data." + key + ")");
         }
+        assertEquals("All tests have been run",counter,props.size());
     }
     
     public void testAccentedStrings() throws IOException {
