@@ -18,6 +18,8 @@
  */
 package org.apache.sling.scripting.wrapper;
 
+import javax.jcr.Node;
+
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.ScriptEngineHelper;
 
@@ -27,12 +29,57 @@ import org.apache.sling.scripting.ScriptEngineHelper;
  */
 public class ScriptableNodeTest extends RepositoryScriptingTestBase {
 
+    private Node node;
+    private String testText;
+    private ScriptEngineHelper.Data data;
+    
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        
+        node = getNewNode();
+        testText = "Test-" + System.currentTimeMillis();
+        node.setProperty("text", testText);
+        
+        data = new ScriptEngineHelper.Data();
+        data.put("node", node);
+        data.put("property", node.getProperty("text"));
+    }
+
     public void testPrimaryNodeType() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("node", getTestRootNode());
         assertEquals(
                 "nt:unstructured",
                 script.evalToString("out.print(node.primaryNodeType.name)", data)
+        );
+    }
+
+    public void testViaPropertyNoWrappers() throws Exception {
+        assertEquals(
+                testText,
+                script.evalToString("out.print(property.value.string)", data)
+        );
+    }
+    
+    public void testViaPropertyWithWrappers() throws Exception {
+        assertEquals(
+                testText,
+                script.evalToString("out.print(property)", data)
+        );
+    }
+    
+    public void testViaNodeNoWrappers() throws Exception {
+        assertEquals(
+                testText,
+                script.evalToString("out.print(node.properties.text.value.string)", data)
+        );
+    }
+    
+    public void DIS_testViaNodeWithWrappers() throws Exception {
+        assertEquals(
+                testText,
+                script.evalToString("out.print(node.properties.text)", data)
         );
     }
 }

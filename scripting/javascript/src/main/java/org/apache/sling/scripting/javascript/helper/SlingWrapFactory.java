@@ -48,6 +48,7 @@ public class SlingWrapFactory extends WrapFactory {
     public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
             Object javaObject, Class staticType) {
 
+        Scriptable result = null;
         try {
             String hostObjectName = getHostObjectName(staticType);
 
@@ -56,14 +57,18 @@ public class SlingWrapFactory extends WrapFactory {
             }
 
             if (hostObjectName != null) {
-                return cx.newObject(scope, hostObjectName,
+                result = cx.newObject(scope, hostObjectName,
                     new Object[] { javaObject });
             }
         } catch (Exception e) {
             log.warn("Cannot Wrap " + javaObject, e);
         }
 
-        return super.wrapAsJavaObject(cx, scope, javaObject, staticType);
+        if(result==null) {
+            result = super.wrapAsJavaObject(cx, scope, javaObject, staticType);
+        }
+        
+        return result;
     }
 
     private String getHostObjectName(Class<?> javaClass) {
