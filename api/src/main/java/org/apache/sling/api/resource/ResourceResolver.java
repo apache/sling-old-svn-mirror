@@ -23,8 +23,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.SlingException;
-
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
  * to resolve {@link Resource} objects. The resource resolver is available to
@@ -48,9 +46,13 @@ public interface ResourceResolver {
      * @param request The http servlet request object used to resolve the
      *            resource for.
      * @return The {@link Resource} for the request.
-     * @throws SlingException May be thrown if another error occurrs.
+     * @throws AccessControlException if the user authenticated with the request
+     *             does not have enough rights to access the resource to which
+     *             the request maps.
+     * @throws SlingException A subclass of this exception is thrown if the
+     *             resource to which the request maps cannot be retrieved.
      */
-    Resource resolve(HttpServletRequest request) throws SlingException;
+    Resource resolve(HttpServletRequest request);
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -66,17 +68,17 @@ public interface ResourceResolver {
      *            (current location) and <code>..</code> (parent location),
      *            which are resolved by this method. If the path is relative,
      *            that is the first character is not a slash, a
-     *            <code>ResourceNotFoundException</code> is thrown.
+     *            <code>SlingException</code> is thrown.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws java.security.AccessControlException if an item exists at the
-     *             <code>path</code> but the session of this resource manager
-     *             has no read access to the item.
+     * @throws AccessControlException if an item exists at the <code>path</code>
+     *             but the session of this resource manager has no read access
+     *             to the item.
      * @throws SlingException If an error occurrs trying to load the resource
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
      */
-    Resource getResource(String path) throws SlingException;
+    Resource getResource(String path);
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -100,14 +102,14 @@ public interface ResourceResolver {
      *            this method.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws java.security.AccessControlException if an item exists at the
-     *             <code>path</code> but the session of this resource manager
-     *             has no read access to the item.
+     * @throws AccessControlException if an item exists at the <code>path</code>
+     *             but the session of this resource manager has no read access
+     *             to the item.
      * @throws SlingException If an error occurrs trying to load the resource
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
      */
-    Resource getResource(Resource base, String path) throws SlingException;
+    Resource getResource(Resource base, String path);
 
     /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded
@@ -120,15 +122,13 @@ public interface ResourceResolver {
      * of the given <code>Resource</code>.
      *
      * @param parent The {@link Resource Resource} whose children are requested.
-     *            If <code>null</code> the children of this request's Resource
-     *            are returned.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is
      *             <code>null</code>.
      * @throws SlingException If any error occurs acquiring the child resource
      *             iterator.
      */
-    Iterator<Resource> listChildren(Resource parent) throws SlingException;
+    Iterator<Resource> listChildren(Resource parent);
 
     /**
      * Searches for resources using the given query formulated in the given
@@ -145,10 +145,12 @@ public interface ResourceResolver {
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching
      *         the query.
+     * @throws QuerySyntaxException If the query is not syntactically correct
+     *             according to the query language indicator of if the query
+     *             language is not supported.
      * @throws SlingException If an error occurrs querying for the resources.
      */
-    Iterator<Resource> findResources(String query, String language)
-            throws SlingException;
+    Iterator<Resource> findResources(String query, String language);
 
     /**
      * Queries the storage using the given query formulated in the given
@@ -168,10 +170,12 @@ public interface ResourceResolver {
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances
      *         providing access to the query result.
+     * @throws QuerySyntaxException If the query is not syntactically correct
+     *             according to the query language indicator of if the query
+     *             language is not supported.
      * @throws SlingException If an error occurrs querying for the resources.
      */
-    Iterator<Map<String, Object>> queryResources(String query, String language)
-            throws SlingException;
+    Iterator<Map<String, Object>> queryResources(String query, String language);
 
     /**
      * Adapts this resource resolver to another type. A JCR based resource

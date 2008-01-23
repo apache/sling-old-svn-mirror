@@ -18,12 +18,10 @@
  */
 package org.apache.sling.api.scripting;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.SlingIOException;
+import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 
 /**
@@ -55,27 +53,33 @@ public interface SlingScriptHelper {
     /**
      * Same as {@link #include(String,RequestDispatcherOptions)}, but using
      * empty options.
+     * 
+     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
+     *        while handling the include.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
      */
-    void include(String path) throws ServletException, IOException;
+    void include(String path);
 
     /**
      * Helper method to include the result of processing the request for the
      * given <code>path</code>. This method is intended to be implemented as
      * follows:
-     *
+     * 
      * <pre>
      * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
      * if (dispatcher != null) {
      *     dispatcher.include(getRequest(), getResponse());
      * }
      * </pre>
-     *
+     * 
      * @param path The path to the resource to include.
      * @param options influence the rendering of the included Resource
-     * @throws ServletException Forwarded from including the resource
-     * @throws IOException Forwarded from including the resource
+     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
+     *        while handling the include.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
      */
-    void include(String path, RequestDispatcherOptions options)
-            throws ServletException, IOException;
+    void include(String path, RequestDispatcherOptions options);
 
 }

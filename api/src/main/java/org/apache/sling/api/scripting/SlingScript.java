@@ -18,10 +18,6 @@
  */
 package org.apache.sling.api.scripting;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import org.apache.sling.api.resource.Resource;
 
 /**
@@ -47,18 +43,15 @@ public interface SlingScript {
     /**
      * Evaluates this script using the bound variables as global variables to
      * the script.
-     * 
+     *
      * @param props The {@link SlingBindings} providing the bound variables for
      *            evaluating the script. Any bound variables must conform to the
      *            requirements of the {@link SlingBindings} predefined variables
      *            set.
-     * @throws IOException if an input or output error occurrs.
-     * @throws ServletException if another error occurrs evaluating the script.
-     *             The exception should encapsulate the error cause. This
-     *             exception is also called if the <code>props</code>
-     *             predefined bindings are not compliant with the definition in
-     *             the {@link SlingBindings} class.
+     * @throws ScriptEvaluationException If an error occurrs executing the
+     *             script or preparing the script execution. The cause of the
+     *             evaluation execption is available as the exception cause.
      */
-    void eval(SlingBindings props) throws IOException, ServletException;
+    void eval(SlingBindings props);
 
 }

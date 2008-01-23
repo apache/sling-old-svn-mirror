@@ -31,10 +31,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
@@ -48,8 +46,8 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * If any of the default HTTP methods is to be implemented just overwrite the
  * respective doXXX method. If additional methods should be supported implement
  * appropriate doXXX methods and overwrite the
- * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to
- * dispatch to the doXXX methods as appropriate and overwrite the
+ * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method
+ * to dispatch to the doXXX methods as appropriate and overwrite the
  * {@link #getAllowedRequestMethods(Map)} to add the new method names.
  * <p>
  * Please note, that this base class is intended for applications where data is
@@ -61,7 +59,12 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * which also contains support for the <em>POST</em>, <em>PUT</em> and
  * <em>DELETE</em> methods. This latter class should also be overwritten to
  * add support for HTTP methods modifying data.
- *
+ * <p>
+ * Implementors note: The methods in this class are all declared to throw the
+ * exceptions according to the intentions of the Servlet API rather than
+ * throwing their Sling RuntimeException counter parts. This is done to easy the
+ * integration with traditional servlets.
+ * 
  * @see SlingAllMethodsServlet
  */
 public class SlingSafeMethodsServlet extends GenericServlet {
@@ -74,7 +77,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * the output. Implementations of this class may overwrite this method if
      * they have a more performing implementation. Otherwise, they may just keep
      * this base implementation.
-     *
+     * 
      * @param request The HTTP request
      * @param response The HTTP response which only gets the headers set
      * @throws ServletException Forwarded from the
@@ -108,18 +111,17 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * <p>
      * Implementations of this class should overwrite this method with their
      * implementation for the HTTP <em>GET</em> method support.
-     *
+     * 
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
-     * @throws IOException This implementation throws a
-     *             {@link HttpStatusCodeException} exception with the
-     *             appropriate status code and message.
+     * @throws IOException If the error status cannot be reported back to the
+     *             client.
      */
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
-        handleMethodNotImplemented(request);
+        handleMethodNotImplemented(request, response);
     }
 
     /**
@@ -134,7 +136,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * {@link #getAllowedRequestMethods(Map)} method with the methods gathered.
      * The returned value is then used as the value of the <code>Allow</code>
      * header set.
-     *
+     * 
      * @param request The HTTP request object. Not used.
      * @param response The HTTP response object on which the header is set.
      * @throws ServletException Not thrown by this implementation.
@@ -154,7 +156,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * <p>
      * Extensions of this class do not generally need to overwrite this method
      * as it contains all there is to be done to the <em>TRACE</em> method.
-     *
+     * 
      * @param request The HTTP request whose headers are returned.
      * @param response The HTTP response into which the request headers are
      *            written.
@@ -211,18 +213,17 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * {@link #mayService(HttpServletRequest, HttpServletResponse)} method and
      * add support for any extension HTTP methods through an additional doXXX
      * method.
-     *
+     * 
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
-     * @throws IOException This implementation throws a
-     *             {@link HttpStatusCodeException} exception with the
-     *             appropriate status code and message.
+     * @throws IOException If the error status cannot be reported back to the
+     *             client.
      */
     protected void doGeneric(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
-        handleMethodNotImplemented(request);
+        handleMethodNotImplemented(request, response);
     }
 
     /**
@@ -239,7 +240,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * call this base implementation and in case <code>false</code> is
      * returned add handling for any other method and of course return whether
      * the requested method was known or not.
-     *
+     * 
      * @param request The HTTP request
      * @param response The HTTP response
      * @return <code>true</code> if the requested method (<code>request.getMethod()</code>)
@@ -277,26 +278,28 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * unhandled HTTP request method. In case of HTTP/1.1 a 405 status code
      * (Method Not Allowed) is returned, otherwise a 400 status (Bad Request) is
      * returned.
-     *
+     * 
      * @param request The HTTP request from which the method and protocol values
      *            are extracted to build the appropriate message.
-     * @throws HttpStatusCodeException Always thrown by this method containing
-     *             the appropriate status code and message.
+     * @param response The HTTP response to which the error status is sent.
+     * @throws IOException Thrown if the status cannot be sent to the client.
      */
-    protected void handleMethodNotImplemented(SlingHttpServletRequest request)
-            throws HttpStatusCodeException {
+    protected void handleMethodNotImplemented(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException {
         String protocol = request.getProtocol();
         String msg = "Method " + request.getMethod() + " not supported";
 
-        // for HTTP/1.1 use 405 Method Not Allowed
         if (protocol.endsWith("1.1")) {
-            throw new HttpStatusCodeException(
-                HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
-        }
 
-        // otherwise use 400 Bad Request
-        throw new HttpStatusCodeException(HttpServletResponse.SC_BAD_REQUEST,
-            msg);
+            // for HTTP/1.1 use 405 Method Not Allowed
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, msg);
+
+        } else {
+
+            // otherwise use 400 Bad Request
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
+
+        }
     }
 
     /**
@@ -313,7 +316,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * Implementations of this class should not generally overwrite this method.
      * Rather the {@link #mayService(HttpServletRequest, HttpServletResponse)}
      * method should be overwritten to add support for more HTTP methods.
-     *
+     * 
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Forwarded from the
@@ -346,7 +349,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * method if the request is a HTTP request.
      * <p>
      * Implementations of this class will not generally overwrite this method.
-     *
+     * 
      * @param req The Servlet request
      * @param res The Servlet response
      * @throws ServletException If the request is not a HTTP request or
@@ -388,7 +391,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * the {@link #mayService(HttpServletRequest, HttpServletResponse)} method).
      * This base class implementation should always be called to make sure the
      * default HTTP methods are included in the list.
-     *
+     * 
      * @param declaredMethods The public and protected methods declared in the
      *            extension of this class.
      * @return A <code>StringBuffer</code> containing the list of HTTP methods
@@ -424,7 +427,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * {@link #getAllowedRequestMethods(Map)} method. Note, that only extension
      * classes of this class are considered to be sure to not account for the
      * default implementations of the doXXX methods in this class.
-     *
+     * 
      * @param c The <code>Class</code> to get the declared methods from
      * @return The Map of methods considered for support checking.
      */

@@ -16,7 +16,6 @@
  */
 package org.apache.sling.api.services;
 
-
 /**
  * Retrieve named services from a Services registry. Sling OSGi, makes extensive
  * use of this interface to locate OSGi services. Microsling also uses it, but
@@ -27,27 +26,22 @@ public interface ServiceLocator {
 
     /**
      * Lookup a single service
-     *
+     * 
      * @param serviceName The name (interface) of the service.
      * @return The service instance, or null if the service is not available.
      */
     <ServiceType> ServiceType getService(Class<ServiceType> type);
 
     /**
-     * Same as getService, but throws a ServiceNotAvailableException if the
-     * requested service is not currently available
-     */
-    <ServiceType> ServiceType getRequiredService(Class<ServiceType> type)
-            throws ServiceNotAvailableException;
-
-    /**
      * Lookup one or several services
-     *
+     * 
      * @param serviceName The name (interface) of the service.
      * @param filter An optional filter (LDAP-like, see OSGi spec)
      * @return The services object or null.
+     * @throws InvalidServiceFilterSyntaxException If the <code>filter</code>
+     *             string is not a valid OSGi service filter string.
      */
-    <ServiceType> ServiceType[] getServices(Class<ServiceType> serviceType, String filter)
-            throws InvalidServiceFilterSyntaxException;;
+    <ServiceType> ServiceType[] getServices(Class<ServiceType> serviceType,
+            String filter);
 
 }
