@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.sling.api.services.InvalidServiceFilterSyntaxException;
 import org.apache.sling.api.services.ServiceLocator;
-import org.apache.sling.api.services.ServiceNotAvailableException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -50,19 +49,6 @@ public class ServiceLocatorImpl implements ServiceLocator {
 
     public ServiceLocatorImpl(BundleContext ctx) {
         this.bundleContext = ctx;
-    }
-
-    /**
-     * @see org.apache.sling.api.services.ServiceLocator#getRequiredService(java.lang.Class)
-     */
-    public <ServiceType> ServiceType getRequiredService(Class<ServiceType> type)
-            throws ServiceNotAvailableException {
-        final ServiceType service = this.getService(type);
-        if (service == null) {
-            throw new ServiceNotAvailableException("Service " + type.getName()
-                + " is not available.");
-        }
-        return service;
     }
 
     /**
@@ -109,8 +95,8 @@ public class ServiceLocatorImpl implements ServiceLocator {
             }
             return result;
         } catch (InvalidSyntaxException ise) {
-            throw new InvalidServiceFilterSyntaxException(
-                "Invalid filter syntax: " + filter, ise);
+            throw new InvalidServiceFilterSyntaxException(filter,
+                "Invalid filter syntax", ise);
         }
     }
 
