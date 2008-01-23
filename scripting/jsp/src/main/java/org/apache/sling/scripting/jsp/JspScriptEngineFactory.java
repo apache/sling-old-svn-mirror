@@ -117,8 +117,12 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         return "2.1";
     }
 
-    private void callJsp(SlingScriptHelper scriptHelper) throws SlingException,
-            IOException {
+    /**
+     * @param scriptHelper
+     * @throws SlingServletException
+     * @throws SlingIOException
+     */
+    private void callJsp(SlingScriptHelper scriptHelper) {
 
         ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
         try {
@@ -266,8 +270,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             if (scriptHelper != null) {
                 try {
                     callJsp(scriptHelper);
-                    // } catch (IOException ioe) {
-                    // } catch (ServletException se) {
                 } catch (Exception e) {
                     throw new ScriptException(e);
                 }
