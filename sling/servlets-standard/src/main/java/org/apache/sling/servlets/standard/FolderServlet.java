@@ -48,7 +48,7 @@ public class FolderServlet extends SlingAllMethodsServlet {
         Resource resource = request.getResource();
         FolderObject content = resource.adaptTo(FolderObject.class);
         if (content == null) {
-            throw new SlingException("Missing mapped object for folder "
+            throw new ServletException("Missing mapped object for folder "
                 + resource.getPath());
         }
 

@@ -55,7 +55,7 @@ public class ReferenceServlet extends SlingAllMethodsServlet {
             RequestDispatcher rd = request.getRequestDispatcher(target);
             rd.include(request, response);
         } else {
-            throw new SlingException("No content for path " + path);
+            throw new ServletException("No content for path " + path);
         }
     }
 }
