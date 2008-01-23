@@ -16,19 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.services;
+package org.apache.sling.api;
 
-import org.apache.sling.api.SlingException;
+import java.io.IOException;
 
-/** Thrown when a required service is not found */
-public class ServiceNotAvailableException extends SlingException {
-    private static final long serialVersionUID = 1L;
+/**
+ * The <code>SlingIOException</code> is a runtime exception wrapper for the
+ * Java <code>IOException</code>. This exception is used to catch an
+ * <code>IOException</code> and forward it as a runtime exception to be
+ * handled at the outermost level.
+ */
+public class SlingIOException extends SlingException {
 
-    public ServiceNotAvailableException(String reason) {
-        super(reason);
+    public SlingIOException(IOException cause) {
+        super(cause);
     }
 
-    public ServiceNotAvailableException(String reason, Throwable cause) {
-        super(reason, cause);
-    }
 }

@@ -16,29 +16,42 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.services;
+package org.apache.sling.api.resource;
 
 import org.apache.sling.api.SlingException;
 
-/** Thrown when an invalid service filter is used */
-public class InvalidServiceFilterSyntaxException extends SlingException {
+/**
+ * The <code>QuerySyntaxException</code> is thrown by the
+ * {@link ResourceResolver#findResources(String, String)} and
+ * {@link ResourceResolver#queryResources(String, String)} methods if the query
+ * syntax is wrong or the requested query language is not available.
+ */
+public class QuerySyntaxException extends SlingException {
 
-    private final String filter;
+    private final String query;
 
-    public InvalidServiceFilterSyntaxException(String filter, String reason) {
-        super(reason);
+    private final String language;
 
-        this.filter = filter;
+    public QuerySyntaxException(String message, String query, String language) {
+        super(message);
+
+        this.query = query;
+        this.language = language;
     }
 
-    public InvalidServiceFilterSyntaxException(String filter, String reason,
+    public QuerySyntaxException(String message, String query, String language,
             Throwable cause) {
-        super(reason, cause);
+        super(message, cause);
 
-        this.filter = filter;
+        this.query = query;
+        this.language = language;
     }
 
-    public String getFilter() {
-        return filter;
+    public String getQuery() {
+        return query;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 }
