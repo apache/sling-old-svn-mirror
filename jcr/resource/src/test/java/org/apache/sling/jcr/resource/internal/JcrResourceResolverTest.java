@@ -40,10 +40,10 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
-import org.apache.sling.jcr.resource.testhelper.RepositoryUtil;
 
 public class JcrResourceResolverTest extends TestCase {
 
