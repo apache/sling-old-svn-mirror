@@ -16,29 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.services;
+package org.apache.sling.api;
 
-import org.apache.sling.api.SlingException;
+import javax.servlet.ServletException;
 
-/** Thrown when an invalid service filter is used */
-public class InvalidServiceFilterSyntaxException extends SlingException {
+/**
+ * The <code>SlingServletException</code> is a runtime exception wrapper for
+ * the Servlet API <code>ServletException</code>. This exception is used to
+ * catch a <code>ServletException</code> and forward it as a runtime exception
+ * to be handled at the outermost level.
+ */
+public class SlingServletException extends SlingException {
 
-    private final String filter;
-
-    public InvalidServiceFilterSyntaxException(String filter, String reason) {
-        super(reason);
-
-        this.filter = filter;
+    public SlingServletException(ServletException cause) {
+        super(cause);
     }
 
-    public InvalidServiceFilterSyntaxException(String filter, String reason,
-            Throwable cause) {
-        super(reason, cause);
-
-        this.filter = filter;
-    }
-
-    public String getFilter() {
-        return filter;
-    }
 }

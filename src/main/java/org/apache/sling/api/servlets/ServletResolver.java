@@ -19,7 +19,6 @@
 package org.apache.sling.api.servlets;
 
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
@@ -33,8 +32,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
  * through a <code>RequestDispatcher</code> is handled by the Sling Framework.
  * <p>
  * The servlet resolver service is available from the
- * {@link org.apache.sling.api.services.ServiceLocator} using the interface class
- * as parameter.
+ * {@link org.apache.sling.api.services.ServiceLocator} using the interface
+ * class as parameter.
  */
 public interface ServletResolver {
 
@@ -46,16 +45,18 @@ public interface ServletResolver {
      * The returned servlet must be assumed to be initialized and ready to run.
      * That is, the <code>init</code> nor the <code>destroy</code> methods
      * must <em>NOT</em> be called on the returned servlet.
-     *
+     * 
      * @param request The {@link SlingHttpServletRequest} object used to drive
      *            selection of the servlet.
      * @return The servlet whose <code>service</code> method may be called to
      *         handle the request.
-     * @throws ServletException Is thrown if an error occurrs while trying to
-     *             find an appropriate servlet to handle the request or if no
-     *             servlet could be resolved to handle the request.
+     * @throws AccessControlException If the script to which the request
+     *             resolves cannot be accessed due to access control
+     *             restrictions.
+     * @throws SlingException Is thrown if an error occurrs while trying to find
+     *             an appropriate servlet to handle the request or if no servlet
+     *             could be resolved to handle the request.
      */
-    Servlet resolveServlet(SlingHttpServletRequest request)
-            throws ServletException;
+    Servlet resolveServlet(SlingHttpServletRequest request);
 
 }

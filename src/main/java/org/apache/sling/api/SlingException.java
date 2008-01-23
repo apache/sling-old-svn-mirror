@@ -18,13 +18,18 @@
  */
 package org.apache.sling.api;
 
-import javax.servlet.ServletException;
-
 /**
- * The <code>SlingException</code> class defines a general exception that may
- * be thrown when unexpected situations occurr while processing requests.
+ * The <code>SlingException</code> is the base exception used throughout the
+ * Sling API. This exception should only be thrown if there is no more specific
+ * exception defined in the Sling API for the cause and if a cause can be
+ * supplied. Otherwise the more specific exception must be used.
+ * <p>
+ * The <code>SlingException</code> is a <code>RuntimeException</code>
+ * because this exception is not intended to be caught by client code. Rather
+ * this exception (and extensions thereof) should be passed through up to the
+ * actual Sling error and exception handling.
  */
-public class SlingException extends ServletException {
+public class SlingException extends RuntimeException {
 
     /**
      * Serial Version ID for pre Java2 RMI
@@ -34,17 +39,17 @@ public class SlingException extends ServletException {
     /**
      * Constructs a new Sling exception.
      */
-    public SlingException() {
+    protected SlingException() {
         super();
     }
 
     /**
      * Constructs a new Sling exception with the given text. The Sling framework
      * may use the text to write it to a log.
-     * 
+     *
      * @param text the exception text
      */
-    public SlingException(String text) {
+    protected SlingException(String text) {
         super(text);
     }
 
@@ -56,7 +61,7 @@ public class SlingException extends ServletException {
      * <li>include the "root cause" exception
      * <li>include a description message
      * </ul>
-     * 
+     *
      * @param text the exception text
      * @param cause the root cause
      */
@@ -73,10 +78,10 @@ public class SlingException extends ServletException {
      * Constructs a new Sling exception when the Servlet needs to throw an
      * exception. The exception's message is based on the localized message of
      * the underlying exception.
-     * 
+     *
      * @param cause the root cause
      */
-    public SlingException(Throwable cause) {
+    protected SlingException(Throwable cause) {
         super(cause);
 
         // ensure proper JDK 1.4 exception chaining

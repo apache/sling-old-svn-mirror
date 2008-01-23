@@ -16,29 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.services;
+package org.apache.sling.api.scripting;
 
 import org.apache.sling.api.SlingException;
 
-/** Thrown when an invalid service filter is used */
-public class InvalidServiceFilterSyntaxException extends SlingException {
+/**
+ * The <code>ScriptEvaluationException</code> is thrown by the
+ * {@link SlingScript#eval(SlingBindings)} method if an error occurrs evaluating
+ * the script.
+ */
+public class ScriptEvaluationException extends SlingException {
 
-    private final String filter;
+    private final String scriptName;
 
-    public InvalidServiceFilterSyntaxException(String filter, String reason) {
-        super(reason);
+    public ScriptEvaluationException(String scriptName, String message) {
+        super(message);
 
-        this.filter = filter;
+        this.scriptName = scriptName;
     }
 
-    public InvalidServiceFilterSyntaxException(String filter, String reason,
+    public ScriptEvaluationException(String scriptName, String message,
             Throwable cause) {
-        super(reason, cause);
+        super(message, cause);
 
-        this.filter = filter;
+        this.scriptName = scriptName;
     }
 
-    public String getFilter() {
-        return filter;
+    public String getScriptName() {
+        return scriptName;
     }
 }
