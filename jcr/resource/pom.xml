@@ -80,6 +80,11 @@
                         <Private-Package>
                             org.apache.sling.jcr.resource.internal.*,
                             org.apache.jackrabbit.net,
+                            org.apache.jackrabbit;
+                            org.apache.jackrabbit.name;
+                            org.apache.jackrabbit.util;
+                            org.apache.jackrabbit.uuid;
+                            org.apache.jackrabbit.value;-split-package:=merge-first,
                             org.apache.jackrabbit.ocm.lock,
                             org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl,
                             org.apache.jackrabbit.ocm.manager.beanconverter,
@@ -158,6 +163,11 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-ocm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
