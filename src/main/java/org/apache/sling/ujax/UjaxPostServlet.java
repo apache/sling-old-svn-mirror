@@ -30,7 +30,7 @@ import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
@@ -123,7 +123,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             }
 
         } catch(RepositoryException re) {
-            throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,re.toString(),re);
+            throw new SlingException(re.toString(), re);
 
         } finally {
             try {
@@ -188,8 +188,10 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             }
             
             if(s.itemExists(currentPath)) {
-                throw new HttpStatusCodeException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Collision in generated node names for path=" + currentPath);
+                response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Collision in generated node names for path=" + currentPath);
+                return;
             }
 
         } else if(s.itemExists(currentPath)) {
@@ -198,7 +200,9 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             if(item.isNode()) {
                 currentNode = (Node)item;
             } else {
-                throw new HttpStatusCodeException(HttpServletResponse.SC_CONFLICT,"Item at path " + currentPath + " is not a Node");
+                response.sendError(HttpServletResponse.SC_CONFLICT,
+                    "Item at path " + currentPath + " is not a Node");
+                return;
             }
 
         } else {
