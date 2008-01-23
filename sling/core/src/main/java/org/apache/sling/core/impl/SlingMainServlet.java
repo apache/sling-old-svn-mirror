@@ -45,12 +45,12 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
@@ -156,7 +156,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         if (req instanceof HttpServletRequest
             && res instanceof HttpServletResponse) {
 
-            this.service((HttpServletRequest) req, (HttpServletResponse) res);
+            service((HttpServletRequest) req, (HttpServletResponse) res);
+            
         } else {
             throw new ServletException(
                 "Apache Sling must be run in an HTTP servlet environment.");
@@ -198,11 +199,27 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                 getSlingAuthenticator().requestAuthentication(clientRequest,
                     clientResponse);
 
-            } catch (HttpStatusCodeException hsce) {
-                // convert the status code exception to sendError
-                getErrorHandler().handleError(hsce.getStatusCode(),
-                    hsce.getMessage(), clientRequest, clientResponse);
+            } catch (ResourceNotFoundException rnfe) {
+                
+                // send this exception as a 404 status
+                getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
+                    rnfe.getMessage(), clientRequest, clientResponse);
 
+            } catch (SlingException se) {
+                
+                // if we have request data and a non-null active servlet name
+                // we assume, that this is the name of the causing servlet
+                if (requestData != null
+                    && requestData.getActiveServletName() != null) {
+                    clientRequest.setAttribute(ERROR_SERVLET_NAME,
+                        requestData.getActiveServletName());
+                }
+
+                // send this exception as is (albeit unwrapping and wrapped
+                // exception.
+                Throwable t = (se.getCause() != null) ? se.getCause() : se;
+                getErrorHandler().handleError(t, clientRequest, clientResponse);
+                
             } catch (Throwable t) {
 
                 // if we have request data and a non-null active servlet name
@@ -243,7 +260,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         if (rd != null) {
             rd.include(request, response);
         } else {
-            throw new SlingException("Got no request dispatcher for " + path);
+            log.error("includeServlet: Got no request dispatcher for {}", path);
         }
     }
 

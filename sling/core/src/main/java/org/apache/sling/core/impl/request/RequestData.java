@@ -41,20 +41,18 @@ import javax.servlet.ServletResponseWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
-import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
@@ -71,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * The <code>RequestData</code> class provides access to objects which are set
  * on a Servlet Request wide basis such as the repository session, the
  * persistence manager, etc.
- *
+ * 
  * @see ContentData
  */
 public class RequestData implements BufferProvider {
@@ -119,7 +117,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * The name of the currently active serlvet.
-     *
+     * 
      * @see #setActiveServletName(String)
      * @see #getActiveServletName()
      */
@@ -145,8 +143,7 @@ public class RequestData implements BufferProvider {
         JcrResourceResolverFactory rmf = slingMainServlet.getResourceResolverFactory();
         if (rmf == null) {
             log.error("RequestData: Missing JcrResourceResolverFactory");
-            throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND,
-                "No resource can be found");
+            throw new ResourceNotFoundException("No resource can be found");
         }
 
         // officially, getting the manager may fail, but not i this
@@ -217,9 +214,13 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps the ServletRequest to a SlingHttpServletRequest.
+     * 
+     * @throws IllegalArgumentException If the <code>request</code> is not a
+     *             <code>SlingHttpServletRequest</code> and not a
+     *             <code>ServletRequestWrapper</code> wrapping a
+     *             <code>SlingHttpServletRequest</code>.
      */
-    public static SlingHttpServletRequest unwrap(ServletRequest request)
-            throws SlingException {
+    public static SlingHttpServletRequest unwrap(ServletRequest request) {
 
         // early check for most cases
         if (request instanceof SlingHttpServletRequest) {
@@ -238,18 +239,21 @@ public class RequestData implements BufferProvider {
 
         // if we unwrapped everything and did not find a
         // SlingHttpServletRequest, we lost
-        throw new SlingException(
+        throw new IllegalArgumentException(
             "ServletRequest not wrapping SlingHttpServletRequest");
     }
 
     /**
      * Unwraps the SlingHttpServletRequest to a SlingHttpServletRequestImpl
-     *
+     * 
      * @param request
-     * @throws SlingException
+     * @throws IllegalArgumentException If <code>request</code> is not a
+     *             <code>SlingHttpServletRequestImpl</code> and not
+     *             <code>SlingHttpServletRequestWrapper</code> wrapping a
+     *             <code>SlingHttpServletRequestImpl</code>.
      */
     public static SlingHttpServletRequestImpl unwrap(
-            SlingHttpServletRequest request) throws SlingException {
+            SlingHttpServletRequest request) {
         while (request instanceof SlingHttpServletRequestWrapper) {
             request = ((SlingHttpServletRequestWrapper) request).getSlingRequest();
         }
@@ -258,14 +262,19 @@ public class RequestData implements BufferProvider {
             return (SlingHttpServletRequestImpl) request;
         }
 
-        throw new SlingException("SlingHttpServletRequest not of correct type");
+        throw new IllegalArgumentException(
+            "SlingHttpServletRequest not of correct type");
     }
 
     /**
      * Unwraps the ServletRequest to a SlingHttpServletRequest.
+     * 
+     * @throws IllegalArgumentException If the <code>response</code> is not a
+     *             <code>SlingHttpServletResponse</code> and not a
+     *             <code>ServletResponseWrapper</code> wrapping a
+     *             <code>SlingHttpServletResponse</code>.
      */
-    public static SlingHttpServletResponse unwrap(ServletResponse response)
-            throws SlingException {
+    public static SlingHttpServletResponse unwrap(ServletResponse response) {
 
         // early check for most cases
         if (response instanceof SlingHttpServletResponse) {
@@ -284,18 +293,21 @@ public class RequestData implements BufferProvider {
 
         // if we unwrapped everything and did not find a
         // SlingHttpServletResponse, we lost
-        throw new SlingException(
+        throw new IllegalArgumentException(
             "ServletResponse not wrapping SlingHttpServletResponse");
     }
 
     /**
      * Unwraps a SlingHttpServletResponse to a SlingHttpServletResponseImpl
-     *
+     * 
      * @param response
-     * @throws SlingException
+     * @throws IllegalArgumentException If <code>response</code> is not a
+     *             <code>SlingHttpServletResponseImpl</code> and not
+     *             <code>SlingHttpServletResponseWrapper</code> wrapping a
+     *             <code>SlingHttpServletResponseImpl</code>.
      */
     public static SlingHttpServletResponseImpl unwrap(
-            SlingHttpServletResponse response) throws SlingException {
+            SlingHttpServletResponse response) {
         while (response instanceof SlingHttpServletResponseWrapper) {
             response = ((SlingHttpServletResponseWrapper) response).getSlingResponse();
         }
@@ -304,36 +316,60 @@ public class RequestData implements BufferProvider {
             return (SlingHttpServletResponseImpl) response;
         }
 
-        throw new SlingException("SlingHttpServletResponse not of correct type");
+        throw new IllegalArgumentException(
+            "SlingHttpServletResponse not of correct type");
     }
 
-    public static RequestData getRequestData(SlingHttpServletRequest request)
-            throws SlingException {
-        return unwrap(request).getRequestData();
-    }
-
-    public static RequestData getRequestData(ServletRequest request)
-            throws SlingException {
+    /**
+     * @param request
+     * @return
+     * @throws IllegalArgumentException If the <code>request</code> is not a
+     *             <code>SlingHttpServletRequest</code> and not a
+     *             <code>ServletRequestWrapper</code> wrapping a
+     *             <code>SlingHttpServletRequest</code>.
+     */
+    public static RequestData getRequestData(ServletRequest request) {
         return unwrap(unwrap(request)).getRequestData();
     }
 
+    /**
+     * @param request
+     * @return
+     * @throws IllegalArgumentException If <code>request</code> is not a
+     *             <code>SlingHttpServletRequestImpl</code> and not
+     *             <code>SlingHttpServletRequestWrapper</code> wrapping a
+     *             <code>SlingHttpServletRequestImpl</code>.
+     */
+    public static RequestData getRequestData(SlingHttpServletRequest request) {
+        return unwrap(request).getRequestData();
+    }
+
+    /**
+     * @param request
+     * @return
+     * @throws IllegalArgumentException if <code>request</code> is not a
+     *             <code>HttpServletRequest</code> of if <code>request</code>
+     *             is not backed by <code>SlingHttpServletRequestImpl</code>.
+     */
     public static SlingHttpServletRequest toSlingHttpServletRequest(
-            ServletRequest request) throws SlingException {
-        // unwrap to SlingHttpServletRequest
+            ServletRequest request) {
+
+        // unwrap to SlingHttpServletRequest, may throw if no
+        // SlingHttpServletRequest is wrapped in request
         SlingHttpServletRequest cRequest = unwrap(request);
 
-        // check type of response, don't care actually for the response itself
+        // ensure the SlingHttpServletRequest is backed by
+        // SlingHttpServletRequestImpl
         RequestData.unwrap(cRequest);
 
-        // if the servlet response is actually the SlingHttpServletResponse, we
-        // are done
+        // if the request is not wrapper at all, we are done
         if (cRequest == request) {
             return cRequest;
         }
 
         // ensure the request is a HTTP request
         if (!(request instanceof HttpServletRequest)) {
-            throw new SlingException("Request is not an HTTP request");
+            throw new IllegalArgumentException("Request is not an HTTP request");
         }
 
         // otherwise, we create a new response wrapping the servlet response
@@ -342,8 +378,17 @@ public class RequestData implements BufferProvider {
             (HttpServletRequest) request);
     }
 
+    /**
+     * @param response
+     * @return
+     * @throws IllegalArgumentException if <code>response</code> is not a
+     *             <code>HttpServletResponse</code> of if
+     *             <code>response</code> is not backed by
+     *             <code>SlingHttpServletResponseImpl</code>.
+     */
     public static SlingHttpServletResponse toSlingHttpServletResponse(
-            ServletResponse response) throws SlingException {
+            ServletResponse response) {
+        
         // unwrap to SlingHttpServletResponse
         SlingHttpServletResponse cResponse = unwrap(response);
 
@@ -358,7 +403,8 @@ public class RequestData implements BufferProvider {
 
         // ensure the response is a HTTP response
         if (!(response instanceof HttpServletResponse)) {
-            throw new SlingException("Response is not an HTTP response");
+            throw new IllegalArgumentException(
+                "Response is not an HTTP response");
         }
 
         // otherwise, we create a new response wrapping the servlet response
@@ -381,7 +427,7 @@ public class RequestData implements BufferProvider {
      * servlet terminates normally. In case of a Throwable, the active servlet
      * name is not reset and indicates which servlet caused the potential abort
      * of the request.
-     *
+     * 
      * @param request The request object for the service method
      * @param response The response object for the service method
      * @throws IOException May be thrown by the servlet's service method
