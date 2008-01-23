@@ -91,14 +91,18 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
                     // register the host object
                     ScriptableObject.defineClass(rootScope, clazz);
+                    final ScriptableObject host = (ScriptableObject)clazz.newInstance();
 
-                    // only register SlignWrappers with our wrapper factory
                     if (SlingWrapper.class.isAssignableFrom(clazz)) {
-                        final SlingWrapper hostObject = (SlingWrapper) clazz.newInstance();
-                        for (Class<?> c : hostObject.getWrappedClasses()) {
+                        // SlingWrappers can map to several classes if needed
+                        final SlingWrapper hostWrapper = (SlingWrapper) host;
+                        for (Class<?> c : hostWrapper.getWrappedClasses()) {
                             SlingWrapFactory.INSTANCE.registerWrapper(c,
-                                hostObject.getClassName());
+                                hostWrapper.getClassName());
                         }
+                    } else {
+                        // but other ScriptableObjects need to be registered as well
+                        SlingWrapFactory.INSTANCE.registerWrapper(host.getClass(),host.getClassName());
                     }
                 } catch (Throwable t) {
                     // TODO: log

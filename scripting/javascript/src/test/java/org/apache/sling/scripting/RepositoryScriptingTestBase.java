@@ -18,6 +18,10 @@
  */
 package org.apache.sling.scripting;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.naming.NamingException;
+
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 
 
@@ -25,11 +29,16 @@ import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
  *  and scripting functionality */
 public class RepositoryScriptingTestBase extends RepositoryTestBase {
     protected ScriptEngineHelper script;
+    private int counter;
     
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         script = new ScriptEngineHelper();
+    }
+    
+    protected Node getNewNode() throws RepositoryException, NamingException {
+        return getTestRootNode().addNode("test-" + (++counter));
     }
 
 }
