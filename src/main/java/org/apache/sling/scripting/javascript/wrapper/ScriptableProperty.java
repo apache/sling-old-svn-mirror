@@ -22,12 +22,12 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
-import org.mozilla.javascript.Wrapper;
 
-public class ScriptableProperty extends ScriptableObject implements Wrapper {
+public class ScriptableProperty extends ScriptableObject implements SlingWrapper {
 
     public static final String CLASSNAME = "Property";
     public static final Class<?> [] WRAPPED_CLASSES = { Property.class };
@@ -207,9 +207,14 @@ public class ScriptableProperty extends ScriptableObject implements Wrapper {
     }
 
     @Override
+    public Object getDefaultValue(Class typeHint) {
+        return toString();
+    }
+
+    @Override
     public String toString() {
         try {
-            return property.getString();
+            return property.getValue().getString();
         } catch (RepositoryException e) {
             return property.toString();
         }
