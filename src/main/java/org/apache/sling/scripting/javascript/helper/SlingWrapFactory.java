@@ -67,6 +67,9 @@ public class SlingWrapFactory extends WrapFactory {
     }
 
     private String getHostObjectName(Class<?> javaClass) {
+        if(javaClass==null) {
+            return null;
+        }
         String hostObjectName = wrappers.get(javaClass);
         if (hostObjectName == null) {
             hostObjectName = getHostObjectName(javaClass.getSuperclass());
@@ -75,7 +78,7 @@ public class SlingWrapFactory extends WrapFactory {
                 Class<?>[] javaInterfaces = javaClass.getInterfaces();
                 for (int i = 0; i < javaInterfaces.length
                     && hostObjectName == null; i++) {
-                    hostObjectName = getHostObjectName(javaClass);
+                    hostObjectName = getHostObjectName(javaInterfaces[i]);
                 }
             }
         }
