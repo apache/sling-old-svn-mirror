@@ -28,6 +28,8 @@ import javax.servlet.ServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.SlingIOException;
+import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -66,16 +68,33 @@ public class ScriptHelper implements SlingScriptHelper {
         return response;
     }
 
-    public void include(String path) throws ServletException, IOException {
+    /**
+     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
+     *        while handling the include.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
+     */
+    public void include(String path) {
         include(path, null);
     }
 
-    public void include(String path, RequestDispatcherOptions options)
-            throws ServletException, IOException {
+    /**
+     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
+     *        while handling the include.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
+     */
+    public void include(String path, RequestDispatcherOptions options) {
         // TODO: Implement for options !!
         RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
         if (dispatcher != null) {
-            dispatcher.include(getRequest(), getResponse());
+            try {
+                dispatcher.include(getRequest(), getResponse());
+            } catch (IOException ioe) {
+                throw new SlingIOException(ioe);
+            } catch (ServletException se) {
+                throw new SlingServletException(se);
+            }
         }
     }
 

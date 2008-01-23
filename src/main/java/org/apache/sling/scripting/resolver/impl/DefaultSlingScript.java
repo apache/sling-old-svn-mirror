@@ -44,8 +44,10 @@ import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.scripting.ScriptEvaluationException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -68,33 +70,44 @@ class DefaultSlingScript implements SlingScript {
         return scriptResource;
     }
 
-    public void eval(SlingBindings props) throws IOException, ServletException {
+    /**
+     * @throws ScriptEvaluationException
+     */
+    public void eval(SlingBindings props) {
 
-        Bindings bindings = verifySlingBindings(props);
-
-        ScriptContext ctx = new SimpleScriptContext();
-        ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-        ctx.setReader(((SlingHttpServletRequest) bindings.get(REQUEST)).getReader());
-        ctx.setWriter((Writer) bindings.get(OUT));
-        ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
-
-        Reader reader = getScriptReader();
+        String scriptName = getScriptResource().getPath();
 
         try {
+            Bindings bindings = verifySlingBindings(scriptName, props);
+            
+            ScriptContext ctx = new SimpleScriptContext();
+            ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+            ctx.setReader(new LazyRequestReader((SlingHttpServletRequest) bindings.get(REQUEST)));
+            ctx.setWriter((Writer) bindings.get(OUT));
+            ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
+
+            Reader reader = getScriptReader();
+
             // evaluate the script
             scriptEngine.eval(reader, ctx);
 
             // optionall flush the output channel
             Object flushObject = bindings.get(SlingBindings.FLUSH);
-            if (flushObject instanceof Boolean && ((Boolean) flushObject).booleanValue()) {
+            if (flushObject instanceof Boolean
+                && ((Boolean) flushObject).booleanValue()) {
                 ctx.getWriter().flush();
             }
 
             // allways flush the error channel
             ctx.getErrorWriter().flush();
 
+        } catch (IOException ioe) {
+            throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
+                ioe);
         } catch (ScriptException se) {
-            throw new ServletException(se.getMessage(), se);
+            Throwable cause = (se.getCause() == null) ? se : se.getCause();
+            throw new ScriptEvaluationException(scriptName, se.getMessage(),
+                cause);
         }
     }
 
@@ -123,26 +136,27 @@ class DefaultSlingScript implements SlingScript {
         return new BufferedReader(new InputStreamReader(input, encoding));
     }
 
-    private Bindings verifySlingBindings(SlingBindings slingBindings)
-            throws IOException, ServletException {
+    private Bindings verifySlingBindings(String scriptName,
+            SlingBindings slingBindings) throws IOException {
+        
         Object requestObject = slingBindings.get(REQUEST);
         if (!(requestObject instanceof SlingHttpServletRequest)) {
-            throw fail(REQUEST, "Missing or wrong type");
+            throw fail(scriptName, REQUEST, "Missing or wrong type");
         }
 
         Object responseObject = slingBindings.get(RESPONSE);
         if (!(responseObject instanceof SlingHttpServletResponse)) {
-            throw fail(RESPONSE, "Missing or wrong type");
+            throw fail(scriptName, RESPONSE, "Missing or wrong type");
         }
 
         Object resourceObject = slingBindings.get(RESOURCE);
         if (resourceObject != null && !(resourceObject instanceof Resource)) {
-            throw fail(RESOURCE, "Wrong type");
+            throw fail(scriptName, RESOURCE, "Wrong type");
         }
 
         Object writerObject = slingBindings.get(OUT);
         if (writerObject != null && !(writerObject instanceof PrintWriter)) {
-            throw fail(OUT, "Wrong type");
+            throw fail(scriptName, OUT, "Wrong type");
         }
 
         Bindings bindings = new SimpleBindings();
@@ -160,30 +174,30 @@ class DefaultSlingScript implements SlingScript {
             sling = (SlingScriptHelper) slingObject;
 
             if (sling.getRequest() != requestObject) {
-                throw fail(REQUEST,
+                throw fail(scriptName, REQUEST,
                     "Not the same as request field of SlingScriptHelper");
             }
 
             if (sling.getResponse() != responseObject) {
-                throw fail(RESPONSE,
+                throw fail(scriptName, RESPONSE,
                     "Not the same as response field of SlingScriptHelper");
             }
 
             if (resourceObject != null
                 && sling.getRequest().getResource() != resourceObject) {
-                throw fail(RESOURCE,
+                throw fail(scriptName, RESOURCE,
                     "Not the same as resource of the SlingScriptHelper request");
             }
 
             if (writerObject != null
                 && sling.getResponse().getWriter() != writerObject) {
-                throw fail(OUT,
+                throw fail(scriptName, OUT,
                     "Not the same as writer of the SlingScriptHelper response");
             }
 
         } else {
 
-            throw fail(SLING, "Wrong type");
+            throw fail(scriptName, SLING, "Wrong type");
 
         }
 
@@ -191,7 +205,7 @@ class DefaultSlingScript implements SlingScript {
         if (logObject == null) {
             logObject = LoggerFactory.getLogger(getLoggerName());
         } else if (!(logObject instanceof Logger)) {
-            throw fail(LOG, "Wrong type");
+            throw fail(scriptName, LOG, "Wrong type");
         }
 
         // set base variables
@@ -212,8 +226,10 @@ class DefaultSlingScript implements SlingScript {
         return bindings;
     }
 
-    private ServletException fail(String variableName, String message) {
-        return new ServletException(variableName + ": " + message);
+    private ScriptEvaluationException fail(String scriptName,
+            String variableName, String message) {
+        return new ScriptEvaluationException(scriptName, variableName + ": "
+            + message);
     }
 
     private String getLoggerName() {
