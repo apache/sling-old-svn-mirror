@@ -32,7 +32,7 @@
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Repository API and Commons Bundle</name>
+    <name>Sling - Repository API Bundle</name>
     <description>
         This OSGi bundle provides the JCR and Jackrabbit API packages as
         well as a helper service interface to be implemented and
@@ -66,16 +66,17 @@
                             <!-- Export provider API selectively -->
                             org.apache.sling.jcr.api;version=${pom.version},
 
-                            <!-- Re-export JCR API, Jackrabbit API and Jackrabbit JCR Commons -->
+                            <!-- Re-export JCR and Jackrabbit API -->
                             javax.jcr.*;version=1.0,
-                            org.apache.jackrabbit.*;version=1.4;-split-package:=merge-first
+                            org.apache.jackrabbit.api;version=1.4
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.api.internal,
                             org.apache.sling.jcr.api.internal.loader
                         </Private-Package>
                         <Import-Package>
-                            javax.xml.*;org.xml.sax*;resolution:=optional,*
+                            javax.transaction.*;org.xml.sax.*;resolution:=optional,
+                            *
                         </Import-Package>
                     </instructions>
                 </configuration>
@@ -93,11 +94,6 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
             <scope>compile</scope>
         </dependency>
 
