@@ -20,8 +20,6 @@ package org.apache.sling.api.request;
 
 import java.util.HashMap;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-
 /** <code>RequestDispatcherOptions</code> are used in the
  *  {@link SlingHttpServletRequest#getRequestDispatcher(org.apache.sling.api.resource.Resource, RequestDispatcherOptions)}
  *  method, to give more control on some aspects of the include/forward
