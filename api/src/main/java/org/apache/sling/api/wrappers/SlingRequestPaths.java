@@ -18,19 +18,18 @@
  */
 package org.apache.sling.api.wrappers;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 
-/** This class is not a "wrapper" per se, but computes the correct
- *  path info, request URI, etc. for included requests.
- *  
- *  When including a request via {@link RequestDispatcher}, the Servlet
- *  API specifies that target paths of the included request are available
- *  as request attributes. Request.getPathInfo(), for example will return 
- *  the value for the including request, *not* for the included one. 
+/**
+ * This class is not a "wrapper" per se, but computes the correct path info,
+ * request URI, etc. for included requests. When including a request via
+ * {@link RequestDispatcher}, the Servlet API specifies that target paths of
+ * the included request are available as request attributes.
+ * Request.getPathInfo(), for example will return the value for the including
+ * request, *not* for the included one.
  */
 public class SlingRequestPaths {
-    
+
     /**
      * Attribute name used by the RequestDispatcher to indicate the context path
      * of the included request, as a String.
@@ -38,8 +37,8 @@ public class SlingRequestPaths {
     public static final String INCLUDE_CONTEXT_PATH = "javax.servlet.include.context_path";
 
     /**
-     * Attribute name used by the RequestDispatcher to indicate the path info
-     * of the included request, as a String.
+     * Attribute name used by the RequestDispatcher to indicate the path info of
+     * the included request, as a String.
      */
     public static final String INCLUDE_PATH_INFO = "javax.servlet.include.path_info";
 
@@ -61,48 +60,54 @@ public class SlingRequestPaths {
      */
     public static final String INCLUDE_SERVLET_PATH = "javax.servlet.include.servlet_path";
 
-    /** Return the context path for r, using the appropriate request attribute
-     *  if the request is an included one.
+    /**
+     * Return the context path for r, using the appropriate request attribute if
+     * the request is an included one.
      */
     public static String getContextPath(HttpServletRequest r) {
-        final String attr = (String)r.getAttribute(INCLUDE_CONTEXT_PATH);
+        final String attr = (String) r.getAttribute(INCLUDE_CONTEXT_PATH);
         return attr != null ? attr : r.getContextPath();
     }
-    
-    /** Return the context path for r, using the appropriate request attribute
-     *  if the request is an included one.
+
+    /**
+     * Return the context path for r, using the appropriate request attribute if
+     * the request is an included one.
      */
     public static String getPathInfo(HttpServletRequest r) {
-        final String attr = (String)r.getAttribute(INCLUDE_PATH_INFO);
+        final String attr = (String) r.getAttribute(INCLUDE_PATH_INFO);
         return attr != null ? attr : r.getPathInfo();
     }
-    
-    /** Return the query string for r, using the appropriate request attribute
-     *  if the request is an included one.
+
+    /**
+     * Return the query string for r, using the appropriate request attribute if
+     * the request is an included one.
      */
     public static String getQueryString(HttpServletRequest r) {
-        final String attr = (String)r.getAttribute(INCLUDE_QUERY_STRING);
+        final String attr = (String) r.getAttribute(INCLUDE_QUERY_STRING);
         return attr != null ? attr : r.getQueryString();
     }
-    
-    /** Return the request URI for r, using the appropriate request attribute
-     *  if the request is an included one.
+
+    /**
+     * Return the request URI for r, using the appropriate request attribute if
+     * the request is an included one.
      */
     public static String getRequestURI(HttpServletRequest r) {
-        final String attr = (String)r.getAttribute(INCLUDE_REQUEST_URI);
+        final String attr = (String) r.getAttribute(INCLUDE_REQUEST_URI);
         return attr != null ? attr : r.getRequestURI();
     }
-    
-    /** Return the servlet path for r, using the appropriate request attribute
-     *  if the request is an included one.
+
+    /**
+     * Return the servlet path for r, using the appropriate request attribute if
+     * the request is an included one.
      */
     public static String getServletPath(HttpServletRequest r) {
-        final String attr = (String)r.getAttribute(INCLUDE_SERVLET_PATH);
+        final String attr = (String) r.getAttribute(INCLUDE_SERVLET_PATH);
         return attr != null ? attr : r.getServletPath();
     }
-    
-    /** True if r is an included request, in which case it has the 
-     *  INCLUDE_REQUEST_URI attribute
+
+    /**
+     * True if r is an included request, in which case it has the
+     * INCLUDE_REQUEST_URI attribute
      */
     public static boolean isIncluded(HttpServletRequest r) {
         return r.getAttribute(INCLUDE_REQUEST_URI) != null;
