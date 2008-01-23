@@ -40,11 +40,9 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
-import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
@@ -82,7 +80,7 @@ class DefaultSlingScript implements SlingScript {
             
             ScriptContext ctx = new SimpleScriptContext();
             ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-            ctx.setReader(new LazyRequestReader((SlingHttpServletRequest) bindings.get(REQUEST)));
+            ctx.setReader(((SlingHttpServletRequest) bindings.get(REQUEST)).getReader());
             ctx.setWriter((Writer) bindings.get(OUT));
             ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
 

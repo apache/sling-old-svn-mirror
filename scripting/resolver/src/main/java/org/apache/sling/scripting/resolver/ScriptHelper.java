@@ -19,12 +19,9 @@
 package org.apache.sling.scripting.resolver;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
-import javax.servlet.ServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -33,7 +30,8 @@ import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.scripting.resolver.impl.helper.OnDemandReaderRequest;
+import org.apache.sling.scripting.resolver.impl.helper.OnDemandWriterResponse;
 
 /**
  * Simple script helper providing access to the (wrapped) response, the
@@ -52,7 +50,7 @@ public class ScriptHelper implements SlingScriptHelper {
     public ScriptHelper(SlingScript script, SlingHttpServletRequest request,
             SlingHttpServletResponse response) {
         this.script = script;
-        this.request = request;
+        this.request = new OnDemandReaderRequest(request);
         this.response = new OnDemandWriterResponse(response);
     }
 
@@ -94,112 +92,6 @@ public class ScriptHelper implements SlingScriptHelper {
                 throw new SlingIOException(ioe);
             } catch (ServletException se) {
                 throw new SlingServletException(se);
-            }
-        }
-    }
-
-    /**
-     * Simple Response wrapper returning an on-demand writer when asked for a
-     * writer.
-     */
-    private static class OnDemandWriterResponse extends
-            SlingHttpServletResponseWrapper {
-
-        private PrintWriter writer;
-
-        OnDemandWriterResponse(SlingHttpServletResponse delegatee) {
-            super(delegatee);
-        }
-
-        @Override
-        public PrintWriter getWriter() {
-            if (writer == null) {
-                writer = new PrintWriter(new OnDemandWriter(getResponse()));
-            }
-
-            return writer;
-        }
-    }
-
-    /**
-     * A writer acquiring the actual writer to delegate to on demand when the
-     * first data is to be written.
-     */
-    private static class OnDemandWriter extends Writer {
-
-        private final ServletResponse response;
-
-        private Writer delegatee;
-
-        OnDemandWriter(ServletResponse response) {
-            this.response = response;
-        }
-
-        private Writer getWriter() throws IOException {
-            if (delegatee == null) {
-                delegatee = response.getWriter();
-            }
-
-            return delegatee;
-        }
-
-        @Override
-        public void write(int c) throws IOException {
-            synchronized (lock) {
-                getWriter().write(c);
-            }
-        }
-
-        @Override
-        public void write(char[] cbuf) throws IOException {
-            synchronized (lock) {
-                getWriter().write(cbuf);
-            }
-        }
-
-        @Override
-        public void write(char[] cbuf, int off, int len) throws IOException {
-            synchronized (lock) {
-                getWriter().write(cbuf, off, len);
-            }
-        }
-
-        @Override
-        public void write(String str) throws IOException {
-            synchronized (lock) {
-                getWriter().write(str);
-            }
-        }
-
-        @Override
-        public void write(String str, int off, int len) throws IOException {
-            synchronized (lock) {
-                getWriter().write(str, off, len);
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {
-            synchronized (lock) {
-                Writer writer = delegatee;
-                if (writer != null) {
-                    writer.flush();
-                }
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            synchronized (lock) {
-                // flush and close the delegatee if existing, otherwise ignore
-                Writer writer = delegatee;
-                if (writer != null) {
-                    writer.flush();
-                    writer.close();
-
-                    // drop the delegatee now
-                    delegatee = null;
-                }
             }
         }
     }
