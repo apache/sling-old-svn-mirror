@@ -19,19 +19,21 @@ package org.apache.sling.scripting.javascript.wrapper;
 import javax.jcr.Node;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
-import org.mozilla.javascript.Wrapper;
 
 /**
  * Resource in JavaScript has following signature: [Object] getData(); [Object]
  * data [Item] getItem(); [Item] item [String] getResourceType(); [String] type
  * [String] getPath(); [String] path
  */
-public class ScriptableResource extends ScriptableObject implements Wrapper {
+public class ScriptableResource extends ScriptableObject implements SlingWrapper {
 
     public static final String CLASSNAME = "Resource";
+    public static final Class<?> [] WRAPPED_CLASSES = { Resource.class };
 
     private Resource resource;
 
@@ -46,6 +48,10 @@ public class ScriptableResource extends ScriptableObject implements Wrapper {
         this.resource = (Resource) res;
     }
 
+    public Class<?> [] getWrappedClasses() {
+        return WRAPPED_CLASSES;
+    }
+    
     @Override
     public String getClassName() {
         return CLASSNAME;
@@ -58,7 +64,11 @@ public class ScriptableResource extends ScriptableObject implements Wrapper {
 
     public Object jsFunction_getNode() {
         Node node = resource.adaptTo(Node.class);
-        return node != null ? node : Undefined.instance;
+        Object result = Undefined.instance;
+        if(node != null) {
+            result = ScriptRuntime.toObject(this,node);
+        }
+        return result;
     }
 
     /** alias for getNode */

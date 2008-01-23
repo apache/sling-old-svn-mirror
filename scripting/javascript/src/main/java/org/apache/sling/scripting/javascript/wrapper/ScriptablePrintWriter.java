@@ -22,6 +22,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptRuntime;
@@ -29,9 +30,10 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Wrapper;
 
-public class ScriptablePrintWriter extends ScriptableObject implements Wrapper {
+public class ScriptablePrintWriter extends ScriptableObject implements SlingWrapper {
 
     public static final String CLASSNAME = "PrintWriter";
+    public static final Class<?> [] WRAPPED_CLASSES = { PrintWriter.class };
 
     private PrintWriter writer;
 
@@ -54,6 +56,10 @@ public class ScriptablePrintWriter extends ScriptableObject implements Wrapper {
         return CLASSNAME;
     }
 
+    public Class<?> [] getWrappedClasses() {
+        return WRAPPED_CLASSES;
+    }
+    
     // print args to writer if any
     // this method supports write(Object)
     public static void jsFunction_write(Context cx, Scriptable thisObj,

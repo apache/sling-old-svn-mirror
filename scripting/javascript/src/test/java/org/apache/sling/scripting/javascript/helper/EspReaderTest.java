@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
-import org.apache.sling.scripting.javascript.helper.EspReader;
-
 import junit.framework.TestCase;
 
 /**

@@ -30,7 +30,8 @@ import org.mozilla.javascript.Wrapper;
 public class ScriptableProperty extends ScriptableObject implements Wrapper {
 
     public static final String CLASSNAME = "Property";
-
+    public static final Class<?> [] WRAPPED_CLASSES = { Property.class };
+    
     private Property property;
 
     public ScriptableProperty() {
@@ -49,6 +50,10 @@ public class ScriptableProperty extends ScriptableObject implements Wrapper {
         return CLASSNAME;
     }
 
+    public Class<?> [] getWrappedClasses() {
+        return WRAPPED_CLASSES;
+    }
+    
     public Object jsGet_value() {
         try {
             return property.getValue();
@@ -202,14 +207,14 @@ public class ScriptableProperty extends ScriptableObject implements Wrapper {
     }
 
     @Override
-    public Object getDefaultValue(Class typeHint) {
+    public String toString() {
         try {
-            return property.getPath();
+            return property.getString();
         } catch (RepositoryException e) {
-            return super.getDefaultValue(typeHint);
+            return property.toString();
         }
     }
-
+    
     //---------- Wrapper interface --------------------------------------------
 
     public Object unwrap() {
