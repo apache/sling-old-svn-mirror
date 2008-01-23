@@ -24,11 +24,12 @@ import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.HttpStatusCodeException;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         // Access and check our data
         final Resource  r = req.getResource();
         if(r instanceof NonExistingResource) {
-            throw new HttpStatusCodeException(HttpServletResponse.SC_NOT_FOUND, "No data to dump");
+            throw new ResourceNotFoundException("No data to dump");
         }
         
         /* TODO
@@ -84,8 +85,9 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         // Do we have a Node?
         final Node n = r.adaptTo(Node.class);
         if(n == null) {
-            throw new HttpStatusCodeException(
-                HttpServletResponse.SC_NOT_IMPLEMENTED, "Can only dump nodes");
+            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
+                "Can only dump nodes");
+            return;
         }
 
         // SLING-167: the last selector, if present, gives the number of
@@ -97,10 +99,9 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             try {
                 maxRecursionLevels = Integer.parseInt(level);
             } catch(NumberFormatException nfe) {
-                throw new HttpStatusCodeException(HttpServletResponse.SC_BAD_REQUEST,
-                        "Invalid recursion selector value '" + level + "'"
-                );
-                
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid recursion selector value '" + level + "'");
+                return;
             }
         }
 
@@ -127,12 +128,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         resp.getOutputStream().write("{}".getBytes());
     }
 
-    private void reportException(Exception e) throws HttpStatusCodeException {
+    /**
+     * @param e
+     * @throws SlingException wrapping the given exception
+     */
+    private void reportException(Exception e) {
         log.warn("Error in JsonRendererServlet: " + e.toString(),e);
-        throw new HttpStatusCodeException(
-                HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                e.toString(),
-                e
-        );
+        throw new SlingException(e.toString(), e);
     }
 }
