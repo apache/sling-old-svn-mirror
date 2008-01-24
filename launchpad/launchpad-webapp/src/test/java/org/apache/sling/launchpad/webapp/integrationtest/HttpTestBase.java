@@ -58,7 +58,7 @@ public class HttpTestBase extends TestCase {
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_JS = "application/x-javascript";
     public static final String CONTENT_TYPE_CSS = "text/css";
-    
+
     protected UslingIntegrationTestClient testClient;
     protected HttpClient httpClient;
     

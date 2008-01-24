@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.ujax.UjaxPostServlet;
 
 /** Test node deletion via the MicrojaxPostServlet */
 public class PostServletDeleteTest extends HttpTestBase {
@@ -45,9 +46,9 @@ public class PostServletDeleteTest extends HttpTestBase {
     }
 
     public void TODO_FAILS_testDelete() throws IOException {
-        final String urlA = testClient.createNode(postUrl + "/UJAX_create", null);
-        final String urlB = testClient.createNode(postUrl + "/UJAX_create", null);
-        final String urlC = testClient.createNode(postUrl + "/UJAX_create", null);
+        final String urlA = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        final String urlB = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        final String urlC = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
         final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
         
         // initially all nodes must be found

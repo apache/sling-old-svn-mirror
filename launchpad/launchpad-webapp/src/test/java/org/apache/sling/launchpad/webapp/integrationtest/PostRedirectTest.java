@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +27,7 @@ import java.util.Map;
 public class PostRedirectTest extends HttpTestBase {
 
     private String postPath = "CreateNodeTest/" + System.currentTimeMillis();
-    private String postUrl = HTTP_BASE_URL + "/" + postPath + "/UJAX_create";
+    private String postUrl = HTTP_BASE_URL + "/" + postPath + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
     
     public void testForcedRedirect() throws IOException {
         final Map<String,String> params = new HashMap<String,String>();

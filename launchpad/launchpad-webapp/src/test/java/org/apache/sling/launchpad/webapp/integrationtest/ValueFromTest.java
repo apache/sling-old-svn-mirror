@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +36,7 @@ public class ValueFromTest extends HttpTestBase {
         testText = "This is a test " + System.currentTimeMillis();
         
         // create the test node, under a path that's specific to this class to allow collisions
-        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + "/UJAX_create";
+        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
     }

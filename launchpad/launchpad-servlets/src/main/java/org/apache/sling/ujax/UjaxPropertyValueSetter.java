@@ -45,15 +45,16 @@ class UjaxPropertyValueSetter {
      * <input type="hidden" name="lastModified"/> <input type="hidden"
      * name="createdBy"/> <input type="hidden" name="lastModifiedBy"/>
      */
-    void setProperty(Node parent, String name, RequestParameter[] values, String typehint, boolean nodeWasJustCreated)
+    void setProperty(Node parent, RequestProperty prop, boolean nodeWasJustCreated)
             throws RepositoryException {
 
         // set the same timestamp for all values, to ease testing
         final Calendar now = Calendar.getInstance();
-        
-        if (valueProvided(values)) {
+
+        final String name = prop.getName();
+        if (prop.providesValue()) {
             // if user provided a value, don't mess with it
-            setPropertyAsIs(parent, name, values, typehint);
+            setPropertyAsIs(parent, prop);
 
         } else if (CREATED_FIELD.equals(name)) {
             if (nodeWasJustCreated) {
@@ -73,71 +74,74 @@ class UjaxPropertyValueSetter {
 
         } else {
             // no magic field, set value as provided
-            setPropertyAsIs(parent, name, values, typehint);
+            setPropertyAsIs(parent, prop);
         }
     }
 
     /** set property to the current Date */
-    private void setCurrentDate(Node parent, String name, Calendar now) throws RepositoryException {
+    private void setCurrentDate(Node parent, String name, Calendar now)
+            throws RepositoryException {
         removePropertyIfExists(parent, name);
         parent.setProperty(name, now);
     }
 
     /** set property to the current User id */
-    private void setCurrentUser(Node parent, String name) throws RepositoryException {
+    private void setCurrentUser(Node parent, String name)
+            throws RepositoryException {
         removePropertyIfExists(parent, name);
         parent.setProperty(name, parent.getSession().getUserID());
     }
 
-    private void removePropertyIfExists(Node parent, String name) throws RepositoryException {
+    /**
+     * Removes the property with the given name from the parent node if it
+     * exists and if it's not a mandatory property.
+     *
+     * @param parent the parent node
+     * @param name the name of the property to remove
+     * @throws RepositoryException if a repository error occurs.
+     */
+    private void removePropertyIfExists(Node parent, String name)
+            throws RepositoryException {
         if (parent.hasProperty(name)) {
             Property prop = parent.getProperty(name);
-            prop.remove();
+            if (!prop.getDefinition().isMandatory()) {
+                prop.remove();
+            }
         }
     }
 
     /** set property without processing, except for type hints */
-    private void setPropertyAsIs(Node parent, String name, RequestParameter[] values, String typehint) throws RepositoryException {
-        removePropertyIfExists(parent, name);
+    private void setPropertyAsIs(Node parent, RequestProperty prop)
+            throws RepositoryException {
+
+        removePropertyIfExists(parent, prop.getName());
 
         // no explicit typehint
-        if (typehint == null) {
-            // guess type based on mvp information from property
-            // TODO: use old property definition to guess aswell
-            if (values.length > 1) {
-                final String [] stringValues = new String[values.length];
-                int i = 0;
-                for(RequestParameter p : values) {
-                    stringValues[i++] = p.getString();
-                }
-                parent.setProperty(name, stringValues);
-            } else {
-                parent.setProperty(name, values[0].getString());
+        int type = PropertyType.STRING;
+        if (prop.getTypeHint() != null) {
+            try {
+                type = PropertyType.valueFromName(prop.getTypeHint());
+            } catch (Exception e) {
+                // ignore
             }
         }
 
-        // explicit typehint Date
-        if ("Date".equals(typehint)) {
-            parent.setProperty(name, values[0].getString(), PropertyType.DATE);
-        }
-
-        // TODO: accept more typehints including mvp
-        // TODO: binary support
-    }
-
-    /** true if values contains at least one non-empty value */
-    private boolean valueProvided(RequestParameter[] values) {
-        boolean result = false;
-
-        for (RequestParameter p : values) {
-            final String val = p.getString();
-            if(val!=null && val.length() > 0) {
-                result = true;
-                break;
+        String[] values = prop.getStringValues();
+        if (values == null) {
+            // remove property
+            removePropertyIfExists(parent, prop.getName());
+        } else if (values.length == 0) {
+            // do not create new prop here, but clear existing
+            if (parent.hasProperty(prop.getName())) {
+                parent.setProperty(prop.getName(), "");
             }
+        } else if (values.length == 1) {
+            removePropertyIfExists(parent, prop.getName());
+            parent.setProperty(prop.getName(), values[0], type);
+        } else {
+            removePropertyIfExists(parent, prop.getName());
+            parent.setProperty(prop.getName(), values, type);
         }
-
-        return result;
     }
 
 }
