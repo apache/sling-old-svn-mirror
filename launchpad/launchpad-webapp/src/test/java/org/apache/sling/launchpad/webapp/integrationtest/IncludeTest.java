@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -40,7 +42,7 @@ import javax.servlet.http.HttpServletResponse;
         
         // Create the test nodes under a path that's specific to this class to
         // allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + "/UJAX_create";
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         
         // Create two test nodes and store their paths

@@ -51,7 +51,7 @@ public class NodeNameGenerator {
     }
     
     /** Get a "nice" node name, if possible, based on given request 
-     *  @param savePrefix if provided, added in front of our parameterNames
+     *  @param prefix if provided, added in front of our parameterNames
      *  when looking for request parameters
      */
     public String getNodeName(RequestParameterMap parameters, String prefix) {

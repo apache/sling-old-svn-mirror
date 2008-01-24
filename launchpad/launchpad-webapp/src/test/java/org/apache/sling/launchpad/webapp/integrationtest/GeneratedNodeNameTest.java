@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +27,7 @@ import java.util.Map;
  */
 public class GeneratedNodeNameTest extends HttpTestBase {
     
-    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + "/UJAX_create";
+    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
 
     public void testTitle() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();

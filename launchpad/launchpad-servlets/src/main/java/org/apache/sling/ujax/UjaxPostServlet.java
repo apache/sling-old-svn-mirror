@@ -16,20 +16,6 @@
  */
 package org.apache.sling.ujax;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -40,6 +26,18 @@ import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.core.CoreConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
 /** POST servlet that implements the ujax "protocol" */
 public class UjaxPostServlet extends SlingAllMethodsServlet {
@@ -55,11 +53,18 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
      */
     public static final String RP_PREFIX = "ujax:";
 
+    /** suffix that indicates node creation */
+    public static final String DEFAULT_CREATE_SUFFIX = "/*";
+
     /** Optional request parameter: redirect to the specified URL after POST */
     public static final String RP_REDIRECT_TO =  RP_PREFIX + "redirect";
 
     /** Optional request parameter: delete the specified content paths */
     public static final String RP_DELETE_PATH = RP_PREFIX + "delete";
+
+    /** Optional request parameter: move the specified content paths */
+    public static final String RP_MOVE_SRC = RP_PREFIX + "moveSrc";
+    public static final String RP_MOVE_DEST = RP_PREFIX + "moveDest";
 
     /** Optional request parameter: only request parameters starting with this prefix are
      *  saved as Properties when creating a Node. Active only if at least one parameter
@@ -88,6 +93,8 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
 
     public static final String TYPE_HINT_SUFFIX = "@TypeHint";
 
+    public static final String DEFAULT_VALUE_SUFFIX = "@DefaultValue";
+
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
@@ -100,7 +107,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             Node currentNode = currentResource.adaptTo(Node.class);
 
             // need a Node, path and Session
-            String currentPath = null;
+            final String currentPath;
             if(currentNode != null) {
                 currentPath = currentNode.getPath();
                 s = currentNode.getSession();
@@ -113,14 +120,10 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 throw new ServletException("No JCR Session available, currentNode=" + currentNode);
             }
 
-            final String [] pathsToDelete = request.getParameterValues(RP_DELETE_PATH);
-            if(pathsToDelete!=null) {
-                // process deletes if any, and if so don't do anything else
-                deleteNodes(s, pathsToDelete, currentPath, response);
-            } else {
-                // if no deletes, create or update nodes
-                createOrUpdateNodesFromRequest(request, response, s);
-            }
+            // process changes
+            processDeletes(request, s, currentPath);
+            processMoves(request, s, currentPath);
+            createOrUpdateNodesFromRequest(request, response, s);
 
         } catch(RepositoryException re) {
             throw new SlingException(re.toString(), re);
@@ -136,23 +139,9 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         }
     }
 
-    /** Delete specified nodes, and send response */
-    protected void deleteNodes(Session s, String [] pathsToDelete, String currentPath, SlingHttpServletResponse response)
-    throws RepositoryException, IOException {
-        processDeletes(s, pathsToDelete, currentPath);
-        s.save();
-        response.setContentType(getServletContext().getMimeType("dummy.txt"));
-        final PrintWriter pw = new PrintWriter(new OutputStreamWriter(response.getOutputStream()));
-        pw.println("Nodes have been deleted(if they existed):");
-        for(String path : pathsToDelete) {
-            pw.println(path);
-        }
-        pw.flush();
-    }
-
     /** Create or update node(s) according to current request , and send response */
     protected void createOrUpdateNodesFromRequest(SlingHttpServletRequest request, SlingHttpServletResponse response, Session s)
-    throws RepositoryException, IOException {
+            throws RepositoryException, IOException {
 
         // find out the actual "save prefix" to use - only parameters starting with
         // this prefix are saved as Properties, when creating nodes, see setPropertiesFromRequest()
@@ -167,8 +156,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             currentPath = currentPath.substring(0,dotPos);
         }
 
-        // TODO in microsling this was /* but that causes problems as * is not a valid JCR path - temp fix for now
-        final String starSuffix = "/UJAX_create";
+        final String starSuffix = DEFAULT_CREATE_SUFFIX;
         if(currentPath.endsWith(starSuffix)) {
             // If the path ends with a *, create a node under its parent, with
             // a generated node name
@@ -177,9 +165,8 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             
             // if resulting path exists, add a suffix until it's not the case anymore
             if(s.itemExists(currentPath)) {
-                String newPath = currentPath;
                 for(int suffix = 0; suffix < 100; suffix++) {
-                    newPath = currentPath + "_" + suffix;
+                    String newPath = currentPath + "_" + suffix;
                     if(!s.itemExists(newPath)) {
                         currentPath = newPath;
                         break;
@@ -291,8 +278,13 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 propertyName = paramName.substring(savePrefix.length());
             }
 
-            // ignore field with a '@TypeHint' suffix. this is dealt in setProperty()
+            // ignore field with a '@TypeHint' suffix. this is dealt in RequestProperty
             if (propertyName.endsWith(TYPE_HINT_SUFFIX)) {
+                continue;
+            }
+
+            // ignore field with a '@DefaultValue' suffix. this is dealt in RequestProperty
+            if (propertyName.endsWith(DEFAULT_VALUE_SUFFIX)) {
                 continue;
             }
 
@@ -318,71 +310,45 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 }
             }
 
-            // @TypeHint example
-            // <input type="text" name="./age" />
-            // <input type="hidden" name="./age@TypeHint" value="long" />
-            // causes the setProperty using the 'long' property type
-            final String thName = e.getKey() + TYPE_HINT_SUFFIX;
-            final RequestParameter rp = request.getRequestParameter(thName);
-            final String typeHint = rp == null ? null : rp.getString();
-            setProperty(n, request, propertyName, values, createdNodes, typeHint);
+            RequestProperty prop = new RequestProperty(request, savePrefix, propertyName, values);
+            
+            setProperty(n, request, createdNodes, prop);
         }
     }
 
-    /** Set a single Property on node N
-     * @throws RepositoryException */
+    /**
+     * Set a single Property on node N
+     *
+     * @throws RepositoryException if a repository error occurs
+     */
     private void setProperty(Node n, SlingHttpServletRequest request,
-                             String name, RequestParameter[] values,
-                             Set<Node> createdNodes, String typeHint)
+                             Set<Node> createdNodes, RequestProperty prop)
             throws RepositoryException {
 
-        // split the relative path identifying the property to be saved
-        String proppath = name;
-
-        // @ValueFrom can be used to define mappings between form fields and JCR properties
-// TODO
-//        final int vfIndex = name.indexOf("@ValueFrom");
-//        if (vfIndex >= 0) {
-//            // Indirect
-//            proppath = name.substring(0, vfIndex);
-//        } else if (name.indexOf("@") >= 0) {
-//            // skip "Hints"
-//            return;
-//        }
-
-        final String path = n.getPath();
-        String parentpath = "";
-        String propname=name;
-
-        if (propname.indexOf("/")>=0) {
-            parentpath=proppath.substring(0, name.lastIndexOf("/"));
-            propname = proppath.substring(name.lastIndexOf("/") + 1);
-        }
-
-        // if the whole thing ended in a slash -> skip
-        if (propname.equals("")) {
+        if (prop.getName().equals("")) {
             return;
         }
 
         // get or create the parent node
+        final String path = n.getPath();
         final Session s = n.getSession();
         Node parent;
-        if(name.startsWith("/")) {
-            parent = deepCreateNode(s, parentpath, createdNodes);
-
-        } else if (!parentpath.equals("")) {
-            parent = (Node) s.getItem(path + "/" + parentpath);
+        if(prop.getKeyName().startsWith("/")) {
+            parent = deepCreateNode(s, prop.getParentPath(), createdNodes);
+        } else if (!prop.getParentPath().equals("")) {
+            parent = (Node) s.getItem(path + "/" + prop.getParentPath());
         } else {
             parent = (Node) s.getItem(path);
         }
 
-        if (values[0].isFormField()) {
-            final boolean nodeIsNew = createdNodes.contains(parent);
-            propertyValueSetter.setProperty(parent, propname, values, typeHint, nodeIsNew);
+        // call setter
+        if (prop.isFileUpload()) {
+            uploadHandler.setFile(request, parent, prop);
         } else {
-            uploadHandler.setFile(request, parent, propname, values, typeHint);
+            final boolean nodeIsNew = createdNodes.contains(parent);
+            propertyValueSetter.setProperty(parent, prop, nodeIsNew);
         }
-}
+    }
 
     /**
      * Deep creates a node, parent-padding with nt:unstructured nodes
@@ -411,25 +377,66 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         return (parent);
     }
 
-    /** Delete Items at the provided paths
-     *  @param pathsToDelete each path that does not start with / is
-     *      prepended with currentPath
+    /**
+     * Delete Items at the provided paths
+     * @param request the servlet request
+     * @param s the session
+     * @param currentPath the current path
+     * @throws RepositoryException if a repository error occurs
      */
-    private void processDeletes(Session s, String [] pathsToDelete, String currentPath)
-    throws RepositoryException {
-        for(String path : pathsToDelete) {
-            if(!path.startsWith("/")) {
-                path = currentPath + "/" + path;
+    private void processDeletes(SlingHttpServletRequest request, Session s,
+                                String currentPath)
+            throws RepositoryException {
+        final String [] pathsToDelete = request.getParameterValues(RP_DELETE_PATH);
+        if (pathsToDelete != null) {
+            for(String path : pathsToDelete) {
+                if(!path.startsWith("/")) {
+                    path = currentPath + "/" + path;
+                }
+                if(s.itemExists(path)) {
+                    s.getItem(path).remove();
+                    if(log.isDebugEnabled()) {
+                        log.debug("Deleted item " + path);
+                    }
+                } else {
+                    if(log.isDebugEnabled()) {
+                        log.debug("Item '" + path + "' not found for deletion, ignored");
+                    }
+                }
             }
-            if(s.itemExists(path)) {
-                s.getItem(path).remove();
-                if(log.isDebugEnabled()) {
-                    log.debug("Deleted item " + path);
-                }
-            } else {
-                if(log.isDebugEnabled()) {
-                    log.debug("Item '" + path + "' not found for deletion, ignored");
-                }
+        }
+    }
+
+    /**
+     * Move nodes at the provided paths
+     * @param request the servlet request
+     * @param s the session
+     * @param currentPath the current path
+     * @throws RepositoryException if a repository error occurs
+     */
+    private void processMoves(SlingHttpServletRequest request, Session s,
+                                String currentPath)
+            throws RepositoryException {
+        final String [] moveSrc = request.getParameterValues(RP_MOVE_SRC);
+        final String [] moveDest = request.getParameterValues(RP_MOVE_DEST);
+        if (moveSrc == null || moveDest == null) {
+            return;
+        }
+        if (moveSrc.length != moveDest.length) {
+            return;
+        }
+        for (int i=0; i<moveSrc.length; i++) {
+            String src = moveSrc[i];
+            if (!src.startsWith("/")) {
+                src = currentPath + "/" + src;
+            }
+            String dest = moveDest[i];
+            if (!dest.startsWith("/")) {
+                dest = currentPath + "/" + dest;
+            }
+            s.move(src, dest);
+            if (log.isDebugEnabled()) {
+                log.debug("moved {} to {}", src, dest);
             }
         }
     }
@@ -437,20 +444,17 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     /** Return the "save prefix" to use, null if none */
     private String getSavePrefix(SlingHttpServletRequest request) {
         String prefix = request.getParameter(RP_SAVE_PARAM_PREFIX);
-        if(prefix==null) {
+        if (prefix==null) {
             prefix = DEFAULT_SAVE_PARAM_PREFIX;
         }
 
         // if no parameters start with this prefix, it is not used
-        String result = null;
-        for(String name : request.getRequestParameterMap().keySet()) {
-            if(name.startsWith(prefix)) {
-                result = prefix;
-                break;
+        for (String name : request.getRequestParameterMap().keySet()) {
+            if (name.startsWith(prefix)) {
+                return prefix;
             }
         }
-
-        return result;
+        return null;
     }
 
     /** If orderCode is ORDER_ZERO, move n so that it is the first

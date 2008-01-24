@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +39,7 @@ public class NodetypeRenderingTest extends RenderingTestBase {
 
         // create the test node, under a path that's specific to this class to allow collisions
         secondFolderOfContentPath = "" + System.currentTimeMillis();
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + secondFolderOfContentPath + "/UJAX_create";
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + secondFolderOfContentPath + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
         displayUrl = testClient.createNode(url, props);

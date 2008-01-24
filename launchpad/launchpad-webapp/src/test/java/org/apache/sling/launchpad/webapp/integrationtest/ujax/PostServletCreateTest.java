@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.ujax.UjaxPostServlet;
 
 /** Test node creation via the MicrojaxPostServlet */
 public class PostServletCreateTest extends HttpTestBase {
@@ -42,7 +43,7 @@ public class PostServletCreateTest extends HttpTestBase {
     }
 
     public void testCreateNode() throws IOException {
-        final String location = testClient.createNode(postUrl + "/UJAX_create", null);
+        final String location = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
         assertHttpStatus(location, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have generated name",
@@ -76,7 +77,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("a","123");
         props.put("b","456");
         props.put("c","some words");
-        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props);
+        final String createdNodeUrl = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("some words", content, "out.println(data.c)");
@@ -90,7 +91,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("./a","123");
         props.put("./b","456");
         props.put("c","not saved");
-        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props);
+        final String createdNodeUrl = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("undefined", content, "out.println(typeof data.c)");
@@ -105,7 +106,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("STUFF_b","456");
         props.put("c","not saved");
         props.put("ujax:saveParamPrefix","STUFF_");
-        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props,null,false);
+        final String createdNodeUrl = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("undefined", content, "out.println(typeof data.c)");
@@ -119,7 +120,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("++b","456");
         props.put("c","not saved");
         props.put("ujax:saveParamPrefix","++");
-        final String createdNodeUrl = testClient.createNode(postUrl + "/UJAX_create", props,null,false);
+        final String createdNodeUrl = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("undefined", content, "out.println(typeof data.c)");
