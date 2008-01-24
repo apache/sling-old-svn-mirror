@@ -18,8 +18,11 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
+import java.io.File;
+
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.tools.debugger.ScopeProvider;
 
 /**
  * The <code>SlingContextFactory</code> extends the standard Rhino
@@ -29,17 +32,29 @@ import org.mozilla.javascript.ContextFactory;
  */
 public class SlingContextFactory extends ContextFactory {
 
+    private SlingRhinoDebugger debugger;
+    private ScopeProvider scopeProvider;
+    private boolean debuggerActive;
+    
     // conditionally setup the global ContextFactory to be ours. If
     // a global context factory has already been set, we have lost
     // and cannot set this one.
-    public static void setup() {
+    public static void setup(ScopeProvider sp) {
+        // TODO what do we do in the other case? debugger won't work
         if (!hasExplicitGlobal()) {
-            initGlobal(new SlingContextFactory());
+            initGlobal(new SlingContextFactory(sp));
         }
     }
     
     // private as instances of this class are only used by setup()
-    private SlingContextFactory() {}
+    private SlingContextFactory(ScopeProvider sp) 
+    {
+        scopeProvider = sp;
+        
+        // TODO make this configurable via OSGi
+        File f = new File("/tmp/sling.debug");
+        debuggerActive = f.exists();
+    }
     
     @Override
     protected boolean hasFeature(Context cx, int featureIndex) {
@@ -49,5 +64,27 @@ public class SlingContextFactory extends ContextFactory {
 
         return super.hasFeature(cx, featureIndex);
     }
+    
+    @Override
+    protected void onContextCreated(Context cx) {
+        super.onContextCreated(cx);
+        initDebugger(cx);
+    }
 
+    private void initDebugger(Context cx) {
+        if(!debuggerActive) {
+            return;
+        }
+        try {
+            if (debugger == null) {
+                debugger = new SlingRhinoDebugger(getClass().getSimpleName());
+                debugger.setScopeProvider(scopeProvider);
+                debugger.attachTo(this);
+            }
+        } catch (Exception e) {
+            // TODO log
+            System.err.println("SlingContextFactory.initDebugger(): " + e);
+        }
+    }
+    
 }
