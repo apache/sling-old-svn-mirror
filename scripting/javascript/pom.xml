@@ -62,7 +62,6 @@
                         <Private-Package>
                             org.apache.sling.scripting.javascript.*,
                             org.mozilla.classfile,
-                            !org.mozilla.javascript.tools.*,
                             !org.mozilla.javascript.xml.impl.xmlbeans,
                             org.mozilla.javascript.*
                         </Private-Package>

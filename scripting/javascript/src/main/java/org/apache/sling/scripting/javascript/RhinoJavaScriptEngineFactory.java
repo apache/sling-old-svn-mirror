@@ -32,11 +32,12 @@ import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.tools.debugger.ScopeProvider;
 
 /**
  * The <code>RhinoJavaScriptEngineFactory</code> TODO
  */
-public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
+public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory implements ScopeProvider {
 
     public final static String JS_SCRIPT_EXTENSION = "js";
 
@@ -48,13 +49,12 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
         ScriptablePrintWriter.class };
 
     private final String languageVersion;
-
     private Scriptable rootScope;
 
     public RhinoJavaScriptEngineFactory() {
 
         // initialize the Rhino Context Factory
-        SlingContextFactory.setup();
+        SlingContextFactory.setup(this);
 
         Context cx = Context.enter();
         setEngineName(getEngineName() + " (" + cx.getImplementationVersion()
@@ -79,6 +79,10 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
     public String getLanguageVersion() {
         return languageVersion;
+    }
+    
+    public Scriptable getScope() {
+        return getRootScope();
     }
 
     private Scriptable getRootScope() {
