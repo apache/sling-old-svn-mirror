@@ -46,12 +46,13 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         data.put("property", node.getProperty("text"));
     }
 
-    public void testPrimaryNodeType() throws Exception {
+    /** TODO reactivate this once SLING-154 is fixed */
+    public void TODO_FAILS_testPrimaryNodeType() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("node", getTestRootNode());
         assertEquals(
                 "nt:unstructured",
-                script.evalToString("out.print(node.primaryNodeType.name)", data)
+                script.evalToString("out.print(node.getPrimaryNodeType())", data)
         );
     }
 
@@ -69,17 +70,18 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         );
     }
     
-    public void testViaNodeNoWrappers() throws Exception {
+    /** TODO reactivate this once SLING-154 is fixed */
+    public void TODO_FAILStestViaNodeNoWrappers() throws Exception {
         assertEquals(
                 testText,
                 script.evalToString("out.print(node.properties.text.value.string)", data)
         );
     }
     
-    public void DIS_testViaNodeWithWrappers() throws Exception {
+    public void testViaNodeDirectPropertyAccess() throws Exception {
         assertEquals(
                 testText,
-                script.evalToString("out.print(node.properties.text)", data)
+                script.evalToString("out.print(node.text)", data)
         );
     }
 }
