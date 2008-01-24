@@ -116,9 +116,12 @@
         <module>microsling/microsling-standalone</module>
         -->
 
-        <!-- Launchpad -->
+        <!-- 
+		TODO add launchpad, but currently its integration
+		tests destroy the "sling" code subdirectory
         <module>launchpad/launchpad-servlets</module>
         <module>launchpad/launchpad-webapp</module>
+        -->
 
     </modules>
     <distributionManagement>
