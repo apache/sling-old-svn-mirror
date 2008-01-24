@@ -56,7 +56,9 @@
             <Private-Package>
               org.apache.sling.launchpad.servlets.*,
               org.apache.sling.launchpad.renderers.*,
-              org.apache.sling.ujax.*
+              org.apache.sling.ujax.*,
+              org.apache.jackrabbit;
+              org.apache.jackrabbit.util;-split-package:=merge-first
             </Private-Package>
           </instructions>
         </configuration>
