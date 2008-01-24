@@ -96,15 +96,12 @@ public class UjaxFileUploadHandler {
      *
      * @param request the servlet request
      * @param parent the parent node
-     * @param name the name of the file/resource node or '*'
-     * @param values the request values
-     * @param typeHint a hint for the node type
+     * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    void setFile(SlingHttpServletRequest request, Node parent, String name,
-                 RequestParameter[] values, String typeHint)
+    void setFile(SlingHttpServletRequest request, Node parent, RequestProperty prop)
             throws RepositoryException {
-        RequestParameter value = values[0];
+        RequestParameter value = prop.getValues()[0];
         assert !value.isFormField();
 
         // ignore if empty
@@ -113,6 +110,7 @@ public class UjaxFileUploadHandler {
         }
 
         // get node name
+        String name = prop.getName();
         if (name.equals("*")) {
             name = value.getFileName();
             // strip of possible path (some browsers include the entire path)
@@ -125,6 +123,7 @@ public class UjaxFileUploadHandler {
         // create an nt:file with that type. if it's invalid, drop it and let
         // the parent node type decide.
         boolean createNtFile = parent.isNodeType(NT_FOLDER);
+        String typeHint = prop.getTypeHint();
         if (typeHint != null) {
             try {
                 NodeTypeManager ntMgr = parent.getSession().getWorkspace().getNodeTypeManager();
