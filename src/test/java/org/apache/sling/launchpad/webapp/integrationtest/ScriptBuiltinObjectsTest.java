@@ -30,17 +30,13 @@ public class ScriptBuiltinObjectsTest extends RenderingTestBase {
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
 
-    public void testNothing() {
-        // TODO remove this all TODO_FAILS_ are gone 
-    }
- 
-    public void TODO_FAILS_testEspBuiltinObjects() throws IOException {
+    public void testEspBuiltinObjects() throws IOException {
         final String toDelete = uploadTestScript("builtin-objects.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes ESP marker",content.contains("ESP template"));
             assertTrue("Content includes test text", content.contains(testText));
-            assertTrue("Content includes ServletContext data",content.contains("ServletContext:text/plain"));
+            assertTrue("Content includes sc data",content.contains("sc:null"));
             assertTrue("Content includes response data",content.contains("SlingHttpServletResponse:false"));
         } finally {
             testClient.delete(toDelete);

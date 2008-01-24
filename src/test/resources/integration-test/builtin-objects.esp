@@ -5,12 +5,15 @@
 		<p><%= resource.node.text %></p>
 	</body>
 	
-	<!-- test access request and to ServletContext -->
+	<!-- 
+		TODO we should test access to a well-known service
+		via the ServiceLocator - for now just check that it's
+		available 
+	-->
 	<%
-		var scClass = Packages.javax.servlet.ServletContext;
-		var sc = request.getServiceLocator().getService(scClass);
+		var sc = request.getServiceLocator().getService(Packages.java.lang.String);
 	%>
-	<p>ServletContext:<%= sc.getMimeType('foo.txt') %></p>
+	<p>sc:<%= sc %></p>
 	
 	<!-- test access to Response -->
 	<p>SlingHttpServletResponse:<%= response.containsHeader('NOT_A_HEADER') %></p>
