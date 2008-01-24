@@ -99,7 +99,8 @@ public class UploadFileTest extends HttpTestBase {
         assertTrue("checking for content", data.contains("http://www.apache.org/licenses/LICENSE-2.0"));
 
         // download structure
-        String json = getContent(urlOfFileNode + ".json", CONTENT_TYPE_JSON);
+        String json = getContent(urlOfFileNode + ".100.json", CONTENT_TYPE_JSON);
+
         // just check for some strings
         assertTrue("checking primary type", json.contains("\"jcr:primaryType\":\"nt:unstructured\""));
         assertTrue("checking mime type", json.contains("\"jcr:mimeType\":\"text/plain\""));

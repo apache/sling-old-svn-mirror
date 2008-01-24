@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +38,7 @@ public class PropertyRenderingTest extends RenderingTestBase {
         slingResourceType = getClass().getName();
 
         // create the test node, under a path that's specific to this class to allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + "/UJAX_create";
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         props.put("sling:resourceType", slingResourceType);
         props.put("text", testText);

@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.ujax.UjaxPostServlet;
 
 /** Test the order option for node creation via the MicrojaxPostServlet */
 public class PostServletOrderTest extends HttpTestBase {
@@ -44,10 +45,10 @@ public class PostServletOrderTest extends HttpTestBase {
     /** Create several nodes without the order option, and check ordering */
     public void testStandardOrder() throws IOException {
         final String [] nodeUrl = new String[4];
-        nodeUrl[0] = testClient.createNode(postUrl + "/UJAX_create", null);
-        nodeUrl[1] = testClient.createNode(postUrl + "/UJAX_create", null);
-        nodeUrl[2] = testClient.createNode(postUrl + "/UJAX_create", null);
-        nodeUrl[3] = testClient.createNode(postUrl + "/UJAX_create", null);
+        nodeUrl[0] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        nodeUrl[1] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        nodeUrl[2] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        nodeUrl[3] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
         
         final String [] nodeName = new String[nodeUrl.length];
         for(int i = 0;  i < nodeUrl.length; i++) {
@@ -71,10 +72,10 @@ public class PostServletOrderTest extends HttpTestBase {
         props.put("ujax:order","0");
         
         final String [] nodeUrl = new String[4];
-        nodeUrl[0] = testClient.createNode(postUrl + "/UJAX_create", props);
-        nodeUrl[1] = testClient.createNode(postUrl + "/UJAX_create", props);
-        nodeUrl[2] = testClient.createNode(postUrl + "/UJAX_create", props);
-        nodeUrl[3] = testClient.createNode(postUrl + "/UJAX_create", props);
+        nodeUrl[0] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        nodeUrl[1] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        nodeUrl[2] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        nodeUrl[3] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
         
         final String [] nodeName = new String[nodeUrl.length];
         for(int i = 0;  i < nodeUrl.length; i++) {

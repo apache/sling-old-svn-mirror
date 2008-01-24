@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +40,7 @@ public class JsonRenderingTest extends HttpTestBase {
         testText = "This is a test " + System.currentTimeMillis();
         
         // create the test node, under a path that's specific to this class to allow collisions
-        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/UJAX_create";
+        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
         createdNodeUrl = testClient.createNode(postUrl, props);
