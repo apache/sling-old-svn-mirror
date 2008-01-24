@@ -115,6 +115,11 @@
         <module>microsling/microsling-core</module>
         <module>microsling/microsling-standalone</module>
         -->
+
+        <!-- Launchpad -->
+        <module>launchpad/launchpad-servlets</module>
+        <module>launchpad/launchpad-webapp</module>
+
     </modules>
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
