@@ -33,6 +33,7 @@ public class StreamServletTest extends RenderingTestBase {
         // TODO remove this all TODO_FAILS_ are gone 
     }
 
+    /** TODO fails as files are currently served by the default renderer, as plain text */
     public void TODO_FAILS_testPlainTextFile() throws Exception {
         final String filename = "testfile.txt";
         final String toDelete = uploadTestScript(filename,filename);
@@ -49,6 +50,7 @@ public class StreamServletTest extends RenderingTestBase {
         }
     }
 
+    /** TODO fails as files are currently served by the default renderer, as plain text */
     public void TODO_FAILS_testHtmlTextFile() throws Exception {
         final String filename = "testfile.html";
         final String toDelete = uploadTestScript(filename,filename);
