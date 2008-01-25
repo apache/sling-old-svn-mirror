@@ -96,7 +96,7 @@ class OcmAdapterFactory implements AdapterFactory {
             if (type.getName().equals(CLASS_OBJECT)) {
                 // unchecked cast
                 try {
-                    return (AdapterType) ocm.getObject(res.getURI());
+                    return (AdapterType) ocm.getObject(res.getPath());
                 } catch (JcrMappingException jme) {
                     // no default mapping, try DefaultMappedObject
                     type = (Class<AdapterType>) DefaultMappedObject.class;
@@ -104,7 +104,7 @@ class OcmAdapterFactory implements AdapterFactory {
             }
             
             // unchecked cast
-            return (AdapterType) ocm.getObject(type, res.getURI());
+            return (AdapterType) ocm.getObject(type, res.getPath());
         } catch (RepositoryException re) {
             // TODO: should log
         } catch (NestableRuntimeException nre) {
