@@ -16,30 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.mapping.classloader;
+package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-/**
- * The <code>ClassLoaderLoader</code> TODO
- */
-public class ClassLoaderLoader implements Loader {
+import javax.jcr.Session;
 
-    private ClassLoader classLoader;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
-    ClassLoaderLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+public class JcrResourceProviderEntry extends ResourceProviderEntry {
+
+    private final Session session;
+
+    public JcrResourceProviderEntry(
+            JcrResourceResolverFactoryImpl resourceResolverFactory,
+            Session session, ResourceProviderEntry[] entries) {
+        super("/", new JcrResourceProvider(resourceResolverFactory, session),
+            null, entries);
+
+        this.session = session;
     }
 
-    /**
-     * @see org.apache.sling.jcr.resource.internal.mapping.classloader.Loader#loadClass(java.lang.String)
-     */
-    public Class loadClass(String name) throws ClassNotFoundException {
-        return this.classLoader.loadClass(name);
-    }
-
-    /**
-     * @see org.apache.sling.jcr.resource.internal.mapping.classloader.Loader#getLoader()
-     */
-    public Object getLoader() {
-        return this.classLoader;
+    public Session getSession() {
+        return session;
     }
 }

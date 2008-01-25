@@ -68,14 +68,6 @@
                     <instructions>
                         <Export-Package>
                             org.apache.sling.jcr.resource;version=${pom.version},
-                            org.apache.jackrabbit.ocm.exception;
-                            org.apache.jackrabbit.ocm.mapper;
-                            org.apache.jackrabbit.ocm.manager;
-                            org.apache.jackrabbit.ocm.manager.atomictypeconverter;
-                            org.apache.jackrabbit.ocm.manager.collectionconverter;
-                            org.apache.jackrabbit.ocm.manager.collectionconverter.impl;
-                            org.apache.jackrabbit.ocm.query;
-                            org.apache.jackrabbit.ocm.version;version=1.4
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.resource.internal.*,
@@ -85,32 +77,16 @@
                             org.apache.jackrabbit.util;
                             org.apache.jackrabbit.uuid;
                             org.apache.jackrabbit.value;-split-package:=merge-first,
-                            org.apache.jackrabbit.ocm.lock,
-                            org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl,
-                            org.apache.jackrabbit.ocm.manager.beanconverter,
-                            org.apache.jackrabbit.ocm.manager.beanconverter.impl,
-                            org.apache.jackrabbit.ocm.manager.cache,
-                            org.apache.jackrabbit.ocm.manager.cache.impl,
-                            org.apache.jackrabbit.ocm.manager.impl,
-                            org.apache.jackrabbit.ocm.manager.objectconverter,
-                            org.apache.jackrabbit.ocm.manager.objectconverter.impl,
-                            org.apache.jackrabbit.ocm.mapper.impl,
-                            org.apache.jackrabbit.ocm.mapper.impl.annotation,
-                            org.apache.jackrabbit.ocm.mapper.model,
-                            org.apache.jackrabbit.ocm.query.impl,
-                            org.apache.jackrabbit.ocm.reflection,
-                            org.apache.jackrabbit.ocm.repository,
                             org.kxml2.io, org.xmlpull.v1
                         </Private-Package>
-                        <Import-Package>
-                            !org.apache.jackrabbit.ocm.mapper.impl.digester,
-                            *
-                        </Import-Package>
 
                         <Sling-Namespaces>
-                            sling=http://sling.apache.org/jcr/sling/1.0,
-                            ocm=http://jackrabbit.apache.org/ocm
+                            sling=http://sling.apache.org/jcr/sling/1.0
                         </Sling-Namespaces>
+
+                        <Embed-Dependency>
+                            jackrabbit-classloader, kxml2
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -146,7 +122,17 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.osgi.commons</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.adapter</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -160,10 +146,7 @@
             <artifactId>slf4j-simple</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-ocm</artifactId>
-        </dependency>
+        <!-- for adapting JCR resources to URLs -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
@@ -178,6 +161,7 @@
         <dependency>
             <groupId>net.sf.kxml</groupId>
             <artifactId>kxml2</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

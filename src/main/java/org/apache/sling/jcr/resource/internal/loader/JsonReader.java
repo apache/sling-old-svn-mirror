@@ -18,13 +18,14 @@
  */
 package org.apache.sling.jcr.resource.internal.loader;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
 import javax.jcr.PropertyType;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -37,7 +38,7 @@ class JsonReader implements NodeReader {
 
     public Node parse(InputStream ins) throws IOException {
         try {
-            String jsonString = IOUtils.toString(ins).trim();
+            String jsonString = toString(ins).trim();
             if (!jsonString.startsWith("{")) {
                 jsonString = "{" + jsonString + "}";
             }
@@ -165,5 +166,36 @@ class JsonReader implements NodeReader {
 
         // fall back to default
         return PropertyType.TYPENAME_STRING;
+    }
+    
+    private String toString(InputStream ins) throws IOException {
+        if (!ins.markSupported()) {
+            ins = new BufferedInputStream(ins);
+        }
+        
+        String encoding;
+        ins.mark(5);
+        int c = ins.read();
+        if (c == '#') {
+            // character encoding following
+            StringBuffer buf = new StringBuffer();
+            for (c = ins.read(); !Character.isWhitespace((char) c); c = ins.read()) {
+                buf.append((char) c);
+            }
+            encoding = buf.toString();
+        } else {
+            ins.reset();
+            encoding = "UTF-8";
+        }
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        int rd;
+        while ( (rd = ins.read(buf)) >= 0) {
+            bos.write(buf, 0, rd);
+        }
+        bos.close(); // just to comply with the contract
+        
+        return new String(bos.toByteArray(), encoding);
     }
 }

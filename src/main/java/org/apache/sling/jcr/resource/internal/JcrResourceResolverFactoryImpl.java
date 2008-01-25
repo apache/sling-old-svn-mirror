@@ -32,22 +32,21 @@ import javax.jcr.Session;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
-import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.bundle.BundleResourceProvider;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.loader.Loader;
-import org.apache.sling.jcr.resource.internal.mapping.ObjectContentManagerFactory;
+import org.apache.sling.osgi.commons.OsgiUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -72,9 +71,12 @@ import org.slf4j.LoggerFactory;
  *               JcrResourceResolverFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceResolverFactory"
+ * @scr.reference name="ResourceProvider"
+ *                interface="org.apache.sling.api.resource.ResourceProvider"
+ *                cardinality="0..n" policy="dynamic"
  */
 public class JcrResourceResolverFactoryImpl implements
-        JcrResourceResolverFactory, SynchronousBundleListener, ResourceProvider {
+        JcrResourceResolverFactory, BundleListener {
 
     /**
      * @scr.property value="true" type="Boolean"
@@ -124,6 +126,8 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private MimeTypeService mimeTypeService;
 
+    private ComponentContext componentContext;
+    
     /**
      * This services ServiceReference for use in
      * {@link #fireEvent(Bundle, String, Map)}
@@ -149,12 +153,6 @@ public class JcrResourceResolverFactoryImpl implements
     private Map<String, Session> adminSessions = new HashMap<String, Session>();
 
     /**
-     * The {@link ObjectContentManagerFactory} used retrieve object content
-     * managers on-demand on behalf of {@link JcrResourceResolver} instances.
-     */
-    private ObjectContentManagerFactory objectContentManagerFactory;
-
-    /**
      * The initial content loader which is called to load initial content up
      * into the repository when the providing bundle is installed.
      */
@@ -165,7 +163,7 @@ public class JcrResourceResolverFactoryImpl implements
     private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
 
     public JcrResourceResolverFactoryImpl() {
-        this.rootProviderEntry = new ResourceProviderEntry("/", this);
+        this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
     }
 
     // ---------- JcrResourceResolverFactory -----------------------------------
@@ -178,7 +176,9 @@ public class JcrResourceResolverFactoryImpl implements
      * may be cast.
      */
     public ResourceResolver getResourceResolver(Session session) {
-        return new JcrResourceResolver(this, session);
+        JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(this,
+            session, rootProviderEntry.getEntries());
+        return new JcrResourceResolver(sessionRoot, this);
     }
 
     // ---------- BundleListener -----------------------------------------------
@@ -214,14 +214,13 @@ public class JcrResourceResolverFactoryImpl implements
                             + event.getBundle().getBundleId() + ")", t);
                 }
 
-                // register mappings before the bundle gets activated
-                objectContentManagerFactory.registerMapperClient(event.getBundle());
+            case BundleEvent.STARTED:
+                // register resource provider for the started bundle
                 addBundleResourceProvider(event.getBundle());
                 break;
 
             case BundleEvent.STOPPED:
-                // remove mappings after the bundle has stopped
-                objectContentManagerFactory.unregisterMapperClient(event.getBundle());
+                // remove resource provider after the bundle has stopped
                 removeBundleResourceProvider(event.getBundle());
                 break;
 
@@ -229,17 +228,6 @@ public class JcrResourceResolverFactoryImpl implements
                 initialContentLoader.unregisterBundle(event.getBundle());
                 break;
         }
-    }
-
-    // ---------- ResourceProvider ---------------------------------------------
-
-    public String[] getRoots() {
-        return new String[] { "/" };
-    }
-
-    public Resource getResource(JcrResourceResolver jcrResourceResolver,
-            String path) throws RepositoryException {
-        return jcrResourceResolver.createResource(path);
     }
 
     // ---------- EventAdmin Event Dispatching ---------------------------------
@@ -294,13 +282,11 @@ public class JcrResourceResolverFactoryImpl implements
 
     // ---------- Implementation helpers --------------------------------------
 
-    /** return the ObjectContentManager, used by JcrResourceResolver */
-    ObjectContentManager getObjectContentManager(Session session) {
-        return objectContentManagerFactory.getObjectContentManager(session);
-    }
-
-    /** check existence of an item with admin session, used by JcrResourceResolver */
-    boolean itemReallyExists(Session clientSession, String path)
+    /**
+     * check existence of an item with admin session, used by
+     * JcrResourceResolver
+     */
+    public boolean itemReallyExists(Session clientSession, String path)
             throws RepositoryException {
 
         // assume this session has more access rights than the client Session
@@ -356,7 +342,16 @@ public class JcrResourceResolverFactoryImpl implements
         if (prefixes != null) {
             BundleResourceProvider brp = new BundleResourceProvider(bundle,
                 prefixes);
-            rootProviderEntry.addResourceProvider(brp);
+            String[] rootPaths = brp.getRoots();
+            for (String rootPath : rootPaths) {
+                try {
+                    rootProviderEntry.addResourceProvider(rootPath, brp);
+                } catch (IllegalStateException ise) {
+                    log.error(
+                        "addBundleResourceProvider: A ResourceProvider for {} is already registered",
+                        rootPath);
+                }
+            }
             bundleResourceProviderMap.put(bundle.getBundleId(), brp);
         }
     }
@@ -364,22 +359,24 @@ public class JcrResourceResolverFactoryImpl implements
     private void removeBundleResourceProvider(Bundle bundle) {
         BundleResourceProvider brp = bundleResourceProviderMap.get(bundle.getBundleId());
         if (brp != null) {
-            rootProviderEntry.removeResourceProvider(brp);
+            String[] rootPaths = brp.getRoots();
+            for (String rootPath : rootPaths) {
+                // TODO: Do not remove this path, if another resource
+                //       owns it. This may be the case if adding the provider
+                //       yielded an IllegalStateException
+                rootProviderEntry.removeResourceProvider(rootPath);
+            }
         }
-    }
-
-    ResourceProvider getResourceProvider(String path) {
-        return rootProviderEntry.getResourceProvider(path);
     }
 
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
+        this.componentContext = componentContext;
         this.serviceReference = componentContext.getServiceReference();
 
         this.initialContentLoader = new Loader(this);
-        this.objectContentManagerFactory = new ObjectContentManagerFactory(this);
 
         componentContext.getBundleContext().addBundleListener(this);
 
@@ -395,8 +392,7 @@ public class JcrResourceResolverFactoryImpl implements
                 }
 
                 if (bundle.getState() == Bundle.ACTIVE) {
-                    // register active bundles with the mapper client
-                    objectContentManagerFactory.registerMapperClient(bundle);
+                    // add bundle resource provider for active bundles
                     addBundleResourceProvider(bundle);
                 }
             }
@@ -440,7 +436,6 @@ public class JcrResourceResolverFactoryImpl implements
     protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
-        objectContentManagerFactory.dispose();
         initialContentLoader.dispose();
 
         Session[] sessions = adminSessions.values().toArray(
@@ -449,8 +444,41 @@ public class JcrResourceResolverFactoryImpl implements
         for (int i = 0; i < sessions.length; i++) {
             sessions[i].logout();
         }
+        
+        this.componentContext = null;
     }
 
+    protected void bindResourceProvider(ServiceReference reference) {
+        String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
+        if (roots != null && roots.length > 0) {
+            
+            ResourceProvider provider = (ResourceProvider) componentContext.locateService(
+                "ResourceProvider", reference);
+            
+            for (String root : roots) {
+                try {
+                    rootProviderEntry.addResourceProvider(root, provider);
+                } catch (IllegalStateException ise) {
+                    log.error(
+                        "bindResourceProvider: A ResourceProvider for {} is already registered",
+                        root);
+                }
+            }
+        }
+    }
+    
+    protected void unbindResourceProvider(ServiceReference reference) {
+        String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
+        if (roots != null && roots.length > 0) {
+            for (String root : roots) {
+                // TODO: Do not remove this path, if another resource
+                //       owns it. This may be the case if adding the provider
+                //       yielded an IllegalStateException
+                rootProviderEntry.removeResourceProvider(root);
+            }
+        }
+    }
+    
     // ---------- internal helper ----------------------------------------------
 
     /** Returns the JCR repository used by this factory */

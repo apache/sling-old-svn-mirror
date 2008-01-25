@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.api.resource.ResourceProvider;
+
 public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> {
 
     private final String path;
@@ -29,10 +31,18 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     private final String prefix;
 
     private final ResourceProvider provider;
+    
+    private final ResourceProviderEntry parentEntry;
 
     private ResourceProviderEntry[] entries;
 
-    public ResourceProviderEntry(String path, ResourceProvider provider) {
+    public ResourceProviderEntry(String path, ResourceProvider provider,
+            ResourceProviderEntry parentEntry) {
+        this(path, provider, parentEntry, null);
+    }
+
+    public ResourceProviderEntry(String path, ResourceProvider provider,
+            ResourceProviderEntry parentEntry, ResourceProviderEntry[] entries) {
         if (path.endsWith("/")) {
             this.path = path.substring(0, path.length() - 1);
             this.prefix = path;
@@ -41,25 +51,25 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             this.prefix = path + "/";
         }
         this.provider = provider;
+        this.parentEntry = parentEntry;
+        this.entries = entries;
     }
 
-    public void addResourceProvider(ResourceProvider provider) {
-        String[] roots = provider.getRoots();
-        for (int i = 0; i < roots.length; i++) {
-            addResourceProvider(roots[i], provider);
-        }
+    public ResourceProviderEntry getParentEntry() {
+        return parentEntry;
+    }
+    
+    public ResourceProvider getResourceProvider() {
+        return provider;
+    }
+    
+    public ResourceProviderEntry[] getEntries() {
+        return entries;
     }
 
-    public void removeResourceProvider(ResourceProvider provider) {
-        String[] roots = provider.getRoots();
-        for (int i = 0; i < roots.length; i++) {
-            removeResourceProvider(roots[i]);
-        }
-    }
-
-    public ResourceProvider getResourceProvider(String path) {
+    public ResourceProviderEntry getResourceProvider(String path) {
         if (path.equals(this.path)) {
-            return provider;
+            return this;
         } else if (match(path)) {
             if (entries != null) {
 
@@ -67,15 +77,15 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 path = path.substring(this.prefix.length());
 
                 for (ResourceProviderEntry entry : entries) {
-                    ResourceProvider provider = entry.getResourceProvider(path);
-                    if (provider != null) {
-                        return provider;
+                    ResourceProviderEntry test = entry.getResourceProvider(path);
+                    if (test != null) {
+                        return test;
                     }
                 }
             }
 
             // no more specific provider, return mine
-            return provider;
+            return this;
         }
 
         // no match for my prefix, return null
@@ -86,15 +96,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return path.startsWith(prefix);
     }
 
-    // ---------- Comparable<ResourceProviderEntry> interface ------------------
-
-    public int compareTo(ResourceProviderEntry o) {
-        return prefix.compareTo(o.prefix);
-    }
-
-    // ---------- internal -----------------------------------------------------
-
-    private boolean addResourceProvider(String prefix, ResourceProvider provider) {
+    public boolean addResourceProvider(String prefix, ResourceProvider provider) {
         if (prefix.equals(this.path)) {
             throw new IllegalStateException(
                 "ResourceProviderEntry for prefix already exists");
@@ -112,7 +114,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                     } else if (entry.prefix.startsWith(prefix)
                         && entry.prefix.charAt(prefix.length()) == '/') {
                         ResourceProviderEntry newEntry = new ResourceProviderEntry(
-                            prefix, provider);
+                            prefix, provider, this);
                         newEntry.addResourceProvider(entry.path, entry.provider);
                         entries[i] = newEntry;
                         return true;
@@ -123,7 +125,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
             // none found, so add it here
             ResourceProviderEntry entry = new ResourceProviderEntry(prefix,
-                provider);
+                provider, this);
             if (entries == null) {
                 entries = new ResourceProviderEntry[] { entry };
             } else {
@@ -140,7 +142,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return false;
     }
 
-    private boolean removeResourceProvider(String prefix) {
+    public boolean removeResourceProvider(String prefix) {
         if (prefix.equals(path)) {
             return true;
         } else if (match(prefix)) {
@@ -186,4 +188,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
         return false;
     }
+
+    // ---------- Comparable<ResourceProviderEntry> interface ------------------
+
+    public int compareTo(ResourceProviderEntry o) {
+        return prefix.compareTo(o.prefix);
+    }
+
 }
