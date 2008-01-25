@@ -18,8 +18,6 @@
  */
 package org.apache.sling.core;
 
-import org.apache.sling.core.impl.auth.SlingAuthenticator;
-
 /**
  * The <code>CoreConstants</code> interface provides some symbolic constants
  * for well known constant strings in Sling. Even though these constants will
@@ -87,7 +85,8 @@ public class CoreConstants {
     public static final String SLING_SERLVET_NAME = "sling.core.servletName";
 
     /**
-     * The name of the request attribute set by the {@link SlingAuthenticator}
+     * The name of the request attribute set by the
+     * {@link org.apache.sling.core.impl.auth.SlingAuthenticator}
      * when authenticating the request user (value is "javax.jcr.Session").
      * Existence of this attribute in the request, provided it is a JCR Session,
      * signals that authentication has already taken place. This may be used
