@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launchpad.renderers;
+package org.apache.sling.commons.json.jcr;
 
 import java.io.Writer;
 import java.text.DateFormat;
@@ -73,7 +73,7 @@ public class JsonItemWriter {
         writeProperty(jw, 0, p);
         jw.endObject();
     }
-    
+
     /** Dump given node in JSON, optionally recursing into its child nodes */
     protected void dump(Node node, JSONWriter w, int currentRecursionLevel, int maxRecursionLevels)
     throws RepositoryException, JSONException {
@@ -92,6 +92,7 @@ public class JsonItemWriter {
             if (!prop.getDefinition().isMultiple()) {
                 writeProperty(w, currentRecursionLevel, prop);
             } else {
+                w.key(prop.getName()); 
                 w.array();
                 for(Value v : prop.getValues()) {
                     w.value(convertValue(v));
@@ -120,10 +121,10 @@ public class JsonItemWriter {
             dump(n, w, currentRecursionLevel + 1, maxRecursionLevels);
         }
     }
-    
+
     /** true if the current recursion level is active */
     protected boolean recursionLevelActive(int currentRecursionLevel, int maxRecursionLevels) {
-        return currentRecursionLevel < maxRecursionLevels;
+        return maxRecursionLevels < 0 || currentRecursionLevel < maxRecursionLevels;
     }
 
     /**
