@@ -63,4 +63,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+      <dependency>
+        <groupId>javax.jcr</groupId>
+        <artifactId>jcr</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>org.apache.sling.commons.testing</artifactId>
+        <version>2.0.0-incubator-SNAPSHOT</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
 </project>
