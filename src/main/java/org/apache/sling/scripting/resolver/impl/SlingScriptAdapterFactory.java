@@ -38,17 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Find scripts in the repository, based on the current Resource type. The
- * script filename is built using the current HTTP request method name, followed
- * by the extension of the current request and the desired script extension. For
- * example, a "js" script for a GET request on a Resource of type some/type with
- * request extension "html" should be stored as
- * 
- * <pre>
- *      /sling/scripts/some/type/get.html.js
- * </pre>
- * 
- * in the repository.
+ *  AdapterFactory that adapts Resources to the DefaultSlingScript servlet,
+ *  which executes the Resources as scripts.
  * 
  * @scr.component metatype="no"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
