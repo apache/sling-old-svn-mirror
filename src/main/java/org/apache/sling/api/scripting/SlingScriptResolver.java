@@ -47,20 +47,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 public interface SlingScriptResolver {
 
     /**
-     * Resolves a {@link SlingScript} to handle the given request.
-     *
-     * @param request The {@link SlingHttpServletRequest} for which a
-     *            {@link SlingScript} is to be found.
-     * @return The {@link SlingScript} or <code>null</code> if no script can
-     *         be found to handle the request.
-     * @throws AccessControlException If the script to which the request
-     *             resolves cannot be accessed due to access control
-     *             restrictions.
-     * @throws SlingException If an error occurrs trying to find a script.
-     */
-    SlingScript resolveScript(SlingHttpServletRequest request);
-
-    /**
      * Finds the given name to a {@link SlingScript}.
      * <p>
      * The semantic meaning of the name is implementation specific: It may be an
