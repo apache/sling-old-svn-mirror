@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 
 /**
  * The <code>SyntheticResource</code> class is a simple implementation of the
@@ -68,6 +69,11 @@ public class SyntheticResource implements Resource {
         return resourceMetadata;
     }
 
+    /** synthetic resources have no provider */
+    public ResourceProvider getResourceProvider() {
+        return null;
+    }
+    
     public <Type> Type adaptTo(Class<Type> type) {
         return null;
     }

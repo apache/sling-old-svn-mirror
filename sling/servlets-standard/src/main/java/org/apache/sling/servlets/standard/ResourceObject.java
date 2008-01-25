@@ -18,7 +18,7 @@ package org.apache.sling.servlets.standard;
 
 import javax.jcr.Value;
 
-import org.apache.sling.jcr.resource.AbstractMappedObject;
+import org.apache.sling.jcr.ocm.AbstractMappedObject;
 
 /**
  * The <code>ResourceObject</code> TODO

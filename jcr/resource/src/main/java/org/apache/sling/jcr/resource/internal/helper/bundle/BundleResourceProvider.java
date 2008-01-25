@@ -19,12 +19,15 @@
 package org.apache.sling.jcr.resource.internal.helper.bundle;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProvider;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.osgi.framework.Bundle;
 
 public class BundleResourceProvider implements ResourceProvider {
@@ -59,13 +62,22 @@ public class BundleResourceProvider implements ResourceProvider {
         return roots;
     }
 
+    public Resource getResource(HttpServletRequest request, String path) {
+        return getResource(path);
+    }
+
     /**
      * Returns a BundleResource for the path if such an entry exists in the
      * bundle of this provider. The JcrResourceResolver is ignored by this
      * implementation.
      */
-    public Resource getResource(JcrResourceResolver jrm, String path) {
-        return BundleResource.getResource(bundle, path);
+    public Resource getResource(String path) {
+        return BundleResource.getResource(this, bundle, path);
     }
 
+    public Iterator<Resource> listChildren(Resource parent)
+            throws SlingException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

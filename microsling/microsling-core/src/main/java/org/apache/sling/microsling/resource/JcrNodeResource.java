@@ -38,6 +38,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,6 +102,11 @@ public class JcrNodeResource implements Resource {
         return metadata;
     }
 
+    /** Returns null as microsling has no ResourceProviders */
+    public ResourceProvider getResourceProvider() {
+        return null;
+    }
+    
     // --- helpers, public for scripting ----
 
     public Node getNode() {

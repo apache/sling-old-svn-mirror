@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource;
 
-import org.apache.sling.jcr.resource.JcrResourceUtil;
-
 import junit.framework.TestCase;
 
 public class JcrResourceUtilTest extends TestCase {

@@ -115,6 +115,10 @@ public class Main {
             commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
         Logger logger = new Logger();
+        
+        // prevent tons of needless WARN from the framework
+//        logger.setLogLevel(logLevel);
+        logger.setLogLevel(Logger.LOG_ERROR);
 
         // prevent tons of needless WARN messages from the framework
         // logger.setLogLevel(logLevel);

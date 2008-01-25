@@ -30,6 +30,7 @@ import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
@@ -41,6 +42,8 @@ public class BundleResource implements Resource, Descendable {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private final ResourceProvider resourceProvider;
+    
     private final Bundle bundle;
 
     private final String path;
@@ -51,12 +54,12 @@ public class BundleResource implements Resource, Descendable {
 
     private final ResourceMetadata metadata;
 
-    public static BundleResource getResource(Bundle bundle, String path) {
+    public static BundleResource getResource(ResourceProvider resourceProvider, Bundle bundle, String path) {
 
         // if the entry has no trailing slash, try to with a trailing
         // slash in case the entry would be a folder
         if (!path.endsWith("/")) {
-            BundleResource br = getResource(bundle, path + "/");
+            BundleResource br = getResource(resourceProvider, bundle, path + "/");
             if (br != null) {
                 return br;
             }
@@ -65,14 +68,15 @@ public class BundleResource implements Resource, Descendable {
         // has trailing slash or not a folder, try path itself
         URL entry = bundle.getEntry(path);
         if (entry != null) {
-            return new BundleResource(bundle, path);
+            return new BundleResource(resourceProvider, bundle, path);
         }
 
         // the bundle does not contain the path
         return null;
     }
 
-    public BundleResource(Bundle bundle, String path) {
+    public BundleResource(ResourceProvider resourceProvider, Bundle bundle, String path) {
+        this.resourceProvider = resourceProvider;
         this.bundle = bundle;
         this.path = path.endsWith("/")
                 ? path.substring(0, path.length() - 1)
@@ -97,6 +101,10 @@ public class BundleResource implements Resource, Descendable {
         return metadata;
     }
 
+    public ResourceProvider getResourceProvider() {
+        return resourceProvider;
+    }
+    
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
         if (type == InputStream.class) {
@@ -162,7 +170,7 @@ public class BundleResource implements Resource, Descendable {
         if (!isFile()) {
             URL descendent = bundle.getEntry(path + relPath);
             if (descendent != null) {
-                new BundleResource(bundle, descendent.getPath());
+                new BundleResource(resourceProvider, bundle, descendent.getPath());
             }
         }
 

@@ -39,12 +39,14 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Sample Navigation Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.core.resourceTypes" value="sling.sample.navigation"
- * @scr.service
+ * @scr.property name="sling.servlet.resourceTypes" value="sling/sample.navigation"
+ * @scr.property name="sling.servlet.extensions" value="html"
+ * @scr.property name="sling.servlet.methods" value="GET"
+ * @scr.service interface="javax.servlet.Servlet"
  */
 public class Navigation extends SlingSafeMethodsServlet {
 
-    public static final String RESOURCE_TYPE = "sling.sample.navigation";
+    public static final String RESOURCE_TYPE = "sling/sample.navigation";
 
     @Override
     protected void doGet(SlingHttpServletRequest request,

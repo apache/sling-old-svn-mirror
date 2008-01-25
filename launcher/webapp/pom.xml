@@ -129,14 +129,12 @@
                                 <exclude>
                                     resources/bundles/pax-web-service*.jar
                                 </exclude>
-<!-- 
                                 <exclude>
                                     resources/bundles/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
                                     resources/bundles/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
--->
                             </excludes>
                             <includes>
                                 <include>org/**</include>
@@ -157,6 +155,9 @@
                                 <include>jre-*.properties</include>
                             </includes>
                             <excludes>
+                                <exclude>
+                                    resources/bundles/pax-web-service*.jar
+                                </exclude>
                                 <exclude>
                                     resources/bundles/org.apache.felix.http.jetty*.jar
                                 </exclude>

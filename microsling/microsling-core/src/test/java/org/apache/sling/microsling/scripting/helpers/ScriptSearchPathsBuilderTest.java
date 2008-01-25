@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 
 /** Test the ScriptSearchPathsBuilder class */
 public class ScriptSearchPathsBuilderTest extends TestCase {
@@ -102,6 +103,10 @@ public class ScriptSearchPathsBuilderTest extends TestCase {
 
         public <Type> Type adaptTo(Class<Type> type) {
             throw new Error("MockResource does not implement this method");
+        }
+        
+        public ResourceProvider getResourceProvider() {
+            return null;
         }
     }
 }

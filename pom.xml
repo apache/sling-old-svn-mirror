@@ -79,11 +79,13 @@
         <module>jcr/api</module>
         <module>jcr/resource</module>
         <module>jcr/classloader</module>
+        <module>jcr/ocm</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
         <module>jcr/webdav</module>
         
         <!-- OSGi -->
+        <module>osgi/commons</module>
         <module>osgi/assembly</module>
         <module>osgi/console-web</module>
         <module>osgi/log</module>
@@ -91,6 +93,7 @@
 
         <!-- Sling -->
         <module>sling/core</module>
+        <module>sling/adapter</module>
         <module>sling/servlet-resolver</module>
         <module>sling/event</module>
         <module>sling/scheduler</module>

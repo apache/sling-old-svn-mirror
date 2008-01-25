@@ -20,9 +20,8 @@ package org.apache.sling.core.servlets;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 
 /**
  * The <code>ErrorHandler</code> defines the interface of the service used by
@@ -47,8 +46,9 @@ public interface ErrorHandler {
      * @throws IOException May be thrown if an error occurrs sending the
      *             response.
      */
-    void handleError(int status, String message, HttpServletRequest request,
-            HttpServletResponse response) throws IOException;
+    void handleError(int status, String message,
+            SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws IOException;
 
     /**
      * Called to render a response for an uncaught <code>Throwable</code>.
@@ -65,7 +65,7 @@ public interface ErrorHandler {
      * @throws IOException May be thrown if an error occurrs sending the
      *             response.
      */
-    void handleError(Throwable throwable, HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException;
+    void handleError(Throwable throwable, SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException;
 
 }

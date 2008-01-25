@@ -278,7 +278,9 @@ public class JsonReaderTest extends TestCase {
     //---------- internal helper ----------------------------------------------
 
     private Node parse(String json) throws IOException {
-        InputStream ins = new ByteArrayInputStream(json.getBytes());
+        String charSet = "ISO-8859-1";
+        json = "#" + charSet + "\r\n" + json;
+        InputStream ins = new ByteArrayInputStream(json.getBytes(charSet));
         return this.jsonReader.parse(ins);
     }
 

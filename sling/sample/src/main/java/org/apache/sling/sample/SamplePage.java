@@ -18,7 +18,7 @@
  */
 package org.apache.sling.sample;
 
-import org.apache.sling.jcr.resource.AbstractMappedObject;
+import org.apache.sling.jcr.ocm.AbstractMappedObject;
 
 /**
  * The <code>SamplePage</code> is a page level sample content object
