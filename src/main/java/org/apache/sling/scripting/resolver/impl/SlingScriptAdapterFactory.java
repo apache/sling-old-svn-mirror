@@ -21,23 +21,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.apache.sling.api.SlingException;
-import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.api.scripting.SlingScriptResolver;
-import org.apache.sling.scripting.resolver.ScriptPathSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -51,113 +43,63 @@ import org.slf4j.LoggerFactory;
  * by the extension of the current request and the desired script extension. For
  * example, a "js" script for a GET request on a Resource of type some/type with
  * request extension "html" should be stored as
- *
+ * 
  * <pre>
  *      /sling/scripts/some/type/get.html.js
  * </pre>
- *
+ * 
  * in the repository.
- *
+ * 
  * @scr.component metatype="no"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Default SlingScriptResolver"
- * @scr.service
+ * 
+ * @scr.property name="adaptables"
+ *               value="org.apache.sling.api.resource.Resource";
+ * @scr.property name="adapters"
+ *               values.0="org.apache.sling.api.scripting.SlingScript"
+ *               values.1="javax.servlet.Servlet"
+ * 
+ * @scr.service interface="org.apache.sling.api.adapter.AdapterFactory"
+ * 
  * @scr.reference name="ScriptEngineFactory"
  *                interface="javax.script.ScriptEngineFactory"
  *                cardinality="0..n" policy="dynamic"
  */
-public class DefaultSlingScriptResolver implements SlingScriptResolver,
+public class SlingScriptAdapterFactory implements AdapterFactory,
         BundleListener {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultSlingScriptResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
 
     /**
      * jcr:encoding
      */
     public static final String JCR_ENCODING = "jcr:encoding";
 
-    /** @scr.property values.1="/apps" values.2="/libs" */
-    public static final String PROP_SCRIPT_PATH = "path";
-
     private static final String ENGINE_FACTORY_SERVICE = "META-INF/services/"
         + ScriptEngineFactory.class.getName();
 
     private ScriptEngineManager scriptEngineManager;
 
-    private String[] scriptPath;
-
     private List<Bundle> engineSpiBundles = new LinkedList<Bundle>();
 
     private List<ScriptEngineFactory> engineSpiServices = new LinkedList<ScriptEngineFactory>();
 
-    /**
-     * Try to find a script Node that can process the given request, based on
-     * the rules defined above.
-     *
-     * @return null if not found.
-     */
-    public SlingScript resolveScript(final SlingHttpServletRequest request)
-            throws SlingException {
+    //---------- AdapterFactory -----------------------------------------------
+    
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType getAdapter(Object adaptable,
+            Class<AdapterType> type) {
 
-        ResourceResolver resolver = request.getResourceResolver();
+        Resource resource = (Resource) adaptable;
+        String path = resource.getPath();
+        String ext = path.substring(path.lastIndexOf('.') + 1);
 
-        String baseName = ScriptPathSupport.getScriptBaseName(request) + ".";
-
-        SlingScript result = null;
-        Iterator<String> pathIterator = ScriptPathSupport.getPathIterator(
-            request, scriptPath);
-        while (result == null && pathIterator.hasNext()) {
-
-            Resource scriptRoot = resolver.getResource(pathIterator.next());
-            if (scriptRoot != null) {
-
-                log.debug("Looking for script with filename={} under {}",
-                    baseName, scriptRoot.getPath());
-
-                // get the item and ensure it is a node
-                Iterator<Resource> children = resolver.listChildren(scriptRoot);
-                while (result == null && children.hasNext()) {
-                    Resource resource = children.next();
-                    result = getScript(resource, baseName);
-                }
-            }
-        }
-
-        if (result != null) {
-            log.info("Script {} found for Resource={}",
-                result.getScriptResource().getPath(), request.getResource());
-        } else {
-            log.debug("No script found for Resource={}", request.getResource());
-        }
-
-        return result;
-    }
-
-    public SlingScript findScript(ResourceResolver resourceResolver, String path)
-            throws SlingException {
-        Resource scriptResource;
-        if (path.startsWith("/")) {
-            scriptResource = resourceResolver.getResource(path);
-        } else {
-            scriptResource = null;
-            for (int i = 0; scriptResource == null && i < scriptPath.length; i++) {
-                String testPath = scriptPath[i] + "/" + path;
-                scriptResource = resourceResolver.getResource(testPath);
-            }
-        }
-
-        if (scriptResource != null) {
-            SlingScript script = getScript(scriptResource, null);
-            if (script == null) {
-                log.error("Cannot handle script {} for path {}",
-                    scriptResource.getPath(), path);
-            } else {
-                log.debug("Returning script {} for path {}",
-                    scriptResource.getPath(), path);
-                return script;
-            }
-        } else {
-            log.error("No resource found at " + path);
+        ScriptEngine engine = getScriptEngineManager().getEngineByExtension(
+            ext);
+        if (engine != null) {
+            // unchecked cast
+            return (AdapterType) new DefaultSlingScript(resource, engine);
         }
 
         return null;
@@ -165,21 +107,21 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
 
     private ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
-
+            
             // create (empty) script engine manager
             ClassLoader loader = getClass().getClassLoader();
             ScriptEngineManager tmp = new ScriptEngineManager(loader);
-
+            
             // register script engines from bundles
             for (Bundle bundle : engineSpiBundles) {
                 registerFactories(tmp, bundle);
             }
-
+            
             // register script engines from registered services
             for (ScriptEngineFactory factory : engineSpiServices) {
                 registerFactory(tmp, factory);
             }
-
+            
             scriptEngineManager = tmp;
         }
         return scriptEngineManager;
@@ -253,23 +195,6 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
-
-        Object pathProp = context.getProperties().get(PROP_SCRIPT_PATH);
-        if (pathProp instanceof String[]) {
-            scriptPath = (String[]) pathProp;
-        } else if (pathProp instanceof Vector<?>) {
-            Vector<?> pathVector = (Vector<?>) pathProp;
-            List<String> pathList = new ArrayList<String>();
-            for (Object entry : pathVector) {
-                if (entry != null) {
-                    pathList.add(entry.toString());
-                }
-            }
-            scriptPath = pathList.toArray(new String[pathList.size()]);
-        } else {
-            scriptPath = new String[] { "/" };
-        }
-
         context.getBundleContext().addBundleListener(this);
 
         Bundle[] bundles = context.getBundleContext().getBundles();
@@ -301,24 +226,4 @@ public class DefaultSlingScriptResolver implements SlingScriptResolver,
         scriptEngineManager = null;
     }
 
-    // ---------- inner class --------------------------------------------------
-
-    private SlingScript getScript(Resource resource, String baseName) {
-        String path = resource.getPath();
-        String name = path.substring(path.lastIndexOf('/') + 1);
-
-        String ext = null;
-        if (baseName == null && name.indexOf(".")>-1) {
-            ext = name.substring(name.lastIndexOf(".")+1);
-        } else if (name.startsWith(baseName)) {
-            ext = name.substring(baseName.length());
-        }
-        if (ext !=null) {
-            ScriptEngine engine = getScriptEngineManager().getEngineByExtension(ext);
-            if (engine != null) {
-                return new DefaultSlingScript(resource, engine);
-            }
-        }
-        return null;
-    }
 }
