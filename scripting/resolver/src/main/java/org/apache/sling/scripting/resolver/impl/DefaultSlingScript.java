@@ -18,6 +18,8 @@
  */
 package org.apache.sling.scripting.resolver.impl;
 
+import static java.lang.Boolean.TRUE;
+import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
 import static org.apache.sling.api.scripting.SlingBindings.LOG;
 import static org.apache.sling.api.scripting.SlingBindings.OUT;
 import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
@@ -32,6 +34,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javax.script.Bindings;
@@ -40,7 +45,14 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
+import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -53,16 +65,22 @@ import org.apache.sling.scripting.resolver.ScriptHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DefaultSlingScript implements SlingScript {
+class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     private Resource scriptResource;
 
     private ScriptEngine scriptEngine;
 
+    private ServletContext servletContext;
+
+    private Dictionary<String, String> initParameters;
+
     DefaultSlingScript(Resource scriptResource, ScriptEngine scriptEngine) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
     }
+
+    // ---------- SlingScript interface ----------------------------------------
 
     public Resource getScriptResource() {
         return scriptResource;
@@ -102,12 +120,89 @@ class DefaultSlingScript implements SlingScript {
         } catch (IOException ioe) {
             throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
                 ioe);
+            
         } catch (ScriptException se) {
             Throwable cause = (se.getCause() == null) ? se : se.getCause();
             throw new ScriptEvaluationException(scriptName, se.getMessage(),
                 cause);
         }
     }
+
+    // ---------- Servlet interface --------------------------------------------
+
+    public void init(ServletConfig servletConfig) {
+        if (servletConfig != null) {
+            Dictionary<String, String> params = new Hashtable<String, String>();
+            for (Enumeration<?> ne = servletConfig.getInitParameterNames(); ne.hasMoreElements();) {
+                String name = String.valueOf(ne.nextElement());
+                String value = servletConfig.getInitParameter(name);
+                params.put(name, value);
+            }
+            
+            servletContext = servletConfig.getServletContext();
+        }
+    }
+
+    public void service(ServletRequest req, ServletResponse res)
+            throws ServletException, IOException {
+
+        SlingHttpServletRequest request = (SlingHttpServletRequest) req;
+
+        try {
+            // prepare the properties for the script
+            SlingBindings props = new SlingBindings();
+            props.put(REQUEST, req);
+            props.put(RESPONSE, res);
+            props.put(FLUSH, TRUE);
+
+            res.setCharacterEncoding("UTF-8");
+            res.setContentType(request.getResponseContentType());
+
+            // evaluate the script now using the ScriptEngine
+            eval(props);
+
+        } catch (ScriptEvaluationException see) {
+            throw see;
+        } catch (Exception e) {
+            throw new SlingException("Cannot get DefaultSlingScript: "
+                + e.getMessage(), e);
+        }
+    }
+
+    public ServletConfig getServletConfig() {
+        return this;
+    }
+
+    public String getServletInfo() {
+        return "Script " + getScriptResource().getPath();
+    }
+
+    public void destroy() {
+        initParameters = null;
+        servletContext = null;
+    }
+
+    // ---------- ServletConfig ------------------------------------------------
+
+    public String getInitParameter(String name) {
+        Dictionary<String, String> params = initParameters;
+        return (params != null) ? params.get(name) : null;
+    }
+
+    public Enumeration<String> getInitParameterNames() {
+        Dictionary<String, String> params = initParameters;
+        return (params != null) ? params.keys() : null;
+    }
+
+    public ServletContext getServletContext() {
+        return servletContext;
+    }
+
+    public String getServletName() {
+        return getScriptResource().getPath();
+    }
+
+    // ---------- internal -----------------------------------------------------
 
     private Reader getScriptReader() throws IOException {
 

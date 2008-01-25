@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 
 /** A Resource that wraps a JCR Property */
 public class JcrPropertyResource implements Resource {
@@ -68,5 +69,10 @@ public class JcrPropertyResource implements Resource {
 
     public String getPath() {
         return path;
+    }
+
+    /** Returns null as microsling has no ResourceProviders */
+    public ResourceProvider getResourceProvider() {
+        return null;
     }
 }

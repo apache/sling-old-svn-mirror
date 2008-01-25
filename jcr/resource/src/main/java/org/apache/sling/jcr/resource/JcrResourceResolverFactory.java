@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource;
 
 import javax.jcr.Session;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.ResourceResolver;
 
 /**
@@ -40,9 +39,7 @@ public interface JcrResourceResolverFactory {
      * 
      * @param session The JCR <code>Session</code> used by the created
      *            resource manager to access the repository.
-     * @throws SlingException May be thrown if an error occurrs setting up the
-     *             <code>ResourceResolver</code>.
      */
-    ResourceResolver getResourceResolver(Session session) throws SlingException;
+    ResourceResolver getResourceResolver(Session session);
 
 }

@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launcher.webapp;
 
-import static org.apache.felix.framework.util.FelixConstants.*;
+import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -43,7 +43,6 @@ import org.apache.sling.launcher.app.Sling;
 import org.apache.sling.osgi.log.LogbackManager;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**

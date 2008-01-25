@@ -16,15 +16,23 @@
  */
 package org.apache.sling.api.resource;
 
-/** Resources are pieces of content on which Sling acts */
-public interface Resource {
+import org.apache.sling.api.adapter.Adaptable;
+
+/**
+ * Resources are pieces of content on which Sling acts
+ * <p>
+ * The <code>Resource</code> is also an {@link Adaptable} to get adapters to
+ * other types. A JCR based resource might support adapting to the JCR Node on
+ * which the resource is based.
+ */
+public interface Resource extends Adaptable {
 
     /**
      * The special resource type for resource instances representing nonexisting
      * resources (value is "sling:nonexisting"). This resource type is used by
      * {@link ResourceResolver} instances to mark a resource which could not
      * actually be resolved.
-     *
+     * 
      * @see #getResourceType()
      * @see ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
      */
@@ -55,22 +63,14 @@ public interface Resource {
      * except for the {@link ResourceMetadata#RESOLUTION_PATH} property which is
      * required to be set to the part of the request URI used to resolve the
      * resource.
-     *
+     * 
      * @see ResourceMetadata
      */
     ResourceMetadata getResourceMetadata();
 
     /**
-     * Adapts this resource to another type. A JCR based resource might support
-     * adapting to the JCR Node on which the resource is based.
-     *
-     * @param <AdapterType> The generic type to which this resource is adapted
-     *            to
-     * @param type The Class object of the target type, such as
-     *            <code>Node.class</code>
-     * @return The adapter target or <code>null</code> if the resource cannot
-     *         adapt to the requested type
+     * Returns the ResourceProvider from which this resource has been retrieved.
      */
-    <AdapterType> AdapterType adaptTo(Class<AdapterType> type);
+    ResourceProvider getResourceProvider();
 
 }

@@ -19,6 +19,7 @@
 package org.apache.sling.servlet.resolver.defaults;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -30,6 +31,8 @@ import java.util.TreeMap;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.beanutils.BeanMap;
@@ -37,6 +40,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.servlet.resolver.helper.JsonItemWriter;
@@ -44,9 +48,8 @@ import org.apache.sling.servlet.resolver.helper.JsonItemWriter;
 /**
  * The <code>DefaultServlet</code> is a very simple default resource handler.
  * <p>
- * The default servlet is not registered to handle any concrete resource
- * type. Rather it is used internally on demand.
- *
+ * The default servlet is not registered to handle any concrete resource type.
+ * Rather it is used internally on demand.
  */
 public class DefaultServlet extends SlingSafeMethodsServlet {
 
@@ -56,7 +59,8 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
 
         Resource resource = request.getResource();
 
@@ -66,8 +70,27 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-        // format response according to extension (use Mime mapping instead)
         String extension = request.getRequestPathInfo().getExtension();
+
+        // check whether we have a directly addressed script
+        if (extension == null) {
+            
+            // check whether the resource adapts to servlet (maybe script)
+            Servlet resourceServlet = resource.adaptTo(Servlet.class);
+            if (resourceServlet != null) {
+                resourceServlet.service(request, response);
+                return;
+            }
+            
+            // check whether the resource adapts to a stream, spool then
+            InputStream stream = resource.adaptTo(InputStream.class);
+            if (stream != null) {
+                stream(response, resource, stream);
+                return;
+            }
+        }
+
+        // format response according to extension (use Mime mapping instead)
         if ("html".equals(extension) || "htm".equals(extension)) {
             this.renderContentHtml(resource, response);
         } else if ("xml".equals(extension)) {
@@ -199,6 +222,53 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
             throw new IOException(je.getMessage());
         } catch(RepositoryException re) {
             throw new IOException(re.getMessage());
+        }
+    }
+
+    private void stream(HttpServletResponse response, Resource resource,
+            InputStream stream) throws IOException {
+        
+        ResourceMetadata meta = resource.getResourceMetadata();
+        
+        String contentType = (String) meta.get(ResourceMetadata.CONTENT_TYPE);
+        if (contentType == null) {
+            contentType = getServletContext().getMimeType(resource.getPath());
+        }
+        if (contentType != null) {
+            response.setContentType(contentType);
+        }
+        
+        String encoding = (String) meta.get(ResourceMetadata.CHARACTER_ENCODING);
+        if (encoding != null) {
+            response.setCharacterEncoding(encoding);
+        }
+        
+        try {
+            OutputStream out = response.getOutputStream();
+            
+            byte[] buf = new byte[1024];
+            int rd;
+            while ( (rd=stream.read(buf)) >= 0) {
+                out.write(buf, 0, rd);
+            }
+            
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException ignore) {
+                // don't care
+            }
+        }
+    }
+    
+    private void printObjectJson(PrintWriter pw, Object object) {
+        boolean quote = !((object instanceof Boolean) || (object instanceof Number));
+        if (quote) {
+            pw.print('"');
+        }
+        pw.print(object);
+        if (quote) {
+            pw.print('"');
         }
     }
 

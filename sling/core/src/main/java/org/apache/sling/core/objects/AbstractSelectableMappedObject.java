@@ -18,7 +18,7 @@
  */
 package org.apache.sling.core.objects;
 
-import org.apache.sling.jcr.resource.AbstractMappedObject;
+import org.apache.sling.jcr.ocm.AbstractMappedObject;
 
 /**
  * The <code>AbstractSelectableMappedObject</code> class extends the

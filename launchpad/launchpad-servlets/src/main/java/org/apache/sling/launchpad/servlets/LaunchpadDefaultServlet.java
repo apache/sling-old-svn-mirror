@@ -60,8 +60,8 @@ import org.apache.sling.ujax.UjaxPostServlet;
  *
  * Use this as the default servlet for Sling 
  * @scr.property 
- *  name="sling.core.resourceTypes" 
- *  value="sling.core.servlet.default"
+ *  name="sling.servlet.resourceTypes" 
+ *  value="sling/servlet/default"
  *  
  */
 public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {

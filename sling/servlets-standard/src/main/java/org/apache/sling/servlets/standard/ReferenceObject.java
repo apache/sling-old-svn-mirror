@@ -16,7 +16,7 @@
  */
 package org.apache.sling.servlets.standard;
 
-import org.apache.sling.jcr.resource.AbstractMappedObject;
+import org.apache.sling.jcr.ocm.AbstractMappedObject;
 
 /**
  * The <code>ReferenceObject</code> TODO

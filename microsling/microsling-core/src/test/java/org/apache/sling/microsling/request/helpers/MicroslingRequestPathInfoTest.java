@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 
 /** Test the MicroslingRequestPathInfo */
 public class MicroslingRequestPathInfoTest extends TestCase {
@@ -266,6 +267,9 @@ public class MicroslingRequestPathInfoTest extends TestCase {
             return null;
         }
 
+        public ResourceProvider getResourceProvider() {
+            return null;
+        }
     }
 
 }

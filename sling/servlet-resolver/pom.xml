@@ -68,6 +68,7 @@
                         <Private-Package>
                             org.apache.sling.servlet.resolver.*
                         </Private-Package>
+                        <!--
                         <Import-Package>
                             javax.servlet , javax.servlet.http ,
                             org.apache.commons.beanutils,
@@ -83,6 +84,7 @@
                             javax.jcr, javax.jcr.nodetype, org.apache.sling.commons.json,
                             org.apache.sling.commons.json.io
                         </Import-Package>
+                        -->
                     </instructions>
                 </configuration>
             </plugin>

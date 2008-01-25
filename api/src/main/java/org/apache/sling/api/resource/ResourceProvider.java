@@ -1,0 +1,99 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.api.resource;
+
+import java.util.Iterator;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.sling.api.SlingException;
+
+/**
+ * API for providers of resources. Used by the {@link ResourceResolver} to
+ * transparently access resources from different locations such as a JCR
+ * repository (the default) or OSGi bundles.
+ * <p>
+ * This interface is intended to be implemented by providers of Resource
+ * instances on behalf of the {@link ResourceResolver}. It is not intended to
+ * be used by client applications directly.
+ */
+public interface ResourceProvider {
+
+    /**
+     * The service name to use when registering implementations of this
+     * interface as services (value is
+     * "org.apache.sling.api.resource.ResourceProvider").
+     */
+    static final String SERVICE_NAME = ResourceProvider.class.getName();
+
+    /**
+     * The name of the service registration property containing the root paths
+     * of the resources provided by this provider (value is "provider.roots").
+     */
+    static final String ROOTS = "provider.roots";
+
+    /**
+     * Returns a resource from this resource provider or <code>null</code> if
+     * the resource provider cannot find it. The path should have one of the
+     * {@link #getRoots()} strings as its prefix.
+     * <p>
+     * This method is called to resolve a resource for the given request. The
+     * properties of the request, such as request parameters, may be use to
+     * parametrize the resource resolution. An example of such parametrization
+     * is support for a JSR-311 style resource provider to support the
+     * parametrized URL patterns.
+     * 
+     * @return <code>null</code> If this provider does not have a resource for
+     *         the path.
+     * @throws SlingException may be thrown in case of any problem creating the
+     *             <code>Resource</code> instance.
+     */
+    Resource getResource(HttpServletRequest request, String path);
+
+    /**
+     * Returns a resource from this resource provider or <code>null</code> if
+     * the resource provider cannot find it. The path should have one of the
+     * {@link #getRoots()} strings as its prefix.
+     * 
+     * @return <code>null</code> If this provider does not have a resource for
+     *         the path.
+     * @throws SlingException may be thrown in case of any problem creating the
+     *             <code>Resource</code> instance.
+     */
+    Resource getResource(String path);
+
+    /**
+     * Returns an <code>Iterator</code> of {@link Resource} objects loaded
+     * from the children of the given <code>Resource</code>.
+     * <p>
+     * This method is only called for resource providers whose root path list
+     * contains an entry which is a prefix for the path of the parent resource.
+     * 
+     * @param parent The {@link Resource Resource} whose children are requested.
+     * @return An <code>Iterator</code> of {@link Resource} objects or
+     *         <code>null</code> if the resource provider has no children for
+     *         the given resource.
+     * @throws NullPointerException If <code>parent</code> is
+     *             <code>null</code>.
+     * @throws SlingException If any error occurs acquiring the child resource
+     *             iterator.
+     */
+    Iterator<Resource> listChildren(Resource parent);
+
+}

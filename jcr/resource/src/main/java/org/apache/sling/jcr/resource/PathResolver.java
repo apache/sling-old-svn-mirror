@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 
 /**
  * The <code>PathResolver</code> interface defines additional methods to the
@@ -31,7 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * This reverse mapping may be used for example to create links for existing
  * paths.
  */
-public interface PathResolver extends ResourceResolver {
+public interface PathResolver {
 
     /**
      * Resolves the given url string to a <code>Resource</code> applying the
@@ -59,22 +58,6 @@ public interface PathResolver extends ResourceResolver {
      * @param path The resource path to map to an url string
      * @return The external (URI) representation of the resource path.
      */
-    String pathToURL(String path);
-
-    /**
-     * Maps a Content path to an url string, which when fed to the
-     * {@link #resolve(String)} method returns a resource of the given path.
-     * This method may be used to get the external (URI) representation of a
-     * resource, which is guaranteed to map back to the same handle, when used
-     * in a request.
-     *
-     * @param prefix A prefix to prepend to the url string, ignored if empty or
-     *            <code>null</code>
-     * @param path The resource path to map to an url string
-     * @param suffix A suffix to append to the url string, ignored if empty or
-     *            <code>null</code>
-     * @return The external (URI) representation of the resource path.
-     */
-    String pathToURL(String prefix, String path, String suffix);
+    String pathToURL(Resource resource);
 
 }

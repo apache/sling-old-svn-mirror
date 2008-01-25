@@ -23,14 +23,20 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.adapter.Adaptable;
+
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
  * to resolve {@link Resource} objects. The resource resolver is available to
  * the request processing servlet through the
  * {@link org.apache.sling.api.SlingHttpServletRequest#getResourceResolver()}
  * method.
+ * <p>
+ * The <code>ResourceResolver</code> is also an {@link Adaptable} to get
+ * adapters to other types. A JCR based resource resolver might support adapting
+ * to the JCR Session used by the resolver to access the JCR Repository.
  */
-public interface ResourceResolver {
+public interface ResourceResolver extends Adaptable {
 
     /**
      * Resolves the resource from the given <code>HttpServletRequest</code>.
@@ -42,7 +48,7 @@ public interface ResourceResolver {
      * {@link Resource#getPath() resource path} set to the request URI.
      * {@link Resource#adaptTo(Class) object} returns <code>null</code> for
      * all classes.
-     *
+     * 
      * @param request The http servlet request object used to resolve the
      *            resource for.
      * @return The {@link Resource} for the request.
@@ -62,7 +68,7 @@ public interface ResourceResolver {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     *
+     * 
      * @param path The absolute path to the resource object to be loaded. The
      *            path may contain relative path specifiers like <code>.</code>
      *            (current location) and <code>..</code> (parent location),
@@ -88,7 +94,7 @@ public interface ResourceResolver {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     *
+     * 
      * @param base The base {@link Resource} against which a relative path
      *            argument given by <code>path</code> is resolved. This
      *            parameter may be <code>null</code> if the <code>path</code>
@@ -120,7 +126,7 @@ public interface ResourceResolver {
      * reading content from a Java Content Repository, the children could be the
      * {@link Resource} objects loaded from child items of the <code>Item</code>
      * of the given <code>Resource</code>.
-     *
+     * 
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is
@@ -140,7 +146,7 @@ public interface ResourceResolver {
      * create a JCR <code>Query</code> through the <code>QueryManager</code>.
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
-     *
+     * 
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching
@@ -165,7 +171,7 @@ public interface ResourceResolver {
      * the column name and the column value is the JCR <code>Value</code>
      * object converted into the respective Java object, such as
      * <code>Boolean</code> for a value of property type <em>Boolean</em>.
-     *
+     * 
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances
@@ -177,17 +183,4 @@ public interface ResourceResolver {
      */
     Iterator<Map<String, Object>> queryResources(String query, String language);
 
-    /**
-     * Adapts this resource resolver to another type. A JCR based resource
-     * resolver might support adapting to the JCR Session used by the resolver
-     * to access the JCR Repository.
-     *
-     * @param <AdapterType> The generic type to which this resource is adapted
-     *            to
-     * @param type The Class object of the target type, such as
-     *            <code>Session.class</code>
-     * @return The adapter target or <code>null</code> if the resource cannot
-     *         adapt to the requested type
-     */
-    <AdapterType> AdapterType adaptTo(Class<AdapterType> type);
 }

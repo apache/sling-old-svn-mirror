@@ -47,6 +47,14 @@ public final class NonExistingResource implements Resource {
     }
 
     /**
+     * Returns <code>null</code> because this resource instance is not
+     * reflected by a real resource by any provider.
+     */
+    public ResourceProvider getResourceProvider() {
+        return null;
+    }
+
+    /**
      * Returns <code>null</code> because a non-existing resource cannot adapt
      * to anything.
      */

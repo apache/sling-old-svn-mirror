@@ -18,7 +18,7 @@
  */
 package org.apache.sling.sample;
 
-import org.apache.sling.jcr.resource.AbstractMappedObject;
+import org.apache.sling.jcr.ocm.AbstractMappedObject;
 
 /**
  * The <code>SampleContent</code> class defines sample content for this bundle.

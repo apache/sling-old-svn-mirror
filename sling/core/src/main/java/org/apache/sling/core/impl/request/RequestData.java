@@ -123,9 +123,9 @@ public class RequestData implements BufferProvider {
      */
     private String activeServletName;
 
-    public RequestData(SlingMainServlet slingMainServlet, Session session,
-            HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    public RequestData(SlingMainServlet slingMainServlet,
+            ResourceResolver resourceResolver, HttpServletRequest request,
+            HttpServletResponse response) {
 
         this.slingMainServlet = slingMainServlet;
 
@@ -139,21 +139,15 @@ public class RequestData implements BufferProvider {
 
         this.requestProgressTracker = new SlingRequestProgressTracker();
 
-        // the resource manager factory may be missing
-        JcrResourceResolverFactory rmf = slingMainServlet.getResourceResolverFactory();
-        if (rmf == null) {
-            log.error("RequestData: Missing JcrResourceResolverFactory");
-            throw new ResourceNotFoundException("No resource can be found");
-        }
-
-        // officially, getting the manager may fail, but not i this
-        // implementation
-        this.resourceResolver = rmf.getResourceResolver(session);
+        this.resourceResolver = resourceResolver;
+    }
+    
+    public void init() {
 
         // resolve the resource and the request path info, will never be null
-        Resource resource = resourceResolver.resolve(request);
+        Resource resource = resourceResolver.resolve(getServletRequest());
         RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource,
-            request.getPathInfo());
+            getServletRequest().getPathInfo());
         ContentData contentData = pushContent(resource, requestPathInfo);
 
         // finally resolve the servlet for the resource

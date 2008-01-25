@@ -39,25 +39,25 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.net.URLFactory;
+import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource implements Resource, Descendable {
+public class JcrNodeResource extends SlingAdaptable implements Resource,
+        Descendable {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final Object UNDEFINED = "undefined";
-
     /** The relative path name of the data property of an nt:file node */
     private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;
 
-    private final JcrResourceResolver resourceResolver;
+    private final ResourceProvider resourceProvider;
 
     private final Node node;
 
@@ -65,27 +65,23 @@ public class JcrNodeResource implements Resource, Descendable {
 
     private final String resourceType;
 
-    private Object object = UNDEFINED;
-
-    private Class<?> objectType;
-
     private final ResourceMetadata metadata;
 
-    public JcrNodeResource(JcrResourceResolver cMgr, String path)
-            throws RepositoryException {
-        this.resourceResolver = cMgr;
-        node = (Node) cMgr.getSession().getItem(path);
-        this.path = node.getPath();
-        metadata = new ResourceMetadata();
-        resourceType = getResourceTypeForNode(node);
+//    JcrNodeResource(JcrResourceProvider resourceProvider, String path)
+//            throws RepositoryException {
+//        this.resourceProvider = resourceProvider;
+//        node = (Node) resourceProvider.getSession().getItem(path);
+//        this.path = node.getPath();
+//        metadata = new ResourceMetadata();
+//        resourceType = getResourceTypeForNode(node);
+//
+//        // check for nt:file metadata
+//        setMetaData(node, metadata);
+//    }
 
-        // check for nt:file metadata
-        setMetaData(node, metadata);
-    }
-
-    public JcrNodeResource(JcrResourceResolver resourceResolver, Node node)
+    JcrNodeResource(ResourceProvider resourceProvider, Node node)
             throws RepositoryException {
-        this.resourceResolver = resourceResolver;
+        this.resourceProvider = resourceProvider;
         this.node = node;
         this.path = node.getPath();
         metadata = new ResourceMetadata();
@@ -116,20 +112,18 @@ public class JcrNodeResource implements Resource, Descendable {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
-        } else if (type.isInstance(getObject())) {
-            return (Type) getObject(); // unchecked cast
         }
 
-        // fall back to nothing
-        return null;
+        // fall back to default implementation
+        return super.adaptTo(type);
     }
 
     public String toString() {
         return "JcrNodeResource, type=" + resourceType + ", path=" + path;
     }
 
-    JcrResourceResolver getResourceResolver() {
-        return resourceResolver;
+    public ResourceProvider getResourceProvider() {
+        return resourceProvider;
     }
 
     Node getNode() {
@@ -161,15 +155,6 @@ public class JcrNodeResource implements Resource, Descendable {
         return null;
     }
 
-    private Object getObject() {
-        if (object == UNDEFINED) {
-            // lazy loaded object
-            object = resourceResolver.getObject(getPath(), objectType);
-        }
-
-        return object;
-    }
-
     private URL getURL() {
         try {
             return URLFactory.createURL(node.getSession(), node.getPath());
@@ -189,7 +174,7 @@ public class JcrNodeResource implements Resource, Descendable {
     public Resource getDescendent(String relPath) {
         try {
             if (node.hasNode(relPath)) {
-                return new JcrNodeResource(resourceResolver,
+                return new JcrNodeResource(resourceProvider,
                     node.getNode(relPath));
             }
 
@@ -201,10 +186,6 @@ public class JcrNodeResource implements Resource, Descendable {
                 + path, re);
             return null;
         }
-    }
-
-    public void setObjectType(Class<?> objectType) {
-        this.objectType = objectType;
     }
 
     /**
