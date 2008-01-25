@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
