@@ -20,6 +20,8 @@ package org.apache.sling.commons.testing.jcr;
 
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.ItemVisitor;
@@ -27,18 +29,24 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
 // simple mock implementation of a node
 public class MockNode implements Node {
 
     private String path;
+    private Map <String, Property> properties = new HashMap <String, Property>();
 
     private NodeType nodeType;
 
@@ -162,7 +170,7 @@ public class MockNode implements Node {
     }
 
     public PropertyIterator getProperties() {
-        return null;
+        return new MockPropertyIterator(properties.values().iterator());
     }
 
     public PropertyIterator getProperties(String namePattern) {
@@ -251,12 +259,18 @@ public class MockNode implements Node {
         return null;
     }
 
-    public Property setProperty(String name, String[] values) {
-        return null;
+    public Property setProperty(String name, String[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(values);
+        properties.put(name, p);
+        return p;
     }
 
-    public Property setProperty(String name, String value) {
-        return null;
+    public Property setProperty(String name, String value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        MockProperty p = new MockProperty(name);
+        p.setValue(value);
+        properties.put(name, p);
+        return p;
     }
 
     public Property setProperty(String name, InputStream value) {
