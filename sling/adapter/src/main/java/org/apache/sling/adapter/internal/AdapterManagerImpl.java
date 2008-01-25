@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.osgi.commons.OsgiUtil;
@@ -44,7 +43,7 @@ import org.osgi.service.log.LogService;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  * @scr.reference name="AdapterFactory"
- *                interface="org.apache.sling.osgi.commons.AdapterFactory"
+ *                interface="org.apache.sling.api.adapter.AdapterFactory"
  *                cardinality="0..n" policy="dynamic"
  */
 public class AdapterManagerImpl implements AdapterManager {
