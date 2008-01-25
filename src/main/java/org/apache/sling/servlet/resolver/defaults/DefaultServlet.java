@@ -43,7 +43,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.servlet.resolver.helper.JsonItemWriter;
+import org.apache.sling.commons.json.jcr.JsonItemWriter;
 
 /**
  * The <code>DefaultServlet</code> is a very simple default resource handler.
