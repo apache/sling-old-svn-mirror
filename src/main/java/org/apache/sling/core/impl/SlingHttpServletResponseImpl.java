@@ -28,10 +28,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.jcr.resource.PathResolver;
+import org.apache.sling.jcr.resource.SyntheticResource;
 
 /**
  * The <code>SlingHttpServletResponseImpl</code> TODO
@@ -231,6 +233,11 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
     private String pathToURL(String url) {
         PathResolver pr = getRequestData().getResourceResolver().adaptTo(PathResolver.class);
-        return (pr != null) ? pr.pathToURL(url) : url;
+        if (pr != null) {
+            Resource r = new SyntheticResource(url, null);
+            return pr.pathToURL(r);
+        }
+        
+        return url;
     }
 }

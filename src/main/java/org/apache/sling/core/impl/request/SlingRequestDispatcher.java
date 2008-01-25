@@ -29,6 +29,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 
 public class SlingRequestDispatcher implements RequestDispatcher {
@@ -46,7 +47,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         this.options = null;
     }
 
-    public SlingRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
+    public SlingRequestDispatcher(Resource resource,
+            RequestDispatcherOptions options) {
         this.resource = resource;
         this.options = options;
         this.path = resource.getPath();
@@ -82,7 +84,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
                 // ensure overwritten resource type
                 String rtOverwrite = options.get(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
-                if (rtOverwrite != null && !rtOverwrite.equals(resource.getResourceType())) {
+                if (rtOverwrite != null
+                    && !rtOverwrite.equals(resource.getResourceType())) {
                     resource = new ResourceWrapper(resource, rtOverwrite);
                 }
             }
@@ -118,11 +121,16 @@ public class SlingRequestDispatcher implements RequestDispatcher {
     private static class ResourceWrapper implements Resource {
 
         private final Resource delegatee;
+
         private final String resourceType;
 
         ResourceWrapper(Resource delegatee, String resourceType) {
             this.delegatee = delegatee;
             this.resourceType = resourceType;
+        }
+
+        public String getPath() {
+            return delegatee.getPath();
         }
 
         public String getResourceType() {
@@ -133,8 +141,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             return delegatee.getResourceMetadata();
         }
 
-        public String getPath() {
-            return delegatee.getPath();
+        public ResourceProvider getResourceProvider() {
+            return delegatee.getResourceProvider();
         }
 
         public <Type> Type adaptTo(Class<Type> type) {

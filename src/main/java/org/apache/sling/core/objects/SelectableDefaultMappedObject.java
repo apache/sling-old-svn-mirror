@@ -18,7 +18,7 @@
  */
 package org.apache.sling.core.objects;
 
-import org.apache.sling.jcr.resource.DefaultMappedObject;
+import org.apache.sling.jcr.ocm.DefaultMappedObject;
 
 /**
  * The <code>SelectableDefaultMappedObject</code> class extends the

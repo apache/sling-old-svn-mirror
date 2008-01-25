@@ -21,9 +21,11 @@ package org.apache.sling.core.impl;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
+import static org.apache.sling.core.CoreConstants.SESSION;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.SocketException;
 import java.net.URL;
 import java.security.AccessControlException;
 import java.util.ArrayList;
@@ -80,7 +82,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingMainServlet</code> TODO
- *
+ * 
  * @scr.component immediate="true" label="%sling.name"
  *                description="%sling.description"
  * @scr.property name="sling.root" value="/" private="true"
@@ -151,13 +153,53 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     // ---------- Servlet API -------------------------------------------------
 
     public void service(ServletRequest req, ServletResponse res)
-            throws ServletException, IOException {
+            throws ServletException {
 
         if (req instanceof HttpServletRequest
             && res instanceof HttpServletResponse) {
 
-            service((HttpServletRequest) req, (HttpServletResponse) res);
-            
+            try {
+
+                // real request handling for HTTP requests
+                service((HttpServletRequest) req, (HttpServletResponse) res);
+
+            } catch (IOException ioe) {
+
+                // unwrap any causes (Jetty wraps SocketException in
+                // EofException)
+                Throwable cause = ioe;
+                while (cause.getCause() != null) {
+                    cause = cause.getCause();
+                }
+
+                if (cause instanceof SocketException) {
+
+                    // if the cause is a SocketException, the client most
+                    // probably
+                    // aborted the request, we do not fill the log with errors
+                    // in this case
+                    log.debug(
+                        "service: Socketexception (Client abort or network problem",
+                        ioe);
+
+                } else {
+
+                    // otherwise we want to know why the servlet failed
+                    log.error(
+                        "service: Uncaught IO Problem while handling the request",
+                        ioe);
+                }
+
+            } catch (Throwable t) {
+
+                // some failure while handling the request, log the issue
+                // and terminate. We do not call error handling here, because
+                // we assume the real request handling would have done this.
+                // So here we just log
+
+                log.error("service: Uncaught Problem handling the request", t);
+            }
+
         } else {
             throw new ServletException(
                 "Apache Sling must be run in an HTTP servlet environment.");
@@ -166,81 +208,96 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
     // ---------- Request Handling on behalf of the servlet -------------------
 
-    public void service(HttpServletRequest clientRequest,
-            HttpServletResponse clientResponse) throws ServletException, IOException {
+    public void service(HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) throws IOException {
 
-        Session session = (Session) clientRequest.getAttribute(CoreConstants.SESSION);
-        if (session != null) {
-            RequestData requestData = null;
-            try {
-
-                // prepare internal request stuff
-                requestData = new RequestData(this, session, clientRequest,
-                    clientResponse);
-                clientRequest = requestData.getSlingRequest();
-                clientResponse = requestData.getSlingResponse();
-
-                Filter[] filters = requestFilterChain.getFilters();
-                if (filters != null) {
-                    FilterChain processor = new RequestSlingFilterChain(this,
-                        filters);
-
-                    processor.doFilter(clientRequest, clientResponse);
-
-                } else {
-                    log.error("service: No Request Handling filters, cannot process request");
-                    clientResponse.sendError(SC_INTERNAL_SERVER_ERROR,
-                        "Cannot process Request");
-                }
-
-            } catch (AccessControlException ace) {
-
-                // try to request authentication fail, if not possible
-                getSlingAuthenticator().requestAuthentication(clientRequest,
-                    clientResponse);
-
-            } catch (ResourceNotFoundException rnfe) {
-                
-                // send this exception as a 404 status
-                getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
-                    rnfe.getMessage(), clientRequest, clientResponse);
-
-            } catch (SlingException se) {
-                
-                // if we have request data and a non-null active servlet name
-                // we assume, that this is the name of the causing servlet
-                if (requestData != null
-                    && requestData.getActiveServletName() != null) {
-                    clientRequest.setAttribute(ERROR_SERVLET_NAME,
-                        requestData.getActiveServletName());
-                }
-
-                // send this exception as is (albeit unwrapping and wrapped
-                // exception.
-                Throwable t = (se.getCause() != null) ? se.getCause() : se;
-                getErrorHandler().handleError(t, clientRequest, clientResponse);
-                
-            } catch (Throwable t) {
-
-                // if we have request data and a non-null active servlet name
-                // we assume, that this is the name of the causing servlet
-                if (requestData != null
-                    && requestData.getActiveServletName() != null) {
-                    clientRequest.setAttribute(ERROR_SERVLET_NAME,
-                        requestData.getActiveServletName());
-                }
-
-                getErrorHandler().handleError(t, clientRequest, clientResponse);
-
-            } finally {
-                if (requestData != null) {
-                    requestData.dispose();
-                }
-
-                session.logout();
-            }
+        // the resource manager factory may be missing
+        if (getResourceResolverFactory() == null) {
+            log.error("service: Cannot handle requests without a ResourceResolverFactory");
+            sendError(HttpServletResponse.SC_NOT_FOUND,
+                "No resource can be found", null, servletRequest,
+                servletResponse);
+            return;
         }
 
+        Session session = (Session) servletRequest.getAttribute(SESSION);
+        if (session == null) {
+            log.error("service: Cannot handle request: Missing JCR Session");
+            sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                "Missing JCR Session", null, servletRequest, servletResponse);
+            return;
+        }
+
+        // setting the Sling request and response
+        RequestData requestData = new RequestData(this,
+            getResourceResolverFactory().getResourceResolver(session),
+            servletRequest, servletResponse);
+        SlingHttpServletRequest request = requestData.getSlingRequest();
+        SlingHttpServletResponse response = requestData.getSlingResponse();
+
+        try {
+
+            // initialize the request data - resolve resource and servlet
+            requestData.init();
+
+            Filter[] filters = requestFilterChain.getFilters();
+            if (filters != null) {
+                FilterChain processor = new RequestSlingFilterChain(this,
+                    filters);
+
+                processor.doFilter(request, response);
+
+            } else {
+                log.error("service: No Request Handling filters, cannot process request");
+                response.sendError(SC_INTERNAL_SERVER_ERROR,
+                    "Cannot process Request");
+            }
+
+        } catch (ResourceNotFoundException rnfe) {
+
+            // send this exception as a 404 status
+            getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
+                rnfe.getMessage(), request, response);
+
+        } catch (SlingException se) {
+
+            // if we have request data and a non-null active servlet name
+            // we assume, that this is the name of the causing servlet
+            if (requestData != null
+                && requestData.getActiveServletName() != null) {
+                request.setAttribute(ERROR_SERVLET_NAME,
+                    requestData.getActiveServletName());
+            }
+
+            // send this exception as is (albeit unwrapping and wrapped
+            // exception.
+            Throwable t = (se.getCause() != null) ? se.getCause() : se;
+            getErrorHandler().handleError(t, request, response);
+
+        } catch (AccessControlException ace) {
+
+            // try to request authentication fail, if not possible
+            getSlingAuthenticator().requestAuthentication(request, response);
+
+        } catch (Throwable t) {
+
+            // if we have request data and a non-null active servlet name
+            // we assume, that this is the name of the causing servlet
+            if (requestData != null
+                && requestData.getActiveServletName() != null) {
+                request.setAttribute(ERROR_SERVLET_NAME,
+                    requestData.getActiveServletName());
+            }
+
+            getErrorHandler().handleError(t, request, response);
+
+        } finally {
+            if (requestData != null) {
+                requestData.dispose();
+            }
+
+            session.logout();
+        }
     }
 
     // ---------- Generic Content Request processor ----------------------------
@@ -309,18 +366,34 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
     // reset the response, set the status and write a simple message
     public void handleError(int status, String message,
-            HttpServletRequest request, HttpServletResponse response)
+            SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws IOException {
 
         if (message == null) {
-            message = String.valueOf(status);
+            message = "HTTP ERROR:" + String.valueOf(status);
         } else {
-            message = status + " - " + message;
+            message = "HTTP ERROR:" + status + " - " + message;
         }
 
+        sendError(status, message, null, request, response);
+    }
+
+    // just rethrow the exception as explained in the class comment
+    public void handleError(Throwable throwable,
+            SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws IOException {
+        sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            throwable.getMessage(), throwable, request, response);
+    }
+
+    private void sendError(int status, String message, Throwable throwable,
+            HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
         if (response.isCommitted()) {
-            log.error("handleError: Response already committed; cannot send error "
-                + status + message);
+            log.error(
+                "handleError: Response already committed; cannot send error "
+                    + status + message, throwable);
         } else {
 
             // error situation
@@ -341,59 +414,21 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             pw.println("<html><head><title>");
             pw.println(message);
             pw.println("</title></head><body><h1>");
-            pw.println("HTTP ERROR:" + message);
-            pw.println("</h1><p>");
-            pw.println("RequestURI=" + requestURI);
-            if (servletName != null) {
-                pw.println("</p>Servlet=" + servletName + "<p>");
-            }
-            pw.println("</p><hr /><address>");
-            pw.println(getServerInfo());
-            pw.println("</address></body></html>");
-
-            // commit the response
-            response.flushBuffer();
-
-        }
-    }
-
-    // just rethrow the exception as explained in the class comment
-    public void handleError(Throwable throwable, HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-
-        if (response.isCommitted()) {
-            log.error(
-                "handleError: Response already committed; cannot send error",
-                throwable);
-        } else {
-
-            // error situation
-            String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
-            String requestURI = (String) request.getAttribute(ERROR_REQUEST_URI);
-            if (requestURI == null) {
-                requestURI = request.getRequestURI();
-            }
-
-            // reset anything in the response first
-            response.reset();
-
-            // set the status, content type and encoding
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setContentType("text/html; charset=UTF-8");
-
-            PrintWriter pw = response.getWriter();
-            pw.println("<html><head><title>");
-            pw.println(throwable.getMessage());
-            pw.println("</title></head><body><h1>");
             pw.println(throwable.toString());
             pw.println("</h1><p>");
             pw.println("RequestURI=" + request.getRequestURI());
             if (servletName != null) {
                 pw.println("</p>Servlet=" + servletName + "<p>");
             }
-            pw.println("</p><pre>");
-            throwable.printStackTrace(pw);
-            pw.println("</pre><hr /><address>");
+            pw.println("</p>");
+
+            if (throwable != null) {
+                pw.println("<pre>");
+                throwable.printStackTrace(pw);
+                pw.println("</pre>");
+            }
+
+            pw.println("<hr /><address>");
             pw.println(getServerInfo());
             pw.println("</address></body></html>");
 
@@ -504,7 +539,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                     }
                 }
             };
-            
+
             Dictionary<String, String> servletConfig = toStringConfig(configuration);
 
             this.httpService.registerServlet(this.slingRoot, this,
@@ -654,7 +689,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         // global filter by default
         return requestFilterChain;
     }
-    
+
     private Dictionary<String, String> toStringConfig(Dictionary<?, ?> config) {
         Dictionary<String, String> stringConfig = new Hashtable<String, String>();
         for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
