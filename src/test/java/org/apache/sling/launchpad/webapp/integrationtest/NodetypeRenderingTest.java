@@ -59,6 +59,16 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         assertTrue("Content contains default rendering",content.contains("Node dumped by DefaultHtmlRenderer"));
     }
 
+    public void testMiniScriptHtml() throws IOException {
+        final String toDelete = uploadTestScript("no-code.esp","html.esp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertEquals("There's no code in this script, just this constant string",content);
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
     public void testEspHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
