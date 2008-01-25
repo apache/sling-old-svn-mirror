@@ -18,6 +18,8 @@
  */
 package org.apache.sling.core;
 
+import org.apache.sling.core.impl.auth.SlingAuthenticator;
+
 /**
  * The <code>CoreConstants</code> interface provides some symbolic constants
  * for well known constant strings in Sling. Even though these constants will
@@ -29,12 +31,12 @@ public class CoreConstants {
     /**
      * The name of the framework property defining the Sling home directory
      * (value is "sling.home"). This is a Platform file system directory below
-     * which all runtime data, such as the Felix bundle archives, logfiles, CRX
+     * which all runtime data, such as the Felix bundle archives, logfiles, the
      * repository, etc., is located.
      * <p>
      * This property is available calling the
      * <code>BundleContext.getProperty(String)</code> method.
-     * 
+     *
      * @see #SLING_HOME_URL
      */
     public static final String SLING_HOME = "sling.home";
@@ -49,7 +51,7 @@ public class CoreConstants {
      * <p>
      * This property is available calling the
      * <code>BundleContext.getProperty(String)</code> method.
-     * 
+     *
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
