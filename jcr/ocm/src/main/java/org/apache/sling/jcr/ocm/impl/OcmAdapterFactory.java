@@ -39,13 +39,13 @@ class OcmAdapterFactory implements AdapterFactory {
 
     private static final String CLASS_OBJECT = Object.class.getName();
     
-    private final ObjectContentManagerFactory factory;
+    private final ObjectContentManagerFactoryImpl factory;
     
     private Dictionary<String, Object> registrationProperties;
     
     private ServiceRegistration registration;
     
-    OcmAdapterFactory(ObjectContentManagerFactory factory, BundleContext bundleContext, String[] mappedClasses) {
+    OcmAdapterFactory(ObjectContentManagerFactoryImpl factory, BundleContext bundleContext, String[] mappedClasses) {
         this.factory = factory;
         
         mappedClasses = ensureClassObject(mappedClasses);

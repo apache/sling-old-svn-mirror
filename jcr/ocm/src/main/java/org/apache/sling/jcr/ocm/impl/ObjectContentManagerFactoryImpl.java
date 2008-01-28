@@ -49,6 +49,7 @@ import org.apache.jackrabbit.ocm.query.QueryManager;
 import org.apache.jackrabbit.ocm.query.impl.QueryManagerImpl;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.sling.jcr.ocm.ObjectContentManagerFactory;
 import org.apache.sling.jcr.ocm.impl.classloader.MapperClassLoader;
 import org.apache.sling.osgi.commons.OsgiUtil;
 import org.osgi.framework.Bundle;
@@ -63,20 +64,20 @@ import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * The <code>ObjectContentManagerFactory</code> TODO
- * 
+ *
  * @scr.component metadata="no"
  * @scr.property name="service.description"
  *               value="Sling Object Content Manager Factory"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class ObjectContentManagerFactory implements SynchronousBundleListener {
+public class ObjectContentManagerFactoryImpl implements ObjectContentManagerFactory, SynchronousBundleListener {
 
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactoryImpl.class);
 
     /** scr.reference cardinality="0..1" policy="dynamic" */
     private EventAdmin eventAdmin;
-    
+
     /**
      * The class loader used by the Jackrabbit OCM ReflectionUtils class to load
      * classes for mapping. The class loader is set on the ReflectionUtils
@@ -91,15 +92,18 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
     private ClassDescriptorReader descriptorReader;
 
     private AtomicTypeConverterProvider converterProvider;
-    
+
     private OcmAdapterFactory adapterFactory;
 
-    public ObjectContentManagerFactory() {
+    public ObjectContentManagerFactoryImpl() {
 
         // prepare the data converters and query manager
         this.converterProvider = new SlingAtomicTypeConverterProvider();
     }
 
+    /**
+     * @see org.apache.sling.jcr.ocm.ObjectContentManagerFactory#getObjectContentManager(javax.jcr.Session)
+     */
     public ObjectContentManager getObjectContentManager(Session session) {
 
         ValueFactory valueFactory;
@@ -113,10 +117,10 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
         }
 
         ObjectCache objectCache = new ObservingObjectCache(session);
-        
+
         QueryManager queryManager = new QueryManagerImpl(mapper,
             converterProvider.getAtomicTypeConverters(), valueFactory);
-        
+
         ObjectConverter objectConverter = new ObjectConverterImpl(mapper,
             converterProvider, new ProxyManagerImpl(), objectCache);
 
@@ -245,7 +249,7 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
 
         mapperClassLoader = newMapperClassLoader;
         mapper = newMapper;
-        
+
         // update adapters
         if (adapterFactory != null) {
             adapterFactory.updateAdapterClasses(mapper.getMappedClasses());
@@ -292,11 +296,10 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
      * @param sourceBundle The Bundle from which the event originates. This may
      *            be <code>null</code> if there is no originating bundle.
      * @param eventName The name of the event
-     * @param props Event properties. This must not be <code>null</code>.
      * @throws NullPointerException if eventName or props is <code>null</code>.
      */
     public void fireEvent(Bundle sourceBundle, String eventName) {
-        
+
         // check event admin service, return if not available
         EventAdmin ea = eventAdmin;
         BundleMapper mapper = this.mapper;
@@ -308,7 +311,7 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
         Map<String, Object> props = new HashMap<String, Object>();
         props.put(MAPPING_CLASS, mapper.getMappedClasses());
         props.put(MAPPING_NODE_TYPE, mapper.getMappedNodeTypes());
-        
+
         // create and fire the event
         Event event = OsgiUtil.createEvent(sourceBundle, null, eventName, props);
         ea.postEvent(event);
@@ -348,7 +351,7 @@ public class ObjectContentManagerFactory implements SynchronousBundleListener {
             adapterFactory.dispose();
             adapterFactory = null;
         }
-        
+
         componentContext.getBundleContext().removeBundleListener(this);
 
         synchronized (this) {
