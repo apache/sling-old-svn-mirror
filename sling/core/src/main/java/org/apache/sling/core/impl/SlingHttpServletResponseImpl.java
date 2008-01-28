@@ -205,6 +205,18 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         ErrorHandler eh = getRequestData().getSlingMainServlet().getErrorHandler();
         eh.handleError(sc, msg, requestData.getSlingRequest(), this);
     }
+    
+    @Override
+    public void setStatus(int sc, String sm) {
+        checkCommitted();
+        super.setStatus(sc, sm);
+    }
+
+    @Override
+    public void setStatus(int sc) {
+        checkCommitted();
+        super.setStatus(sc);
+    }
 
     // ---------- Internal helper ---------------------------------------------
 
