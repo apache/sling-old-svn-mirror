@@ -27,49 +27,39 @@ import java.util.Map;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 
-public class JcrResourceResolverTest extends TestCase {
+public class JcrResourceResolverTest extends RepositoryTestBase {
 
-    private Session session;
-
-    private String root;
-
+    private String rootPath;
     private Node rootNode;
-
     private ResourceResolver resResolver;
 
     protected void setUp() throws Exception {
-        RepositoryUtil.startRepository();
-        SlingRepository repository = RepositoryUtil.getRepository();
-
+        super.setUp();
+        getSession();
+        
         JcrResourceResolverFactoryImpl resFac = new JcrResourceResolverFactoryImpl();
 
         Field repoField = resFac.getClass().getDeclaredField("repository");
         repoField.setAccessible(true);
-        repoField.set(resFac, repository);
+        repoField.set(resFac, getRepository());
 
         Field mappingsField = resFac.getClass().getDeclaredField("mappings");
         mappingsField.setAccessible(true);
         mappingsField.set(resFac, new Mapping[] { Mapping.DIRECT });
-
-        session = RepositoryUtil.getRepository().loginAdministrative(null);
 
         try {
             NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
@@ -81,8 +71,8 @@ public class JcrResourceResolverTest extends TestCase {
 
         resResolver = resFac.getResourceResolver(session);
 
-        root = "/test" + System.currentTimeMillis();
-        rootNode = session.getRootNode().addNode(root.substring(1),
+        rootPath = "/test" + System.currentTimeMillis();
+        rootNode = getSession().getRootNode().addNode(rootPath.substring(1),
             "nt:unstructured");
         session.save();
     }
@@ -93,19 +83,13 @@ public class JcrResourceResolverTest extends TestCase {
             rootNode.remove();
             session.save();
         }
-
-        if (session != null) {
-            session.logout();
-        }
-
-        RepositoryUtil.stopRepository();
     }
 
     public void testGetResource() throws Exception {
         // existing resource
-        Resource res = resResolver.getResource(root);
+        Resource res = resResolver.getResource(rootPath);
         assertNotNull(res);
-        assertEquals(root, res.getPath());
+        assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -113,16 +97,16 @@ public class JcrResourceResolverTest extends TestCase {
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // missing resource
-        String path = root + "/missing";
+        String path = rootPath + "/missing";
         res = resResolver.getResource(path);
         assertNull(res);
     }
 
     public void testResolveResource() throws Exception {
         // existing resource
-        Resource res = resResolver.resolve(new ResourceResolverTestRequest(root));
+        Resource res = resResolver.resolve(new ResourceResolverTestRequest(rootPath));
         assertNotNull(res);
-        assertEquals(root, res.getPath());
+        assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -130,10 +114,10 @@ public class JcrResourceResolverTest extends TestCase {
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // missing resource below root should resolve root
-        String path = root + "/missing";
+        String path = rootPath + "/missing";
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
-        assertEquals(root, res.getPath());
+        assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -141,10 +125,10 @@ public class JcrResourceResolverTest extends TestCase {
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // root with selectors/ext should resolve root
-        path = root + ".print.a4.html";
+        path = rootPath + ".print.a4.html";
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
-        assertEquals(root, res.getPath());
+        assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
             res.getResourceType());
 
@@ -152,20 +136,54 @@ public class JcrResourceResolverTest extends TestCase {
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         // missing resource should return NON_EXISTING Resource
-        path = root + System.currentTimeMillis();
+        path = rootPath + System.currentTimeMillis();
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
     }
+    
+    public void testGetDoesNotGoUp() throws Exception {
+        
+        final String path = rootPath + "/nothing";
+        
+        { 
+            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "POST"));
+            assertNotNull(res);
+            assertEquals("POST request resolution goes up up the path to rootPath", rootPath, res.getPath());
+            assertEquals(rootNode.getPrimaryNodeType().getName(), res.getResourceType());
+        }
+        
+        { 
+            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "GET"));
+            assertNotNull(res);
+            assertEquals("GET request resolution does not go up the path", 
+                    Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+        }
+    }
+    
+    public void testGetRemovesExtensionInResolution() throws Exception {
+        final String path = rootPath + ".whatever";
+        final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "GET"));
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(), res.getResourceType());
+    }
+
 
     private static class ResourceResolverTestRequest implements HttpServletRequest {
 
-        private String pathInfo;
+        private final String pathInfo;
+        private final String method;
 
         ResourceResolverTestRequest(String pathInfo) {
+            this(pathInfo, null);
+        }
+
+        ResourceResolverTestRequest(String pathInfo, String httpMethod) {
             this.pathInfo = pathInfo;
+            this.method = httpMethod;
         }
 
         public String getPathInfo() {
@@ -318,7 +336,7 @@ public class JcrResourceResolverTest extends TestCase {
         }
 
         public String getMethod() {
-            return null;
+            return method;
         }
 
         public String getPathTranslated() {

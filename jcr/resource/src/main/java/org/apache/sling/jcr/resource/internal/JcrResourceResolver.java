@@ -27,9 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -50,7 +47,6 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrPropertyResource;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +76,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     public Resource resolve(HttpServletRequest request) throws SlingException {
         String pathInfo = request.getPathInfo();
-        Resource result = resolve(pathInfo);
+        Resource result = resolve(pathInfo, request.getMethod());
 
         if (result == null) {
             result = new NonExistingResource(pathInfo);
@@ -221,42 +217,9 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
      *             to this manager's session.
      */
     public Resource resolve(String uri) throws SlingException {
-
-        // decode the request URI (required as the servlet container does not
-        try {
-            uri = URLDecoder.decode(uri, "UTF-8");
-        } catch (UnsupportedEncodingException uee) {
-            log.error("Cannot decode request URI using UTF-8", uee);
-        } catch (Exception e) {
-            log.error("Failed to decode request URI " + uri, e);
-        }
-
-        // resolve virtual uri
-        String realUrl = factory.virtualToRealUri(uri);
-        if (realUrl != null) {
-            log.debug("resolve: Using real url '{}' for virtual url '{}'",
-                realUrl, uri);
-            uri = realUrl;
-        }
-
-        try {
-
-            // translate url to a mapped url structure
-            Resource result = transformURL(uri);
-            return result;
-
-        } catch (AccessControlException ace) {
-            // rethrow AccessControlExceptions to be handled
-            throw ace;
-
-        } catch (SlingException se) {
-            // rethrow SlingException as it is declared
-            throw se;
-
-        } catch (Throwable t) {
-            // wrap any other issue into a SlingException
-            throw new SlingException("Problem resolving " + uri, t);
-        }
+        // TODO for now use null as a method to make sure this goes up the path
+        // (see SLING-179)
+        return resolve(uri, null);
     }
 
     public String pathToURL(Resource resource) {
@@ -288,11 +251,54 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     // ---------- implementation helper ----------------------------------------
 
+    /**
+     * @throws AccessControlException If an item would exist but is not readable
+     *             to this manager's session.
+     */
+    public Resource resolve(String uri, String httpMethod) throws SlingException {
+
+        // decode the request URI (required as the servlet container does not
+        try {
+            uri = URLDecoder.decode(uri, "UTF-8");
+        } catch (UnsupportedEncodingException uee) {
+            log.error("Cannot decode request URI using UTF-8", uee);
+        } catch (Exception e) {
+            log.error("Failed to decode request URI " + uri, e);
+        }
+
+        // resolve virtual uri
+        String realUrl = factory.virtualToRealUri(uri);
+        if (realUrl != null) {
+            log.debug("resolve: Using real url '{}' for virtual url '{}'",
+                realUrl, uri);
+            uri = realUrl;
+        }
+
+        try {
+
+            // translate url to a mapped url structure
+            Resource result = urlToResource(uri, httpMethod);
+            return result;
+
+        } catch (AccessControlException ace) {
+            // rethrow AccessControlExceptions to be handled
+            throw ace;
+
+        } catch (SlingException se) {
+            // rethrow SlingException as it is declared
+            throw se;
+
+        } catch (Throwable t) {
+            // wrap any other issue into a SlingException
+            throw new SlingException("Problem resolving " + uri, t);
+        }
+    }
+
     public Session getSession() {
         return rootProvider.getSession();
     }
 
-    private Resource transformURL(String uri) throws SlingException {
+    private Resource urlToResource(String uri, String httpMethod) throws SlingException {
         Mapping[] mappings = factory.getMappings();
         for (int i = 0; i < mappings.length; i++) {
             // exchange the 'to'-portion with the 'from' portion and check
@@ -302,7 +308,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
                 continue;
             }
 
-            Resource resource = scanPath(mappedUri);
+            Resource resource = scanPath(mappedUri, httpMethod);
             if (resource != null) {
 
                 ResourceMetadata rm = resource.getResourceMetadata();
@@ -324,11 +330,11 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     }
 
-    private Resource scanPath(String uriPath) throws SlingException {
+    private Resource scanPath(String uriPath, String httpMethod) throws SlingException {
         Resource resource = null;
         String curPath = uriPath;
         try {
-            final ResourcePathIterator it = new ResourcePathIterator(uriPath);
+            final ResourcePathIterator it = new ResourcePathIterator(uriPath, httpMethod);
             while (it.hasNext() && resource == null) {
                 curPath = it.next();
                 resource = getResourceInternal(curPath);
