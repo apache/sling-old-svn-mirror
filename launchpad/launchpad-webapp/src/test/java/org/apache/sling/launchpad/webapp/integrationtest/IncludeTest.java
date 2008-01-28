@@ -16,6 +16,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.ujax.UjaxPostServlet;
 
 import java.io.IOException;
@@ -88,10 +89,16 @@ import javax.servlet.http.HttpServletResponse;
         assertTrue("Include has been used",content.contains("<p>Including"));
     }
     
-    public void TODO_FAILS_testInfiniteLoopDetection() throws IOException {
+    public void testInfiniteLoopDetection() throws IOException {
         // Node C has a property that causes an infinite include loop,
-        // microsling must return an error 500 in this case
-        assertHttpStatus(nodeUrlC + ".html", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        // Sling must return an error 500 in this case
+        final GetMethod get = new GetMethod(nodeUrlC + ".html");
+        final int status = httpClient.executeMethod(get);
+        final String content = get.getResponseBodyAsString();
+        assertTrue("Response contains infinite loop error message",
+                content.contains("InfiniteIncludeLoopException"));
+        
+        // TODO_FAILS_ see SLING-207
+        // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR,status);
     }
-
 }
