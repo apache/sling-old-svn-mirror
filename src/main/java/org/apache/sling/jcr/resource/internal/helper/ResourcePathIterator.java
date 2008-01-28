@@ -34,18 +34,31 @@ import java.util.NoSuchElementException;
  * <p>
  * The root path (/) is never returned. Creating a resource path iterator with a
  * null or empty path or a root path will not return anything.
+ * 
+ * The above rules are not valid for GET or HEAD requests, where
+ * we do not go up the path: for those requests, the path is
+ * only split at dots that follow the last slash
  */
 public class ResourcePathIterator implements Iterator<String> {
 
     private String nextPath;
+    private final String httpMethod;
+    private final int smallestBreakPos;
 
-    public ResourcePathIterator(String path) {
+    public ResourcePathIterator(String path, String httpMethod) {
+        this.httpMethod = httpMethod;
+
+        // For GET or HEAD requests, path can only be split after
+        // the last slash (SLING-179)
+        final boolean getOrHead = "GET".equals(httpMethod) || "HEAD".equals(httpMethod);
+        smallestBreakPos = getOrHead ? path.lastIndexOf('/') : 0; 
+            
         if (path != null) {
             int i = path.length() - 1;
-            while (i >= 0 && path.charAt(i) == '/') {
+            while (i >= smallestBreakPos && path.charAt(i) == '/') {
                 i--;
             }
-            if (i < 0) {
+            if (i < 0 || i <= smallestBreakPos) {
                 nextPath = null;
             } else if (i < path.length() - 1) {
                 nextPath = path.substring(0, i + 1);
@@ -70,7 +83,7 @@ public class ResourcePathIterator implements Iterator<String> {
 
         // find next path
         int pos = result.length() - 1;
-        while (pos >= 0) {
+        while (pos >= smallestBreakPos) {
             final char c = result.charAt(pos);
             if (c == '.' || c == '/') {
                 break;
@@ -78,7 +91,7 @@ public class ResourcePathIterator implements Iterator<String> {
             pos--;
         }
 
-        nextPath = (pos <= 0) ? null : result.substring(0, pos);
+        nextPath = (pos <= smallestBreakPos) ? null : result.substring(0, pos);
 
         return result;
     }
