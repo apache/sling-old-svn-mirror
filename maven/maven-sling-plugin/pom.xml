@@ -61,9 +61,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi_R4_core</artifactId>
-            <version>1.0</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>
