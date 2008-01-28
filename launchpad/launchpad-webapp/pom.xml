@@ -302,7 +302,7 @@
         To run integration tests against a running instance of Sling (useful to quickly
         run some of them) use for example:
         
-           mvn test -Dtest=**/integrationtest/**Test.java
+            mvn test -Dtest=**/integrationtest/**/*Test.java
            
         or
         
