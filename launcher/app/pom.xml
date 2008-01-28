@@ -52,11 +52,11 @@
 
     <build>
         <plugins>
-            <plugin>
               <!-- 
+            <plugin>
+            
                 The clean plugin deletes the sling work directory as well,
                 to avoid confusion with leftovers from previous runs
-              -->
               <artifactId>maven-clean-plugin</artifactId>
               <configuration>
                 <filesets>
@@ -66,6 +66,7 @@
                 </filesets>
               </configuration>
             </plugin>
+              -->
 
             <!-- Bundles to list in the installer properties file -->
             <plugin>
