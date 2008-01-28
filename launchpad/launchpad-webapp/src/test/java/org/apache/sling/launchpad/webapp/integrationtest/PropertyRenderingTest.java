@@ -50,27 +50,27 @@ public class PropertyRenderingTest extends RenderingTestBase {
         assertJavascript(testText, json, "out.println(data.text)");
     }
     
-    public void TODO_FAILS_testTextJson() throws IOException {
+    public void testTextJson() throws IOException {
         final String json = getContent(displayUrl + "/text.json", CONTENT_TYPE_JSON);
         assertEquals("{\"text\":\"" + testText + "\"}",json);
     }
 
-    public void TODO_FAILS_testTextHtml() throws IOException {
+    public void testTextHtml() throws IOException {
         final String data = getContent(displayUrl + "/text.html", CONTENT_TYPE_HTML);
         assertEquals(testText, data);
     }
     
-    public void TODO_FAILS_testTextTxt() throws IOException {
+    public void testTextTxt() throws IOException {
         final String data = getContent(displayUrl + "/text.txt", CONTENT_TYPE_PLAIN);
         assertEquals(testText, data);
     }
     
-    public void TODO_FAILS_testTextNoExt() throws IOException {
+    public void testTextNoExt() throws IOException {
         final String data = getContent(displayUrl + "/text", CONTENT_TYPE_PLAIN);
         assertEquals(testText, data);
     }
     
-    public void TODO_FAILS_testResourceTypeNoExt() throws IOException {
+    public void testResourceTypeNoExt() throws IOException {
         final String data = getContent(displayUrl + "/sling:resourceType", CONTENT_TYPE_PLAIN);
         assertEquals(slingResourceType, data);
     }
