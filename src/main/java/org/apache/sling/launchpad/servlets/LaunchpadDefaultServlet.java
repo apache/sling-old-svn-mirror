@@ -68,6 +68,7 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
     
     private Servlet postServlet;
     private Servlet defaultGetServlet;
+    private Servlet ujaxInfoServlet;
     private Map<String, Servlet> getServlets;
     
     @Override
@@ -78,6 +79,9 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
         // setup our "internal" servlets
         postServlet = new UjaxPostServlet();
         postServlet.init(config);
+        
+        ujaxInfoServlet = new UjaxInfoServlet();
+        ujaxInfoServlet.init(config);
         
         defaultGetServlet = new PlainTextRendererServlet("text/plain");
         
@@ -90,6 +94,11 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException, ServletException {
         final Resource resource = request.getResource();
 
+        if(request.getPathInfo().startsWith(UjaxInfoServlet.PATH_PREFIX)) {
+            ujaxInfoServlet.service(request, response);
+            return;
+        }
+        
         // cannot handle the request for missing resources
         if (resource instanceof NonExistingResource) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,"Resource not found at path " + resource.getPath());
