@@ -24,6 +24,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 public class MockBundle implements Bundle {
@@ -117,6 +118,10 @@ public class MockBundle implements Bundle {
 
     public void update(InputStream in) {
 
+    }
+
+    public BundleContext getBundleContext() {
+        return null;
     }
 
 }
