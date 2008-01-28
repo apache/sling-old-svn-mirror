@@ -34,6 +34,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.QuerySyntaxException;
@@ -59,14 +60,14 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
  * method.
  */
-public class JcrResourceResolver implements ResourceResolver, PathResolver {
+public class JcrResourceResolver extends SlingAdaptable implements ResourceResolver, PathResolver {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final JcrResourceProviderEntry rootProvider;
     private final JcrResourceResolverFactoryImpl factory;
-    
+
     public JcrResourceResolver(JcrResourceProviderEntry rootProvider, JcrResourceResolverFactoryImpl factory) {
         this.rootProvider = rootProvider;
         this.factory = factory;
@@ -206,8 +207,8 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
             return (AdapterType) this;
         }
 
-        // no adapter available
-        return null;
+        // fall back to default behaviour
+        return super.adaptTo(type);
     }
 
     // ---------- PathResolver interface --------------------------------------
@@ -349,7 +350,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
 
     /**
      * Creates a JcrNodeResource with the given path if existing
-     * 
+     *
      * @throws AccessControlException If an item exists but this manager has no
      *             read access
      */
@@ -362,7 +363,7 @@ public class JcrResourceResolver implements ResourceResolver, PathResolver {
             resource = rp.getResourceProvider().getResource(path);
             rp = rp.getParentEntry();
         }
-        
+
         if (resource != null) {
             resource.getResourceMetadata().put(
                 ResourceMetadata.RESOLUTION_PATH, path);
