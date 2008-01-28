@@ -206,7 +206,9 @@
       -->
       <id>cargoIntegrationTesting</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>!maven.test.skip</name>
+        </property>
       </activation>
       <build>
         <plugins>
@@ -295,7 +297,9 @@
       -->
       <id>disableIntegrationTestsInTestPhase</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>!maven.test.skip</name>
+        </property>
       </activation>
       <build>
         <plugins>
