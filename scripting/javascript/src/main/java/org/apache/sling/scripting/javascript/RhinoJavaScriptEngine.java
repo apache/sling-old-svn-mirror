@@ -94,8 +94,10 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
             rhinoContext.evaluateReader(scope, scriptReader, scriptName,
                 lineNumber, securityDomain);
         } catch (Throwable t) {
-            throw new ScriptException("Failure running script " + scriptName
+            final ScriptException se = new ScriptException("Failure running script " + scriptName
                 + ": " + t.getMessage());
+            se.initCause(t);
+            throw se;
         } finally {
             Context.exit();
         }
