@@ -122,6 +122,18 @@ public class SlingServletResolver implements ServletResolver,
      * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.SlingHttpServletRequest)
      */
     public Servlet resolveServlet(SlingHttpServletRequest request) {
+
+        // TODO: tentative implementation
+        // if the request extension is not null and the request resource adapts
+        // to a servlet, use that directly
+        // check whether the resource adapts to servlet (maybe script)
+        if (request.getRequestPathInfo().getExtension() != null) {
+            Servlet resourceServlet = request.getResource().adaptTo(Servlet.class);
+            if (resourceServlet != null) {
+                return resourceServlet;
+            }
+        }
+        
         ResourceResolver resolver = request.getResourceResolver();
         String baseName = PathSupport.getScriptBaseName(request);
 
