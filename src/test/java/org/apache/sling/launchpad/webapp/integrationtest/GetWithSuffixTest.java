@@ -46,12 +46,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
     
-    public void testNothing() {
-        // TODO remove this once all TODO_FAILS are gone
-        // several tests fail due to SLING-179
-    }
-    
-    public void TODO_FAILS_testWithExactUrl() throws IOException {
+    public void testWithExactUrl() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
@@ -62,7 +57,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
         }
     }
 
-    public void TODO_FAILS_testWithExtraPathA() throws IOException {
+    public void testWithExtraPathA() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
             assertHttpStatus(displayUrl + "/extra.html", HttpServletResponse.SC_NOT_FOUND);
@@ -74,7 +69,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
     /** behavior seems slightly different if using GET.esp vs. html.esp for the
      *  script name, verify that both give a 404
      */
-    public void TODO_FAILS_testWithExtraPathB() throws IOException {
+    public void testWithExtraPathB() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","GET.esp");
         try {
             assertHttpStatus(displayUrl + "/extra/more.a4.html", HttpServletResponse.SC_NOT_FOUND);
