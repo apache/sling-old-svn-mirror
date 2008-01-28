@@ -56,7 +56,6 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.impl.auth.MissingRepositoryException;
 import org.apache.sling.core.impl.auth.SlingAuthenticator;
 import org.apache.sling.core.impl.filter.RequestSlingFilterChain;
@@ -149,6 +148,15 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     private ServiceLocatorImpl slingServiceLocator;
 
     private SlingAuthenticator slingAuthenticator;
+
+    public static final String INCLUDE_COUNTER = "Sling.ScriptHelper.include.counter";
+    public static final int MAX_INCLUDE_RECURSION_LEVEL = 50;
+    
+    public static class InfiniteIncludeLoopException extends SlingException {
+        InfiniteIncludeLoopException(String path) {
+            super("Infinite include loop (> " + MAX_INCLUDE_RECURSION_LEVEL + " levels) for path '" + path + "'");
+        }
+    }
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -306,6 +314,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             ServletResponse response, String path) throws IOException,
             ServletException {
 
+        checkRecursionLevel(request, path);
+        
         // check type of response, don't care actually for the response itself
         RequestData.unwrap(response);
 
@@ -325,6 +335,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             ServletResponse response, Resource resource,
             RequestPathInfo resolvedURL) throws IOException, ServletException {
 
+        checkRecursionLevel(request, resolvedURL.getResourcePath());
+        
         // we need a ComponentRequest/ComponentResponse tupel to continue
         SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
         SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
@@ -342,6 +354,20 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         } finally {
             requestData.popContent();
         }
+    }
+    
+    /** Add a recursion counter to req and fail if it's too high */
+    protected void checkRecursionLevel(ServletRequest request, String info)  throws InfiniteIncludeLoopException {
+        // Detect infinite loops
+        Integer recursionLevel = (Integer)request.getAttribute(INCLUDE_COUNTER);
+        if(recursionLevel == null) {
+            recursionLevel = new Integer(1);
+        } else if(recursionLevel.intValue() > MAX_INCLUDE_RECURSION_LEVEL) {
+            throw new InfiniteIncludeLoopException(info);
+        } else {
+            recursionLevel = new Integer(recursionLevel.intValue() + 1);
+        }
+        request.setAttribute(INCLUDE_COUNTER, recursionLevel);
     }
 
     public void processRequest(SlingHttpServletRequest request,
