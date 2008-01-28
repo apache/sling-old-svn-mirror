@@ -388,6 +388,8 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                                 String currentPath)
             throws RepositoryException {
         final String [] pathsToDelete = request.getParameterValues(RP_DELETE_PATH);
+        int deleteCount = 0;
+        
         if (pathsToDelete != null) {
             for(String path : pathsToDelete) {
                 if(!path.startsWith("/")) {
@@ -395,6 +397,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 }
                 if(s.itemExists(path)) {
                     s.getItem(path).remove();
+                    deleteCount++;
                     if(log.isDebugEnabled()) {
                         log.debug("Deleted item " + path);
                     }
@@ -404,6 +407,10 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                     }
                 }
             }
+        }
+        
+        if(deleteCount > 0) {
+            s.save();
         }
     }
 
@@ -417,6 +424,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     private void processMoves(SlingHttpServletRequest request, Session s,
                                 String currentPath)
             throws RepositoryException {
+        int moveCount = 0;
         final String [] moveSrc = request.getParameterValues(RP_MOVE_SRC);
         final String [] moveDest = request.getParameterValues(RP_MOVE_DEST);
         if (moveSrc == null || moveDest == null) {
@@ -435,9 +443,13 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 dest = currentPath + "/" + dest;
             }
             s.move(src, dest);
+            moveCount++;
             if (log.isDebugEnabled()) {
                 log.debug("moved {} to {}", src, dest);
             }
+        }
+        if(moveCount > 0) {
+            s.save();
         }
     }
 
