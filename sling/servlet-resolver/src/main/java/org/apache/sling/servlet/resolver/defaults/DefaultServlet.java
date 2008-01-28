@@ -75,19 +75,13 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         // check whether we have a directly addressed script
         if (extension == null) {
             
-            // check whether the resource adapts to servlet (maybe script)
-            Servlet resourceServlet = resource.adaptTo(Servlet.class);
-            if (resourceServlet != null) {
-                resourceServlet.service(request, response);
-                return;
-            }
-            
             // check whether the resource adapts to a stream, spool then
             InputStream stream = resource.adaptTo(InputStream.class);
             if (stream != null) {
                 stream(response, resource, stream);
                 return;
             }
+            
         }
 
         // format response according to extension (use Mime mapping instead)
