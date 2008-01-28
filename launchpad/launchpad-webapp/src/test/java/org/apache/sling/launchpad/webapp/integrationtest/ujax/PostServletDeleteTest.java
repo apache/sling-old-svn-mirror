@@ -36,16 +36,11 @@ public class PostServletDeleteTest extends HttpTestBase {
         super.setUp();
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis();
         
-        // TODO_FAILS (SLING-179): the Sling resource renderer currently goes up the path for GETs 
-        //assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
-        //        "Path must not exist before test: " + postUrl);
+        assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
+                "Path must not exist before test: " + postUrl);
     }
 
-    public void testNothing() {
-        // TODO remove this all TODO_FAILS_ are gone 
-    }
-
-    public void TODO_FAILS_testDelete() throws IOException {
+    public void testDelete() throws IOException {
         final String urlA = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
         final String urlB = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
         final String urlC = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
@@ -61,7 +56,7 @@ public class PostServletDeleteTest extends HttpTestBase {
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
         final String deleteCmd = "ujax:delete";
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlA)));
-        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return status OK (1)");
+        assertPostStatus(postUrl,HttpServletResponse.SC_MOVED_TEMPORARILY,params,"Delete must return expected status (3)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
         assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must still exist");
         assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
@@ -72,14 +67,14 @@ public class PostServletDeleteTest extends HttpTestBase {
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlB)));
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlC)));
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlD)));
-        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return status OK (2)");
+        assertPostStatus(postUrl,HttpServletResponse.SC_MOVED_TEMPORARILY,params,"Delete must return expected status (2)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
         assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
         assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
         assertHttpStatus(urlD, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
         
         // attempting to delete non-existing nodes is ok
-        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Repeated delete must return status OK (3)");
+        assertPostStatus(postUrl,HttpServletResponse.SC_MOVED_TEMPORARILY,params,"Delete must return expected status (2)");
     }
     
     private String urlToNodePath(String url) {
