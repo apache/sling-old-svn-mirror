@@ -31,7 +31,6 @@ import java.util.TreeMap;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
