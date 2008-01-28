@@ -56,6 +56,11 @@
     <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
     
     <!-- 
+      Sling home directory when starting with jetty:run
+     -->
+    <jetty.sling.home>target/sling</jetty.sling.home>
+    
+    <!-- 
       Defines which tests are for the "integration-testing" phase
      -->
     <integration.test.code.path>**/launchpad/webapp/integrationtest</integration.test.code.path>
@@ -77,6 +82,13 @@
         <configuration>
           <contextPath>/</contextPath>
           <scanIntervalSeconds>${jetty.scan.interval.seconds}</scanIntervalSeconds>
+          
+          <systemProperties>
+            <systemProperty>
+              <name>sling.home</name>
+              <value>${jetty.sling.home}</value>
+            </systemProperty>
+          </systemProperties>
 
           <connectors>
             <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
