@@ -119,13 +119,6 @@
         <module>microsling/microsling-standalone</module>
         -->
 
-        <!-- 
-		TODO add launchpad, but currently its integration
-		tests destroy the "sling" code subdirectory
-        <module>launchpad/launchpad-servlets</module>
-        <module>launchpad/launchpad-webapp</module>
-        -->
-
     </modules>
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
@@ -145,4 +138,22 @@
             </url>
         </repository>
     </distributionManagement>
+
+    <profiles>
+      <profile>
+        <!--
+          Launchpad build is relatively slow when integration tests
+          run - having it here makes it possible to disable it.
+        -->
+        <id>launchpadBuild</id>
+        <activation>
+          <activeByDefault>true</activeByDefault>
+        </activation>
+        <modules>
+          <module>launchpad/launchpad-servlets</module>
+          <module>launchpad/launchpad-webapp</module>
+        </modules>
+      </profile>
+    </profiles>
+
 </project>
