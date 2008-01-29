@@ -102,6 +102,13 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
+    /**
+     * @scr.property values.1="/apps" values.2="/libs"
+     *               label="%resolver.path.name"
+     *               description="%resolver.path.description"
+     */
+    public static final String PROP_PATH = "resource.resolver.path";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -130,7 +137,7 @@ public class JcrResourceResolverFactoryImpl implements
     // list of ResourceProvider services bound before activation of the
     // component
     private List<ServiceReference> delayedResourceProviders = new LinkedList<ServiceReference>();
-
+    
     private ComponentContext componentContext;
 
     /**
@@ -147,6 +154,9 @@ public class JcrResourceResolverFactoryImpl implements
 
     /** <code>true</code>, if direct mappings from URI to handle are allowed */
     private boolean allowDirect = false;
+
+    // the search path for ResourceResolver.getResource(String)
+    private String[] path;
 
     /**
      * Map of administrative sessions used to check item existence. Indexed by
@@ -339,6 +349,10 @@ public class JcrResourceResolverFactoryImpl implements
         return mappings;
     }
 
+    String[] getPath() {
+        return path;
+    }
+
     // ---------- Bundle provided resources -----------------------------------
 
     private void addBundleResourceProvider(Bundle bundle) {
@@ -435,6 +449,24 @@ public class JcrResourceResolverFactoryImpl implements
             mappings = tmp;
         }
 
+        // from configuration if available
+        path = OsgiUtil.toStringArray(properties.get(PROP_PATH));
+        if (path != null && path.length > 0) {
+            for (int i = 0; i < path.length; i++) {
+                // ensure leading slash
+                if (!path[i].startsWith("/")) {
+                    path[i] = "/" + path[i];
+                }
+                // ensure trailing slash
+                if (!path[i].endsWith("/")) {
+                    path[i] += "/";
+                }
+            }
+        }
+        if (path == null) {
+            path = new String[] { "/" };
+        }
+
         // bind resource providers not bound yet
         for (ServiceReference reference : delayedResourceProviders) {
             bindResourceProvider(reference);
@@ -460,10 +492,10 @@ public class JcrResourceResolverFactoryImpl implements
 
     protected void bindResourceProvider(ServiceReference reference) {
         if (componentContext == null) {
-
+            
             // delay binding resource providers if called before activation
             delayedResourceProviders.add(reference);
-
+            
         } else {
             String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
             if (roots != null && roots.length > 0) {
