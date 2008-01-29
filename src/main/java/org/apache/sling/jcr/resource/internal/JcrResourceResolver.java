@@ -42,7 +42,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.PathResolver;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
@@ -55,12 +54,12 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>JcrResourceResolver</code> class implements the Sling
  * <code>ResourceResolver</code> and <code>ResourceResolver</code>
- * interfaces and in addition is a {@link PathResolver}. Instances of this
+ * interfaces and in addition is a {@link PathMapper}. Instances of this
  * class are retrieved through the
  * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
  * method.
  */
-public class JcrResourceResolver extends SlingAdaptable implements ResourceResolver, PathResolver {
+public class JcrResourceResolver extends SlingAdaptable implements ResourceResolver {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -86,42 +85,70 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         return result;
     }
 
-    public Resource getResource(String path) throws SlingException {
-        path = JcrResourceUtil.normalize(path);
-        if (path != null) {
-            try {
-                Resource resource = getResourceInternal(path);
-                return resource;
-            } catch (Exception ex) {
-                throw new SlingException("Problem accessing resource" + path,
-                    ex);
-            }
+    /**
+     * @throws AccessControlException If an item would exist but is not readable
+     *             to this manager's session.
+     */
+    public Resource resolve(String uri) throws SlingException {
+
+        // TODO for now use null as a method to make sure this goes up the path
+        // (see SLING-179)
+        return resolve(uri, null);
+        
+    }
+
+    public String map(String resourcePath) {
+
+        // get first map
+        String href = null;
+        Mapping[] mappings = factory.getMappings();
+        for (int i = 0; i < mappings.length && href == null; i++) {
+            href = mappings[i].mapHandle(resourcePath);
         }
 
-        // relative path segments cannot be resolved
+        // if no mapping's to prefix matches the handle, use the handle itself
+        if (href == null) {
+            href = resourcePath;
+        }
+
+        // check virtual mappings
+        String virtual = factory.realToVirtualUri(href);
+        if (virtual != null) {
+            log.debug("map: Using virtual URI {} for path {}", virtual,
+                href);
+            href = virtual;
+        }
+
+        log.debug("map: {} -> {}", resourcePath, href);
+        return href;
+    }
+
+    public Resource getResource(String path) {
+        
+        // if the path is absolute, normalize . and .. segements and get res
+        if (path.startsWith("/")) {
+            path = JcrResourceUtil.normalize(path);
+            return (path != null) ? getResourceInternal(path) : null;
+        }
+
+        // otherwise we have to apply the search path
+        for (String prefix : factory.getPath()) {
+            Resource res = getResource(prefix + path);
+            if (res != null) {
+                return res;
+            }
+        }
+        
+        // no resource found, if we get here
         return null;
      }
 
-    public Resource getResource(Resource base, String path)
-            throws SlingException {
-        // special case of absolute paths
-        if (path.startsWith("/")) {
-            return getResource(path);
+    public Resource getResource(Resource base, String path) {
+        
+        if (!path.startsWith("/") && base != null) {
+            path = base.getPath() + "/" + path;
         }
 
-        // resolve relative path segments now
-        path = JcrResourceUtil.normalize(path);
-        if (path != null) {
-            if (path.length() == 0) {
-                // return the base resource
-                return base;
-            } else if (base instanceof Descendable) {
-                return ((Descendable) base).getDescendent(path);
-            }
-        }
-
-        // try (again) with absolute resource path
-        path = base.getPath() + "/" + path;
         return getResource(path);
     }
 
@@ -203,51 +230,10 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == Session.class) {
             return (AdapterType) getSession();
-        } else if (type == PathResolver.class) {
-            return (AdapterType) this;
         }
 
         // fall back to default behaviour
         return super.adaptTo(type);
-    }
-
-    // ---------- PathResolver interface --------------------------------------
-
-    /**
-     * @throws AccessControlException If an item would exist but is not readable
-     *             to this manager's session.
-     */
-    public Resource resolve(String uri) throws SlingException {
-        // TODO for now use null as a method to make sure this goes up the path
-        // (see SLING-179)
-        return resolve(uri, null);
-    }
-
-    public String pathToURL(Resource resource) {
-        String path = resource.getPath();
-
-        // get first map
-        String href = null;
-        Mapping[] mappings = factory.getMappings();
-        for (int i = 0; i < mappings.length && href == null; i++) {
-            href = mappings[i].mapHandle(path);
-        }
-
-        // if no mapping's to prefix matches the handle, use the handle itself
-        if (href == null) {
-            href = path;
-        }
-
-        // check virtual mappings
-        String virtual = factory.realToVirtualUri(href);
-        if (virtual != null) {
-            log.debug("pathToURL: Using virtual URI {} for path {}", virtual,
-                href);
-            href = virtual;
-        }
-
-        log.debug("MapHandle: {} -> {}", path, href);
-        return href;
     }
 
     // ---------- implementation helper ----------------------------------------
@@ -256,7 +242,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
      * @throws AccessControlException If an item would exist but is not readable
      *             to this manager's session.
      */
-    public Resource resolve(String uri, String httpMethod) throws SlingException {
+    private Resource resolve(String uri, String httpMethod) throws SlingException {
 
         // decode the request URI (required as the servlet container does not
         try {
@@ -354,7 +340,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
      * @throws AccessControlException If an item exists but this manager has no
      *             read access
      */
-    protected Resource getResourceInternal(String path) throws Exception {
+    protected Resource getResourceInternal(String path) {
 
         Resource resource= null;
 
