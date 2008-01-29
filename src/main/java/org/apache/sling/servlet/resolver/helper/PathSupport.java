@@ -40,6 +40,7 @@ public class PathSupport {
                 "HTTP Method name must not be empty");
 
         } else if (HttpConstants.METHOD_GET.equalsIgnoreCase(methodName)
+            || HttpConstants.METHOD_HEAD.equalsIgnoreCase(methodName)
             && extension != null && extension.length() > 0) {
 
             // for GET, we use the request extension
@@ -62,9 +63,9 @@ public class PathSupport {
     }
 
     private static class ScriptPathIterator implements Iterator<String> {
-        
+
         private static final String[] EMPTY_PATH = { "" };
-        
+
         private final String resourceTypePath;
 
         private final String selectorsPath;
