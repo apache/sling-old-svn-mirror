@@ -395,6 +395,12 @@
                 <artifactId>org.osgi.compendium</artifactId>
                 <version>1.0.0</version>
                 <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>javax.servlet</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
