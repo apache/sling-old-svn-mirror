@@ -66,6 +66,7 @@ import org.xmlpull.v1.XmlPullParserException;
  * The <code>ObjectContentManagerFactory</code> TODO
  *
  * @scr.component metadata="no"
+ * @scr.service name="org.apache.sling.jcr.ocm.ObjectContentManagerFactory"
  * @scr.property name="service.description"
  *               value="Sling Object Content Manager Factory"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -94,6 +95,8 @@ public class ObjectContentManagerFactoryImpl implements ObjectContentManagerFact
     private AtomicTypeConverterProvider converterProvider;
 
     private OcmAdapterFactory adapterFactory;
+
+    private OcmFactoryAdapterFactory factoryAdapterFactory;
 
     public ObjectContentManagerFactoryImpl() {
 
@@ -343,6 +346,7 @@ public class ObjectContentManagerFactoryImpl implements ObjectContentManagerFact
                 : new String[0];
         adapterFactory = new OcmAdapterFactory(this,
             componentContext.getBundleContext(), mappedClasses);
+        factoryAdapterFactory = new OcmFactoryAdapterFactory(this, componentContext.getBundleContext());
     }
 
     /** Deativates this component, called by SCR to take out of service */
@@ -350,6 +354,10 @@ public class ObjectContentManagerFactoryImpl implements ObjectContentManagerFact
         if (adapterFactory != null) {
             adapterFactory.dispose();
             adapterFactory = null;
+        }
+        if ( factoryAdapterFactory != null ) {
+            factoryAdapterFactory.dispose();
+            factoryAdapterFactory = null;
         }
 
         componentContext.getBundleContext().removeBundleListener(this);
