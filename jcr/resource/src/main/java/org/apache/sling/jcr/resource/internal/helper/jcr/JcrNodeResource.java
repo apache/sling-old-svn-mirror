@@ -35,7 +35,9 @@ import java.net.URL;
 import java.util.Iterator;
 
 import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.net.URLFactory;
@@ -54,9 +56,6 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** The relative path name of the data property of an nt:file node */
-    private static final String FILE_DATA_PROP = JCR_CONTENT + "/" + JCR_DATA;
-
     private final ResourceProvider resourceProvider;
 
     private final Node node;
@@ -66,18 +65,6 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
     private final String resourceType;
 
     private final ResourceMetadata metadata;
-
-//    JcrNodeResource(JcrResourceProvider resourceProvider, String path)
-//            throws RepositoryException {
-//        this.resourceProvider = resourceProvider;
-//        node = (Node) resourceProvider.getSession().getItem(path);
-//        this.path = node.getPath();
-//        metadata = new ResourceMetadata();
-//        resourceType = getResourceTypeForNode(node);
-//
-//        // check for nt:file metadata
-//        setMetaData(node, metadata);
-//    }
 
     JcrNodeResource(ResourceProvider resourceProvider, Node node)
             throws RepositoryException {
@@ -141,10 +128,28 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
         // implement this for nt:file only
         if (node != null) {
             try {
-                if (node.isNodeType(NT_FILE)
-                    && node.hasProperty(FILE_DATA_PROP)) {
-                    return node.getProperty(FILE_DATA_PROP).getStream();
+                // find the content node: for nt:file it is jcr:content
+                // otherwise it is the node of this resource
+                Node content = node.isNodeType(NT_FILE) ? node.getNode(JCR_CONTENT) : node;
+                
+                // if the node has a jcr:data property, use that property
+                if (content.hasProperty(JCR_DATA)) {
+                    return content.getProperty(JCR_DATA).getStream();
                 }
+                
+                // otherwise try to follow default item trail
+                try {
+                    Item item = content.getPrimaryItem();
+                    while (item.isNode()) {
+                        item = ((Node) item).getPrimaryItem();
+                    }
+                    return ((Property) item).getStream();
+                } catch (ItemNotFoundException infe) {
+                    // we don't actually care, but log for completeness
+                    log.debug("getInputStream: No primary items for "
+                        + toString(), infe);
+                }
+                
             } catch (RepositoryException re) {
                 log.error("getInputStream: Cannot get InputStream for " + this,
                     re);
@@ -211,32 +216,38 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
         return result;
     }
 
-    private static void setMetaData(Node node, ResourceMetadata metadata) {
+    private void setMetaData(Node node, ResourceMetadata metadata) {
         try {
+            
+            // check stuff for nt:file nodes
             if (node.isNodeType(NT_FILE)) {
                 metadata.put(CREATION_TIME,
                     node.getProperty(JCR_CREATED).getLong());
 
-                if (node.hasNode(JCR_CONTENT)) {
-                    Node content = node.getNode(JCR_CONTENT);
-                    if (content.hasProperty(JCR_MIMETYPE)) {
-                        metadata.put(CONTENT_TYPE, content.getProperty(
-                            JCR_MIMETYPE).getString());
-                    }
+                // continue our stuff with the jcr:content node
+                // which might be  nt:resource, which we support below
+                node = node.getNode(JCR_CONTENT);
+            }
+            
+            // check stuff for nt:resource (or similar) nodes
+            if (node.hasProperty(JCR_MIMETYPE)) {
+                metadata.put(CONTENT_TYPE,
+                    node.getProperty(JCR_MIMETYPE).getString());
+            }
 
-                    if (content.hasProperty(JCR_ENCODING)) {
-                        metadata.put(CHARACTER_ENCODING, content.getProperty(
-                            JCR_ENCODING).getString());
-                    }
+            if (node.hasProperty(JCR_ENCODING)) {
+                metadata.put(CHARACTER_ENCODING,
+                    node.getProperty(JCR_ENCODING).getString());
+            }
 
-                    if (content.hasProperty(JCR_LASTMODIFIED)) {
-                        metadata.put(MODIFICATION_TIME, content.getProperty(
-                            JCR_LASTMODIFIED).getLong());
-                    }
-                }
+            if (node.hasProperty(JCR_LASTMODIFIED)) {
+                metadata.put(MODIFICATION_TIME, node.getProperty(
+                    JCR_LASTMODIFIED).getLong());
             }
         } catch (RepositoryException re) {
-            // TODO: should log
+            log.info(
+                "setMetaData: Problem extracting metadata information for "
+                    + getPath(), re);
         }
     }
 
