@@ -145,12 +145,16 @@
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-ocm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
         </dependency>
 
        <dependency>
