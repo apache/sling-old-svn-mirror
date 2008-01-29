@@ -61,6 +61,49 @@ public interface ResourceResolver extends Adaptable {
     Resource resolve(HttpServletRequest request);
 
     /**
+     * Resolves the resource from the given absolute path.
+     * <p>
+     * If the request cannot be resolved to an existing resource this method
+     * returns <code>null</code>. This method is intended to apply the same
+     * algorithm to the absolute path as is used by the
+     * {@link #resolve(HttpServletRequest)} method except for cases where the
+     * latter uses request property such as request headers or request
+     * parameters to resolve a resource. In this case this method may return
+     * <code>null</code>.
+     * <p>
+     * If the <code>absPath</code> is a relative path, this method returns
+     * <code>null</code>.
+     * 
+     * @param absPath The absolute path to be mapped to a resource.
+     * @return The {@link Resource} mapped from the path or <code>null</code>
+     *         if no resource can be found for the path.
+     * @throws AccessControlException if the user authenticated with the request
+     *             does not have enough rights to access the resource to which
+     *             the request maps.
+     * @throws SlingException A subclass of this exception is thrown if the
+     *             resource to which the request maps cannot be retrieved.
+     */
+    Resource resolve(String absPath);
+
+    /**
+     * Returns a path mapped from the (resource) path applying the reverse
+     * mapping used by the {@link #resolve(HttpServletRequest)} and
+     * {@link #resolve(String)} such that when the path is given to the
+     * {@link #resolve(String)} method the same resource is returned.
+     * <p>
+     * Note, that technically the <code>resourcePath</code> need not refer to
+     * an existing resource. This method just applies the mappings and returns
+     * the resulting string. If the <code>resourcePath</code> does not address
+     * an existing resource roundtripping may of course not work and calling
+     * {@link #resolve(String)} with the path returned may return
+     * <code>null</code>.
+     * 
+     * @param resourcePath The path for which to return a mapped path.
+     * @return The mapped path.
+     */
+    String map(String resourcePath);
+
+    /**
      * Returns a {@link Resource} object for data located at the given path.
      * <p>
      * This specification does not define the location for resources or the
@@ -73,16 +116,16 @@ public interface ResourceResolver extends Adaptable {
      *            path may contain relative path specifiers like <code>.</code>
      *            (current location) and <code>..</code> (parent location),
      *            which are resolved by this method. If the path is relative,
-     *            that is the first character is not a slash, a
-     *            <code>SlingException</code> is thrown.
+     *            that is the first character is not a slash, implementations
+     *            are expected to apply a search path algorithm to resolve the
+     *            relative path to a resource.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
      * @throws AccessControlException if an item exists at the <code>path</code>
      *             but the session of this resource manager has no read access
      *             to the item.
      * @throws SlingException If an error occurrs trying to load the resource
-     *             object from the path or if <code>base</code> is
-     *             <code>null</code> and <code>path</code> is relative.
+     *             object from the path.
      */
     Resource getResource(String path);
 
