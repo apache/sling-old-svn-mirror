@@ -32,7 +32,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.servlets.ErrorHandler;
-import org.apache.sling.jcr.resource.PathResolver;
 import org.apache.sling.jcr.resource.SyntheticResource;
 
 /**
@@ -161,7 +160,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         url = makeAbsolutePath(url);
 
         // resolve the url to as if it would be a resource path
-        url = pathToURL(url);
+        url = map(url);
 
         // have the servlet container to further encodings
         return super.encodeURL(url);
@@ -173,7 +172,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         url = makeAbsolutePath(url);
 
         // resolve the url to as if it would be a resource path
-        url = pathToURL(url);
+        url = map(url);
 
         // have the servlet container to further encodings
         return super.encodeRedirectURL(url);
@@ -243,13 +242,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         return path;
     }
 
-    private String pathToURL(String url) {
-        PathResolver pr = getRequestData().getResourceResolver().adaptTo(PathResolver.class);
-        if (pr != null) {
-            Resource r = new SyntheticResource(url, null);
-            return pr.pathToURL(r);
-        }
-        
-        return url;
+    private String map(String url) {
+        return getRequestData().getResourceResolver().map(url);
     }
 }
