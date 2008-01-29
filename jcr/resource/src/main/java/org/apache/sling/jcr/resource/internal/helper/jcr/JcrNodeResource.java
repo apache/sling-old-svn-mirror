@@ -176,6 +176,9 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
             if (node.hasNode(relPath)) {
                 return new JcrNodeResource(resourceProvider,
                     node.getNode(relPath));
+            } else if (node.hasProperty(relPath)) {
+                return new JcrPropertyResource(resourceProvider, getPath()
+                    + "/" + relPath, node.getProperty(relPath));
             }
 
             log.error("getResource: There is no node at {} below {}", path,
