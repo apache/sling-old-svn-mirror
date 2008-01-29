@@ -17,8 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 
-/** Test the StreamServlet by reading an uploaded file with a GET
- */
+/** Test the streaming of static files uploaded to the repository */
 public class StreamServletTest extends RenderingTestBase {
     
     @Override
@@ -29,42 +28,30 @@ public class StreamServletTest extends RenderingTestBase {
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
     
-    public void testNothing() {
-        // TODO remove this all TODO_FAILS_ are gone 
-    }
-
-    /** TODO fails as files are currently served by the default renderer, as plain text */
-    public void TODO_FAILS_testPlainTextFile() throws Exception {
-        final String filename = "testfile.txt";
+    private void runTest(String filename, String expectedContentType, String expectedContent) throws Exception {
         final String toDelete = uploadTestScript(filename,filename);
         try {
             final String url = displayUrl + "/" + filename;
-            // TODO why don't we get a content-type here?
-            final String content = getContent(url, null);
-            assertTrue(
-                    "Content at " + url + " must include expected marker, got " + content,
-                    content.contains("This is just some text in an ASCII file.")
-            );
+            final String content = getContent(url, expectedContentType);
+            assertEquals(expectedContent, content);
         } finally {
             testClient.delete(toDelete);
         }
     }
+    
+    public void testPlainTextFile() throws Exception {
+        runTest("testfile.txt", CONTENT_TYPE_PLAIN, "This is just some text in an ASCII file.");
+    }
 
-    /** TODO fails as files are currently served by the default renderer, as plain text */
-    public void TODO_FAILS_testHtmlTextFile() throws Exception {
-        final String filename = "testfile.html";
-        final String toDelete = uploadTestScript(filename,filename);
-        try {
-            // TODO this should really be text/html, not sure why it is not
-            final String url = displayUrl + "/" + filename;
-            // TODO why don't we get a content-type here?
-            final String content = getContent(url, null);
-            assertTrue(
-                    "Content at " + url + " must include expected marker, got " + content,
-                    content.contains("This is <em>testfile.html</em>.")
-            );
-        } finally {
-            testClient.delete(toDelete);
-        }
+    public void testHtmlFile() throws Exception {
+        runTest("testfile.html", CONTENT_TYPE_HTML, "This is <em>testfile.html</em>");
+    }
+    
+    public void testJavascriptFile() throws Exception {
+        runTest("testfile.js", CONTENT_TYPE_JS, "// This is testfile.js");
+    }
+    
+    public void testJsonFile() throws Exception {
+        runTest("testfile.json", CONTENT_TYPE_JSON, "This is testfile.json");
     }
 }

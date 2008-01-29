@@ -20,19 +20,8 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-/** Test static content served from the microsling webapp resources */
+/** Some tests about static content */
 public class StaticContentTest extends HttpTestBase {
-    public void TODO_FAILS_testContentTypeHtml() throws IOException {
-        getContent(HTTP_BASE_URL + "/index.html", CONTENT_TYPE_HTML);
-    }
-    
-    public void TODO_FAILS_testContentTypeCss() throws IOException {
-        getContent(HTTP_BASE_URL + "/launchpad.css", CONTENT_TYPE_CSS);
-    }
-    
-    public void TODO_FAILS_testContentTypeJs() throws IOException {
-        getContent(HTTP_BASE_URL + "/ujax/ujax.js", CONTENT_TYPE_JS);
-    }
     
     public void testWebInfForbidden() throws IOException {
         // if DefaultSlingServlet handled this we'd get an SC_FORBIDDEN, but it looks
