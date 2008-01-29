@@ -19,6 +19,8 @@ package org.apache.sling.jcr.resource.internal.helper;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.sling.api.servlets.HttpConstants;
+
 /**
  * Iterate over the the HTTP request path by creating shorter segments of that
  * path using "." and "/" as separators.
@@ -42,15 +44,14 @@ import java.util.NoSuchElementException;
 public class ResourcePathIterator implements Iterator<String> {
 
     private String nextPath;
-    private final String httpMethod;
     private final int smallestBreakPos;
 
     public ResourcePathIterator(String path, String httpMethod) {
-        this.httpMethod = httpMethod;
 
         // For GET or HEAD requests, path can only be split after
         // the last slash (SLING-179)
-        final boolean getOrHead = "GET".equals(httpMethod) || "HEAD".equals(httpMethod);
+        final boolean getOrHead = HttpConstants.METHOD_GET.equals(httpMethod)
+            || HttpConstants.METHOD_HEAD.equals(httpMethod);
         smallestBreakPos = getOrHead ? path.lastIndexOf('/') : 0; 
             
         if (path != null) {
