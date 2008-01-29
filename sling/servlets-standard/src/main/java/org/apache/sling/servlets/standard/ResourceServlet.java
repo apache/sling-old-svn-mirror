@@ -39,7 +39,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
  * @scr.property name="service.description"
  *      value="Servlet to handle nt:resource nodes"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.core.resourceTypes" value="nt:resource"
+ * @scr.property name="sling.servlet.resourceTypes" value="nt:resource"
  * @scr.service
  */
 public class ResourceServlet extends SlingAllMethodsServlet {

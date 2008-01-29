@@ -34,7 +34,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
  * @scr.property name="service.description"
  *             value="Servlet to handle sling:Reference"
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
- * @scr.property name="sling.core.resourceTypes" value="sling:Reference"
+ * @scr.property name="sling.servlet.resourceTypes" value="sling:Reference"
  * @scr.service
  */
 public class ReferenceServlet extends SlingAllMethodsServlet {
