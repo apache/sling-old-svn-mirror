@@ -19,6 +19,8 @@
 package org.apache.sling.launchpad.servlets;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +33,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.launchpad.renderers.DefaultHtmlRendererServlet;
 import org.apache.sling.launchpad.renderers.JsonRendererServlet;
@@ -105,27 +108,77 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
             return;
         }
         
-        // use default renderer servlet if no extension, else lookup our getServlets 
+        // render using a servlet or binary streaming
         Servlet s = defaultGetServlet;
+        InputStream stream = null;
         final String ext = request.getRequestPathInfo().getExtension();
         if(ext!=null && ext.length() > 0) {
-            s = getServlets.get(ext);
+            // if there is an extension, lookup our getServlets 
+            s = getServlets.get(ext); 
+        } else {
+            // no extension means we're addressing a static file directly
+            // check whether the resource adapts to a stream, spool then
+            stream = resource.adaptTo(InputStream.class);
         }
 
-        // render using s, or fail
-        if(s==null) {
+        // render using stream, s, or fail
+        if(stream != null) {
+            stream(response, resource, stream);
+        } else if(s!=null) {
+            s.service(request, response);
+        } else {
             response.sendError(
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "No default renderer found for extension='" + ext + "'"
             );
-        } else {
-            s.service(request, response);
         }
     }
-
 
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) 
     throws ServletException,IOException {
         postServlet.service(request, response);
+    }
+    
+    /** Stream the Resource to response */
+    private void stream(HttpServletResponse response, Resource resource,
+            InputStream stream) throws IOException {
+        
+        ResourceMetadata meta = resource.getResourceMetadata();
+        
+        final String defaultContentType = "application/octet-stream";
+        String contentType = (String) meta.get(ResourceMetadata.CONTENT_TYPE);
+        if (contentType == null || defaultContentType.equals(contentType)) {
+            // if repository doesn't provide a content-type, or provides the default one,
+            // try to do better using our servlet context
+            final String ct = getServletContext().getMimeType(resource.getPath());
+            if(ct!=null) {
+                contentType = ct;
+            }
+        }
+        if (contentType != null) {
+            response.setContentType(contentType);
+        }
+        
+        String encoding = (String) meta.get(ResourceMetadata.CHARACTER_ENCODING);
+        if (encoding != null) {
+            response.setCharacterEncoding(encoding);
+        }
+        
+        try {
+            OutputStream out = response.getOutputStream();
+            
+            byte[] buf = new byte[1024];
+            int rd;
+            while ( (rd=stream.read(buf)) >= 0) {
+                out.write(buf, 0, rd);
+            }
+            
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException ignore) {
+                // don't care
+            }
+        }
     }
 }
