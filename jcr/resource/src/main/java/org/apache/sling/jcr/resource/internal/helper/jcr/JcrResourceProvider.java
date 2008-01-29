@@ -38,12 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>JcrResourceResolver</code> class implements the Sling
- * <code>ResourceResolver</code> and <code>ResourceResolver</code> interfaces
- * and in addition is a {@link PathResolver}. Instances of this class are
- * retrieved through the
- * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
- * method.
+ * The <code>JcrResourceProvider</code> is the main resource provider of this
+ * bundle providing access to JCR resources. This resoure provider is created
+ * for each <code>JcrResourceResolver</code> instance and is bound to the JCR
+ * session for a single request.
  */
 public class JcrResourceProvider implements ResourceProvider {
 
@@ -68,12 +66,12 @@ public class JcrResourceProvider implements ResourceProvider {
         return new String[] { "/" };
     }
 
-    public Resource getResource(HttpServletRequest request, String path) throws SlingException {
+    public Resource getResource(HttpServletRequest request, String path)
+            throws SlingException {
         return getResource(path);
     }
 
-    public Resource getResource(String path)
-            throws SlingException {
+    public Resource getResource(String path) throws SlingException {
 
         try {
             return createResource(path);
@@ -147,7 +145,7 @@ public class JcrResourceProvider implements ResourceProvider {
      * Checks whether the item exists and this content manager's session has
      * read access to the item. If the item does not exist, access control is
      * ignored by this method and <code>false</code> is returned.
-     *
+     * 
      * @param path The path to the item to check
      * @return <code>true</code> if the item exists and this content manager's
      *         session has read access. If the item does not exist,
