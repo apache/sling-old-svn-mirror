@@ -52,13 +52,17 @@ import org.slf4j.LoggerFactory;
  */
 public class Loader {
 
+
     public static final String CONTENT_HEADER = "Sling-Initial-Content";
 
     public static final String EXT_XML = ".xml";
     public static final String EXT_JSON = ".json";
 
+    // default content type for createFile()
+    private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+
     /** default log */
-    private static final Logger log = LoggerFactory.getLogger(Loader.class);
+    private final Logger log = LoggerFactory.getLogger(Loader.class);
 
     private JcrResourceResolverFactoryImpl jcrContentHelper;
     private XmlReader xmlReader;
@@ -337,11 +341,20 @@ public class Loader {
         String type = conn.getContentType();
         InputStream data = conn.getInputStream();
 
+        // ensure content type
         if (type == null) {
             type = this.jcrContentHelper.getMimeType(name);
             if (type == null) {
-                type = "application/octet-stream";
+                log.info(
+                    "createFile: Cannot find content type for {}, using {}",
+                    source.getPath(), DEFAULT_CONTENT_TYPE);
+                type = DEFAULT_CONTENT_TYPE;
             }
+        }
+        
+        // ensure sensible last modification date
+        if (lastModified <= 0) {
+            lastModified = System.currentTimeMillis();
         }
 
         Node file = parent.addNode(name, "nt:file");
