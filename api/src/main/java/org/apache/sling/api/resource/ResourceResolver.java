@@ -161,6 +161,17 @@ public interface ResourceResolver extends Adaptable {
     Resource getResource(Resource base, String path);
 
     /**
+     * Returns the search path used by the {@link #getResource(String)} method
+     * to search for resources by relative path. If no search path is set an
+     * empty array is returned.
+     * <p>
+     * The returns array of Strings is a copy of the internal vaue, so
+     * modifications to this array have no influence on the operation of the
+     * ResourceResolver.
+     */
+    String[] getSearchPath();
+
+    /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded
      * from the children of the given <code>Resource</code>.
      * <p>
