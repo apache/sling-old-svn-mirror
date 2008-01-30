@@ -41,7 +41,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
+import org.apache.sling.jcr.resource.internal.ContentLoaderService;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class Loader {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
-    private JcrResourceResolverFactoryImpl jcrContentHelper;
+    private ContentLoaderService jcrContentHelper;
     private XmlReader xmlReader;
     private JsonReader jsonReader;
     private Map<String, List<String>> delayedReferences;
@@ -72,7 +72,7 @@ public class Loader {
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
-    public Loader(JcrResourceResolverFactoryImpl jcrContentHelper) {
+    public Loader(ContentLoaderService jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
         this.delayedReferences = new HashMap<String, List<String>>();
         this.delayedBundles = new LinkedList<Bundle>();
@@ -351,7 +351,7 @@ public class Loader {
                 type = DEFAULT_CONTENT_TYPE;
             }
         }
-        
+
         // ensure sensible last modification date
         if (lastModified <= 0) {
             lastModified = System.currentTimeMillis();
