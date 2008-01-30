@@ -105,7 +105,7 @@ public class JcrResourceResolverFactoryImpl implements
      *               label="%resolver.path.name"
      *               description="%resolver.path.description"
      */
-    public static final String PROP_PATH = "resource.resolver.path";
+    public static final String PROP_PATH = "resource.resolver.searchpath";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -146,7 +146,7 @@ public class JcrResourceResolverFactoryImpl implements
     private boolean allowDirect = false;
 
     // the search path for ResourceResolver.getResource(String)
-    private String[] path;
+    private String[] searchPath;
 
     /**
      * Map of administrative sessions used to check item existence. Indexed by
@@ -306,8 +306,8 @@ public class JcrResourceResolverFactoryImpl implements
         return mappings;
     }
 
-    String[] getPath() {
-        return path;
+    String[] getSearchPath() {
+        return searchPath;
     }
 
     // ---------- Bundle provided resources -----------------------------------
@@ -399,21 +399,21 @@ public class JcrResourceResolverFactoryImpl implements
         }
 
         // from configuration if available
-        path = OsgiUtil.toStringArray(properties.get(PROP_PATH));
-        if (path != null && path.length > 0) {
-            for (int i = 0; i < path.length; i++) {
+        searchPath = OsgiUtil.toStringArray(properties.get(PROP_PATH));
+        if (searchPath != null && searchPath.length > 0) {
+            for (int i = 0; i < searchPath.length; i++) {
                 // ensure leading slash
-                if (!path[i].startsWith("/")) {
-                    path[i] = "/" + path[i];
+                if (!searchPath[i].startsWith("/")) {
+                    searchPath[i] = "/" + searchPath[i];
                 }
                 // ensure trailing slash
-                if (!path[i].endsWith("/")) {
-                    path[i] += "/";
+                if (!searchPath[i].endsWith("/")) {
+                    searchPath[i] += "/";
                 }
             }
         }
-        if (path == null) {
-            path = new String[] { "/" };
+        if (searchPath == null) {
+            searchPath = new String[] { "/" };
         }
 
         // bind resource providers not bound yet
