@@ -35,14 +35,12 @@ import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.bundle.BundleResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
-import org.apache.sling.jcr.resource.internal.loader.Loader;
 import org.apache.sling.osgi.commons.OsgiUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -65,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * descriptors provided by bundles.
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
- * 
+ *
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  * @scr.property name="service.description" value="Sling
@@ -89,7 +87,7 @@ public class JcrResourceResolverFactoryImpl implements
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
-     * 
+     *
      * @scr.property values.1="/-/"
      */
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
@@ -114,30 +112,22 @@ public class JcrResourceResolverFactoryImpl implements
 
     /**
      * The JCR Repository we access to resolve resources
-     * 
+     *
      * @scr.reference
      */
     private SlingRepository repository;
 
     /**
      * The OSGi EventAdmin service used to dispatch events
-     * 
+     *
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
     private EventAdmin eventAdmin;
 
-    /**
-     * The MimeTypeService used by the initial content initialContentLoader to
-     * resolve MIME types for files to be installed.
-     * 
-     * @scr.reference cardinality="0..1" policy="dynamic"
-     */
-    private MimeTypeService mimeTypeService;
-
     // list of ResourceProvider services bound before activation of the
     // component
     private List<ServiceReference> delayedResourceProviders = new LinkedList<ServiceReference>();
-    
+
     private ComponentContext componentContext;
 
     /**
@@ -162,16 +152,10 @@ public class JcrResourceResolverFactoryImpl implements
      * Map of administrative sessions used to check item existence. Indexed by
      * workspace name. The map is filled on-demand. The sessions are closed when
      * the factory is deactivated.
-     * 
+     *
      * @see #itemReallyExists(Session, String)
      */
     private Map<String, Session> adminSessions = new HashMap<String, Session>();
-
-    /**
-     * The initial content loader which is called to load initial content up
-     * into the repository when the providing bundle is installed.
-     */
-    private Loader initialContentLoader;
 
     private ResourceProviderEntry rootProviderEntry;
 
@@ -202,7 +186,7 @@ public class JcrResourceResolverFactoryImpl implements
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     * 
+     *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -214,21 +198,6 @@ public class JcrResourceResolverFactoryImpl implements
         //
 
         switch (event.getType()) {
-            case BundleEvent.STARTING: // STARTED:
-                // register content when the bundle content is available
-                // as node types are registered when the bundle is installed
-                // we can safely add the content at this point.
-                try {
-                    Session session = getAdminSession(null);
-                    initialContentLoader.registerBundle(session,
-                        event.getBundle());
-                } catch (Throwable t) {
-                    log.error(
-                        "bundleChanged: Problem loading initial content of bundle "
-                            + event.getBundle().getSymbolicName() + " ("
-                            + event.getBundle().getBundleId() + ")", t);
-                }
-
             case BundleEvent.STARTED:
                 // register resource provider for the started bundle
                 addBundleResourceProvider(event.getBundle());
@@ -238,10 +207,6 @@ public class JcrResourceResolverFactoryImpl implements
                 // remove resource provider after the bundle has stopped
                 removeBundleResourceProvider(event.getBundle());
                 break;
-
-            case BundleEvent.UNINSTALLED:
-                initialContentLoader.unregisterBundle(event.getBundle());
-                break;
         }
     }
 
@@ -249,7 +214,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     /**
      * Fires an OSGi event through the EventAdmin service.
-     * 
+     *
      * @param sourceBundle The Bundle from which the event originates. This may
      *            be <code>null</code> if there is no originating bundle.
      * @param eventName The name of the event
@@ -320,14 +285,6 @@ public class JcrResourceResolverFactoryImpl implements
         }
     }
 
-    /** Returns the MIME type from the MimeTypeService for the given name */
-    public String getMimeType(String name) {
-        // local copy to not get NPE despite check for null due to concurrent
-        // unbind
-        MimeTypeService mts = mimeTypeService;
-        return (mts != null) ? mts.getMimeType(name) : null;
-    }
-
     /** If uri is a virtual URI returns the real URI, otherwise returns null */
     String virtualToRealUri(String virtualUri) {
         return (virtualURLMap != null)
@@ -395,8 +352,6 @@ public class JcrResourceResolverFactoryImpl implements
         this.componentContext = componentContext;
         this.serviceReference = componentContext.getServiceReference();
 
-        this.initialContentLoader = new Loader(this);
-
         componentContext.getBundleContext().addBundleListener(this);
 
         try {
@@ -404,12 +359,6 @@ public class JcrResourceResolverFactoryImpl implements
 
             Bundle[] bundles = componentContext.getBundleContext().getBundles();
             for (Bundle bundle : bundles) {
-                if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
-                    // load content for bundles which are neither INSTALLED nor
-                    // UNINSTALLED
-                    initialContentLoader.registerBundle(session, bundle);
-                }
-
                 if (bundle.getState() == Bundle.ACTIVE) {
                     // add bundle resource provider for active bundles
                     addBundleResourceProvider(bundle);
@@ -478,8 +427,6 @@ public class JcrResourceResolverFactoryImpl implements
     protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
-        initialContentLoader.dispose();
-
         Session[] sessions = adminSessions.values().toArray(
             new Session[adminSessions.size()]);
         adminSessions.clear();
@@ -492,10 +439,10 @@ public class JcrResourceResolverFactoryImpl implements
 
     protected void bindResourceProvider(ServiceReference reference) {
         if (componentContext == null) {
-            
+
             // delay binding resource providers if called before activation
             delayedResourceProviders.add(reference);
-            
+
         } else {
             String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
             if (roots != null && roots.length > 0) {
