@@ -132,7 +132,8 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         }
 
         // otherwise we have to apply the search path
-        for (String prefix : factory.getPath()) {
+        // (don't use this.getSearchPath() to save a few cycle for not cloning)
+        for (String prefix : factory.getSearchPath()) {
             Resource res = getResource(prefix + path);
             if (res != null) {
                 return res;
@@ -152,6 +153,10 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         return getResource(path);
     }
 
+    public String[] getSearchPath() {
+        return factory.getSearchPath().clone();
+    }
+    
     public Iterator<Resource> listChildren(Resource parent) {
         if (parent instanceof Descendable) {
             return ((Descendable) parent).listChildren();
