@@ -155,6 +155,7 @@ public class Loader {
 
             // persist modifications now
             session.save();
+            log.debug("Done installing initial content from bundle {}", bundle.getSymbolicName());
         } finally {
             try {
                 if (session.hasPendingChanges()) {
@@ -173,13 +174,14 @@ public class Loader {
         @SuppressWarnings("unchecked")
         Enumeration<String> entries = bundle.getEntryPaths(path);
         if (entries == null) {
-            log.info("install: No entries at {}", path);
+            log.info("install: No initial content entries at {}", path);
             return;
         }
 
         Set<URL> ignoreEntry = new HashSet<URL>();
         while (entries.hasMoreElements()) {
             final String entry = entries.nextElement();
+            log.debug("Processing initial content entry {}", entry);
             if (entry.endsWith("/")) {
                 // dir, check for node descriptor , else create dir
                 String base = entry.substring(0, entry.length()-1);
