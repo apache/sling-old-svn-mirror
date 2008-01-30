@@ -1,9 +1,5 @@
-This module generates a zip file that, once expanded, allows
-microsling to run standalone, using the Jetty web server's
-start.jar utility.
+microsling has been replaced by the Sling Launchpad,
+see http://incubator.apache.org/sling/site/discover-sling-in-15-minutes.html
 
-To build the zip file, run "mvn install" here, after building
-the microsling core if needed (in ../microsling-core).
+We'll keep this code around for some time, but it might not even build.
 
-To run microsling, see the README.txt found in the generated
-zip file.
