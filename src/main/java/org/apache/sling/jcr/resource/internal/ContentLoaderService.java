@@ -26,7 +26,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.loader.Loader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
+import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  *               Content Loader Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class ContentLoaderService implements BundleListener {
+public class ContentLoaderService implements SynchronousBundleListener {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
