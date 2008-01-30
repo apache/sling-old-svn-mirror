@@ -136,15 +136,28 @@ public class ContentLoaderService implements BundleListener {
         try {
             final Session session = getAdminSession();
 
+            log.debug(
+                    "Activated - attempting to load content from all "
+                    + "bundles which are neither INSTALLED nor UNINSTALLED");
+
+            int ignored = 0;
             Bundle[] bundles = componentContext.getBundleContext().getBundles();
             for (Bundle bundle : bundles) {
                 if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
                     initialContentLoader.registerBundle(session, bundle);
+                } else {
+                    ignored++;
                 }
 
             }
+            
+            log.debug(
+                    "Out of {} bundles, {} were not in a suitable state for initial content loading",
+                    bundles.length, ignored
+                    );
+
         } catch (Throwable t) {
             log.error("activate: Problem while loading initial content and"
                 + " registering mappings for existing bundles", t);
