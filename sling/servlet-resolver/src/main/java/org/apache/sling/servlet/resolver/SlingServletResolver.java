@@ -575,15 +575,19 @@ public class SlingServletResolver implements ServletResolver,
 
             Servlet servlet = (Servlet) context.locateService(REF_SERVLET,
                 reference);
-            String name = servlet.getServletConfig().getServletName();
-            log.debug("unbindServlet: Servlet {} removed", name);
-
-            try {
-                servlet.destroy();
-            } catch (Throwable t) {
-                log.error(
-                    "unbindServlet: Unexpected problem destroying servlet "
-                        + name, t);
+            if(servlet == null) {
+                log.error("destroyServlet: Servlet not found for reference {}", reference.toString());
+            } else {
+                String name = servlet.getServletConfig().getServletName();
+                log.debug("unbindServlet: Servlet {} removed", name);
+    
+                try {
+                    servlet.destroy();
+                } catch (Throwable t) {
+                    log.error(
+                        "unbindServlet: Unexpected problem destroying servlet "
+                            + name, t);
+                }
             }
         }
     }
