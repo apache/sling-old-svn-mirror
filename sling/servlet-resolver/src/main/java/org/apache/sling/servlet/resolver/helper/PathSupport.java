@@ -39,8 +39,8 @@ public class PathSupport {
             throw new IllegalArgumentException(
                 "HTTP Method name must not be empty");
 
-        } else if (HttpConstants.METHOD_GET.equalsIgnoreCase(methodName)
-            || HttpConstants.METHOD_HEAD.equalsIgnoreCase(methodName)
+        } else if ((HttpConstants.METHOD_GET.equalsIgnoreCase(methodName)
+            || HttpConstants.METHOD_HEAD.equalsIgnoreCase(methodName))
             && extension != null && extension.length() > 0) {
 
             // for GET, we use the request extension
