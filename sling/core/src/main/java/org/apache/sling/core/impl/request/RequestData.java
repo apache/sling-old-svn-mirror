@@ -155,6 +155,8 @@ public class RequestData implements BufferProvider {
         if (sr != null) {
             Servlet servlet = sr.resolveServlet(slingRequest);
             contentData.setServlet(servlet);
+        } else {
+            log.warn("init(): No ServletResolver available");
         }
     }
 

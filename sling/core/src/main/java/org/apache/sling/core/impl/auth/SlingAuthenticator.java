@@ -454,9 +454,13 @@ public class SlingAuthenticator implements ManagedService {
      */
     private void setAttributes(Session session, String authType,
             HttpServletRequest request) {
+        
         request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
         request.setAttribute(CoreConstants.SESSION, session);
+        
+        log.debug("Session stored as request attribute: user={}, workspace={}",
+                session.getUserID(), session.getWorkspace().getName());
     }
 
     /**
