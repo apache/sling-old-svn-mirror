@@ -264,6 +264,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         } catch (ResourceNotFoundException rnfe) {
 
             // send this exception as a 404 status
+            log.info("service: Resource {} not found", rnfe.getResource());
+            
             getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
                 rnfe.getMessage(), request, response);
 
@@ -280,11 +282,15 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             // send this exception as is (albeit unwrapping and wrapped
             // exception.
             Throwable t = (se.getCause() != null) ? se.getCause() : se;
+            log.error("service: Uncaught SlingException", t);
             getErrorHandler().handleError(t, request, response);
 
         } catch (AccessControlException ace) {
 
             // try to request authentication fail, if not possible
+            log.info(
+                "service: Authenticated user {} does not have enough rights to executed requested action",
+                request.getRemoteUser());
             getSlingAuthenticator().requestAuthentication(request, response);
 
         } catch (Throwable t) {
@@ -297,6 +303,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                     requestData.getActiveServletName());
             }
 
+            log.error("service: Uncaught Throwable", t);
             getErrorHandler().handleError(t, request, response);
 
         } finally {
