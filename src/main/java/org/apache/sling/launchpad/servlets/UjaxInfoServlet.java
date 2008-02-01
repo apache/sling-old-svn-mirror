@@ -56,11 +56,13 @@ public class UjaxInfoServlet extends SlingSafeMethodsServlet {
 
         if (data== null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,request.getPathInfo());
+            return;
         }
         
         // render data in JSON format
         response.setContentType("application/json");
-        final Writer out = new OutputStreamWriter(response.getOutputStream());
+        response.setCharacterEncoding("UTF-8");
+        final Writer out = response.getWriter();
         final JSONWriter w = new JSONWriter(out);
         try {
             w.object();
