@@ -219,15 +219,25 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     public void service(HttpServletRequest servletRequest,
             HttpServletResponse servletResponse) throws IOException {
 
-        // the resource manager factory may be missing
-        if (getResourceResolverFactory() == null) {
-            log.error("service: Cannot handle requests without a ResourceResolverFactory");
-            sendError(HttpServletResponse.SC_NOT_FOUND,
-                "No resource can be found", null, servletRequest,
-                servletResponse);
+        // check that we have all required services
+        String missing = null;
+        if(getResourceResolverFactory() == null) {
+            missing = "ResourceResolverFactory";
+        } else if(getServletResolver() == null) {
+            missing = "ServletResolver";
+        } else if(mimeTypeService == null) {
+            missing = "MimeTypeService";
+        }
+        
+        if(missing != null) {
+            final String err = missing + " service missing, cannot service requests";
+            final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE; 
+            log.error(err + ", sending status " + status);
+            sendError(status, err, null, servletRequest, servletResponse);
             return;
         }
 
+        // get JCR Session
         Session session = (Session) servletRequest.getAttribute(SESSION);
         if (session == null) {
             log.error("service: Cannot handle request: Missing JCR Session");
@@ -737,5 +747,5 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         }
         return stringConfig;
     }
-
+ 
 }
