@@ -96,6 +96,8 @@
                     </execution>
                 </executions>
             </plugin>
+<!-- 
+            Disable for now as this doesn't work on Mac OS X
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -107,6 +109,7 @@
                     </compilerArguments>
                 </configuration>
             </plugin>
+ -->
         </plugins>
     </build>
 
