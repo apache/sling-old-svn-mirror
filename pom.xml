@@ -564,28 +564,28 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.eventadmin</artifactId>
-                <version>0.9.0-SNAPSHOT</version>
+                <version>1.0.0</version>
                 <scope>provided</scope>
             </dependency>
         
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr</artifactId>
-                <version>0.9.0-SNAPSHOT</version>
+                <version>1.0.0</version>
                 <scope>provided</scope>
             </dependency>
         
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.configadmin</artifactId>
-                <version>0.9.0-SNAPSHOT</version>
+                <version>1.0.0</version>
                 <scope>provided</scope>
             </dependency>
            
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.metatype</artifactId>
-                <version>0.9.0-SNAPSHOT</version>
+                <version>1.0.0</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
