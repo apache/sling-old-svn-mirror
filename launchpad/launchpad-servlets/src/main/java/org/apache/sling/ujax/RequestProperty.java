@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ujax;
 
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 
 /**
@@ -33,7 +32,7 @@ public class RequestProperty {
 
     private final String typeHint;
 
-    private final String keyName;
+    private final String relPath;
 
     private final String propName;
 
@@ -43,34 +42,31 @@ public class RequestProperty {
 
     private RequestParameter[] defaultValues;
 
-    public RequestProperty(SlingHttpServletRequest req, String savePrefix,
-                           String keyName, RequestParameter[] values) {
-        this.keyName = keyName;
+    public RequestProperty(UjaxPostProcessor ctx, String relPath,
+                           RequestParameter[] values) {
+        this.relPath = relPath;
         this.values = values;
-        if (savePrefix == null) {
-            savePrefix = "";
-        }
 
         // split the relative path identifying the property to be saved
-        if (keyName.indexOf("/")>=0) {
-            parentPath = keyName.substring(0, keyName.lastIndexOf("/"));
-            propName = keyName.substring(keyName.lastIndexOf("/") + 1);
+        if (this.relPath.indexOf("/")>=0) {
+            parentPath = this.relPath.substring(0, this.relPath.lastIndexOf("/"));
+            propName = this.relPath.substring(this.relPath.lastIndexOf("/") + 1);
         } else {
             parentPath = "";
-            propName = keyName;
+            propName = this.relPath;
         }
 
         // @TypeHint example
         // <input type="text" name="./age" />
         // <input type="hidden" name="./age@TypeHint" value="long" />
         // causes the setProperty using the 'long' property type
-        final String thName = savePrefix + keyName + UjaxPostServlet.TYPE_HINT_SUFFIX;
-        final RequestParameter rp = req.getRequestParameter(thName);
+        final String thName = ctx.getSavePrefix() + this.relPath + UjaxPostServlet.TYPE_HINT_SUFFIX;
+        final RequestParameter rp = ctx.getRequest().getRequestParameter(thName);
         typeHint = rp == null ? null : rp.getString();
 
         // @DefaultValue
-        final String dvName = savePrefix + keyName + UjaxPostServlet.DEFAULT_VALUE_SUFFIX;
-        defaultValues = req.getRequestParameters(dvName);
+        final String dvName = ctx.getSavePrefix() + this.relPath + UjaxPostServlet.DEFAULT_VALUE_SUFFIX;
+        defaultValues = ctx.getRequest().getRequestParameters(dvName);
         if (defaultValues == null) {
             defaultValues = EMPTY_PARAM_ARRAY;
         }
@@ -81,8 +77,8 @@ public class RequestProperty {
         return typeHint;
     }
 
-    public String getKeyName() {
-        return keyName;
+    public String getRelPath() {
+        return relPath;
     }
 
     public String getName() {

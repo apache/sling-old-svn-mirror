@@ -16,18 +16,17 @@
  */
 package org.apache.sling.ujax;
 
-import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.jackrabbit.util.Text;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.commons.mime.MimeTypeService;
 
-import java.util.Calendar;
 import java.io.IOException;
+import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 
 /**
  * Handles file uploads.
@@ -89,17 +88,29 @@ public class UjaxFileUploadHandler {
     public static final String JCR_DATA = "jcr:data";
 
     /**
+     * the post processor
+     */
+    private final UjaxPostProcessor ctx;
+
+    /**
+     * Constructs file upload handler
+     * @param ctx the post processor
+     */
+    public UjaxFileUploadHandler(UjaxPostProcessor ctx) {
+        this.ctx = ctx;
+    }
+
+    /**
      * Uses the file(s) in the request parameter for creation of new nodes.
      * if the parent node is a nt:folder a new nt:file is created. otherwise
      * just a nt:resource. if the <code>name</code> is '*', the filename of
      * the uploaded file is used.
      *
-     * @param request the servlet request
      * @param parent the parent node
      * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    void setFile(SlingHttpServletRequest request, Node parent, RequestProperty prop)
+    void setFile(Node parent, RequestProperty prop)
             throws RepositoryException {
         RequestParameter value = prop.getValues()[0];
         assert !value.isFormField();
@@ -149,12 +160,14 @@ public class UjaxFileUploadHandler {
         if (createNtFile) {
             // create nt:file
             parent = parent.addNode(name, typeHint);
+            ctx.getChangeLog().onCreated(parent.getPath());
             name = JCR_CONTENT;
             typeHint = NT_RESOURCE;
         }
         
         // create resource node
         Node res = parent.addNode(name, typeHint);
+        ctx.getChangeLog().onCreated(res.getPath());
 
         // get content type
         String contentType = value.getContentType();
@@ -166,7 +179,7 @@ public class UjaxFileUploadHandler {
         }
         if (contentType == null || contentType.equals("application/octet-stream")) {
             // try to find a better content type
-            MimeTypeService svc = request.getServiceLocator().getService(MimeTypeService.class);
+            MimeTypeService svc = ctx.getRequest().getServiceLocator().getService(MimeTypeService.class);
             if (svc != null) {
                 contentType = svc.getMimeType(value.getFileName());
             }
@@ -176,10 +189,16 @@ public class UjaxFileUploadHandler {
         }
 
         // set properties
-        res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
-        res.setProperty(JCR_MIMETYPE, contentType);
+        ctx.getChangeLog().onModified(
+            res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance()).getPath()
+        );
+        ctx.getChangeLog().onModified(
+            res.setProperty(JCR_MIMETYPE, contentType).getPath()
+        );
         try {
-            res.setProperty(JCR_DATA, value.getInputStream());
+            ctx.getChangeLog().onModified(
+                res.setProperty(JCR_DATA, value.getInputStream()).getPath()
+            );
         } catch (IOException e) {
             throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
         }
