@@ -76,6 +76,12 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
 
     public Resource resolve(HttpServletRequest request) throws SlingException {
         String pathInfo = request.getPathInfo();
+        
+        // servlet directly address, so there is no path info, use "/" then
+        if (pathInfo == null) {
+            pathInfo = "/";
+        }
+        
         Resource result = resolve(pathInfo, request.getMethod());
 
         if (result == null) {
