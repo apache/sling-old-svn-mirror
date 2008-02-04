@@ -57,6 +57,7 @@ public class Loader {
 
     public static final String EXT_XML = ".xml";
     public static final String EXT_JSON = ".json";
+    public static final String EXT_XJSON = ".xjson";
 
     // default content type for createFile()
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
@@ -67,6 +68,7 @@ public class Loader {
     private ContentLoaderService jcrContentHelper;
     private XmlReader xmlReader;
     private JsonReader jsonReader;
+    private XJsonReader xjsonReader;
     private Map<String, List<String>> delayedReferences;
 
     // bundles whose registration failed and should be retried
@@ -81,6 +83,7 @@ public class Loader {
     public void dispose() {
         this.xmlReader = null;
         this.jsonReader = null;
+        this.xjsonReader = null;
         this.delayedReferences = null;
         if (this.delayedBundles != null) {
             this.delayedBundles.clear();
@@ -192,6 +195,9 @@ public class Loader {
                 if (nodeDescriptor == null) {
                     nodeDescriptor = bundle.getEntry(base + EXT_JSON);
                 }
+                if (nodeDescriptor == null) {
+                    nodeDescriptor = bundle.getEntry(base + EXT_XJSON);
+                }
 
                 // if we have a descriptor, which has not been processed yet,
                 // otherwise call crateFolder, which creates an nt:folder or
@@ -217,7 +223,9 @@ public class Loader {
                 }
 
                 // install if it is a descriptor
-                if (entry.endsWith(EXT_XML) || entry.endsWith(EXT_JSON)) {
+                if (entry.endsWith(EXT_XML)
+                        || entry.endsWith(EXT_JSON)
+                        || entry.endsWith(EXT_XJSON)) {
                     if (this.createNode(parent, this.getName(entry), file) != null) {
                         ignoreEntry.add(file);
                         continue;
@@ -251,6 +259,8 @@ public class Loader {
                 nodeReader = this.getXmlReader();
             } else if (nodeXML.getPath().toLowerCase().endsWith(".json")) {
                 nodeReader = this.getJsonReader();
+            } else if (nodeXML.getPath().toLowerCase().endsWith(".xjson")) {
+                nodeReader = this.getXJsonReader();
             } else {
                 // cannot find out the type
                 return null;
@@ -500,6 +510,13 @@ public class Loader {
             this.jsonReader = new JsonReader();
         }
         return this.jsonReader;
+    }
+
+    private XJsonReader getXJsonReader() {
+        if (this.xjsonReader == null) {
+            this.xjsonReader = new XJsonReader();
+        }
+        return this.xjsonReader;
     }
 
 }
