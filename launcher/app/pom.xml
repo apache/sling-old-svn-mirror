@@ -165,7 +165,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <scope>compile</scope> 
+            <scope>provded</scope> 
         </dependency>
 
         <dependency>
