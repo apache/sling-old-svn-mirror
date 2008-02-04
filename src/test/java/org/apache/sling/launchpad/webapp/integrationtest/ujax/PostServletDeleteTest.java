@@ -56,7 +56,7 @@ public class PostServletDeleteTest extends HttpTestBase {
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
         final String deleteCmd = "ujax:delete";
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlA)));
-        assertPostStatus(postUrl,HttpServletResponse.SC_MOVED_TEMPORARILY,params,"Delete must return expected status (3)");
+        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
         assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must still exist");
         assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
@@ -67,14 +67,14 @@ public class PostServletDeleteTest extends HttpTestBase {
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlB)));
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlC)));
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlD)));
-        assertPostStatus(postUrl,HttpServletResponse.SC_MOVED_TEMPORARILY,params,"Delete must return expected status (2)");
+        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
         assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
         assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
         assertHttpStatus(urlD, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
         
         // attempting to delete non-existing nodes is ok
-        assertPostStatus(postUrl,HttpServletResponse.SC_MOVED_TEMPORARILY,params,"Delete must return expected status (2)");
+        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
     }
     
     private String urlToNodePath(String url) {

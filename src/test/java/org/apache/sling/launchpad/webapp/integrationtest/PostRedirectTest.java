@@ -22,47 +22,84 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /** Test the various redirect options for POST, SLING-126 */
 public class PostRedirectTest extends HttpTestBase {
 
     private String postPath = "CreateNodeTest/" + System.currentTimeMillis();
-    private String postUrl = HTTP_BASE_URL + "/" + postPath + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
-    
+
+    private String postUrl = HTTP_BASE_URL + "/" + postPath
+        + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
+
     public void testForcedRedirect() throws IOException {
-        final Map<String,String> params = new HashMap<String,String>();
-        params.put("ujax:redirect","http://forced/");
-        final Map<String,String> headers = new HashMap<String,String>();
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put("ujax:redirect", "http://forced/");
+        final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
-        
-        final String location = testClient.createNode(postUrl, params, headers, false);
-        assertEquals("With forced redirect and Referer, redirect must be forced","http://forced/",location);
+
+        final String location = testClient.createNode(postUrl, params, headers,
+            false);
+        assertEquals(
+            "With forced redirect and Referer, redirect must be forced",
+            "http://forced/", location);
     }
-    
+
     public void testDefaultRedirect() throws IOException {
-        final String location = testClient.createNode(postUrl, null, null, false);
-        assertTrue(
-                "With no headers or parameters, redirect (" + location 
-                + ") must point to created node (path=" + postPath + ")",
-                location.contains(postPath));
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put("ujax:redirect", null);
+        final String location = testClient.createNode(postUrl, null, null,
+            false);
+        assertTrue("With no headers or parameters, redirect (" + location
+            + ") must point to created node (path=" + postPath + ")",
+            location.contains(postPath));
     }
-    
-    public void testRefererRedirect() throws IOException {
-        final Map<String,String> headers = new HashMap<String,String>();
-        headers.put("Referer", "http://referer/");
-        final String location = testClient.createNode(postUrl, null, headers, true);
-        assertEquals("With Referer, redirect must point to referer","http://referer/",location);
-    }
-    
+
     public void testMagicStarRedirect() throws IOException {
-        final Map<String,String> params = new HashMap<String,String>();
-        params.put("ujax:redirect","*");
-        final Map<String,String> headers = new HashMap<String,String>();
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put("ujax:redirect", "*");
+        final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
-        final String location = testClient.createNode(postUrl, params, headers, false);
-        assertTrue(
-                "With magic star, redirect (" + location 
-                + ") must point to created node (path=" + postPath + ")",
-                location.contains(postPath));
+        final String location = testClient.createNode(postUrl, params, headers,
+            false);
+        assertTrue("With magic star, redirect (" + location
+            + ") must point to created node (path=" + postPath + ")",
+            location.contains(postPath));
+    }
+
+    public void testMagicStarRedirectPrefix() throws IOException {
+        String prefix = "xyz/";
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put("ujax:redirect", prefix + "*");
+        final Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Referer", "http://referer/");
+        final String location = testClient.createNode(postUrl, params, headers,
+            false);
+        assertTrue("With magic star, redirect (" + location
+            + ") must start with prefix " + prefix, location.contains(prefix));
+    }
+
+    public void testMagicStarRedirectSuffix() throws IOException {
+        String suffix = "/xyz.html";
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put("ujax:redirect", "*" + suffix);
+        final Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Referer", "http://referer/");
+        final String location = testClient.createNode(postUrl, params, headers,
+            false);
+        assertTrue("With magic star, redirect (" + location
+            + ") must end with suffix " + suffix, location.endsWith(suffix));
+    }
+
+    public void testMagicStarRedirectPrefixSuffix() throws IOException {
+        String prefix = "xyz/";
+        String suffix = "/xyz.html";
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put("ujax:redirect", prefix + "*" + suffix);
+        final Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Referer", "http://referer/");
+        final String location = testClient.createNode(postUrl, params, headers,
+            false);
+        assertTrue("With magic star, redirect (" + location
+            + ") must start with prefix " + prefix + " and end with suffix "
+            + suffix, location.contains(prefix) && location.endsWith(suffix));
     }
 }

@@ -60,7 +60,7 @@ public class PostServletOrderTest extends HttpTestBase {
             final int posA = json.indexOf(nodeName[i]);
             final int posB = json.indexOf(nodeName[i + 1]);
             if(posB <= posA) {
-                fail("Expected '" + nodeName[i] + " to come before " + nodeName[i + 1] + " in JSON data '" + json + "'");
+                fail("Expected '" + nodeName[i] + "' to come before '" + nodeName[i + 1] + "' in JSON data '" + json + "'");
             }
         }
     }
