@@ -52,7 +52,7 @@ class JsonReader implements NodeReader {
         }
     }
 
-    private Node createNode(String name, JSONObject nodeDescriptor) throws JSONException {
+    protected Node createNode(String name, JSONObject nodeDescriptor) throws JSONException {
         Node node = new Node();
         node.setName(name);
 
@@ -100,7 +100,7 @@ class JsonReader implements NodeReader {
         return node;
     }
 
-    private Property createProperty(String name, Object propDescriptorObject) throws JSONException {
+    protected Property createProperty(String name, Object propDescriptorObject) throws JSONException {
         if (propDescriptorObject == null) {
             return null;
         }
@@ -155,7 +155,7 @@ class JsonReader implements NodeReader {
         return property;
     }
 
-    private String getType(Object object) {
+    protected String getType(Object object) {
         if (object instanceof Double || object instanceof Float) {
             return PropertyType.TYPENAME_DOUBLE;
         } else if (object instanceof Number) {
