@@ -19,6 +19,7 @@ package org.apache.sling.commons.json.jcr;
 import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Set;
 
@@ -38,7 +39,10 @@ import org.apache.sling.commons.json.io.JSONWriter;
  *  are threadsafe.
  */
 public class JsonItemWriter {
-    final Set<String> propertyNamesToIgnore;
+    
+    private static DateFormat calendarFormat;
+    
+    private final Set<String> propertyNamesToIgnore;
 
     /** Create a JsonItemWriter
      *  @param propertyNamesToIgnore if not null, a property having a name from this
@@ -95,7 +99,7 @@ public class JsonItemWriter {
                 w.key(prop.getName()); 
                 w.array();
                 for(Value v : prop.getValues()) {
-                    w.value(convertValue(v));
+                    dumpValue(w, v);
                 }
                 w.endArray();
             }
@@ -142,21 +146,62 @@ public class JsonItemWriter {
             w.key(p.getName());
         }
 
-        w.value(convertValue(p.getValue()));
+        dumpValue(w, p.getValue());
     }
 
-    /** Convert a Value for JSON output */
-    protected Object convertValue(Value v) throws ValueFormatException, IllegalStateException, RepositoryException {
-        if(v.getType() == PropertyType.BINARY) {
-            // TODO return the binary size
-            return new Integer(0);
+    /**
+     * Writes the given value to the JSON writer. currently the following
+     * conversions are done:
+     * <table>
+     *   <tr><th>JSR Property Type</th><th>JSON Value Type</th></tr>
+     *   <tr><td>BINARY</td><td>size of binary value as long<sup>1</sup></td></tr>
+     *   <tr><td>DATE</td><td>converted date string as defined by ECMA</td></tr>
+     *   <tr><td>BOOLEAN</td><td>boolean</td></tr>
+     *   <tr><td>LONG</td><td>long</td></tr>
+     *   <tr><td>DOUBLE</td><td>double</td></tr>
+     *   <tr><td><i>all other</li></td><td>string</td></tr>
+     * </table>
+     * <sup>1</sup> Currently not implemented and uses 0 as default.
+     * 
+     * @param w json writer
+     * @param v value to dump
+     */
+    protected void dumpValue(JSONWriter w, Value v)
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException, JSONException {
 
-        } else if(v.getType() == PropertyType.DATE) {
-            final DateFormat fmt = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
-            return fmt.format(v.getDate().getTime());
+        switch (v.getType()) {
+            case PropertyType.BINARY:
+                // TODO return the binary size
+                w.value(0);
+                break;
 
-        } else {
-            return v.getString();
+            case PropertyType.DATE:
+                w.value(format(v.getDate()));
+                break;
+            
+            case PropertyType.BOOLEAN:
+                w.value(v.getBoolean());
+                break;
+            
+            case PropertyType.LONG:
+                w.value(v.getLong());
+                break;
+
+            case PropertyType.DOUBLE:
+                w.value(v.getDouble());
+
+                break;
+            default:
+                w.value(v.getString());
         }
+    }
+    
+    public static synchronized String format(Calendar date) {
+        if (calendarFormat == null) {
+            calendarFormat = new SimpleDateFormat(
+                "EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
+        }
+        return calendarFormat.format(date.getTime());
     }
 }
