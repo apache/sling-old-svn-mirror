@@ -122,7 +122,6 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.bundlerepository</artifactId>
-            <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
 

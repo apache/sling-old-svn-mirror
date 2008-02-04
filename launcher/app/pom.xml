@@ -154,26 +154,18 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
 
-        <!--
-            Depend on current Felix Framework snapshot due to a bug
-            in synchronous shutdown, which prevents Sling from shutting
-            controllably.
-        -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>1.1.0-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>compile</scope> 
         </dependency>
 
         <dependency>
@@ -194,22 +186,18 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.eventadmin</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.metatype</artifactId>
-            <version>0.9.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
