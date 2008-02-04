@@ -21,13 +21,14 @@ import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.SyntheticResource;
 import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
@@ -59,53 +60,51 @@ public class IncludeTagHandler extends TagSupport {
 
     /**
      * Called after the body has been processed.
-     *
+     * 
      * @return whether additional evaluations of the body are desired
      */
     public int doEndTag() throws JspException {
         log.debug("IncludeTagHandler.doEndTag");
 
-        // only try to include, if there is anything to include !!
         final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
-        RequestDispatcher dispatcher = null;
-        if (resource != null) {
-            // get the request dispatcher for the content object
-            dispatcher = request.getRequestDispatcher(resource);
-            path = resource.getPath();
 
-        } else if (path != null) {
-            // ensure the child path is absolute and assign the result to path
-            if (!path.startsWith("/")) {
-                path = request.getResource().getPath() + "/" + path;
-            }
-
-            // if the resourceType is set, try to resolve the path, if no
-            // resource exists for the path create a synthetic resource
-            if (resourceType != null) {
-                try {
-                    resource = request.getResourceResolver().getResource(path);
-                    if (resource == null) {
-                        resource = new SyntheticResource(path, resourceType);
-                    }
-                } catch (SlingException e) {
-                    TagUtil.log(log, pageContext,
-                        "Problem trying to load content", e);
+        // only try to include, if there is anything to include !!
+        if (resource == null) {
+            if (path == null) {
+                resource = request.getResource();
+                // overwrite resource type if needed
+                if (resourceType != null
+                    && !resourceType.equals(resource.getResourceType())) {
+                    path = resource.getPath();
+                    resource = null;
                 }
+            } else {
+                if (!path.startsWith("/")) {
+                    path = request.getResource().getPath() + "/"
+                        + JcrResourceUtil.normalize(this.path);
+                }
+                resource = request.getResourceResolver().getResource(path);
             }
+        }
 
-            // get the request dispatcher for the (relative) path
-            dispatcher = request.getRequestDispatcher(path);
+        // if resource could not be resolved, create synthetic one
+        if (resource == null) {
+            if (resourceType == null) {
+                TagUtil.log(log, pageContext, "unable to include path " + path
+                    + ". Resource not found and no resource type given.", null);
+                return EVAL_PAGE;
+            }
+            resource = new SyntheticResource(path, resourceType);
         }
 
         try {
-
             // optionally flush
             if (flush && !(pageContext.getOut() instanceof BodyContent)) {
                 // might throw an IOException of course
                 pageContext.getOut().flush();
             }
-
             // include the rendered content
+            RequestDispatcher dispatcher = request.getRequestDispatcher(resource);
             if (dispatcher != null) {
                 SlingHttpServletResponse response = new JspSlingHttpServletResponseWrapper(
                     pageContext);
@@ -122,6 +121,16 @@ public class IncludeTagHandler extends TagSupport {
         }
 
         return EVAL_PAGE;
+    }
+
+    public void setPageContext(PageContext pageContext) {
+        super.setPageContext(pageContext);
+
+        // init local fields, since tag might be reused
+        flush = false;
+        resource = null;
+        resourceType = null;
+        path = null;
     }
 
     public void setFlush(boolean flush) {
