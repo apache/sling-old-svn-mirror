@@ -19,7 +19,10 @@ package org.apache.sling.launchpad.webapp.integrationtest.helpers;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.DeleteMethod;
@@ -103,18 +106,34 @@ public class UslingIntegrationTestClient {
      *  @param multiPart if true, does a multipart POST 
      *  @return the URL that microsling provides to display the node 
      */
-    public String createNode(String url, Map<String,String> nodeProperties, Map<String,String> requestHeaders,boolean multiPart) 
+    public String createNode(String url, Map<String,String> clientNodeProperties, Map<String,String> requestHeaders,boolean multiPart) 
     throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
+
+        // create a private copy of the properties to not tamper with
+        // the properties of the client
+        Map<String, String> nodeProperties = new HashMap<String, String>();
+
+        // add ujax specific properties
+        nodeProperties.put("ujax:redirect", url);
+        nodeProperties.put("ujax:displayExtension", "");
+        
+        // take over any client provided properties
+        if (clientNodeProperties != null) {
+            nodeProperties.putAll(clientNodeProperties);
+        }
+        
         
         if(nodeProperties != null && nodeProperties.size() > 0) {
             if(multiPart) {
-                final Part [] parts = new Part[nodeProperties.size()];
-                int index = 0;
+                final List<Part> partList = new ArrayList<Part>();
                 for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
-                    parts[index++] = new StringPart(e.getKey().toString(), e.getValue().toString());
+                    if (e.getValue() != null) {
+                        partList.add(new StringPart(e.getKey().toString(), e.getValue().toString()));
+                    }
                 }
+                final Part [] parts = partList.toArray(new Part[partList.size()]);
                 post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
             } else {
                 for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
@@ -161,9 +180,8 @@ public class UslingIntegrationTestClient {
         post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
 
         final int status = httpClient.executeMethod(post);
-        if(status!=302) {
-            throw new IOException("Expected status code 302 for POST, got " + status + ", URL=" + url);
+        if(status!=200) { // fmeschbe: The default ujax status is 200, not 302 
+            throw new IOException("Expected status code 200 for POST, got " + status + ", URL=" + url);
         }
     }
-
 }
