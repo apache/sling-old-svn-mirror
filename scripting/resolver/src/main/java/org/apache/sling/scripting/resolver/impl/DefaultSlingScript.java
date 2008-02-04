@@ -252,7 +252,6 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             throw fail(scriptName, OUT, "Wrong type");
         }
 
-        Bindings bindings = new SimpleBindings();
         SlingScriptHelper sling;
 
         Object slingObject = slingBindings.get(SLING);
@@ -302,6 +301,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         }
 
         // set base variables
+        Bindings bindings = new SimpleBindings();
         bindings.put(SLING, sling);
         bindings.put(REQUEST, sling.getRequest());
         bindings.put(RESPONSE, sling.getResponse());
