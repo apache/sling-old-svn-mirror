@@ -117,4 +117,34 @@ public class JcrResourceUtilTest extends TestCase {
         assertEquals("az/bz/cz", JcrResourceUtil.normalize("az/bz/cz"));
         assertEquals("", JcrResourceUtil.normalize(""));
     }
+    
+    public void testGetParent() {
+        assertNull(JcrResourceUtil.getParent("/"));
+        assertNull(JcrResourceUtil.getParent("/.."));
+        
+        assertEquals("/", JcrResourceUtil.getParent("/b"));
+        assertEquals("b/c", JcrResourceUtil.getParent("b/c/d"));
+        assertEquals("/b/c", JcrResourceUtil.getParent("/b/c/d"));
+
+        assertNull(JcrResourceUtil.getParent("b"));
+        assertNull(JcrResourceUtil.getParent("/b/.."));
+    }
+    
+    public void testGetName() {
+        assertEquals("", JcrResourceUtil.getName("/"));
+        assertEquals("", JcrResourceUtil.getName("/a/.."));
+        
+        assertEquals("c", JcrResourceUtil.getName("c"));
+        assertEquals("c", JcrResourceUtil.getName("/c"));
+        
+        assertEquals("c", JcrResourceUtil.getName("b/c"));
+        assertEquals("c", JcrResourceUtil.getName("/b/c"));
+        
+        assertEquals("c", JcrResourceUtil.getName("b/c/"));
+        assertEquals("c", JcrResourceUtil.getName("/b/c/"));
+
+        assertEquals("b", JcrResourceUtil.getName("b/c/.."));
+        assertEquals("b", JcrResourceUtil.getName("/b/c/.."));
+        assertEquals("", JcrResourceUtil.getName("/b/c/../.."));
+    }
 }

@@ -184,7 +184,7 @@ public class JcrResourceUtil {
         path = normalize(path);
 
         // if normalized to root, there is no parent
-        if ("/".equals(path)) {
+        if (path == null || "/".equals(path)) {
             return null;
         }
 
@@ -193,6 +193,9 @@ public class JcrResourceUtil {
         if (lastSlash < 0) {
             // no slash in the path
             return null;
+        } else if (lastSlash == 0) {
+            // parent is root
+            return "/";
         }
 
         return path.substring(0, lastSlash);
@@ -223,8 +226,7 @@ public class JcrResourceUtil {
         }
 
         // find the last slash
-        int lastSlash = path.lastIndexOf('/');
-        return (lastSlash >= 0) ? path.substring(lastSlash) : path;
+        return path.substring(path.lastIndexOf('/')+1);
     }
 
 }
