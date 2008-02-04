@@ -96,20 +96,14 @@
                     </execution>
                 </executions>
             </plugin>
-<!-- 
-            Disable for now as this doesn't work on Mac OS X
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <compilerArguments>
-                        <bootclasspath>
-                            ${project.build.directory}/dependency/bsf-api.jar:${java.home}/lib/rt.jar
-                        </bootclasspath>
-                    </compilerArguments>
+                    <!-- Reported to work on Linux, Windows, Mac OSX -->
+                    <compilerArgument>-Xbootclasspath/p:${project.build.directory}/dependency/bsf-api.jar</compilerArgument>
                 </configuration>
             </plugin>
- -->
         </plugins>
     </build>
 
