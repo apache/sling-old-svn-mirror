@@ -24,32 +24,55 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.api.request.RequestParameter;
-
 /**
  * Sets a Property on the given Node, in some cases with a specific type and
  * value. For example, "lastModified" with an empty value is stored as the
  * current Date.
  */
-class UjaxPropertyValueSetter {
+class UjaxPropertyValueHandler {
+
     public static final String CREATED_FIELD = "created";
     public static final String CREATED_BY_FIELD = "createdBy";
     public static final String LAST_MODIFIED_FIELD = "lastModified";
     public static final String LAST_MODIFIED_BY_FIELD = "lastModifiedBy";
 
     /**
+     * the post processor
+     */
+    private final UjaxPostProcessor ctx;
+
+    /**
+     * current date for all properties in this request
+     */
+    private final Calendar now = Calendar.getInstance();
+
+    /**
+     * Constructs a propert value handler
+     * @param ctx the post processor
+     */
+    public UjaxPropertyValueHandler(UjaxPostProcessor ctx) {
+        this.ctx = ctx;
+    }
+
+
+    /**
      * Set property on given node, with some automatic values when user provides
      * the field name but no value.
      * 
-     * html example for testing: <input type="hidden" name="dateCreated"/>
-     * <input type="hidden" name="lastModified"/> <input type="hidden"
-     * name="createdBy"/> <input type="hidden" name="lastModifiedBy"/>
+     * html example for testing:
+     * <xmp>
+     *   <input type="hidden" name="dateCreated"/>
+     *   <input type="hidden" name="lastModified"/>
+     *   <input type="hidden" name="createdBy" />
+     *   <input type="hidden" name="lastModifiedBy"/>
+     * </xmp>
+     *
+     * @param parent the parent node
+     * @param prop the request property
+     * @throws RepositoryException if a repository error occurs
      */
-    void setProperty(Node parent, RequestProperty prop, boolean nodeWasJustCreated)
+    void setProperty(Node parent, RequestProperty prop)
             throws RepositoryException {
-
-        // set the same timestamp for all values, to ease testing
-        final Calendar now = Calendar.getInstance();
 
         final String name = prop.getName();
         if (prop.providesValue()) {
@@ -57,17 +80,17 @@ class UjaxPropertyValueSetter {
             setPropertyAsIs(parent, prop);
 
         } else if (CREATED_FIELD.equals(name)) {
-            if (nodeWasJustCreated) {
-                setCurrentDate(parent, name, now);
+            if (parent.isNew()) {
+                setCurrentDate(parent, name);
             }
 
         } else if (CREATED_BY_FIELD.equals(name)) {
-            if (nodeWasJustCreated) {
+            if (parent.isNew()) {
                 setCurrentUser(parent, name);
             }
 
         } else if (LAST_MODIFIED_FIELD.equals(name)) {
-            setCurrentDate(parent, name, now);
+            setCurrentDate(parent, name);
 
         } else if (LAST_MODIFIED_BY_FIELD.equals(name)) {
             setCurrentUser(parent, name);
@@ -78,18 +101,32 @@ class UjaxPropertyValueSetter {
         }
     }
 
-    /** set property to the current Date */
-    private void setCurrentDate(Node parent, String name, Calendar now)
+    /**
+     * Sets the property to the given date
+     * @param parent parent node
+     * @param name name of the property
+     * @throws RepositoryException if a repository error occurs
+     */
+    private void setCurrentDate(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        parent.setProperty(name, now);
+        ctx.getChangeLog().onModified(
+            parent.setProperty(name, now).getPath()
+        );
     }
 
-    /** set property to the current User id */
+    /**
+     * set property to the current User id
+     * @param parent parent node
+     * @param name name of the property
+     * @throws RepositoryException if a repository error occurs
+     */
     private void setCurrentUser(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        parent.setProperty(name, parent.getSession().getUserID());
+        ctx.getChangeLog().onModified(
+            parent.setProperty(name, parent.getSession().getUserID()).getPath()
+        );
     }
 
     /**
@@ -98,23 +135,32 @@ class UjaxPropertyValueSetter {
      *
      * @param parent the parent node
      * @param name the name of the property to remove
+     * @return path of the property that was removed or <code>null</code> if
+     *         it was not removed
      * @throws RepositoryException if a repository error occurs.
      */
-    private void removePropertyIfExists(Node parent, String name)
+    private String removePropertyIfExists(Node parent, String name)
             throws RepositoryException {
         if (parent.hasProperty(name)) {
             Property prop = parent.getProperty(name);
             if (!prop.getDefinition().isMandatory()) {
+                String path = prop.getPath();
                 prop.remove();
+                return path;
             }
         }
+        return null;
     }
 
-    /** set property without processing, except for type hints */
+    /**
+     * set property without processing, except for type hints
+     *
+     * @param parent the parent node
+     * @param prop the request property
+     * @throws RepositoryException if a repository error occurs.
+     */
     private void setPropertyAsIs(Node parent, RequestProperty prop)
             throws RepositoryException {
-
-        removePropertyIfExists(parent, prop.getName());
 
         // no explicit typehint
         int type = PropertyType.STRING;
@@ -129,18 +175,26 @@ class UjaxPropertyValueSetter {
         String[] values = prop.getStringValues();
         if (values == null) {
             // remove property
-            removePropertyIfExists(parent, prop.getName());
+            ctx.getChangeLog().onDeleted(
+                removePropertyIfExists(parent, prop.getName())
+            );
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
-                parent.setProperty(prop.getName(), "");
+                ctx.getChangeLog().onModified(
+                    parent.setProperty(prop.getName(), "").getPath()
+                );
             }
         } else if (values.length == 1) {
             removePropertyIfExists(parent, prop.getName());
-            parent.setProperty(prop.getName(), values[0], type);
+            ctx.getChangeLog().onModified(
+                parent.setProperty(prop.getName(), values[0], type).getPath()
+            );
         } else {
             removePropertyIfExists(parent, prop.getName());
-            parent.setProperty(prop.getName(), values, type);
+            ctx.getChangeLog().onModified(
+                parent.setProperty(prop.getName(), values, type).getPath()
+            );
         }
     }
 
