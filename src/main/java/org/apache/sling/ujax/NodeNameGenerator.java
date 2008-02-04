@@ -50,16 +50,19 @@ public class NodeNameGenerator {
         
     }
     
-    /** Get a "nice" node name, if possible, based on given request 
-     *  @param prefix if provided, added in front of our parameterNames
-     *  when looking for request parameters
+    /**
+     * Get a "nice" node name, if possible, based on given request
+     *
+     * @param parameters the request parameters
+     * @param prefix if provided, added in front of our parameterNames
+     *        when looking for request parameters
+     * @return a nice node name
      */
     public String getNodeName(RequestParameterMap parameters, String prefix) {
-        String result = null;
-        if(prefix==null) {
+        if (prefix==null) {
             prefix = "";
         }
-        
+
         // find the first request parameter that matches one of
         // our parameterNames, in order, and has a value
         String valueToUse = null;
@@ -68,7 +71,6 @@ public class NodeNameGenerator {
                 if(valueToUse != null) {
                     break;
                 }
-                
                 final RequestParameter[] pp = parameters.get(prefix + param);
                 if(pp!=null) {
                     for(RequestParameter p : pp) {
@@ -82,15 +84,13 @@ public class NodeNameGenerator {
                 }
             }
         }
-        
-        // default value if none provided
-        if(result==null) {
-            result = (++counter) + "_" + System.currentTimeMillis();
-        }
-        
-        // filter value so that it works as a node name
+        String result;
         if(valueToUse != null) {
+            // filter value so that it works as a node name
             result = filter.filter(valueToUse);
+        } else {
+            // default value if none provided
+            result = nextCounter() + "_" + System.currentTimeMillis();
         }
 
         // max length
@@ -107,5 +107,9 @@ public class NodeNameGenerator {
 
     public void setMaxLength(int maxLength) {
         this.maxLength = maxLength;
+    }
+
+    public synchronized int nextCounter() {
+        return ++counter;
     }
 }
