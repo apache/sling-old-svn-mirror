@@ -30,10 +30,9 @@ import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * The <code>JcrResourceUtil</code> class provides helper methods used throughout
- * this bundle.
+ * The <code>JcrResourceUtil</code> class provides helper methods used
+ * throughout this bundle.
  */
 public class JcrResourceUtil {
 
@@ -86,7 +85,7 @@ public class JcrResourceUtil {
 
         // prepare the path buffer with trailing slash (simplifies impl)
         int absOffset = (path.charAt(0) == '/') ? 0 : 1;
-        char[] buf= new char[path.length() + 1 + absOffset];
+        char[] buf = new char[path.length() + 1 + absOffset];
         if (absOffset == 1) {
             buf[0] = '/';
         }
@@ -102,7 +101,8 @@ public class JcrResourceUtil {
             if (c == '/') {
                 if (numDots == 2) {
                     if (bufPos == 0) {
-                        log.error("normalize: Path '{}' cannot be resolved", path);
+                        log.error("normalize: Path '{}' cannot be resolved",
+                            path);
                         return null;
                     }
 
@@ -143,7 +143,7 @@ public class JcrResourceUtil {
         } else if ((bufPos - absOffset) == path.length()) {
             resolved = path;
         } else {
-            resolved = new String(buf, absOffset, bufPos-absOffset);
+            resolved = new String(buf, absOffset, bufPos - absOffset);
         }
 
         log.debug("normalize: Resolving '{}' to '{}'", path, resolved);
@@ -151,18 +151,28 @@ public class JcrResourceUtil {
     }
 
     /**
+     * Helper method, which returns the given resource type as returned from the
+     * {@link org.apache.sling.api.resource.Resource#getResourceType()} as a
+     * relative path.
+     * 
+     * @param type The resource type to be converted into a path
+     * @return The resource type as a path.
+     */
+    public static String resourceTypeToPath(String type) {
+        return type.replaceAll("\\:", "/");
+    }
+
+    /**
      * Utility method returns the parent path of the given <code>path</code>,
      * which is normalized by {@link #normalize(String)} before resolving the
      * parent.
-     *
+     * 
      * @param path The path whose parent is to be returned.
-     *
      * @return <code>null</code> if <code>path</code> is the root path (<code>/</code>)
-     *      or if <code>path</code> is a single name containing no slash (<code>/</code>)
-     *      characters.
-     *
-     * @throws IllegalArgumentException If the path cannot be normalized by
-     *      the {@link #normalize(String)} method.
+     *         or if <code>path</code> is a single name containing no slash (<code>/</code>)
+     *         characters.
+     * @throws IllegalArgumentException If the path cannot be normalized by the
+     *             {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
      */
     public static String getParent(String path) {
@@ -191,7 +201,7 @@ public class JcrResourceUtil {
     /**
      * Utility method returns the name of the given <code>path</code>, which
      * is normalized by {@link #normalize(String)} before resolving the name.
-     *
+     * 
      * @param path The path whose name (the last path element) is to be
      *            returned.
      * @return The empty string if <code>path</code> is the root path (<code>/</code>)
