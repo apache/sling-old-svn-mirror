@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
@@ -104,7 +105,7 @@ public class HttpTestBase extends TestCase {
         System.err.println("Checking if the required Sling services are started...");
         
         // Try creating a node on server, every 500msec, until ok, with timeout
-        final Set exceptionMessages = new HashSet();
+        final List<String> exceptionMessages = new LinkedList<String>();
         final long maxMsecToWait = 10000L;
         while(!slingStartupOk && (System.currentTimeMillis() < startupTime + maxMsecToWait) ) {
             try {
@@ -116,10 +117,12 @@ public class HttpTestBase extends TestCase {
         }
         
         if(!slingStartupOk) {
-            fail(
-                    "Server does not seem to be ready, after " + maxMsecToWait + " msec"
-                    + ", got the following Exceptions: " + exceptionMessages
-            );
+            StringBuffer msg = new StringBuffer("Server does not seem to be ready, after ");
+            msg.append(maxMsecToWait).append(" msec, got the following Exceptions:");
+            for (String e: exceptionMessages) {
+                msg.append(e).append("\n");
+            }
+            fail(msg.toString());
         }
         
         System.err.println("Sling services seem to be started, continuing with integration tests.");
