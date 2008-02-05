@@ -51,7 +51,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             RequestDispatcherOptions options) {
         this.resource = resource;
         this.options = options;
-        this.path = resource.getPath();
+        // TODO Is the empty path ok?
+        this.path = (resource == null ? "" : resource.getPath());
     }
 
     public void include(ServletRequest request, ServletResponse response)

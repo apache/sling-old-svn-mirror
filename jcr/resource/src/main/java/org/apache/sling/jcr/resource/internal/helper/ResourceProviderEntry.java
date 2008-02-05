@@ -31,7 +31,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     private final String prefix;
 
     private final ResourceProvider provider;
-    
+
     private final ResourceProviderEntry parentEntry;
 
     private ResourceProviderEntry[] entries;
@@ -58,11 +58,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     public ResourceProviderEntry getParentEntry() {
         return parentEntry;
     }
-    
+
     public ResourceProvider getResourceProvider() {
         return provider;
     }
-    
+
     public ResourceProviderEntry[] getEntries() {
         return entries;
     }
