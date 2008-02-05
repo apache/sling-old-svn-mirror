@@ -81,7 +81,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingMainServlet</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%sling.name"
  *                description="%sling.description"
  * @scr.property name="sling.root" value="/" private="true"
@@ -151,7 +151,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
     public static final String INCLUDE_COUNTER = "Sling.ScriptHelper.include.counter";
     public static final int MAX_INCLUDE_RECURSION_LEVEL = 50;
-    
+
     public static class InfiniteIncludeLoopException extends SlingException {
         InfiniteIncludeLoopException(String path) {
             super("Infinite include loop (> " + MAX_INCLUDE_RECURSION_LEVEL + " levels) for path '" + path + "'");
@@ -228,10 +228,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         } else if(mimeTypeService == null) {
             missing = "MimeTypeService";
         }
-        
+
         if(missing != null) {
             final String err = missing + " service missing, cannot service requests";
-            final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE; 
+            final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE;
             log.error(err + ", sending status " + status);
             sendError(status, err, null, servletRequest, servletResponse);
             return;
@@ -275,7 +275,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
             // send this exception as a 404 status
             log.info("service: Resource {} not found", rnfe.getResource());
-            
+
             getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
                 rnfe.getMessage(), request, response);
 
@@ -332,7 +332,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             ServletException {
 
         checkRecursionLevel(request, path);
-        
+
         // check type of response, don't care actually for the response itself
         RequestData.unwrap(response);
 
@@ -353,8 +353,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             RequestPathInfo resolvedURL) throws IOException, ServletException {
 
         checkRecursionLevel(request, resolvedURL.getResourcePath());
-        
-        // we need a ComponentRequest/ComponentResponse tupel to continue
+
+        // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel to continue
         SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
         SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
 
@@ -372,7 +372,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             requestData.popContent();
         }
     }
-    
+
     /** Add a recursion counter to req and fail if it's too high */
     protected void checkRecursionLevel(ServletRequest request, String info)  throws InfiniteIncludeLoopException {
         // Detect infinite loops
@@ -747,5 +747,5 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         }
         return stringConfig;
     }
- 
+
 }
