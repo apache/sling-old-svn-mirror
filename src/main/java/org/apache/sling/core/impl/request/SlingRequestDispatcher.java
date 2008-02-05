@@ -24,6 +24,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
@@ -55,29 +56,58 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         this.path = (resource == null ? "" : resource.getPath());
     }
 
-    public void include(ServletRequest request, ServletResponse response)
+    public void include(ServletRequest request, ServletResponse sResponse)
             throws ServletException, IOException {
 
+        /** TODO: I have made some quick fixes in this method for SLING-221
+         *  and SLING-222, but haven't had time to do a proper review. This
+         *  method might deserve a more extensive rewrite. 
+         */
+        
+        // get options from request attribute if we don't have them yet
+        if(options == null) {
+            options = (RequestDispatcherOptions)request.getAttribute(RequestDispatcherOptions.class.getName());
+        }
+        
         // this may throw an exception in case loading fails, which is
         // ok here, if no content is available at that path null is
         // return, which results in using the servlet container
         SlingHttpServletRequest cRequest = RequestData.unwrap(request);
         RequestData rd = RequestData.getRequestData(cRequest);
         String absPath = getAbsolutePath(cRequest, path);
+        
+        if( ! (sResponse instanceof HttpServletResponse )) {
+            throw new ServletException("Response is not an HttpServletResponse, cannot continue");
+        }
+        final HttpServletResponse response = (HttpServletResponse)sResponse;
 
         if (resource == null) {
             ResourceResolver rr = cRequest.getResourceResolver();
+            
+            if(absPath.startsWith(cRequest.getContextPath())) {
+                absPath = absPath.substring(cRequest.getContextPath().length());
+            }
+            
+            // remove extension before attempting to resolve, like in a "normal" request
+            // TODO use the same parsing as for normal resources?
+            final int lastSlash = absPath.lastIndexOf('/');
+            final int lastDot = absPath.lastIndexOf('.');
+            if(lastDot > lastSlash && lastDot >= 0) {
+                absPath = absPath.substring(0, lastDot);
+            }
             resource = rr.getResource(absPath);
         }
 
         if (resource == null) {
-
-            rd.getSlingMainServlet().includeServlet(request, response, path);
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Resource not found in include: " + absPath);
+            
+            // The code below was previously used but causes SLING-222...not sure what's best
+            // rd.getSlingMainServlet().includeServlet(request, response, path);
 
         } else {
 
             // ensure request path info and optional merges
-            SlingRequestPathInfo info = new SlingRequestPathInfo(resource, path);
+            SlingRequestPathInfo info = new SlingRequestPathInfo(resource, absPath);
             info = info.merge(cRequest.getRequestPathInfo());
 
             if (options != null) {
