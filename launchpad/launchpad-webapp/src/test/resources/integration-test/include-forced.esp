@@ -1,0 +1,4 @@
+<%-- used by IncludeTest --%>
+<div>
+  Forced resource type:<%= resource.node.text %></p>. 
+</div>

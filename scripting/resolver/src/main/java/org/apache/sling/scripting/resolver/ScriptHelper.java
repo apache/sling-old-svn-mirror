@@ -32,6 +32,8 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.resolver.impl.helper.OnDemandReaderRequest;
 import org.apache.sling.scripting.resolver.impl.helper.OnDemandWriterResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple script helper providing access to the (wrapped) response, the
@@ -42,10 +44,10 @@ import org.apache.sling.scripting.resolver.impl.helper.OnDemandWriterResponse;
 public class ScriptHelper implements SlingScriptHelper {
 
     private final SlingScript script;
-
     private final SlingHttpServletRequest request;
-
     private final SlingHttpServletResponse response;
+    
+    private final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
 
     public ScriptHelper(SlingScript script, SlingHttpServletRequest request,
             SlingHttpServletResponse response) {
@@ -76,15 +78,16 @@ public class ScriptHelper implements SlingScriptHelper {
         include(path, null);
     }
 
-    /**
-     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
-     *        while handling the include.
-     * @throws SlingServletException Wrapping a <code>ServletException</code>
-     *             thrown while handling the include.
-     */
-    public void include(String path, RequestDispatcherOptions options) {
-        // TODO: Implement for options !!
-        RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
+    /** Include the output of another request, using specified options */
+    public void include(String path, String options) {
+        final RequestDispatcherOptionsParser parser = new RequestDispatcherOptionsParser();
+        final RequestDispatcherOptions opt = parser.parse(options); 
+        final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
+        
+        if (opt != null) {
+            getRequest().setAttribute(RequestDispatcherOptions.class.getName(), opt);
+        }
+        
         if (dispatcher != null) {
             try {
                 dispatcher.include(getRequest(), getResponse());

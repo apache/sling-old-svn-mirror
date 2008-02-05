@@ -80,6 +80,6 @@ public interface SlingScriptHelper {
      * @throws SlingServletException Wrapping a <code>ServletException</code>
      *             thrown while handling the include.
      */
-    void include(String path, RequestDispatcherOptions options);
+    void include(String path, String requestDispatcherOptions);
 
 }

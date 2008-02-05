@@ -4,23 +4,36 @@
 		<h1>ESP template</h1>
 		<p class="main"><%= resource.node.text %></p>
 		
+		<h2>Test 1</h2>
 		<%
 			if(resource.node.pathToInclude) {
 			  %>
 			  <p>pathToInclude = <%= resource.node.pathToInclude %></p>
   		  	  <p>Including <%= resource.node.pathToInclude %></p>
 			  <%
-			  sling.include(resource.node.pathToInclude + ".html");
+			  sling.include(resource.node.pathToInclude);
 			}
 		%>
 		
+		<h2>Test 2</h2>
 		<%
 			if(resource.node.testInfiniteLoop) {
 			  %>
 			  <p>testInfiniteLoop = <%= resource.node.testInfiniteLoop %></p>
 			  <%
 			  // try to include the item itself, to cause an infinite loop
-			  sling.include(resource.getPath() + ".html");
+			  sling.include(resource.getPath());
+			}
+		%>
+		
+		<h2>Test 3</h2>
+		<%
+			if(resource.node.pathToInclude && resource.node.forceResourceType) {
+			  %>
+			  <p>pathToInclude = <%= resource.node.pathToInclude %></p>
+  		  	  <p>Including <%= resource.node.pathToInclude %></p>
+			  <%
+			  sling.include(resource.node.pathToInclude, resource.node.forceResourceType);
 			}
 		%>
 	</body>
