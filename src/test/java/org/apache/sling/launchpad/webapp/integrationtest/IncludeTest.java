@@ -16,15 +16,15 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.sling.ujax.UjaxPostServlet;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.ujax.UjaxPostServlet;
 
 /** Test the {link ScriptHelper#include) functionality */
  public class IncludeTest extends HttpTestBase {
@@ -34,8 +34,10 @@ import javax.servlet.http.HttpServletResponse;
     private String nodeUrlB;
     private String testTextB;
     private String nodeUrlC;
+    private String nodeUrlD;
+    private String nodeUrlE;
     private String scriptPath;
-    private String toDelete;
+    private Set<String> toDelete = new HashSet<String>();
     
     @Override
     protected void setUp() throws Exception {
@@ -58,21 +60,39 @@ import javax.servlet.http.HttpServletResponse;
         props.put("pathToInclude", new URL(nodeUrlA).getPath());
         nodeUrlB = testClient.createNode(url, props);
         
+        // Node E is like B but with an extension on the include path
+        props.put("pathToInclude", new URL(nodeUrlA).getPath() + ".html");
+        nodeUrlE = testClient.createNode(url, props);
+        
         // Node C is used for the infinite loop detection test
         props.remove("pathToInclude");
         props.put("testInfiniteLoop","true");
         nodeUrlC = testClient.createNode(url, props);
 
-        // the rendering script goes under /apps in the repository
+        // Node D is used for the "force resource type" test
+        final String forcedResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
+        props.remove("testInfiniteLoop");
+        props.put("forceResourceType", forcedResourceType);
+        props.put("pathToInclude", new URL(nodeUrlA).getPath());
+        nodeUrlD = testClient.createNode(url, props);
+        
+        // Script for forced resource type
+        scriptPath = "/apps/" + forcedResourceType;
+        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
+        toDelete.add(uploadTestScript(scriptPath,"include-forced.esp","html.esp"));
+        
+        // The main rendering script goes under /apps in the repository
         scriptPath = "/apps/nt/unstructured";
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        toDelete = uploadTestScript(scriptPath,"include-test.esp","html.esp");
+        toDelete.add(uploadTestScript(scriptPath,"include-test.esp","html.esp"));
     }
     
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        testClient.delete(toDelete);
+        for(String script : toDelete) {
+            testClient.delete(script);
+        }
     }
 
     public void testWithoutInclude() throws IOException {
@@ -87,18 +107,36 @@ import javax.servlet.http.HttpServletResponse;
         assertTrue("Content includes ESP marker",content.contains("ESP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Include has been used",content.contains("<p>Including"));
+        assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
+    }
+    
+    public void testWithIncludeAndExtension() throws IOException {
+        final String content = getContent(nodeUrlE + ".html", CONTENT_TYPE_HTML);
+        assertTrue("Content includes ESP marker",content.contains("ESP template"));
+        assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
+        assertTrue("Include has been used",content.contains("<p>Including"));
+        assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
     }
     
     public void testInfiniteLoopDetection() throws IOException {
         // Node C has a property that causes an infinite include loop,
         // Sling must return an error 500 in this case
         final GetMethod get = new GetMethod(nodeUrlC + ".html");
-        final int status = httpClient.executeMethod(get);
+        httpClient.executeMethod(get);
         final String content = get.getResponseBodyAsString();
         assertTrue("Response contains infinite loop error message",
                 content.contains("InfiniteIncludeLoopException"));
         
         // TODO_FAILS_ see SLING-207
         // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR,status);
+    }
+    
+    public void testForcedResourceType() throws IOException {
+        final String content = getContent(nodeUrlD + ".html", CONTENT_TYPE_HTML);
+        assertTrue("Content includes ESP marker",content.contains("ESP template"));
+        assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
+        assertTrue("Include has been used",content.contains("<p>Including"));
+        assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
+        assertTrue("Resource type has been forced (" + content + ")",content.contains("Forced resource type:" + testTextA));
     }
 }
