@@ -31,7 +31,7 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
             JcrResourceResolverFactoryImpl resourceResolverFactory,
             Session session, ResourceProviderEntry[] entries) {
         super("/", new JcrResourceProvider(resourceResolverFactory, session),
-            null, entries);
+            entries);
 
         this.session = session;
     }

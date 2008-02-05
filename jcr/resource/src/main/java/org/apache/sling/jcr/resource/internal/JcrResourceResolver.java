@@ -45,7 +45,6 @@ import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
-import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.slf4j.Logger;
@@ -54,20 +53,23 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>JcrResourceResolver</code> class implements the Sling
  * <code>ResourceResolver</code> and <code>ResourceResolver</code>
- * interfaces and in addition is a {@link PathMapper}. Instances of this
- * class are retrieved through the
+ * interfaces and in addition is a {@link PathMapper}. Instances of this class
+ * are retrieved through the
  * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
  * method.
  */
-public class JcrResourceResolver extends SlingAdaptable implements ResourceResolver {
+public class JcrResourceResolver extends SlingAdaptable implements
+        ResourceResolver {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final JcrResourceProviderEntry rootProvider;
+
     private final JcrResourceResolverFactoryImpl factory;
 
-    public JcrResourceResolver(JcrResourceProviderEntry rootProvider, JcrResourceResolverFactoryImpl factory) {
+    public JcrResourceResolver(JcrResourceProviderEntry rootProvider,
+            JcrResourceResolverFactoryImpl factory) {
         this.rootProvider = rootProvider;
         this.factory = factory;
     }
@@ -120,8 +122,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         // check virtual mappings
         String virtual = factory.realToVirtualUri(href);
         if (virtual != null) {
-            log.debug("map: Using virtual URI {} for path {}", virtual,
-                href);
+            log.debug("map: Using virtual URI {} for path {}", virtual, href);
             href = virtual;
         }
 
@@ -148,7 +149,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
 
         // no resource found, if we get here
         return null;
-     }
+    }
 
     public Resource getResource(Resource base, String path) {
 
@@ -188,7 +189,8 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         try {
             QueryResult res = JcrResourceUtil.query(getSession(), query,
                 language);
-            return new JcrNodeResourceIterator(rootProvider.getResourceProvider(), res.getNodes());
+            return new JcrNodeResourceIterator(
+                rootProvider.getResourceProvider(), res.getNodes());
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language,
                 iqe);
@@ -253,7 +255,8 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
      * @throws AccessControlException If an item would exist but is not readable
      *             to this manager's session.
      */
-    private Resource resolve(String uri, String httpMethod) throws SlingException {
+    private Resource resolve(String uri, String httpMethod)
+            throws SlingException {
 
         // decode the request URI (required as the servlet container does not
         try {
@@ -296,7 +299,8 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         return rootProvider.getSession();
     }
 
-    private Resource urlToResource(String uri, String httpMethod) throws SlingException {
+    private Resource urlToResource(String uri, String httpMethod)
+            throws SlingException {
         Mapping[] mappings = factory.getMappings();
         for (int i = 0; i < mappings.length; i++) {
             // exchange the 'to'-portion with the 'from' portion and check
@@ -328,11 +332,13 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
 
     }
 
-    private Resource scanPath(String uriPath, String httpMethod) throws SlingException {
+    private Resource scanPath(String uriPath, String httpMethod)
+            throws SlingException {
         Resource resource = null;
         String curPath = uriPath;
         try {
-            final ResourcePathIterator it = new ResourcePathIterator(uriPath, httpMethod);
+            final ResourcePathIterator it = new ResourcePathIterator(uriPath,
+                httpMethod);
             while (it.hasNext() && resource == null) {
                 curPath = it.next();
                 resource = getResourceInternal(curPath);
@@ -347,23 +353,13 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
 
     /**
      * Creates a JcrNodeResource with the given path if existing
-     *
+     * 
      * @throws AccessControlException If an item exists but this manager has no
      *             read access
      */
     protected Resource getResourceInternal(String path) {
 
-        Resource resource= null;
-
-        ResourceProviderEntry rp = rootProvider.getResourceProvider(path);
-        while (rp != null && resource == null) {
-            // resource provider can be null (TODO - why?)
-            if ( rp.getResourceProvider() != null ) {
-                resource = rp.getResourceProvider().getResource(path);
-            }
-            rp = rp.getParentEntry();
-        }
-
+        Resource resource = rootProvider.getResource(path);
         if (resource != null) {
             resource.getResourceMetadata().put(
                 ResourceMetadata.RESOLUTION_PATH, path);
