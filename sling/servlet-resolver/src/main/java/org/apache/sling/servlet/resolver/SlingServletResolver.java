@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingServletResolver</code> TODO
- * 
+ *
  * @scr.component label="%servletresolver.name"
  *                description="%servletresolver.description"
  * @scr.property name="service.description" value="Sling Servlet Resolver and
@@ -100,8 +100,6 @@ public class SlingServletResolver implements ServletResolver,
     /** @scr.reference */
     private ServletContext servletContext;
 
-    private Map<String, Servlet> servlets = new HashMap<String, Servlet>();
-
     private Map<ServiceReference, ServiceRegistration> servletsByReference = new HashMap<ServiceReference, ServiceRegistration>();
 
     private List<ServiceReference> pendingServlets = new ArrayList<ServiceReference>();
@@ -133,7 +131,7 @@ public class SlingServletResolver implements ServletResolver,
                 return resourceServlet;
             }
         }
-        
+
         ResourceResolver resolver = request.getResourceResolver();
         String baseName = PathSupport.getScriptBaseName(request);
 
@@ -341,12 +339,12 @@ public class SlingServletResolver implements ServletResolver,
                     result = resource.adaptTo(Servlet.class);
                 }
             }
-            
+
             // there is no child node with the basename, try without
             if (result == null) {
                 result = scriptRoot.adaptTo(Servlet.class);
             }
-            
+
         } else {
             // check alternative variant using location/basename directly
             Resource scriptResource = resolver.getResource(location + "/"
@@ -480,11 +478,10 @@ public class SlingServletResolver implements ServletResolver,
         Collection<ServiceReference> refs;
         synchronized (this) {
             refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
+            // destroy all servlets
+            destroyAllServlets(refs);
             this.context = null;
         }
-
-        // destroy all servlets
-        destroyAllServlets(refs);
     }
 
     protected synchronized void bindServlet(ServiceReference reference) {
@@ -580,7 +577,7 @@ public class SlingServletResolver implements ServletResolver,
             } else {
                 String name = servlet.getServletConfig().getServletName();
                 log.debug("unbindServlet: Servlet {} removed", name);
-    
+
                 try {
                     servlet.destroy();
                 } catch (Throwable t) {
