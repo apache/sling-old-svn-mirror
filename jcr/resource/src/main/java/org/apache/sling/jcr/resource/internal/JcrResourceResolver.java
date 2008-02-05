@@ -76,12 +76,12 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
 
     public Resource resolve(HttpServletRequest request) throws SlingException {
         String pathInfo = request.getPathInfo();
-        
+
         // servlet directly address, so there is no path info, use "/" then
         if (pathInfo == null) {
             pathInfo = "/";
         }
-        
+
         Resource result = resolve(pathInfo, request.getMethod());
 
         if (result == null) {
@@ -100,7 +100,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
         // TODO for now use null as a method to make sure this goes up the path
         // (see SLING-179)
         return resolve(uri, null);
-        
+
     }
 
     public String map(String resourcePath) {
@@ -130,7 +130,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
     }
 
     public Resource getResource(String path) {
-        
+
         // if the path is absolute, normalize . and .. segements and get res
         if (path.startsWith("/")) {
             path = JcrResourceUtil.normalize(path);
@@ -145,13 +145,13 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
                 return res;
             }
         }
-        
+
         // no resource found, if we get here
         return null;
      }
 
     public Resource getResource(Resource base, String path) {
-        
+
         if (!path.startsWith("/") && base != null) {
             path = base.getPath() + "/" + path;
         }
@@ -162,7 +162,7 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
     public String[] getSearchPath() {
         return factory.getSearchPath().clone();
     }
-    
+
     public Iterator<Resource> listChildren(Resource parent) {
         if (parent instanceof Descendable) {
             return ((Descendable) parent).listChildren();
@@ -357,7 +357,10 @@ public class JcrResourceResolver extends SlingAdaptable implements ResourceResol
 
         ResourceProviderEntry rp = rootProvider.getResourceProvider(path);
         while (rp != null && resource == null) {
-            resource = rp.getResourceProvider().getResource(path);
+            // resource provider can be null (TODO - why?)
+            if ( rp.getResourceProvider() != null ) {
+                resource = rp.getResourceProvider().getResource(path);
+            }
             rp = rp.getParentEntry();
         }
 
