@@ -42,6 +42,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
+import org.apache.sling.ujax.UjaxPostServlet;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -59,6 +60,8 @@ public class HttpTestBase extends TestCase {
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_JS = "application/x-javascript";
     public static final String CONTENT_TYPE_CSS = "text/css";
+    
+    public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
     protected UslingIntegrationTestClient testClient;
     protected HttpClient httpClient;
@@ -66,6 +69,29 @@ public class HttpTestBase extends TestCase {
     private static boolean slingStartupOk; 
     private static final long startupTime = System.currentTimeMillis();
     
+    /** Class that creates a test node under the given parentPath, and 
+     *  stores useful values for testing. Created for JspScriptingTest,
+     *  older test classes do not use it, but it might simplify them.
+     */
+    protected class TestNode {
+        final String testText;
+        final String nodeUrl;
+        final String resourceType;
+        final String scriptPath;
+        
+        TestNode(String parentPath, Map<String, String> properties) throws IOException {
+            if(properties == null) {
+                properties = new HashMap<String, String>();
+            }
+            testText = "This is a test node " + System.currentTimeMillis();
+            properties.put("text", testText);
+            nodeUrl = testClient.createNode(parentPath + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, properties);
+            resourceType = properties.get(SLING_RESOURCE_TYPE);
+            scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
+            testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
+        }
+    };
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
