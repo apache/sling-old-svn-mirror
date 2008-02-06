@@ -46,6 +46,9 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     private static final long serialVersionUID = 5577121546674133317L;
     private final String responseContentType;
     private final JsonItemWriter itemWriter;
+    
+    /** Recursion level selector that means "all levels" */
+    public static final String INFINITY = "infinity";
 
     public JsonRendererServlet(String responseContentTypeHeaderValue) {
         this.responseContentType = responseContentTypeHeaderValue;
@@ -97,12 +100,16 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         final String [] selectors = req.getRequestPathInfo().getSelectors();
         if(selectors != null && selectors.length > 0) {
             String level = selectors[selectors.length - 1];
-            try {
-                maxRecursionLevels = Integer.parseInt(level);
-            } catch(NumberFormatException nfe) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid recursion selector value '" + level + "'");
-                return;
+            if(INFINITY.equals(level)) {
+                maxRecursionLevels = -1;
+            } else {
+                try {
+                    maxRecursionLevels = Integer.parseInt(level);
+                } catch(NumberFormatException nfe) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid recursion selector value '" + level + "'");
+                    return;
+                }
             }
         }
 
