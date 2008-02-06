@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 public class ResourcePathIteratorTest extends TestCase {
 
     public void testNull() {
-        ResourcePathIterator rpi = new ResourcePathIterator(null,"POST");
+        ResourcePathIterator rpi = new ResourcePathIterator(null, "POST");
         assertFalse(rpi.hasNext());
 
         try {
@@ -38,7 +38,7 @@ public class ResourcePathIteratorTest extends TestCase {
     }
 
     public void testEmpty() {
-        ResourcePathIterator rpi = new ResourcePathIterator("","POST");
+        ResourcePathIterator rpi = new ResourcePathIterator("", "POST");
         assertFalse(rpi.hasNext());
 
         try {
@@ -50,7 +50,7 @@ public class ResourcePathIteratorTest extends TestCase {
     }
 
     public void testRoot() {
-        ResourcePathIterator rpi = new ResourcePathIterator("/","POST");
+        ResourcePathIterator rpi = new ResourcePathIterator("/", "POST");
         assertFalse(rpi.hasNext());
 
         try {
@@ -62,11 +62,12 @@ public class ResourcePathIteratorTest extends TestCase {
     }
 
     public void testSlashed() {
-        ResourcePathIterator rpi = new ResourcePathIterator("/root/child","POST");
+        ResourcePathIterator rpi = new ResourcePathIterator("/root/child",
+            "POST");
         assertEquals("/root/child", rpi.next());
         assertEquals("/root", rpi.next());
         assertFalse(rpi.hasNext());
-        
+
         try {
             rpi.next();
             fail("Expected NoSuchElementException after end of iterator");
@@ -74,15 +75,16 @@ public class ResourcePathIteratorTest extends TestCase {
             // expected
         }
     }
-    
+
     public void testOtherMethods() {
-        final String [] methods = { "PUT", "WHATEVER.METHOD", null };
-        for(String method : methods) {
-            ResourcePathIterator rpi = new ResourcePathIterator("/root/child",method);
+        final String[] methods = { "PUT", "WHATEVER.METHOD", null };
+        for (String method : methods) {
+            ResourcePathIterator rpi = new ResourcePathIterator("/root/child",
+                method);
             assertEquals("/root/child", rpi.next());
             assertEquals("/root", rpi.next());
             assertFalse(rpi.hasNext());
-            
+
             try {
                 rpi.next();
                 fail("Expected NoSuchElementException after end of iterator");
@@ -91,13 +93,14 @@ public class ResourcePathIteratorTest extends TestCase {
             }
         }
     }
-    
+
     public void testSlashedTrailingSlash1() {
-        ResourcePathIterator rpi = new ResourcePathIterator("/root/child/","POST");
+        ResourcePathIterator rpi = new ResourcePathIterator("/root/child/",
+            "POST");
         assertEquals("/root/child", rpi.next());
         assertEquals("/root", rpi.next());
         assertFalse(rpi.hasNext());
-        
+
         try {
             rpi.next();
             fail("Expected NoSuchElementException after end of iterator");
@@ -105,9 +108,10 @@ public class ResourcePathIteratorTest extends TestCase {
             // expected
         }
     }
-    
+
     public void testSlashedTrailingSlash2() {
-        ResourcePathIterator rpi = new ResourcePathIterator("/root/child//","POST");
+        ResourcePathIterator rpi = new ResourcePathIterator("/root/child//",
+            "POST");
         assertEquals("/root/child", rpi.next());
         assertEquals("/root", rpi.next());
         assertFalse(rpi.hasNext());
@@ -121,7 +125,8 @@ public class ResourcePathIteratorTest extends TestCase {
     }
 
     public void testDotted() {
-        ResourcePathIterator rpi = new ResourcePathIterator("/root.child","POST");
+        ResourcePathIterator rpi = new ResourcePathIterator("/root.child",
+            "POST");
         assertEquals("/root.child", rpi.next());
         assertEquals("/root", rpi.next());
         assertFalse(rpi.hasNext());
@@ -134,11 +139,10 @@ public class ResourcePathIteratorTest extends TestCase {
         }
     }
 
-    public void testMixed() {
-        ResourcePathIterator rpi = new ResourcePathIterator("/root/child.print.a4.html/with/suffix","POST");
+    public void testMixedPost() {
+        ResourcePathIterator rpi = new ResourcePathIterator(
+            "/root/child.print.a4.html/with/suffix", "POST");
         assertEquals("/root/child.print.a4.html/with/suffix", rpi.next());
-        assertEquals("/root/child.print.a4.html/with", rpi.next());
-        assertEquals("/root/child.print.a4.html", rpi.next());
         assertEquals("/root/child.print.a4", rpi.next());
         assertEquals("/root/child.print", rpi.next());
         assertEquals("/root/child", rpi.next());
@@ -152,67 +156,97 @@ public class ResourcePathIteratorTest extends TestCase {
             // expected
         }
     }
-    
+
+    public void testMixedGet() {
+        ResourcePathIterator rpi = new ResourcePathIterator(
+            "/root/child.print.a4.html/with/suffix", "GET");
+        assertEquals("/root/child.print.a4.html/with/suffix", rpi.next());
+        assertEquals("/root/child.print.a4", rpi.next());
+        assertEquals("/root/child.print", rpi.next());
+        assertEquals("/root/child", rpi.next());
+        assertFalse(rpi.hasNext());
+
+        try {
+            rpi.next();
+            fail("Expected NoSuchElementException after end of iterator");
+        } catch (NoSuchElementException nsee) {
+            // expected
+        }
+    }
+
     public void testNoSeparators() {
-        final Iterator<String> it = new ResourcePathIterator("MickeyMouseWasHere","POST");
+        final Iterator<String> it = new ResourcePathIterator(
+            "MickeyMouseWasHere", "POST");
         assertTrue(it.hasNext());
-        assertEquals("MickeyMouseWasHere",it.next());
+        assertEquals("MickeyMouseWasHere", it.next());
         assertFalse("done iterating", it.hasNext());
     }
 
     public void testGetA() {
-        final Iterator<String> it = new ResourcePathIterator("/some/stuff/more.a4.html","GET");
+        final Iterator<String> it = new ResourcePathIterator(
+            "/some/stuff/more.a4.html", "GET");
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more.a4.html",it.next());
+        assertEquals("/some/stuff/more.a4.html", it.next());
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more.a4",it.next());
+        assertEquals("/some/stuff/more.a4", it.next());
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more",it.next());
+        assertEquals("/some/stuff/more", it.next());
         assertFalse("done iterating", it.hasNext());
     }
-    
+
     public void testGetB() {
-        final Iterator<String> it = new ResourcePathIterator("/some/stuff/more.html","GET");
+        final Iterator<String> it = new ResourcePathIterator(
+            "/some/stuff/more.html", "GET");
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more.html",it.next());
+        assertEquals("/some/stuff/more.html", it.next());
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more",it.next());
+        assertEquals("/some/stuff/more", it.next());
         assertFalse("done iterating", it.hasNext());
     }
-    
+
     public void testHeadB() {
-        final Iterator<String> it = new ResourcePathIterator("/some/stuff/more.html","HEAD");
+        final Iterator<String> it = new ResourcePathIterator(
+            "/some/stuff/more.html", "HEAD");
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more.html",it.next());
+        assertEquals("/some/stuff/more.html", it.next());
         assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more",it.next());
+        assertEquals("/some/stuff/more", it.next());
         assertFalse("done iterating", it.hasNext());
     }
-    
+
     public void testGetC() {
-        final Iterator<String> it = new ResourcePathIterator("/some/stuff/more","GET");
-        assertTrue(it.hasNext());
-        assertEquals("/some/stuff/more",it.next());
+        final Iterator<String> it = new ResourcePathIterator(
+            "/some/stuff/more", "GET");
+        assertEquals("/some/stuff/more", it.next());
         assertFalse("done iterating", it.hasNext());
     }
-    
+
     public void testGetD() {
-        final Iterator<String> it = new ResourcePathIterator("/some/stuff.print/more.html","GET");
-        assertTrue(it.hasNext());
-        assertEquals("/some/stuff.print/more.html",it.next());
-        assertTrue(it.hasNext());
-        assertEquals("/some/stuff.print/more",it.next());
+        final Iterator<String> it = new ResourcePathIterator(
+            "/some/stuff.print/more.html", "GET");
+        assertEquals("/some/stuff.print/more.html", it.next());
+        assertEquals("/some/stuff.print/more", it.next());
+        assertEquals("/some/stuff", it.next());
         assertFalse("done iterating", it.hasNext());
     }
-    
-    public void testRelativePath() {
-        final Iterator<String> it = new ResourcePathIterator("some/stuff.print","POST");
+
+    public void testRelativePathPost() {
+        final Iterator<String> it = new ResourcePathIterator(
+            "some/stuff.print", "POST");
         assertTrue(it.hasNext());
-        assertEquals("some/stuff.print",it.next());
+        assertEquals("some/stuff.print", it.next());
         assertTrue(it.hasNext());
-        assertEquals("some/stuff",it.next());
+        assertEquals("some/stuff", it.next());
         assertTrue(it.hasNext());
-        assertEquals("some",it.next());
+        assertEquals("some", it.next());
+        assertFalse("done iterating", it.hasNext());
+    }
+
+    public void testRelativePathGet() {
+        final Iterator<String> it = new ResourcePathIterator(
+            "some/stuff.print", "GET");
+        assertEquals("some/stuff.print", it.next());
+        assertEquals("some/stuff", it.next());
         assertFalse("done iterating", it.hasNext());
     }
 }
