@@ -69,8 +69,14 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
         return getSlingRequest().getRequestDispatcher(resource);
     }
 
-    public RequestDispatcher getRequestDispatcher(Resource resource, RequestDispatcherOptions options) {
+    public RequestDispatcher getRequestDispatcher(Resource resource,
+            RequestDispatcherOptions options) {
         return getSlingRequest().getRequestDispatcher(resource, options);
+    }
+
+    public RequestDispatcher getRequestDispatcher(String path,
+            RequestDispatcherOptions options) {
+        return getSlingRequest().getRequestDispatcher(path, options);
     }
 
     public RequestParameter getRequestParameter(String name) {
