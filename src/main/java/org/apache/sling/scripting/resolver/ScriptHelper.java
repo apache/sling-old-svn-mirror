@@ -44,9 +44,11 @@ import org.slf4j.LoggerFactory;
 public class ScriptHelper implements SlingScriptHelper {
 
     private final SlingScript script;
+
     private final SlingHttpServletRequest request;
+
     private final SlingHttpServletResponse response;
-    
+
     private final Logger log = LoggerFactory.getLogger(ScriptHelper.class);
 
     public ScriptHelper(SlingScript script, SlingHttpServletRequest request,
@@ -75,19 +77,22 @@ public class ScriptHelper implements SlingScriptHelper {
      *             thrown while handling the include.
      */
     public void include(String path) {
-        include(path, null);
+        include(path, (RequestDispatcherOptions) null);
     }
 
     /** Include the output of another request, using specified options */
     public void include(String path, String options) {
         final RequestDispatcherOptionsParser parser = new RequestDispatcherOptionsParser();
-        final RequestDispatcherOptions opt = parser.parse(options); 
-        final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
-        
-        if (opt != null) {
-            getRequest().setAttribute(RequestDispatcherOptions.class.getName(), opt);
-        }
-        
+        final RequestDispatcherOptions opt = parser.parse(options);
+
+        include(path, opt);
+    }
+
+    /** Include the output of another request, using specified options */
+    public void include(String path, RequestDispatcherOptions options) {
+        final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
+            path, options);
+
         if (dispatcher != null) {
             try {
                 dispatcher.include(getRequest(), getResponse());
