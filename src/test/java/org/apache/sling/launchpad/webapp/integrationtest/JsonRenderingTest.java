@@ -103,6 +103,17 @@ public class JsonRenderingTest extends HttpTestBase {
         }
     }
     
+    /** Test the "infinity" recursion level */
+    public void testRecursiveInfinity() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("text", testText);
+        props.put("a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y", "yes");
+        final String url = testClient.createNode(postUrl, props);
+        final String json = getContent(url + ".infinity.json", CONTENT_TYPE_JSON);
+        assertJavascript(testText, json, "out.print(data.text)");
+        assertJavascript("yes", json, "out.print(data.a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y)");
+    }
+    
     public void testInvalidLevel() throws IOException {
         assertHttpStatus(createdNodeUrl + ".notAnIntegerOnPurpose.json", HttpServletResponse.SC_BAD_REQUEST);
     }
