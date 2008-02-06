@@ -41,11 +41,12 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
     private String path;
 
-    public SlingRequestDispatcher(String path) {
+    public SlingRequestDispatcher(String path,
+            RequestDispatcherOptions options) {
         this.path = path;
+        this.options = options;
 
         this.resource = null;
-        this.options = null;
     }
 
     public SlingRequestDispatcher(Resource resource,
@@ -63,11 +64,6 @@ public class SlingRequestDispatcher implements RequestDispatcher {
          *  and SLING-222, but haven't had time to do a proper review. This
          *  method might deserve a more extensive rewrite. 
          */
-        
-        // get options from request attribute if we don't have them yet
-        if(options == null) {
-            options = (RequestDispatcherOptions)request.getAttribute(RequestDispatcherOptions.class.getName());
-        }
         
         // this may throw an exception in case loading fails, which is
         // ok here, if no content is available at that path null is

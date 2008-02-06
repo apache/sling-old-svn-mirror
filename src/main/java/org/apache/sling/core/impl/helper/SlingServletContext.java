@@ -234,7 +234,7 @@ public class SlingServletContext implements ServletContext {
             return null;
         }
 
-        return new SlingRequestDispatcher(path);
+        return new SlingRequestDispatcher(path, null);
     }
 
     /**
