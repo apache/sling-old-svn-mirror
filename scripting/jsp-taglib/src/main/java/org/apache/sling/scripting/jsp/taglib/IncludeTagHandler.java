@@ -27,6 +27,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.SyntheticResource;
@@ -68,20 +69,14 @@ public class IncludeTagHandler extends TagSupport {
 
         final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
 
-        // only try to include, if there is anything to include !!
+        // check for resource otherwise resolve from path
+        RequestDispatcherOptions opts = null;
         if (resource == null) {
             if (path == null) {
                 resource = request.getResource();
-                // overwrite resource type if needed
-                if (resourceType != null
-                    && !resourceType.equals(resource.getResourceType())) {
-                    path = resource.getPath();
-                    resource = null;
-                }
             } else {
                 if (!path.startsWith("/")) {
-                    path = request.getResource().getPath() + "/"
-                        + JcrResourceUtil.normalize(this.path);
+                    path = request.getResource().getPath() + "/" + JcrResourceUtil.normalize(this.path);
                 }
                 resource = request.getResourceResolver().getResource(path);
             }
@@ -95,6 +90,12 @@ public class IncludeTagHandler extends TagSupport {
                 return EVAL_PAGE;
             }
             resource = new SyntheticResource(path, resourceType);
+        } else {
+            // overwrite resource type if desired
+            if (resourceType != null && !resourceType.equals(resource.getResourceType())) {
+                opts = new RequestDispatcherOptions();
+                opts.put(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE, resourceType);
+            }
         }
 
         try {
@@ -104,7 +105,7 @@ public class IncludeTagHandler extends TagSupport {
                 pageContext.getOut().flush();
             }
             // include the rendered content
-            RequestDispatcher dispatcher = request.getRequestDispatcher(resource);
+            RequestDispatcher dispatcher = request.getRequestDispatcher(resource, opts);
             if (dispatcher != null) {
                 SlingHttpServletResponse response = new JspSlingHttpServletResponseWrapper(
                     pageContext);
