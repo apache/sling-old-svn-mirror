@@ -82,6 +82,19 @@ public class PostServletCreateTest extends HttpTestBase {
         assertJavascript("some words", content, "out.println(data.c)");
     }
     
+    /** Create a node with a propery in a subnode, and check (SLING-223) */
+    public void testCreateSubnodeProperty() throws IOException {
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("a","123");
+        props.put("subnode/b","456");
+        props.put("c","some words");
+        final String createdNodeUrl = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String content = getContent(createdNodeUrl + ".2.json", CONTENT_TYPE_JSON);
+        assertJavascript("123", content, "out.println(data.a)");
+        assertJavascript("456", content, "out.println(data.subnode.b)");
+        assertJavascript("some words", content, "out.println(data.c)");
+    }
+    
     /** Use the default "save prefix" on some parameters, and check that only those
      *  who have the prefix are saved.
      */

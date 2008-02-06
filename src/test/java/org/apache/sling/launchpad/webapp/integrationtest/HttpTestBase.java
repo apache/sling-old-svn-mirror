@@ -103,6 +103,7 @@ public class HttpTestBase extends TestCase {
         }
         
         System.err.println("Checking if the required Sling services are started...");
+        System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + ")");
         
         // Try creating a node on server, every 500msec, until ok, with timeout
         final List<String> exceptionMessages = new LinkedList<String>();
