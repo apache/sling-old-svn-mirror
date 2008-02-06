@@ -90,7 +90,7 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
         ujaxInfoServlet.init(config);
 
         defaultGetServlet = new PlainTextRendererServlet("text/plain");
-        streamServlet = new StreamRendererServlet();
+        streamServlet = new StreamRendererServlet("text/plain", config);
 
         getServlets = new HashMap<String, Servlet>();
         getServlets.put("html", new DefaultHtmlRendererServlet("text/html"));
