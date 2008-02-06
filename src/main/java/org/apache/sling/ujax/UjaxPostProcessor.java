@@ -16,21 +16,19 @@
  */
 package org.apache.sling.ujax;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.NonExistingResource;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.api.request.RequestParameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.ServletException;
-import javax.swing.RootPaneContainer;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Holds various states and encapsulates method that are neede to handle a
@@ -401,7 +399,7 @@ public class UjaxPostProcessor {
 
         }
         // create or get node
-        currentNode = deepCreateNode(nodePath);
+        currentNode = deepGetOrCreateNode(null, nodePath);
         currentPath = currentNode.getPath();
 
         // process the "order" command if any
@@ -457,14 +455,8 @@ public class UjaxPostProcessor {
             }
             // create property helper and get parent node
             RequestProperty prop = new RequestProperty(this, propertyName, values);
-            Node parent;
-            if(prop.getRelPath().startsWith("/")) {
-                parent = deepCreateNode(prop.getParentPath());
-            } else if (!prop.getParentPath().equals("")) {
-                parent = currentNode.getNode(prop.getParentPath());
-            } else {
-                parent = currentNode;
-            }
+            Node parent = deepGetOrCreateNode(currentNode, prop.getParentPath());
+
             // call handler
             if (prop.isFileUpload()) {
                 uploadHandler.setFile(parent, prop);
@@ -475,19 +467,36 @@ public class UjaxPostProcessor {
     }
 
     /**
-     * Deep creates a node, parent-padding with nt:unstructured nodes
+     * Deep gets or creates a node, parent-padding with default nodes nodes.
+     * If the path is empty, the given parent node is returned.
      *
+     * @param parent parent node for relative paths
      * @param path absolute path to node that needs to be deep-created
      * @return node at path
      * @throws RepositoryException if an error occurs
+     * @throws IllegalArgumentException if the path is relative and parent
+     *         is <code>null</code>
      */
-    private Node deepCreateNode(String path) throws RepositoryException {
+    private Node deepGetOrCreateNode(Node parent, String path)
+            throws RepositoryException {
         if(log.isDebugEnabled()) {
             log.debug("Deep-creating Node '{}'", path);
         }
-
-        String[] pathelems = path.substring(1).split("/");
-        Node node = session.getRootNode();
+        if (path.equals("")) {
+            return parent;
+        }
+        String[] pathelems;
+        Node node;
+        if (path.charAt(0) == '/') {
+            pathelems = path.substring(1).split("/");
+            node = session.getRootNode();
+        } else {
+            pathelems = path.split("/");
+            node = parent;
+            if (node == null) {
+                throw new IllegalArgumentException("parent node must not be NULL for relative paths.");
+            }
+        }
         for (String name: pathelems) {
             if (node.hasNode(name)) {
                 node = node.getNode(name);
