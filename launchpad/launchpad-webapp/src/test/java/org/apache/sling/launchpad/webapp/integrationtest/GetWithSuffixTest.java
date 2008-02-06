@@ -36,7 +36,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
         testText = "This is a test " + System.currentTimeMillis();
 
         // create the test node, under a path that's specific to this class to allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "." + System.currentTimeMillis();
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis();
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
         displayUrl = testClient.createNode(url, props);
@@ -58,9 +58,12 @@ public class GetWithSuffixTest extends RenderingTestBase {
     }
 
     public void testWithExtraPathA() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
+        final String toDelete = uploadTestScript("rendering-test.esp","txt.esp");
         try {
-            assertHttpStatus(displayUrl + "/extra.html", HttpServletResponse.SC_NOT_FOUND);
+            // expected to be found as resource with ext .txt and suffix
+            final String content = getContent(displayUrl + ".txt/extra.html", CONTENT_TYPE_PLAIN);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
         } finally {
             testClient.delete(toDelete);
         }
@@ -72,6 +75,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
     public void testWithExtraPathB() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","GET.esp");
         try {
+            // expected to not be found as dispalyUrl has no dots
             assertHttpStatus(displayUrl + "/extra/more.a4.html", HttpServletResponse.SC_NOT_FOUND);
         } finally {
             testClient.delete(toDelete);
