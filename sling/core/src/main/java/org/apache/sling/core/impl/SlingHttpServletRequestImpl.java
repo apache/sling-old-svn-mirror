@@ -91,27 +91,33 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestDispatcher(org.apache.sling.api.resource.Resource)
+     * Returns <code>null</code> if <code>resource</code> is <code>null</code>.
      */
     public RequestDispatcher getRequestDispatcher(Resource resource) {
         return getRequestDispatcher(resource, null);
     }
 
+    /**
+     * Returns <code>null</code> if <code>resource</code> is <code>null</code>.
+     */
     public RequestDispatcher getRequestDispatcher(Resource resource,
             RequestDispatcherOptions options) {
-        return new SlingRequestDispatcher(resource, options);
+        return (resource != null) ? new SlingRequestDispatcher(resource, options) : null;
     }
 
     /**
-     * @see javax.servlet.ServletRequestWrapper#getRequestDispatcher(java.lang.String)
+     * Returns <code>null</code> if <code>path</code> is <code>null</code>.
      */
     public RequestDispatcher getRequestDispatcher(String path) {
-        return new SlingRequestDispatcher(path, null);
+        return getRequestDispatcher(path, null);
     }
 
+    /**
+     * Returns <code>null</code> if <code>path</code> is <code>null</code>.
+     */
     public RequestDispatcher getRequestDispatcher(String path,
             RequestDispatcherOptions options) {
-        return new SlingRequestDispatcher(path, options);
+        return (path != null) ? new SlingRequestDispatcher(path, options) : null;
     }
     
     /**
