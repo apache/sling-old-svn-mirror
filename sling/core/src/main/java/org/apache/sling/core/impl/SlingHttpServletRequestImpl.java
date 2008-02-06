@@ -106,9 +106,14 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
      * @see javax.servlet.ServletRequestWrapper#getRequestDispatcher(java.lang.String)
      */
     public RequestDispatcher getRequestDispatcher(String path) {
-        return new SlingRequestDispatcher(path);
+        return new SlingRequestDispatcher(path, null);
     }
 
+    public RequestDispatcher getRequestDispatcher(String path,
+            RequestDispatcherOptions options) {
+        return new SlingRequestDispatcher(path, options);
+    }
+    
     /**
      * @see javax.servlet.ServletRequestWrapper#getLocale()
      */
