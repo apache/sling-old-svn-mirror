@@ -60,7 +60,9 @@ SOFTWARE.
  * @version 2
  */
 public class JSONWriter {
-    private static final int maxdepth = 20;
+    // This was previously 20 - increased while creating
+    // the JsonRenderingTest.testRecursiveInfinity test
+    private static final int maxdepth = 50;
 
     /**
      * The comma flag determines if a comma should be output before the next
@@ -267,7 +269,7 @@ public class JSONWriter {
      */
     private void push(char c) throws JSONException {
         if (this.top >= maxdepth) {
-            throw new JSONException("Nesting too deep.");
+            throw new JSONException("Nesting too deep (maximum is " + maxdepth + " levels)");
         }
         this.stack[this.top] = c;
         this.mode = c;
