@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,19 +37,25 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StreamRendererServlet extends SlingSafeMethodsServlet {
+public class StreamRendererServlet extends PlainTextRendererServlet {
 
     private static final long serialVersionUID = -1L;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public StreamRendererServlet() {
+    public StreamRendererServlet(String contentType, ServletConfig config)
+            throws ServletException {
+        super(contentType);
+
+        // not quite correct, but ok
+        init(config);
     }
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
 
         Resource resource = request.getResource();
         ResourceMetadata meta = resource.getResourceMetadata();
@@ -60,12 +67,10 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-        // fail if the resource does not adapt to an InputStream
+        // fall back to plain text rendering if the resource has no stream
         InputStream stream = resource.adaptTo(InputStream.class);
         if (stream == null) {
-            log.error("service: Resource {} does not adapt to an InputStream",
-                resource);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            super.doGet(request, response);
             return;
         }
 
