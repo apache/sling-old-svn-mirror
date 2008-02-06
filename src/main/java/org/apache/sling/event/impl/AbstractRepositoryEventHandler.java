@@ -237,6 +237,15 @@ public abstract class AbstractRepositoryEventHandler
         return EventHelper.EVENT_NODE_TYPE;
     }
 
+    protected String getNodeName(Event e) {
+        final Calendar now = Calendar.getInstance();
+        final String nodeType = this.getEventNodeType();
+        final int sepPos = nodeType.indexOf(':');
+        final String nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
+
+        return nodeName;
+    }
+
     /**
      * Write an event to the repository.
      * @param e
@@ -248,10 +257,8 @@ public abstract class AbstractRepositoryEventHandler
         // create new node with name of topic
         final Node rootNode = (Node) this.session.getItem(this.repositoryPath);
 
-        final Calendar now = Calendar.getInstance();
         final String nodeType = this.getEventNodeType();
-        final int sepPos = nodeType.indexOf(':');
-        final String nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
+        final String nodeName = this.getNodeName(e);
         final Node eventNode = rootNode.addNode(nodeName, nodeType);
 
         eventNode.setProperty(EventHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
