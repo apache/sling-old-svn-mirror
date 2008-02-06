@@ -71,30 +71,31 @@ public class IncludeTagHandler extends TagSupport {
 
         // check for resource otherwise resolve from path
         RequestDispatcherOptions opts = null;
-        if (resource == null) {
-            if (path == null) {
-                resource = request.getResource();
-            } else {
-                if (!path.startsWith("/")) {
-                    path = request.getResource().getPath() + "/" + JcrResourceUtil.normalize(this.path);
-                }
-                resource = request.getResourceResolver().getResource(path);
-            }
+        if (resourceType != null) {
+            opts = new RequestDispatcherOptions();
+            opts.put(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE, resourceType);
         }
 
-        // if resource could not be resolved, create synthetic one
-        if (resource == null) {
-            if (resourceType == null) {
-                TagUtil.log(log, pageContext, "unable to include path " + path
-                    + ". Resource not found and no resource type given.", null);
-                return EVAL_PAGE;
+        // ensure the path (if set) is absolute and normalized
+        if (path != null) {
+            if (!path.startsWith("/")) {
+                path = request.getResource().getPath() + "/" + path;
             }
-            resource = new SyntheticResource(path, resourceType);
-        } else {
-            // overwrite resource type if desired
-            if (resourceType != null && !resourceType.equals(resource.getResourceType())) {
-                opts = new RequestDispatcherOptions();
-                opts.put(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE, resourceType);
+            path = JcrResourceUtil.normalize(path);
+        }
+        
+        // check the resource
+        if (resource == null) {
+            if (path == null) {
+                // neither resource nor path is defined, use current resource
+                resource = request.getResource();
+            } else {
+                // check whether the path (would) resolve, else SyntheticRes.
+                Resource tmp = request.getResourceResolver().resolve(path);
+                if (tmp == null && resourceType != null) {
+                    opts = null; // not needed
+                    resource = new SyntheticResource(path, resourceType);
+                }
             }
         }
 
@@ -104,8 +105,15 @@ public class IncludeTagHandler extends TagSupport {
                 // might throw an IOException of course
                 pageContext.getOut().flush();
             }
-            // include the rendered content
-            RequestDispatcher dispatcher = request.getRequestDispatcher(resource, opts);
+            
+            // create a dispatcher for the resource or path
+            RequestDispatcher dispatcher;
+            if (resource != null) {
+                dispatcher = request.getRequestDispatcher(resource, opts);
+            } else {
+                dispatcher = request.getRequestDispatcher(path, opts);
+            }
+            
             if (dispatcher != null) {
                 SlingHttpServletResponse response = new JspSlingHttpServletResponseWrapper(
                     pageContext);
