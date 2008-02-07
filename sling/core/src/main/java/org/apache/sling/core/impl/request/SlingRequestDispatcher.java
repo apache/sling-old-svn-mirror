@@ -109,7 +109,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             info = info.merge(options);
 
             // ensure overwritten resource type
-            String rtOverwrite = options.get(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
+            String rtOverwrite = options.getForceResourceType();
             if (rtOverwrite != null
                 && !rtOverwrite.equals(resource.getResourceType())) {
                 resource = new ResourceWrapper(resource, rtOverwrite);
