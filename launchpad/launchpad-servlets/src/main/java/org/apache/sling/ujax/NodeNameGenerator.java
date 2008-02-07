@@ -41,8 +41,10 @@ public class NodeNameGenerator {
         if(parameterNames == null) {
             this.parameterNames = new LinkedList<String>();
             this.parameterNames.add("title");
+            this.parameterNames.add("jcr:title");
             this.parameterNames.add("name");
             this.parameterNames.add("description");
+            this.parameterNames.add("jcr:description");
             this.parameterNames.add("abstract");
         } else {
             this.parameterNames = parameterNames;
