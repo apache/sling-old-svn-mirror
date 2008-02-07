@@ -64,4 +64,9 @@ public class ResourceWrapper implements Resource {
         return resource.adaptTo(type);
     }
 
+    public String toString() {
+        return getClass().getSimpleName() + ", type=" + getResourceType()
+            + ", path=" + getPath() + ", resource=[" + getResource() + "]";
+    }
+
 }

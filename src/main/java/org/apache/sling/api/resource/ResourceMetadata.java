@@ -76,4 +76,121 @@ public class ResourceMetadata extends HashMap<String, Object> {
      */
     public static final String MODIFICATION_TIME = "sling.modificationTime";
 
+    /**
+     * Sets the {@link #CHARACTER_ENCODING} property to <code>encoding</code>
+     * if not <code>null</code>.
+     */
+    public void setCharacterEncoding(String encoding) {
+        if (encoding != null) {
+            put(CHARACTER_ENCODING, encoding);
+        }
+    }
+
+    /**
+     * Returns the {@link #CHARACTER_ENCODING} property if not <code>null</code>
+     * and a <code>String</code> instance. Otherwise <code>null</code> is
+     * returned.
+     */
+    public String getCharacterEncoding() {
+        Object value = get(CHARACTER_ENCODING);
+        if (value instanceof String) {
+            return (String) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #CONTENT_TYPE} property to <code>contentType</code> if
+     * not <code>null</code>.
+     */
+    public void setContentType(String contentType) {
+        if (contentType != null) {
+            put(CONTENT_TYPE, contentType);
+        }
+    }
+
+    /**
+     * Returns the {@link #CONTENT_TYPE} property if not <code>null</code> and
+     * a <code>String</code> instance. Otherwise <code>null</code> is
+     * returned.
+     */
+    public String getContentType() {
+        Object value = get(CONTENT_TYPE);
+        if (value instanceof String) {
+            return (String) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #CREATION_TIME} property to <code>creationTime</code>
+     * if not negative.
+     */
+    public void setCreationTime(long creationTime) {
+        if (creationTime >= 0) {
+            put(CREATION_TIME, creationTime);
+        }
+    }
+
+    /**
+     * Returns the {@link #CREATION_TIME} property if not <code>null</code>
+     * and a <code>long</code>. Otherwise <code>-1</code> is returned.
+     */
+    public long getCreationTime() {
+        Object value = get(CREATION_TIME);
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Sets the {@link #MODIFICATION_TIME} property to
+     * <code>modificationTime</code> if not negative.
+     */
+    public void setModificationTime(long modificationTime) {
+        if (modificationTime >= 0) {
+            put(MODIFICATION_TIME, modificationTime);
+        }
+    }
+
+    /**
+     * Returns the {@link #MODIFICATION_TIME} property if not <code>null</code>
+     * and a <code>long</code>. Otherwise <code>-1</code> is returned.
+     */
+    public long getModificationTime() {
+        Object value = get(MODIFICATION_TIME);
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+
+        return -1;
+    }
+
+    /**
+     * Sets the {@link #RESOLUTION_PATH} property to <code>resolutionPath</code>
+     * if not <code>null</code>.
+     */
+    public void setResolutionPath(String resolutionPath) {
+        if (resolutionPath != null) {
+            put(RESOLUTION_PATH, resolutionPath);
+        }
+    }
+
+    /**
+     * Returns the {@link #RESOLUTION_PATH} property if not <code>null</code>
+     * and a <code>String</code> instance. Otherwise <code>null</code> is
+     * returned.
+     */
+    public String getResolutionPath() {
+        Object value = get(RESOLUTION_PATH);
+        if (value instanceof String) {
+            return (String) value;
+        }
+
+        return null;
+    }
 }

@@ -18,7 +18,13 @@
  */
 package org.apache.sling.api.scripting;
 
+import java.io.PrintWriter;
 import java.util.HashMap;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.slf4j.Logger;
 
 /**
  * The <code>SlingBindings</code> class is used to prepare global variables
@@ -122,5 +128,169 @@ public class SlingBindings extends HashMap<String, Object> {
      * script implementation will bind it before actually evaluating the script.
      */
     public static final String LOG = "log";
+
+    /**
+     * Sets the {@link #FLUSH} property to <code>flush</code>.
+     */
+    public void setFlush(boolean flush) {
+        put(FLUSH, flush);
+    }
+
+    /**
+     * Returns the {@link #FLUSH} property if not <code>null</code> and a
+     * <code>boolean</code>. Otherwise <code>false</code> is returned.
+     */
+    public boolean getFlush() {
+        Object value = get(FLUSH);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+
+        return false;
+    }
+
+    /**
+     * Sets the {@link #LOG} property to <code>log</code> if not
+     * <code>null</code>.
+     */
+    public void setLog(Logger log) {
+        if (log != null) {
+            put(LOG, log);
+        }
+    }
+
+    /**
+     * Returns the {@link #LOG} property if not <code>null</code> and a
+     * <code>org.slf4j.Logger</code> instance. Otherwise <code>null</code>
+     * is returned.
+     */
+    public Logger getLog() {
+        Object value = get(LOG);
+        if (value instanceof Logger) {
+            return (Logger) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #OUT} property to <code>out</code> if not
+     * <code>null</code>.
+     */
+    public void setOut(PrintWriter out) {
+        if (out != null) {
+            put(OUT, out);
+        }
+    }
+
+    /**
+     * Returns the {@link #OUT} property if not <code>null</code> and a
+     * <code>PrintWriter</code> instance. Otherwise <code>null</code> is
+     * returned.
+     */
+    public PrintWriter getOut() {
+        Object value = get(OUT);
+        if (value instanceof PrintWriter) {
+            return (PrintWriter) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #REQUEST} property to <code>request</code> if not
+     * <code>null</code>.
+     */
+    public void setRequest(SlingHttpServletRequest request) {
+        if (request != null) {
+            put(REQUEST, request);
+        }
+    }
+
+    /**
+     * Returns the {@link #REQUEST} property if not <code>null</code> and a
+     * <code>SlingHttpServletRequest</code> instance. Otherwise
+     * <code>null</code> is returned.
+     */
+    public SlingHttpServletRequest getRequest() {
+        Object value = get(REQUEST);
+        if (value instanceof SlingHttpServletRequest) {
+            return (SlingHttpServletRequest) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #RESOURCE} property to <code>resource</code> if not
+     * <code>null</code>.
+     */
+    public void setResource(Resource resource) {
+        if (resource != null) {
+            put(RESOURCE, resource);
+        }
+    }
+
+    /**
+     * Returns the {@link #RESOURCE} property if not <code>null</code> and a
+     * <code>Resource</code> instance. Otherwise <code>null</code> is
+     * returned.
+     */
+    public Resource getResource() {
+        Object value = get(RESOURCE);
+        if (value instanceof Resource) {
+            return (Resource) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #RESPONSE} property to <code>response</code> if not
+     * <code>null</code>.
+     */
+    public void setResponse(SlingHttpServletResponse response) {
+        if (response != null) {
+            put(RESPONSE, response);
+        }
+    }
+
+    /**
+     * Returns the {@link #RESPONSE} property if not <code>null</code> and a
+     * <code>SlingHttpServletResponse</code> instance. Otherwise
+     * <code>null</code> is returned.
+     */
+    public SlingHttpServletResponse getResponse() {
+        Object value = get(RESPONSE);
+        if (value instanceof SlingHttpServletResponse) {
+            return (SlingHttpServletResponse) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #SLING} property to <code>sling</code> if not
+     * <code>null</code>.
+     */
+    public void setSling(SlingScriptHelper sling) {
+        if (sling != null) {
+            put(SLING, sling);
+        }
+    }
+
+    /**
+     * Returns the {@link #SLING} property if not <code>null</code> and a
+     * <code>SlingScriptHelper</code> instance. Otherwise <code>null</code>
+     * is returned.
+     */
+    public SlingScriptHelper getSling() {
+        Object value = get(SLING);
+        if (value instanceof SlingScriptHelper) {
+            return (SlingScriptHelper) value;
+        }
+
+        return null;
+    }
 
 }
