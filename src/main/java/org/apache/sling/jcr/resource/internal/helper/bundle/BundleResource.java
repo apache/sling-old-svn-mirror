@@ -18,9 +18,6 @@ package org.apache.sling.jcr.resource.internal.helper.bundle;
 
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 import static org.apache.jackrabbit.JcrConstants.NT_FOLDER;
-import static org.apache.sling.api.resource.ResourceMetadata.CREATION_TIME;
-import static org.apache.sling.api.resource.ResourceMetadata.MODIFICATION_TIME;
-import static org.apache.sling.api.resource.ResourceMetadata.RESOLUTION_PATH;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,9 +81,9 @@ public class BundleResource implements Resource, Descendable {
         this.resourceType = path.endsWith("/") ? NT_FOLDER : NT_FILE;
 
         metadata = new ResourceMetadata();
-        metadata.put(RESOLUTION_PATH, path);
-        metadata.put(CREATION_TIME, bundle.getLastModified());
-        metadata.put(MODIFICATION_TIME, bundle.getLastModified());
+        metadata.setResolutionPath(path);
+        metadata.setCreationTime(bundle.getLastModified());
+        metadata.setModificationTime(bundle.getLastModified());
     }
 
     public String getPath() {
@@ -118,7 +115,8 @@ public class BundleResource implements Resource, Descendable {
     }
 
     public String toString() {
-        return "BundleResource, type=" + resourceType + ", path=" + path;
+        return getClass().getSimpleName() + ", type=" + getResourceType()
+            + ", path=" + getPath();
     }
 
     // ---------- internal -----------------------------------------------------

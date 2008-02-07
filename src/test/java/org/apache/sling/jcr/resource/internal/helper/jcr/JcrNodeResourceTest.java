@@ -152,10 +152,9 @@ public class JcrNodeResourceTest extends RepositoryTestBase {
     private void assertResourceMetaData(ResourceMetadata rm) {
         assertNotNull(rm);
 
-        assertEquals(new Long(TEST_MODIFIED),
-            rm.get(ResourceMetadata.MODIFICATION_TIME));
-        assertEquals(TEST_TYPE, rm.get(ResourceMetadata.CONTENT_TYPE));
-        assertEquals(TEST_ENCODING, rm.get(ResourceMetadata.CHARACTER_ENCODING));
+        assertEquals(TEST_MODIFIED, rm.getModificationTime());
+        assertEquals(TEST_TYPE, rm.getContentType());
+        assertEquals(TEST_ENCODING, rm.getCharacterEncoding());
     }
 
     private void assertEquals(byte[] expected, InputStream actual)

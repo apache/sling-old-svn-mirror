@@ -302,11 +302,10 @@ public class JcrResourceResolver extends SlingAdaptable implements
             if (resource != null) {
 
                 ResourceMetadata rm = resource.getResourceMetadata();
-                String path = (String) rm.get(ResourceMetadata.RESOLUTION_PATH);
+                String path = rm.getResolutionPath();
                 String uriPath = mappings[i].mapHandle(path);
                 if (uriPath != null && !uriPath.equals(path)) {
-                    resource.getResourceMetadata().put(
-                        ResourceMetadata.RESOLUTION_PATH, uriPath);
+                    resource.getResourceMetadata().setResolutionPath(uriPath);
                 }
 
                 return resource;
@@ -348,8 +347,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
         Resource resource = rootProvider.getResource(path);
         if (resource != null) {
-            resource.getResourceMetadata().put(
-                ResourceMetadata.RESOLUTION_PATH, path);
+            resource.getResourceMetadata().setResolutionPath(path);
             return resource;
         }
 
