@@ -20,7 +20,7 @@
 <%@page import="org.apache.sling.sample.*"%>
 <%@page import="org.apache.sling.api.*"%>
 <%@page import="org.apache.sling.api.resource.Resource"%>
-<%@page import="org.apache.sling.jcr.resource.SyntheticResource"%>
+<%@page import="org.apache.sling.api.resource.SyntheticResource"%>
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
 
 <%-- Ensure the presence of the ComponentAPI objects --%>
