@@ -42,7 +42,7 @@ public class ServletResource extends SlingAdaptable implements Resource {
         this.path = path;
 
         this.metadata = new ResourceMetadata();
-        metadata.put(ResourceMetadata.RESOLUTION_PATH, path);
+        metadata.setResolutionPath(path);
     }
 
     public ResourceMetadata getResourceMetadata() {
@@ -69,6 +69,23 @@ public class ServletResource extends SlingAdaptable implements Resource {
         }
 
         return super.adaptTo(type);
+    }
+
+    public String toString() {
+        // prepare the servlet name
+        String servletName = null;
+        if (servlet.getServletConfig() != null) {
+            servletName = servlet.getServletConfig().getServletName();
+        }
+        if (servletName == null) {
+            servletName = servlet.getServletInfo();
+        }
+        if (servletName == null) {
+            servletName = servlet.getClass().getName();
+        }
+        
+        return getClass().getSimpleName() + ", servlet=" + servletName
+            + ", path=" + getPath();
     }
 
 }
