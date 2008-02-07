@@ -28,11 +28,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.servlets.ErrorHandler;
-import org.apache.sling.jcr.resource.SyntheticResource;
 
 /**
  * The <code>SlingHttpServletResponseImpl</code> TODO
