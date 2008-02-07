@@ -23,9 +23,7 @@ import org.apache.sling.api.servlets.HttpConstants;
 
 /**
  * Iterate over the the HTTP request path by creating shorter segments of that
- * path using "." as a separator. If the request path is for a request method
- * other than <em>GET</em> or <em>HEAD</em>, after checking the last dot,
- * the parent path is also checked.
+ * path using "." as a separator.
  * <p>
  * For example, if path = /some/stuff.a4.html/xyz.ext the sequence is:
  * <ol>
@@ -33,7 +31,6 @@ import org.apache.sling.api.servlets.HttpConstants;
  * <li> /some/stuff.a4.html/xyz </li>
  * <li> /some/stuff.a4</li>
  * <li> /some/stuff </li>
- * <li> /some (only if the request method is neither GET nor HEAD) </li>
  * </ol>
  * <p>
  * The root path (/) is never returned.
@@ -43,10 +40,6 @@ public class ResourcePathIterator implements Iterator<String> {
     // the next path to return, null if nothing more to return
     private String nextPath;
 
-    // true if the parent of nextPath is to be considered after cutting
-    // off at all dots, initialy true only for non-GET/HEAD requests
-    private boolean considerParent;
-
     /**
      * Creates a new instance iterating over the given path
      * 
@@ -55,11 +48,7 @@ public class ResourcePathIterator implements Iterator<String> {
      * @param httpMethod The HTTP request method causing this iterator to be
      *            created.
      */
-    public ResourcePathIterator(String path, String httpMethod) {
-
-        // only consider a parent if not a GET or HEAD request
-        considerParent = !HttpConstants.METHOD_GET.equals(httpMethod)
-            && !HttpConstants.METHOD_HEAD.equals(httpMethod);
+    public ResourcePathIterator(String path) {
 
         // find last non-slash character
         int i = (path != null) ? path.length() - 1 : -1;
@@ -92,28 +81,9 @@ public class ResourcePathIterator implements Iterator<String> {
 
         final String result = nextPath;
 
-        // find last
+        // find next path
         int lastDot = nextPath.lastIndexOf('.');
-        if (lastDot > 0) {
-            nextPath = nextPath.substring(0, lastDot);
-        } else if (lastDot == 0) {
-            // path started with a dot ??
-            nextPath = null;
-        } else if (considerParent) {
-            // no dot any more, go up to parent for non-GET/HEAD
-            int lastSlash = nextPath.lastIndexOf('/');
-            if (lastSlash > 0) {
-                nextPath = nextPath.substring(0, lastSlash);
-            } else {
-                // never consider "/"
-                nextPath = null;
-            }
-
-            // prevent going further up the path by slashes
-            considerParent = false;
-        } else {
-            nextPath = null;
-        }
+        nextPath = (lastDot > 0) ? nextPath.substring(0, lastDot) : null;
 
         return result;
     }
