@@ -29,8 +29,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.SyntheticResource;
 import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ public class IncludeTagHandler extends TagSupport {
         RequestDispatcherOptions opts = null;
         if (resourceType != null) {
             opts = new RequestDispatcherOptions();
-            opts.put(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE, resourceType);
+            opts.setForceResourceType(resourceType);
         }
 
         // ensure the path (if set) is absolute and normalized
