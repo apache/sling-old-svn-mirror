@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private Resource resource;
 
     private RequestDispatcherOptions options;
@@ -76,10 +77,11 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         // if the response is not an HttpServletResponse, fail gracefully not
         // doing anything
         if (!(sResponse instanceof HttpServletResponse)) {
-            log.error("include: Failed to include {}, response has wrong type", absPath);
+            log.error("include: Failed to include {}, response has wrong type",
+                absPath);
             return;
         }
-        
+
         final HttpServletResponse response = (HttpServletResponse) sResponse;
 
         if (resource == null) {
@@ -92,10 +94,12 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             // resolve the absolute path in the resource resolver, using
             // only those parts of the path as if it would be request path
             resource = cRequest.getResourceResolver().resolve(absPath);
-            
+
             // if the resource could not be resolved, fail gracefully
             if (resource == null) {
-                log.error("include: Could not resolve {} to a resource, not including", absPath);
+                log.error(
+                    "include: Could not resolve {} to a resource, not including",
+                    absPath);
                 return;
             }
         }
@@ -112,12 +116,13 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             String rtOverwrite = options.getForceResourceType();
             if (rtOverwrite != null
                 && !rtOverwrite.equals(resource.getResourceType())) {
-                resource = new ResourceWrapper(resource, rtOverwrite);
+                resource = new TypeOverwritingResourceWrapper(resource,
+                    rtOverwrite);
             }
         }
 
-        rd.getSlingMainServlet().includeContent(request, response,
-            resource, info);
+        rd.getSlingMainServlet().includeContent(request, response, resource,
+            info);
     }
 
     public void forward(ServletRequest request, ServletResponse response)
@@ -143,35 +148,18 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         return uri + '/' + path;
     }
 
-    private static class ResourceWrapper implements Resource {
-
-        private final Resource delegatee;
+    private static class TypeOverwritingResourceWrapper extends ResourceWrapper {
 
         private final String resourceType;
 
-        ResourceWrapper(Resource delegatee, String resourceType) {
-            this.delegatee = delegatee;
+        TypeOverwritingResourceWrapper(Resource delegatee, String resourceType) {
+            super(delegatee);
             this.resourceType = resourceType;
-        }
-
-        public String getPath() {
-            return delegatee.getPath();
         }
 
         public String getResourceType() {
             return resourceType;
         }
 
-        public ResourceMetadata getResourceMetadata() {
-            return delegatee.getResourceMetadata();
-        }
-
-        public ResourceProvider getResourceProvider() {
-            return delegatee.getResourceProvider();
-        }
-
-        public <Type> Type adaptTo(Class<Type> type) {
-            return delegatee.adaptTo(type);
-        }
     }
 }
