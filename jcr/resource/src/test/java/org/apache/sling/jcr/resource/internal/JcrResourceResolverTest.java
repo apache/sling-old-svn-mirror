@@ -44,13 +44,15 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 public class JcrResourceResolverTest extends RepositoryTestBase {
 
     private String rootPath;
+
     private Node rootNode;
+
     private ResourceResolver resResolver;
 
     protected void setUp() throws Exception {
         super.setUp();
         getSession();
-        
+
         JcrResourceResolverFactoryImpl resFac = new JcrResourceResolverFactoryImpl();
 
         Field repoField = resFac.getClass().getDeclaredField("repository");
@@ -104,7 +106,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
     public void testResolveResource() throws Exception {
         // existing resource
-        Resource res = resResolver.resolve(new ResourceResolverTestRequest(rootPath));
+        Resource res = resResolver.resolve(new ResourceResolverTestRequest(
+            rootPath));
         assertNotNull(res);
         assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -113,16 +116,14 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertNotNull(res.adaptTo(Node.class));
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
-        // missing resource below root should resolve root
+        // missing resource below root should resolve "missing resource"
         String path = rootPath + "/missing";
         res = resResolver.resolve(new ResourceResolverTestRequest(path));
         assertNotNull(res);
-        assertEquals(rootPath, res.getPath());
-        assertEquals(rootNode.getPrimaryNodeType().getName(),
-            res.getResourceType());
+        assertEquals(path, res.getPath());
+        assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
 
-        assertNotNull(res.adaptTo(Node.class));
-        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        assertNull(res.adaptTo(Node.class));
 
         // root with selectors/ext should resolve root
         path = rootPath + ".print.a4.html";
@@ -143,38 +144,43 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
     }
-    
+
     public void testGetDoesNotGoUp() throws Exception {
-        
+
         final String path = rootPath + "/nothing";
-        
-        { 
-            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "POST"));
+
+        {
+            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
+                path, "POST"));
             assertNotNull(res);
-            assertEquals("POST request resolution goes up up the path to rootPath", rootPath, res.getPath());
-            assertEquals(rootNode.getPrimaryNodeType().getName(), res.getResourceType());
+            assertEquals("POST request resolution does not go up the path",
+                Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
         }
-        
-        { 
-            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "GET"));
+
+        {
+            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
+                path, "GET"));
             assertNotNull(res);
-            assertEquals("GET request resolution does not go up the path", 
-                    Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+            assertEquals("GET request resolution does not go up the path",
+                Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
         }
     }
-    
+
     public void testGetRemovesExtensionInResolution() throws Exception {
         final String path = rootPath + ".whatever";
-        final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "GET"));
+        final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
+            path, "GET"));
         assertNotNull(res);
         assertEquals(rootPath, res.getPath());
-        assertEquals(rootNode.getPrimaryNodeType().getName(), res.getResourceType());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+            res.getResourceType());
     }
 
-
-    private static class ResourceResolverTestRequest implements HttpServletRequest {
+    private static class ResourceResolverTestRequest implements
+            HttpServletRequest {
 
         private final String pathInfo;
+
         private final String method;
 
         ResourceResolverTestRequest(String pathInfo) {
