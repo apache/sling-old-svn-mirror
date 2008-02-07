@@ -16,8 +16,6 @@
  */
 package org.apache.sling.scripting.jsp;
 
-import static org.apache.sling.api.resource.ResourceMetadata.MODIFICATION_TIME;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -123,8 +121,8 @@ class SlingIOProvider implements IOProvider {
             Resource resource = getResourceInternal(fileName);
             if (resource != null) {
                 ResourceMetadata meta = resource.getResourceMetadata();
-                Long modTime = (Long) meta.get(MODIFICATION_TIME);
-                return (modTime != null) ? modTime.longValue() : 0;
+                long modTime = meta.getModificationTime();
+                return (modTime > 0) ? modTime : 0;
             }
 
         } catch (SlingException se) {
