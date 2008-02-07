@@ -18,10 +18,6 @@
  */
 package org.apache.sling.api.resource;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
-
 /**
  * The <code>SyntheticResource</code> class is a simple implementation of the
  * <code>Resource</code> interface which may be used to provide a resource
@@ -46,7 +42,7 @@ public class SyntheticResource implements Resource {
         this.path = path;
         this.resourceType = resourceType;
         this.resourceMetadata = new ResourceMetadata();
-        this.resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, path);
+        this.resourceMetadata.setResolutionPath(path);
     }
 
     public String getPath() {
@@ -79,6 +75,11 @@ public class SyntheticResource implements Resource {
      */
     public <Type> Type adaptTo(Class<Type> type) {
         return null;
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + ", type=" + getResourceType()
+            + ", path=" + getPath();
     }
 
 }

@@ -23,11 +23,6 @@ import static org.apache.jackrabbit.JcrConstants.JCR_ENCODING;
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED;
 import static org.apache.jackrabbit.JcrConstants.JCR_MIMETYPE;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
-import static org.apache.sling.api.resource.ResourceMetadata.CHARACTER_ENCODING;
-import static org.apache.sling.api.resource.ResourceMetadata.CONTENT_TYPE;
-import static org.apache.sling.api.resource.ResourceMetadata.CREATION_TIME;
-import static org.apache.sling.api.resource.ResourceMetadata.MODIFICATION_TIME;
-import static org.apache.sling.api.resource.ResourceMetadata.RESOLUTION_PATH;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
 import java.io.InputStream;
@@ -72,7 +67,7 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
         this.node = node;
         this.path = node.getPath();
         metadata = new ResourceMetadata();
-        metadata.put(RESOLUTION_PATH, path);
+        metadata.setResolutionPath(path);
         resourceType = getResourceTypeForNode(node);
 
         // check for nt:file metadata
@@ -106,7 +101,8 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
     }
 
     public String toString() {
-        return "JcrNodeResource, type=" + resourceType + ", path=" + path;
+        return getClass().getSimpleName() + ", type=" + getResourceType()
+            + ", path=" + getPath();
     }
 
     public ResourceProvider getResourceProvider() {
@@ -130,13 +126,15 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
             try {
                 // find the content node: for nt:file it is jcr:content
                 // otherwise it is the node of this resource
-                Node content = node.isNodeType(NT_FILE) ? node.getNode(JCR_CONTENT) : node;
-                
+                Node content = node.isNodeType(NT_FILE)
+                        ? node.getNode(JCR_CONTENT)
+                        : node;
+
                 // if the node has a jcr:data property, use that property
                 if (content.hasProperty(JCR_DATA)) {
                     return content.getProperty(JCR_DATA).getStream();
                 }
-                
+
                 // otherwise try to follow default item trail
                 try {
                     Item item = content.getPrimaryItem();
@@ -149,7 +147,7 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
                     log.debug("getInputStream: No primary items for "
                         + toString(), infe);
                 }
-                
+
             } catch (RepositoryException re) {
                 log.error("getInputStream: Cannot get InputStream for " + this,
                     re);
@@ -187,7 +185,7 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
             }
 
             log.error("getResource: There is no node at {} below {}", path,
-                    getPath());
+                getPath());
             return null;
         } catch (RepositoryException re) {
             log.error("getResource: Problem accessing relative resource at "
@@ -218,31 +216,27 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
 
     private void setMetaData(Node node, ResourceMetadata metadata) {
         try {
-            
+
             // check stuff for nt:file nodes
             if (node.isNodeType(NT_FILE)) {
-                metadata.put(CREATION_TIME,
-                    node.getProperty(JCR_CREATED).getLong());
+                metadata.setCreationTime(node.getProperty(JCR_CREATED).getLong());
 
                 // continue our stuff with the jcr:content node
-                // which might be  nt:resource, which we support below
+                // which might be nt:resource, which we support below
                 node = node.getNode(JCR_CONTENT);
             }
-            
+
             // check stuff for nt:resource (or similar) nodes
             if (node.hasProperty(JCR_MIMETYPE)) {
-                metadata.put(CONTENT_TYPE,
-                    node.getProperty(JCR_MIMETYPE).getString());
+                metadata.setContentType(node.getProperty(JCR_MIMETYPE).getString());
             }
 
             if (node.hasProperty(JCR_ENCODING)) {
-                metadata.put(CHARACTER_ENCODING,
-                    node.getProperty(JCR_ENCODING).getString());
+                metadata.setCharacterEncoding(node.getProperty(JCR_ENCODING).getString());
             }
 
             if (node.hasProperty(JCR_LASTMODIFIED)) {
-                metadata.put(MODIFICATION_TIME, node.getProperty(
-                    JCR_LASTMODIFIED).getLong());
+                metadata.setModificationTime(node.getProperty(JCR_LASTMODIFIED).getLong());
             }
         } catch (RepositoryException re) {
             log.info(

@@ -59,8 +59,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             pathToParse = "";
         }
 
-        resourcePath = (String) r.getResourceMetadata().get(
-            ResourceMetadata.RESOLUTION_PATH);
+        resourcePath = r.getResourceMetadata().getResolutionPath();
         if (resourcePath != null && !"/".equals(resourcePath)
             && pathToParse.length() >= resourcePath.length()) {
             pathToParse = pathToParse.substring(resourcePath.length());

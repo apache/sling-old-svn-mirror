@@ -61,7 +61,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
         ResourceMetadata meta = resource.getResourceMetadata();
 
         // check the last modification time and If-Modified-Since header
-        Long modifTime = (Long) meta.get(ResourceMetadata.MODIFICATION_TIME);
+        long modifTime = meta.getModificationTime();
         if (unmodified(request, modifTime)) {
             response.setStatus(SC_NOT_MODIFIED);
             return;
@@ -77,12 +77,12 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
         // finally stream the resource
         try {
 
-            if (modifTime != null) {
+            if (modifTime > 0) {
                 response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
             }
 
             final String defaultContentType = "application/octet-stream";
-            String contentType = (String) meta.get(ResourceMetadata.CONTENT_TYPE);
+            String contentType = meta.getContentType();
             if (contentType == null || defaultContentType.equals(contentType)) {
                 // if repository doesn't provide a content-type, or
                 // provides the
@@ -98,7 +98,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
                 response.setContentType(contentType);
             }
 
-            String encoding = (String) meta.get(ResourceMetadata.CHARACTER_ENCODING);
+            String encoding = meta.getCharacterEncoding();
             if (encoding != null) {
                 response.setCharacterEncoding(encoding);
             }
@@ -132,8 +132,8 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
      *         or equal to the time of the <code>If-Modified-Since</code>
      *         header.
      */
-    private boolean unmodified(HttpServletRequest request, Long modifTime) {
-        if (modifTime != null) {
+    private boolean unmodified(HttpServletRequest request, long modifTime) {
+        if (modifTime > 0) {
             long modTime = modifTime / 1000; // seconds
             long ims = request.getDateHeader(HEADER_IF_MODIFIED_SINCE) / 1000;
             return modTime <= ims;
