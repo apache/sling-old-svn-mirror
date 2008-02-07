@@ -18,6 +18,8 @@
 package org.apache.sling.ujax;
 
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -31,10 +33,20 @@ import javax.jcr.RepositoryException;
  */
 class UjaxPropertyValueHandler {
 
-    public static final String CREATED_FIELD = "created";
-    public static final String CREATED_BY_FIELD = "createdBy";
-    public static final String LAST_MODIFIED_FIELD = "lastModified";
-    public static final String LAST_MODIFIED_BY_FIELD = "lastModifiedBy";
+    /**
+     * Defins a map of auto properties
+     */
+    private static final Map<String, AutoType> AUTO_PROPS = new HashMap<String, AutoType>();
+    static {
+        AUTO_PROPS.put("created", AutoType.CREATED);
+        AUTO_PROPS.put("createdBy", AutoType.CREATED_BY);
+        AUTO_PROPS.put("jcr:created", AutoType.CREATED);
+        AUTO_PROPS.put("jcr:createdBy", AutoType.CREATED_BY);
+        AUTO_PROPS.put("lastModified", AutoType.MODIFIED);
+        AUTO_PROPS.put("lastModifiedBy", AutoType.MODIFIED_BY);
+        AUTO_PROPS.put("jcr:lastModified", AutoType.MODIFIED);
+        AUTO_PROPS.put("jcr:lastModifiedBy", AutoType.MODIFIED_BY);
+    }
 
     /**
      * the post processor
@@ -61,7 +73,7 @@ class UjaxPropertyValueHandler {
      * 
      * html example for testing:
      * <xmp>
-     *   <input type="hidden" name="dateCreated"/>
+     *   <input type="hidden" name="created"/>
      *   <input type="hidden" name="lastModified"/>
      *   <input type="hidden" name="createdBy" />
      *   <input type="hidden" name="lastModifiedBy"/>
@@ -79,22 +91,26 @@ class UjaxPropertyValueHandler {
             // if user provided a value, don't mess with it
             setPropertyAsIs(parent, prop);
 
-        } else if (CREATED_FIELD.equals(name)) {
-            if (parent.isNew()) {
-                setCurrentDate(parent, name);
+        } else if (AUTO_PROPS.containsKey(name)) {
+            // avoid collision with protected properties
+            switch (AUTO_PROPS.get(name)) {
+                case CREATED:
+                    if (parent.isNew()) {
+                        setCurrentDate(parent, name);
+                    }
+                    break;
+                case CREATED_BY:
+                    if (parent.isNew()) {
+                        setCurrentUser(parent, name);
+                    }
+                    break;
+                case MODIFIED:
+                    setCurrentDate(parent, name);
+                    break;
+                case MODIFIED_BY:
+                    setCurrentUser(parent, name);
+                    break;
             }
-
-        } else if (CREATED_BY_FIELD.equals(name)) {
-            if (parent.isNew()) {
-                setCurrentUser(parent, name);
-            }
-
-        } else if (LAST_MODIFIED_FIELD.equals(name)) {
-            setCurrentDate(parent, name);
-
-        } else if (LAST_MODIFIED_BY_FIELD.equals(name)) {
-            setCurrentUser(parent, name);
-
         } else {
             // no magic field, set value as provided
             setPropertyAsIs(parent, prop);
@@ -198,4 +214,13 @@ class UjaxPropertyValueHandler {
         }
     }
 
+    /**
+     * Defines an auto property behavior
+     */
+    private enum AutoType {
+        CREATED,
+        CREATED_BY,
+        MODIFIED,
+        MODIFIED_BY
+    }
 }
