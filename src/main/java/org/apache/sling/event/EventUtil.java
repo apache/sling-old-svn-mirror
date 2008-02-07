@@ -40,11 +40,20 @@ public abstract class EventUtil {
     /** The job topic property. */
     public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
 
-    /** The property for the unique event id. */
+    /** The property for the unique event id. Value is of type String. */
     public static final String PROPERTY_JOB_ID = "event.job.id";
 
     /** The property to set if a job can be run parallel to any other job. */
     public static final String PROPERTY_JOB_PARALLEL = "event.job.parallel";
+
+    /** The property to track the retry count for jobs. Value is of type Integer. */
+    public static final String PROPERTY_JOB_RETRY_COUNT = "event.job.retrycount";
+
+    /** The property to for setting the maximum number of retries. Value is of type Integer. */
+    public static final String PROPERTY_JOB_RETRIES = "event.job.retries";
+
+    /** The property to set a retry delay. Value is of type Long. */
+    public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
 
     /** The topic for jobs. */
     public static final String TOPIC_JOB = "org/apache/sling/event/job";
@@ -137,7 +146,30 @@ public abstract class EventUtil {
         if ( ctx == null ) {
             throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
         }
-        ctx.notifier.finishedJob(job, ctx.eventNodePath, ctx.lockToken, true);
+        boolean retry = true;
+        // check if we exceeded the number of retries
+        if ( job.getProperty(PROPERTY_JOB_RETRIES) != null ) {
+            int retries = (Integer) job.getProperty(PROPERTY_JOB_RETRIES);
+            int retryCount = 0;
+            if ( job.getProperty(PROPERTY_JOB_RETRY_COUNT) != null ) {
+                retryCount = (Integer)job.getProperty(PROPERTY_JOB_RETRY_COUNT);
+            }
+            retryCount++;
+            if ( retryCount >= retries ) {
+                retry = false;
+            }
+            // update event with retry count
+            final Dictionary<String, Object> newProperties;
+            // create a new dictionary
+            newProperties = new Hashtable<String, Object>();
+            final String[] names = job.getPropertyNames();
+            for(int i=0; i<names.length; i++ ) {
+                newProperties.put(names[i], job.getProperty(names[i]));
+            }
+            newProperties.put(PROPERTY_JOB_RETRY_COUNT, retryCount);
+            job = new Event(job.getTopic(), newProperties);
+        }
+        ctx.notifier.finishedJob(job, ctx.eventNodePath, ctx.lockToken, retry);
     }
 
     /**
