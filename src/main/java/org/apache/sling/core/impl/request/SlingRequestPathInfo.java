@@ -146,7 +146,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             boolean needCreate = false;
 
             // replacement selectors
-            String selectors = options.get(RequestDispatcherOptions.OPT_REPLACE_SELECTORS);
+            String selectors = options.getReplaceSelectors();
             if (selectors != null) {
                 needCreate = true;
             } else {
@@ -154,7 +154,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             }
 
             // additional selectors
-            String selectorsAdd = options.get(RequestDispatcherOptions.OPT_ADD_SELECTORS);
+            String selectorsAdd = options.getAddSelectors();
             if (selectorsAdd != null) {
                 if (selectors != null) {
                     selectors += "." + selectorsAdd;
@@ -165,7 +165,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             }
 
             // suffix replacement
-            String suffix = options.get(RequestDispatcherOptions.REPLACE_SUFFIX);
+            String suffix = options.getReplaceSuffix();
             if (suffix != null) {
                 needCreate = true;
             } else {
