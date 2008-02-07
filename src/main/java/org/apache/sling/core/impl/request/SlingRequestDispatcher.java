@@ -91,12 +91,12 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
             // resolve the absolute path in the resource resolver, using
             // only those parts of the path as if it would be request path
-            ResourceResolver rr = cRequest.getResourceResolver();
-            resource = rr.resolve(absPath);
+            resource = cRequest.getResourceResolver().resolve(absPath);
             
             // if the resource could not be resolved, fail gracefully
             if (resource == null) {
                 log.error("include: Could not resolve {} to a resource, not including", absPath);
+                return;
             }
         }
 
