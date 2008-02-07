@@ -75,20 +75,10 @@ public interface SlingScriptHelper {
      * </pre>
      * 
      * <p>
-     * The request dispatcher options provided to this method as a string are
-     * internally parsed into an {@link RequestDispatcherOptions} object as
-     * follows:
-     * <ul>
-     * <li>If the string neither contains a comma nor an equals sign, the
-     * string is assumed to be a resource type. Hence a
-     * <code>RequestDispatcherOptions</code> object is created with the
-     * {@link RequestDispatcherOptions#OPT_FORCE_RESOURCE_TYPE} field set to the
-     * string.</li>
-     * <li>Otherwise the string is assumed to be a comma separated list of name
-     * value pairs where the equals sign is used to separate the name from its
-     * value. Hence a <code>RequestDispatcherOptions</code> object is created
-     * from the name value pair list.</li>
-     * </ul>
+     * This method creates a <code>RequestDispatcherOptions</code> object by
+     * calling the
+     * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
+     * constructor.
      * 
      * @param path The path to the resource to include.
      * @param requestDispatcherOptions influence the rendering of the included
@@ -97,7 +87,7 @@ public interface SlingScriptHelper {
      *             while handling the include.
      * @throws SlingServletException Wrapping a <code>ServletException</code>
      *             thrown while handling the include.
-     * @see RequestDispatcherOptions
+     * @see RequestDispatcherOptions#RequestDispatcherOptions(String)
      * @see #include(String, RequestDispatcherOptions)
      */
     void include(String path, String requestDispatcherOptions);
