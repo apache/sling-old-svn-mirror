@@ -18,6 +18,9 @@
  */
 package org.apache.sling.jcr.resource.internal.loader;
 
+import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
+
+import java.awt.image.ImagingOpException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -35,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
@@ -46,17 +51,19 @@ import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * The <code>Loader</code> TODO
  */
 public class Loader {
 
-
     public static final String CONTENT_HEADER = "Sling-Initial-Content";
 
     public static final String EXT_XML = ".xml";
+
+    public static final String EXT_JCR_XML = ".jcr.xml";
+
     public static final String EXT_JSON = ".json";
+
     public static final String EXT_XJSON = ".xjson";
 
     // default content type for createFile()
@@ -66,9 +73,13 @@ public class Loader {
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
     private ContentLoaderService jcrContentHelper;
+
     private XmlReader xmlReader;
+
     private JsonReader jsonReader;
+
     private XJsonReader xjsonReader;
+
     private Map<String, List<String>> delayedReferences;
 
     // bundles whose registration failed and should be retried
@@ -93,12 +104,15 @@ public class Loader {
     }
 
     public void registerBundle(Session session, Bundle bundle) {
-        log.debug("Registering bundle {} for content loading.", bundle.getSymbolicName());
+        log.debug("Registering bundle {} for content loading.",
+            bundle.getSymbolicName());
         if (this.registerBundleInternal(session, bundle, false)) {
             // handle delayed bundles, might help now
             int currentSize = -1;
-            for (int i=this.delayedBundles.size(); i > 0 && currentSize != this.delayedBundles.size() && !this.delayedBundles.isEmpty(); i--) {
-                for (Iterator<Bundle> di=this.delayedBundles.iterator(); di.hasNext(); ) {
+            for (int i = this.delayedBundles.size(); i > 0
+                && currentSize != this.delayedBundles.size()
+                && !this.delayedBundles.isEmpty(); i--) {
+                for (Iterator<Bundle> di = this.delayedBundles.iterator(); di.hasNext();) {
                     Bundle delayed = di.next();
                     if (this.registerBundleInternal(session, delayed, true)) {
                         di.remove();
@@ -112,19 +126,23 @@ public class Loader {
         }
     }
 
-    private boolean registerBundleInternal (Session session, Bundle bundle, boolean isRetry) {
+    private boolean registerBundleInternal(Session session, Bundle bundle,
+            boolean isRetry) {
         try {
             this.installContent(session, bundle);
-            if ( isRetry ) {
+            if (isRetry) {
                 // log success of retry
-                log.info("Retrytring to load initial content for bundle {} succeeded.",
-                        bundle.getSymbolicName());
+                log.info(
+                    "Retrytring to load initial content for bundle {} succeeded.",
+                    bundle.getSymbolicName());
             }
             return true;
         } catch (RepositoryException re) {
-            // if we are retrying we already logged this message once, so we won't log it again
-            if ( !isRetry ) {
-                log.error("Cannot load initial content for bundle " + bundle.getSymbolicName() + " : " + re.getMessage(), re);
+            // if we are retrying we already logged this message once, so we
+            // won't log it again
+            if (!isRetry) {
+                log.error("Cannot load initial content for bundle "
+                    + bundle.getSymbolicName() + " : " + re.getMessage(), re);
             }
         }
 
@@ -132,24 +150,27 @@ public class Loader {
     }
 
     public void unregisterBundle(Bundle bundle) {
-        if ( this.delayedBundles.contains(bundle) ) {
+        if (this.delayedBundles.contains(bundle)) {
             this.delayedBundles.remove(bundle);
         } else {
             this.uninstallContent(bundle);
         }
     }
 
-    //---------- internal -----------------------------------------------------
+    // ---------- internal -----------------------------------------------------
 
-    private void installContent(Session session, Bundle bundle) throws RepositoryException {
+    private void installContent(Session session, Bundle bundle)
+            throws RepositoryException {
         String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
         if (root == null) {
-            log.debug("Bundle {} has no initial content", bundle.getSymbolicName());
+            log.debug("Bundle {} has no initial content",
+                bundle.getSymbolicName());
             return;
         }
 
         try {
-            log.debug("Installing initial content from bundle {}", bundle.getSymbolicName());
+            log.debug("Installing initial content from bundle {}",
+                bundle.getSymbolicName());
             StringTokenizer tokener = new StringTokenizer(root, ",");
             while (tokener.hasMoreTokens()) {
                 String path = tokener.nextToken().trim();
@@ -158,7 +179,8 @@ public class Loader {
 
             // persist modifications now
             session.save();
-            log.debug("Done installing initial content from bundle {}", bundle.getSymbolicName());
+            log.debug("Done installing initial content from bundle {}",
+                bundle.getSymbolicName());
         } finally {
             try {
                 if (session.hasPendingChanges()) {
@@ -173,7 +195,8 @@ public class Loader {
 
     }
 
-    private void install(Bundle bundle, String path, javax.jcr.Node parent) throws RepositoryException {
+    private void install(Bundle bundle, String path, javax.jcr.Node parent)
+            throws RepositoryException {
         @SuppressWarnings("unchecked")
         Enumeration<String> entries = bundle.getEntryPaths(path);
         if (entries == null) {
@@ -187,7 +210,7 @@ public class Loader {
             log.debug("Processing initial content entry {}", entry);
             if (entry.endsWith("/")) {
                 // dir, check for node descriptor , else create dir
-                String base = entry.substring(0, entry.length()-1);
+                String base = entry.substring(0, entry.length() - 1);
                 String name = this.getName(base);
 
                 Node node = null;
@@ -202,7 +225,8 @@ public class Loader {
                 // if we have a descriptor, which has not been processed yet,
                 // otherwise call crateFolder, which creates an nt:folder or
                 // returns an existing node (created by a descriptor)
-                if (nodeDescriptor != null && !ignoreEntry.contains(nodeDescriptor)) {
+                if (nodeDescriptor != null
+                    && !ignoreEntry.contains(nodeDescriptor)) {
                     node = this.createNode(parent, name, nodeDescriptor);
                     ignoreEntry.add(nodeDescriptor);
                 } else {
@@ -223,9 +247,8 @@ public class Loader {
                 }
 
                 // install if it is a descriptor
-                if (entry.endsWith(EXT_XML)
-                        || entry.endsWith(EXT_JSON)
-                        || entry.endsWith(EXT_XJSON)) {
+                if (entry.endsWith(EXT_XML) || entry.endsWith(EXT_JSON)
+                    || entry.endsWith(EXT_XJSON)) {
                     if (this.createNode(parent, this.getName(entry), file) != null) {
                         ignoreEntry.add(file);
                         continue;
@@ -242,7 +265,8 @@ public class Loader {
         }
     }
 
-    private javax.jcr.Node createFolder(javax.jcr.Node parent, String name) throws RepositoryException {
+    private javax.jcr.Node createFolder(javax.jcr.Node parent, String name)
+            throws RepositoryException {
         if (parent.hasNode(name)) {
             return parent.getNode(name);
         }
@@ -250,16 +274,23 @@ public class Loader {
         return parent.addNode(name, "nt:folder");
     }
 
-    private javax.jcr.Node createNode(Node parent, String name, URL nodeXML) throws RepositoryException {
+    private javax.jcr.Node createNode(Node parent, String name, URL nodeXML)
+            throws RepositoryException {
 
         InputStream ins = null;
         try {
             NodeReader nodeReader;
-            if (nodeXML.getPath().toLowerCase().endsWith(".xml")) {
+            if (nodeXML.getPath().toLowerCase().endsWith(EXT_XML)) {
+                // return immediately if system/document view import succeeds
+                Node childNode = importSystemView(parent, name, nodeXML);
+                if (childNode != null) {
+                    return childNode;
+                }
+                
                 nodeReader = this.getXmlReader();
-            } else if (nodeXML.getPath().toLowerCase().endsWith(".json")) {
+            } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_JSON)) {
                 nodeReader = this.getJsonReader();
-            } else if (nodeXML.getPath().toLowerCase().endsWith(".xjson")) {
+            } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XJSON)) {
                 nodeReader = this.getXJsonReader();
             } else {
                 // cannot find out the type
@@ -294,12 +325,15 @@ public class Loader {
         }
     }
 
-    private Node createNode(Node parentNode, org.apache.sling.jcr.resource.internal.loader.Node clNode) throws RepositoryException {
+    private Node createNode(Node parentNode,
+            org.apache.sling.jcr.resource.internal.loader.Node clNode)
+            throws RepositoryException {
         Node node;
         if (parentNode.hasNode(clNode.getName())) {
             node = parentNode.getNode(clNode.getName());
         } else {
-            node = parentNode.addNode(clNode.getName(), clNode.getPrimaryNodeType());
+            node = parentNode.addNode(clNode.getName(),
+                clNode.getPrimaryNodeType());
 
             if (clNode.getMixinNodeTypes() != null) {
                 for (String mixin : clNode.getMixinNodeTypes()) {
@@ -310,18 +344,21 @@ public class Loader {
 
         if (clNode.getProperties() != null) {
             for (Property prop : clNode.getProperties()) {
-                if (node.hasProperty(prop.getName()) && !node.getProperty(prop.getName()).isNew()) {
+                if (node.hasProperty(prop.getName())
+                    && !node.getProperty(prop.getName()).isNew()) {
                     continue;
                 }
 
                 int type = PropertyType.valueFromName(prop.getType());
                 if (prop.isMultiValue()) {
-                    String[] values = prop.getValues().toArray(new String[prop.getValues().size()]);
+                    String[] values = prop.getValues().toArray(
+                        new String[prop.getValues().size()]);
                     node.setProperty(prop.getName(), values, type);
                 } else if (type == PropertyType.REFERENCE) {
                     // need to resolve the reference
                     String propPath = node.getPath() + "/" + prop.getName();
-                    String uuid = this.getUUID(node.getSession(), propPath, prop.getValue());
+                    String uuid = this.getUUID(node.getSession(), propPath,
+                        prop.getValue());
                     if (uuid != null) {
                         node.setProperty(prop.getName(), uuid, type);
                     }
@@ -342,7 +379,8 @@ public class Loader {
         return node;
     }
 
-    private void createFile(Node parent, URL source) throws IOException, RepositoryException {
+    private void createFile(Node parent, URL source) throws IOException,
+            RepositoryException {
         String name = this.getName(source.getPath());
         if (parent.hasNode(name)) {
             return;
@@ -376,7 +414,8 @@ public class Loader {
         content.setProperty("jcr:data", data);
     }
 
-    private String getUUID(Session session, String propPath, String referencePath) throws RepositoryException {
+    private String getUUID(Session session, String propPath,
+            String referencePath) throws RepositoryException {
         if (session.itemExists(referencePath)) {
             Item item = session.getItem(referencePath);
             if (item.isNode()) {
@@ -423,21 +462,21 @@ public class Loader {
     }
 
     /**
-     * Gets and decods the name part of the <code>path</code>. The name is the
-     * part of the path after the last slash (or the complete path if no slash
-     * is contained). To support names containing unsupported characters such
-     * as colon (<code>:</code>), names may be URL encoded (see <code>java.net.URLEncoder</code>)
-     * using the <i>UTF-8</i> character encoding. In this case, this method
-     * decodes the name using the <code>java.netURLDecoder</code> class with
-     * the <i>UTF-8</i> character encoding.
-     *
+     * Gets and decods the name part of the <code>path</code>. The name is
+     * the part of the path after the last slash (or the complete path if no
+     * slash is contained). To support names containing unsupported characters
+     * such as colon (<code>:</code>), names may be URL encoded (see
+     * <code>java.net.URLEncoder</code>) using the <i>UTF-8</i> character
+     * encoding. In this case, this method decodes the name using the
+     * <code>java.netURLDecoder</code> class with the <i>UTF-8</i> character
+     * encoding.
+     * 
      * @param path The path from which to extract the name part.
-     *
      * @return The URL decoded name part.
      */
-    private String getName(String path){
+    private String getName(String path) {
         int lastSlash = path.lastIndexOf('/');
-        String name = (lastSlash < 0) ? path : path.substring(lastSlash+1);
+        String name = (lastSlash < 0) ? path : path.substring(lastSlash + 1);
 
         // check for encoded characters (%xx)
         // has encoded characters, need to decode
@@ -459,7 +498,8 @@ public class Loader {
         return name;
     }
 
-    private Node getParentNode(Session session, String path) throws RepositoryException {
+    private Node getParentNode(Session session, String path)
+            throws RepositoryException {
         int lastSlash = path.lastIndexOf('/');
 
         // not an absolute path, cannot find parent
@@ -485,11 +525,13 @@ public class Loader {
     private void uninstallContent(Bundle bundle) {
         String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
         if (root == null) {
-            log.debug("Bundle {} has no initial content", bundle.getSymbolicName());
+            log.debug("Bundle {} has no initial content",
+                bundle.getSymbolicName());
             return;
         }
 
-        log.info("Content deinstallation not implemented yet. Keeping content of bundle {}",
+        log.info(
+            "Content deinstallation not implemented yet. Keeping content of bundle {}",
             bundle.getSymbolicName());
     }
 
@@ -519,4 +561,64 @@ public class Loader {
         return this.xjsonReader;
     }
 
+    /**
+     * Import the XML file as JCR system or document view import. If the XML
+     * file is not a valid system or document view export/import file,
+     * <code>false</code> is returned.
+     * 
+     * @param parent The parent node below which to import
+     * @param nodeXML The URL to the XML file to import
+     * @return <code>true</code> if the import succeeds, <code>false</code>
+     *         if the import fails due to XML format errors.
+     * @throws IOException If an IO error occurrs reading the XML file.
+     */
+    private Node importSystemView(Node parent, String name, URL nodeXML)
+            throws IOException {
+
+        // only consider ".jcr.xml" files here
+        if (!nodeXML.getPath().toLowerCase().endsWith(EXT_JCR_XML)) {
+            return null;
+        }
+
+        InputStream ins = null;
+        try {
+
+            ins = nodeXML.openStream();
+            Session session = parent.getSession();
+            session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
+
+            // additionally check whether the expected child node exists
+            if (name.toLowerCase().endsWith(EXT_JCR_XML)) {
+                name = name.substring(0, name.length()-EXT_JCR_XML.length());
+            }
+            return (parent.hasNode(name)) ? parent.getNode(name) : null;
+
+        } catch (InvalidSerializedDataException isde) {
+
+            // the xml might not be System or Document View export, fall back
+            // to old-style XML reading
+            log.info(
+                "importSystemView: XML {} does not seem to be system view export, trying old style",
+                nodeXML);
+            return null;
+
+        } catch (RepositoryException re) {
+
+            // any other repository related issue...
+            log.info(
+                "importSystemView: Repository issue loading XML {}, trying old style",
+                nodeXML);
+            return null;
+
+        } finally {
+            if (ins != null) {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                    // ignore
+                }
+            }
+        }
+
+    }
 }
