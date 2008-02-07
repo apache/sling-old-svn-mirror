@@ -54,8 +54,8 @@ public interface SlingScriptHelper {
      * Same as {@link #include(String,RequestDispatcherOptions)}, but using
      * empty options.
      * 
-     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
-     *        while handling the include.
+     * @throws SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the include.
      * @throws SlingServletException Wrapping a <code>ServletException</code>
      *             thrown while handling the include.
      */
@@ -63,11 +63,54 @@ public interface SlingScriptHelper {
 
     /**
      * Helper method to include the result of processing the request for the
-     * given <code>path</code>. This method is intended to be implemented as
-     * follows:
+     * given <code>path</code> and <code>requestDispatcherOptions</code>.
+     * This method is intended to be implemented as follows:
      * 
      * <pre>
-     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path);
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path,
+     *     &quot;option:xyz&quot;);
+     * if (dispatcher != null) {
+     *     dispatcher.include(getRequest(), getResponse());
+     * }
+     * </pre>
+     * 
+     * <p>
+     * The request dispatcher options provided to this method as a string are
+     * internally parsed into an {@link RequestDispatcherOptions} object as
+     * follows:
+     * <ul>
+     * <li>If the string neither contains a comma nor an equals sign, the
+     * string is assumed to be a resource type. Hence a
+     * <code>RequestDispatcherOptions</code> object is created with the
+     * {@link RequestDispatcherOptions#OPT_FORCE_RESOURCE_TYPE} field set to the
+     * string.</li>
+     * <li>Otherwise the string is assumed to be a comma separated list of name
+     * value pairs where the equals sign is used to separate the name from its
+     * value. Hence a <code>RequestDispatcherOptions</code> object is created
+     * from the name value pair list.</li>
+     * </ul>
+     * 
+     * @param path The path to the resource to include.
+     * @param requestDispatcherOptions influence the rendering of the included
+     *            Resource
+     * @throws SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the include.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the include.
+     * @see RequestDispatcherOptions
+     * @see #include(String, RequestDispatcherOptions)
+     */
+    void include(String path, String requestDispatcherOptions);
+
+    /**
+     * Helper method to include the result of processing the request for the
+     * given <code>path</code> and <code>options</code>. This method is
+     * intended to be implemented as follows:
+     * 
+     * <pre>
+     * RequestDispatcherOptions opts = new RequestDispatcherOptions();
+     * opts.put(&quot;option&quot;, &quot;xyz&quot;);
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path, opts);
      * if (dispatcher != null) {
      *     dispatcher.include(getRequest(), getResponse());
      * }
@@ -75,11 +118,13 @@ public interface SlingScriptHelper {
      * 
      * @param path The path to the resource to include.
      * @param options influence the rendering of the included Resource
-     * @trows SlingIOException Wrapping a <code>IOException</code> thrown
-     *        while handling the include.
+     * @throws SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the include.
      * @throws SlingServletException Wrapping a <code>ServletException</code>
      *             thrown while handling the include.
+     * @see RequestDispatcherOptions
+     * @see #include(String, String)
      */
-    void include(String path, String requestDispatcherOptions);
+    void include(String path, RequestDispatcherOptions options);
 
 }
