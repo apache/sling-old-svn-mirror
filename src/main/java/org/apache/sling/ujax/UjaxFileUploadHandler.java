@@ -79,6 +79,7 @@ public class UjaxFileUploadHandler {
     public static final String NT_FOLDER = "nt:folder";
     public static final String NT_FILE = "nt:file";
     public static final String NT_RESOURCE = "nt:resource";
+    public static final String NT_UNSTRUCTURED = "nt:unstructured";
 
     // item name string constants
     public static final String JCR_CONTENT = "jcr:content";
@@ -144,6 +145,13 @@ public class UjaxFileUploadHandler {
                 // assuming type not valid.
                 typeHint = null;
             }
+        }
+        
+        // also create an nt:file if the name contains an extension
+        // the rationale is that if the file name is "important" we want
+        // an nt:file, and an image name with an extension is probably "important"
+        if(!createNtFile && name.indexOf('.') > 0) {
+            createNtFile = true;
         }
 
         // set empty type
