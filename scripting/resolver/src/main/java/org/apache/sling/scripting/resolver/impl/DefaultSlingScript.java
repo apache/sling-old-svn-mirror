@@ -18,8 +18,6 @@
  */
 package org.apache.sling.scripting.resolver.impl;
 
-import static java.lang.Boolean.TRUE;
-import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
 import static org.apache.sling.api.scripting.SlingBindings.LOG;
 import static org.apache.sling.api.scripting.SlingBindings.OUT;
 import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
@@ -48,7 +46,6 @@ import javax.script.SimpleScriptContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
@@ -95,7 +92,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
         try {
             Bindings bindings = verifySlingBindings(scriptName, props);
-            
+
             ScriptContext ctx = new SimpleScriptContext();
             ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             ctx.setReader(((SlingHttpServletRequest) bindings.get(REQUEST)).getReader());
@@ -109,8 +106,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             // optionall flush the output channel
             Object flushObject = bindings.get(SlingBindings.FLUSH);
-            if (flushObject instanceof Boolean
-                && ((Boolean) flushObject).booleanValue()) {
+            if (flushObject instanceof Boolean && (Boolean) flushObject) {
                 ctx.getWriter().flush();
             }
 
@@ -120,7 +116,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         } catch (IOException ioe) {
             throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
                 ioe);
-            
+
         } catch (ScriptException se) {
             Throwable cause = (se.getCause() == null) ? se : se.getCause();
             throw new ScriptEvaluationException(scriptName, se.getMessage(),
@@ -138,22 +134,21 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 String value = servletConfig.getInitParameter(name);
                 params.put(name, value);
             }
-            
+
             servletContext = servletConfig.getServletContext();
         }
     }
 
-    public void service(ServletRequest req, ServletResponse res)
-            throws ServletException, IOException {
+    public void service(ServletRequest req, ServletResponse res) {
 
         SlingHttpServletRequest request = (SlingHttpServletRequest) req;
 
         try {
             // prepare the properties for the script
             SlingBindings props = new SlingBindings();
-            props.put(REQUEST, req);
-            props.put(RESPONSE, res);
-            props.put(FLUSH, TRUE);
+            props.setRequest((SlingHttpServletRequest) req);
+            props.setResponse((SlingHttpServletResponse) res);
+            props.setFlush(true);
 
             res.setCharacterEncoding("UTF-8");
             res.setContentType(request.getResponseContentType());
@@ -218,7 +213,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         // we try to get a jcr:encoding property besides the data property
         // to provide a possible encoding
         ResourceMetadata meta = getScriptResource().getResourceMetadata();
-        String encoding = (String) meta.get(ResourceMetadata.CHARACTER_ENCODING);
+        String encoding = meta.getCharacterEncoding();
         if (encoding == null) {
             encoding = "UTF-8";
         }
@@ -231,14 +226,14 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     private Bindings verifySlingBindings(String scriptName,
             SlingBindings slingBindings) throws IOException {
-        
-        Object requestObject = slingBindings.get(REQUEST);
-        if (!(requestObject instanceof SlingHttpServletRequest)) {
+
+        SlingHttpServletRequest request = slingBindings.getRequest();
+        if (request == null) {
             throw fail(scriptName, REQUEST, "Missing or wrong type");
         }
 
-        Object responseObject = slingBindings.get(RESPONSE);
-        if (!(responseObject instanceof SlingHttpServletResponse)) {
+        SlingHttpServletResponse response = slingBindings.getResponse();
+        if (response == null) {
             throw fail(scriptName, RESPONSE, "Missing or wrong type");
         }
 
@@ -257,20 +252,18 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         Object slingObject = slingBindings.get(SLING);
         if (slingObject == null) {
 
-            sling = new ScriptHelper(this,
-                (SlingHttpServletRequest) requestObject,
-                (SlingHttpServletResponse) responseObject);
+            sling = new ScriptHelper(this, request, response);
 
         } else if (slingObject instanceof SlingScriptHelper) {
 
             sling = (SlingScriptHelper) slingObject;
 
-            if (sling.getRequest() != requestObject) {
+            if (sling.getRequest() != request) {
                 throw fail(scriptName, REQUEST,
                     "Not the same as request field of SlingScriptHelper");
             }
 
-            if (sling.getResponse() != responseObject) {
+            if (sling.getResponse() != response) {
                 throw fail(scriptName, RESPONSE,
                     "Not the same as response field of SlingScriptHelper");
             }

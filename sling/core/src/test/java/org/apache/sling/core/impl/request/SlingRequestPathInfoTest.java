@@ -272,7 +272,7 @@ public class SlingRequestPathInfoTest extends TestCase {
 
         MockResource(String resolutionPath) {
             metadata = new ResourceMetadata();
-            metadata.put(ResourceMetadata.RESOLUTION_PATH, resolutionPath);
+            metadata.setResolutionPath(resolutionPath);
         }
 
         public String getResourceType() {

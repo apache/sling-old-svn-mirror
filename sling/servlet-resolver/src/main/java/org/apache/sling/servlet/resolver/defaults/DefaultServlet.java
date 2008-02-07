@@ -223,7 +223,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         
         ResourceMetadata meta = resource.getResourceMetadata();
         
-        String contentType = (String) meta.get(ResourceMetadata.CONTENT_TYPE);
+        String contentType = meta.getContentType();
         if (contentType == null) {
             contentType = getServletContext().getMimeType(resource.getPath());
         }
@@ -231,7 +231,7 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
             response.setContentType(contentType);
         }
         
-        String encoding = (String) meta.get(ResourceMetadata.CHARACTER_ENCODING);
+        String encoding = meta.getCharacterEncoding();
         if (encoding != null) {
             response.setCharacterEncoding(encoding);
         }

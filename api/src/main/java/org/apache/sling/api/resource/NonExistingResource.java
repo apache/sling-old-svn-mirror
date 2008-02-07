@@ -31,7 +31,7 @@ public final class NonExistingResource implements Resource {
         this.resourceURI = resourceURI;
 
         resourceMetadata = new ResourceMetadata();
-        resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, resourceURI);
+        resourceMetadata.setResolutionPath(resourceURI);
     }
 
     public String getPath() {
@@ -60,5 +60,9 @@ public final class NonExistingResource implements Resource {
      */
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return null;
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + ", path=" + getPath();
     }
 }
