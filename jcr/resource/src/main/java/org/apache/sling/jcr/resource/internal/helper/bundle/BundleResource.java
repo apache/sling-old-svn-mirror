@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 
+import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -34,7 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a Bundle entry */
-public class BundleResource implements Resource, Descendable {
+public class BundleResource extends SlingAdaptable implements Resource,
+        Descendable {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -111,7 +113,7 @@ public class BundleResource implements Resource, Descendable {
         }
 
         // fall back to nothing
-        return null;
+        return super.adaptTo(type);
     }
 
     public String toString() {
