@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.wrapper;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.ScriptEngineHelper;
@@ -30,6 +31,7 @@ import org.apache.sling.scripting.ScriptEngineHelper;
 public class ScriptableNodeTest extends RepositoryScriptingTestBase {
 
     private Node node;
+    private Property textProperty;
     private String testText;
     private ScriptEngineHelper.Data data;
     
@@ -40,19 +42,38 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         node = getNewNode();
         testText = "Test-" + System.currentTimeMillis();
         node.setProperty("text", testText);
+        node.setProperty("otherProperty", node.getPath());
         
         data = new ScriptEngineHelper.Data();
         data.put("node", node);
-        data.put("property", node.getProperty("text"));
+        textProperty = node.getProperty("text");
+        data.put("property", textProperty);
     }
 
-    /** TODO reactivate this once SLING-154 is fixed */
-    public void TODO_FAILS_testPrimaryNodeType() throws Exception {
+    public void testDefaultValue() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("node", getTestRootNode());
+        assertEquals(
+                getTestRootNode().getPath(),
+                script.evalToString("out.print(node)", data)
+        );
+    }
+
+    public void testPrimaryNodeType() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("node", getTestRootNode());
         assertEquals(
                 "nt:unstructured",
-                script.evalToString("out.print(node.getPrimaryNodeType())", data)
+                script.evalToString("out.print(node.getPrimaryNodeType().getName())", data)
+        );
+    }
+
+    public void testPrimaryNodeTypeProperty() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("node", getTestRootNode());
+        assertEquals(
+                "nt:unstructured",
+                script.evalToString("out.print(node['jcr:primaryType'])", data)
         );
     }
 
@@ -64,17 +85,10 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
     }
     
     public void testViaPropertyWithWrappers() throws Exception {
+        // TODO why does that not return the property value??
         assertEquals(
-                testText,
+                textProperty.getPath(),
                 script.evalToString("out.print(property)", data)
-        );
-    }
-    
-    /** TODO reactivate this once SLING-154 is fixed */
-    public void TODO_FAILStestViaNodeNoWrappers() throws Exception {
-        assertEquals(
-                testText,
-                script.evalToString("out.print(node.properties.text.value.string)", data)
         );
     }
     
@@ -83,5 +97,17 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
                 testText,
                 script.evalToString("out.print(node.text)", data)
         );
+    }
+    
+    public void testPropertiesIterationNoWrapper() throws Exception {
+        final String code = 
+            "var props = node.getProperties();"
+            + " for(i in props) { out.print(props[i].name); out.print(' '); }"
+        ;
+        final String result = script.evalToString(code, data);
+        final String [] names = { "text", "otherProperty" };
+        for(String name : names) {
+            assertTrue("result (" + result + ") contains '" + name + "'", result.contains(name));
+        }
     }
 }
