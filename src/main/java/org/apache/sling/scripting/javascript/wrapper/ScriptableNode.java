@@ -54,7 +54,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private Node node;
-
+    
     public ScriptableNode() {
     }
 
@@ -74,26 +74,26 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
-    
-    public ScriptableItemMap jsGet_children() {
+
+    public ScriptableItemMap jsFunction_getChildren() {
         try {
             return new ScriptableItemMap(node.getNodes());
         } catch (RepositoryException re) {
-            log.warn("Cannot get children of " + jsGet_path(), re);
+            log.warn("Cannot get children of " + jsFunction_getPath(), re);
             return new ScriptableItemMap();
         }
     }
 
-    public ScriptableItemMap jsGet_properties() {
+    public ScriptableItemMap jsFunction_getProperties() {
         try {
             return new ScriptableItemMap(node.getProperties());
         } catch (RepositoryException re) {
-            log.warn("Cannot get children of " + jsGet_path(), re);
+            log.warn("Cannot get children of " + jsFunction_getPath(), re);
             return new ScriptableItemMap();
         }
     }
 
-    public Object jsGet_primaryItem() {
+    public Object jsFunction_getPrimaryItem() {
         try {
             return ScriptRuntime.toObject(this, node.getPrimaryItem());
         } catch (RepositoryException re) {
@@ -101,7 +101,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public String jsGet_UUID() {
+    public String jsFunction_getUUID() {
         try {
             return node.getUUID();
         } catch (RepositoryException re) {
@@ -109,7 +109,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public int jsGet_index() {
+    public int jsFunction_getIndex() {
         try {
             return node.getIndex();
         } catch (RepositoryException re) {
@@ -117,7 +117,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Iterator<?> jsGet_references() {
+    public Iterator<?> jsFunction_getReferences() {
         try {
             return node.getReferences();
         } catch (RepositoryException re) {
@@ -125,7 +125,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_primaryNodeType() {
+    public Object jsFunction_getPrimaryNodeType() {
         try {
             return node.getPrimaryNodeType();
         } catch (RepositoryException re) {
@@ -133,7 +133,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public NodeType[] jsGet_mixinNodeTypes() {
+    public NodeType[] jsFunction_getMixinNodeTypes() {
         try {
             return node.getMixinNodeTypes();
         } catch (RepositoryException re) {
@@ -141,7 +141,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_definition() {
+    public Object jsFunction_getDefinition() {
         try {
             return node.getDefinition();
         } catch (RepositoryException re) {
@@ -149,7 +149,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public boolean jsGet_checkedOut() {
+    public boolean jsFunction_getCheckedOut() {
         try {
             return node.isCheckedOut();
         } catch (RepositoryException re) {
@@ -157,7 +157,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_versionHistory() {
+    public Object jsFunction_getVersionHistory() {
         try {
             return node.getVersionHistory();
         } catch (RepositoryException re) {
@@ -165,7 +165,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_baseVersion() {
+    public Object jsFunction_getBaseVersion() {
         try {
             return node.getBaseVersion();
         } catch (RepositoryException re) {
@@ -173,7 +173,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_lock() {
+    public Object jsFunction_getLock() {
         try {
             return node.getLock();
         } catch (RepositoryException re) {
@@ -181,7 +181,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public boolean jsGet_locked() {
+    public boolean jsFunction_getLocked() {
         try {
             return node.isLocked();
         } catch (RepositoryException re) {
@@ -189,7 +189,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_session() {
+    public Object jsFunction_getSession() {
         try {
             return node.getSession();
         } catch (RepositoryException re) {
@@ -197,7 +197,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public String jsGet_path() {
+    public String jsFunction_getPath() {
         try {
             return node.getPath();
         } catch (RepositoryException e) {
@@ -205,7 +205,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public String jsGet_name() {
+    public String jsFunction_getName() {
         try {
             return node.getName();
         } catch (RepositoryException e) {
@@ -213,7 +213,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public Object jsGet_parent() {
+    public Object jsFunction_getParent() {
         try {
             return ScriptRuntime.toObject(this, node.getParent());
         } catch (RepositoryException re) {
@@ -221,7 +221,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public int jsGet_depth() {
+    public int jsFunction_getDepth() {
         try {
             return node.getDepth();
         } catch (RepositoryException re) {
@@ -229,11 +229,11 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
-    public boolean jsGet_new() {
+    public boolean jsFunction_getNew() {
         return node.isNew();
     }
 
-    public boolean jsGet_modified() {
+    public boolean jsFunction_getModified() {
         return node.isModified();
     }
     
@@ -244,17 +244,30 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
      */
     @Override
     public Object get(String name, Scriptable start) {
-        List<Scriptable> items = new ArrayList<Scriptable>();
 
-        // add all matching nodes
+        // builtin javascript properties (jsFunction_ etc.) have priority
+        final Object fromSuperclass = super.get(name, start);
+        if(fromSuperclass != Scriptable.NOT_FOUND) {
+            return fromSuperclass;
+        }
+        
+        if(node == null) {
+            return Undefined.instance;
+        }
+
+        final List<Scriptable> items = new ArrayList<Scriptable>();
+        
+        // Add all matching nodes to result
         try {
             NodeIterator it = node.getNodes(name);
             while (it.hasNext()) {
                 items.add(new ScriptableNode(it.nextNode()));
             }
-        } catch (RepositoryException e) {}
+        } catch (RepositoryException e) {
+            log.debug("RepositoryException while collecting Node children",e);
+        }
 
-        // add all matching properies
+        // Add all matching properties to result
         try {
             PropertyIterator it = node.getProperties(name);
             while (it.hasNext()) {
@@ -273,10 +286,12 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
                     }
                 }
             }
-        } catch (RepositoryException e) {}
+        } catch (RepositoryException e) {
+            log.debug("RepositoryException while collecting Node properties",e);
+        }
 
         if (items.size()==0) {
-            return Undefined.instance;
+            return Scriptable.NOT_FOUND;
         } else if (items.size()==1) {
             return items.iterator().next();
         } else {
@@ -326,8 +341,18 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     }
 
     @Override
+    public Object getDefaultValue(Class typeHint) {
+        try {
+            return node.getPath();
+        } catch(Exception e) {
+            return null;
+        }
+    }
+
+    @Override
     public boolean has(String name, Scriptable start) {
         try {
+            // TODO should this take into account our jsFunction_ members?
             return node.hasProperty(name) || node.hasNode(name);
         } catch (RepositoryException e) {
             return false;
