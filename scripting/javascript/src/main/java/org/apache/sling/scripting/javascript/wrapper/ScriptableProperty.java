@@ -41,6 +41,9 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
         this.property = property;
     }
 
+    public void jsConstructor() {
+    }
+
     public void jsConstructor(Object res) {
         this.property = (Property) res;
     }
