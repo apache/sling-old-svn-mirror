@@ -307,7 +307,7 @@ public class Loader {
 
             if (clNode.getName() == null) {
                 // set the name without the [last] extension (xml or json)
-                clNode.setName(name.substring(0, name.lastIndexOf('.')));
+                clNode.setName(toPlainName(name));
             }
 
             return this.createNode(parent, clNode);
@@ -588,9 +588,7 @@ public class Loader {
             session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
 
             // additionally check whether the expected child node exists
-            if (name.toLowerCase().endsWith(EXT_JCR_XML)) {
-                name = name.substring(0, name.length()-EXT_JCR_XML.length());
-            }
+            name = toPlainName(name);
             return (parent.hasNode(name)) ? parent.getNode(name) : null;
 
         } catch (InvalidSerializedDataException isde) {
@@ -620,5 +618,22 @@ public class Loader {
             }
         }
 
+    }
+    
+    private String toPlainName(String name) {
+        int diff;
+        if (name.endsWith(EXT_JCR_XML)) {
+            diff = EXT_JCR_XML.length();
+        } else if (name.endsWith(EXT_XML)) {
+            diff = EXT_XML.length();
+        } else if (name.endsWith(EXT_JSON)) {
+            diff = EXT_JSON.length();
+        } else if (name.endsWith(EXT_XJSON)) {
+            diff = EXT_XJSON.length();
+        } else {
+            return name;
+        }
+        
+        return name.substring(0, name.length() - diff);
     }
 }
