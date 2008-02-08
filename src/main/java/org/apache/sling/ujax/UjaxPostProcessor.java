@@ -399,6 +399,10 @@ public class UjaxPostProcessor {
 
         }
         // create or get node
+        if (changeLog.isDeleted(nodePath)) {
+            // TODO: correct?
+            return;
+        }
         currentNode = deepGetOrCreateNode(null, nodePath);
         currentPath = currentNode.getPath();
 
