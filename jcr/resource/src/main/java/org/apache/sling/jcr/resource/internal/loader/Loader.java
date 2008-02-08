@@ -214,7 +214,10 @@ public class Loader {
                 String name = this.getName(base);
 
                 Node node = null;
-                URL nodeDescriptor = bundle.getEntry(base + EXT_XML);
+                URL nodeDescriptor = bundle.getEntry(base + EXT_JCR_XML);
+                if (nodeDescriptor == null) {
+                    nodeDescriptor = bundle.getEntry(base + EXT_XML);
+                }
                 if (nodeDescriptor == null) {
                     nodeDescriptor = bundle.getEntry(base + EXT_JSON);
                 }
@@ -280,18 +283,18 @@ public class Loader {
         InputStream ins = null;
         try {
             NodeReader nodeReader;
-            if (nodeXML.getPath().toLowerCase().endsWith(EXT_XML)) {
-                // return immediately if system/document view import succeeds
-                Node childNode = importSystemView(parent, name, nodeXML);
-                if (childNode != null) {
-                    return childNode;
-                }
+            if (nodeXML.getPath().toLowerCase().endsWith(EXT_JCR_XML)) {
+                return importSystemView(parent, name, nodeXML);
                 
+            } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XML)) {
                 nodeReader = this.getXmlReader();
+                
             } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_JSON)) {
                 nodeReader = this.getJsonReader();
+                
             } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XJSON)) {
                 nodeReader = this.getXJsonReader();
+                
             } else {
                 // cannot find out the type
                 return null;
@@ -575,20 +578,23 @@ public class Loader {
     private Node importSystemView(Node parent, String name, URL nodeXML)
             throws IOException {
 
-        // only consider ".jcr.xml" files here
-        if (!nodeXML.getPath().toLowerCase().endsWith(EXT_JCR_XML)) {
-            return null;
-        }
-
         InputStream ins = null;
         try {
 
+            // check whether we have the content already, nothing to do then
+            name = toPlainName(name);
+            if (parent.hasNode(name)) {
+                log.debug(
+                    "importSystemView: Node {} for XML {} already exists, nothing to to",
+                    name, nodeXML);
+                return parent.getNode(name);
+            }
+            
             ins = nodeXML.openStream();
             Session session = parent.getSession();
             session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
 
             // additionally check whether the expected child node exists
-            name = toPlainName(name);
             return (parent.hasNode(name)) ? parent.getNode(name) : null;
 
         } catch (InvalidSerializedDataException isde) {
