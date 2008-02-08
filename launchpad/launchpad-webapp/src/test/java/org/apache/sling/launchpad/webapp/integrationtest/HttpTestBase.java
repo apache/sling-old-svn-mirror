@@ -90,6 +90,10 @@ public class HttpTestBase extends TestCase {
             scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
             testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
         }
+        
+        void delete() throws IOException {
+            testClient.delete(nodeUrl);
+        }
     };
 
     @Override

@@ -16,6 +16,8 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
+import java.util.Iterator;
+
 import javax.jcr.Node;
 
 import org.apache.sling.api.resource.Resource;
@@ -98,6 +100,14 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
 
     public Object jsGet_meta() {
         return resource.getResourceMetadata();
+    }
+    
+    // TODO a wrapper would be more convenient than an Iterator,
+    // but in my tests ScriptableItemMap didn't seem to allow
+    // proper wrapping of its elements: javascript constructor
+    // not found when scope = ScriptableItemMap
+    public Iterator<Resource> jsGet_children() {
+        return resource.getResourceProvider().listChildren(resource);
     }
 
     @Override
