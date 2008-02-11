@@ -31,9 +31,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
+import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.event.EventUtil;
@@ -83,8 +85,8 @@ public abstract class AbstractRepositoryEventHandler
     /** Our application id. */
     protected String applicationId;
 
-    /** The repository session. */
-    protected Session session;
+    /** The repository session to write into the repository. */
+    protected Session writerSession;
 
     /** The path in the repository. */
     protected String repositoryPath;
@@ -95,8 +97,11 @@ public abstract class AbstractRepositoryEventHandler
     /** Is the background task still running? */
     protected boolean running;
 
-    /** A local queue for serialising the job processing. */
+    /** A local queue for serialising the event processing. */
     protected final BlockingQueue<EventInfo> queue = new LinkedBlockingQueue<EventInfo>();
+
+    /** A local queue for writing received events into the repository. */
+    protected final BlockingQueue<EventInfo> writeQueue = new LinkedBlockingQueue<EventInfo>();
 
     /**
      * Activate this component.
@@ -111,37 +116,79 @@ public abstract class AbstractRepositoryEventHandler
         if ( i != null ) {
             this.cleanupPeriod = i;
         }
-        // start background thread
+
+        // start background threads
         this.running = true;
+        // start writer thread
         final Thread t = new Thread() {
             public void run() {
                 try {
-                    startSession();
-                    runInBackground();
+                    startWriterSession();
                 } catch (RepositoryException e) {
                     // there is nothing we can do except log!
                     logger.error("Error during session starting.", e);
+                    running = false;
                 }
+                processWriteQueue();
             }
         };
         t.start();
+        final Thread t2 = new Thread() {
+            public void run() {
+                runInBackground();
+            }
+        };
+        t2.start();
     }
 
     /**
+     * This method is invoked periodically.
      * @see java.lang.Runnable#run()
      */
     public void run() {
         if ( this.cleanupPeriod > 0 ) {
-            this.cleanUpRepository();
+            this.logger.debug("Cleaning up repository, removing all entries older than {} minutes.", this.cleanupPeriod);
+
+            final String queryString = this.getCleanUpQueryString();
+            if ( queryString != null ) {
+                // we create an own session for concurrency issues
+                Session s = null;
+                try {
+                    s = this.createSession();
+                    final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                    logger.debug("Executing query {}", queryString);
+                    final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
+                    final NodeIterator iter = q.execute().getNodes();
+                    int count = 0;
+                    while ( iter.hasNext() ) {
+                        final Node eventNode = iter.nextNode();
+                        eventNode.remove();
+                        count++;
+                    }
+                    parentNode.save();
+                    logger.debug("Removed {} entries from the repository.", count);
+
+                } catch (RepositoryException e) {
+                    // in the case of an error, we just log this as a warning
+                    this.logger.warn("Exception during repository cleanup.", e);
+                } finally {
+                    if ( s != null ) {
+                        s.logout();
+                    }
+                }
+            }
         }
     }
 
     protected abstract void runInBackground();
 
+    protected abstract void processWriteQueue();
+
     /**
-     * Clean up the repository.
+     * The query to detect old entries which can be removed.
+     * This method is invoked periodically from the {@link #run()} method.
      */
-    protected abstract void cleanUpRepository();
+    protected abstract String getCleanUpQueryString();
 
     /**
      * Deactivate this component.
@@ -151,12 +198,18 @@ public abstract class AbstractRepositoryEventHandler
         // stop background thread, by adding a job info to wake it up
         this.running = false;
         try {
+            this.writeQueue.put(new EventInfo());
+        } catch (InterruptedException e) {
+            // we ignore this
+            this.ignoreException(e);
+        }
+        try {
             this.queue.put(new EventInfo());
         } catch (InterruptedException e) {
             // we ignore this
             this.ignoreException(e);
         }
-        this.stopSession();
+        this.stopWriterSession();
     }
 
     /**
@@ -178,8 +231,8 @@ public abstract class AbstractRepositoryEventHandler
      * for new events created on other nodes.
      * @throws RepositoryException
      */
-    protected void startSession() throws RepositoryException {
-        this.session = this.createSession();
+    protected void startWriterSession() throws RepositoryException {
+        this.writerSession = this.createSession();
         if ( this.repositoryPath != null ) {
             this.createRepositoryPath();
         }
@@ -188,16 +241,16 @@ public abstract class AbstractRepositoryEventHandler
     /**
      * Stop the session.
      */
-    protected void stopSession() {
-        if ( this.session != null ) {
+    protected void stopWriterSession() {
+        if ( this.writerSession != null ) {
             try {
-                this.session.getWorkspace().getObservationManager().removeEventListener(this);
+                this.writerSession.getWorkspace().getObservationManager().removeEventListener(this);
             } catch (RepositoryException e) {
                 // we just ignore it
                 this.logger.warn("Unable to remove event listener.", e);
             }
-            this.session.logout();
-            this.session = null;
+            this.writerSession.logout();
+            this.writerSession = null;
         }
     }
 
@@ -206,8 +259,8 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void createRepositoryPath()
     throws RepositoryException {
-        if ( !this.session.itemExists(this.repositoryPath) ) {
-            Node node = this.session.getRootNode();
+        if ( !this.writerSession.itemExists(this.repositoryPath) ) {
+            Node node = this.writerSession.getRootNode();
             String path = this.repositoryPath.substring(1);
             int pos = path.lastIndexOf('/');
             if ( pos != -1 ) {
@@ -255,7 +308,7 @@ public abstract class AbstractRepositoryEventHandler
     protected Node writeEvent(Event e)
     throws RepositoryException {
         // create new node with name of topic
-        final Node rootNode = (Node) this.session.getItem(this.repositoryPath);
+        final Node rootNode = (Node) this.writerSession.getItem(this.repositoryPath);
 
         final String nodeType = this.getEventNodeType();
         final String nodeName = this.getNodeName(e);

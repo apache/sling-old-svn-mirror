@@ -126,8 +126,8 @@ public abstract class AbstractRepositoryEventHandlerTest {
         assertEquals(this.handler.applicationId, SLING_ID);
         assertEquals(this.handler.cleanupPeriod, CLEANUP_PERIOD);
         assertEquals(this.handler.repositoryPath, REPO_PATH);
-        assertNotNull(this.handler.session);
-        final EventListenerIterator iter = this.handler.session.getWorkspace().getObservationManager().getRegisteredEventListeners();
+        assertNotNull(this.handler.writerSession);
+        final EventListenerIterator iter = this.handler.writerSession.getWorkspace().getObservationManager().getRegisteredEventListeners();
         boolean found = false;
         while ( !found && iter.hasNext() ) {
             final javax.jcr.observation.EventListener listener = iter.nextEventListener();

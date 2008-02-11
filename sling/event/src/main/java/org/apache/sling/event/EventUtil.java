@@ -52,7 +52,7 @@ public abstract class EventUtil {
     /** The property to for setting the maximum number of retries. Value is of type Integer. */
     public static final String PROPERTY_JOB_RETRIES = "event.job.retries";
 
-    /** The property to set a retry delay. Value is of type Long. */
+    /** The property to set a retry delay. Value is of type Long and specifies milliseconds. */
     public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
 
     /** The topic for jobs. */
@@ -140,36 +140,14 @@ public abstract class EventUtil {
 
     /**
      * Notify a failed job.
+     * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
      */
-    public static void rescheduleJob(Event job) {
+    public static boolean rescheduleJob(Event job) {
         final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
         if ( ctx == null ) {
             throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
         }
-        boolean retry = true;
-        // check if we exceeded the number of retries
-        if ( job.getProperty(PROPERTY_JOB_RETRIES) != null ) {
-            int retries = (Integer) job.getProperty(PROPERTY_JOB_RETRIES);
-            int retryCount = 0;
-            if ( job.getProperty(PROPERTY_JOB_RETRY_COUNT) != null ) {
-                retryCount = (Integer)job.getProperty(PROPERTY_JOB_RETRY_COUNT);
-            }
-            retryCount++;
-            if ( retryCount >= retries ) {
-                retry = false;
-            }
-            // update event with retry count
-            final Dictionary<String, Object> newProperties;
-            // create a new dictionary
-            newProperties = new Hashtable<String, Object>();
-            final String[] names = job.getPropertyNames();
-            for(int i=0; i<names.length; i++ ) {
-                newProperties.put(names[i], job.getProperty(names[i]));
-            }
-            newProperties.put(PROPERTY_JOB_RETRY_COUNT, retryCount);
-            job = new Event(job.getTopic(), newProperties);
-        }
-        ctx.notifier.finishedJob(job, ctx.eventNodePath, ctx.lockToken, retry);
+        return ctx.notifier.finishedJob(job, ctx.eventNodePath, ctx.lockToken, true);
     }
 
     /**
@@ -217,6 +195,18 @@ public abstract class EventUtil {
             }
         }
 
-        void finishedJob(Event job, String eventNodePath, String lockToken, boolean reschedule);
+        /**
+         * Notify that the job is finished.
+         * If the job is not rescheduled, a return value of <code>false</code> indicates an error
+         * during the processing. If the job should be rescheduled, <code>true</code> indicates
+         * that the job could be rescheduled. If an error occurs or the number of retries is
+         * exceeded, <code>false</code> will be returned.
+         * @param job The job.
+         * @param eventNodePath The storage node in the repository.
+         * @param lockToken The lock token locking the node.
+         * @param reschedule Should the event be rescheduled?
+         * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
+         */
+        boolean finishedJob(Event job, String eventNodePath, String lockToken, boolean reschedule);
     }
 }

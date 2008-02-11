@@ -22,12 +22,9 @@ import java.util.Calendar;
 import java.util.Dictionary;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.event.EventUtil;
@@ -45,52 +42,59 @@ public class DistributingEventHandler
     extends AbstractRepositoryEventHandler {
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
      */
-    protected void cleanUpRepository() {
-        this.logger.debug("Cleaning up repository, removing all events older than {} minutes.", this.cleanupPeriod);
+    protected String getCleanUpQueryString() {
+        final Calendar deleteBefore = Calendar.getInstance();
+        deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
+        final String dateString = ISO8601.format(deleteBefore);
 
-        // we create an own session for concurrency issues
-        Session s = null;
-        try {
-            s = this.createSession();
-            final Node parentNode = (Node)s.getItem(this.repositoryPath);
-            final Calendar deleteBefore = Calendar.getInstance();
-            deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
-            final String dateString = ISO8601.format(deleteBefore);
+        final StringBuffer buffer = new StringBuffer("/jcr:root");
+        buffer.append(this.repositoryPath);
+        buffer.append("//element(*, ");
+        buffer.append(getEventNodeType());
+        buffer.append(")[@");
+        buffer.append(EventHelper.NODE_PROPERTY_CREATED);
+        buffer.append(" < xs:dateTime('");
+        buffer.append(dateString);
+        buffer.append("')]");
 
-            final QueryManager qManager = parentNode.getSession().getWorkspace().getQueryManager();
-            final StringBuffer buffer = new StringBuffer("/jcr:root");
-            buffer.append(this.repositoryPath);
-            buffer.append("//element(*, ");
-            buffer.append(getEventNodeType());
-            buffer.append(")[@");
-            buffer.append(EventHelper.NODE_PROPERTY_CREATED);
-            buffer.append(" < xs:dateTime('");
-            buffer.append(dateString);
-            buffer.append("')]");
+        return buffer.toString();
+    }
 
-            this.logger.debug("Executing query {}", buffer);
-            final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
-            final NodeIterator iter = q.execute().getNodes();
-            int count = 0;
-            while ( iter.hasNext() ) {
-                final Node eventNode = iter.nextNode();
-                eventNode.remove();
-                count++;
+    /**
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#processWriteQueue()
+     */
+    protected void processWriteQueue() {
+        while ( this.running ) {
+            // so let's wait/get the next job from the queue
+            EventInfo info = null;
+            try {
+                info = this.writeQueue.take();
+            } catch (InterruptedException e) {
+                // we ignore this
+                this.ignoreException(e);
             }
-            this.logger.debug("Removed {} event nodes from the repository.", count);
-            parentNode.save();
-        } catch (RepositoryException e) {
-            // in the case of an error, we just log this as a warning
-            this.logger.warn("Exception during repository cleanup.", e);
-        } finally {
-            if ( s != null ) {
-                s.logout();
+            if ( info != null && this.running ) {
+                try {
+                    final Node eventNode = this.writeEvent(info.event);
+                    info.nodePath = eventNode.getPath();
+                } catch (Exception e) {
+                    this.logger.error("Exception during writing the event to the repository.", e);
+                }
+                try {
+                    this.queue.put(info);
+                } catch (InterruptedException e) {
+                    // we ignore this
+                    this.ignoreException(e);
+                }
             }
         }
     }
 
+    /**
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#runInBackground()
+     */
     protected void runInBackground() {
         while ( this.running ) {
             // so let's wait/get the next job from the queue
@@ -102,15 +106,11 @@ public class DistributingEventHandler
                 this.ignoreException(e);
             }
             if ( info != null && this.running ) {
-                if ( info.event != null ) {
+                if ( info.nodePath != null) {
+                    Session session = null;
                     try {
-                        this.writeEvent(info.event);
-                    } catch (Exception e) {
-                        this.logger.error("Exception during writing the event to the repository.", e);
-                    }
-                } else if ( info.nodePath != null) {
-                    try {
-                        final Node eventNode = (Node) this.session.getItem(info.nodePath);
+                        session = this.createSession();
+                        final Node eventNode = (Node)session.getItem(info.nodePath);
                         final EventAdmin localEA = this.eventAdmin;
                         if ( localEA != null ) {
                             localEA.postEvent(this.readEvent(eventNode));
@@ -119,6 +119,10 @@ public class DistributingEventHandler
                         }
                     } catch (Exception ex) {
                         this.logger.error("Exception during reading the event from the repository.", ex);
+                    } finally {
+                        if ( session != null ) {
+                            session.logout();
+                        }
                     }
                 }
             }
@@ -132,7 +136,7 @@ public class DistributingEventHandler
         try {
             final EventInfo info = new EventInfo();
             info.event = event;
-            this.queue.put(info);
+            this.writeQueue.put(info);
         } catch (InterruptedException ex) {
             // we ignore this
             this.ignoreException(ex);
@@ -169,13 +173,11 @@ public class DistributingEventHandler
 
 
     /**
-     * Start the repository session and add this handler as an observer
-     * for new events created on other nodes.
-     * @throws RepositoryException
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#startWriterSession()
      */
-    protected void startSession() throws RepositoryException {
-        super.startSession();
-        this.session.getWorkspace().getObservationManager()
-            .addEventListener(this, javax.jcr.observation.Event.NODE_ADDED, this.repositoryPath, true, null, null, true);
+    protected void startWriterSession() throws RepositoryException {
+        super.startWriterSession();
+        this.writerSession.getWorkspace().getObservationManager()
+            .addEventListener(this, javax.jcr.observation.Event.NODE_ADDED, this.repositoryPath, true, null, new String[] {this.getEventNodeType()}, true);
     }
 }
