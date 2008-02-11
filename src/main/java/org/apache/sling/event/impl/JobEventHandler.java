@@ -96,6 +96,12 @@ public class JobEventHandler
     protected void deactivate(final ComponentContext context) {
         super.deactivate(context);
         if ( this.backgroundSession != null ) {
+            try {
+                this.backgroundSession.getWorkspace().getObservationManager().removeEventListener(this);
+            } catch (RepositoryException e) {
+                // we just ignore it
+                this.logger.warn("Unable to remove event listener.", e);
+            }
             this.backgroundSession.logout();
             this.backgroundSession = null;
         }
@@ -312,7 +318,7 @@ public class JobEventHandler
         super.startWriterSession();
         // load unprocessed jobs from repository
         this.loadJobs();
-        this.writerSession.getWorkspace().getObservationManager()
+        this.backgroundSession.getWorkspace().getObservationManager()
             .addEventListener(this,
                               javax.jcr.observation.Event.PROPERTY_CHANGED | javax.jcr.observation.Event.PROPERTY_REMOVED,
                               this.repositoryPath,
