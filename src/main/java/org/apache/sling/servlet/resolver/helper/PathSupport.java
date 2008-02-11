@@ -49,7 +49,7 @@ public class PathSupport {
         } else {
 
             // for other methods use the method name
-            return methodName.toUpperCase();
+            return methodName;
         }
     }
 
