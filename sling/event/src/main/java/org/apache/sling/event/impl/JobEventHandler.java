@@ -363,7 +363,8 @@ public class JobEventHandler
     protected String getNodeName(Event event) {
         final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
         if ( jobId != null ) {
-            return jobId.replace('/', '.');
+            final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC)).replace('/', '.');
+            return jobTopic + " " + jobId.replace('/', '.');
         }
 
         return "Job " + UUID.randomUUID().toString();
