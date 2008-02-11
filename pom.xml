@@ -48,7 +48,7 @@
     <!--
       Jetty default port (override with -D)
     -->
-    <http.port>8080</http.port>
+    <http.port>8888</http.port>
 
     <!--
       Disable Jetty webapp rescan (override with -D) 
@@ -92,7 +92,7 @@
 
           <connectors>
             <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-              <port>8080</port>
+              <port>8888</port>
               <maxIdleTime>60000</maxIdleTime>
               <port>${http.port}</port>
             </connector>
@@ -193,11 +193,11 @@
             -->
             <property>
               <name>launchpad.http.server.url</name>
-              <value>http://localhost:8080</value>
+              <value>http://localhost:8888</value>
             </property>
             <property>
               <name>launchpad.webdav.server.url</name>
-              <value>http://localhost:8080/dav/default</value>
+              <value>http://localhost:8888/dav/default</value>
             </property>
           </systemProperties>
         </configuration>
@@ -246,11 +246,11 @@
                     -->
                     <property>
                       <name>launchpad.http.server.url</name>
-                      <value>http://localhost:8080/${project.build.finalName}</value>
+                      <value>http://localhost:8888/${project.build.finalName}</value>
                     </property>
                     <property>
                       <name>launchpad.webdav.server.url</name>
-                      <value>http://localhost:8080/${project.build.finalName}/dav/default</value>
+                      <value>http://localhost:8888/${project.build.finalName}/dav/default</value>
                     </property>
                   </systemProperties>
                 </configuration>
