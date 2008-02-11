@@ -71,6 +71,9 @@ public class JobEventHandler
     /** We check every 20 secs by default. */
     protected long sleepTime;
 
+    /** Background session. */
+    protected Session backgroundSession;
+
     /**
      * Activate this component.
      * @param context
@@ -83,7 +86,19 @@ public class JobEventHandler
         } else {
             this.sleepTime = DEFAULT_SLEEP_TIME;
         }
+        this.backgroundSession = this.createSession();
         super.activate(context);
+    }
+
+    /**
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#deactivate(org.osgi.service.component.ComponentContext)
+     */
+    protected void deactivate(final ComponentContext context) {
+        super.deactivate(context);
+        if ( this.backgroundSession != null ) {
+            this.backgroundSession.logout();
+            this.backgroundSession = null;
+        }
     }
 
     /**
@@ -226,10 +241,8 @@ public class JobEventHandler
                 }
                 if ( process ) {
                     boolean unlock = true;
-                    Session session = null;
                     try {
-                        session = this.createSession();
-                        final Node eventNode = (Node) session.getItem(info.nodePath);
+                        final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
                         if ( !eventNode.isLocked() && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
                             // lock node
                             Lock lock = null;
@@ -259,16 +272,11 @@ public class JobEventHandler
                                 this.processingMap.put(jobTopic, Boolean.FALSE);
                             }
                         }
-                        if ( session != null ) {
-                            session.logout();
-                        }
                     }
                 } else {
-                    Session session = null;
                     try {
-                        session = this.createSession();
                         // check if the node is in processing or already finished
-                        final Node eventNode = (Node) session.getItem(info.nodePath);
+                        final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
                         if ( !eventNode.isLocked() && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
                             try {
                                 this.queue.put(info);
@@ -289,10 +297,6 @@ public class JobEventHandler
                     } catch (RepositoryException e) {
                         // ignore
                         this.ignoreException(e);
-                    } finally {
-                        if ( session != null ) {
-                            session.logout();
-                        }
                     }
                 }
             }
@@ -470,7 +474,7 @@ public class JobEventHandler
                                  && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
                                 final EventInfo info = new EventInfo();
                                 info.event = this.readEvent(eventNode);
-                                info.nodePath = event.getPath();
+                                info.nodePath = nodePath;
                                 try {
                                     this.queue.put(info);
                                 } catch (InterruptedException e) {
@@ -559,7 +563,7 @@ public class JobEventHandler
         try {
             s = this.createSession();
             // remove lock token from shared session and add it to current session
-            this.writerSession.removeLockToken(lockToken);
+            this.backgroundSession.removeLockToken(lockToken);
             s.addLockToken(lockToken);
             final Node eventNode = (Node) s.getItem(eventNodePath);
             try {
