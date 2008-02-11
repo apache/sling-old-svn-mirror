@@ -70,6 +70,7 @@
                             org.apache.jackrabbit.name;
                             org.apache.jackrabbit.util;split-package:=merge-first
                         </Private-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/event.cnd
                         </Sling-Nodetypes>
