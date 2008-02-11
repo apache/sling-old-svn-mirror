@@ -375,7 +375,6 @@ public class UjaxPostProcessor {
     private void processContent() throws RepositoryException, ServletException {
         // get desired path.
         String nodePath = rootPath;
-        Node currentNode;
         // check for star suffix in request
         if (isCreateRequest) {
             // If the path ends with a *, create a node under its parent, with
@@ -398,18 +397,12 @@ public class UjaxPostProcessor {
             }
 
         }
-        // create or get node
-        if (changeLog.isDeleted(nodePath)) {
-            // TODO: correct?
-            return;
-        }
-        currentNode = deepGetOrCreateNode(null, nodePath);
-        currentPath = currentNode.getPath();
+        currentPath = nodePath;
 
         // process the "order" command if any
         final String order = request.getParameter(UjaxPostServlet.RP_ORDER);
         if  (order!=null) {
-            processNodeOrder(currentNode, order);
+            processNodeOrder(currentPath, order);
         }
 
         // walk the request parameters, create and save nodes and properties
@@ -459,7 +452,7 @@ public class UjaxPostProcessor {
             }
             // create property helper and get parent node
             RequestProperty prop = new RequestProperty(this, propertyName, values);
-            Node parent = deepGetOrCreateNode(currentNode, prop.getParentPath());
+            Node parent = deepGetOrCreateNode(currentPath, prop.getParentPath());
 
             // call handler
             if (prop.isFileUpload()) {
@@ -470,6 +463,53 @@ public class UjaxPostProcessor {
         }
     }
 
+    /**
+     * Deep gets or creates a node, parent-padding with default nodes nodes.
+     * If the path is empty, the given parent node is returned.
+     *
+     * @param parent path to the parent node, may be null if path is absolute
+     * @param path path to node that needs to be deep-created
+     * @return node at path
+     * @throws RepositoryException if an error occurs
+     * @throws IllegalArgumentException if the path is relative and parent
+     *         is <code>null</code>
+     */
+    private Node deepGetOrCreateNode(String parent, String path)
+            throws RepositoryException {
+        if(log.isDebugEnabled()) {
+            log.debug("Deep-creating Node '{}'", path);
+        }
+        if (path.equals("")) {
+            return (Node) session.getItem(parent);
+        }
+        
+        // prepend parent path if path is relative
+        if (path.charAt(0) != '/') {
+            if (parent == null || !parent.startsWith("/")) {
+                throw new IllegalArgumentException("parent must be an absolute path for relative paths.");
+            }
+
+            if (!parent.endsWith("/")) {
+                path = "/" + path;
+            }
+            
+            path = parent + path;
+        }
+        
+        String[] pathelems = path.substring(1).split("/");
+        Node node = session.getRootNode();
+        
+        for (String name: pathelems) {
+            if (node.hasNode(name)) {
+                node = node.getNode(name);
+            } else {
+                node = node.addNode(name);
+                changeLog.onCreated(node.getPath());
+            }
+        }
+        return node;
+    }
+    
     /**
      * Deep gets or creates a node, parent-padding with default nodes nodes.
      * If the path is empty, the given parent node is returned.
@@ -546,9 +586,10 @@ public class UjaxPostProcessor {
      * @param orderCode code that specifies how to order
      * @throws RepositoryException if a repository error occurs
      */
-    private void processNodeOrder(Node n, String orderCode)
+    private void processNodeOrder(String nodePath, String orderCode)
             throws RepositoryException {
         if (UjaxPostServlet.ORDER_ZERO.equals(orderCode)) {
+            final Node n = deepGetOrCreateNode((String) null, nodePath);
             final Node parent = n.getParent();
             final String beforename=parent.getNodes().nextNode().getName();
             parent.orderBefore(n.getName(), beforename);

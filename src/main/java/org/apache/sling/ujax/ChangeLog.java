@@ -81,23 +81,4 @@ public class ChangeLog {
         }
     }
 
-    /**
-     * Look if item is prepared for deletion.
-     *
-     * @param path item path
-     * @return true if prepared for deletion
-     */
-    public boolean isDeleted(String path) {
-        for (Change c: changes) {
-            if (c.getType() == Change.Type.DELETED) {
-                if (c.getArguments().length > 0) {
-                    String delPath = c.getArguments()[0];
-                    if (delPath.equals(path)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
 }
