@@ -289,7 +289,9 @@
               <configuration>
               <properties>
                 <cargo.servlet.port>8888</cargo.servlet.port>
+                <!-- 
                 <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
+                 -->
               </properties>
               </configuration>
             </configuration>
