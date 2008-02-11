@@ -40,13 +40,14 @@ import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
+import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The JSP engine (a.k.a Jasper).
- *
+ * 
  * @scr.component scr="no" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
@@ -231,6 +232,12 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
         ioProvider = null;
         componentContext = null;
+
+        // remove JspApplicationContextImpl from the servlet context, otherwise
+        // a ClassCastException may be caused after this component is recreated
+        // because the class loader of the JspApplicationContextImpl class
+        // object is different from the one stored in the servlet context
+        slingServletContext.removeAttribute(JspApplicationContextImpl.class.getName());
     }
 
     protected void bindRepositoryClassLoaderProvider(
