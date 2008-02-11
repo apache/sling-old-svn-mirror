@@ -107,7 +107,7 @@ public class EncodedRequestParameter extends AbstractEncodedParameter {
         if (encoding != null) {
             try {
                 String value = new String(data, Util.ENCODING_DIRECT);
-                return URLDecoder.decode(value, encoding);
+                return value; // URLDecoder.decode(value, encoding);
             } catch (UnsupportedEncodingException uue) {
                 // not expected, use default encoding anyway ...
             } catch (IllegalArgumentException iae) {
