@@ -67,22 +67,28 @@ public class TimedEventHandler
     protected Scheduler scheduler;
 
     /**
-     * Start the repository session and add this handler as an observer
-     * for new events created on other nodes.
-     * @throws RepositoryException
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#startWriterSession()
      */
-    protected void startSession() throws RepositoryException {
-        super.startSession();
+    protected void startWriterSession() throws RepositoryException {
+        super.startWriterSession();
         // load timed events from repository
         this.loadEvents();
-        this.session.getWorkspace().getObservationManager()
+        this.writerSession.getWorkspace().getObservationManager()
             .addEventListener(this, javax.jcr.observation.Event.PROPERTY_CHANGED, this.repositoryPath, true, null, null, true);
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#cleanUpRepository()
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
      */
-    protected void cleanUpRepository() {
+    protected String getCleanUpQueryString() {
+        // nothing to clean up for now
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#processWriteQueue()
+     */
+    protected void processWriteQueue() {
         // nothing to do right now
     }
 
@@ -122,8 +128,8 @@ public class TimedEventHandler
                                 }
                             }
                         } else {
-                            this.session.refresh(true);
-                            final Node eventNode = (Node) this.session.getItem(info.nodePath);
+                            this.writerSession.refresh(true);
+                            final Node eventNode = (Node) this.writerSession.getItem(info.nodePath);
                             if ( !eventNode.isLocked() ) {
                                 // lock node
                                 Lock lock = null;
@@ -156,13 +162,13 @@ public class TimedEventHandler
 
     protected String persistEvent(final Event event, final ScheduleInfo scheduleInfo) {
         try {
-            final Node parentNode = (Node)this.session.getItem(this.repositoryPath);
+            final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
             Lock lock = (Lock) new Locked() {
 
                 protected Object run(Node node) throws RepositoryException {
                     final String jobId = scheduleInfo.jobId;
                     // if there is a node, we know that there is exactly one node
-                    final Node foundNode = queryJob(session, jobId);
+                    final Node foundNode = queryJob(writerSession, jobId);
                     if ( scheduleInfo.isStopEvent() ) {
                         // if this is a stop event, we should remove the node from the repository
                         // if there is no node someone else was faster and we can ignore this
@@ -408,7 +414,7 @@ public class TimedEventHandler
      * @throws RepositoryException
      */
     protected void loadEvents() throws RepositoryException {
-        final QueryManager qManager = this.session.getWorkspace().getQueryManager();
+        final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
         final StringBuffer buffer = new StringBuffer("/jcr:root");
         buffer.append(this.repositoryPath);
         buffer.append("//element(*, ");
