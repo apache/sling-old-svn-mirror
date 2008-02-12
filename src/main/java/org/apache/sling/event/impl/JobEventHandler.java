@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.jcr.ItemExistsException;
@@ -71,6 +73,9 @@ public class JobEventHandler
 
     /** Background session. */
     protected Session backgroundSession;
+
+    /** Unloaded jobs. */
+    protected Set<String>unloadedJobs = new HashSet<String>();
 
     /**
      * Activate this component.
@@ -452,14 +457,20 @@ public class JobEventHandler
                         if ( "jcr:lockOwner".equals(propertyName) ) {
                             final Node eventNode = (Node) s.getItem(nodePath);
                             if ( !eventNode.isLocked() ) {
-                                final EventInfo info = new EventInfo();
-                                info.event = this.readEvent(eventNode);
-                                info.nodePath = nodePath;
                                 try {
-                                    this.queue.put(info);
-                                } catch (InterruptedException e) {
-                                    // we ignore this exception as this should never occur
-                                    this.ignoreException(e);
+                                    final EventInfo info = new EventInfo();
+                                    info.event = this.readEvent(eventNode);
+                                    info.nodePath = nodePath;
+                                    try {
+                                        this.queue.put(info);
+                                    } catch (InterruptedException e) {
+                                        // we ignore this exception as this should never occur
+                                        this.ignoreException(e);
+                                    }
+                                } catch (ClassNotFoundException cnfe) {
+                                    // store path for lazy loading
+                                    this.unloadedJobs.add(nodePath);
+                                    this.ignoreException(cnfe);
                                 }
                             }
                         }
@@ -481,29 +492,42 @@ public class JobEventHandler
      * Load all active jobs from the repository.
      * @throws RepositoryException
      */
-    protected void loadJobs() throws RepositoryException {
-        final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
-        final StringBuffer buffer = new StringBuffer("/jcr:root");
-        buffer.append(this.repositoryPath);
-        buffer.append("//element(*, ");
-        buffer.append(this.getEventNodeType());
-        buffer.append(")");
-        final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
-        final NodeIterator result = q.execute().getNodes();
-        while ( result.hasNext() ) {
-            final Node eventNode = result.nextNode();
-            if ( !eventNode.isLocked() ) {
-                final Event event = this.readEvent(eventNode);
-                final EventInfo info = new EventInfo();
-                info.event = event;
-                info.nodePath = eventNode.getPath();
-                try {
-                    this.queue.put(info);
-                } catch (InterruptedException e) {
-                    // we ignore this exception as this should never occur
-                    this.ignoreException(e);
+    protected void loadJobs() {
+        try {
+            final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
+            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            buffer.append(this.repositoryPath);
+            buffer.append("//element(*, ");
+            buffer.append(this.getEventNodeType());
+            buffer.append(")");
+            final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
+            final NodeIterator result = q.execute().getNodes();
+            while ( result.hasNext() ) {
+                final Node eventNode = result.nextNode();
+                if ( !eventNode.isLocked() ) {
+                    final String nodePath = eventNode.getPath();
+                    try {
+                        final Event event = this.readEvent(eventNode);
+                        final EventInfo info = new EventInfo();
+                        info.event = event;
+                        info.nodePath = nodePath;
+                        try {
+                            this.queue.put(info);
+                        } catch (InterruptedException e) {
+                            // we ignore this exception as this should never occur
+                            this.ignoreException(e);
+                        }
+                    } catch (ClassNotFoundException cnfe) {
+                        // store path for lazy loading
+                        this.unloadedJobs.add(nodePath);
+                        this.ignoreException(cnfe);
+                    } catch (RepositoryException re) {
+                        this.logger.error("Unable to load stored job from " + nodePath);
+                    }
                 }
             }
+        } catch (RepositoryException re) {
+            this.logger.error("Exception during initial loading of stored jobs.", re);
         }
     }
 
@@ -546,10 +570,18 @@ public class JobEventHandler
             final Node eventNode = (Node) s.getItem(eventNodePath);
             try {
                 if ( !reschedule ) {
+                    // unlock node
+                    try {
+                        eventNode.unlock();
+                    } catch (RepositoryException e) {
+                        // if unlock fails, we silently ignore this
+                        this.ignoreException(e);
+                    }
                     // remove node from repository
                     final Node parentNode = eventNode.getParent();
                     eventNode.remove();
                     parentNode.save();
+                    lockToken = null;
                 }
             } catch (RepositoryException re) {
                 // if an exception occurs, we just log
@@ -561,12 +593,14 @@ public class JobEventHandler
                         this.processingMap.put(jobTopic, Boolean.FALSE);
                     }
                 }
-                // unlock node
-                try {
-                    eventNode.unlock();
-                } catch (RepositoryException e) {
-                    // if unlock fails, we silently ignore this
-                    this.ignoreException(e);
+                if ( lockToken != null ) {
+                    // unlock node
+                    try {
+                        eventNode.unlock();
+                    } catch (RepositoryException e) {
+                        // if unlock fails, we silently ignore this
+                        this.ignoreException(e);
+                    }
                 }
             }
             if ( reschedule ) {
@@ -656,8 +690,13 @@ public class JobEventHandler
             final NodeIterator iter = q.execute().getNodes();
             while ( iter.hasNext() ) {
                 final Node eventNode = iter.nextNode();
-                final Event event = this.readEvent(eventNode);
-                jobs.add(event);
+                try {
+                    final Event event = this.readEvent(eventNode);
+                    jobs.add(event);
+                } catch (ClassNotFoundException cnfe) {
+                    // in the case of a class not found exception we just ignore the exception
+                    this.ignoreException(cnfe);
+                }
             }
         } catch (RepositoryException e) {
             // in the case of an error, we return an empty list

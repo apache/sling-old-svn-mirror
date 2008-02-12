@@ -129,13 +129,21 @@ public abstract class AbstractRepositoryEventHandler
                     logger.error("Error during session starting.", e);
                     running = false;
                 }
-                processWriteQueue();
+                try {
+                    processWriteQueue();
+                } catch (Throwable t) {
+                    logger.error("Writer thread stopped with exception: " + t.getMessage(), t);
+                }
             }
         };
         t.start();
         final Thread t2 = new Thread() {
             public void run() {
-                runInBackground();
+                try {
+                    runInBackground();
+                } catch (Throwable t) {
+                    logger.error("Background thread stopped with exception: " + t.getMessage(), t);
+                }
             }
         };
         t2.start();
@@ -369,7 +377,7 @@ public abstract class AbstractRepositoryEventHandler
      * @throws ClassNotFoundException
      */
     protected Event readEvent(Node eventNode)
-    throws RepositoryException {
+    throws RepositoryException, ClassNotFoundException {
         final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
         if ( eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES) ) {
@@ -383,8 +391,6 @@ public abstract class AbstractRepositoryEventHandler
                 }
             } catch (IOException ioe) {
                 throw new RepositoryException("Unable to deserialize event properties.", ioe);
-            } catch (ClassNotFoundException e) {
-                throw new RepositoryException("Unable to deserialize event properties.", e);
             }
         }
         this.addEventProperties(eventNode, properties);
