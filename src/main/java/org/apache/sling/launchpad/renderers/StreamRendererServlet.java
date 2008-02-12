@@ -27,22 +27,15 @@ import java.io.OutputStream;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StreamRendererServlet extends PlainTextRendererServlet {
 
     private static final long serialVersionUID = -1L;
-
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     public StreamRendererServlet(String contentType, ServletConfig config)
             throws ServletException {
@@ -124,7 +117,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
      * Returns <code>true</code> if the request has a
      * <code>If-Modified-Since</code> header whose date value is later than
      * the last modification time given as <code>modifTime</code>.
-     * 
+     *
      * @param request The <code>ComponentRequest</code> checked for the
      *            <code>If-Modified-Since</code> header.
      * @param modifTime The last modification time to compare the header to.
