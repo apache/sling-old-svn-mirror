@@ -122,6 +122,9 @@ public class UslingIntegrationTestClient {
         // take over any client provided properties
         if (clientNodeProperties != null) {
             nodeProperties.putAll(clientNodeProperties);
+        } else {
+            // add fake property - otherwise the node is not created
+            nodeProperties.put("jcr:created", "");
         }
         
         

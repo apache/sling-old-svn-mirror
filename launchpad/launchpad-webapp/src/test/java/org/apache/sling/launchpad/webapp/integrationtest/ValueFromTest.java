@@ -63,7 +63,9 @@ public class ValueFromTest extends HttpTestBase {
     
     public void testWithValueFromAndMissingField() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
+        props.put("./jcr:created", "");
         props.put("./text@ValueFrom", "fulltext");
+
         // no fulltext field on purpose, field must be ignored
         
         final String jsonUrl = testClient.createNode(postUrl, props) + ".json";
