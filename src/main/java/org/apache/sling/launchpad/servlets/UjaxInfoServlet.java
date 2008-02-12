@@ -19,7 +19,6 @@
 package org.apache.sling.launchpad.servlets;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +38,7 @@ import org.apache.sling.commons.json.io.JSONWriter;
 public class UjaxInfoServlet extends SlingSafeMethodsServlet {
     /** Handle requests which start with this path */
     public static String PATH_PREFIX = "/ujax:";
-    
+
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws ServletException,
             IOException {
@@ -58,7 +57,7 @@ public class UjaxInfoServlet extends SlingSafeMethodsServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,request.getPathInfo());
             return;
         }
-        
+
         // render data in JSON format
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
