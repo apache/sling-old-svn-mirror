@@ -64,6 +64,11 @@ public class UjaxPostProcessor {
     private final NodeNameGenerator nodeNameGenerator;
 
     /**
+     * utility class for parsing date strings
+     */
+    private final DateParser dateParser;
+
+    /**
      * the sling http servlet request
      */
     private final SlingHttpServletRequest request;
@@ -105,42 +110,44 @@ public class UjaxPostProcessor {
      * @param session jcr session to operate on
      * @param nodeNameGenerator the node name generator. use a servlet scoped one,
      *        so that it can hold states.
+     * @param dateParser helper for parsing date strings
      */
     public UjaxPostProcessor(SlingHttpServletRequest request, Session session,
-                             NodeNameGenerator nodeNameGenerator) {
+                             NodeNameGenerator nodeNameGenerator,
+                             DateParser dateParser) {
         this.request = request;
         this.session = session;
 
         // default to non-creating request (trailing DEFAULT_CREATE_SUFFIX)
         isCreateRequest = false;
-        
+
         // calculate the paths
         StringBuffer rootPathBuf = new StringBuffer();
         String suffix;
         Resource currentResource = request.getResource();
         if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(currentResource.getResourceType())) {
-            
+
             // no resource, treat the missing resource path as suffix
             suffix = currentResource.getPath();
-            
+
         } else {
-            
+
             // resource for part of the path, use request suffix
             suffix = request.getRequestPathInfo().getSuffix();
 
             // and preset the path buffer with the resource path
             rootPathBuf.append(currentResource.getPath());
-            
+
         }
 
         // check for extensions or create suffix in the suffix
         if (suffix != null) {
-            
+
             // cut off any selectors/extension from the suffix
             int dotPos = suffix.indexOf('.');
             if (dotPos > 0) {
                 suffix = suffix.substring(0, dotPos);
-                
+
             // otherwise check whether it is a create request (trailing /*)
             } else if (suffix.endsWith(UjaxPostServlet.DEFAULT_CREATE_SUFFIX)) {
                 suffix = suffix.substring(0, suffix.length()
@@ -150,12 +157,13 @@ public class UjaxPostProcessor {
 
             // append the remains of the suffix to the path buffer
             rootPathBuf.append(suffix);
-            
+
         }
-        
+
         rootPath = rootPathBuf.toString();
 
         this.nodeNameGenerator = nodeNameGenerator;
+        this.dateParser = dateParser;
         propHandler = new UjaxPropertyValueHandler(this);
         uploadHandler = new UjaxFileUploadHandler(this);
     }
@@ -209,9 +217,8 @@ public class UjaxPostProcessor {
     public String getLocation() {
         if (currentPath == null) {
             return externalizePath(rootPath);
-        } else {
-            return externalizePath(currentPath);
         }
+        return externalizePath(currentPath);
     }
 
     /**
@@ -223,6 +230,14 @@ public class UjaxPostProcessor {
         String path = currentPath == null ? rootPath : currentPath;
         path = path.substring(0, path.lastIndexOf('/'));
         return externalizePath(path);
+    }
+
+    /**
+     * Returns the date parser
+     * @return date parser
+     */
+    public DateParser getDateParser() {
+        return dateParser;
     }
 
     /**
@@ -244,7 +259,7 @@ public class UjaxPostProcessor {
             }
             ret.append(ext);
         }
-        
+
         return ret.toString();
     }
 
@@ -300,9 +315,8 @@ public class UjaxPostProcessor {
     public String resolvePath(String path) {
         if (path.startsWith("/")) {
             return path;
-        } else {
-            return rootPath + "/" + path;
         }
+        return rootPath + "/" + path;
     }
 
     /**
@@ -482,7 +496,7 @@ public class UjaxPostProcessor {
         if (path.equals("")) {
             return (Node) session.getItem(parent);
         }
-        
+
         // prepend parent path if path is relative
         if (path.charAt(0) != '/') {
             if (parent == null || !parent.startsWith("/")) {
@@ -492,55 +506,13 @@ public class UjaxPostProcessor {
             if (!parent.endsWith("/")) {
                 path = "/" + path;
             }
-            
+
             path = parent + path;
         }
-        
+
         String[] pathelems = path.substring(1).split("/");
         Node node = session.getRootNode();
-        
-        for (String name: pathelems) {
-            if (node.hasNode(name)) {
-                node = node.getNode(name);
-            } else {
-                node = node.addNode(name);
-                changeLog.onCreated(node.getPath());
-            }
-        }
-        return node;
-    }
-    
-    /**
-     * Deep gets or creates a node, parent-padding with default nodes nodes.
-     * If the path is empty, the given parent node is returned.
-     *
-     * @param parent parent node for relative paths
-     * @param path absolute path to node that needs to be deep-created
-     * @return node at path
-     * @throws RepositoryException if an error occurs
-     * @throws IllegalArgumentException if the path is relative and parent
-     *         is <code>null</code>
-     */
-    private Node deepGetOrCreateNode(Node parent, String path)
-            throws RepositoryException {
-        if(log.isDebugEnabled()) {
-            log.debug("Deep-creating Node '{}'", path);
-        }
-        if (path.equals("")) {
-            return parent;
-        }
-        String[] pathelems;
-        Node node;
-        if (path.charAt(0) == '/') {
-            pathelems = path.substring(1).split("/");
-            node = session.getRootNode();
-        } else {
-            pathelems = path.split("/");
-            node = parent;
-            if (node == null) {
-                throw new IllegalArgumentException("parent node must not be NULL for relative paths.");
-            }
-        }
+
         for (String name: pathelems) {
             if (node.hasNode(name)) {
                 node = node.getNode(name);
