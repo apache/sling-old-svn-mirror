@@ -25,6 +25,9 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 /**
  * Sets a Property on the given Node, in some cases with a specific type and
@@ -203,11 +206,33 @@ class UjaxPropertyValueHandler {
             }
         } else if (values.length == 1) {
             removePropertyIfExists(parent, prop.getName());
+            if (type == PropertyType.DATE) {
+                // try conversion
+                Calendar c = ctx.getDateParser().parse(values[0]);
+                if (c != null) {
+                    ctx.getChangeLog().onModified(
+                        parent.setProperty(prop.getName(), c).getPath()
+                    );
+                    return;
+                }
+                // fall back to default behaviour
+            }
             ctx.getChangeLog().onModified(
                 parent.setProperty(prop.getName(), values[0], type).getPath()
             );
         } else {
             removePropertyIfExists(parent, prop.getName());
+            if (type == PropertyType.DATE) {
+                // try conversion
+                Value[] c = ctx.getDateParser().parse(values, ValueFactoryImpl.getInstance());
+                if (c != null) {
+                    ctx.getChangeLog().onModified(
+                        parent.setProperty(prop.getName(), c).getPath()
+                    );
+                    return;
+                }
+                // fall back to default behaviour
+            }
             ctx.getChangeLog().onModified(
                 parent.setProperty(prop.getName(), values, type).getPath()
             );

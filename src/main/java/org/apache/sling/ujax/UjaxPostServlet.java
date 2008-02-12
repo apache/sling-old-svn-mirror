@@ -16,22 +16,17 @@
  */
 package org.apache.sling.ujax;
 
+import java.io.IOException;
+
+import javax.jcr.Session;
+import javax.servlet.ServletException;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.core.CoreConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.servlet.ServletException;
 
 /**
  * POST servlet that implements the ujax "protocol"
@@ -126,6 +121,20 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
      */
     private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
 
+    /**
+     * utility class for parsing date strings
+     */
+    private final DateParser dateParser = new DateParser(); {
+        // TODO: maybe put initialization to OSGI activation ?
+        dateParser.register("EEE MMM dd yyyy HH:mm:ss 'GMT'Z");
+        dateParser.register("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        dateParser.register("yyyy-MM-dd'T'HH:mm:ss");
+        dateParser.register("yyyy-MM-dd");
+        dateParser.register("dd.MM.yyyy HH:mm:ss");
+        dateParser.register("dd.MM.yyyy");
+    }
+
+
     @Override
     protected void doPost(SlingHttpServletRequest request,
                           SlingHttpServletResponse response)
@@ -159,9 +168,9 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         if (s == null) {
             throw new ServletException("No JCR Session available");
         }
-        
+
         // create the post context
-        return new UjaxPostProcessor(request, s, nodeNameGenerator);
+        return new UjaxPostProcessor(request, s, nodeNameGenerator, dateParser);
     }
 
     /**
@@ -173,12 +182,12 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         // redirect param has priority (but see below, magic star)
         String result = ctx.getRequest().getParameter(RP_REDIRECT_TO);
         if (result != null) {
-            
+
             // redirect to created/modified Resource
             int star = result.indexOf('*');
             if (star >= 0) {
                 StringBuffer buf = new StringBuffer();
-                
+
                 // anything before the star
                 if (star > 0) {
                     buf.append(result.substring(0, star));
@@ -190,16 +199,16 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                     nodePath = ctx.getRootPath();
                 }
                 buf.append(JcrResourceUtil.getName(nodePath));
-                
+
                 // anything after the star
                 if (star < result.length() - 1) {
                     buf.append(result.substring(star + 1));
                 }
-                
+
                 // use the created path as the redirect result
                 result = buf.toString();
             }
-            
+
             if (log.isDebugEnabled()) {
                 log.debug("Will redirect to " + result);
             }
