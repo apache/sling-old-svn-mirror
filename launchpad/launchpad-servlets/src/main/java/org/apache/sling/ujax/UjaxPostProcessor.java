@@ -491,23 +491,23 @@ public class UjaxPostProcessor {
     private Node deepGetOrCreateNode(String parent, String path)
             throws RepositoryException {
         if(log.isDebugEnabled()) {
-            log.debug("Deep-creating Node '{}'", path);
+            log.debug("Deep-creating Node '{}/{}'", parent, path);
         }
         if (path.equals("")) {
-            return (Node) session.getItem(parent);
-        }
-
-        // prepend parent path if path is relative
-        if (path.charAt(0) != '/') {
             if (parent == null || !parent.startsWith("/")) {
                 throw new IllegalArgumentException("parent must be an absolute path for relative paths.");
             }
-
-            if (!parent.endsWith("/")) {
-                path = "/" + path;
+            path = parent;
+        } else if (path.charAt(0) != '/') {
+            // prepend parent path if path is relative
+            if (parent == null || !parent.startsWith("/")) {
+                throw new IllegalArgumentException("parent must be an absolute path for relative paths.");
             }
-
-            path = parent + path;
+            if (parent.endsWith("/")) {
+                path = parent + path;
+            } else {
+                path = parent + "/" + path;
+            }
         }
 
         String[] pathelems = path.substring(1).split("/");
@@ -554,7 +554,7 @@ public class UjaxPostProcessor {
     /**
      * If orderCode is ORDER_ZERO, move n so that it is the first child of its
      * parent
-     * @param n th node to order
+     * @param nodePath path to the node to order
      * @param orderCode code that specifies how to order
      * @throws RepositoryException if a repository error occurs
      */
