@@ -114,14 +114,13 @@ public class RequestProperty {
             // is missleading return type. but means that property should not
             // get auto-create values
             return true;
-        } else {
-            for (String s: sv) {
-                if (!s.equals("")) {
-                    return true;
-                }
-            }
-            return false;
         }
+        for (String s: sv) {
+            if (!s.equals("")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -138,22 +137,21 @@ public class RequestProperty {
                 ret[i] = values[i].getString();
             }
             return ret;
-        } else {
-            String value = values[0].getString();
-            if (value.equals("")) {
-                if (defaultValues.length == 1) {
-                    String defValue = defaultValues[0].getString();
-                    if (defValue.equals(DEFAULT_IGNORE)) {
-                        // ignore means, do not create empty values
-                        return new String[0];
-                    } else if (defValue.equals(DEFAULT_NULL)) {
-                        // null means, remove property if exist
-                        return null;
-                    }
-                    value = defValue;
-                }
-            }
-            return new String[]{value};
         }
+        String value = values[0].getString();
+        if (value.equals("")) {
+            if (defaultValues.length == 1) {
+                String defValue = defaultValues[0].getString();
+                if (defValue.equals(DEFAULT_IGNORE)) {
+                    // ignore means, do not create empty values
+                    return new String[0];
+                } else if (defValue.equals(DEFAULT_NULL)) {
+                    // null means, remove property if exist
+                    return null;
+                }
+                value = defValue;
+            }
+        }
+        return new String[]{value};
     }
 }

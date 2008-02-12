@@ -23,11 +23,9 @@ import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.LinkedList;
 
 import junit.framework.TestCase;
 
@@ -50,25 +48,25 @@ import org.mozilla.javascript.ScriptableObject;
 public class HttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = System.getProperty("launchpad.http.server.url");
     public static final String WEBDAV_BASE_URL = System.getProperty("launchpad.webdav.server.url");
-    
+
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
-    
+
     public static final String CONTENT_TYPE_HTML = "text/html";
     public static final String CONTENT_TYPE_XML = "text/xml";
     public static final String CONTENT_TYPE_PLAIN = "text/plain";
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_JS = "application/x-javascript";
     public static final String CONTENT_TYPE_CSS = "text/css";
-    
+
     public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
     protected UslingIntegrationTestClient testClient;
     protected HttpClient httpClient;
-    
+
     private static Boolean slingStartupOk;
 
-    /** Class that creates a test node under the given parentPath, and 
+    /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
      *  older test classes do not use it, but it might simplify them.
      */
@@ -77,7 +75,7 @@ public class HttpTestBase extends TestCase {
         final String nodeUrl;
         final String resourceType;
         final String scriptPath;
-        
+
         TestNode(String parentPath, Map<String, String> properties) throws IOException {
             if(properties == null) {
                 properties = new HashMap<String, String>();
@@ -89,7 +87,7 @@ public class HttpTestBase extends TestCase {
             scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
             testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
         }
-        
+
         void delete() throws IOException {
             testClient.delete(nodeUrl);
         }
@@ -98,7 +96,7 @@ public class HttpTestBase extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         // assume http and webdav are on the same host + port
         URL url = null;
         try {
@@ -107,7 +105,7 @@ public class HttpTestBase extends TestCase {
             // MalformedURLException doesn't tell us the URL by default
             throw new IOException("MalformedURLException: " + HTTP_BASE_URL);
         }
-        
+
         // setup HTTP client, with authentication (using default Jackrabbit credentials)
         httpClient = new HttpClient();
         httpClient.getParams().setAuthenticationPreemptive(true);
@@ -115,10 +113,10 @@ public class HttpTestBase extends TestCase {
         httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
 
         testClient = new UslingIntegrationTestClient(httpClient);
-        
+
         waitForSlingStartup();
     }
-    
+
     /** On the server side, initialization of Sling bundles is done
      *  asynchronously once the webapp is started. This method checks
      *  that everything's ready on the server side, by calling an URL
@@ -130,12 +128,11 @@ public class HttpTestBase extends TestCase {
         if (slingStartupOk != null) {
             if(slingStartupOk) {
                 return;
-            } else {
-                fail("Sling services not available. Already checked in earlier tests.");
             }
+            fail("Sling services not available. Already checked in earlier tests.");
         }
         slingStartupOk = false;
-        
+
         System.err.println("Checking if the required Sling services are started...");
         System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + ")");
 
@@ -230,24 +227,24 @@ public class HttpTestBase extends TestCase {
             assertEquals(assertMessage, expectedStatusCode, status);
         }
     }
-    
-    /** Verify that given URL returns expectedStatusCode 
+
+    /** Verify that given URL returns expectedStatusCode
      * @throws IOException */
     protected void assertHttpStatus(String urlString, int expectedStatusCode) throws IOException {
         assertHttpStatus(urlString, expectedStatusCode, null);
     }
-    
+
     /** Execute a POST request and check status */
     protected void assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
     throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
-        
+
         if(postParams!=null) {
             final NameValuePair [] nvp = {};
             post.setRequestBody(postParams.toArray(nvp));
         }
-        
+
         final int status = httpClient.executeMethod(post);
         if(assertMessage == null) {
             assertEquals(expectedStatusCode, status);
@@ -255,7 +252,7 @@ public class HttpTestBase extends TestCase {
             assertEquals(assertMessage, expectedStatusCode, status);
         }
     }
-    
+
     /** retrieve the contents of given URL and assert its content type
      * @throws IOException
      * @throws HttpException */
@@ -270,12 +267,12 @@ public class HttpTestBase extends TestCase {
             }
         } else if(h==null) {
             fail(
-                    "Expected Content-Type that starts with '" + expectedContentType 
+                    "Expected Content-Type that starts with '" + expectedContentType
                     +" but got no Content-Type header at " + url
             );
         } else {
             assertTrue(
-                "Expected Content-Type that starts with '" + expectedContentType 
+                "Expected Content-Type that starts with '" + expectedContentType
                 + "' for " + url + ", got '" + h.getValue() + "'",
                 h.getValue().startsWith(expectedContentType)
             );
@@ -304,8 +301,8 @@ public class HttpTestBase extends TestCase {
     protected void assertJavascript(String expectedOutput, String jsonData, String code) throws IOException {
         assertJavascript(expectedOutput, jsonData, code, null);
     }
-    
-    /** Evaluate given code using given jsonData as the "data" object */ 
+
+    /** Evaluate given code using given jsonData as the "data" object */
     protected void assertJavascript(String expectedOutput, String jsonData, String code, String testInfo) throws IOException {
         // build the code, something like
         //  data = <jsonData> ;
@@ -314,22 +311,22 @@ public class HttpTestBase extends TestCase {
         final Context rhinoContext = Context.enter();
         final ScriptableObject scope = rhinoContext.initStandardObjects();
 
-        // execute the script, out script variable maps to sw 
+        // execute the script, out script variable maps to sw
         final StringWriter sw = new StringWriter();
         final PrintWriter pw = new PrintWriter(sw, true);
         ScriptableObject.putProperty(scope, "out", Context.javaToJS(pw, scope));
         final int lineNumber = 1;
         final Object securityDomain = null;
-        rhinoContext.evaluateString(scope, jsCode, getClass().getSimpleName(), 
+        rhinoContext.evaluateString(scope, jsCode, getClass().getSimpleName(),
                 lineNumber, securityDomain);
-        
+
         // check script output
         pw.flush();
         final String result = sw.toString().trim();
         if(!result.equals(expectedOutput)) {
             fail(
-                    "Expected '" + expectedOutput 
-                    + "' but got '" + result 
+                    "Expected '" + expectedOutput
+                    + "' but got '" + result
                     + "' for script='" + jsCode + "'"
                     + (testInfo==null ? "" : ", test info=" + testInfo)
             );
