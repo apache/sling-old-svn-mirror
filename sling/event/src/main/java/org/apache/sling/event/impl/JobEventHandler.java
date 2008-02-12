@@ -215,77 +215,84 @@ public class JobEventHandler
             }
 
             if ( info != null && this.running ) {
-                final Event event = info.event;
-                final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-                final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
+                // check if the node still exists
+                try {
+                    if ( this.backgroundSession.itemExists(info.nodePath) ) {
+                        final Event event = info.event;
+                        final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
+                        final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
 
-                // check how we can process this job
-                // if parallel processing is allowed, we can just process
-                // if not we should check if any other job with the same topic is currently running
-                boolean process = parallelProcessing;
-                if ( !process ) {
-                    synchronized ( this.processingMap ) {
-                        final Boolean value = this.processingMap.get(jobTopic);
-                        if ( value == null || !value.booleanValue() ) {
-                            this.processingMap.put(jobTopic, Boolean.TRUE);
-                            process = true;
-                        }
-                    }
-
-                }
-                if ( process ) {
-                    boolean unlock = true;
-                    try {
-                        final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
-                        if ( !eventNode.isLocked() ) {
-                            // lock node
-                            Lock lock = null;
-                            try {
-                                lock = eventNode.lock(false, true);
-                            } catch (RepositoryException re) {
-                                // lock failed which means that the node is locked by someone else, so we don't have to requeue
-                                process = false;
-                            }
-                            if ( process ) {
-                                unlock = false;
-                                this.processJob(info.event, eventNode, lock.getLockToken());
-                            }
-                        }
-                    } catch (RepositoryException e) {
-                        // ignore
-                        this.ignoreException(e);
-                    } finally {
-                        if ( unlock && !parallelProcessing ) {
+                        // check how we can process this job
+                        // if parallel processing is allowed, we can just process
+                        // if not we should check if any other job with the same topic is currently running
+                        boolean process = parallelProcessing;
+                        if ( !process ) {
                             synchronized ( this.processingMap ) {
-                                this.processingMap.put(jobTopic, Boolean.FALSE);
+                                final Boolean value = this.processingMap.get(jobTopic);
+                                if ( value == null || !value.booleanValue() ) {
+                                    this.processingMap.put(jobTopic, Boolean.TRUE);
+                                    process = true;
+                                }
                             }
+
                         }
-                    }
-                } else {
-                    try {
-                        // check if the node is in processing or already finished
-                        final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
-                        if ( !eventNode.isLocked() ) {
+                        if ( process ) {
+                            boolean unlock = true;
                             try {
-                                this.queue.put(info);
-                            } catch (InterruptedException e) {
+                                final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
+                                if ( !eventNode.isLocked() ) {
+                                    // lock node
+                                    Lock lock = null;
+                                    try {
+                                        lock = eventNode.lock(false, true);
+                                    } catch (RepositoryException re) {
+                                        // lock failed which means that the node is locked by someone else, so we don't have to requeue
+                                        process = false;
+                                    }
+                                    if ( process ) {
+                                        unlock = false;
+                                        this.processJob(info.event, eventNode, lock.getLockToken());
+                                    }
+                                }
+                            } catch (RepositoryException e) {
+                                // ignore
+                                this.ignoreException(e);
+                            } finally {
+                                if ( unlock && !parallelProcessing ) {
+                                    synchronized ( this.processingMap ) {
+                                        this.processingMap.put(jobTopic, Boolean.FALSE);
+                                    }
+                                }
+                            }
+                        } else {
+                            try {
+                                // check if the node is in processing or already finished
+                                final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
+                                if ( !eventNode.isLocked() ) {
+                                    try {
+                                        this.queue.put(info);
+                                    } catch (InterruptedException e) {
+                                        // ignore
+                                        this.ignoreException(e);
+                                    }
+                                    // wait time before we restart the cycle, if there is only one job in the queue!
+                                    if ( this.queue.size() == 1 ) {
+                                        try {
+                                            Thread.sleep(this.sleepTime);
+                                        } catch (InterruptedException e) {
+                                            // ignore
+                                            this.ignoreException(e);
+                                        }
+                                    }
+                                }
+                            } catch (RepositoryException e) {
                                 // ignore
                                 this.ignoreException(e);
                             }
-                            // wait time before we restart the cycle, if there is only one job in the queue!
-                            if ( this.queue.size() == 1 ) {
-                                try {
-                                    Thread.sleep(this.sleepTime);
-                                } catch (InterruptedException e) {
-                                    // ignore
-                                    this.ignoreException(e);
-                                }
-                            }
                         }
-                    } catch (RepositoryException e) {
-                        // ignore
-                        this.ignoreException(e);
                     }
+                } catch (RepositoryException re) {
+                    this.ignoreException(re);
                 }
             }
         }
@@ -522,7 +529,7 @@ public class JobEventHandler
                         this.unloadedJobs.add(nodePath);
                         this.ignoreException(cnfe);
                     } catch (RepositoryException re) {
-                        this.logger.error("Unable to load stored job from " + nodePath);
+                        this.logger.error("Unable to load stored job from " + nodePath, re);
                     }
                 }
             }
@@ -570,13 +577,6 @@ public class JobEventHandler
             final Node eventNode = (Node) s.getItem(eventNodePath);
             try {
                 if ( !reschedule ) {
-                    // unlock node
-                    try {
-                        eventNode.unlock();
-                    } catch (RepositoryException e) {
-                        // if unlock fails, we silently ignore this
-                        this.ignoreException(e);
-                    }
                     // remove node from repository
                     final Node parentNode = eventNode.getParent();
                     eventNode.remove();
