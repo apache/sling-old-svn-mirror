@@ -32,11 +32,11 @@ public class NodeNameGenerator {
     public static final int DEFAULT_MAX_NAME_LENGTH = 20;
     private int maxLength = DEFAULT_MAX_NAME_LENGTH;
     private int counter;
-    
+
     public NodeNameGenerator() {
         this(null);
     }
-    
+
     public NodeNameGenerator(List<String> parameterNames) {
         if(parameterNames == null) {
             this.parameterNames = new LinkedList<String>();
@@ -49,9 +49,9 @@ public class NodeNameGenerator {
         } else {
             this.parameterNames = parameterNames;
         }
-        
+
     }
-    
+
     /**
      * Get a "nice" node name, if possible, based on given request
      *
@@ -79,9 +79,8 @@ public class NodeNameGenerator {
                         valueToUse = p.getString();
                         if(valueToUse != null && valueToUse.length() > 0) {
                             break;
-                        } else {
-                            valueToUse = null;
                         }
+                        valueToUse = null;
                     }
                 }
             }
@@ -99,7 +98,7 @@ public class NodeNameGenerator {
         if(result.length() > maxLength) {
             result = result.substring(0,maxLength);
         }
-        
+
         return result;
     }
 

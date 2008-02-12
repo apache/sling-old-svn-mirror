@@ -46,7 +46,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     private static final long serialVersionUID = 5577121546674133317L;
     private final String responseContentType;
     private final JsonItemWriter itemWriter;
-    
+
     /** Recursion level selector that means "all levels" */
     public static final String INFINITY = "infinity";
 
@@ -64,7 +64,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         if(r instanceof NonExistingResource) {
             throw new ResourceNotFoundException("No data to dump");
         }
-        
+
         /* TODO
         // Do we have a SyntheticResourceData?
         if(r.adaptTo(SyntheticResourceData.class) != null) {
@@ -72,7 +72,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             return;
         }
         */
-        
+
         // Do we have a Property?
         final Property p = r.adaptTo(Property.class);
         if(p!=null) {
@@ -85,7 +85,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             }
             return;
         }
-        
+
         // Do we have a Node?
         final Node n = r.adaptTo(Node.class);
         if(n == null) {
@@ -123,17 +123,11 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             reportException(re);
         }
     }
-    
-    /** Render a Property by dumping its String value */ 
+
+    /** Render a Property by dumping its String value */
     private void renderProperty(Property p, SlingHttpServletResponse resp) throws JSONException, RepositoryException, IOException {
         resp.setContentType(responseContentType);
         new JsonItemWriter(null).dump(p, resp.getWriter());
-    }
-
-    /** Render synthetic resources as empty JSON objects */
-    private void renderSyntheticResource(SlingHttpServletRequest req,SlingHttpServletResponse resp) throws IOException {
-        resp.setContentType(responseContentType);
-        resp.getOutputStream().write("{}".getBytes());
     }
 
     /**
