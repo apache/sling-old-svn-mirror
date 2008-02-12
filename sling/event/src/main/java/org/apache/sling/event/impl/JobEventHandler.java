@@ -135,7 +135,7 @@ public class JobEventHandler
                         info.nodePath = eventNode.getPath();
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job to repository.", re);
+                        this.logger.error("Exception during writing new job '" + this.getNodeName(event) + "' to repository.", re);
                     }
                 } else {
                     try {
@@ -149,19 +149,16 @@ public class JobEventHandler
                         if ( foundNode != null ) {
                             // if the node is locked, someone else was quicker
                             // and we don't have to process this job
-                            if ( foundNode.isLocked() ) {
-                                foundNode = null;
-                            } else {
+                            if ( !foundNode.isLocked() ) {
                                 // node is already in repository, so we just overwrite it
                                 try {
                                     foundNode.remove();
                                     parentNode.save();
+                                    foundNode = null;
                                 } catch (RepositoryException re) {
                                     // if anything goes wrong, it means that (hopefully) someone
                                     // else is processing this node
-                                    foundNode = null;
                                 }
-
                             }
                         }
                         if ( foundNode == null ) {
