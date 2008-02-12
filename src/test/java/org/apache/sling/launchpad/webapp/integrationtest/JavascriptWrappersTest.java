@@ -22,41 +22,41 @@ import java.util.Map;
 
 /** Test Scriptable objects */
 public class JavascriptWrappersTest extends HttpTestBase {
+
     private TestNode testRootNode;
-    private String scriptPath;
     private String basePath;
-    
+
     private void createNodes(TestNode n, String prefix, int levels) throws Exception {
         String url = n.nodeUrl;
         while(levels >= 1) {
-            url += "/" + prefix + levels; 
+            url += "/" + prefix + levels;
             testClient.createNode(url, null);
             levels--;
         }
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         basePath = "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis();
-        
+
         final Map<String, String> props = new HashMap<String, String>();
         props.put(SLING_RESOURCE_TYPE, getClass().getSimpleName());
         props.put("title", "testnode");
-        
+
         testRootNode = new TestNode(HTTP_BASE_URL + basePath, props);
         createNodes(testRootNode, "a", 3);
         createNodes(testRootNode, "b", 1);
         createNodes(testRootNode, "c", 2);
     }
-    
+
     public void testRecursiveDump() throws IOException {
         final String toDelete = uploadTestScript(testRootNode.scriptPath, "dump-resource.js", "html.js");
         try {
             final String content = getContent(testRootNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
-            
-            final String expected = 
+
+            final String expected =
                 "1 " + basePath + "/testnode\n"
                 + "2 " + basePath + "/testnode/a3\n"
                 + "3 " + basePath + "/testnode/a3/a2\n"
@@ -69,6 +69,6 @@ public class JavascriptWrappersTest extends HttpTestBase {
         } finally {
             testClient.delete(toDelete);
         }
-        
+
     }
 }
