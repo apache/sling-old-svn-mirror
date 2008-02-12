@@ -23,9 +23,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -65,6 +67,9 @@ public class TimedEventHandler
 
     /** @scr.reference */
     protected Scheduler scheduler;
+
+    /** Unloaded events. */
+    protected Set<String>unloadedEvents = new HashSet<String>();
 
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#startWriterSession()
@@ -307,14 +312,21 @@ public class TimedEventHandler
                     try {
                         final Node eventNode = (Node) s.getItem(event.getPath());
                         if ( !eventNode.isLocked() ) {
-                            final EventInfo info = new EventInfo();
-                            info.event = this.readEvent(eventNode);
-                            info.nodePath = event.getPath();
+                            final String nodePath = event.getPath();
                             try {
-                                this.queue.put(info);
-                            } catch (InterruptedException e) {
-                                // we ignore this exception as this should never occur
-                                this.ignoreException(e);
+                                final EventInfo info = new EventInfo();
+                                info.event = this.readEvent(eventNode);
+                                info.nodePath =nodePath;
+                                try {
+                                    this.queue.put(info);
+                                } catch (InterruptedException e) {
+                                    // we ignore this exception as this should never occur
+                                    this.ignoreException(e);
+                                }
+                            } catch (ClassNotFoundException cnfe) {
+                                // add it to the unloaded set
+                                this.unloadedEvents.add(nodePath);
+                                this.ignoreException(cnfe);
                             }
                         }
                     } catch (RepositoryException re) {
@@ -413,34 +425,43 @@ public class TimedEventHandler
      * Load all active timed events from the repository.
      * @throws RepositoryException
      */
-    protected void loadEvents() throws RepositoryException {
-        final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
-        final StringBuffer buffer = new StringBuffer("/jcr:root");
-        buffer.append(this.repositoryPath);
-        buffer.append("//element(*, ");
-        buffer.append(this.getEventNodeType());
-        buffer.append(")");
-        final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
-        final NodeIterator result = q.execute().getNodes();
-        while ( result.hasNext() ) {
-            final Node eventNode = result.nextNode();
-            if ( !eventNode.isLocked() ) {
-                try {
-                    final Event event = this.readEvent(eventNode);
-                    final EventInfo info = new EventInfo();
-                    info.event = event;
-                    info.nodePath = eventNode.getPath();
+    protected void loadEvents() {
+        try {
+            final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
+            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            buffer.append(this.repositoryPath);
+            buffer.append("//element(*, ");
+            buffer.append(this.getEventNodeType());
+            buffer.append(")");
+            final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
+            final NodeIterator result = q.execute().getNodes();
+            while ( result.hasNext() ) {
+                final Node eventNode = result.nextNode();
+                if ( !eventNode.isLocked() ) {
+                    final String nodePath = eventNode.getPath();
                     try {
-                        this.queue.put(info);
-                    } catch (InterruptedException e) {
-                        // we ignore this exception as this should never occur
-                        this.ignoreException(e);
+                        final Event event = this.readEvent(eventNode);
+                        final EventInfo info = new EventInfo();
+                        info.event = event;
+                        info.nodePath = nodePath;
+                        try {
+                            this.queue.put(info);
+                        } catch (InterruptedException e) {
+                            // we ignore this exception as this should never occur
+                            this.ignoreException(e);
+                        }
+                    } catch (ClassNotFoundException cnfe) {
+                        // add it to the unloaded set
+                        this.unloadedEvents.add(nodePath);
+                        this.ignoreException(cnfe);
+                    } catch (RepositoryException re) {
+                        // if reading an event fails, we ignore this
+                        this.ignoreException(re);
                     }
-                } catch (RepositoryException re) {
-                    // if reading an event fails, we ignore this
-                    this.ignoreException(re);
                 }
             }
+        } catch (RepositoryException re) {
+            this.logger.error("Exception during initial loading of stored timed events.", re);
         }
     }
 
