@@ -38,9 +38,7 @@
   
 [slingevent:Job] > slingevent:Event, mix:lockable
   - slingevent:processor (string)
-  - slingevent:active (boolean)
   - slingevent:id (string)
-  - slingevent:finished (date)
 
  
 [slingevent:TimedEvent] > slingevent:Event, mix:lockable
