@@ -128,9 +128,23 @@ public abstract class EventUtil {
     }
 
     /**
+     * Is this a job event?
+     * This method checks if the event contains the {@link #PROPERTY_JOB_TOPIC}
+     * property.
+     * @param event The event to check.
+     * @return <code>true></code> if this is a job event.
+     */
+    public static boolean isJobEvent(Event event) {
+        return event.getProperty(PROPERTY_JOB_TOPIC) != null;
+    }
+    /**
      * Notify a finished job.
      */
     public static void finishedJob(Event job) {
+        // check if this is a job event
+        if ( !isJobEvent(job) ) {
+            return;
+        }
         final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
         if ( ctx == null ) {
             throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
@@ -143,6 +157,10 @@ public abstract class EventUtil {
      * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
      */
     public static boolean rescheduleJob(Event job) {
+        // check if this is a job event
+        if ( !isJobEvent(job) ) {
+            return false;
+        }
         final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
         if ( ctx == null ) {
             throw new NullPointerException("JobStatusNotifier context is not available in event properties.");

@@ -19,7 +19,6 @@
 package org.apache.sling.event.impl;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -39,7 +38,6 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.osgi.service.component.ComponentContext;
@@ -194,22 +192,7 @@ public class JobEventHandler
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
      */
     protected String getCleanUpQueryString() {
-        final Calendar deleteBefore = Calendar.getInstance();
-        deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
-        final String dateString = ISO8601.format(deleteBefore);
-        final StringBuffer buffer = new StringBuffer("/jcr:root");
-        buffer.append(JobEventHandler.this.repositoryPath);
-        buffer.append("//element(*, ");
-        buffer.append(JobEventHandler.this.getEventNodeType());
-        buffer.append(") [@");
-        buffer.append(EventHelper.NODE_PROPERTY_ACTIVE);
-        buffer.append(" = 'false' and @");
-        buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
-        buffer.append(" < xs:dateTime('");
-        buffer.append(dateString);
-        buffer.append("')]");
-
-        return buffer.toString();
+        return null;
     }
 
     /**
@@ -249,7 +232,7 @@ public class JobEventHandler
                     boolean unlock = true;
                     try {
                         final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
-                        if ( !eventNode.isLocked() && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
+                        if ( !eventNode.isLocked() ) {
                             // lock node
                             Lock lock = null;
                             try {
@@ -259,14 +242,8 @@ public class JobEventHandler
                                 process = false;
                             }
                             if ( process ) {
-                                // check if event is still active
-                                eventNode.refresh(true);
-                                if ( eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
-                                    unlock = false;
-                                    this.processJob(info.event, eventNode, lock.getLockToken());
-                                } else {
-                                    eventNode.unlock();
-                                }
+                                unlock = false;
+                                this.processJob(info.event, eventNode, lock.getLockToken());
                             }
                         }
                     } catch (RepositoryException e) {
@@ -283,7 +260,7 @@ public class JobEventHandler
                     try {
                         // check if the node is in processing or already finished
                         final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
-                        if ( !eventNode.isLocked() && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
+                        if ( !eventNode.isLocked() ) {
                             try {
                                 this.queue.put(info);
                             } catch (InterruptedException e) {
@@ -320,7 +297,7 @@ public class JobEventHandler
         this.loadJobs();
         this.backgroundSession.getWorkspace().getObservationManager()
             .addEventListener(this,
-                              javax.jcr.observation.Event.PROPERTY_CHANGED | javax.jcr.observation.Event.PROPERTY_REMOVED,
+                              javax.jcr.observation.Event.PROPERTY_REMOVED,
                               this.repositoryPath,
                               true,
                               null,
@@ -447,7 +424,6 @@ public class JobEventHandler
     throws RepositoryException {
         super.addNodeProperties(eventNode, event);
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_ACTIVE, true);
         final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
         if ( jobId != null ) {
             eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, jobId);
@@ -475,9 +451,7 @@ public class JobEventHandler
                         // we are only interested in unlocks
                         if ( "jcr:lockOwner".equals(propertyName) ) {
                             final Node eventNode = (Node) s.getItem(nodePath);
-                            if ( !eventNode.isLocked()
-                                 && eventNode.hasProperty(EventHelper.NODE_PROPERTY_ACTIVE)
-                                 && eventNode.getProperty(EventHelper.NODE_PROPERTY_ACTIVE).getBoolean() ) {
+                            if ( !eventNode.isLocked() ) {
                                 final EventInfo info = new EventInfo();
                                 info.event = this.readEvent(eventNode);
                                 info.nodePath = nodePath;
@@ -513,9 +487,7 @@ public class JobEventHandler
         buffer.append(this.repositoryPath);
         buffer.append("//element(*, ");
         buffer.append(this.getEventNodeType());
-        buffer.append(") [");
-        buffer.append(EventHelper.NODE_PROPERTY_ACTIVE);
-        buffer.append(" = 'true']");
+        buffer.append(")");
         final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
         final NodeIterator result = q.execute().getNodes();
         while ( result.hasNext() ) {
@@ -574,9 +546,10 @@ public class JobEventHandler
             final Node eventNode = (Node) s.getItem(eventNodePath);
             try {
                 if ( !reschedule ) {
-                    eventNode.setProperty(EventHelper.NODE_PROPERTY_FINISHED, Calendar.getInstance());
-                    eventNode.setProperty(EventHelper.NODE_PROPERTY_ACTIVE, false);
-                    eventNode.save();
+                    // remove node from repository
+                    final Node parentNode = eventNode.getParent();
+                    eventNode.remove();
+                    parentNode.save();
                 }
             } catch (RepositoryException re) {
                 // if an exception occurs, we just log
@@ -666,11 +639,9 @@ public class JobEventHandler
             buffer.append(this.repositoryPath);
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
-            buffer.append(") [");
-            buffer.append(EventHelper.NODE_PROPERTY_ACTIVE);
-            buffer.append(" = 'true'");
+            buffer.append(")");
             if ( topic != null ) {
-                buffer.append(" and ");
+                buffer.append(" [");
                 buffer.append(EventHelper.NODE_PROPERTY_TOPIC);
                 buffer.append(" = '");
                 buffer.append(topic);
