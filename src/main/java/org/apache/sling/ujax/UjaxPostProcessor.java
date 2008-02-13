@@ -287,8 +287,8 @@ public class UjaxPostProcessor {
     public void run()  {
         try {
             processDeletes();
-            processMoves();
             processContent();
+            processMoves();
             if (session.hasPendingChanges()) {
                 session.save();
             }
@@ -316,7 +316,11 @@ public class UjaxPostProcessor {
         if (path.startsWith("/")) {
             return path;
         }
-        return rootPath + "/" + path;
+        if (currentPath == null) {
+            return rootPath + "/" + path;
+        } else {
+            return currentPath + "/" + path;
+        }
     }
 
     /**
