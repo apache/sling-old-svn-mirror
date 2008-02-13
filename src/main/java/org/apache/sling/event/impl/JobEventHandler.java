@@ -39,7 +39,6 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.osgi.framework.BundleEvent;
@@ -122,32 +121,33 @@ public class JobEventHandler
     protected void processWriteQueue() {
         while ( this.running ) {
             // so let's wait/get the next job from the queue
-            EventInfo info = null;
+            Event event = null;
             try {
-                info = this.writeQueue.take();
+                event = this.writeQueue.take();
             } catch (InterruptedException e) {
                 // we ignore this
                 this.ignoreException(e);
             }
-            if ( info != null && this.running ) {
-                final Event event = info.event;
+            if ( event != null && this.running ) {
                 final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
 
+                final EventInfo info = new EventInfo();
+                info.event = event;
                 // if the job has no job id, we can just write the job to the repo and don't
                 // need locking
+                final String nodeName = this.getNodeName(event);
                 if ( jobId == null ) {
                     try {
-                        final Node eventNode = this.writeEvent(event);
+                        final Node eventNode = this.writeEvent(event, nodeName);
                         info.nodePath = eventNode.getPath();
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job '" + this.getNodeName(event) + "' to repository.", re);
+                        this.logger.error("Exception during writing new job '" + nodeName + "' to repository.", re);
                     }
                 } else {
                     try {
                         // let's first search for an existing node with the same id
                         final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
-                        final String nodeName = this.getNodeName(event);
                         Node foundNode = null;
                         if ( parentNode.hasNode(nodeName) ) {
                             foundNode = parentNode.getNode(nodeName);
@@ -170,7 +170,7 @@ public class JobEventHandler
                         if ( foundNode == null ) {
                             // We now write the event into the repository
                             try {
-                                final Node eventNode = this.writeEvent(event);
+                                final Node eventNode = this.writeEvent(event, nodeName);
                                 info.nodePath = eventNode.getPath();
                             } catch (ItemExistsException iee) {
                                 // someone else did already write this node in the meantime
@@ -341,10 +341,8 @@ public class JobEventHandler
                 //  job topic must be set, otherwise we ignore this event!
                 if ( jobTopic != null ) {
                     // queue the event in order to respond quickly
-                    final EventInfo info = new EventInfo();
-                    info.event = event;
                     try {
-                        this.writeQueue.put(info);
+                        this.writeQueue.put(event);
                     } catch (InterruptedException e) {
                         // this should never happen
                         this.ignoreException(e);
@@ -420,7 +418,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getNodeName(org.osgi.service.event.Event)
+     * Create a unique node name for the job.
      */
     protected String getNodeName(Event event) {
         final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
@@ -750,7 +748,7 @@ public class JobEventHandler
             }
             if ( locked ) {
                 buffer.append(" and ");
-                buffer.append(JcrConstants.JCR_LOCKOWNER);
+                buffer.append("jcr:lockOwner");
             }
             buffer.append("]");
             final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);

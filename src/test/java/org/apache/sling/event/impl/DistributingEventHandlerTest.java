@@ -18,7 +18,8 @@
  */
 package org.apache.sling.event.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
 import java.util.Dictionary;
@@ -54,7 +55,7 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put("a property", "some value");
         final Event e = new Event(topic, props);
-        this.handler.writeEvent(e);
+        this.handler.writeEvent(e, null);
 
         final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
         final NodeIterator iter = rootNode.getNodes();
@@ -73,7 +74,7 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         props.put("a property", "some value");
         // now we check if the application id is handled correctly
         props.put(EventUtil.PROPERTY_APPLICATION, "foo");
-        this.handler.writeEvent(new Event(topic, props));
+        this.handler.writeEvent(new Event(topic, props), null);
         final Node rootNode = (Node) session.getItem(this.handler.repositoryPath);
         final NodeIterator iter = rootNode.getNodes();
         iter.hasNext();

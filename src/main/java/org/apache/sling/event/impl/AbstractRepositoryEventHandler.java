@@ -35,7 +35,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -88,7 +87,7 @@ public abstract class AbstractRepositoryEventHandler
     protected final BlockingQueue<EventInfo> queue = new LinkedBlockingQueue<EventInfo>();
 
     /** A local queue for writing received events into the repository. */
-    protected final BlockingQueue<EventInfo> writeQueue = new LinkedBlockingQueue<EventInfo>();
+    protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
 
     /**
      * Activate this component.
@@ -141,20 +140,20 @@ public abstract class AbstractRepositoryEventHandler
      * @param context
      */
     protected void deactivate(final ComponentContext context) {
-        // stop background thread, by adding a job info to wake it up
+        // stop background threads by putting empty objects into the queue
         this.running = false;
         try {
-            this.writeQueue.put(new EventInfo());
+            this.writeQueue.put(new Event("some", null));
         } catch (InterruptedException e) {
-            // we ignore this
             this.ignoreException(e);
         }
         try {
             this.queue.put(new EventInfo());
         } catch (InterruptedException e) {
-            // we ignore this
             this.ignoreException(e);
         }
+
+        // close session
         this.stopWriterSession();
     }
 
@@ -214,7 +213,7 @@ public abstract class AbstractRepositoryEventHandler
                 while ( st.hasMoreTokens() ) {
                     final String token = st.nextToken();
                     if ( !node.hasNode(token) ) {
-                        node.addNode(token, JcrConstants.NT_UNSTRUCTURED);
+                        node.addNode(token, "nt:unstructured");
                         node.save();
                     }
                     node = node.getNode(token);
@@ -236,28 +235,26 @@ public abstract class AbstractRepositoryEventHandler
         return EventHelper.EVENT_NODE_TYPE;
     }
 
-    protected String getNodeName(Event e) {
-        final Calendar now = Calendar.getInstance();
-        final String nodeType = this.getEventNodeType();
-        final int sepPos = nodeType.indexOf(':');
-        final String nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
-
-        return nodeName;
-    }
-
     /**
      * Write an event to the repository.
      * @param e
      * @throws RepositoryException
      * @throws IOException
      */
-    protected Node writeEvent(Event e)
+    protected Node writeEvent(Event e, String suggestedName)
     throws RepositoryException {
         // create new node with name of topic
         final Node rootNode = (Node) this.writerSession.getItem(this.repositoryPath);
 
         final String nodeType = this.getEventNodeType();
-        final String nodeName = this.getNodeName(e);
+        final String nodeName;
+        if ( suggestedName != null ) {
+            nodeName = suggestedName;
+        } else {
+            final Calendar now = Calendar.getInstance();
+            final int sepPos = nodeType.indexOf(':');
+            nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
+        }
         final Node eventNode = rootNode.addNode(nodeName, nodeType);
 
         eventNode.setProperty(EventHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
