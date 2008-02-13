@@ -52,7 +52,9 @@ import org.osgi.service.event.EventAdmin;
  * An event handler for timed events.
  *
  * @scr.component inherit="true"
- * @scr.property name="event.topics" value="org/apache/sling/event/timed"
+ * @scr.property name="event.topics" refValues="EventUtil.TOPIC_TIMED_EVENT"
+ *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
+ *               values.started="org/osgi/framework/BundleEvent/STARTED"
  * @scr.property name="repository.path" value="/sling/timed-events"
  */
 public class TimedEventHandler
@@ -325,7 +327,9 @@ public class TimedEventHandler
                                 }
                             } catch (ClassNotFoundException cnfe) {
                                 // add it to the unloaded set
-                                this.unloadedEvents.add(nodePath);
+                                synchronized (unloadedEvents) {
+                                    this.unloadedEvents.add(nodePath);
+                                }
                                 this.ignoreException(cnfe);
                             }
                         }
@@ -347,14 +351,74 @@ public class TimedEventHandler
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
     public void handleEvent(Event event) {
-        // queue the event in order to respond quickly
-        final EventInfo info = new EventInfo();
-        info.event = event;
-        try {
-            this.queue.put(info);
-        } catch (InterruptedException e) {
-            // this should never happen
-            this.ignoreException(e);
+        if ( event.getTopic().equals(EventUtil.TOPIC_TIMED_EVENT) ) {
+            // queue the event in order to respond quickly
+            final EventInfo info = new EventInfo();
+            info.event = event;
+            try {
+                this.queue.put(info);
+            } catch (InterruptedException e) {
+                // this should never happen
+                this.ignoreException(e);
+            }
+        } else {
+            // bundle event started or updated
+            boolean doIt = false;
+            synchronized ( this.unloadedEvents ) {
+                if ( this.unloadedEvents.size() > 0 ) {
+                    doIt = true;
+                }
+            }
+            if ( doIt ) {
+                final Thread t = new Thread() {
+
+                    public void run() {
+                        synchronized (unloadedEvents) {
+                            Session s = null;
+                            final Set<String> newUnloadedEvents = new HashSet<String>();
+                            newUnloadedEvents.addAll(unloadedEvents);
+                            try {
+                                for(String path : unloadedEvents ) {
+                                    newUnloadedEvents.remove(path);
+                                    try {
+                                        if ( s.itemExists(path) ) {
+                                            final Node eventNode = (Node) s.getItem(path);
+                                            if ( !eventNode.isLocked() ) {
+                                                try {
+                                                    final EventInfo info = new EventInfo();
+                                                    info.event = readEvent(eventNode);
+                                                    info.nodePath = path;
+                                                    try {
+                                                        queue.put(info);
+                                                    } catch (InterruptedException e) {
+                                                        // we ignore this exception as this should never occur
+                                                        ignoreException(e);
+                                                    }
+                                                } catch (ClassNotFoundException cnfe) {
+                                                    newUnloadedEvents.add(path);
+                                                    ignoreException(cnfe);
+                                                }
+                                            }
+                                        }
+                                    } catch (RepositoryException re) {
+                                        // we ignore this and readd
+                                        newUnloadedEvents.add(path);
+                                        ignoreException(re);
+                                    }
+                                }
+                            } finally {
+                                if ( s != null ) {
+                                    s.logout();
+                                }
+                                unloadedEvents.clear();
+                                unloadedEvents.addAll(newUnloadedEvents);
+                            }
+                        }
+                    }
+
+                };
+                t.start();
+            }
         }
     }
 
@@ -452,7 +516,9 @@ public class TimedEventHandler
                         }
                     } catch (ClassNotFoundException cnfe) {
                         // add it to the unloaded set
-                        this.unloadedEvents.add(nodePath);
+                        synchronized (unloadedEvents) {
+                            this.unloadedEvents.add(nodePath);
+                        }
                         this.ignoreException(cnfe);
                     } catch (RepositoryException re) {
                         // if reading an event fails, we ignore this

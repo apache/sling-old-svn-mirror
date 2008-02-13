@@ -42,6 +42,7 @@ import javax.jcr.query.QueryManager;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
+import org.osgi.framework.BundleEvent;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -52,12 +53,17 @@ import org.osgi.service.event.EventAdmin;
  *
  * @scr.component
  * @scr.service interface="org.apache.sling.event.JobStatusProvider"
- * @scr.property name="event.topics" valueRef="EventUtil.TOPIC_JOB"
+ * @scr.property name="event.topics" refValues="EventUtil.TOPIC_JOB"
+ *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
+ *               values.started="org/osgi/framework/BundleEvent/STARTED"
  * @scr.property name="repository.path" value="/sling/jobs"
  */
 public class JobEventHandler
     extends AbstractRepositoryEventHandler
     implements EventUtil.JobStatusNotifier, JobStatusProvider {
+
+    /** The topic prefix for bundle events. */
+    protected static final String BUNDLE_EVENT_PREFIX = BundleEvent.class.getName().replace('.', '/') + '/';
 
     /** A map for keeping track of currently processed job topics. */
     protected final Map<String, Boolean> processingMap = new HashMap<String, Boolean>();
@@ -87,7 +93,7 @@ public class JobEventHandler
         if ( context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) != null ) {
             this.sleepTime = (Long)context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) * 1000;
         } else {
-            this.sleepTime = DEFAULT_SLEEP_TIME;
+            this.sleepTime = DEFAULT_SLEEP_TIME * 1000;
         }
         this.backgroundSession = this.createSession();
         super.activate(context);
@@ -334,21 +340,84 @@ public class JobEventHandler
     public void handleEvent(final Event event) {
         // we ignore remote job events
         if ( EventUtil.isLocal(event) ) {
-            final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
+            // check for bundle event
+            if ( event.getTopic().equals(EventUtil.TOPIC_JOB)) {
+                // job event
+                final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
 
-            //  job topic must be set, otherwise we ignore this event!
-            if ( jobTopic != null ) {
-                // queue the event in order to respond quickly
-                final EventInfo info = new EventInfo();
-                info.event = event;
-                try {
-                    this.writeQueue.put(info);
-                } catch (InterruptedException e) {
-                    // this should never happen
-                    this.ignoreException(e);
+                //  job topic must be set, otherwise we ignore this event!
+                if ( jobTopic != null ) {
+                    // queue the event in order to respond quickly
+                    final EventInfo info = new EventInfo();
+                    info.event = event;
+                    try {
+                        this.writeQueue.put(info);
+                    } catch (InterruptedException e) {
+                        // this should never happen
+                        this.ignoreException(e);
+                    }
+                } else {
+                    this.logger.warn("Event does not contain job topic: {}", event);
                 }
+
             } else {
-                this.logger.warn("Event does not contain job topic: {}", event);
+                // bundle event started or updated
+                boolean doIt = false;
+                synchronized ( this.unloadedJobs ) {
+                    if ( this.unloadedJobs.size() > 0 ) {
+                        doIt = true;
+                    }
+                }
+                if ( doIt ) {
+                    final Thread t = new Thread() {
+
+                        public void run() {
+                            synchronized (unloadedJobs) {
+                                Session s = null;
+                                final Set<String> newUnloadedJobs = new HashSet<String>();
+                                newUnloadedJobs.addAll(unloadedJobs);
+                                try {
+                                    for(String path : unloadedJobs ) {
+                                        newUnloadedJobs.remove(path);
+                                        try {
+                                            if ( s.itemExists(path) ) {
+                                                final Node eventNode = (Node) s.getItem(path);
+                                                if ( !eventNode.isLocked() ) {
+                                                    try {
+                                                        final EventInfo info = new EventInfo();
+                                                        info.event = readEvent(eventNode);
+                                                        info.nodePath = path;
+                                                        try {
+                                                            queue.put(info);
+                                                        } catch (InterruptedException e) {
+                                                            // we ignore this exception as this should never occur
+                                                            ignoreException(e);
+                                                        }
+                                                    } catch (ClassNotFoundException cnfe) {
+                                                        newUnloadedJobs.add(path);
+                                                        ignoreException(cnfe);
+                                                    }
+                                                }
+                                            }
+                                        } catch (RepositoryException re) {
+                                            // we ignore this and readd
+                                            newUnloadedJobs.add(path);
+                                            ignoreException(re);
+                                        }
+                                    }
+                                } finally {
+                                    if ( s != null ) {
+                                        s.logout();
+                                    }
+                                    unloadedJobs.clear();
+                                    unloadedJobs.addAll(newUnloadedJobs);
+                                }
+                            }
+                        }
+
+                    };
+                    t.start();
+                }
             }
         }
     }
@@ -473,7 +542,9 @@ public class JobEventHandler
                                     }
                                 } catch (ClassNotFoundException cnfe) {
                                     // store path for lazy loading
-                                    this.unloadedJobs.add(nodePath);
+                                    synchronized ( this.unloadedJobs ) {
+                                        this.unloadedJobs.add(nodePath);
+                                    }
                                     this.ignoreException(cnfe);
                                 }
                             }
@@ -523,7 +594,9 @@ public class JobEventHandler
                         }
                     } catch (ClassNotFoundException cnfe) {
                         // store path for lazy loading
-                        this.unloadedJobs.add(nodePath);
+                        synchronized ( this.unloadedJobs ) {
+                            this.unloadedJobs.add(nodePath);
+                        }
                         this.ignoreException(cnfe);
                     } catch (RepositoryException re) {
                         this.logger.error("Unable to load stored job from " + nodePath, re);
