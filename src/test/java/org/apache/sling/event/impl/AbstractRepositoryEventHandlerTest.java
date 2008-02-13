@@ -49,7 +49,6 @@ public abstract class AbstractRepositoryEventHandlerTest {
 
     protected static final String REPO_PATH = "/test/events";
     protected static final String SLING_ID = "4711";
-    protected static final int CLEANUP_PERIOD = 10000;
 
     protected static Session session;
 
@@ -58,7 +57,6 @@ public abstract class AbstractRepositoryEventHandlerTest {
     protected Dictionary<String, Object> getComponentConfig() {
         final Dictionary<String, Object> config = new Hashtable<String, Object>();
         config.put(AbstractRepositoryEventHandler.CONFIG_PROPERTY_REPO_PATH, REPO_PATH);
-        config.put(AbstractRepositoryEventHandler.CONFIG_PROPERTY_CLEANUP_PERIOD, CLEANUP_PERIOD);
 
         return config;
     }
@@ -124,7 +122,6 @@ public abstract class AbstractRepositoryEventHandlerTest {
 
     @org.junit.Test public void testSetup() throws RepositoryException {
         assertEquals(this.handler.applicationId, SLING_ID);
-        assertEquals(this.handler.cleanupPeriod, CLEANUP_PERIOD);
         assertEquals(this.handler.repositoryPath, REPO_PATH);
         assertNotNull(this.handler.writerSession);
         final EventListenerIterator iter = this.handler.writerSession.getWorkspace().getObservationManager().getRegisteredEventListeners();
