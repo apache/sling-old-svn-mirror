@@ -633,15 +633,19 @@ public class JobEventHandler
             }
         }
         final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
-        Session s = null;
+        // we have to use the same session for unlocking that we used for locking!
+        // TODO - we have to bring the session into the same thread!
         try {
-            s = this.createSession();
-            // remove lock token from shared session and add it to current session
-            this.backgroundSession.removeLockToken(lockToken);
-            s.addLockToken(lockToken);
-            final Node eventNode = (Node) s.getItem(eventNodePath);
+            final Node eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
             try {
                 if ( !reschedule ) {
+                    // unlock node
+                    try {
+                        eventNode.unlock();
+                    } catch (RepositoryException e) {
+                        // if unlock fails, we silently ignore this
+                        this.ignoreException(e);
+                    }
                     // remove node from repository
                     final Node parentNode = eventNode.getParent();
                     eventNode.remove();
@@ -714,10 +718,6 @@ public class JobEventHandler
         } catch (RepositoryException re) {
             this.logger.error("Unable to create new session.", re);
             return false;
-        } finally {
-            if ( s != null ) {
-                s.logout();
-            }
         }
     }
 
