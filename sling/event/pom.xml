@@ -66,9 +66,7 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.event.impl,
-                            org.apache.jackrabbit;
-                            org.apache.jackrabbit.name;
-                            org.apache.jackrabbit.util;split-package:=merge-first
+                            org.apache.jackrabbit.util
                         </Private-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Sling-Nodetypes>

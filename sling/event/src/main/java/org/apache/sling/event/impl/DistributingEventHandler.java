@@ -140,25 +140,27 @@ public class DistributingEventHandler
     protected void processWriteQueue() {
         while ( this.running ) {
             // so let's wait/get the next job from the queue
-            EventInfo info = null;
+            Event event = null;
             try {
-                info = this.writeQueue.take();
+                event = this.writeQueue.take();
             } catch (InterruptedException e) {
                 // we ignore this
                 this.ignoreException(e);
             }
-            if ( info != null && this.running ) {
+            if ( event != null && this.running ) {
                 try {
-                    final Node eventNode = this.writeEvent(info.event);
+                    final Node eventNode = this.writeEvent(event, null);
+                    final EventInfo info = new EventInfo();
+                    info.event = event;
                     info.nodePath = eventNode.getPath();
+                    try {
+                        this.queue.put(info);
+                    } catch (InterruptedException e) {
+                        // we ignore this
+                        this.ignoreException(e);
+                    }
                 } catch (Exception e) {
                     this.logger.error("Exception during writing the event to the repository.", e);
-                }
-                try {
-                    this.queue.put(info);
-                } catch (InterruptedException e) {
-                    // we ignore this
-                    this.ignoreException(e);
                 }
             }
         }
@@ -206,9 +208,7 @@ public class DistributingEventHandler
      */
     public void handleEvent(final Event event) {
         try {
-            final EventInfo info = new EventInfo();
-            info.event = event;
-            this.writeQueue.put(info);
+            this.writeQueue.put(event);
         } catch (InterruptedException ex) {
             // we ignore this
             this.ignoreException(ex);
