@@ -22,12 +22,15 @@ import java.util.Calendar;
 import java.util.Dictionary;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventIterator;
+import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.event.EventUtil;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -37,9 +40,39 @@ import org.osgi.service.event.EventAdmin;
  * @scr.property name="event.topics" value="*"
  * @scr.property name="event.filter" value="(event.distribute=*)"
  * @scr.property name="repository.path" value="/sling/events"
+ *
+ * We schedule this event handler to run in the background and clean up
+ * obsolete events.
+ * @scr.service interface="java.lang.Runnable"
+ * @scr.property name="scheduler.period" value="1800" type="Long"
+ * @scr.property name="scheduler.concurrent" value="false" type="Boolean"
  */
 public class DistributingEventHandler
-    extends AbstractRepositoryEventHandler {
+    extends AbstractRepositoryEventHandler
+    implements Runnable {
+
+    /** Default clean up time is 30 minutes. */
+    protected static final int DEFAULT_CLEANUP_PERIOD = 30;
+
+    /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" */
+    protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
+
+    /** We remove everything which is older than 30min by default. */
+    protected int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
+
+    /**
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#activate(org.osgi.service.component.ComponentContext)
+     */
+    protected void activate(ComponentContext context)
+    throws RepositoryException {
+        final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
+        if ( i != null ) {
+            this.cleanupPeriod = i;
+        } else {
+            this.cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
+        }
+        super.activate(context);
+    }
 
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
@@ -60,6 +93,45 @@ public class DistributingEventHandler
         buffer.append("')]");
 
         return buffer.toString();
+    }
+
+    /**
+     * This method is invoked periodically.
+     * @see java.lang.Runnable#run()
+     */
+    public void run() {
+        if ( this.cleanupPeriod > 0 ) {
+            this.logger.debug("Cleaning up repository, removing all entries older than {} minutes.", this.cleanupPeriod);
+
+            final String queryString = this.getCleanUpQueryString();
+            if ( queryString != null ) {
+                // we create an own session for concurrency issues
+                Session s = null;
+                try {
+                    s = this.createSession();
+                    final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                    logger.debug("Executing query {}", queryString);
+                    final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
+                    final NodeIterator iter = q.execute().getNodes();
+                    int count = 0;
+                    while ( iter.hasNext() ) {
+                        final Node eventNode = iter.nextNode();
+                        eventNode.remove();
+                        count++;
+                    }
+                    parentNode.save();
+                    logger.debug("Removed {} entries from the repository.", count);
+
+                } catch (RepositoryException e) {
+                    // in the case of an error, we just log this as a warning
+                    this.logger.warn("Exception during repository cleanup.", e);
+                } finally {
+                    if ( s != null ) {
+                        s.logout();
+                    }
+                }
+            }
+        }
     }
 
     /**

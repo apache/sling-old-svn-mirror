@@ -31,11 +31,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
-import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.event.EventUtil;
@@ -52,14 +50,9 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component abstract="true"
  * @scr.service interface="org.osgi.service.event.EventHandler"
- * We schedule the job event handler to run in the background and clean up
- * obsolete jobs:
- * @scr.service interface="java.lang.Runnable"
- * @scr.property name="scheduler.period" value="1800" type="Long"
- * @scr.property name="scheduler.concurrent" value="false" type="Boolean"
  */
 public abstract class AbstractRepositoryEventHandler
-    implements EventHandler, EventListener, Runnable {
+    implements EventHandler, EventListener {
 
     /** FIXME - This is a copy from the sling core constants to avoid
      * a dependency just for the constant. We will move this into an
@@ -69,9 +62,6 @@ public abstract class AbstractRepositoryEventHandler
 
     /** Default log. */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    /** @scr.property value="30" type="Integer" */
-    protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** @scr.property value="/sling/events" */
     protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.path";
@@ -91,9 +81,6 @@ public abstract class AbstractRepositoryEventHandler
     /** The path in the repository. */
     protected String repositoryPath;
 
-    /** We remove everything which is older than 30min by default. */
-    protected int cleanupPeriod = 30;
-
     /** Is the background task still running? */
     protected boolean running;
 
@@ -112,10 +99,6 @@ public abstract class AbstractRepositoryEventHandler
     throws RepositoryException {
         this.applicationId = context.getBundleContext().getProperty(SLING_ID);
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
-        final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
-        if ( i != null ) {
-            this.cleanupPeriod = i;
-        }
 
         // start background threads
         this.running = true;
@@ -149,54 +132,9 @@ public abstract class AbstractRepositoryEventHandler
         t2.start();
     }
 
-    /**
-     * This method is invoked periodically.
-     * @see java.lang.Runnable#run()
-     */
-    public void run() {
-        if ( this.cleanupPeriod > 0 ) {
-            this.logger.debug("Cleaning up repository, removing all entries older than {} minutes.", this.cleanupPeriod);
-
-            final String queryString = this.getCleanUpQueryString();
-            if ( queryString != null ) {
-                // we create an own session for concurrency issues
-                Session s = null;
-                try {
-                    s = this.createSession();
-                    final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                    logger.debug("Executing query {}", queryString);
-                    final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
-                    final NodeIterator iter = q.execute().getNodes();
-                    int count = 0;
-                    while ( iter.hasNext() ) {
-                        final Node eventNode = iter.nextNode();
-                        eventNode.remove();
-                        count++;
-                    }
-                    parentNode.save();
-                    logger.debug("Removed {} entries from the repository.", count);
-
-                } catch (RepositoryException e) {
-                    // in the case of an error, we just log this as a warning
-                    this.logger.warn("Exception during repository cleanup.", e);
-                } finally {
-                    if ( s != null ) {
-                        s.logout();
-                    }
-                }
-            }
-        }
-    }
-
     protected abstract void runInBackground();
 
     protected abstract void processWriteQueue();
-
-    /**
-     * The query to detect old entries which can be removed.
-     * This method is invoked periodically from the {@link #run()} method.
-     */
-    protected abstract String getCleanUpQueryString();
 
     /**
      * Deactivate this component.
