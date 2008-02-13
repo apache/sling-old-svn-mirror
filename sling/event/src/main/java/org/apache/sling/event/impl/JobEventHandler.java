@@ -34,7 +34,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.Lock;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
@@ -241,16 +240,15 @@ public class JobEventHandler
                                 final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
                                 if ( !eventNode.isLocked() ) {
                                     // lock node
-                                    Lock lock = null;
                                     try {
-                                        lock = eventNode.lock(false, true);
+                                        eventNode.lock(false, true);
                                     } catch (RepositoryException re) {
                                         // lock failed which means that the node is locked by someone else, so we don't have to requeue
                                         process = false;
                                     }
                                     if ( process ) {
                                         unlock = false;
-                                        this.processJob(info.event, eventNode, lock.getLockToken());
+                                        this.processJob(info.event, eventNode);
                                     }
                                 }
                             } catch (RepositoryException e) {
@@ -438,12 +436,12 @@ public class JobEventHandler
      * @param event The original event.
      * @param eventNode The node in the repository where the job is stored.
      */
-    protected void processJob(Event event, Node eventNode, String lockToken)  {
+    protected void processJob(Event event, Node eventNode)  {
         final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         boolean unlock = true;
         try {
-            final Event jobEvent = this.getJobEvent(event, eventNode, lockToken);
+            final Event jobEvent = this.getJobEvent(event, eventNode);
             eventNode.setProperty(EventHelper.NODE_PROPERTY_PROCESSOR, this.applicationId);
             eventNode.save();
             final EventAdmin localEA = this.eventAdmin;
@@ -480,7 +478,7 @@ public class JobEventHandler
      * @param e
      * @return
      */
-    protected Event getJobEvent(Event e, Node eventNode, String lockToken)
+    protected Event getJobEvent(Event e, Node eventNode)
     throws RepositoryException {
         final String eventTopic = (String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
@@ -489,7 +487,7 @@ public class JobEventHandler
             properties.put(propertyNames[i], e.getProperty(propertyNames[i]));
         }
         // put properties for finished job callback
-        properties.put(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME, new EventUtil.JobStatusNotifier.NotifierContext(this, eventNode.getPath(), lockToken));
+        properties.put(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME, new EventUtil.JobStatusNotifier.NotifierContext(this, eventNode.getPath()));
         return new Event(eventTopic, properties);
     }
 
@@ -613,9 +611,9 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, String, boolean)
+     * @see org.apache.sling.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, boolean)
      */
-    public boolean finishedJob(Event job, String eventNodePath, String lockToken, boolean shouldReschedule) {
+    public boolean finishedJob(Event job, String eventNodePath, boolean shouldReschedule) {
         boolean reschedule = shouldReschedule;
         if ( shouldReschedule ) {
             // check if we exceeded the number of retries
@@ -646,6 +644,7 @@ public class JobEventHandler
         // TODO - we have to bring the session into the same thread!
         try {
             final Node eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
+            boolean unlock = true;
             try {
                 if ( !reschedule ) {
                     synchronized ( this.deletedJobs ) {
@@ -658,11 +657,11 @@ public class JobEventHandler
                         // if unlock fails, we silently ignore this
                         this.ignoreException(e);
                     }
+                    unlock = false;
                     // remove node from repository
                     final Node parentNode = eventNode.getParent();
                     eventNode.remove();
                     parentNode.save();
-                    lockToken = null;
                 }
             } catch (RepositoryException re) {
                 // if an exception occurs, we just log
@@ -674,7 +673,7 @@ public class JobEventHandler
                         this.processingMap.put(jobTopic, Boolean.FALSE);
                     }
                 }
-                if ( lockToken != null ) {
+                if ( unlock ) {
                     synchronized ( this.deletedJobs ) {
                         this.deletedJobs.add(eventNodePath);
                     }

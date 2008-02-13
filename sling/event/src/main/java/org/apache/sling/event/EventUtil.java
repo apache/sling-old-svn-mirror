@@ -149,7 +149,7 @@ public abstract class EventUtil {
         if ( ctx == null ) {
             throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
         }
-        ctx.notifier.finishedJob(job, ctx.eventNodePath, ctx.lockToken, false);
+        ctx.notifier.finishedJob(job, ctx.eventNodePath, false);
     }
 
     /**
@@ -165,7 +165,7 @@ public abstract class EventUtil {
         if ( ctx == null ) {
             throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
         }
-        return ctx.notifier.finishedJob(job, ctx.eventNodePath, ctx.lockToken, true);
+        return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);
     }
 
     /**
@@ -204,12 +204,10 @@ public abstract class EventUtil {
         public static final class NotifierContext {
             public final JobStatusNotifier notifier;
             public final String eventNodePath;
-            public final String lockToken;
 
-            public NotifierContext(JobStatusNotifier n, String path, String token) {
+            public NotifierContext(JobStatusNotifier n, String path) {
                 this.notifier = n;
                 this.eventNodePath = path;
-                this.lockToken = token;
             }
         }
 
@@ -225,6 +223,6 @@ public abstract class EventUtil {
          * @param reschedule Should the event be rescheduled?
          * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
          */
-        boolean finishedJob(Event job, String eventNodePath, String lockToken, boolean reschedule);
+        boolean finishedJob(Event job, String eventNodePath, boolean reschedule);
     }
 }
