@@ -51,7 +51,7 @@ import org.osgi.service.event.EventAdmin;
 /**
  * An event handler for timed events.
  *
- * @scr.component inherit="true"
+ * @scr.component
  * @scr.property name="event.topics" refValues="EventUtil.TOPIC_TIMED_EVENT"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
@@ -82,14 +82,6 @@ public class TimedEventHandler
         this.loadEvents();
         this.writerSession.getWorkspace().getObservationManager()
             .addEventListener(this, javax.jcr.observation.Event.PROPERTY_CHANGED, this.repositoryPath, true, null, null, true);
-    }
-
-    /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
-     */
-    protected String getCleanUpQueryString() {
-        // nothing to clean up for now
-        return null;
     }
 
     /**
@@ -426,13 +418,6 @@ public class TimedEventHandler
      * @see org.apache.sling.scheduler.Job#execute(org.apache.sling.scheduler.JobContext)
      */
     public void execute(JobContext context) {
-        // as we are called periodically as well, we have to check the configuration first
-        if ( context.getConfiguration() == null ) {
-            // period call, just invoke run
-            this.run();
-            return;
-        }
-
         final String topic = (String) context.getConfiguration().get(JOB_TOPIC);
         @SuppressWarnings("unchecked")
         final Dictionary<Object, Object> properties = (Dictionary<Object, Object>) context.getConfiguration().get(JOB_CONFIG);

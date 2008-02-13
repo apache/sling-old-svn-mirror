@@ -197,13 +197,6 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
-     */
-    protected String getCleanUpQueryString() {
-        return null;
-    }
-
-    /**
      * This method runs in the background and processes the local queue.
      */
     protected void runInBackground() {
@@ -377,6 +370,7 @@ public class JobEventHandler
                                 final Set<String> newUnloadedJobs = new HashSet<String>();
                                 newUnloadedJobs.addAll(unloadedJobs);
                                 try {
+                                    s = createSession();
                                     for(String path : unloadedJobs ) {
                                         newUnloadedJobs.remove(path);
                                         try {
@@ -405,6 +399,9 @@ public class JobEventHandler
                                             ignoreException(re);
                                         }
                                     }
+                                } catch (RepositoryException re) {
+                                    // unable to create session, so we try it again next time
+                                    ignoreException(re);
                                 } finally {
                                     if ( s != null ) {
                                         s.logout();
