@@ -82,6 +82,9 @@ public class JobEventHandler
     /** Unloaded jobs. */
     protected Set<String>unloadedJobs = new HashSet<String>();
 
+    /** List of deleted jobs. */
+    protected Set<String>deletedJobs = new HashSet<String>();
+
     /**
      * Activate this component.
      * @param context
@@ -523,24 +526,30 @@ public class JobEventHandler
 
                         // we are only interested in unlocks
                         if ( "jcr:lockOwner".equals(propertyName) ) {
-                            final Node eventNode = (Node) s.getItem(nodePath);
-                            if ( !eventNode.isLocked() ) {
-                                try {
-                                    final EventInfo info = new EventInfo();
-                                    info.event = this.readEvent(eventNode);
-                                    info.nodePath = nodePath;
+                            boolean doNotProcess = false;
+                            synchronized ( this.deletedJobs ) {
+                                doNotProcess = this.deletedJobs.remove(nodePath);
+                            }
+                            if ( !doNotProcess ) {
+                                final Node eventNode = (Node) s.getItem(nodePath);
+                                if ( !eventNode.isLocked() ) {
                                     try {
-                                        this.queue.put(info);
-                                    } catch (InterruptedException e) {
-                                        // we ignore this exception as this should never occur
-                                        this.ignoreException(e);
+                                        final EventInfo info = new EventInfo();
+                                        info.event = this.readEvent(eventNode);
+                                        info.nodePath = nodePath;
+                                        try {
+                                            this.queue.put(info);
+                                        } catch (InterruptedException e) {
+                                            // we ignore this exception as this should never occur
+                                            this.ignoreException(e);
+                                        }
+                                    } catch (ClassNotFoundException cnfe) {
+                                        // store path for lazy loading
+                                        synchronized ( this.unloadedJobs ) {
+                                            this.unloadedJobs.add(nodePath);
+                                        }
+                                        this.ignoreException(cnfe);
                                     }
-                                } catch (ClassNotFoundException cnfe) {
-                                    // store path for lazy loading
-                                    synchronized ( this.unloadedJobs ) {
-                                        this.unloadedJobs.add(nodePath);
-                                    }
-                                    this.ignoreException(cnfe);
                                 }
                             }
                         }
@@ -639,6 +648,9 @@ public class JobEventHandler
             final Node eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
             try {
                 if ( !reschedule ) {
+                    synchronized ( this.deletedJobs ) {
+                        this.deletedJobs.add(eventNodePath);
+                    }
                     // unlock node
                     try {
                         eventNode.unlock();
@@ -663,6 +675,9 @@ public class JobEventHandler
                     }
                 }
                 if ( lockToken != null ) {
+                    synchronized ( this.deletedJobs ) {
+                        this.deletedJobs.add(eventNodePath);
+                    }
                     // unlock node
                     try {
                         eventNode.unlock();
