@@ -39,7 +39,6 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import org.apache.jackrabbit.util.Locked;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.scheduler.Job;
 import org.apache.sling.scheduler.JobContext;
@@ -57,7 +56,7 @@ import org.osgi.service.event.EventAdmin;
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
  * @scr.property name="repository.path" value="/sling/timed-events"
  */
-public class TimedEventHandler
+public class TimedJobHandler
     extends AbstractRepositoryEventHandler
     implements Job {
 
@@ -88,7 +87,46 @@ public class TimedEventHandler
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#processWriteQueue()
      */
     protected void processWriteQueue() {
-        // nothing to do right now
+        while ( this.running ) {
+            Event event = null;
+            try {
+                event = this.writeQueue.take();
+            } catch (InterruptedException e) {
+                // we ignore this
+                this.ignoreException(e);
+            }
+            if ( this.running && event != null ) {
+                ScheduleInfo scheduleInfo = null;
+                try {
+                    scheduleInfo = new ScheduleInfo(event);
+                } catch (IllegalArgumentException iae) {
+                    this.logger.error(iae.getMessage());
+                }
+                if ( scheduleInfo != null ) {
+                    final EventInfo info = new EventInfo();
+                    info.event = event;
+
+                    // write event and update path
+                    // if something went wrong we get the node path and reschedule
+                    info.nodePath = this.persistEvent(info.event, scheduleInfo);
+                    if ( info.nodePath != null ) {
+                        try {
+                            this.queue.put(info);
+                        } catch (InterruptedException e) {
+                            // this should never happen, so we ignore it
+                            this.ignoreException(e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Create a unique node name for this timed job.
+     */
+    protected String getNodeName(String jobTopic, String jobId) {
+        return jobTopic.replace('/', '.') + " " + jobId.replace('/', '.');
     }
 
     /**
@@ -113,39 +151,24 @@ public class TimedEventHandler
                 }
                 if ( scheduleInfo != null ) {
                     try {
-                        // if the node path is null, this is a new event
-                        if ( info.nodePath == null ) {
-                            // write event and update path
-                            // if something went wrong we get the node path and reschedule
-                            info.nodePath = this.persistEvent(info.event, scheduleInfo);
-                            if ( info.nodePath != null ) {
-                                try {
-                                    this.queue.put(info);
-                                } catch (InterruptedException e) {
-                                    // this should never happen, so we ignore it
-                                    this.ignoreException(e);
-                                }
+                        this.writerSession.refresh(true);
+                        final Node eventNode = (Node) this.writerSession.getItem(info.nodePath);
+                        if ( !eventNode.isLocked() ) {
+                            // lock node
+                            Lock lock = null;
+                            try {
+                                lock = eventNode.lock(false, true);
+                            } catch (RepositoryException re) {
+                                // lock failed which means that the node is locked by someone else, so we don't have to requeue
                             }
-                        } else {
-                            this.writerSession.refresh(true);
-                            final Node eventNode = (Node) this.writerSession.getItem(info.nodePath);
-                            if ( !eventNode.isLocked() ) {
-                                // lock node
-                                Lock lock = null;
-                                try {
-                                    lock = eventNode.lock(false, true);
-                                } catch (RepositoryException re) {
-                                    // lock failed which means that the node is locked by someone else, so we don't have to requeue
-                                }
-                                if ( lock != null ) {
-                                    // if something went wrong, we reschedule
-                                    if ( !this.processEvent(info.event, scheduleInfo) ) {
-                                        try {
-                                            this.queue.put(info);
-                                        } catch (InterruptedException e) {
-                                            // this should never happen, so we ignore it
-                                            this.ignoreException(e);
-                                        }
+                            if ( lock != null ) {
+                                // if something went wrong, we reschedule
+                                if ( !this.processEvent(info.event, scheduleInfo) ) {
+                                    try {
+                                        this.queue.put(info);
+                                    } catch (InterruptedException e) {
+                                        // this should never happen, so we ignore it
+                                        this.ignoreException(e);
                                     }
                                 }
                             }
@@ -161,49 +184,47 @@ public class TimedEventHandler
 
     protected String persistEvent(final Event event, final ScheduleInfo scheduleInfo) {
         try {
+            // get parent node
             final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
-            Lock lock = (Lock) new Locked() {
-
-                protected Object run(Node node) throws RepositoryException {
-                    final String jobId = scheduleInfo.jobId;
-                    // if there is a node, we know that there is exactly one node
-                    final Node foundNode = queryJob(writerSession, jobId);
-                    if ( scheduleInfo.isStopEvent() ) {
-                        // if this is a stop event, we should remove the node from the repository
-                        // if there is no node someone else was faster and we can ignore this
-                        if ( foundNode != null ) {
-                            try {
-                                foundNode.remove();
-                                parentNode.save();
-                            } catch (LockException le) {
-                                // if someone else has the lock this is fine
-                            }
-                        }
-                        // stop the scheduler
-                        processEvent(event, scheduleInfo);
-                        return null;
+            final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
+            final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
+            final String nodeName = this.getNodeName(jobTopic, jobId);
+            // is there already a node?
+            final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+            Lock lock = null;
+            if ( scheduleInfo.isStopEvent() ) {
+                // if this is a stop event, we should remove the node from the repository
+                // if there is no node someone else was faster and we can ignore this
+                if ( foundNode != null ) {
+                    try {
+                        foundNode.remove();
+                        parentNode.save();
+                    } catch (LockException le) {
+                        // if someone else has the lock this is fine
                     }
-                    // if there is already a node, it means we must handle an update
-                    if ( foundNode != null ) {
-                        try {
-                            foundNode.remove();
-                            parentNode.save();
-                        } catch (LockException le) {
-                            // if someone else has the lock this is fine
-                        }
-                        // create a stop event
-                        processEvent(event, scheduleInfo.getStopInfo());
-                    }
-                    // we only write the event if this is a local one
-                    if ( EventUtil.isLocal(event) ) {
-
-                        // write event to repository, lock it and schedule the event
-                        final Node eventNode = writeEvent(event);
-                        return eventNode.lock(false, true);
-                    }
-                    return null;
                 }
-            }.with(parentNode, false);
+                // stop the scheduler
+                processEvent(event, scheduleInfo);
+            } else {
+                // if there is already a node, it means we must handle an update
+                if ( foundNode != null ) {
+                    try {
+                        foundNode.remove();
+                        parentNode.save();
+                    } catch (LockException le) {
+                        // if someone else has the lock this is fine
+                    }
+                    // create a stop event
+                    processEvent(event, scheduleInfo.getStopInfo());
+                }
+                // we only write the event if this is a local one
+                if ( EventUtil.isLocal(event) ) {
+
+                    // write event to repository, lock it and schedule the event
+                    final Node eventNode = writeEvent(event, nodeName);
+                    lock = eventNode.lock(false, true);
+                }
+            }
 
             if ( lock != null ) {
                 // if something went wrong, we reschedule
@@ -216,9 +237,6 @@ public class TimedEventHandler
         } catch (RepositoryException re ) {
             // something went wrong, so let's log it
             this.logger.error("Exception during writing new job to repository.", re);
-        } catch (InterruptedException e) {
-            // This should never happen from the lock, so we ignore it
-            this.ignoreException(e);
         }
         return null;
     }
@@ -345,10 +363,8 @@ public class TimedEventHandler
     public void handleEvent(Event event) {
         if ( event.getTopic().equals(EventUtil.TOPIC_TIMED_EVENT) ) {
             // queue the event in order to respond quickly
-            final EventInfo info = new EventInfo();
-            info.event = event;
             try {
-                this.queue.put(info);
+                this.writeQueue.put(event);
             } catch (InterruptedException e) {
                 // this should never happen
                 this.ignoreException(e);
@@ -370,6 +386,7 @@ public class TimedEventHandler
                             final Set<String> newUnloadedEvents = new HashSet<String>();
                             newUnloadedEvents.addAll(unloadedEvents);
                             try {
+                                s = createSession();
                                 for(String path : unloadedEvents ) {
                                     newUnloadedEvents.remove(path);
                                     try {
@@ -398,6 +415,9 @@ public class TimedEventHandler
                                         ignoreException(re);
                                     }
                                 }
+                            } catch (RepositoryException re) {
+                                // unable to create session, so we try it again next time
+                                ignoreException(re);
                             } finally {
                                 if ( s != null ) {
                                     s.logout();
@@ -439,29 +459,20 @@ public class TimedEventHandler
             Session s = null;
             try {
                 s = this.createSession();
-                final Session mySession = s;
                 final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                new Locked() {
-
-                    protected Object run(Node node) throws RepositoryException {
-                        final Node eventNode = queryJob(mySession, info.jobId);
-                        if ( eventNode != null ) {
-                            try {
-                                eventNode.remove();
-                                parentNode.save();
-                            } catch (RepositoryException re) {
-                                // we ignore the exception if removing fails
-                                ignoreException(re);
-                            }
-                        }
-                        return null;
+                final String nodeName = this.getNodeName(topic, info.jobId);
+                final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+                if ( eventNode != null ) {
+                    try {
+                        eventNode.remove();
+                        parentNode.save();
+                    } catch (RepositoryException re) {
+                        // we ignore the exception if removing fails
+                        ignoreException(re);
                     }
-                }.with(parentNode, false);
+                }
             } catch (RepositoryException re) {
                 this.logger.error("Unable to create a session.", re);
-            } catch (InterruptedException e) {
-                 // This should never happen from the lock, so we ignore it
-                 this.ignoreException(e);
             } finally {
                 if ( s != null ) {
                     s.logout();
@@ -536,33 +547,6 @@ public class TimedEventHandler
         if ( info.period != null ) {
             eventNode.setProperty(EventHelper.NODE_PROPERTY_TE_PERIOD, info.period.longValue());
         }
-    }
-
-    /**
-     * Search for a node with the corresponding topic and unique key.
-     * @param topic
-     * @param key
-     * @return The node or null.
-     * @throws RepositoryException
-     */
-    protected Node queryJob(final Session session, final String jobId) throws RepositoryException {
-        final QueryManager qManager = session.getWorkspace().getQueryManager();
-        final StringBuffer buffer = new StringBuffer("/jcr:root");
-        buffer.append(this.repositoryPath);
-        buffer.append("//element(*, ");
-        buffer.append(this.getEventNodeType());
-        buffer.append(") [");
-        buffer.append(EventHelper.NODE_PROPERTY_JOBID);
-        buffer.append(" = '");
-        buffer.append(jobId);
-        buffer.append("']");
-        final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
-        final NodeIterator result = q.execute().getNodes();
-        Node foundNode = null;
-        if ( result.hasNext() ) {
-            foundNode = result.nextNode();
-        }
-        return foundNode;
     }
 
     /**
