@@ -96,7 +96,6 @@ public class JobEventHandler
         } else {
             this.sleepTime = DEFAULT_SLEEP_TIME * 1000;
         }
-        this.backgroundSession = this.createSession();
         super.activate(context);
     }
 
@@ -201,7 +200,18 @@ public class JobEventHandler
     /**
      * This method runs in the background and processes the local queue.
      */
-    protected void runInBackground() {
+    protected void runInBackground() throws RepositoryException {
+        this.backgroundSession = this.createSession();
+        this.backgroundSession.getWorkspace().getObservationManager()
+        .addEventListener(this,
+                          javax.jcr.observation.Event.PROPERTY_REMOVED,
+                          this.repositoryPath,
+                          true,
+                          null,
+                          new String[] {this.getEventNodeType()},
+                          true);
+        // load unprocessed jobs from repository
+        this.loadJobs();
         while ( this.running ) {
             // so let's wait/get the next job from the queue
             EventInfo info = null;
@@ -293,25 +303,6 @@ public class JobEventHandler
                 }
             }
         }
-    }
-
-    /**
-     * Start the repository session and add this handler as an observer
-     * for new events created on other nodes.
-     * @throws RepositoryException
-     */
-    protected void startWriterSession() throws RepositoryException {
-        super.startWriterSession();
-        // load unprocessed jobs from repository
-        this.loadJobs();
-        this.backgroundSession.getWorkspace().getObservationManager()
-            .addEventListener(this,
-                              javax.jcr.observation.Event.PROPERTY_REMOVED,
-                              this.repositoryPath,
-                              true,
-                              null,
-                              new String[] {this.getEventNodeType()},
-                              true);
     }
 
     /**
@@ -571,7 +562,7 @@ public class JobEventHandler
      */
     protected void loadJobs() {
         try {
-            final QueryManager qManager = this.writerSession.getWorkspace().getQueryManager();
+            final QueryManager qManager = this.backgroundSession.getWorkspace().getQueryManager();
             final StringBuffer buffer = new StringBuffer("/jcr:root");
             buffer.append(this.repositoryPath);
             buffer.append("//element(*, ");
