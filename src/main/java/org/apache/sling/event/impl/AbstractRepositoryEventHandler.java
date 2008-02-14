@@ -115,7 +115,9 @@ public abstract class AbstractRepositoryEventHandler
                     processWriteQueue();
                 } catch (Throwable t) {
                     logger.error("Writer thread stopped with exception: " + t.getMessage(), t);
+                    running = false;
                 }
+                stopWriterSession();
             }
         };
         t.start();
@@ -125,13 +127,14 @@ public abstract class AbstractRepositoryEventHandler
                     runInBackground();
                 } catch (Throwable t) {
                     logger.error("Background thread stopped with exception: " + t.getMessage(), t);
+                    running = false;
                 }
             }
         };
         t2.start();
     }
 
-    protected abstract void runInBackground();
+    protected abstract void runInBackground() throws RepositoryException;
 
     protected abstract void processWriteQueue();
 
@@ -152,9 +155,6 @@ public abstract class AbstractRepositoryEventHandler
         } catch (InterruptedException e) {
             this.ignoreException(e);
         }
-
-        // close session
-        this.stopWriterSession();
     }
 
     /**
