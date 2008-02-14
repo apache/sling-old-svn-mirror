@@ -56,6 +56,21 @@ public class GetWithSuffixTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
+    
+    public void testGETScript() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.esp","GET.esp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+
+            final String content2 = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
+            assertTrue("Content includes ESP marker",content.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
 
     public void testWithExtraPathA() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","txt.esp");
