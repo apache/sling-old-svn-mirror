@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Calendar;
+import java.util.Locale;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
@@ -53,7 +54,7 @@ public class DateParser {
      * @throws IllegalArgumentException if the format is not valid.
      */
     public void register(String format) {
-        register(new SimpleDateFormat(format));
+        register(new SimpleDateFormat(format, Locale.US));
     }
 
     /**
