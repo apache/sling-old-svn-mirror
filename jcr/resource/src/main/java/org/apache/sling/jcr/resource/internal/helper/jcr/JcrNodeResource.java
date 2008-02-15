@@ -39,7 +39,7 @@ import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ResourceProvider resourceProvider;
+    private final ResourceResolver resourceResolver;
 
     private final Node node;
 
@@ -61,9 +61,9 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
 
     private final ResourceMetadata metadata;
 
-    JcrNodeResource(ResourceProvider resourceProvider, Node node)
+    JcrNodeResource(ResourceResolver resourceResolver, Node node)
             throws RepositoryException {
-        this.resourceProvider = resourceProvider;
+        this.resourceResolver = resourceResolver;
         this.node = node;
         this.path = node.getPath();
         metadata = new ResourceMetadata();
@@ -105,8 +105,8 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
             + ", path=" + getPath();
     }
 
-    public ResourceProvider getResourceProvider() {
-        return resourceProvider;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     Node getNode() {
@@ -177,10 +177,10 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
     public Resource getDescendent(String relPath) {
         try {
             if (node.hasNode(relPath)) {
-                return new JcrNodeResource(resourceProvider,
+                return new JcrNodeResource(resourceResolver,
                     node.getNode(relPath));
             } else if (node.hasProperty(relPath)) {
-                return new JcrPropertyResource(resourceProvider, getPath()
+                return new JcrPropertyResource(resourceResolver, getPath()
                     + "/" + relPath, node.getProperty(relPath));
             }
 

@@ -25,7 +25,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +40,8 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** resource manager used to create resources from nodes */
-    private ResourceProvider resourceProvider;
+    /** resource resolver used to create resources from nodes */
+    private ResourceResolver resourceResolver;
 
     /** underlying node iterator to be used for resources */
     private NodeIterator nodes;
@@ -57,20 +57,20 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         try {
             NodeIterator nodes = parent.getNode().getNodes();
 
-            this.resourceProvider = parent.getResourceProvider();
+            this.resourceResolver = parent.getResourceResolver();
             this.nodes = nodes;
             this.nextResult = seek();
         } catch (RepositoryException re) {
             log.error("<init>: Cannot get children of resource " + parent, re);
-            this.resourceProvider = null;
+            this.resourceResolver = null;
             this.nodes = null;
             this.nextResult = null;
         }
     }
 
-    public JcrNodeResourceIterator(ResourceProvider resourceProvider,
+    public JcrNodeResourceIterator(ResourceResolver resourceResolver,
             NodeIterator nodes) {
-        this.resourceProvider = resourceProvider;
+        this.resourceResolver = resourceResolver;
         this.nodes = nodes;
         this.nextResult = seek();
     }
@@ -100,7 +100,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (nodes.hasNext()) {
             try {
-                return new JcrNodeResource(resourceProvider, nodes.nextNode());
+                return new JcrNodeResource(resourceResolver, nodes.nextNode());
             } catch (Throwable t) {
                 log.error(
                     "seek: Problem creating Resource for next node, skipping",
