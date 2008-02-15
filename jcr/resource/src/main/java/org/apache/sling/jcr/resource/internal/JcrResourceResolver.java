@@ -99,15 +99,6 @@ public class JcrResourceResolver extends SlingAdaptable implements
      */
     public Resource resolve(String uri) throws SlingException {
 
-        // decode the request URI (required as the servlet container does not
-        try {
-            uri = URLDecoder.decode(uri, "UTF-8");
-        } catch (UnsupportedEncodingException uee) {
-            log.error("Cannot decode request URI using UTF-8", uee);
-        } catch (Exception e) {
-            log.error("Failed to decode request URI " + uri, e);
-        }
-
         // resolve virtual uri
         String realUrl = factory.virtualToRealUri(uri);
         if (realUrl != null) {
