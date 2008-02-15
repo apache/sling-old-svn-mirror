@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
@@ -66,15 +67,16 @@ public class JcrResourceProvider implements ResourceProvider {
         return new String[] { "/" };
     }
 
-    public Resource getResource(HttpServletRequest request, String path)
-            throws SlingException {
-        return getResource(path);
+    public Resource getResource(ResourceResolver resourceResolver,
+            HttpServletRequest request, String path) throws SlingException {
+        return getResource(resourceResolver, path);
     }
 
-    public Resource getResource(String path) throws SlingException {
+    public Resource getResource(ResourceResolver resourceResolver, String path)
+            throws SlingException {
 
         try {
-            return createResource(path);
+            return createResource(resourceResolver, path);
         } catch (RepositoryException re) {
             throw new SlingException("Problem retrieving node based resource "
                 + path, re);
@@ -88,7 +90,7 @@ public class JcrResourceProvider implements ResourceProvider {
         }
 
         try {
-            parent = getResource(parent.getPath());
+            parent = getResource(parent.getResourceResolver(), parent.getPath());
             if (parent instanceof Descendable) {
                 return ((Descendable) parent).listChildren();
             }
@@ -121,20 +123,22 @@ public class JcrResourceProvider implements ResourceProvider {
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
-    private Resource createResource(String path) throws RepositoryException {
+    private Resource createResource(ResourceResolver resourceResolver,
+            String path) throws RepositoryException {
         if (itemExists(path)) {
             Item item = getSession().getItem(path);
             if (item.isNode()) {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     path);
-                return new JcrNodeResource(this, (Node) item);
+                return new JcrNodeResource(resourceResolver, (Node) item);
             }
 
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
                 path);
-            return new JcrPropertyResource(this, path, (Property) item);
+            return new JcrPropertyResource(resourceResolver, path,
+                (Property) item);
         }
 
         log.debug("createResource: No JCR Item exists at path '{}'", path);

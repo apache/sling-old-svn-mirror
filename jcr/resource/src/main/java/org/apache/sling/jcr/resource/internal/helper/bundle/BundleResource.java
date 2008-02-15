@@ -28,7 +28,7 @@ import java.util.Iterator;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class BundleResource extends SlingAdaptable implements Resource,
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ResourceProvider resourceProvider;
+    private final ResourceResolver resourceResolver;
     
     private final Bundle bundle;
 
@@ -53,12 +53,12 @@ public class BundleResource extends SlingAdaptable implements Resource,
 
     private final ResourceMetadata metadata;
 
-    public static BundleResource getResource(ResourceProvider resourceProvider, Bundle bundle, String path) {
+    public static BundleResource getResource(ResourceResolver resourceResolver, Bundle bundle, String path) {
 
         // if the entry has no trailing slash, try to with a trailing
         // slash in case the entry would be a folder
         if (!path.endsWith("/")) {
-            BundleResource br = getResource(resourceProvider, bundle, path + "/");
+            BundleResource br = getResource(resourceResolver, bundle, path + "/");
             if (br != null) {
                 return br;
             }
@@ -67,15 +67,15 @@ public class BundleResource extends SlingAdaptable implements Resource,
         // has trailing slash or not a folder, try path itself
         URL entry = bundle.getEntry(path);
         if (entry != null) {
-            return new BundleResource(resourceProvider, bundle, path);
+            return new BundleResource(resourceResolver, bundle, path);
         }
 
         // the bundle does not contain the path
         return null;
     }
 
-    public BundleResource(ResourceProvider resourceProvider, Bundle bundle, String path) {
-        this.resourceProvider = resourceProvider;
+    public BundleResource(ResourceResolver resourceResolver, Bundle bundle, String path) {
+        this.resourceResolver = resourceResolver;
         this.bundle = bundle;
         this.path = path.endsWith("/")
                 ? path.substring(0, path.length() - 1)
@@ -100,8 +100,8 @@ public class BundleResource extends SlingAdaptable implements Resource,
         return metadata;
     }
 
-    public ResourceProvider getResourceProvider() {
-        return resourceProvider;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
     
     @SuppressWarnings("unchecked")
@@ -170,7 +170,7 @@ public class BundleResource extends SlingAdaptable implements Resource,
         if (!isFile()) {
             URL descendent = bundle.getEntry(path + relPath);
             if (descendent != null) {
-                new BundleResource(resourceProvider, bundle, descendent.getPath());
+                new BundleResource(resourceResolver, bundle, descendent.getPath());
             }
         }
 

@@ -25,6 +25,9 @@ package org.apache.sling.api.resource;
  */
 public class SyntheticResource implements Resource {
 
+    /** The resoure resolver to which this resource is related */
+    private final ResourceResolver resourceResolver;
+
     /** The path of the synthetic resource */
     private final String path;
 
@@ -38,7 +41,9 @@ public class SyntheticResource implements Resource {
      * Creates a synthetic resource with the given <code>path</code> and
      * <code>resourceType</code>.
      */
-    public SyntheticResource(String path, String resourceType) {
+    public SyntheticResource(ResourceResolver resourceResolver, String path,
+            String resourceType) {
+        this.resourceResolver = resourceResolver;
         this.path = path;
         this.resourceType = resourceType;
         this.resourceMetadata = new ResourceMetadata();
@@ -62,11 +67,11 @@ public class SyntheticResource implements Resource {
     }
 
     /**
-     * Returns <code>null</code> because synthetic resources have no actual
-     * data and are not provided by any {@link ResourceProvider}.
+     * Returns the {@link ResourceResolver} with which this synthetic resource
+     * is related or <code>null</code> if none.
      */
-    public ResourceProvider getResourceProvider() {
-        return null;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     /**

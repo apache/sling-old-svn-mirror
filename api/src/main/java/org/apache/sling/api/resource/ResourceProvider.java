@@ -59,28 +59,35 @@ public interface ResourceProvider {
      * is support for a JSR-311 style resource provider to support the
      * parametrized URL patterns.
      * 
+     * @param resourceResolver The {@link ResourceResolver} to which the
+     *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
      * @throws SlingException may be thrown in case of any problem creating the
      *             <code>Resource</code> instance.
      */
-    Resource getResource(HttpServletRequest request, String path);
+    Resource getResource(ResourceResolver resourceResolver,
+            HttpServletRequest request, String path);
 
     /**
      * Returns a resource from this resource provider or <code>null</code> if
      * the resource provider cannot find it. The path should have one of the
      * {@link #getRoots()} strings as its prefix.
      * 
+     * @param resourceResolver The {@link ResourceResolver} to which the
+     *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
      * @throws SlingException may be thrown in case of any problem creating the
      *             <code>Resource</code> instance.
      */
-    Resource getResource(String path);
+    Resource getResource(ResourceResolver resourceResolver, String path);
 
     /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded
-     * from the children of the given <code>Resource</code>.
+     * from the children of the given <code>Resource</code>. The returned
+     * {@link Resource} instances are attached to the same
+     * {@link ResourceResolver} as the given <code>parent</code> resource.
      * <p>
      * This method is only called for resource providers whose root path list
      * contains an entry which is a prefix for the path of the parent resource.

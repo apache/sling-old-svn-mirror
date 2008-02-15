@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 
 /** Test the SlingRequestPathInfo class */
 public class SlingRequestPathInfoTest extends TestCase {
@@ -287,7 +287,7 @@ public class SlingRequestPathInfoTest extends TestCase {
             return metadata;
         }
 
-        public ResourceProvider getResourceProvider() {
+        public ResourceResolver getResourceResolver() {
             return null;
         }
         
