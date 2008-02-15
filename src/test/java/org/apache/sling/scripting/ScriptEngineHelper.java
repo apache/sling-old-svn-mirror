@@ -39,37 +39,49 @@ public class ScriptEngineHelper {
 
     public static class Data extends HashMap<String, Object> {
     }
-    
+
     private static ScriptEngine getEngine() {
-        if(engine == null) {
+        if (engine == null) {
             synchronized (ScriptEngineHelper.class) {
-                engine = new RhinoJavaScriptEngineFactory().getScriptEngine(); 
+                engine = new RhinoJavaScriptEngineFactory().getScriptEngine();
             }
         }
         return engine;
     }
-    
+
     public String evalToString(String javascriptCode) throws ScriptException {
         return evalToString(javascriptCode, null);
     }
-    
-    public String evalToString(String javascriptCode, Map<String, Object> data) throws ScriptException {
+
+    public Object eval(String javascriptCode, Map<String, Object> data)
+            throws ScriptException {
+        return eval(javascriptCode, data, new StringWriter());
+    }
+
+    public String evalToString(String javascriptCode, Map<String, Object> data)
+            throws ScriptException {
         final StringWriter sw = new StringWriter();
+        eval(javascriptCode, data, sw);
+        return sw.toString();
+    }
+
+    public Object eval(String javascriptCode, Map<String, Object> data,
+            final StringWriter sw) throws ScriptException {
         final PrintWriter pw = new PrintWriter(sw, true);
         ScriptContext ctx = new SimpleScriptContext();
-        
+
         final Bindings b = new SimpleBindings();
         b.put("out", pw);
-        if(data != null) {
-            for(Map.Entry<String, Object> e : data.entrySet()) {
+        if (data != null) {
+            for (Map.Entry<String, Object> e : data.entrySet()) {
                 b.put(e.getKey(), e.getValue());
             }
         }
-        
+
         ctx.setBindings(b, ScriptContext.ENGINE_SCOPE);
         ctx.setWriter(sw);
         ctx.setErrorWriter(new OutputStreamWriter(System.err));
-        getEngine().eval(javascriptCode, ctx);
-        return sw.toString();
+        return getEngine().eval(javascriptCode, ctx);
     }
+
 }
