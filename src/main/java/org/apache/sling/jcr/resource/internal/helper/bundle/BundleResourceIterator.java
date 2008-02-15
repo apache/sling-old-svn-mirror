@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +38,8 @@ class BundleResourceIterator implements Iterator<Resource> {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** The bundle resource provider */
-    private ResourceProvider resourceProvider;
+    /** The bundle resource resolver */
+    private ResourceResolver resourceResolver;
     
     /** Bundle providing the entry resources */
     private Bundle bundle;
@@ -62,7 +62,7 @@ class BundleResourceIterator implements Iterator<Resource> {
         if (parent.isFile()) {
 
             // if the parent is a file, the iterator is empty
-            this.resourceProvider = null;
+            this.resourceResolver = null;
             this.bundle = null;
             this.entries = null;
             this.prefixLength = 0;
@@ -72,7 +72,7 @@ class BundleResourceIterator implements Iterator<Resource> {
             // trailing slash to enumerate children
             String parentPath = parent.getPath() + "/";
 
-            this.resourceProvider = parent.getResourceProvider();
+            this.resourceResolver = parent.getResourceResolver();
             this.bundle = parent.getBundle();
             // unchecked cast
             this.entries = parent.getBundle().getEntryPaths(parentPath);
@@ -121,7 +121,7 @@ class BundleResourceIterator implements Iterator<Resource> {
             int slash = entry.indexOf('/', prefixLength);
             if (slash < 0 || slash == entry.length() - 1) {
                 log.debug("seek: Using entry {}", entry);
-                return new BundleResource(resourceProvider, bundle, entry);
+                return new BundleResource(resourceResolver, bundle, entry);
             }
 
             log.debug("seek: Ignoring entry {}", entry);

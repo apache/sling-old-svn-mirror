@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -27,6 +28,7 @@ import junit.framework.TestCase;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 
 public class ResourceProviderEntryTest extends TestCase {
 
@@ -48,12 +50,13 @@ public class ResourceProviderEntryTest extends TestCase {
     }
 
     public void testRootProvider() {
-        assertNull(root.getResource("relpath"));
-        assertEquals(root, root.getResource("/"));
-        assertEquals(root, root.getResource("/rootel"));
-        assertEquals(root, root.getResource("/rootel/child"));
-        assertEquals(root, root.getResource("/apps/sling/sample/html.js"));
-        assertEquals(root, root.getResource("/apps/sling/microsling/html.js"));
+        assertNull(root.getResource(null, "relpath"));
+        assertEquals(root, root.getResource(null, "/"));
+        assertEquals(root, root.getResource(null, "/rootel"));
+        assertEquals(root, root.getResource(null, "/rootel/child"));
+        assertEquals(root, root.getResource(null, "/apps/sling/sample/html.js"));
+        assertEquals(root, root.getResource(null,
+            "/apps/sling/microsling/html.js"));
     }
 
     public void testAdd1Provider() {
@@ -61,15 +64,15 @@ public class ResourceProviderEntryTest extends TestCase {
         ResourceProvider first = new TestResourceProvider(firstPath);
         root.addResourceProvider(firstPath, first);
 
-        assertEquals(root, root.getResource("/"));
-        assertEquals(first, root.getResource("/rootel"));
-        assertEquals(first, root.getResource("/rootel/html.js"));
-        assertEquals(first, root.getResource("/rootel/child"));
-        assertEquals(first, root.getResource("/rootel/child/html.js"));
-        assertEquals(rootProvider,
-            root.getResource("/apps/sling/sample/html.js"));
-        assertEquals(rootProvider,
-            root.getResource("/apps/sling/microsling/html.js"));
+        assertEquals(root, root.getResource(null, "/"));
+        assertEquals(first, root.getResource(null, "/rootel"));
+        assertEquals(first, root.getResource(null, "/rootel/html.js"));
+        assertEquals(first, root.getResource(null, "/rootel/child"));
+        assertEquals(first, root.getResource(null, "/rootel/child/html.js"));
+        assertEquals(rootProvider, root.getResource(null,
+            "/apps/sling/sample/html.js"));
+        assertEquals(rootProvider, root.getResource(null,
+            "/apps/sling/microsling/html.js"));
     }
 
     public void testAdd3Providers() {
@@ -85,14 +88,15 @@ public class ResourceProviderEntryTest extends TestCase {
         root.addResourceProvider(secondPath, second);
         root.addResourceProvider(thirdPath, third);
 
-        assertEquals(rootProvider, root.getResource("/"));
-        assertEquals(first, root.getResource("/rootel"));
-        assertEquals(first, root.getResource("/rootel/html.js"));
-        assertEquals(second, root.getResource("/rootel/child"));
-        assertEquals(second, root.getResource("/rootel/child/html.js"));
-        assertEquals(third, root.getResource("/apps/sling/sample/html.js"));
-        assertEquals(rootProvider,
-            root.getResource("/apps/sling/microsling/html.js"));
+        assertEquals(rootProvider, root.getResource(null, "/"));
+        assertEquals(first, root.getResource(null, "/rootel"));
+        assertEquals(first, root.getResource(null, "/rootel/html.js"));
+        assertEquals(second, root.getResource(null, "/rootel/child"));
+        assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
+        assertEquals(third,
+            root.getResource(null, "/apps/sling/sample/html.js"));
+        assertEquals(rootProvider, root.getResource(null,
+            "/apps/sling/microsling/html.js"));
     }
 
     public void testAdd3ProvidersReverse() {
@@ -108,14 +112,15 @@ public class ResourceProviderEntryTest extends TestCase {
         root.addResourceProvider(secondPath, second);
         root.addResourceProvider(firstPath, first);
 
-        assertEquals(rootProvider, root.getResource("/"));
-        assertEquals(first, root.getResource("/rootel"));
-        assertEquals(first, root.getResource("/rootel/html.js"));
-        assertEquals(second, root.getResource("/rootel/child"));
-        assertEquals(second, root.getResource("/rootel/child/html.js"));
-        assertEquals(third, root.getResource("/apps/sling/sample/html.js"));
-        assertEquals(rootProvider,
-            root.getResource("/apps/sling/microsling/html.js"));
+        assertEquals(rootProvider, root.getResource(null, "/"));
+        assertEquals(first, root.getResource(null, "/rootel"));
+        assertEquals(first, root.getResource(null, "/rootel/html.js"));
+        assertEquals(second, root.getResource(null, "/rootel/child"));
+        assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
+        assertEquals(third,
+            root.getResource(null, "/apps/sling/sample/html.js"));
+        assertEquals(rootProvider, root.getResource(null,
+            "/apps/sling/microsling/html.js"));
     }
 
     public void testRemoveProviders() {
@@ -131,32 +136,38 @@ public class ResourceProviderEntryTest extends TestCase {
         root.addResourceProvider(secondPath, second);
         root.addResourceProvider(thirdPath, third);
 
-        assertEquals(rootProvider, root.getResource("/"));
-        assertEquals(first, root.getResource("/rootel/html.js"));
-        assertEquals(second, root.getResource("/rootel/child/html.js"));
+        assertEquals(rootProvider, root.getResource(null, "/"));
+        assertEquals(first, root.getResource(null, "/rootel/html.js"));
+        assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
 
         root.removeResourceProvider(firstPath);
 
-        assertEquals(rootProvider, root.getResource("/"));
-        assertEquals(rootProvider, root.getResource("/rootel/html.js"));
-        assertEquals(second, root.getResource("/rootel/child/html.js"));
+        assertEquals(rootProvider, root.getResource(null, "/"));
+        assertEquals(rootProvider, root.getResource(null, "/rootel/html.js"));
+        assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
 
         root.addResourceProvider(firstPath, first);
 
-        assertEquals(rootProvider, root.getResource("/"));
-        assertEquals(first, root.getResource("/rootel/html.js"));
-        assertEquals(second, root.getResource("/rootel/child/html.js"));
+        assertEquals(rootProvider, root.getResource(null, "/"));
+        assertEquals(first, root.getResource(null, "/rootel/html.js"));
+        assertEquals(second, root.getResource(null, "/rootel/child/html.js"));
     }
 
     protected void assertEquals(ResourceProvider resProvider, Resource res) {
-        assertEquals(resProvider, res.getResourceProvider());
-    }
-    
-    protected void assertEquals(ResourceProviderEntry resProviderEntry, Resource res) {
-        assertEquals(resProviderEntry.getResourceProvider(), res.getResourceProvider());
+        assertEquals(resProvider, res.getResourceResolver());
     }
 
-    private static class TestResourceProvider implements ResourceProvider {
+    protected void assertEquals(ResourceProviderEntry resProviderEntry,
+            Resource res) {
+        assertEquals(resProviderEntry.getResourceProvider(),
+            res.getResourceResolver());
+    }
+
+    // The test provider implements the ResourceResolver interface and sets
+    // itself on the returned resource. This way the assertEquals methods above
+    // may identify whether a resource has been returned from the expected
+    // ResourceProvider
+    private static class TestResourceProvider implements ResourceProvider, ResourceResolver {
 
         private final String[] roots;
 
@@ -164,11 +175,12 @@ public class ResourceProviderEntryTest extends TestCase {
             roots = new String[] { root };
         }
 
-        public Resource getResource(HttpServletRequest request, String path) {
-            return null;
+        public Resource getResource(ResourceResolver resolver,
+                HttpServletRequest request, String path) {
+            return getResource(resolver, path);
         }
 
-        public Resource getResource(String path) {
+        public Resource getResource(ResourceResolver resolver, String path) {
             return new TestResource(path, this);
         }
 
@@ -179,18 +191,57 @@ public class ResourceProviderEntryTest extends TestCase {
         public Iterator<Resource> listChildren(Resource parent) {
             return null;
         }
+
+        // just dummy implementation to mark our resources for the tests
+        public Iterator<Resource> findResources(String query, String language) {
+            return null;
+        }
+
+        public Resource getResource(String path) {
+            return null;
+        }
+
+        public Resource getResource(Resource base, String path) {
+            return null;
+        }
+
+        public String[] getSearchPath() {
+            return null;
+        }
+
+        public String map(String resourcePath) {
+            return null;
+        }
+
+        public Iterator<Map<String, Object>> queryResources(String query,
+                String language) {
+            return null;
+        }
+
+        public Resource resolve(HttpServletRequest request) {
+            return null;
+        }
+
+        public Resource resolve(String absPath) {
+            return null;
+        }
+
+        public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+            return null;
+        }
     }
-    
+
     private static class TestResource implements Resource {
 
         private final String path;
-        private final ResourceProvider resourceProvider;
 
-        public TestResource(String path, ResourceProvider resourceProvider) {
+        private final ResourceResolver resourceResolver;
+
+        public TestResource(String path, ResourceResolver resourceResolver) {
             this.path = path;
-            this.resourceProvider = resourceProvider;
+            this.resourceResolver = resourceResolver;
         }
-        
+
         public String getPath() {
             return path;
         }
@@ -199,8 +250,8 @@ public class ResourceProviderEntryTest extends TestCase {
             return null;
         }
 
-        public ResourceProvider getResourceProvider() {
-            return resourceProvider;
+        public ResourceResolver getResourceResolver() {
+            return resourceResolver;
         }
 
         public String getResourceType() {
@@ -210,6 +261,6 @@ public class ResourceProviderEntryTest extends TestCase {
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }
-        
+
     }
 }

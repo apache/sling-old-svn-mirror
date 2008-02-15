@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.framework.Bundle;
 
 public class BundleResourceProvider implements ResourceProvider {
@@ -62,8 +63,9 @@ public class BundleResourceProvider implements ResourceProvider {
         return roots;
     }
 
-    public Resource getResource(HttpServletRequest request, String path) {
-        return getResource(path);
+    public Resource getResource(ResourceResolver resourceResolver,
+            HttpServletRequest request, String path) {
+        return getResource(resourceResolver, path);
     }
 
     /**
@@ -71,8 +73,8 @@ public class BundleResourceProvider implements ResourceProvider {
      * bundle of this provider. The JcrResourceResolver is ignored by this
      * implementation.
      */
-    public Resource getResource(String path) {
-        return BundleResource.getResource(this, bundle, path);
+    public Resource getResource(ResourceResolver resourceResolver, String path) {
+        return BundleResource.getResource(resourceResolver, bundle, path);
     }
 
     public Iterator<Resource> listChildren(Resource parent)

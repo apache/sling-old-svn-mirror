@@ -87,7 +87,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         Resource result = resolve(pathInfo);
 
         if (result == null) {
-            result = new NonExistingResource(pathInfo);
+            result = new NonExistingResource(this, pathInfo);
         }
 
         return result;
@@ -221,8 +221,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         try {
             QueryResult res = JcrResourceUtil.query(getSession(), query,
                 language);
-            return new JcrNodeResourceIterator(
-                rootProvider.getResourceProvider(), res.getNodes());
+            return new JcrNodeResourceIterator(this, res.getNodes());
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language,
                 iqe);
@@ -345,7 +344,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
      */
     protected Resource getResourceInternal(String path) {
 
-        Resource resource = rootProvider.getResource(path);
+        Resource resource = rootProvider.getResource(this, path);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
             return resource;

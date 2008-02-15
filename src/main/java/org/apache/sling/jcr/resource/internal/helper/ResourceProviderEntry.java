@@ -24,6 +24,7 @@ import java.util.TreeSet;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 
 /**
  * The <code>ResourceProviderEntry</code> class represents a node in the tree
@@ -109,8 +110,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * @throws SlingException if an error occurrs trying to access an existing
      *             resource.
      */
-    public Resource getResource(String path) {
-        return getResource(path, path);
+    public Resource getResource(ResourceResolver resourceResolver, String path) {
+        return getResource(resourceResolver, path, path);
     }
 
     /**
@@ -131,9 +132,10 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * @throws SlingException if an error occurrs trying to access an existing
      *             resource.
      */
-    private Resource getResource(String path, String fullPath) {
+    private Resource getResource(ResourceResolver resourceResolver,
+            String path, String fullPath) {
         if (path.equals(this.path)) {
-            return getResourceProvider().getResource(fullPath);
+            return getResourceProvider().getResource(resourceResolver, fullPath);
         } else if (path.startsWith(this.prefix)) {
             if (entries != null) {
 
@@ -141,7 +143,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 path = path.substring(this.prefix.length());
 
                 for (ResourceProviderEntry entry : entries) {
-                    Resource test = entry.getResource(path, fullPath);
+                    Resource test = entry.getResource(resourceResolver, path,
+                        fullPath);
                     if (test != null) {
                         return test;
                     }
@@ -149,7 +152,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             }
 
             // no more specific provider, return mine
-            return getResourceProvider().getResource(fullPath);
+            return getResourceProvider().getResource(resourceResolver, fullPath);
         }
 
         // no match for my prefix, return null

@@ -28,11 +28,11 @@ import javax.jcr.ValueFormatException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 
 public class JcrPropertyResource implements Resource {
 
-    private final ResourceProvider resourceProvider;
+    private final ResourceResolver resourceResolver;
 
     private final String path;
 
@@ -42,9 +42,9 @@ public class JcrPropertyResource implements Resource {
 
     private final ResourceMetadata metadata;
 
-    public JcrPropertyResource(ResourceProvider resourceProvider, String path,
+    public JcrPropertyResource(ResourceResolver resourceResolver, String path,
             Property property) throws RepositoryException {
-        this.resourceProvider = resourceProvider;
+        this.resourceResolver = resourceResolver;
         this.path = path;
         this.property = property;
         this.resourceType = JcrNodeResource.getResourceTypeForNode(property.getParent())
@@ -65,8 +65,8 @@ public class JcrPropertyResource implements Resource {
         return resourceType;
     }
 
-    public ResourceProvider getResourceProvider() {
-        return resourceProvider;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     @SuppressWarnings("unchecked")
