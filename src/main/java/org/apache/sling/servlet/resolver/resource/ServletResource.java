@@ -24,10 +24,11 @@ import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 
-public class ServletResource extends SlingAdaptable implements Resource {
+class ServletResource extends SlingAdaptable implements Resource {
 
-    private final ResourceProvider resourceProvider;
+    private final ResourceResolver resourceResolver;
 
     private final Servlet servlet;
 
@@ -35,9 +36,9 @@ public class ServletResource extends SlingAdaptable implements Resource {
 
     private final ResourceMetadata metadata;
 
-    public ServletResource(ResourceProvider resourceProvider, Servlet servlet,
+    ServletResource(ResourceResolver resourceResolver, Servlet servlet,
             String path) {
-        this.resourceProvider = resourceProvider;
+        this.resourceResolver = resourceResolver;
         this.servlet = servlet;
         this.path = path;
 
@@ -49,8 +50,8 @@ public class ServletResource extends SlingAdaptable implements Resource {
         return metadata;
     }
 
-    public ResourceProvider getResourceProvider() {
-        return resourceProvider;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     public String getResourceType() {
