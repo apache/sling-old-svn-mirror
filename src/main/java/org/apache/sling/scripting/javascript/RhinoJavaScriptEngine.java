@@ -91,7 +91,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
             final int lineNumber = 1;
             final Object securityDomain = null;
 
-            rhinoContext.evaluateReader(scope, scriptReader, scriptName,
+            return rhinoContext.evaluateReader(scope, scriptReader, scriptName,
                 lineNumber, securityDomain);
         } catch (Throwable t) {
             final ScriptException se = new ScriptException("Failure running script " + scriptName
@@ -101,7 +101,6 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         } finally {
             Context.exit();
         }
-        return null;
     }
 
 }
