@@ -40,8 +40,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * @scr.property name="service.description" value="Sample Navigation Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/sample.navigation"
- * @scr.property name="sling.servlet.extensions" value="html"
- * @scr.property name="sling.servlet.methods" value="GET"
+ * @scr.property name="sling.servlet.methods" value="html"
  * @scr.service interface="javax.servlet.Servlet"
  */
 public class Navigation extends SlingSafeMethodsServlet {
