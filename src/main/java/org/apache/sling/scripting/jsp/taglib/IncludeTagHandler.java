@@ -94,7 +94,8 @@ public class IncludeTagHandler extends TagSupport {
                 Resource tmp = request.getResourceResolver().resolve(path);
                 if (tmp == null && resourceType != null) {
                     opts = null; // not needed
-                    resource = new SyntheticResource(path, resourceType);
+                    resource = new SyntheticResource(
+                        request.getResourceResolver(), path, resourceType);
                 }
             }
         }
