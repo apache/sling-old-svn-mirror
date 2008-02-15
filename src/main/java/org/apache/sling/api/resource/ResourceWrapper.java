@@ -52,8 +52,8 @@ public class ResourceWrapper implements Resource {
         return resource.getResourceMetadata();
     }
 
-    public ResourceProvider getResourceProvider() {
-        return resource.getResourceProvider();
+    public ResourceResolver getResourceResolver() {
+        return resource.getResourceResolver();
     }
 
     public String getResourceType() {

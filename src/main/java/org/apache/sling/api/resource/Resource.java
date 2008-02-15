@@ -69,8 +69,9 @@ public interface Resource extends Adaptable {
     ResourceMetadata getResourceMetadata();
 
     /**
-     * Returns the ResourceProvider from which this resource has been retrieved.
+     * Returns the {@link ResourceResolver} from which this resource has been
+     * retrieved.
      */
-    ResourceProvider getResourceProvider();
+    ResourceResolver getResourceResolver();
 
 }

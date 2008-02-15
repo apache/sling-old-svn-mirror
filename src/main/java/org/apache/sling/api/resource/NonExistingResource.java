@@ -23,11 +23,15 @@ package org.apache.sling.api.resource;
  */
 public final class NonExistingResource implements Resource {
 
+    private final ResourceResolver resourceResolver;
+
     private final String resourceURI;
 
     private final ResourceMetadata resourceMetadata;
 
-    public NonExistingResource(String resourceURI) {
+    public NonExistingResource(ResourceResolver resourceResolver,
+            String resourceURI) {
+        this.resourceResolver = resourceResolver;
         this.resourceURI = resourceURI;
 
         resourceMetadata = new ResourceMetadata();
@@ -46,12 +50,8 @@ public final class NonExistingResource implements Resource {
         return resourceMetadata;
     }
 
-    /**
-     * Returns <code>null</code> because this resource instance is not
-     * reflected by a real resource by any provider.
-     */
-    public ResourceProvider getResourceProvider() {
-        return null;
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
     }
 
     /**
