@@ -87,6 +87,11 @@
                         <Embed-Dependency>
                             jackrabbit-classloader, kxml2
                         </Embed-Dependency>
+                        
+                        <Sling-Nodetypes>
+                            SLING-INF/nodetypes/resource.cnd
+                        </Sling-Nodetypes>
+                        
                     </instructions>
                 </configuration>
             </plugin>
