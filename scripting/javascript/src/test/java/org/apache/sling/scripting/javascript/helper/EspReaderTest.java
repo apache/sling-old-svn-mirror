@@ -22,7 +22,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 
+import javax.script.ScriptException;
+
 import junit.framework.TestCase;
+
+import org.apache.sling.scripting.ScriptEngineHelper;
 
 /**
  * The <code>EspReaderTest</code> contains some simple test cases for the
@@ -192,6 +196,44 @@ public class EspReaderTest extends TestCase {
         assertEquals(flatten(expected), flatten(actual));
     }
 
+    /** Test a complete template, using all features */
+    public void testNumericExpression() throws IOException {
+        String input = "<%= 1 %>";
+        String expected = "out=response.writer;out.write( 1 );";
+        String actual = parse(input);
+        assertEquals(expected, actual);
+        
+        input = "<%= \"1\" %>";
+        expected = "out=response.writer;out.write( \"1\" );";
+        actual = parse(input);
+        assertEquals(expected, actual);
+        
+        input = "<%= '1' %>";
+        expected = "out=response.writer;out.write( '1' );";
+        actual = parse(input);
+        assertEquals(expected, actual);
+    }
+    
+    /** Test a complete template, using all features */
+    public void testNumericExpressionOutput() throws ScriptException {
+        ScriptEngineHelper script = new ScriptEngineHelper();
+        
+        String input = "out.write( 1 );";
+        String actual = script.evalToString(input);
+        String expected = "1";
+        assertEquals(expected, actual);
+
+        input = "out.write( \"1\" );";
+        actual = script.evalToString(input);
+        expected = "1";
+        assertEquals(expected, actual);
+
+        input = "out.write( '1' );";
+        actual = script.evalToString(input);
+        expected = "1";
+        assertEquals(expected, actual);
+    }
+    
     /** Helper to pass an ESP text through the EspReader and return the result */
     private String parse(String text) throws IOException {
         StringBuffer buf = new StringBuffer();
