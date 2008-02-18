@@ -20,7 +20,7 @@ package org.apache.sling.jcr.ocm.impl.classloader;
 
 public interface Loader {
 
-    Class loadClass(String name) throws ClassNotFoundException;
+    Class<?> loadClass(String name) throws ClassNotFoundException;
 
     Object getLoader();
 }

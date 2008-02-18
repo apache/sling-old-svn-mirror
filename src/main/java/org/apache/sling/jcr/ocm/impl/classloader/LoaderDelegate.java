@@ -26,7 +26,7 @@ abstract class LoaderDelegate {
         return new LoadingDelegate(loader, className);
     }
 
-    static LoaderDelegate create(Loader loader, Class clazz) {
+    static LoaderDelegate create(Loader loader, Class<?> clazz) {
         return new ReturningDelegate(loader, clazz);
     }
 
@@ -34,7 +34,7 @@ abstract class LoaderDelegate {
         this.loader = loader;
     }
 
-    abstract Class loadClass() throws ClassNotFoundException;
+    abstract Class<?> loadClass() throws ClassNotFoundException;
 
     final Object getLoader() {
         return this.loader.getLoader();
@@ -47,19 +47,19 @@ abstract class LoaderDelegate {
             this.className = className;
         }
 
-        Class loadClass() throws ClassNotFoundException {
+        Class<?> loadClass() throws ClassNotFoundException {
             return this.loader.loadClass(this.className);
         }
     }
 
     private static class ReturningDelegate extends LoaderDelegate {
-        private Class clazz;
-        ReturningDelegate(Loader loader, Class clazz) {
+        private Class<?> clazz;
+        ReturningDelegate(Loader loader, Class<?> clazz) {
             super(loader);
             this.clazz = clazz;
         }
 
-        Class loadClass() {
+        Class<?> loadClass() {
             return this.clazz;
         }
     }

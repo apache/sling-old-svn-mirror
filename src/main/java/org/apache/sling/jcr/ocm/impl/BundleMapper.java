@@ -32,6 +32,7 @@ public class BundleMapper implements Mapper {
         this.mappingDescriptor = mappingDescriptor;
     }
 
+    @SuppressWarnings("unchecked")
     public ClassDescriptor getClassDescriptorByClass(Class clazz) {
         return this.mappingDescriptor.getClassDescriptorByName(clazz.getName());
     }
@@ -48,6 +49,7 @@ public class BundleMapper implements Mapper {
         return this.toStringArray(this.mappingDescriptor.getClassDescriptorsByNodeType());
     }
 
+    @SuppressWarnings("unchecked")
     private String[] toStringArray(Map map) {
         return (String[]) map.keySet().toArray(new String[map.size()]);
     }

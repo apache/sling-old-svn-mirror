@@ -34,7 +34,7 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap
  * type <code>nt:unstructured</code> without any mixin types is created
  * <li>All non-protected properties are simply read and may be accessed in the
  * Java standard <code>Map</code> style using the {@link #get(Object)} and
- * {@link #put(Object, Object)} methods.
+ * {@link #put(String, Object)} methods.
  * <li>Storing the object back to the repository just writes the map contents
  * into the properties. Care must be taken to obey the node type restrictions if
  * setting properties, otherwise storing back may fail.

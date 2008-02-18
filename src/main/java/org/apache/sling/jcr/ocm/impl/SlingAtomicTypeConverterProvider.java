@@ -31,6 +31,7 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.UndefinedTypeC
 public class SlingAtomicTypeConverterProvider extends
         DefaultAtomicTypeConverterProvider {
 
+    @SuppressWarnings("unchecked")
     protected Map registerDefaultAtomicTypeConverters() {
         Map converters = super.registerDefaultAtomicTypeConverters();
 
