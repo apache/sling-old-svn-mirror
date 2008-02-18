@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource.internal.loader;
 
 import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
-import java.awt.image.ImagingOpException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -285,16 +283,16 @@ public class Loader {
             NodeReader nodeReader;
             if (nodeXML.getPath().toLowerCase().endsWith(EXT_JCR_XML)) {
                 return importSystemView(parent, name, nodeXML);
-                
+
             } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XML)) {
                 nodeReader = this.getXmlReader();
-                
+
             } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_JSON)) {
                 nodeReader = this.getJsonReader();
-                
+
             } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XJSON)) {
                 nodeReader = this.getXJsonReader();
-                
+
             } else {
                 // cannot find out the type
                 return null;
@@ -473,7 +471,7 @@ public class Loader {
      * encoding. In this case, this method decodes the name using the
      * <code>java.netURLDecoder</code> class with the <i>UTF-8</i> character
      * encoding.
-     * 
+     *
      * @param path The path from which to extract the name part.
      * @return The URL decoded name part.
      */
@@ -568,7 +566,7 @@ public class Loader {
      * Import the XML file as JCR system or document view import. If the XML
      * file is not a valid system or document view export/import file,
      * <code>false</code> is returned.
-     * 
+     *
      * @param parent The parent node below which to import
      * @param nodeXML The URL to the XML file to import
      * @return <code>true</code> if the import succeeds, <code>false</code>
@@ -589,7 +587,7 @@ public class Loader {
                     name, nodeXML);
                 return parent.getNode(name);
             }
-            
+
             ins = nodeXML.openStream();
             Session session = parent.getSession();
             session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
@@ -625,7 +623,7 @@ public class Loader {
         }
 
     }
-    
+
     private String toPlainName(String name) {
         int diff;
         if (name.endsWith(EXT_JCR_XML)) {
@@ -639,7 +637,7 @@ public class Loader {
         } else {
             return name;
         }
-        
+
         return name.substring(0, name.length() - diff);
     }
 }

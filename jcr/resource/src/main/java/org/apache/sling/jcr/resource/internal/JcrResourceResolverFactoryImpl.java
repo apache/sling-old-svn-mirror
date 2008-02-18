@@ -170,9 +170,6 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * Returns a new <code>ResourceResolve</code> for the given session. Note
      * that each call to this method returns a new resource manager instance.
-     * The resource manager returned also implements the
-     * {@link org.apache.sling.jcr.resource.PathResolver} interface to which it
-     * may be cast.
      */
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
@@ -355,8 +352,6 @@ public class JcrResourceResolverFactoryImpl implements
         componentContext.getBundleContext().addBundleListener(this);
 
         try {
-            Session session = getAdminSession(null);
-
             Bundle[] bundles = componentContext.getBundleContext().getBundles();
             for (Bundle bundle : bundles) {
                 if (bundle.getState() == Bundle.ACTIVE) {

@@ -28,10 +28,8 @@ import org.apache.sling.api.resource.Resource;
  * method.
  * <p>
  * Objects implementing this interface are returned by the
- * {@link SlingScriptResolver#resolveScript(org.apache.sling.api.SlingHttpServletRequest)}
- * and
  * {@link SlingScriptResolver#findScript(org.apache.sling.api.resource.ResourceResolver, String)}
- * methods.
+ * method.
  */
 public interface SlingScript {
 

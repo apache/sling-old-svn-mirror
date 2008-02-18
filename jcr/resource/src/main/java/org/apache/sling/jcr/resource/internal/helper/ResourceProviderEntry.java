@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -56,7 +57,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     /**
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider.
-     * 
+     *
      * @param path The relative path supported by the provider
      * @param provider The resource provider to encapsulate by this entry.
      */
@@ -68,7 +69,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider,
      * and a number of inital child entries.
-     * 
+     *
      * @param path The relative path supported by the provider
      * @param provider The resource provider to encapsulate by this entry.
      */
@@ -103,11 +104,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * Returns the resource with the given path or <code>null</code> if
      * neither the resource provider of this entry nor the resource provider of
      * any of the child entries can provide the resource.
-     * 
+     *
      * @param path The path to the resource to return.
      * @return The resource for the path or <code>null</code> if no resource
      *         can be found.
-     * @throws SlingException if an error occurrs trying to access an existing
+     * @throws org.apache.sling.api.SlingException if an error occurrs trying to access an existing
      *             resource.
      */
     public Resource getResource(ResourceResolver resourceResolver, String path) {
@@ -122,7 +123,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * This method implements the {@link #getResource(String)} method
      * recursively calling itself on any child provide entries matching the
      * path.
-     * 
+     *
      * @param path The path to the resource to return relative to the parent
      *            resource provider entry, which called this method.
      * @param fullPath The actual path to the resource as provided to the

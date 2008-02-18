@@ -66,8 +66,8 @@ public interface AdapterFactory {
      * Note that the <code>adaptable</code> object is not required to
      * implement the <code>Adaptable</code> interface, though most of the time
      * this method is called by means of calling the
-     * {@link SlingAdaptable#adaptTo(Class)} method.
-     * 
+     * {@link org.apache.sling.adapter.SlingAdaptable#adaptTo(Class)} method.
+     *
      * @param <AdapterType> The generic type of the adapter (target) type.
      * @param adaptable The object to adapt to the adapter type.
      * @param type The type to which the object is to be adapted.

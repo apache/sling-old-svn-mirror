@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * This class is not a "wrapper" per se, but computes the correct path info,
  * request URI, etc. for included requests. When including a request via
- * {@link RequestDispatcher}, the Servlet API specifies that target paths of
+ * {@link javax.servlet.RequestDispatcher}, the Servlet API specifies that target paths of
  * the included request are available as request attributes.
  * Request.getPathInfo(), for example will return the value for the including
  * request, *not* for the included one.

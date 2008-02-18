@@ -23,7 +23,7 @@ import java.util.StringTokenizer;
 
 /**
  * <code>RequestDispatcherOptions</code> are used in the
- * {@link SlingHttpServletRequest#getRequestDispatcher(org.apache.sling.api.resource.Resource, RequestDispatcherOptions)}
+ * {@link org.apache.sling.api.SlingHttpServletRequest#getRequestDispatcher(org.apache.sling.api.resource.Resource, RequestDispatcherOptions)}
  * method, to give more control on some aspects of the include/forward
  * mechanism. Typical use cases include:
  * <ul>
@@ -85,7 +85,7 @@ public class RequestDispatcherOptions extends HashMap<String, String> {
      * value. Hence a <code>RequestDispatcherOptions</code> object is created
      * from the name value pair list.</li>
      * </ul>
-     * 
+     *
      * @param options The options to set.
      */
     public RequestDispatcherOptions(String options) {
