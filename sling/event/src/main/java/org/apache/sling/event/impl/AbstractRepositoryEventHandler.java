@@ -39,7 +39,6 @@ import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.threads.ThreadPool;
 import org.apache.sling.threads.ThreadPoolManager;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -92,8 +91,8 @@ public abstract class AbstractRepositoryEventHandler
     /** A local queue for writing received events into the repository. */
     protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
 
-    /** The reference to the thread pool manager. */
-    protected ServiceReference threadPoolManagerRef;
+    /** @scr.reference */
+    protected ThreadPoolManager threadPoolManager;
 
     /** Our thread pool. */
     protected ThreadPool threadPool;
@@ -109,57 +108,46 @@ public abstract class AbstractRepositoryEventHandler
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
 
         // start background threads
-        this.threadPoolManagerRef = context.getBundleContext().getServiceReference(ThreadPoolManager.class.getName());
-        if ( this.threadPoolManagerRef == null ) {
+        if ( this.threadPoolManager == null ) {
             throw new Exception("No ThreadPoolManager found.");
         }
-        try {
-            final ThreadPoolManager threadPoolManager = (ThreadPoolManager) context.getBundleContext().getService(this.threadPoolManagerRef);
-            if ( threadPoolManager == null ) {
-                throw new Exception("No ThreadPoolManager found.");
-            }
-            threadPoolManager.create(EventHelper.THREAD_POOL_NAME,
-                                     10, 30, 30, -1,
-                                     ThreadPoolManager.DEFAULT_BLOCK_POLICY, true, 5000, null, 0, false);
-            this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
-            if ( this.threadPool == null ) {
-                throw new Exception("No thread pool found.");
-            }
-            this.running = true;
-            // start writer thread
-            this.threadPool.execute(new Runnable() {
-                public void run() {
-                    try {
-                        startWriterSession();
-                    } catch (RepositoryException e) {
-                        // there is nothing we can do except log!
-                        logger.error("Error during session starting.", e);
-                        running = false;
-                    }
-                    try {
-                        processWriteQueue();
-                    } catch (Throwable t) {
-                        logger.error("Writer thread stopped with exception: " + t.getMessage(), t);
-                        running = false;
-                    }
-                    stopWriterSession();
-                }
-            });
-            this.threadPool.execute(new Runnable() {
-                public void run() {
-                    try {
-                        runInBackground();
-                    } catch (Throwable t) {
-                        logger.error("Background thread stopped with exception: " + t.getMessage(), t);
-                        running = false;
-                    }
-                }
-            });
-        } catch (Exception e) {
-            context.getBundleContext().ungetService(this.threadPoolManagerRef);
-            this.threadPoolManagerRef = null;
-            throw e;
+        threadPoolManager.create(EventHelper.THREAD_POOL_NAME,
+                                 10, 30, 30, -1,
+                                 ThreadPoolManager.DEFAULT_BLOCK_POLICY, true, 5000, null, Thread.NORM_PRIORITY, false);
+        this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
+        if ( this.threadPool == null ) {
+            throw new Exception("No thread pool found.");
         }
+        this.running = true;
+        // start writer thread
+        this.threadPool.execute(new Runnable() {
+            public void run() {
+                try {
+                    startWriterSession();
+                } catch (RepositoryException e) {
+                    // there is nothing we can do except log!
+                    logger.error("Error during session starting.", e);
+                    running = false;
+                }
+                try {
+                    processWriteQueue();
+                } catch (Throwable t) {
+                    logger.error("Writer thread stopped with exception: " + t.getMessage(), t);
+                    running = false;
+                }
+                stopWriterSession();
+            }
+        });
+        this.threadPool.execute(new Runnable() {
+            public void run() {
+                try {
+                    runInBackground();
+                } catch (Throwable t) {
+                    logger.error("Background thread stopped with exception: " + t.getMessage(), t);
+                    running = false;
+                }
+            }
+        });
     }
 
     protected abstract void runInBackground() throws RepositoryException;
@@ -182,10 +170,6 @@ public abstract class AbstractRepositoryEventHandler
             this.queue.put(new EventInfo());
         } catch (InterruptedException e) {
             this.ignoreException(e);
-        }
-        if ( this.threadPoolManagerRef != null ) {
-            context.getBundleContext().ungetService(this.threadPoolManagerRef);
-            this.threadPoolManagerRef = null;
         }
         this.threadPool = null;
     }
