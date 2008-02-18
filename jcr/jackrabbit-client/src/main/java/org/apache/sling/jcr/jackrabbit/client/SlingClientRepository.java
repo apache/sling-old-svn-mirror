@@ -24,14 +24,10 @@ import java.util.Hashtable;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.naming.InitialContext;
 
-import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
-import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
-import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
-import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.sling.jcr.api.AbstractSlingRepository;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.service.log.LogService;
 
 /**
@@ -111,36 +107,12 @@ public class SlingClientRepository extends AbstractSlingRepository
             throw new RepositoryException("Missing property 'name'");
         }
 
-        // try JNDI
-        Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
-        ClassLoader old = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-            InitialContext initialContext = new InitialContext(jndiContext);
-            Object repoObject = initialContext.lookup(repoName);
-            if (repoObject instanceof Repository) {
-                return (Repository) repoObject;
-
-            } else if (repoObject instanceof RemoteRepository) {
-                RemoteRepository remoteRepo = (RemoteRepository) repoObject;
-                LocalAdapterFactory laf = new ClientAdapterFactory();
-                return laf.getRepository(remoteRepo);
-            }
-        } catch (Throwable t) {
-            this.getLog().log(LogService.LOG_INFO, "Problem checking JNDI for " + repoName, t);
-        } finally {
-            Thread.currentThread().setContextClassLoader(old);
+        final Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
+        final Repository repo = new RepositoryAccessor().getRepository(repoName, jndiContext);
+        if(repo == null) {
+            throw new RepositoryException("Cannot acquire repository '" + repoName + "'");
         }
-
-        try {
-            ClientRepositoryFactory crf = new ClientRepositoryFactory();
-            return crf.getRepository(repoName);
-        } catch (Throwable t) {
-            this.getLog().log(LogService.LOG_INFO, "Problem checking RMI for " + repoName, t);
-        }
-
-        // finally there is no way to find a repository
-        throw new RepositoryException("Cannot find repository " + repoName);
+        return repo;
     }
 
 
