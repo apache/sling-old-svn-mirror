@@ -1,8 +1,9 @@
 <%-- used by ScriptBuiltinObjectsTest --%>
 <html>
 	<body>
-		ESP template
-		<p><%= resource.node.text %></p>
+		<h1>ESP template</h1>
+		<p>resource.node.text:<%= resource.node.text %></p>
+		<p>currentNode.text:<%= currentNode.text %></p>
 	</body>
 	
 	<!-- 
