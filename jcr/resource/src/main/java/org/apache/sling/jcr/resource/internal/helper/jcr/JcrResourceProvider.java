@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -115,7 +116,7 @@ public class JcrResourceProvider implements ResourceProvider {
      * given path. If no item exists at that path or the item does not have
      * read-access for the session of this resolver, <code>null</code> is
      * returned.
-     * 
+     *
      * @param path The absolute path
      * @return The <code>Resource</code> for the item at the given path.
      * @throws RepositoryException If an error occurrs accessingor checking the
@@ -149,13 +150,13 @@ public class JcrResourceProvider implements ResourceProvider {
      * Checks whether the item exists and this content manager's session has
      * read access to the item. If the item does not exist, access control is
      * ignored by this method and <code>false</code> is returned.
-     * 
+     *
      * @param path The path to the item to check
      * @return <code>true</code> if the item exists and this content manager's
      *         session has read access. If the item does not exist,
      *         <code>false</code> is returned ignoring access control.
      * @throws RepositoryException
-     * @throws AccessControlException If the item really exists but this content
+     * @throws java.security.AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
     public boolean itemExists(String path) throws RepositoryException {
@@ -171,7 +172,7 @@ public class JcrResourceProvider implements ResourceProvider {
      * @param path
      * @param actions
      * @throws RepositoryException
-     * @throws AccessControlException if this manager does not have the
+     * @throws java.security.AccessControlException if this manager does not have the
      *             permission for the listed action(s).
      */
     protected void checkPermission(String path, String actions)

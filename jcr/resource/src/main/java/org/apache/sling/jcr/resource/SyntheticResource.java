@@ -27,8 +27,6 @@ import org.apache.sling.api.resource.ResourceResolver;
  * <code>Resource</code> interface which may be used to provide a resource
  * object which has no related repository item.
  * <p>
- * Clients may call the {@link #setRawData(Object)} and
- * {@link #setObject(Object)} method as appropriate.
  * TODO: a similar interface exists in microsling, we might want to
  * consolidate (see SLING-129).
  */
@@ -73,7 +71,7 @@ public class SyntheticResource implements Resource {
     public ResourceResolver getResourceResolver() {
         return null;
     }
-    
+
     public <Type> Type adaptTo(Class<Type> type) {
         return null;
     }

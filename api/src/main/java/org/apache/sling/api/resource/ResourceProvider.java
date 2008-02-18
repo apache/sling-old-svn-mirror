@@ -51,14 +51,14 @@ public interface ResourceProvider {
     /**
      * Returns a resource from this resource provider or <code>null</code> if
      * the resource provider cannot find it. The path should have one of the
-     * {@link #getRoots()} strings as its prefix.
+     * {@link #ROOTS} strings as its prefix.
      * <p>
      * This method is called to resolve a resource for the given request. The
      * properties of the request, such as request parameters, may be use to
      * parametrize the resource resolution. An example of such parametrization
      * is support for a JSR-311 style resource provider to support the
      * parametrized URL patterns.
-     * 
+     *
      * @param resourceResolver The {@link ResourceResolver} to which the
      *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
@@ -72,8 +72,8 @@ public interface ResourceProvider {
     /**
      * Returns a resource from this resource provider or <code>null</code> if
      * the resource provider cannot find it. The path should have one of the
-     * {@link #getRoots()} strings as its prefix.
-     * 
+     * {@link #ROOTS} strings as its prefix.
+     *
      * @param resourceResolver The {@link ResourceResolver} to which the
      *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
@@ -91,7 +91,7 @@ public interface ResourceProvider {
      * <p>
      * This method is only called for resource providers whose root path list
      * contains an entry which is a prefix for the path of the parent resource.
-     * 
+     *
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects or
      *         <code>null</code> if the resource provider has no children for
