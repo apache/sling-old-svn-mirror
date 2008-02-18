@@ -74,6 +74,22 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
+    
+    public Object jsFunction_addNode(String path, String primaryType) throws RepositoryException {
+        Node n = null;
+        if(primaryType == null || "undefined".equals(primaryType)) {
+            n = node.addNode(path);
+        } else {
+            n = node.addNode(path, primaryType);
+        }
+        
+        final Object result = ScriptRuntime.toObject(this, n);
+        return result;
+    }
+    
+    public Object jsFunction_getNode(String path) throws RepositoryException {
+        return ScriptRuntime.toObject(this, node.getNode(path));
+    }
 
     public ScriptableItemMap jsFunction_getChildren() {
         try {
