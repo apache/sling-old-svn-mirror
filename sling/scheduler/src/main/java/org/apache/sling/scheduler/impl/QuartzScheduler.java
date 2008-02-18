@@ -433,7 +433,7 @@ public class QuartzScheduler implements Scheduler {
          * @see org.quartz.spi.QuartzThreadPool#getPoolSize()
          */
         public int getPoolSize() {
-            return this.executor.getMaxPoolSize();
+            return this.executor.getConfiguration().getMaxPoolSize();
         }
 
         /* (non-Javadoc)

@@ -18,9 +18,9 @@ package org.apache.sling.threads.impl;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadFactory;
 
 import org.apache.sling.threads.ThreadPool;
+import org.apache.sling.threads.ThreadPoolConfig;
 import org.apache.sling.threads.ThreadPoolManager;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -37,30 +37,6 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultThreadPoolManager implements ThreadPoolManager {
 
-    /** The default queue size */
-    protected final static int DEFAULT_QUEUE_SIZE = -1;
-
-    /** The default maximum pool size */
-    protected final static int DEFAULT_MAX_POOL_SIZE = 5;
-
-    /** The default minimum pool size */
-    protected final static int DEFAULT_MIN_POOL_SIZE = 5;
-
-    /** The default thread priority */
-    protected final static int DEFAULT_THREAD_PRIORITY =  Thread.NORM_PRIORITY;
-
-    /** The default daemon mode */
-    protected final static boolean DEFAULT_DAEMON_MODE = false;
-
-    /** The default keep alive time */
-    protected final static long DEFAULT_KEEP_ALIVE_TIME = 60000L;
-
-    /** The default way to shutdown gracefully */
-    protected final static boolean DEFAULT_SHUTDOWN_GRACEFUL = false;
-
-    /** The default shutdown waittime time */
-    protected final static int DEFAULT_SHUTDOWN_WAIT_TIME = -1;
-
     /** By default we use the logger for this class. */
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -74,16 +50,7 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
         this.logger.info("Starting thread pool manager.");
         final ThreadPool defaultPool = new DefaultThreadPool(
                     DEFAULT_THREADPOOL_NAME,
-                    DEFAULT_MIN_POOL_SIZE,
-                    DEFAULT_MAX_POOL_SIZE,
-                    DEFAULT_QUEUE_SIZE,
-                    DEFAULT_KEEP_ALIVE_TIME,
-                    DEFAULT_BLOCK_POLICY,
-                    DEFAULT_SHUTDOWN_GRACEFUL,
-                    DEFAULT_SHUTDOWN_WAIT_TIME,
-                    null,
-                    DEFAULT_THREAD_PRIORITY,
-                    DEFAULT_DAEMON_MODE);
+                    new ThreadPoolConfig());
         synchronized ( this.pools ) {
             this.pools.put(defaultPool.getName(), defaultPool);
         }
@@ -141,21 +108,15 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPoolManager#create(java.lang.String, int, int, int, long, org.apache.sling.threads.ThreadPoolManager.ThreadPoolPolicy, boolean, int, java.util.concurrent.ThreadFactory, int, boolean)
+     * @see org.apache.sling.threads.ThreadPoolManager#create(java.lang.String, org.apache.sling.threads.ThreadPoolConfig)
      */
     public ThreadPool create(String name,
-                             int minPoolSize,
-                             int maxPoolSize,
-                             int queueSize,
-                             long keepAliveTime,
-                             ThreadPoolPolicy blockPolicy,
-                             boolean shutdownGraceful,
-                             int shutdownWaitTimeMs,
-                             ThreadFactory factory,
-                             int priority,
-                             boolean isDaemon) {
+                             ThreadPoolConfig config) {
         if ( name == null ) {
             throw new IllegalArgumentException("Name must not be null.");
+        }
+        if ( config == null ) {
+            throw new IllegalArgumentException("Config must not be null.");
         }
         synchronized ( this.pools ) {
             ThreadPool pool = this.pools.get(name);
@@ -163,17 +124,7 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
                 // pool already exists
                 return null;
             }
-            pool = new DefaultThreadPool(name,
-                                         minPoolSize,
-                                         maxPoolSize,
-                                         queueSize,
-                                         keepAliveTime,
-                                         blockPolicy,
-                                         shutdownGraceful,
-                                         shutdownWaitTimeMs,
-                                         factory,
-                                         priority,
-                                         isDaemon);
+            pool = new DefaultThreadPool(name, config);
             this.pools.put(name, pool);
             return pool;
         }
