@@ -38,6 +38,7 @@ import javax.jcr.observation.EventListener;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.threads.ThreadPool;
+import org.apache.sling.threads.ThreadPoolConfig;
 import org.apache.sling.threads.ThreadPoolManager;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -111,9 +112,13 @@ public abstract class AbstractRepositoryEventHandler
         if ( this.threadPoolManager == null ) {
             throw new Exception("No ThreadPoolManager found.");
         }
-        threadPoolManager.create(EventHelper.THREAD_POOL_NAME,
-                                 10, 30, 30, -1,
-                                 ThreadPoolManager.DEFAULT_BLOCK_POLICY, true, 5000, null, Thread.NORM_PRIORITY, false);
+        final ThreadPoolConfig config = new ThreadPoolConfig();
+        config.setMinPoolSize(10);
+        config.setMaxPoolSize(30);
+        config.setQueueSize(-1);
+        config.setShutdownGraceful(true);
+        threadPoolManager.create(EventHelper.THREAD_POOL_NAME, config);
+                                 ;
         this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
         if ( this.threadPool == null ) {
             throw new Exception("No thread pool found.");

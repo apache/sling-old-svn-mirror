@@ -16,7 +16,6 @@
  */
 package org.apache.sling.threads;
 
-import java.util.concurrent.ThreadFactory;
 
 /**
  * The <cod>ThreadPoolManager</code> manages thread pools.
@@ -27,17 +26,6 @@ public interface ThreadPoolManager {
 
     /** The default thread pool name */
     String DEFAULT_THREADPOOL_NAME = "default";
-
-    /** The thread pool policies. */
-    enum ThreadPoolPolicy {
-        ABORT,
-        DISCARD,
-        DISCARDOLDEST,
-        RUN
-    };
-
-    /** The default policy */
-    ThreadPoolPolicy DEFAULT_BLOCK_POLICY = ThreadPoolPolicy.RUN;
 
     /**
      * Add a new pool.
@@ -61,18 +49,8 @@ public interface ThreadPoolManager {
      * If a pool with the same name already exists, no new pool is created
      * and <code>null</code> is returned.
      * @param name Name must not be null.
-     * @param blockPolicy The thread pool policy or null for the default.
-     * @param factory A thread factory or null for the default favtory.
+     * @param config The thread pool configuration.
      */
     ThreadPool create(String name,
-                     int   minPoolSize,
-                     int   maxPoolSize,
-                     final int queueSize,
-                     long  keepAliveTime,
-                     ThreadPoolPolicy blockPolicy,
-                     final boolean shutdownGraceful,
-                     final int shutdownWaitTimeMs,
-                     final ThreadFactory factory,
-                     final int   priority,
-                     final boolean isDaemon);
+                      ThreadPoolConfig config);
 }

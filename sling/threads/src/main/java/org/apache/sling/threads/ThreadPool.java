@@ -40,5 +40,5 @@ public interface ThreadPool {
      */
     void shutdown();
 
-    int getMaxPoolSize();
+    ThreadPoolConfig getConfiguration();
 }
