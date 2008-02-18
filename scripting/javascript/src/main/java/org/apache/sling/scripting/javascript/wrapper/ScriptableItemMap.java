@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.Item;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import org.mozilla.javascript.ScriptRuntime;
@@ -91,9 +90,7 @@ public class ScriptableItemMap extends ScriptableObject {
     public Object get(String name, Scriptable start) {
         Item item = items.get(name);
         Object result = Undefined.instance;
-        if (item instanceof Property) {
-            result = ScriptRuntime.toObject(this, (Property)item);
-        } else if (item != null) {
+        if (item != null) {
             result = ScriptRuntime.toObject(this, item);
         }
 

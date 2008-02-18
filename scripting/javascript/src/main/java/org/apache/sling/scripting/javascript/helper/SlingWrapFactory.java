@@ -44,6 +44,7 @@ public class SlingWrapFactory extends WrapFactory {
      *            object based on its class, staticType will be used instead.
      * @return the wrapped value which shall not be null
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
             Object javaObject, Class staticType) {
@@ -67,7 +68,7 @@ public class SlingWrapFactory extends WrapFactory {
         if(result==null) {
             result = super.wrapAsJavaObject(cx, scope, javaObject, staticType);
         }
-        
+
         return result;
     }
 
