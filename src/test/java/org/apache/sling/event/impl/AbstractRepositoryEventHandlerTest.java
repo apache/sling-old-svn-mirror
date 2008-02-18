@@ -92,7 +92,7 @@ public abstract class AbstractRepositoryEventHandlerTest {
         this.getMockery().checking(new Expectations() {{
             allowing(handler.threadPoolManager).get(EventHelper.THREAD_POOL_NAME);
             will(returnValue(pool));
-            allowing(handler.threadPoolManager).create(with(any(String.class)), with(any(ThreadPoolConfig.class)));
+            allowing(handler.threadPoolManager).create(with(equal(EventHelper.THREAD_POOL_NAME)), with(any(ThreadPoolConfig.class)));
             will(returnValue(null));
         }});
 
