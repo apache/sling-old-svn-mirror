@@ -118,7 +118,10 @@ public abstract class AbstractRepositoryEventHandler
             if ( threadPoolManager == null ) {
                 throw new Exception("No ThreadPoolManager found.");
             }
-            this.threadPool = threadPoolManager.get("SLING_EVENTING");
+            threadPoolManager.create(EventHelper.THREAD_POOL_NAME,
+                                     10, 30, 30, -1,
+                                     ThreadPoolManager.DEFAULT_BLOCK_POLICY, true, 5000, null, 0, false);
+            this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
             if ( this.threadPool == null ) {
                 throw new Exception("No thread pool found.");
             }

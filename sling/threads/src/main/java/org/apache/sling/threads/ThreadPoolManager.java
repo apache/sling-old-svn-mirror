@@ -16,6 +16,8 @@
  */
 package org.apache.sling.threads;
 
+import java.util.concurrent.ThreadFactory;
+
 /**
  * The <cod>ThreadPoolManager</code> manages thread pools.
  *
@@ -23,18 +25,54 @@ package org.apache.sling.threads;
  */
 public interface ThreadPoolManager {
 
+    /** The default thread pool name */
+    String DEFAULT_THREADPOOL_NAME = "default";
+
+    /** The thread pool policies. */
+    enum ThreadPoolPolicy {
+        ABORT,
+        DISCARD,
+        DISCARDOLDEST,
+        RUN
+    };
+
+    /** The default policy */
+    ThreadPoolPolicy DEFAULT_BLOCK_POLICY = ThreadPoolPolicy.RUN;
+
     /**
      * Add a new pool.
      * If a pool with the same name already exists, the new pool is not added
      * and false is returned.
-     * @param pool The pool
+     * @param pool The pool.
      * @return True if the pool could be added, false otherwise.
      */
     boolean add(ThreadPool pool);
 
     /**
-     * Get a thread pool
+     * Get a thread pool.
+     * If there is no thread pool with the given name, the default thread
+     * pool is returned.
      * @param name The name of the thread pool or null for the default pool.
      */
     ThreadPool get(String name);
+
+    /**
+     * Create a new thread pool.
+     * If a pool with the same name already exists, no new pool is created
+     * and <code>null</code> is returned.
+     * @param name Name must not be null.
+     * @param blockPolicy The thread pool policy or null for the default.
+     * @param factory A thread factory or null for the default favtory.
+     */
+    ThreadPool create(String name,
+                     int   minPoolSize,
+                     int   maxPoolSize,
+                     final int queueSize,
+                     long  keepAliveTime,
+                     ThreadPoolPolicy blockPolicy,
+                     final boolean shutdownGraceful,
+                     final int shutdownWaitTimeMs,
+                     final ThreadFactory factory,
+                     final int   priority,
+                     final boolean isDaemon);
 }

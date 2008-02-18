@@ -24,6 +24,8 @@ package org.apache.sling.event.impl;
  */
 public abstract class EventHelper {
 
+    public static final String THREAD_POOL_NAME = "SLING_EVENTING";
+
     public static final String NODE_PROPERTY_TOPIC = "slingevent:topic";
     public static final String NODE_PROPERTY_APPLICATION = "slingevent:application";
     public static final String NODE_PROPERTY_CREATED = "slingevent:created";

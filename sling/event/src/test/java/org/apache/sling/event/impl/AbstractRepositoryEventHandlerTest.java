@@ -94,8 +94,11 @@ public abstract class AbstractRepositoryEventHandlerTest {
         final ThreadPool pool = new ThreadPoolImpl();
         final ThreadPoolManager thpm = this.getMockery().mock(ThreadPoolManager.class);
         this.getMockery().checking(new Expectations() {{
-            allowing(thpm).get("SLING_EVENTING");
+            allowing(thpm).get(EventHelper.THREAD_POOL_NAME);
             will(returnValue(pool));
+            allowing(thpm).create(EventHelper.THREAD_POOL_NAME, 10, 30, 30, -1,
+                    ThreadPoolManager.DEFAULT_BLOCK_POLICY, true, 5000, null, 0, false);
+            will(returnValue(null));
         }});
 
         // lets set up the bundle context with the sling id
