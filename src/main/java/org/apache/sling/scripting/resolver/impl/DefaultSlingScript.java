@@ -37,6 +37,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.jcr.Node;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -64,6 +65,10 @@ import org.slf4j.LoggerFactory;
 
 class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
+	// name of the global variable containing the node to which the
+	// resource adapts (null if the resource does not adapt to a node
+    private static final String NODE = "currentNode";
+    
     private Resource scriptResource;
 
     private ScriptEngine scriptEngine;
@@ -301,6 +306,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         bindings.put(RESOURCE, sling.getRequest().getResource());
         bindings.put(OUT, sling.getResponse().getWriter());
         bindings.put(LOG, logObject);
+        bindings.put(NODE, sling.getRequest().getResource().adaptTo(Node.class));
 
         // copy non-base variables
         for (Map.Entry<String, Object> entry : slingBindings.entrySet()) {
