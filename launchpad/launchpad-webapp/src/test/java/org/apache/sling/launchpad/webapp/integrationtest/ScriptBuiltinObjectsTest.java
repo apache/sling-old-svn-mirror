@@ -34,10 +34,12 @@ public class ScriptBuiltinObjectsTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("builtin-objects.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content includes test text", content.contains(testText));
-            assertTrue("Content includes sc data",content.contains("sc:null"));
-            assertTrue("Content includes response data",content.contains("SlingHttpServletResponse:false"));
+            assertTrue("Content includes ESP marker (" + content + ")",content.contains("ESP template"));
+            assertTrue("Content includes test text (" + content + ")", content.contains(testText));
+            assertTrue("Content includes resource.node text (" + content + ")", content.contains("resource.node.text:" + testText));
+            assertTrue("Content includes currentNode text (" + content + ")", content.contains("currentNode.text:" + testText));
+            assertTrue("Content includes sc data (" + content + ")",content.contains("sc:null"));
+            assertTrue("Content includes response data (" + content + ")",content.contains("SlingHttpServletResponse:false"));
         } finally {
             testClient.delete(toDelete);
         }
