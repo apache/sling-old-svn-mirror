@@ -142,13 +142,13 @@ public class SlingServletResolver implements ServletResolver,
         Iterator<String> pathIterator = PathSupport.getPathIterator(request,
             path);
         servlet = getServlet(resolver, pathIterator, baseName);
-        
+
         // (2) GET/HEAD and according to resource type and selectors
         if (servlet == null && !baseName.equals(request.getMethod())) {
             pathIterator = PathSupport.getPathIterator(request, path);
             servlet = getServlet(resolver, pathIterator, request.getMethod());
         }
-    
+
         // (3) default script name and default servlet name and selectors
         if (servlet == null) {
             pathIterator = PathSupport.getPathIterator(DEFAULT_SERVLET_NAME, path);
@@ -220,9 +220,7 @@ public class SlingServletResolver implements ServletResolver,
     // ---------- ErrorHandler interface --------------------------------------
 
     /**
-     * @see org.apache.sling.core.servlets.ErrorHandler#handleError(int,
-     *      java.lang.String, javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+     * @see org.apache.sling.core.servlets.ErrorHandler#handleError(int, String, SlingHttpServletRequest, SlingHttpServletResponse)
      */
     public void handleError(int status, String message,
             SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -317,11 +315,11 @@ public class SlingServletResolver implements ServletResolver,
                     + location + "/" + baseName, se);
             }
         }
-        
+
         // exhausted all
         return null;
     }
-    
+
     private Servlet getServletAt(ResourceResolver resolver, String location,
             String baseName) throws SlingException {
         Servlet result = null;

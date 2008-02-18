@@ -140,7 +140,7 @@ public class MapperClassLoader extends ClassLoader {
         this.delegateeLoaders.put(className, LoaderDelegate.create(loader, className));
     }
 
-    private void registerClassInternal(Class clazz, Loader loader) {
+    private void registerClassInternal(Class<?> clazz, Loader loader) {
         this.delegateeLoaders.put(clazz.getName(), LoaderDelegate.create(loader, clazz));
     }
 

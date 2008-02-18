@@ -26,7 +26,7 @@ import org.osgi.framework.ServiceReference;
  * The <code>AdapterFactoryDescriptorKey</code> provides the indexing
  * functionality for the {@link AdapterFactoryDescriptorMap}. The key consists
  * of the OSGi <code>service.id</code> of the
- * {@link org.apache.sling.osgi.commons.AdapterFactory} service and the ID of
+ * {@link org.apache.sling.api.adapter.AdapterFactory} service and the ID of
  * the the bundle providing the service.
  * <p>
  * Sort order among the keys is defined primarily by the bundle id and

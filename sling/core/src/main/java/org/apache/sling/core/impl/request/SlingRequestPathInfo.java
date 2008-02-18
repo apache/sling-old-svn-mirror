@@ -19,7 +19,6 @@ package org.apache.sling.core.impl.request;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 
 /**
  * microsling request URI parser that provides SlingRequestPathInfo for the
@@ -77,7 +76,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
                 suffix = pathToParse.substring(0, lastDot).substring(1);
                 extension = pathToParse.substring(lastDot + 1);
             } else {
-                extension = null; 
+                extension = null;
                 suffix = pathToParse;
             }
 

@@ -29,7 +29,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
 import java.util.Locale;
 
-import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
@@ -47,12 +46,12 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.core.CoreConstants;
 import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
@@ -61,7 +60,6 @@ import org.apache.sling.core.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.core.theme.Theme;
-import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +67,7 @@ import org.slf4j.LoggerFactory;
  * The <code>RequestData</code> class provides access to objects which are set
  * on a Servlet Request wide basis such as the repository session, the
  * persistence manager, etc.
- * 
+ *
  * @see ContentData
  */
 public class RequestData implements BufferProvider {
@@ -117,7 +115,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * The name of the currently active serlvet.
-     * 
+     *
      * @see #setActiveServletName(String)
      * @see #getActiveServletName()
      */
@@ -141,7 +139,7 @@ public class RequestData implements BufferProvider {
 
         this.resourceResolver = resourceResolver;
     }
-    
+
     public void init() {
 
         // resolve the resource and the request path info, will never be null
@@ -210,7 +208,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps the ServletRequest to a SlingHttpServletRequest.
-     * 
+     *
      * @throws IllegalArgumentException If the <code>request</code> is not a
      *             <code>SlingHttpServletRequest</code> and not a
      *             <code>ServletRequestWrapper</code> wrapping a
@@ -241,7 +239,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps the SlingHttpServletRequest to a SlingHttpServletRequestImpl
-     * 
+     *
      * @param request
      * @throws IllegalArgumentException If <code>request</code> is not a
      *             <code>SlingHttpServletRequestImpl</code> and not
@@ -264,7 +262,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps the ServletRequest to a SlingHttpServletRequest.
-     * 
+     *
      * @throws IllegalArgumentException If the <code>response</code> is not a
      *             <code>SlingHttpServletResponse</code> and not a
      *             <code>ServletResponseWrapper</code> wrapping a
@@ -295,7 +293,7 @@ public class RequestData implements BufferProvider {
 
     /**
      * Unwraps a SlingHttpServletResponse to a SlingHttpServletResponseImpl
-     * 
+     *
      * @param response
      * @throws IllegalArgumentException If <code>response</code> is not a
      *             <code>SlingHttpServletResponseImpl</code> and not
@@ -384,7 +382,7 @@ public class RequestData implements BufferProvider {
      */
     public static SlingHttpServletResponse toSlingHttpServletResponse(
             ServletResponse response) {
-        
+
         // unwrap to SlingHttpServletResponse
         SlingHttpServletResponse cResponse = unwrap(response);
 
@@ -423,7 +421,7 @@ public class RequestData implements BufferProvider {
      * servlet terminates normally. In case of a Throwable, the active servlet
      * name is not reset and indicates which servlet caused the potential abort
      * of the request.
-     * 
+     *
      * @param request The request object for the service method
      * @param response The response object for the service method
      * @throws IOException May be thrown by the servlet's service method

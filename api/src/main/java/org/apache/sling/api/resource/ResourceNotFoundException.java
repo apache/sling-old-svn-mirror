@@ -16,8 +16,6 @@
  */
 package org.apache.sling.api.resource;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.sling.api.SlingException;
 
 /**
@@ -38,7 +36,7 @@ public class ResourceNotFoundException extends SlingException {
     public ResourceNotFoundException(String message) {
         this(null, message);
     }
-    
+
     public ResourceNotFoundException(String resource, String message) {
         super(message);
         this.resource = resource;

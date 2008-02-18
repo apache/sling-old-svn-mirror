@@ -21,7 +21,6 @@ package org.apache.sling.core.impl.parameters;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 
 /**
  * The <code>EncodedRequestParameter</code> TODO

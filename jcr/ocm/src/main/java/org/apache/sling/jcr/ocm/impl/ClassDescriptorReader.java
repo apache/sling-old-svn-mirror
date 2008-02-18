@@ -439,6 +439,7 @@ public class ClassDescriptorReader {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private List<String> solveReferences(List<String> errors, List<ClassDescriptor> rootClassDescriptors) {
         Set<ClassDescriptor> toRemove = new HashSet<ClassDescriptor>();
         for( ClassDescriptor cd : (Collection<ClassDescriptor>)this.descriptors.getClassDescriptorsByClassName().values() ) {
@@ -492,6 +493,7 @@ public class ClassDescriptorReader {
         return errors;
     }
 
+    @SuppressWarnings("unchecked")
     private void dropClassDescriptor(ClassDescriptor cd) {
         // remove descriptor
         this.descriptors.getClassDescriptorsByClassName().remove(cd.getClassName());
@@ -513,6 +515,7 @@ public class ClassDescriptorReader {
      * @param classDescriptors the ancestor classdescriptors
      * @return
      */
+    @SuppressWarnings("unchecked")
     private List<String> validateDescriptors(List<String> errors, Collection<ClassDescriptor> classDescriptors) {
         for (ClassDescriptor classDescriptor : classDescriptors) {
             try {
