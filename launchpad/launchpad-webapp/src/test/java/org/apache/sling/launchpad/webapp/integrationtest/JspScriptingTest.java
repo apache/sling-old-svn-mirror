@@ -59,10 +59,7 @@ public class JspScriptingTest extends HttpTestBase {
     public void testRtJsp() throws Exception {
         final String toDelete = uploadTestScript(rtNode.scriptPath, "rendering-test.jsp", "html.jsp");
         try {
-            final String content = getContent(rtNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("JSP script executed as expected (" + content + ")", content.contains("JSP rendering result"));
-            final String expected  = "JSP rendering result:" + rtNode.testText;
-            assertTrue("Content contains " + expected + "(" + content + ")", content.contains(expected));
+            checkContent(rtNode);
         } finally {
             if(toDelete != null) {
                 testClient.delete(toDelete);
@@ -73,14 +70,24 @@ public class JspScriptingTest extends HttpTestBase {
     public void testUnstructuredJsp() throws Exception {
         final String toDelete = uploadTestScript(unstructuredNode.scriptPath, "rendering-test.jsp", "html.jsp");
         try {
-            final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("JSP script executed as expected (" + content + ")", content.contains("JSP rendering result"));
-            final String expected  = "JSP rendering result:" + unstructuredNode.testText;
-            assertTrue("Content contains " + expected + "(" + content + ")", content.contains(expected));
+            checkContent(unstructuredNode);
         } finally {
             if(toDelete != null) {
                 testClient.delete(toDelete);
             }
+        }
+    }
+    
+    private void checkContent(TestNode tn) throws Exception {
+        final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
+        assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
+        
+        final String [] expected = {
+                "using resource.adaptTo:" + tn.testText,
+                "using currentNode:" + tn.testText,
+        };
+        for(String exp : expected) {
+            assertTrue("Content contains " + exp + "(" + content + ")", content.contains(exp));
         }
     }
 }
