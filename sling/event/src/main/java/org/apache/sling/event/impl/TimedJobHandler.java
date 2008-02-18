@@ -378,7 +378,7 @@ public class TimedJobHandler
                 }
             }
             if ( doIt ) {
-                final Thread t = new Thread() {
+                final Runnable t = new Runnable() {
 
                     public void run() {
                         synchronized (unloadedEvents) {
@@ -429,7 +429,7 @@ public class TimedJobHandler
                     }
 
                 };
-                t.start();
+                this.threadPool.execute(t);
             }
         }
     }
