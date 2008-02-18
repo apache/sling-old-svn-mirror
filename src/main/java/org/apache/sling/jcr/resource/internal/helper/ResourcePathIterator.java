@@ -19,8 +19,6 @@ package org.apache.sling.jcr.resource.internal.helper;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.apache.sling.api.servlets.HttpConstants;
-
 /**
  * Iterate over the the HTTP request path by creating shorter segments of that
  * path using "." as a separator.
@@ -42,11 +40,9 @@ public class ResourcePathIterator implements Iterator<String> {
 
     /**
      * Creates a new instance iterating over the given path
-     * 
+     *
      * @param path The path to iterate over. If this is empty or
      *            <code>null</code> this iterator will not return anything.
-     * @param httpMethod The HTTP request method causing this iterator to be
-     *            created.
      */
     public ResourcePathIterator(String path) {
 

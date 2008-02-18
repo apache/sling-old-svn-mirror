@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,8 +50,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceResolver</code> class implements the Sling
- * <code>ResourceResolver</code> and <code>ResourceResolver</code>
- * interfaces and in addition is a {@link PathMapper}. Instances of this class
+ * <code>ResourceResolver</code> interface. Instances of this class
  * are retrieved through the
  * {@link org.apache.sling.jcr.resource.JcrResourceResolverFactory#getResourceResolver(Session)}
  * method.
@@ -329,7 +326,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     /**
      * Creates a JcrNodeResource with the given path if existing
-     * 
+     *
      * @throws AccessControlException If an item exists but this manager has no
      *             read access
      */
