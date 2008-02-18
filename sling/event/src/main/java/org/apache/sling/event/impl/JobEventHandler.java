@@ -90,7 +90,7 @@ public class JobEventHandler
      * @throws RepositoryException
      */
     protected void activate(final ComponentContext context)
-    throws RepositoryException {
+    throws Exception {
         if ( context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) != null ) {
             this.sleepTime = (Long)context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) * 1000;
         } else {
@@ -130,6 +130,12 @@ public class JobEventHandler
                 this.ignoreException(e);
             }
             if ( event != null && this.running ) {
+                try {
+                    this.writerSession.refresh(false);
+                } catch (RepositoryException re) {
+                    // we just ignore this
+                    this.ignoreException(re);
+                }
                 final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
 
                 final EventInfo info = new EventInfo();
@@ -180,7 +186,7 @@ public class JobEventHandler
                         }
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job to repository.", re);
+                        this.logger.error("Exception during writing new job '" + nodeName + "' to repository.", re);
                     }
                 }
                 // if we were able to write the event into the repository
