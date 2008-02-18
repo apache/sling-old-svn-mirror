@@ -23,7 +23,6 @@ import javax.servlet.Servlet;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 
 class ServletResource extends SlingAdaptable implements Resource {
@@ -84,7 +83,7 @@ class ServletResource extends SlingAdaptable implements Resource {
         if (servletName == null) {
             servletName = servlet.getClass().getName();
         }
-        
+
         return getClass().getSimpleName() + ", servlet=" + servletName
             + ", path=" + getPath();
     }
