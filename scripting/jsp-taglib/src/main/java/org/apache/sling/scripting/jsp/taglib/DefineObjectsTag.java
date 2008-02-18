@@ -53,9 +53,9 @@ public class DefineObjectsTag extends TagSupport {
     /**
      * Default name for the scripting variable referencing the JCR node
      * underlying the current <code>Resource</code> object if it is based on a
-     * JCR node (value is "node").
+     * JCR node (value is "currentNode").
      */
-    public static final String DEFAULT_NODE_NAME = "node";
+    public static final String DEFAULT_NODE_NAME = "currentNode";
 
     /**
      * Default name for the scripting variable referencing the mapped object
