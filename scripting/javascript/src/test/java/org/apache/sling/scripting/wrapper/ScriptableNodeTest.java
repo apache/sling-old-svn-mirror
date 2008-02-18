@@ -110,4 +110,32 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
             assertTrue("result (" + result + ") contains '" + name + "'", result.contains(name));
         }
     }
+    
+    public void testAddNodeDefaultType() throws Exception {
+        final String path = "subdt_" + System.currentTimeMillis();
+        final String code =
+            "var n = node.addNode('" + path + "');\n"
+            + "out.print(n['jcr:primaryType']);\n"
+        ;
+        assertEquals("nt:unstructured", script.evalToString(code, data));
+    }
+    
+    public void testAddNodeSpecificType() throws Exception {
+        final String path = "subst_" + System.currentTimeMillis();
+        final String code =
+            "var n = node.addNode('" + path + "', 'nt:folder');\n"
+            + "out.print(n['jcr:primaryType']);\n"
+        ;
+        assertEquals("nt:folder", script.evalToString(code, data));
+    }
+    
+    public void testGetNode() throws Exception {
+        final String path = "subgn_" + System.currentTimeMillis();
+        final String code =
+            "node.addNode('" + path + "', 'nt:resource');\n"
+            + "var n=node.getNode('" + path + "');\n"
+            + "out.print(n['jcr:primaryType']);\n"
+        ;
+        assertEquals("nt:resource", script.evalToString(code, data));
+    }
 }
