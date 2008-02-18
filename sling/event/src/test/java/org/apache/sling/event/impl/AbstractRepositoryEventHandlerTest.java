@@ -33,11 +33,14 @@ import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.threads.ThreadPool;
+import org.apache.sling.threads.ThreadPoolManager;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -53,6 +56,8 @@ public abstract class AbstractRepositoryEventHandlerTest {
     protected static Session session;
 
     protected abstract Mockery getMockery();
+
+    protected ServiceReference thpmSR;
 
     protected Dictionary<String, Object> getComponentConfig() {
         final Dictionary<String, Object> config = new Hashtable<String, Object>();
@@ -83,11 +88,25 @@ public abstract class AbstractRepositoryEventHandlerTest {
             allowing(eventAdmin).sendEvent(with(any(Event.class)));
         }});
 
+        // we need a service reference for the thread pool manager
+        // and a thpm
+        thpmSR = this.getMockery().mock(ServiceReference.class);
+        final ThreadPool pool = new ThreadPoolImpl();
+        final ThreadPoolManager thpm = this.getMockery().mock(ThreadPoolManager.class);
+        this.getMockery().checking(new Expectations() {{
+            allowing(thpm).get("SLING_EVENTING");
+            will(returnValue(pool));
+        }});
+
         // lets set up the bundle context with the sling id
         final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
         this.getMockery().checking(new Expectations() {{
             allowing(bundleContext).getProperty(AbstractRepositoryEventHandler.SLING_ID);
             will(returnValue(SLING_ID));
+            allowing(bundleContext).getServiceReference(ThreadPoolManager.class.getName());
+            will(returnValue(thpmSR));
+            allowing(bundleContext).getService(thpmSR);
+            will(returnValue(thpm));
         }});
 
         // lets set up the component configuration
@@ -116,7 +135,17 @@ public abstract class AbstractRepositoryEventHandlerTest {
             child.remove();
         }
         rootNode.save();
-        ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
+        // lets set up the bundle context with the sling id
+        final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
+        this.getMockery().checking(new Expectations() {{
+            allowing(bundleContext).ungetService(thpmSR);
+        }});
+
+        final ComponentContext componentContext = this.getMockery().mock(ComponentContext.class);
+        this.getMockery().checking(new Expectations() {{
+            allowing(componentContext).getBundleContext();
+            will(returnValue(bundleContext));
+        }});
         this.handler.deactivate(componentContext);
     }
 
@@ -135,5 +164,24 @@ public abstract class AbstractRepositoryEventHandlerTest {
 
     @org.junit.Test public void testPathCreation() throws RepositoryException {
         assertTrue(session.itemExists(REPO_PATH));
+    }
+
+    final class ThreadPoolImpl implements ThreadPool {
+
+        public void execute(Runnable runnable) {
+            final Thread t = new Thread(runnable);
+            t.start();
+        }
+
+        public String getName() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public void shutdown() {
+            // TODO Auto-generated method stub
+
+        }
+
     }
 }

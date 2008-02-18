@@ -144,7 +144,12 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
             name = DEFAULT_THREADPOOL_NAME;
         }
         synchronized (this.pools) {
-            return this.pools.get(name);
+            ThreadPool pool = this.pools.get(name);
+            if ( pool == null && !(name.equals(DEFAULT_THREADPOOL_NAME))) {
+                this.logger.info("Requested pool {} is not available, returning default pool.", name);
+                pool = this.pools.get(DEFAULT_THREADPOOL_NAME);
+            }
+            return pool;
         }
     }
 }
