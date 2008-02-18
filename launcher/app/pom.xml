@@ -104,18 +104,43 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>inline-osgi-bundles</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                org.osgi.core,org.osgi.compendium
+                            </includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}
+                            </outputDirectory>
+                            <include>**</include>
+                            <excludes>
+                                org/osgi/framework/**,
+                                org/osgi/service/packageadmin/**,
+                                org/osgi/service/startlevel/**,
+                                org/osgi/service/url/**,
+                                org/osgi/util/tracker/**,
+                                META-INF/**
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>inline-framework-bundles</id>
                         <goals>
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium
+                                org.apache.felix.framework
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
                                 ${project.build.outputDirectory}
                             </outputDirectory>
+                            <include>**</include>
                             <excludes>META-INF/**</excludes>
                         </configuration>
                     </execution>
