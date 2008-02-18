@@ -16,7 +16,6 @@
  */
 package org.apache.sling.api.scripting;
 
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 
 /**
@@ -60,9 +59,9 @@ public interface SlingScriptResolver {
      * @param name The script name. Must not be <code>null</code>.
      * @return The {@link SlingScript} to which the name resolved or
      *         <code>null</code> otherwise.
-     * @throws AccessControlException If the requested script cannot be accessed
+     * @throws java.security.AccessControlException If the requested script cannot be accessed
      *             due to access control restrictions.
-     * @throws SlingException If an error occurrs trying to resolve the name.
+     * @throws org.apache.sling.api.SlingException If an error occurrs trying to resolve the name.
      */
     SlingScript findScript(ResourceResolver resourceResolver, String name);
 }

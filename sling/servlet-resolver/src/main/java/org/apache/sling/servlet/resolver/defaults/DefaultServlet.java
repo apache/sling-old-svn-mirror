@@ -73,14 +73,14 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
 
         // check whether we have a directly addressed script
         if (extension == null) {
-            
+
             // check whether the resource adapts to a stream, spool then
             InputStream stream = resource.adaptTo(InputStream.class);
             if (stream != null) {
                 stream(response, resource, stream);
                 return;
             }
-            
+
         }
 
         // format response according to extension (use Mime mapping instead)
@@ -220,9 +220,9 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
 
     private void stream(HttpServletResponse response, Resource resource,
             InputStream stream) throws IOException {
-        
+
         ResourceMetadata meta = resource.getResourceMetadata();
-        
+
         String contentType = meta.getContentType();
         if (contentType == null) {
             contentType = getServletContext().getMimeType(resource.getPath());
@@ -230,38 +230,27 @@ public class DefaultServlet extends SlingSafeMethodsServlet {
         if (contentType != null) {
             response.setContentType(contentType);
         }
-        
+
         String encoding = meta.getCharacterEncoding();
         if (encoding != null) {
             response.setCharacterEncoding(encoding);
         }
-        
+
         try {
             OutputStream out = response.getOutputStream();
-            
+
             byte[] buf = new byte[1024];
             int rd;
             while ( (rd=stream.read(buf)) >= 0) {
                 out.write(buf, 0, rd);
             }
-            
+
         } finally {
             try {
                 stream.close();
             } catch (IOException ignore) {
                 // don't care
             }
-        }
-    }
-    
-    private void printObjectJson(PrintWriter pw, Object object) {
-        boolean quote = !((object instanceof Boolean) || (object instanceof Number));
-        if (quote) {
-            pw.print('"');
-        }
-        pw.print(object);
-        if (quote) {
-            pw.print('"');
         }
     }
 

@@ -24,7 +24,7 @@ import java.util.TreeMap;
  * The <code>AdapterFactoryDescriptorMap</code> is a sorted map of
  * {@link AdapterFactoryDescriptor} instances indexed (and ordered) by their
  * {@link AdapterFactoryDescriptorKey}. This map is used to organize the
- * registered {@link org.apache.sling.osgi.commons.AdapterFactory} services for
+ * registered {@link org.apache.sling.api.adapter.AdapterFactory} services for
  * a given adaptable type.
  * <p>
  * Each entry in the map is a {@link AdapterFactoryDescriptor} thus enabling the

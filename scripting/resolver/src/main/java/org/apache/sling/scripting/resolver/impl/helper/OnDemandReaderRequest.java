@@ -19,7 +19,6 @@
 package org.apache.sling.scripting.resolver.impl.helper;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
@@ -27,11 +26,11 @@ import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 public class OnDemandReaderRequest extends SlingHttpServletRequestWrapper {
 
     private BufferedReader reader;
-    
+
     public OnDemandReaderRequest(SlingHttpServletRequest request) {
         super(request);
     }
-    
+
     @Override
     public BufferedReader getReader() {
         if (reader == null) {
