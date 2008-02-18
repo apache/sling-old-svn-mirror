@@ -34,6 +34,7 @@ import javax.jcr.observation.EventListenerIterator;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.threads.ThreadPool;
+import org.apache.sling.threads.ThreadPoolConfig;
 import org.apache.sling.threads.ThreadPoolManager;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -91,8 +92,7 @@ public abstract class AbstractRepositoryEventHandlerTest {
         this.getMockery().checking(new Expectations() {{
             allowing(handler.threadPoolManager).get(EventHelper.THREAD_POOL_NAME);
             will(returnValue(pool));
-            allowing(handler.threadPoolManager).create(EventHelper.THREAD_POOL_NAME, 10, 30, 30, -1,
-                    ThreadPoolManager.DEFAULT_BLOCK_POLICY, true, 5000, null, Thread.NORM_PRIORITY, false);
+            allowing(handler.threadPoolManager).create(with(any(String.class)), with(any(ThreadPoolConfig.class)));
             will(returnValue(null));
         }});
 
@@ -172,8 +172,9 @@ public abstract class AbstractRepositoryEventHandlerTest {
             // nothing to do
         }
 
-        public int getMaxPoolSize() {
-            return 30;
+        public ThreadPoolConfig getConfiguration() {
+            return new ThreadPoolConfig();
         }
+
     }
 }
