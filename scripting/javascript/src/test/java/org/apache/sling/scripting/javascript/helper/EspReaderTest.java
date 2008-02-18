@@ -234,6 +234,28 @@ public class EspReaderTest extends TestCase {
         assertEquals(expected, actual);
     }
     
+    public void testColon() throws IOException {
+        final String input = "currentNode.text:<%= currentNode.text %>";
+        final String expected = 
+            "out=response.writer;" 
+            + "out.write(\"currentNode.text:\");"
+            + "out.write( currentNode.text );"
+            ;
+        final String actual = parse(input);
+        assertEquals(expected, actual);
+    }
+    
+    public void DISABLED_SEE_SLING_253_testEqualSigns() throws IOException {
+        final String input = "currentNode.text=<%= currentNode.text %>";
+        final String expected = 
+            "out=response.writer;" 
+            + "out.write(\"currentNode.text=\");"
+            + "out.write( currentNode.text );"
+            ;
+        final String actual = parse(input);
+        assertEquals(expected, actual);
+    }
+    
     /** Helper to pass an ESP text through the EspReader and return the result */
     private String parse(String text) throws IOException {
         StringBuffer buf = new StringBuffer();
