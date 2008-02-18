@@ -55,7 +55,7 @@ public class DefaultThreadFactory
             ( Thread.NORM_PRIORITY == priority ) ) {
             this.priority = priority;
         } else {
-            throw new IllegalStateException("Unknown priority " + this.priority);
+            throw new IllegalStateException("Unknown priority " + priority);
         }
     }
 

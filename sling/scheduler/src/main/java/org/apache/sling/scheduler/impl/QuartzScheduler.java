@@ -27,6 +27,8 @@ import java.util.UUID;
 
 import org.apache.sling.scheduler.Job;
 import org.apache.sling.scheduler.Scheduler;
+import org.apache.sling.threads.ThreadPool;
+import org.apache.sling.threads.ThreadPoolManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -37,7 +39,9 @@ import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
+import org.quartz.impl.DirectSchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.simpl.RAMJobStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +59,8 @@ public class QuartzScheduler implements Scheduler {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected static final String DEFAULT_QUARTZ_JOB_GROUP = "Sling";
+
+    protected static final String THREAD_POOL_NAME = "SLING_SCHEDULER";
 
     /** Map key for the job object */
     static final String DATA_MAP_OBJECT = "QuartzJobScheduler.Object";
@@ -82,6 +88,9 @@ public class QuartzScheduler implements Scheduler {
     protected final List<Object[]> registeredJobs = new ArrayList<Object[]>();
 
     protected ComponentContext context;
+
+    /** @scr.reference */
+    protected ThreadPoolManager threadPoolManager;
 
     /**
      * Activate this component.
@@ -119,8 +128,18 @@ public class QuartzScheduler implements Scheduler {
     }
 
     protected void init() throws SchedulerException {
-        final SchedulerFactory factory = new StdSchedulerFactory();
-        this.scheduler = factory.getScheduler();
+        // if we don't have a thread pool manager, we use the default thread pool
+        final ThreadPoolManager tpm = this.threadPoolManager;
+        if ( tpm == null ) {
+            final SchedulerFactory factory = new StdSchedulerFactory();
+            this.scheduler = factory.getScheduler();
+        } else {
+            final ThreadPool pool = tpm.get(THREAD_POOL_NAME);
+            final QuartzThreadPool quartzPool = new QuartzThreadPool(pool);
+            final DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
+            factory.createScheduler(quartzPool, new RAMJobStore());
+            this.scheduler = factory.getScheduler();
+        }
         this.scheduler.start();
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Scheduler started.");
@@ -394,4 +413,53 @@ public class QuartzScheduler implements Scheduler {
             }
         }
     }
+
+    private static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
+
+        /** Default log. */
+        protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+        /** Our executor thread pool */
+        private ThreadPool executor;
+
+        /**
+         *
+         */
+        public QuartzThreadPool(final ThreadPool executor) {
+            this.executor = executor;
+        }
+
+        /* (non-Javadoc)
+         * @see org.quartz.spi.QuartzThreadPool#getPoolSize()
+         */
+        public int getPoolSize() {
+            return this.executor.getMaxPoolSize();
+        }
+
+        /* (non-Javadoc)
+         * @see org.quartz.spi.QuartzThreadPool#initialize()
+         */
+        public void initialize() {
+            // nothing to do
+        }
+
+        /* (non-Javadoc)
+         * @see org.quartz.spi.QuartzThreadPool#runInThread(java.lang.Runnable)
+         */
+        public boolean runInThread(final Runnable job) {
+            this.executor.execute(job);
+
+            return true;
+        }
+
+        /* (non-Javadoc)
+         * @see org.quartz.spi.QuartzThreadPool#shutdown(boolean)
+         */
+        public void shutdown(final boolean waitForJobsToComplete) {
+            // the pool is managed by the thread pool manager,
+            // so we can just return
+            this.executor = null;
+        }
+    }
+
 }

@@ -172,6 +172,13 @@ public class DefaultThreadPool
     }
 
     /**
+     * @see org.apache.sling.threads.ThreadPool#getMaxPoolSize()
+     */
+    public int getMaxPoolSize() {
+        return this.executor.getMaximumPoolSize();
+    }
+
+    /**
      * @see org.apache.sling.threads.ThreadPool#execute(java.lang.Runnable)
      */
     public void execute(Runnable runnable) {
