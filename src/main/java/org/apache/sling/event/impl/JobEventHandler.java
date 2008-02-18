@@ -362,7 +362,7 @@ public class JobEventHandler
                     }
                 }
                 if ( doIt ) {
-                    final Thread t = new Thread() {
+                    final Runnable t = new Runnable() {
 
                         public void run() {
                             synchronized (unloadedJobs) {
@@ -413,7 +413,7 @@ public class JobEventHandler
                         }
 
                     };
-                    t.start();
+                    this.threadPool.execute(t);
                 }
             }
         }
@@ -699,7 +699,7 @@ public class JobEventHandler
                     // delay rescheduling?
                     if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
                         final long delay = (Long)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
-                        final Thread t = new Thread() {
+                        final Runnable t = new Runnable() {
                             public void run() {
                                 try {
                                     Thread.sleep(delay);
@@ -715,7 +715,7 @@ public class JobEventHandler
                                 }
                             }
                         };
-                        t.start();
+                        this.threadPool.execute(t);
                     } else {
                         // put directly into queue
                         try {
@@ -735,6 +735,13 @@ public class JobEventHandler
                 return false;
             }
         }
+    }
+
+    /**
+     * @see org.apache.sling.event.EventUtil.JobStatusNotifier#execute(java.lang.Runnable)
+     */
+    public void execute(Runnable job) {
+        this.threadPool.execute(job);
     }
 
     /**

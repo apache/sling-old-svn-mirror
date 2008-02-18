@@ -191,7 +191,14 @@ public abstract class EventUtil {
             }
 
         };
-        new Thread(task).start();
+        final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
+        if ( ctx != null ) {
+            ctx.notifier.execute(task);
+        } else {
+            // if we don't have a job status notifier, we create the thread directly
+            // (this should never happen but is a safe fallback)
+            new Thread(task).start();
+        }
     }
 
     /**
@@ -224,5 +231,10 @@ public abstract class EventUtil {
          * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
          */
         boolean finishedJob(Event job, String eventNodePath, boolean reschedule);
+
+        /**
+         * Execute the job in the background
+         */
+        void execute(Runnable job);
     }
 }
