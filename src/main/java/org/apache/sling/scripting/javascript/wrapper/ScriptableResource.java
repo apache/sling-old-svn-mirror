@@ -56,7 +56,7 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
-    
+
     @Override
     public String getClassName() {
         return CLASSNAME;
@@ -98,7 +98,7 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
     public Object jsGet_meta() {
         return jsFunction_getMetadata();
     }
-    
+
     // TODO a wrapper would be more convenient than an Iterator,
     // but in my tests ScriptableItemMap didn't seem to allow
     // proper wrapping of its elements: javascript constructor
@@ -106,11 +106,11 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
     public Iterator<Resource> jsGet_children() {
         return resource.getResourceResolver().listChildren(resource);
     }
-    
+
     public Object jsFunction_getResourceResolver() {
         return toJS(resource.getResourceResolver());
     }
-    
+
     public Object jsGet_resourceResolver() {
         return jsFunction_getResourceResolver();
     }
@@ -123,15 +123,15 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         while (arg instanceof Wrapper) {
             arg = ((Wrapper) arg).unwrap();
         }
-        
+
         // try to get the Class object for the argument
         Class<?> adapter = null;
         if (arg instanceof Class) {
-            
+
             adapter = (Class<?>) arg;
-            
+
         } else if (arg != null && arg != Undefined.instance) {
-            
+
             // try loading the class from the String
             String className = ScriptRuntime.toString(arg);
             try {
@@ -143,17 +143,18 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
             } catch (Exception e) {
                 // TODO: log exception
             }
-            
+
         }
-        
+
         if (adapter != null) {
             ScriptableResource sr = (ScriptableResource) thisObj;
             return sr.toJS(sr.resource.adaptTo(adapter));
         }
-        
+
         return Undefined.instance;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
         return resource.getPath();
@@ -171,12 +172,12 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
     }
 
     //---------- Internal helper ----------------------------------------------
-    
+
     private Object toJS(Object javaObject) {
         if (javaObject == null) {
             return Undefined.instance;
         }
-        
+
         return ScriptRuntime.toObject(this, javaObject);
     }
 }

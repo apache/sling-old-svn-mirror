@@ -31,7 +31,7 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
 
     public static final String CLASSNAME = "Property";
     public static final Class<?> [] WRAPPED_CLASSES = { Property.class };
-    
+
     private Property property;
 
     public ScriptableProperty() {
@@ -56,7 +56,7 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
-    
+
     public Object jsGet_value() {
         try {
             return property.getValue();
@@ -209,6 +209,7 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
         return property.isModified();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
         return toString();
@@ -222,7 +223,7 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
             return property.toString();
         }
     }
-    
+
     //---------- Wrapper interface --------------------------------------------
 
     public Object unwrap() {
