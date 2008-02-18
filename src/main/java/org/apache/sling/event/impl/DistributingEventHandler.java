@@ -64,7 +64,7 @@ public class DistributingEventHandler
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#activate(org.osgi.service.component.ComponentContext)
      */
     protected void activate(ComponentContext context)
-    throws RepositoryException {
+    throws Exception {
         final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
         if ( i != null ) {
             this.cleanupPeriod = i;
