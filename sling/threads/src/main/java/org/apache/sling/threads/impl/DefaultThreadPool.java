@@ -59,31 +59,12 @@ public class DefaultThreadPool
      * @param name - The name of the thread pool. If null {@link DefaultThreadPoolManager#DEFAULT_THREADPOOL_NAME}
      *               is used
      */
-    public DefaultThreadPool(final String name) {
-        this(DefaultThreadPoolManager.DEFAULT_THREADPOOL_NAME,
-                DefaultThreadPoolManager.DEFAULT_MIN_POOL_SIZE,
-                DefaultThreadPoolManager.DEFAULT_MAX_POOL_SIZE,
-                DefaultThreadPoolManager.DEFAULT_QUEUE_SIZE,
-                DefaultThreadPoolManager.DEFAULT_KEEP_ALIVE_TIME,
-                DefaultThreadPoolManager.DEFAULT_BLOCK_POLICY,
-                DefaultThreadPoolManager.DEFAULT_SHUTDOWN_GRACEFUL,
-                DefaultThreadPoolManager.DEFAULT_SHUTDOWN_WAIT_TIME,
-             null,
-             DefaultThreadPoolManager.DEFAULT_THREAD_PRIORITY,
-             DefaultThreadPoolManager.DEFAULT_DAEMON_MODE);
-    }
-
-    /**
-     * Create a new thread pool.
-     * @param name - The name of the thread pool. If null {@link DefaultThreadPoolManager#DEFAULT_THREADPOOL_NAME}
-     *               is used
-     */
     public DefaultThreadPool(final String name,
                              int   minPoolSize,
                              int   maxPoolSize,
                              final int queueSize,
                              long  keepAliveTime,
-                             String blockPolicy,
+                             ThreadPoolManager.ThreadPoolPolicy blockPolicy,
                              final boolean shutdownGraceful,
                              final int shutdownWaitTimeMs,
                              final ThreadFactory factory,
@@ -156,26 +137,20 @@ public class DefaultThreadPool
         if ( blockPolicy == null ) {
             blockPolicy = DefaultThreadPoolManager.DEFAULT_BLOCK_POLICY;
         }
-        final RejectedExecutionHandler handler;
-        if (DefaultThreadPoolManager.POLICY_ABORT.equalsIgnoreCase(blockPolicy)) {
-            handler = new ThreadPoolExecutor.AbortPolicy();
-        } else if (DefaultThreadPoolManager.POLICY_DISCARD.equalsIgnoreCase(blockPolicy)) {
-            handler = new ThreadPoolExecutor.AbortPolicy();
-        } else if (DefaultThreadPoolManager.POLICY_DISCARD_OLDEST.equalsIgnoreCase(blockPolicy)) {
-            handler = new ThreadPoolExecutor.AbortPolicy();
-        } else if (DefaultThreadPoolManager.POLICY_RUN.equalsIgnoreCase(blockPolicy)) {
-            handler = new ThreadPoolExecutor.AbortPolicy();
-        } else {
-            final StringBuffer msg = new StringBuffer();
-            msg.append("WARNING: Unknown block-policy configuration \"")
-                .append(blockPolicy);
-            msg.append("\". Should be one of \"").append(DefaultThreadPoolManager.POLICY_ABORT);
-            msg.append("\",\"").append(DefaultThreadPoolManager.POLICY_DISCARD);
-            msg.append("\",\"").append(DefaultThreadPoolManager.POLICY_DISCARD_OLDEST);
-            msg.append("\",\"").append(DefaultThreadPoolManager.POLICY_RUN);
-            msg.append("\". Will use \"").append(DefaultThreadPoolManager.DEFAULT_BLOCK_POLICY).append("\"");
-            logger.warn(msg.toString());
-            handler = new ThreadPoolExecutor.CallerRunsPolicy();
+        RejectedExecutionHandler handler = null;
+        switch (blockPolicy) {
+            case ABORT :
+                handler = new ThreadPoolExecutor.AbortPolicy();
+                break;
+            case DISCARD :
+                handler = new ThreadPoolExecutor.AbortPolicy();
+                break;
+            case DISCARDOLDEST :
+                handler = new ThreadPoolExecutor.AbortPolicy();
+                break;
+            case RUN :
+                handler = new ThreadPoolExecutor.AbortPolicy();
+                break;
         }
         this.shutdownGraceful = shutdownGraceful;
         this.shutdownWaitTimeMs = shutdownWaitTimeMs;

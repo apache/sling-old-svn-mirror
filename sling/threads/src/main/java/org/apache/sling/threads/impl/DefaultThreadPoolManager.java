@@ -18,6 +18,7 @@ package org.apache.sling.threads.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.sling.threads.ThreadPool;
 import org.apache.sling.threads.ThreadPoolManager;
@@ -60,24 +61,6 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
     /** The default shutdown waittime time */
     protected final static int DEFAULT_SHUTDOWN_WAIT_TIME = -1;
 
-    /** The default shutdown waittime time */
-    protected final static String DEFAULT_THREADPOOL_NAME = "default";
-
-    /** ThreadPool block policy ABORT */
-    protected final static String POLICY_ABORT = "ABORT";
-
-    /** ThreadPool block policy DISCARD */
-    protected final static String POLICY_DISCARD = "DISCARD";
-
-    /** ThreadPool block policy DISCARD-OLDEST */
-    protected final static String POLICY_DISCARD_OLDEST = "DISCARDOLDEST";
-
-    /** ThreadPool block policy RUN */
-    protected final static String POLICY_RUN = "RUN";
-
-    /** The default shutdown waittime time */
-    protected final static String DEFAULT_BLOCK_POLICY = POLICY_RUN;
-
     /** By default we use the logger for this class. */
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -101,7 +84,9 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
                     null,
                     DEFAULT_THREAD_PRIORITY,
                     DEFAULT_DAEMON_MODE);
-        this.pools.put(defaultPool.getName(), defaultPool);
+        synchronized ( this.pools ) {
+            this.pools.put(defaultPool.getName(), defaultPool);
+        }
         this.logger.info("Thread pool manager startet with default pool.");
     }
 
@@ -112,14 +97,16 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
         this.logger.info("Stopping thread pool manager.");
         this.logger.debug("Disposing all thread pools");
 
-        for (ThreadPool pool : this.pools.values()) {
-            this.logger.debug("Shutting down thread pool {}", pool.getName());
+        synchronized ( this.pools ) {
+            for (ThreadPool pool : this.pools.values()) {
+                this.logger.debug("Shutting down thread pool {}", pool.getName());
 
-            pool.shutdown();
+                pool.shutdown();
 
-            this.logger.debug("Thread pool " + pool.getName() + " is shut down.");
+                this.logger.debug("Thread pool " + pool.getName() + " is shut down.");
+            }
+            this.pools.clear();
         }
-        this.pools.clear();
         this.logger.info("Thread pool manager stopped.");
     }
 
@@ -152,4 +139,44 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
             return pool;
         }
     }
+
+    /**
+     * @see org.apache.sling.threads.ThreadPoolManager#create(java.lang.String, int, int, int, long, org.apache.sling.threads.ThreadPoolManager.ThreadPoolPolicy, boolean, int, java.util.concurrent.ThreadFactory, int, boolean)
+     */
+    public ThreadPool create(String name,
+                             int minPoolSize,
+                             int maxPoolSize,
+                             int queueSize,
+                             long keepAliveTime,
+                             ThreadPoolPolicy blockPolicy,
+                             boolean shutdownGraceful,
+                             int shutdownWaitTimeMs,
+                             ThreadFactory factory,
+                             int priority,
+                             boolean isDaemon) {
+        if ( name == null ) {
+            throw new IllegalArgumentException("Name must not be null.");
+        }
+        synchronized ( this.pools ) {
+            ThreadPool pool = this.pools.get(name);
+            if ( pool != null ) {
+                // pool already exists
+                return null;
+            }
+            pool = new DefaultThreadPool(name,
+                                         minPoolSize,
+                                         maxPoolSize,
+                                         queueSize,
+                                         keepAliveTime,
+                                         blockPolicy,
+                                         shutdownGraceful,
+                                         shutdownWaitTimeMs,
+                                         factory,
+                                         priority,
+                                         isDaemon);
+            this.pools.put(name, pool);
+            return pool;
+        }
+    }
+
 }
