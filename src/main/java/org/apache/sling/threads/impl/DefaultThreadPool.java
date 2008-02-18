@@ -17,6 +17,7 @@
 package org.apache.sling.threads.impl;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
@@ -80,15 +81,14 @@ public class DefaultThreadPool
         }
 
         // factory
-        final ThreadFactory threadFactory;
+        final ThreadFactory delegateThreadFactory;
         if (factory == null) {
-            logger.warn("No ThreadFactory is configured. Will use a "
-                + DefaultThreadFactory.class.getName());
-            threadFactory = new DefaultThreadFactory();
+            logger.warn("No ThreadFactory is configured. Will use JVM default thread factory."
+                + ExtendedThreadFactory.class.getName());
+            delegateThreadFactory = Executors.defaultThreadFactory();
         } else {
-            threadFactory = factory;
+            delegateThreadFactory = factory;
         }
-
         // Min pool size
         // make sure we have enough threads for the default thread pool as we
         // need one for ourself
@@ -102,19 +102,8 @@ public class DefaultThreadPool
         // Max pool size
         maxPoolSize = (maxPoolSize < 0) ? Integer.MAX_VALUE : maxPoolSize;
 
-        // Set priority and daemon if the factory is an extended factory
-        if ( threadFactory instanceof ExtendedThreadFactory ) {
-            final ExtendedThreadFactory extTF = (ExtendedThreadFactory)threadFactory;
-            extTF.setPriority(priority);
-            extTF.setDaemon(isDaemon);
-        } else {
-            if ( priority != Thread.NORM_PRIORITY ) {
-                this.logger.warn("ThreadFactory " + threadFactory + " does not support setting the priority or daemon setting.");
-            }
-            if ( isDaemon != DefaultThreadPoolManager.DEFAULT_DAEMON_MODE ) {
-                this.logger.warn("ThreadFactory " + threadFactory + " does not support setting the daemon mode.");
-            }
-        }
+        // Set priority and daemon flag
+        final ExtendedThreadFactory threadFactory = new ExtendedThreadFactory(delegateThreadFactory, priority, isDaemon);
 
         // Keep alive time
         if (keepAliveTime < 0) {

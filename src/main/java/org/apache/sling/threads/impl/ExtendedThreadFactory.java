@@ -18,50 +18,54 @@ package org.apache.sling.threads.impl;
 
 import java.util.concurrent.ThreadFactory;
 
+
 /**
- * This is an extension to the {@link ThreadFactory}.
+ * This class is responsible to create new Thread instances.
+ * It's a very basic implementation.
  *
  * @version $Id$
  */
-public interface ExtendedThreadFactory
-    extends ThreadFactory {
+public final class ExtendedThreadFactory implements ThreadFactory {
+
+    /** The daemon mode */
+    private final boolean isDaemon;
+
+    /** The priority of newly created Threads */
+    private final int priority;
+
+    /** The real factory. */
+    private final ThreadFactory factory;
 
     /**
-     * Set the daemon mode of created <code>Thread</code>s should have
-     *
-     * @param isDaemon Whether new {@link Thread}s should run as daemons.
-     */
-    void setDaemon( boolean isDaemon );
-
-    /**
-     * Get the daemon mode created <code>Thread</code>s will have
-     *
-     * @return Whether new {@link Thread}s should run as daemons.
-     */
-    boolean isDaemon();
-
-    /**
-     * Set the priority newly created <code>Thread</code>s should have
+     * Create a new wrapper for a thread factory handling the
      *
      * @param priority One of {@link Thread#MIN_PRIORITY}, {@link
      *        Thread#NORM_PRIORITY}, {@link Thread#MAX_PRIORITY}
+     * @param isDaemon Whether new {@link Thread}s should run as daemons.
      */
-    void setPriority( int priority );
+    public ExtendedThreadFactory(final ThreadFactory factory,
+                                final int priority,
+                                final boolean isDaemon) {
+        this.isDaemon = isDaemon;
+        if( ( Thread.MAX_PRIORITY == priority ) ||
+                ( Thread.MIN_PRIORITY == priority ) ||
+                ( Thread.NORM_PRIORITY == priority ) ) {
+                this.priority = priority;
+            } else {
+                throw new IllegalStateException("Unknown priority " + priority);
+            }
+        this.factory = factory;
+    }
 
     /**
-     * Get the priority newly created <code>Thread</code>s will have
-     *
-     * @return One of {@link Thread#MIN_PRIORITY}, {@link
-     *         Thread#NORM_PRIORITY}, {@link Thread#MAX_PRIORITY}
+     * Invoke the thread factory and set the daemon flag and priority.
+     * @see java.util.concurrent.ThreadFactory#newThread(java.lang.Runnable)
      */
-    int getPriority();
+    public Thread newThread( final Runnable command ) {
+        final Thread thread = this.factory.newThread(command);
+        thread.setPriority( this.priority );
+        thread.setDaemon( this.isDaemon );
 
-    /**
-     * Create a new Thread for a {@link Runnable} command
-     *
-     * @param command The <code>Runnable</code>
-     *
-     * @return new <code>Thread</code>
-     */
-    Thread newThread( Runnable command );
+        return thread;
+    }
 }
