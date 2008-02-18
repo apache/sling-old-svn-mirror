@@ -247,7 +247,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         }
 
         // setting the Sling request and response
-        RequestData requestData = new RequestData(this,
+        final RequestData requestData = new RequestData(this,
             getResourceResolverFactory().getResourceResolver(session),
             servletRequest, servletResponse);
         SlingHttpServletRequest request = requestData.getSlingRequest();
@@ -283,8 +283,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
             // if we have request data and a non-null active servlet name
             // we assume, that this is the name of the causing servlet
-            if (requestData != null
-                && requestData.getActiveServletName() != null) {
+            if (requestData.getActiveServletName() != null) {
                 request.setAttribute(ERROR_SERVLET_NAME,
                     requestData.getActiveServletName());
             }
@@ -307,8 +306,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
             // if we have request data and a non-null active servlet name
             // we assume, that this is the name of the causing servlet
-            if (requestData != null
-                && requestData.getActiveServletName() != null) {
+            if (requestData.getActiveServletName() != null) {
                 request.setAttribute(ERROR_SERVLET_NAME,
                     requestData.getActiveServletName());
             }
@@ -317,9 +315,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
             getErrorHandler().handleError(t, request, response);
 
         } finally {
-            if (requestData != null) {
-                requestData.dispose();
-            }
+            requestData.dispose();
 
             session.logout();
         }

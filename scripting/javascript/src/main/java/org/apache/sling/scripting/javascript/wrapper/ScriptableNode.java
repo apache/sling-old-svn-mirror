@@ -54,7 +54,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private Node node;
-    
+
     public ScriptableNode() {
     }
 
@@ -74,7 +74,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
-    
+
     public Object jsFunction_addNode(String path, String primaryType) throws RepositoryException {
         Node n = null;
         if(primaryType == null || "undefined".equals(primaryType)) {
@@ -82,11 +82,11 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         } else {
             n = node.addNode(path, primaryType);
         }
-        
+
         final Object result = ScriptRuntime.toObject(this, n);
         return result;
     }
-    
+
     public Object jsFunction_getNode(String path) throws RepositoryException {
         return ScriptRuntime.toObject(this, node.getNode(path));
     }
@@ -252,7 +252,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     public boolean jsFunction_getModified() {
         return node.isModified();
     }
-    
+
     /**
      * Gets the value of a (Javascript) property or child node. If there is a single single-value
      * JCR property of this node, return its string value. If there are multiple properties
@@ -266,13 +266,13 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         if(fromSuperclass != Scriptable.NOT_FOUND) {
             return fromSuperclass;
         }
-        
+
         if(node == null) {
             return Undefined.instance;
         }
 
         final List<Scriptable> items = new ArrayList<Scriptable>();
-        
+
         // Add all matching nodes to result
         try {
             NodeIterator it = node.getNodes(name);
@@ -356,6 +356,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         return ids.toArray();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
         try {
@@ -383,7 +384,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
             return node.toString();
         }
     }
-    
+
     // ---------- Wrapper interface --------------------------------------------
 
     // returns the wrapped node
