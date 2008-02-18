@@ -77,6 +77,7 @@
                 
         <!-- The JCR sub project -->
         <module>jcr/api</module>
+        <module>jcr/base</module>
         <module>jcr/resource</module>
         <module>jcr/classloader</module>
         <module>jcr/ocm</module>
