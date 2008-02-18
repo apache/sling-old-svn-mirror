@@ -24,7 +24,7 @@ import org.apache.sling.api.adapter.Adaptable;
 /**
  * The <code>SlingAdaptable</code> class is an (abstract) default
  * implementation of the <code>Adaptable</code> interface. It just uses the
- * default {@link AdapterManager} implemented in this bundle to adapt the itself
+ * default {@link org.apache.sling.api.adapter.AdapterManager} implemented in this bundle to adapt the itself
  * to the requested type.
  * <p>
  * Extensions of this class may overwrite the {@link #adaptTo(Class)} method
