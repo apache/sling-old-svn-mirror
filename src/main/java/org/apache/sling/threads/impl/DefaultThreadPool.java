@@ -26,6 +26,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.threads.ThreadPool;
+import org.apache.sling.threads.ThreadPoolConfig;
 import org.apache.sling.threads.ThreadPoolManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,11 +50,7 @@ public class DefaultThreadPool
     /** The executor. */
     protected ThreadPoolExecutor executor;
 
-    /** Should we wait for running jobs to terminate on shutdown ? */
-    protected final boolean shutdownGraceful;
-
-    /** How long to wait for running jobs to terminate on disposition */
-    protected final int shutdownWaitTimeMs;
+    protected final ThreadPoolConfig configuration;
 
     /**
      * Create a new thread pool.
@@ -61,16 +58,7 @@ public class DefaultThreadPool
      *               is used
      */
     public DefaultThreadPool(final String name,
-                             int   minPoolSize,
-                             int   maxPoolSize,
-                             final int queueSize,
-                             long  keepAliveTime,
-                             ThreadPoolManager.ThreadPoolPolicy blockPolicy,
-                             final boolean shutdownGraceful,
-                             final int shutdownWaitTimeMs,
-                             final ThreadFactory factory,
-                             final int   priority,
-                             final boolean isDaemon) {
+                             ThreadPoolConfig origConfig) {
         this.logger.info("ThreadPool [{}] initializing ...", name);
 
         // name
@@ -80,42 +68,41 @@ public class DefaultThreadPool
             this.name = DefaultThreadPoolManager.DEFAULT_THREADPOOL_NAME;
         }
 
+        this.configuration = new ThreadPoolConfig(origConfig);
+
         // factory
         final ThreadFactory delegateThreadFactory;
-        if (factory == null) {
+        if (this.configuration.getFactory() == null) {
             logger.warn("No ThreadFactory is configured. Will use JVM default thread factory."
                 + ExtendedThreadFactory.class.getName());
             delegateThreadFactory = Executors.defaultThreadFactory();
         } else {
-            delegateThreadFactory = factory;
+            delegateThreadFactory = this.configuration.getFactory();
         }
         // Min pool size
-        // make sure we have enough threads for the default thread pool as we
-        // need one for ourself
-        if (DefaultThreadPoolManager.DEFAULT_THREADPOOL_NAME.equals(name)
-            && ((minPoolSize > 0) && (minPoolSize < DefaultThreadPoolManager.DEFAULT_MIN_POOL_SIZE))) {
-            minPoolSize = DefaultThreadPoolManager.DEFAULT_MIN_POOL_SIZE;
-        } else if (minPoolSize < 1) {
-            minPoolSize = 1;
+        if (this.configuration.getMinPoolSize() < 1) {
+            this.configuration.setMinPoolSize(1);
             this.logger.warn("min-pool-size < 1 for pool \"" + name + "\". Set to 1");
         }
         // Max pool size
-        maxPoolSize = (maxPoolSize < 0) ? Integer.MAX_VALUE : maxPoolSize;
+        if ( this.configuration.getMaxPoolSize() < 0 ) {
+            this.configuration.setMaxPoolSize(Integer.MAX_VALUE);
+        }
 
         // Set priority and daemon flag
-        final ExtendedThreadFactory threadFactory = new ExtendedThreadFactory(delegateThreadFactory, priority, isDaemon);
+        final ExtendedThreadFactory threadFactory = new ExtendedThreadFactory(delegateThreadFactory, this.configuration.getPriority(), this.configuration.isDaemon());
 
         // Keep alive time
-        if (keepAliveTime < 0) {
-            keepAliveTime = 1000;
+        if (this.configuration.getKeepAliveTime() < 0) {
+            this.configuration.setKeepAliveTime(1000);
             this.logger.warn("keep-alive-time-ms < 0 for pool \"" + name + "\". Set to 1000");
         }
 
         // Queue
         final BlockingQueue<Runnable> queue;
-        if (queueSize != 0) {
-            if (queueSize > 0) {
-                queue = new java.util.concurrent.ArrayBlockingQueue<Runnable>(queueSize);
+        if (this.configuration.getQueueSize() != 0) {
+            if (this.configuration.getQueueSize() > 0) {
+                queue = new java.util.concurrent.ArrayBlockingQueue<Runnable>(this.configuration.getQueueSize());
             } else {
                 queue = new LinkedBlockingQueue<Runnable>();
             }
@@ -123,11 +110,8 @@ public class DefaultThreadPool
             queue = new SynchronousQueue<Runnable>();
         }
 
-        if ( blockPolicy == null ) {
-            blockPolicy = DefaultThreadPoolManager.DEFAULT_BLOCK_POLICY;
-        }
         RejectedExecutionHandler handler = null;
-        switch (blockPolicy) {
+        switch (this.configuration.getBlockPolicy()) {
             case ABORT :
                 handler = new ThreadPoolExecutor.AbortPolicy();
                 break;
@@ -141,15 +125,14 @@ public class DefaultThreadPool
                 handler = new ThreadPoolExecutor.AbortPolicy();
                 break;
         }
-        this.shutdownGraceful = shutdownGraceful;
-        this.shutdownWaitTimeMs = shutdownWaitTimeMs;
-        this.executor = new ThreadPoolExecutor(minPoolSize,
-                maxPoolSize,
-                keepAliveTime,
+        this.executor = new ThreadPoolExecutor(this.configuration.getMinPoolSize(),
+                this.configuration.getMaxPoolSize(),
+                this.configuration.getKeepAliveTime(),
                 TimeUnit.MILLISECONDS,
                 queue,
                 threadFactory,
                 handler);
+        this.configuration.makeReadOnly();
         this.logger.info("ThreadPool [{}] initialized.", name);
     }
 
@@ -160,11 +143,12 @@ public class DefaultThreadPool
 	    return name;
     }
 
+
     /**
-     * @see org.apache.sling.threads.ThreadPool#getMaxPoolSize()
+     * @see org.apache.sling.threads.ThreadPool#getConfiguration()
      */
-    public int getMaxPoolSize() {
-        return this.executor.getMaximumPoolSize();
+    public ThreadPoolConfig getConfiguration() {
+        return this.configuration;
     }
 
     /**
@@ -186,17 +170,17 @@ public class DefaultThreadPool
      */
     public void shutdown() {
         if ( this.executor != null ) {
-            if (shutdownGraceful) {
+            if (this.configuration.isShutdownGraceful()) {
                 this.executor.shutdown();
             } else {
                 this.executor.shutdownNow();
             }
 
             try {
-                if (this.shutdownWaitTimeMs > 0) {
-                    if (!this.executor.awaitTermination(this.shutdownWaitTimeMs, TimeUnit.MILLISECONDS)) {
+                if (this.configuration.getShutdownWaitTimeMs() > 0) {
+                    if (!this.executor.awaitTermination(this.configuration.getShutdownWaitTimeMs(), TimeUnit.MILLISECONDS)) {
                         logger.warn("running commands have not terminated within "
-                            + this.shutdownWaitTimeMs
+                            + this.configuration.getShutdownWaitTimeMs()
                             + "ms. Will shut them down by interruption");
                         this.executor.shutdownNow();
                     }

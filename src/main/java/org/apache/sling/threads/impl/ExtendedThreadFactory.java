@@ -18,12 +18,14 @@ package org.apache.sling.threads.impl;
 
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.sling.threads.ThreadPoolConfig;
+
 
 /**
  * This class is responsible to create new Thread instances.
  * It's a very basic implementation.
  *
- * @version $Id$
+ * @version $Id: DefaultThreadFactory.java 628678 2008-02-18 10:40:12Z cziegeler $
  */
 public final class ExtendedThreadFactory implements ThreadFactory {
 
@@ -39,21 +41,27 @@ public final class ExtendedThreadFactory implements ThreadFactory {
     /**
      * Create a new wrapper for a thread factory handling the
      *
-     * @param priority One of {@link Thread#MIN_PRIORITY}, {@link
-     *        Thread#NORM_PRIORITY}, {@link Thread#MAX_PRIORITY}
+     * @param priority A non null value.
      * @param isDaemon Whether new {@link Thread}s should run as daemons.
      */
     public ExtendedThreadFactory(final ThreadFactory factory,
-                                final int priority,
+                                final ThreadPoolConfig.ThreadPriority priority,
                                 final boolean isDaemon) {
         this.isDaemon = isDaemon;
-        if( ( Thread.MAX_PRIORITY == priority ) ||
-                ( Thread.MIN_PRIORITY == priority ) ||
-                ( Thread.NORM_PRIORITY == priority ) ) {
-                this.priority = priority;
-            } else {
-                throw new IllegalStateException("Unknown priority " + priority);
-            }
+        if ( priority == null ) {
+            throw new IllegalStateException("Prioriy must not be null.");
+        }
+        switch ( priority ) {
+            case NORM : this.priority = Thread.NORM_PRIORITY;
+                        break;
+            case MIN  : this.priority = Thread.MIN_PRIORITY;
+                        break;
+            case MAX  : this.priority = Thread.MAX_PRIORITY;
+                        break;
+            default: // this can never happen
+                        this.priority = Thread.NORM_PRIORITY;
+                        break;
+        }
         this.factory = factory;
     }
 
