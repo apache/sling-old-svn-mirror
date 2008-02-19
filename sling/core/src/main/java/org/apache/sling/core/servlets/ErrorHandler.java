@@ -61,7 +61,6 @@ public interface ErrorHandler {
      * @param request The request object providing more information on the
      *            request.
      * @param response The response object used to send the status and message.
-     * @throws ServletException May be thrown if any processing error occurrs.
      * @throws IOException May be thrown if an error occurrs sending the
      *             response.
      */

@@ -51,9 +51,8 @@ import org.apache.sling.api.request.RequestProgressTracker;
  * <p>
  * As the request being processed, certain steps may be tracked by calling
  * either of the <code>log</code> methods. A tracking entry consists of a time
- * stamp managed by this class, a tracking message noting the actual step being
- * tracked and an optional tracking tag. The value of the tracking tag depends
- * on the application and defaults to {@link #TAG_CHECK} if not specified.
+ * stamp managed by this class, and a tracking message noting the actual step being
+ * tracked.
  * <p>
  * <b>Timing Processing Steps</b>
  * </p>
@@ -61,16 +60,18 @@ import org.apache.sling.api.request.RequestProgressTracker;
  * required for processing should be recorded. Instances of this class maintain
  * a map of named timers. Each timer is started (initialized or reset) by
  * calling the {@link #startTimer(String)} method. This method just records the
- * starting time of the named timer and adds a tracking entry with the timer
- * name as the message and the tracking tag {@link #TAG_START}.
+ * starting time of the named timer.
  * <p>
  * To record the number of milliseconds ellapsed since a timer has been started,
- * the {@link #checkTimer(String)} method may be called. This method logs s
- * tracking entry with the tracking tag {@link #TAG_CHECK} and a message
+ * the {@link #logTimer(String)} method may be called. This method logs the
+ * tracking entry with message
  * consisting of the name of the timer and the number of milliseconds ellapsed
  * since the timer was last {@link #startTimer(String) started}. The
- * {@link #checkTimer(String)} method may be called multiple times to record
+ * {@link #logTimer(String)} method may be called multiple times to record
  * several timed steps.
+ * <p>
+ * Additional information can be logged using the {@link #logTimer(String, String, Object...)}
+ * method.
  * <p>
  * Calling the {@link #startTimer(String)} method with the name of timer which
  * already exists, resets the start time of the named timer to the current
@@ -78,15 +79,13 @@ import org.apache.sling.api.request.RequestProgressTracker;
  * <p>
  * <b>Dumping Tracking Entries</b>
  * <p>
- * The {@link #dumpText(PrintWriter)} methods adds a tracking entry with tag
- * {@link #TAG_CHECK} and writes all tracking entries to the given
+ * The {@link #dump(PrintWriter)} methods writes all tracking entries to the given
  * <code>PrintWriter</code>. Each entry is written on a single line
  * consisting of the following fields:
  * <ol>
  * <li>The number of milliseconds since the last {@link #reset()} (or creation)
  * of this timer.
  * <li>The absolute time of the timer in parenthesis.
- * <li>The timer tag enclosed in stars (*)
  * <li>The entry message
  * </ol>
  */
@@ -172,7 +171,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         }
     }
 
-    /** Creates an entry with the given message and entry tag {@link #TAG_CHECK} */
+    /** Creates an entry with the given message. */
     public void log(String message) {
         entries.add(new TrackingEntry(message));
     }
@@ -205,7 +204,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
     }
 
     /**
-     * Logs an entry with entry tag {@link #TAG_CHECK} and the message set to
+     * Logs an entry with the message set to
      * the name of the timer and the number of milliseconds ellapsed since the
      * timer start.
      */
