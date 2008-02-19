@@ -21,6 +21,9 @@ import java.util.Map;
 
 import org.apache.sling.api.services.ServiceLocator;
 
+/**
+ * The context for a {@link Job}.
+ */
 public interface JobContext {
 
     /**
@@ -29,10 +32,15 @@ public interface JobContext {
      */
     String getName();
 
+    /**
+     * Get the configuration provided when the job was scheduled.
+     * @return A non-null map of values.
+     */
     Map<String, Serializable> getConfiguration();
 
     /**
      * Get the service locator.
+     * The service locator can be used to retrieve additional services.
      * @return The service locator.
      */
     ServiceLocator getServiceLocator();
