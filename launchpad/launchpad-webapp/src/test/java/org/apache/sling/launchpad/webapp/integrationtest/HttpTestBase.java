@@ -138,7 +138,7 @@ public class HttpTestBase extends TestCase {
 
         // Try creating a node on server, every 500msec, until ok, with timeout
         final List<String> exceptionMessages = new LinkedList<String>();
-        final long maxMsecToWait = 10000L;
+        final long maxMsecToWait = 60 * 1000L;
         final long startupTime = System.currentTimeMillis();
 
         while(!slingStartupOk && (System.currentTimeMillis() < startupTime + maxMsecToWait) ) {
