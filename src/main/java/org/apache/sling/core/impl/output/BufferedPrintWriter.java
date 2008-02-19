@@ -29,10 +29,11 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>BufferedPrintWriter</code> implements buffering for the
  * <code>PrintWriter</code> returned by the
- * {@link DeliveryHttpServletResponse#getWriter} method.
+ * {@link org.apache.sling.api.SlingHttpServletResponse#getWriter()} method.
  * <p>
  * We need this additional buffering class for the
- * {@link DeliveryHttpServletResponseImpl} class because we wrap the original
+ * {@link org.apache.sling.api.SlingHttpServletResponse#getWriter()} class because
+ * we wrap the original
  * <code>PrintWriter</code> retrieved from the servlet container with optional
  * caching and link checking writers.
  * <p>
@@ -92,10 +93,7 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
      * Creates an instance wrapping the <code>PrintWriter</code> and providing
      * an initial buffer size.
      * <p>
-     * The <code>servletWriter</code> is to initially write data to. This
-     * destination may be replaced with the {@link #setDestination}. It is
-     * intended that any <code>Writer</code> set in the {@link #setDestination}
-     * method be ultimately writing to this same <code>servletWriter</code>.
+     * The <code>servletWriter</code> is to initially write data to.
      * <p>
      * The other use of the <code>servletWriter</code> is to check for any
      * errors occurred by forwarding the call to the {@link #checkError} to this

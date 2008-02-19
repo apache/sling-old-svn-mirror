@@ -316,7 +316,6 @@ public class RequestData implements BufferProvider {
 
     /**
      * @param request
-     * @return
      * @throws IllegalArgumentException If the <code>request</code> is not a
      *             <code>SlingHttpServletRequest</code> and not a
      *             <code>ServletRequestWrapper</code> wrapping a
@@ -328,7 +327,6 @@ public class RequestData implements BufferProvider {
 
     /**
      * @param request
-     * @return
      * @throws IllegalArgumentException If <code>request</code> is not a
      *             <code>SlingHttpServletRequestImpl</code> and not
      *             <code>SlingHttpServletRequestWrapper</code> wrapping a
@@ -340,7 +338,6 @@ public class RequestData implements BufferProvider {
 
     /**
      * @param request
-     * @return
      * @throws IllegalArgumentException if <code>request</code> is not a
      *             <code>HttpServletRequest</code> of if <code>request</code>
      *             is not backed by <code>SlingHttpServletRequestImpl</code>.
@@ -374,7 +371,6 @@ public class RequestData implements BufferProvider {
 
     /**
      * @param response
-     * @return
      * @throws IllegalArgumentException if <code>response</code> is not a
      *             <code>HttpServletResponse</code> of if
      *             <code>response</code> is not backed by
