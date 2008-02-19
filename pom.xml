@@ -49,6 +49,12 @@
       Jetty default port (override with -D)
     -->
     <http.port>8888</http.port>
+    
+    <!-- path suffix for WebDAV access to the repository -->
+    <webdav.workspace.path>dav/default</webdav.workspace.path>
+    
+    <!-- hostname for integration tests -->
+    <test.host>localhost</test.host>
 
     <!--
       Disable Jetty webapp rescan (override with -D) 
@@ -92,9 +98,8 @@
 
           <connectors>
             <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
-              <port>8888</port>
-              <maxIdleTime>60000</maxIdleTime>
               <port>${http.port}</port>
+              <maxIdleTime>60000</maxIdleTime>
             </connector>
           </connectors>
 
@@ -193,11 +198,11 @@
             -->
             <property>
               <name>launchpad.http.server.url</name>
-              <value>http://localhost:8888</value>
+              <value>http://${test.host}:${http.port}</value>
             </property>
             <property>
               <name>launchpad.webdav.server.url</name>
-              <value>http://localhost:8888/dav/default</value>
+              <value>http://${test.host}:${http.port}/${webdav.workspace.path}</value>
             </property>
           </systemProperties>
         </configuration>
@@ -246,11 +251,11 @@
                     -->
                     <property>
                       <name>launchpad.http.server.url</name>
-                      <value>http://localhost:8888/${project.build.finalName}</value>
+                      <value>http://${test.host}:${http.port}/${project.build.finalName}</value>
                     </property>
                     <property>
                       <name>launchpad.webdav.server.url</name>
-                      <value>http://localhost:8888/${project.build.finalName}/dav/default</value>
+                      <value>http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}</value>
                     </property>
                   </systemProperties>
                 </configuration>
@@ -288,7 +293,7 @@
               </container>
               <configuration>
               <properties>
-                <cargo.servlet.port>8888</cargo.servlet.port>
+                <cargo.servlet.port>${http.port}</cargo.servlet.port>
                 <!-- 
                 <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
                  -->
@@ -440,6 +445,11 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.jcr.api</artifactId>
+      <version>2.0.0-incubator-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.base</artifactId>
       <version>2.0.0-incubator-SNAPSHOT</version>
     </dependency>
     <dependency>
