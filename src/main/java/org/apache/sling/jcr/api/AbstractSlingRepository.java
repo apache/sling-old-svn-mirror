@@ -52,7 +52,7 @@ import org.osgi.service.log.LogService;
  * respective component and metatype definitions by the maven-sling-plugin:
  *
  * <pre>
- *  scr.property value=&quot;default&quot; name=&quot;defaultWorkspace&quot;
+ *  scr.property value=&quot;&quot; name=&quot;defaultWorkspace&quot;
  *  scr.property value=&quot;anonymous&quot; name=&quot;anonymous.name&quot;
  *  scr.property value=&quot;anonymous&quot; name=&quot;anonymous.password&quot;
  *  scr.property value=&quot;admin&quot; name=&quot;admin.name&quot;
@@ -167,8 +167,13 @@ public abstract class AbstractSlingRepository
 
     /**
      * @see org.apache.sling.jcr.api.SlingRepository#getDefaultWorkspace()
+     * Declared final to make sure the SLING-256 rule is enforced. 
      */
-    public String getDefaultWorkspace() {
+    public final String getDefaultWorkspace() {
+        if(defaultWorkspace == null || defaultWorkspace.trim().length() == 0) {
+            // SLING-256
+            return null;
+        }
         return this.defaultWorkspace;
     }
 
@@ -236,10 +241,13 @@ public abstract class AbstractSlingRepository
         }
 
         try {
+            getLog().log(LogService.LOG_DEBUG, 
+                    "Logging in to workspace '" + workspace + "'");
             return this.getPoolManager().login(credentials, workspace);
         } catch (NoSuchWorkspaceException nswe) {
             // if the desired workspace is the default workspace, try to create
-            if (workspace.equals(this.getDefaultWorkspace())
+            // (but not if using the repository-supplied default workspace)
+            if (workspace!=null && workspace.equals(this.getDefaultWorkspace())
                 && this.createWorkspace(workspace)) {
                 return this.getPoolManager().login(credentials, workspace);
             }
