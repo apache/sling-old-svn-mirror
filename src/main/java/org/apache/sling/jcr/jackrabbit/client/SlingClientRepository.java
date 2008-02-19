@@ -42,7 +42,7 @@ import org.osgi.service.log.LogService;
  *
  * @scr.service
  *
- * @scr.property value="default" name="defaultWorkspace"
+ * @scr.property value="" name="defaultWorkspace"
  * @scr.property value="anonymous" name="anonymous.name"
  * @scr.property value="anonymous" name="anonymous.password"
  * @scr.property value="admin" name="admin.name"
