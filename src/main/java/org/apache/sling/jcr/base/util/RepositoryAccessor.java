@@ -27,6 +27,7 @@ import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
+import org.apache.sling.api.SlingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,16 @@ import org.slf4j.LoggerFactory;
     
     /** Prefix for RMI Repository URLs */
     public static final String RMI_PREFIX = "rmi://";
+    
+    /** Prefix for JNDI Repository URLs */
+    public static final String JNDI_PREFIX = "jndi://";
  
+    public static class RepositoryUrlException extends SlingException {
+        RepositoryUrlException(String reason) {
+            super(reason);
+        }
+    }
+    
     /** First try to access the Repository via JNDI (unless jndiContext is null), and if
      *  not successful try RMI.
      *  
@@ -48,8 +58,8 @@ import org.slf4j.LoggerFactory;
         
         Repository result = null;
         
-        if(jndiContext == null) {
-            log.info("jndiContext is null, not trying JNDI");
+        if(jndiContext == null || jndiContext.size() == 0) {
+            log.info("jndiContext is null or empty, not trying JNDI");
         } else {
             log.debug("Trying to acquire Repository '" + repositoryName + "' via JNDI, context=" + jndiContext);
             final ClassLoader old = Thread.currentThread().getContextClassLoader();
@@ -95,5 +105,44 @@ import org.slf4j.LoggerFactory;
         }
         
         return result;
+    }
+    
+    /** Acquire a Repository from the given URL
+     *  @param url for RMI, an RMI URL. For JNDI, "jndi://", followed by the JNDI repository name,
+     *  followed by a colon and a comma-separated list of JNDI context values, for example:
+     *  <pre>
+     *      jndi://jackrabbit:java.naming.factory.initial=org.SomeClass,java.naming.provider.url=http://foo.com
+     *  </pre>  
+     */
+    public Repository getRepositoryFromURL(String url) throws RepositoryUrlException {
+        if(url == null) {
+            throw new RepositoryUrlException("null URL");
+        }
+        
+        if(url.startsWith(JNDI_PREFIX)) {
+            // Parse JNDI URL to extract repository name and context
+            String name = null;
+            final Hashtable<String, Object> jndiContext = new Hashtable <String, Object> ();
+            final String urlNoPrefix = url.substring(JNDI_PREFIX.length()); 
+            final int colonPos = urlNoPrefix.indexOf(':');
+            if(colonPos < 0) {
+                name = urlNoPrefix;
+            } else {
+                name = urlNoPrefix.substring(0, colonPos);
+                for(String entryStr : urlNoPrefix.substring(colonPos + 1).split(",")) {
+                    final String [] entry = entryStr.split("=");
+                    if(entry.length == 2) {
+                        jndiContext.put(entry[0], entry[1]);
+                    }
+                }
+            }
+            
+            return getRepository(name, jndiContext);
+            
+        } else {
+            
+            // Use URL as is
+            return getRepository(url, null);
+        }
     }
 }
