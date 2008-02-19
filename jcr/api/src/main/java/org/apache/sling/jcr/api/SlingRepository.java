@@ -39,6 +39,8 @@ public interface SlingRepository extends Repository {
 
     /**
      * Returns the default workspace to use on login.
+     * 
+     * @return null if the configured default workspace name is empty, SLING-256
      */
     String getDefaultWorkspace();
 

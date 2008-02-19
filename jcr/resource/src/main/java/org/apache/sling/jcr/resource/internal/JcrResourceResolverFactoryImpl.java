@@ -488,8 +488,10 @@ public class JcrResourceResolverFactoryImpl implements
         if (workspaceName == null) {
             workspaceName = getRepository().getDefaultWorkspace();
         }
-
+        
         synchronized (adminSessions) {
+            // HashMap allows null keys, so this should be ok even 
+            // with a null workspaceName
             Session adminSession = adminSessions.get(workspaceName);
             if (adminSession != null && adminSession.isLive()) {
                 return adminSession;

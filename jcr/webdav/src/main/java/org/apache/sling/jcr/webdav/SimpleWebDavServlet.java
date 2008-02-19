@@ -69,15 +69,24 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
     protected void service(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
         
-        // redirect to the default workspace if directly addressing the servlet
-        String pinfo = request.getPathInfo();
+        final String pinfo = request.getPathInfo();
+        
         if (pinfo == null || "/".equals(pinfo)) {
-            String uri = request.getRequestURI();
-            if (pinfo == null) {
-                uri += "/";
+            // redirect to the default workspace if directly addressing the servlet
+            // and if the default workspace name is not null (in which case we'd need
+            // to login to find out the actual workspace name, SLING-256)
+            if(repository.getDefaultWorkspace() == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                        "JCR workspace name required, please add it to the end of the URL"
+                        + " (for the Jackrabbit embedded repository the default name is 'default') ");
+            } else {
+                String uri = request.getRequestURI();
+                if (pinfo == null) {
+                    uri += "/";
+                }
+                uri += repository.getDefaultWorkspace();
+                response.sendRedirect(uri);
             }
-            uri += repository.getDefaultWorkspace();
-            response.sendRedirect(uri);
         }
         
         super.service(request, response);
