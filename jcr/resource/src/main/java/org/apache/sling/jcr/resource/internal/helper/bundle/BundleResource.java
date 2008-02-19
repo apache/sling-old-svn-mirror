@@ -25,6 +25,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -110,6 +116,16 @@ public class BundleResource extends SlingAdaptable implements Resource,
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
+        } else if (type == Node.class) {
+            Item item = getItem();
+            if (item != null && item.isNode()) {
+                return (Type) item;
+            }
+        } else if (type == Property.class) {
+            Item item = getItem();
+            if (item != null && !item.isNode()) {
+                return (Type) item;
+            }
         }
 
         // fall back to nothing
@@ -156,6 +172,22 @@ public class BundleResource extends SlingAdaptable implements Resource,
         }
 
         return url;
+    }
+    
+    /** Return a JCR Item which may be located at the resource path */
+    private Item getItem() {
+        Session session = getResourceResolver().adaptTo(Session.class);
+        if (session != null) {
+            try {
+                if (session.itemExists(getPath())) {
+                    return session.getItem(getPath());
+                }
+            } catch (RepositoryException re) {
+                log.info("getItem: Cannot get item for resource " + this, re);
+            }
+        }
+        
+        return null;
     }
 
     // ---------- Descendable interface ----------------------------------------
