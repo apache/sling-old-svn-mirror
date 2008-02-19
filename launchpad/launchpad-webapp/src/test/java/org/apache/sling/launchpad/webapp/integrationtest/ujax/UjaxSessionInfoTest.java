@@ -28,7 +28,11 @@ public class UjaxSessionInfoTest extends HttpTestBase {
     
     public void testSessionInfo() throws IOException {
         final String content = getContent(HTTP_BASE_URL + "/ujax:sessionInfo.json", CONTENT_TYPE_JSON);
-        assertJavascript("admin.default", content, "out.println(data.userID + '.' + data.workspace)");
+        
+        // assume workspace name contains "default", might not
+        // always be the case as the default workspace is selected
+        // by the JCR implementation due to SLING-256
+        assertJavascript("admin.true", content, "out.println(data.userID + '.' + (data.workspace.indexOf('default') >= 0) )");
     }
     
     public void testNonexistentUjaxUrl() throws IOException {

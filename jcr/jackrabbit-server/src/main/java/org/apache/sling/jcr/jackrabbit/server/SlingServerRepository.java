@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.sling.jcr.api.AbstractSlingRepository;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
@@ -97,18 +98,23 @@ public class SlingServerRepository extends AbstractSlingRepository
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
     /**
+     * @scr.property value="sling.repository.url.override"
+     */
+    public static final String REPOSITORY_URL_OVERRIDE_NAME = "repository.url.override.property"; 
+
+    /**
      * @scr.reference
      */
     private LogService log;
 
-    private RepositoryImpl delegatee;
+    private Repository delegatee;
 
     //---------- AbstractSlingRepository methods ------------------------------
 
     protected Repository getDelegatee() throws RepositoryException {
         if (this.delegatee == null) {
             try {
-                this.delegatee = (RepositoryImpl) this.getRepository();
+                this.delegatee = (Repository) this.getRepository();
             } catch (IOException ioe) {
                 throw new RepositoryException(ioe.getMessage(), ioe);
             }
@@ -140,7 +146,11 @@ public class SlingServerRepository extends AbstractSlingRepository
     protected void deactivate(ComponentContext componentContext) {
         if (this.delegatee != null) {
             try {
-                this.delegatee.shutdown();
+                if(this.delegatee instanceof RepositoryImpl) {
+                    ((RepositoryImpl)this.delegatee).shutdown();
+                } else {
+                    log.log(LogService.LOG_WARNING, "Repository is not a RepositoryImpl, cannot shut it down");
+                }
             } catch (Throwable t) {
                 this.log(LogService.LOG_ERROR, "Unexpected problem shutting down repository", t);
             }
@@ -152,9 +162,38 @@ public class SlingServerRepository extends AbstractSlingRepository
 
     //---------- Repository Publication ---------------------------------------
 
-    private Repository getRepository() throws RepositoryException, IOException {
+    private Repository getRepository() throws RepositoryException, IOException, RepositoryAccessor.RepositoryUrlException {
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
+        
+        final String urlOverrideProperty = (String) environment.get(REPOSITORY_URL_OVERRIDE_NAME);
+        String repositoryUrl = null;
+        if(urlOverrideProperty!=null && urlOverrideProperty.length() > 0) {
+            repositoryUrl = System.getProperty(urlOverrideProperty);
+        }
+        
+        if(repositoryUrl != null) {
+            log.log(LogService.LOG_INFO, 
+                    "Will not use embedded repository due to system property " + urlOverrideProperty 
+                    + "=" + repositoryUrl
+                    + ", acquiring repository using that URL"
+                    );
+            return getRepositoryFromUrl(repositoryUrl);
+            
+        } else {
+            log.log(LogService.LOG_INFO, 
+                    "Repository URL override system property (" + urlOverrideProperty 
+                    + ") not set, using embedded repository"); 
+            return getEmbeddedRepository(environment);
+        }
+    }
+    
+    private Repository getRepositoryFromUrl(String repositoryUrl) throws RepositoryAccessor.RepositoryUrlException {
+        return new RepositoryAccessor().getRepositoryFromURL(repositoryUrl);
+    }
+    
+    private Repository getEmbeddedRepository(Dictionary<String, Object> environment) 
+    throws RepositoryException, IOException {
 
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
         String home = (String) environment.get(REPOSITORY_HOME_DIR);

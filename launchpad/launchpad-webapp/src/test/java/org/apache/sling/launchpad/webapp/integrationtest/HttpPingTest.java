@@ -21,9 +21,12 @@ package org.apache.sling.launchpad.webapp.integrationtest;
  *  setup is ok.
  */
 public class HttpPingTest extends HttpTestBase {
-    public void testWebServerRoot() throws Exception
+    
+    public void TODO_FAILS_testWebServerRoot() throws Exception
     {
-        // The root URL returns a 404, Sling doesn't resolve the root node??
+        // disabled for now: an empty repository returns 404,
+        // but if there's someting under /content it is returned
+        // due to the default mappings
         assertHttpStatus(HTTP_BASE_URL + "/", 404);
     }
     
