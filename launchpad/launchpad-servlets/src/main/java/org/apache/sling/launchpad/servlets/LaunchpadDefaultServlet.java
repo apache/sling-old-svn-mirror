@@ -37,6 +37,7 @@ import org.apache.sling.launchpad.renderers.JsonRendererServlet;
 import org.apache.sling.launchpad.renderers.PlainTextRendererServlet;
 import org.apache.sling.launchpad.renderers.StreamRendererServlet;
 import org.apache.sling.ujax.UjaxPostServlet;
+import org.osgi.service.component.ComponentContext;
 
 /**
  * Replaces the Sling default servlet (that bundle must NOT be
@@ -49,7 +50,6 @@ import org.apache.sling.ujax.UjaxPostServlet;
  *  
  * @scr.component 
  *  immediate="true" 
- *  metatype="false"
  *  
  * @scr.property 
  *  name="service.description"
@@ -77,6 +77,10 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
 
     private Map<String, Servlet> getServlets;
 
+    /** @scr.property value="index.html" */
+    private static final String PROP_ROOT_REDIRECT = "root.redirect";
+    private String rootRedirect;
+    
     @Override
     public void init(ServletConfig config) throws ServletException {
 
@@ -104,6 +108,11 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
             ServletException {
         final Resource resource = request.getResource();
 
+        if(rootRedirect!= null && rootRedirect.length() > 0 && "/".equals(request.getPathInfo())) {
+            response.sendRedirect(rootRedirect);
+            return;
+        }
+        
         if (request.getPathInfo().startsWith(UjaxInfoServlet.PATH_PREFIX)) {
             ujaxInfoServlet.service(request, response);
             return;
@@ -142,5 +151,8 @@ public class LaunchpadDefaultServlet extends SlingAllMethodsServlet {
             IOException {
         postServlet.service(request, response);
     }
-
+    
+    protected void activate(ComponentContext componentContext) throws Exception {
+        rootRedirect = (String)componentContext.getProperties().get(PROP_ROOT_REDIRECT);
+    }
 }
