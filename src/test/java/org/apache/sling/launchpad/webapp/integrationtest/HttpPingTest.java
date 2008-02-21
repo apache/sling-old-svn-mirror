@@ -16,18 +16,26 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.methods.GetMethod;
+
 
 /** Ping the Sling server to verify that our integration test
  *  setup is ok.
  */
 public class HttpPingTest extends HttpTestBase {
     
-    public void TODO_FAILS_testWebServerRoot() throws Exception
+    public void testWebServerRoot() throws Exception
     {
-        // disabled for now: an empty repository returns 404,
-        // but if there's someting under /content it is returned
-        // due to the default mappings
-        assertHttpStatus(HTTP_BASE_URL + "/", 404);
+        // by default, the Launchpad default servlet redirects / to index.html
+        final String url = HTTP_BASE_URL + "/";
+        final GetMethod get = new GetMethod(url);
+        get.setFollowRedirects(false);
+        final int status = httpClient.executeMethod(get);
+        assertEquals("Status must be 302 for " + url, 302, status);
+        final Header h = get.getResponseHeader("Location");
+        assertNotNull("Location header must be provided",h);
+        assertEquals(HTTP_BASE_URL + "/index.html", h.getValue());
     }
     
     public void test404() throws Exception
