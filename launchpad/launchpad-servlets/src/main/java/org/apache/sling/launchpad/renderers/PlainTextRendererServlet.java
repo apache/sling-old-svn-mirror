@@ -56,6 +56,8 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         */
         
         resp.setContentType(responseContentType);
+        resp.setCharacterEncoding("UTF-8");
+
         final PrintWriter pw = resp.getWriter();
         try {
             renderItem(pw, r);
