@@ -113,8 +113,10 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             }
         }
 
-        // do the dump
         resp.setContentType(responseContentType);
+        resp.setCharacterEncoding("UTF-8");
+
+        // do the dump
         try {
             itemWriter.dump(n, resp.getWriter(), maxRecursionLevels);
         } catch(JSONException je) {
@@ -127,6 +129,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     /** Render a Property by dumping its String value */
     private void renderProperty(Property p, SlingHttpServletResponse resp) throws JSONException, RepositoryException, IOException {
         resp.setContentType(responseContentType);
+        resp.setCharacterEncoding("UTF-8");
         new JsonItemWriter(null).dump(p, resp.getWriter());
     }
 
