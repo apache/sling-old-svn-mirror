@@ -50,6 +50,8 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
         final Resource  r = req.getResource();
 
         resp.setContentType(responseContentType);
+        resp.setCharacterEncoding("UTF-8");
+        
         final PrintWriter pw = resp.getWriter();
 
         final Node node = r.adaptTo(Node.class);

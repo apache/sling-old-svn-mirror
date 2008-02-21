@@ -180,6 +180,7 @@ public class UjaxHtmlResponse {
      */
     public void send() throws IOException {
         response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
         Writer out = response.getWriter();
         InputStream template = getClass().getResourceAsStream(TEMPLATE_NAME);
         Reader in = new BufferedReader(new InputStreamReader(template));
