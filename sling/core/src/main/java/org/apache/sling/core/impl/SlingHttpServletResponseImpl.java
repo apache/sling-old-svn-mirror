@@ -39,9 +39,6 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
     private final RequestData requestData;
 
-    private String contentType = "text/html";
-    private String characterEncoding = null;
-
     public SlingHttpServletResponseImpl(RequestData requestData,
             HttpServletResponse response) {
         super(response);
@@ -60,22 +57,6 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     @Override
     public int getBufferSize() {
         return getRequestData().getContentData().getBufferSize();
-    }
-
-    @Override
-    public String getCharacterEncoding() {
-        return characterEncoding;
-    }
-
-    @Override
-    public String getContentType() {
-        // plaing content type if there is no character encoding
-        if (characterEncoding == null) {
-            return contentType;
-        }
-
-        // otherwise append the charset
-        return contentType + ";charset=" + characterEncoding;
     }
 
     @Override
@@ -114,40 +95,6 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     @Override
     public void setBufferSize(int size) {
         getRequestData().getContentData().setBufferSize(size);
-    }
-
-    @Override
-    public void setCharacterEncoding(String charset) {
-        // should actually check for charset validity ??
-        characterEncoding = charset;
-    }
-
-    @Override
-    public void setContentType(String type) {
-        // ignore empty values
-        if (type == null || type.length() == 0) {
-            return;
-        }
-
-        if (type.indexOf(';') > 0) {
-            Map<String, Map<String, String>> parsedType = RequestUtil.parserHeader(type);
-            if (parsedType.size() == 1) {
-                // expected single entry of token being content type and
-                // a single parameter charset, otherwise just ignore and
-                // use type as is...
-                Map.Entry<String, Map<String, String>> entry = parsedType.entrySet().iterator().next();
-                type = entry.getKey();
-                String charset = entry.getValue().get("charset");
-                if (charset != null && charset.length() > 0) {
-                    setCharacterEncoding(charset);
-                }
-            }
-        }
-
-        contentType = type;
-
-        // set the content type with charset on the underlying response
-        super.setContentType(getContentType());
     }
 
     // ---------- Redirection support through PathResolver --------------------
