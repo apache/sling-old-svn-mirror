@@ -266,6 +266,53 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("12005879509741.json",p.getSuffix());
     }
 
+    public void testJIRA_250_a() {
+    	RequestPathInfo p = 
+            new SlingRequestPathInfo(
+                    new MockResource("/bunkai"), 
+                    "/bunkai.1.json"
+            );
+        assertEquals("/bunkai", p.getResourcePath());
+        assertEquals("json", p.getExtension());
+        assertEquals("1", p.getSelectorString());
+    }
+    
+    public void testJIRA_250_b() {
+    	RequestPathInfo p = 
+            new SlingRequestPathInfo(
+                    new MockResource("/"), 
+                    "/.1.json"
+            );
+        assertEquals("/", p.getResourcePath());
+        assertEquals("json", p.getExtension());
+        assertEquals("", p.getSuffix());
+        assertEquals("Selector string must not be null", "1", p.getSelectorString());
+    }
+    
+    public void testJIRA_250_c() {
+    	RequestPathInfo p = 
+            new SlingRequestPathInfo(
+                    new MockResource("/"), 
+                    "/.1.json/my/suffix"
+            );
+        assertEquals("/", p.getResourcePath());
+        assertEquals("json", p.getExtension());
+        assertEquals("/my/suffix",p.getSuffix());
+        assertEquals("Selector string must not be null", "1", p.getSelectorString());
+    }
+    
+    public void testJIRA_250_d() {
+    	RequestPathInfo p = 
+            new SlingRequestPathInfo(
+                    new MockResource("/"), 
+                    "/.json"
+            );
+        assertEquals("/", p.getResourcePath());
+        assertEquals("json", p.getExtension());
+        assertEquals("", p.getSuffix());
+        assertNull(p.getSelectorString());
+    }
+    
     static class MockResource implements Resource {
 
         private final ResourceMetadata metadata;

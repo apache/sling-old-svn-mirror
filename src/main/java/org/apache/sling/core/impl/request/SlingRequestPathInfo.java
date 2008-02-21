@@ -64,7 +64,33 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             pathToParse = pathToParse.substring(resourcePath.length());
         }
 
-        if (pathToParse.startsWith("/")) {
+        if (pathToParse.startsWith("/.")) {
+            final int lastDot = pathToParse.lastIndexOf('.');
+            
+            if (1==lastDot) {
+            	selectorString = null;
+                selectors = NO_SELECTORS;
+            } else {
+            	String tmpSel = pathToParse.substring(2, lastDot);
+                selectors = tmpSel.split("\\.");
+                selectorString = (selectors.length > 0) ? tmpSel : null;
+            	
+            	//selectorString = pathToParse.substring(firstDot, lastDot - firstDot);
+            	
+            }
+            
+            final int lastSlash = pathToParse.lastIndexOf('/');
+            if (lastSlash == 0) {
+            	suffix = "";
+            	extension = pathToParse.substring(lastDot + 1);
+            } else {
+            	final int secondSlash = pathToParse.indexOf("/", 1);
+            	suffix = pathToParse.substring(secondSlash);
+            	String prefix = pathToParse.substring(0, secondSlash);
+            	final int extensionDot = prefix.lastIndexOf(".");
+            	extension = prefix.substring(extensionDot + 1);
+            }
+        } else if (pathToParse.startsWith("/")) {
             // resolution path is up in the hierarchy
             // from request path: split the remainder
             // in suffix and extension only
