@@ -114,6 +114,7 @@
         
         <!-- Launcher -->
         <module>launcher/app</module>
+        <module>launcher/content</module>
         <module>launcher/webapp</module>
 
         <!-- Microsling 
