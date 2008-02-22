@@ -40,6 +40,12 @@ import org.slf4j.LoggerFactory;
     
     /** Prefix for JNDI Repository URLs */
     public static final String JNDI_PREFIX = "jndi://";
+    
+    /** Name of the property that the jcr client and server bundles
+     *  to override their default configuration settings and connect
+     *  to the specified repository instead (SLING-254 and SLING-260)
+     */
+    public static final String REPOSITORY_URL_OVERRIDE_PROPERTY = "sling.repository.url.override";
  
     public static class RepositoryUrlException extends SlingException {
         RepositoryUrlException(String reason) {
