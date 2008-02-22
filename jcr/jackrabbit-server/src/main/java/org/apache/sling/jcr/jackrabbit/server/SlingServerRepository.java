@@ -98,11 +98,6 @@ public class SlingServerRepository extends AbstractSlingRepository
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
     /**
-     * @scr.property value="sling.repository.url.override"
-     */
-    public static final String REPOSITORY_URL_OVERRIDE_NAME = "repository.url.override.property"; 
-
-    /**
      * @scr.reference
      */
     private LogService log;
@@ -166,23 +161,20 @@ public class SlingServerRepository extends AbstractSlingRepository
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
         
-        final String urlOverrideProperty = (String) environment.get(REPOSITORY_URL_OVERRIDE_NAME);
-        String repositoryUrl = null;
-        if(urlOverrideProperty!=null && urlOverrideProperty.length() > 0) {
-            repositoryUrl = System.getProperty(urlOverrideProperty);
-        }
+        // if the environment provides a repository override URL, other settings are ignored
+        final String overrideUrl = (String) environment.get(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
         
-        if(repositoryUrl != null) {
+        if(overrideUrl != null && overrideUrl.length() > 0) {
             log.log(LogService.LOG_INFO, 
-                    "Will not use embedded repository due to system property " + urlOverrideProperty 
-                    + "=" + repositoryUrl
+                    "Will not use embedded repository due to property " + RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY 
+                    + "=" + overrideUrl
                     + ", acquiring repository using that URL"
                     );
-            return getRepositoryFromUrl(repositoryUrl);
+            return getRepositoryFromUrl(overrideUrl);
             
         } else {
             log.log(LogService.LOG_INFO, 
-                    "Repository URL override system property (" + urlOverrideProperty 
+                    "Repository URL override property (" +  RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
                     + ") not set, using embedded repository"); 
             return getEmbeddedRepository(environment);
         }
