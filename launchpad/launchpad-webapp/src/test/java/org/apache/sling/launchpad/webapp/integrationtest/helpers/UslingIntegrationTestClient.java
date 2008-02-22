@@ -127,13 +127,16 @@ public class UslingIntegrationTestClient {
             nodeProperties.put("jcr:created", "");
         }
 
+        // force form encoding to UTF-8, which is what we use to convert the
+        // string parts into stream data
+        nodeProperties.put("FormEncoding", "UTF-8");
 
         if( nodeProperties.size() > 0) {
             if(multiPart) {
                 final List<Part> partList = new ArrayList<Part>();
                 for(Map.Entry<String,String> e : nodeProperties.entrySet()) {
                     if (e.getValue() != null) {
-                        partList.add(new StringPart(e.getKey().toString(), e.getValue().toString()));
+                        partList.add(new StringPart(e.getKey().toString(), e.getValue().toString(), "UTF-8"));
                     }
                 }
                 final Part [] parts = partList.toArray(new Part[partList.size()]);
