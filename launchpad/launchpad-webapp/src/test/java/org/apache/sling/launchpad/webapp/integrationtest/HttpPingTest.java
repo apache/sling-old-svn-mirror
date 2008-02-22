@@ -35,7 +35,7 @@ public class HttpPingTest extends HttpTestBase {
         assertEquals("Status must be 302 for " + url, 302, status);
         final Header h = get.getResponseHeader("Location");
         assertNotNull("Location header must be provided",h);
-        assertEquals(HTTP_BASE_URL + "/index.html", h.getValue());
+        assertTrue("Location header must end with index.html", h.getValue().endsWith("index.html"));
     }
     
     public void test404() throws Exception
