@@ -118,11 +118,6 @@
         <module>launcher/app</module>
         <module>launcher/webapp</module>
 
-        <!-- Microsling 
-        <module>microsling/microsling-core</module>
-        <module>microsling/microsling-standalone</module>
-        -->
-
     </modules>
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
