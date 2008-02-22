@@ -46,8 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingAuthenticator</code> class is the default implementation of
- * the {@link SlingAuthenticator} interface. This class supports :
+ * The <code>SlingAuthenticator</code> class is the default implementation
+ * for handling authentication. This class supports :
  * <ul>
  * <li>Support for login sessions where session ids are exchanged with cookies
  * <li>Support for multiple authentication handlers, which must implement the
@@ -58,22 +58,11 @@ import org.slf4j.LoggerFactory;
  * URL.
  * <p>
  * Clients of this class use {@link #authenticate} method to create a
- * {@link Ticket} for the handling of the request. This method uses any of the
- * handlers to extract the user information from the reques. Next a ticket is
+ * {@link AuthenticationInfo} for the handling of the request. This method uses any of the
+ * handlers to extract the user information from the request. Next an object is
  * created for this user information. If no user information is contained in the
- * request (according to the handler), the anonymous ticket is used.
+ * request (according to the handler), the anonymous info is used.
  * <p>
- * If the service is configured with session support, a session is created whose
- * sessionId is transported between client and server using HTTP cookies. The
- * session configuration specifies what name those cookies should have and how
- * long theses sessions will be kept alive between two successive requests. That
- * is, the time-to-life value is really and "idle timeout value".
- * <p>
- * Sessions can be canceled either with the {@link #destroySession} method or
- * when the session times out. To not clutter the session map with old, unused
- * sessions, a separate thread scans the session list for expired sessions
- * removing any one the thread finds. Currently the cleanup routine runs at and
- * interval twice as big as the time-to-life value.
  *
  * @scr.component label="%auth.name" description="%auth.description" ds="false"
  * @scr.property name="service.description" value="Sling Authenticator"
@@ -114,7 +103,7 @@ public class SlingAuthenticator implements ManagedService {
     private static final String DEFAULT_IMPERSONATION_COOKIE = "cqsudo";
 
     /** The default value for allowing anonymous access */
-    private static final boolean DEFAULT_ANONYMOUS_ALLOWED = false;
+    private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
 
     private final ServiceTracker repositoryTracker;
 
@@ -179,26 +168,11 @@ public class SlingAuthenticator implements ManagedService {
      * based on the original request object, no URI translation has taken place
      * yet.
      * <p>
-     * The method will either return the anonymous ticket, if no authentication
-     * handler could extract credentials from the request, or null, if
-     * credentials extracted from the request are not valid to create a ticket
-     * or a ticket identifying the user's credentials extracted from the ticket.
-     * This method must not call back to client for valid credentials, if they
-     * are missing.
-     * <p>
-     * If sessions are enabled the returned ticket may be impersonated, that is
-     * for another user than the one who has authenticated.
      *
      * @param req The request object containing the information for the
      *            authentication.
      * @param res The response object which may be used to send the information
      *            on the request failure to the user.
-     * @return A valid ContentBus Ticket identifying the request user or the
-     *         anonymous ticket, if the request does not contain credential data
-     *         or null if the credential data cannot be used to create a ticket.
-     *         If <code>null</code> the request should be terminated as it can
-     *         be assumed, that during this method enough response information
-     *         has been sent to the client.
      */
     public boolean authenticate(HttpServletRequest req, HttpServletResponse res)
             throws MissingRepositoryException {
@@ -235,7 +209,7 @@ public class SlingAuthenticator implements ManagedService {
         } else {
             // try to connect
             try {
-                log.debug("authenticate: credentials, trying to get a ticket");
+                log.debug("authenticate: credentials, trying to get a session");
                 Session session = getRepository().login(
                     authInfo.getCredentials(), null);
 
@@ -329,6 +303,7 @@ public class SlingAuthenticator implements ManagedService {
 
     // ----------- ManagedService interface -----------------------------------
 
+    @SuppressWarnings("unchecked")
     public void updated(Dictionary properties) {
 
         if (properties == null) {
@@ -454,11 +429,11 @@ public class SlingAuthenticator implements ManagedService {
      */
     private void setAttributes(Session session, String authType,
             HttpServletRequest request) {
-        
+
         request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
         request.setAttribute(CoreConstants.SESSION, session);
-        
+
         log.debug("Session stored as request attribute: user={}, workspace={}",
                 session.getUserID(), session.getWorkspace().getName());
     }
@@ -506,20 +481,20 @@ public class SlingAuthenticator implements ManagedService {
      * impersonation is used. Else if the parameter is <code>-</code>, the
      * current cookie impersonation is removed and no impersonation will take
      * place for this request. Else the parameter is assumed to contain the
-     * handle of a user page acceptable for the {@link Ticket#impersonate}
+     * handle of a user page acceptable for the {@link Session#impersonate}
      * method.
      *
      * @param req The {@link DeliveryHttpServletRequest} optionally containing
      *            the sudo parameter.
      * @param res The {@link DeliveryHttpServletResponse} to send the
      *            impersonation cookie.
-     * @param ticket The real {@link Ticket} to optionally replace with an
-     *            impersonated ticket.
-     * @return The impersonated ticket or the input ticket.
-     * @throws LoginException thrown by the {@link Ticket#impersonate} method.
-     * @throws ContentBusException thrown by the {@link Ticket#impersonate}
+     * @param session The real {@link Session} to optionally replace with an
+     *            impersonated session.
+     * @return The impersonated session or the input session.
+     * @throws LoginException thrown by the {@link Session#impersonate} method.
+     * @throws ContentBusException thrown by the {@link Session#impersonate}
      *             method.
-     * @see Ticket#impersonate for details on the user configuration
+     * @see Session#impersonate for details on the user configuration
      *      requirements for impersonation.
      */
     private Session handleImpersonation(HttpServletRequest req,
@@ -550,12 +525,12 @@ public class SlingAuthenticator implements ManagedService {
             sudo = null;
         }
 
-        // sudo the ticket if needed
+        // sudo the session if needed
         if (sudo != null && sudo.length() > 0) {
             Credentials creds = new SimpleCredentials(sudo, new char[0]);
             session = session.impersonate(creds);
         }
-        // invariant: same ticket or successful impersonation
+        // invariant: same session or successful impersonation
 
         // set the (new) impersonation
         if (sudo != currentSudo) {
@@ -577,7 +552,7 @@ public class SlingAuthenticator implements ManagedService {
             }
         }
 
-        // return the ticket
+        // return the session
         return session;
     }
 
