@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
      *  to override their default configuration settings and connect
      *  to the specified repository instead (SLING-254 and SLING-260)
      */
-    public static final String REPOSITORY_URL_OVERRIDE_PROPERTY = "sling.repository.url.override";
+    public static final String REPOSITORY_URL_OVERRIDE_PROPERTY = "sling.repository.url";
  
     public static class RepositoryUrlException extends SlingException {
         RepositoryUrlException(String reason) {
