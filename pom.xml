@@ -113,8 +113,9 @@
         <module>scripting/velocity</module>
         
         <!-- Launcher -->
+        <module>launchpad/launchpad-servlets</module>
+        <module>launchpad/launchpad-content</module>
         <module>launcher/app</module>
-        <module>launcher/content</module>
         <module>launcher/webapp</module>
 
         <!-- Microsling 
@@ -153,7 +154,6 @@
           <activeByDefault>true</activeByDefault>
         </activation>
         <modules>
-          <module>launchpad/launchpad-servlets</module>
           <module>launchpad/launchpad-webapp</module>
         </modules>
       </profile>
