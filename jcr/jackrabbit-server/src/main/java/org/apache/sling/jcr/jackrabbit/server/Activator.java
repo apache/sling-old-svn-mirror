@@ -17,7 +17,10 @@
 package org.apache.sling.jcr.jackrabbit.server;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Hashtable;
+
+import org.apache.sling.jcr.base.util.RepositoryAccessor;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -136,36 +139,22 @@ public class Activator implements BundleActivator, ServiceListener {
                 return;
             }
 
-            String slingHome = bundleContext.getProperty("sling.home");
-
-            // make sure jackrabbit home exists
-            File homeDir = new File(slingHome, this.getRepositoryName());
-            if (!homeDir.isDirectory()) {
-                if (!homeDir.mkdirs()) {
-                    log.info("verifyConfiguration: Cannot create Jackrabbit home "
-                        + homeDir + ", failed creating default configuration");
-                    return;
-                }
+            // No config, create a default one.
+            Hashtable<String, String> defaultConfig = new Hashtable<String, String>();
+            final String overrideUrl = bundleContext.getProperty(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
+            if(overrideUrl != null && overrideUrl.length() > 0) {
+                // Ignore other parameters if override URL (SLING-254) is set 
+                defaultConfig.put(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY, overrideUrl);
+                log.debug(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY + "=" + overrideUrl + 
+                    ", using it to create the default configuration");
+                
+            } else {
+               initDefaultConfig(defaultConfig, bundleContext); 
             }
-
-            // ensure the configuration file
-            File configFile = new File(slingHome, "repository.xml");
-            SlingServerRepository.copyFile(bundleContext.getBundle(),
-                "repository.xml", configFile);
-
-            // we have no configuration, create from default settings
-            Hashtable<String, String> props = new Hashtable<String, String>();
-            props.put(SLING_CONTEXT, slingContext);
-            props.put(SlingServerRepository.REPOSITORY_CONFIG_URL,
-                configFile.getPath());
-            props.put(SlingServerRepository.REPOSITORY_HOME_DIR,
-                homeDir.getPath());
-            props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
-                this.getRepositoryName());
-
+            
             // create the factory and set the properties
             Configuration config = ca.createFactoryConfiguration(SERVER_REPOSITORY_FACTORY_PID);
-            config.update(props);
+            config.update(defaultConfig);
 
             log.debug("verifyConfiguration: Created configuration {} for {}",
                 config.getPid(), config.getFactoryPid());
@@ -176,5 +165,34 @@ public class Activator implements BundleActivator, ServiceListener {
         } finally {
             bundleContext.ungetService(ref);
         }
+    }
+    
+    private void initDefaultConfig(Hashtable<String, String> props, BundleContext bundleContext) throws IOException {
+        String slingHome = bundleContext.getProperty("sling.home");
+        log.debug("Creating default config, sling.home=" + slingHome);
+
+        // make sure jackrabbit home exists
+        File homeDir = new File(slingHome, this.getRepositoryName());
+        if (!homeDir.isDirectory()) {
+            if (!homeDir.mkdirs()) {
+                log.info("verifyConfiguration: Cannot create Jackrabbit home "
+                    + homeDir + ", failed creating default configuration");
+                return;
+            }
+        }
+
+        // ensure the configuration file
+        File configFile = new File(slingHome, "repository.xml");
+        SlingServerRepository.copyFile(bundleContext.getBundle(),
+            "repository.xml", configFile);
+
+        // default config values
+        props.put(SLING_CONTEXT, slingContext);
+        props.put(SlingServerRepository.REPOSITORY_CONFIG_URL,
+            configFile.getPath());
+        props.put(SlingServerRepository.REPOSITORY_HOME_DIR,
+            homeDir.getPath());
+        props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
+            this.getRepositoryName());
     }
 }
