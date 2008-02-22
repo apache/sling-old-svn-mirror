@@ -101,16 +101,34 @@ public class SlingClientRepository extends AbstractSlingRepository
     private Repository getRepository() throws RepositoryException {
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
+        Repository repo = null;
 
-        String repoName = (String) environment.get(REPOSITORY_NAME);
-        if (repoName == null) {
-            throw new RepositoryException("Missing property 'name'");
-        }
-
-        final Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
-        final Repository repo = new RepositoryAccessor().getRepository(repoName, jndiContext);
-        if(repo == null) {
-            throw new RepositoryException("Cannot acquire repository '" + repoName + "'");
+        // if the environment provides a repository override URL, other settings are ignored (SLING-260)
+        final String overrideUrl = (String) environment.get(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
+        
+        if(overrideUrl != null && overrideUrl.length() > 0) {
+            log.log(LogService.LOG_INFO, 
+                    "Will not use embedded repository due to property " + RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY 
+                    + "=" + overrideUrl
+                    + ", acquiring repository using that URL"
+                    );
+            repo = new RepositoryAccessor().getRepositoryFromURL(overrideUrl);
+            
+        } else {
+            log.log(LogService.LOG_INFO, 
+                    "Repository URL override property (" +  RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
+                    + ") not set, using name/context settings");
+            
+            String repoName = (String) environment.get(REPOSITORY_NAME);
+            if (repoName == null) {
+                throw new RepositoryException("Missing property 'name'");
+            }
+    
+            final Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
+            repo = new RepositoryAccessor().getRepository(repoName, jndiContext);
+            if(repo == null) {
+                throw new RepositoryException("Cannot acquire repository '" + repoName + "'");
+            }
         }
         return repo;
     }

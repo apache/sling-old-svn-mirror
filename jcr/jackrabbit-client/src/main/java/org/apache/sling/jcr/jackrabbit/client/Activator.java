@@ -22,6 +22,8 @@ import java.util.Hashtable;
 
 import javax.naming.Context;
 
+import org.apache.sling.jcr.base.util.RepositoryAccessor;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -71,14 +73,12 @@ public class Activator implements BundleActivator, ServiceListener {
         return SlingClientRepository.class.getName();
     }
 
-    protected Hashtable<String, Object>getDefaultConfiguration() {
-        Hashtable<String, Object> props = new Hashtable<String, Object>();
+    protected void initDefaultConfig(Hashtable<String, String> props) {
         props.put(SLING_CONTEXT, slingContext);
         props.put(SlingClientRepository.REPOSITORY_NAME, "jackrabbit");
         props.put(Context.PROVIDER_URL, "http://incubator.apache.org/sling");
         props.put(Context.INITIAL_CONTEXT_FACTORY,
             "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
-        return props;
     }
 
     public void start(BundleContext context) {
@@ -152,11 +152,21 @@ public class Activator implements BundleActivator, ServiceListener {
             }
 
             // we have no configuration, create from default settings
-            final Hashtable<String, Object> props = this.getDefaultConfiguration();
+            Hashtable<String, String> defaultConfig = new Hashtable<String, String>();
+            final String overrideUrl = bundleContext.getProperty(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
+            if(overrideUrl != null && overrideUrl.length() > 0) {
+                // Ignore other parameters if override URL (SLING-260) is set 
+                defaultConfig.put(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY, overrideUrl);
+                log.debug(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY + "=" + overrideUrl + 
+                    ", using it to create the default configuration");
+                
+            } else {
+               initDefaultConfig(defaultConfig); 
+            }
 
             // create the factory and set the properties
             Configuration config = ca.createFactoryConfiguration(this.getClientRepositoryFactoryPID());
-            config.update(props);
+            config.update(defaultConfig);
 
             log.debug("verifyConfiguration: Created configuration {} for {}",
                 config.getPid(), config.getFactoryPid());
