@@ -40,29 +40,37 @@ public class ResourcePathIterator implements Iterator<String> {
 
     /**
      * Creates a new instance iterating over the given path
-     *
+     * 
      * @param path The path to iterate over. If this is empty or
      *            <code>null</code> this iterator will not return anything.
      */
     public ResourcePathIterator(String path) {
 
-        // find last non-slash character
-        int i = (path != null) ? path.length() - 1 : -1;
-        while (i >= 0 && path.charAt(i) == '/') {
-            i--;
-        }
-
-        if (i < 0) {
-            // only slashes, assume root node
-            nextPath = "/";
-
-        } else if (i < path.length() - 1) {
-            // cut off slash
-            nextPath = path.substring(0, i + 1);
+        if (path == null || path.length() == 0) {
+            
+            // null or empty path, there is nothing to return
+            nextPath = null;
 
         } else {
-            // no trailing slash
-            nextPath = path;
+
+            // find last non-slash character
+            int i = (path != null) ? path.length() - 1 : -1;
+            while (i >= 0 && path.charAt(i) == '/') {
+                i--;
+            }
+
+            if (i < 0) {
+                // only slashes, assume root node
+                nextPath = "/";
+
+            } else if (i < path.length() - 1) {
+                // cut off slash
+                nextPath = path.substring(0, i + 1);
+
+            } else {
+                // no trailing slash
+                nextPath = path;
+            }
         }
     }
 

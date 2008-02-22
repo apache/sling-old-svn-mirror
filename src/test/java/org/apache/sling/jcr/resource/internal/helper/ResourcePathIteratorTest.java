@@ -37,6 +37,7 @@ public class ResourcePathIteratorTest extends TestCase {
 
     public void testRoot() {
         ResourcePathIterator rpi = new ResourcePathIterator("/");
+        assertNext("/", rpi);
         assertFinished(rpi);
     }
 
