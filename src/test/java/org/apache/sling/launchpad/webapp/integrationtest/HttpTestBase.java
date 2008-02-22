@@ -46,8 +46,8 @@ import org.mozilla.javascript.ScriptableObject;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
-    public static final String HTTP_BASE_URL = System.getProperty("launchpad.http.server.url");
-    public static final String WEBDAV_BASE_URL = System.getProperty("launchpad.webdav.server.url");
+    public static final String HTTP_BASE_URL = System.getProperty("launchpad.http.server.url", "http://localhost:8888");
+    public static final String WEBDAV_BASE_URL = System.getProperty("launchpad.webdav.server.url", "http://localhost:8888/dav/default");
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
@@ -65,7 +65,7 @@ public class HttpTestBase extends TestCase {
     protected HttpClient httpClient;
 
     private static Boolean slingStartupOk;
-
+    
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
      *  older test classes do not use it, but it might simplify them.
