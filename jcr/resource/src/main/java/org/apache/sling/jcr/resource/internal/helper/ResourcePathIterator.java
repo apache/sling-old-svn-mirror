@@ -53,8 +53,8 @@ public class ResourcePathIterator implements Iterator<String> {
         }
 
         if (i < 0) {
-            // only slash
-            nextPath = null;
+            // only slashes, assume root node
+            nextPath = "/";
 
         } else if (i < path.length() - 1) {
             // cut off slash
