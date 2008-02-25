@@ -48,7 +48,7 @@ public class XJsonReader extends JsonReader {
             node.setPrimaryNodeType(String.valueOf(primaryType));
         }
 
-        Object mixinsObject = obj.opt("jcr:mixinTyes");
+        Object mixinsObject = obj.opt("jcr:mixinTypes");
         if (mixinsObject instanceof JSONArray) {
             JSONArray mixins = (JSONArray) mixinsObject;
             for (int i = 0; i < mixins.length(); i++) {
