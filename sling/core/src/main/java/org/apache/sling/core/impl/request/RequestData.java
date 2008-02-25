@@ -59,7 +59,6 @@ import org.apache.sling.core.impl.SlingMainServlet;
 import org.apache.sling.core.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.core.impl.output.BufferProvider;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
-import org.apache.sling.core.theme.Theme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,8 +97,6 @@ public class RequestData implements BufferProvider {
     private RequestProgressTracker requestProgressTracker;
 
     private Locale locale;
-
-    private Theme theme;
 
     /** the current ContentData */
     private ContentData currentContentData;
@@ -549,23 +546,6 @@ public class RequestData implements BufferProvider {
 
     public ServiceLocator getServiceLocator() {
         return slingMainServlet.getServiceLocator();
-    }
-
-    /**
-     * @return the theme
-     */
-    public Theme getTheme() {
-        return theme;
-    }
-
-    /**
-     * @param theme the theme to set
-     */
-    public void setTheme(Theme theme) {
-        this.theme = theme;
-        // provide the current theme to components as a request attribute
-        // TODO - We should define a well known constant for this
-        servletRequest.setAttribute(Theme.class.getName(), theme);
     }
 
     /**
