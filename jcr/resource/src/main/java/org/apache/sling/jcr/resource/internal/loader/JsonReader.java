@@ -36,6 +36,17 @@ import org.apache.sling.commons.json.JSONObject;
  */
 class JsonReader implements NodeReader {
 
+    static final ImportProvider PROVIDER = new ImportProvider() {
+        private JsonReader jsonReader;
+
+        public NodeReader getReader() {
+            if (jsonReader == null) {
+                jsonReader = new JsonReader();
+            }
+            return jsonReader;
+        }
+    };
+    
     public Node parse(InputStream ins) throws IOException {
         try {
             String jsonString = toString(ins).trim();
