@@ -39,6 +39,17 @@ public class XJsonReader extends JsonReader {
         ignoredNames.add("jcr:created");
     }
 
+    static final ImportProvider PROVIDER = new ImportProvider() {
+        private XJsonReader xjsonReader;
+
+        public NodeReader getReader() {
+            if (xjsonReader == null) {
+                xjsonReader = new XJsonReader();
+            }
+            return xjsonReader;
+        }
+    };
+    
     protected Node createNode(String name, JSONObject obj) throws JSONException {
         Node node = new Node();
         node.setName(name);
@@ -58,7 +69,7 @@ public class XJsonReader extends JsonReader {
 
         // add properties and nodes
         JSONArray names = obj.names();
-        for (int i = 0; i < names.length(); i++) {
+        for (int i = 0; names != null && i < names.length(); i++) {
             String n = names.getString(i);
             // skip well known objects
             if (!ignoredNames.contains(n)) {

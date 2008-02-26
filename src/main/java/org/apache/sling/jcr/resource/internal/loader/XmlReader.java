@@ -52,6 +52,21 @@ public class XmlReader implements NodeReader {
 
     private static final String ELEM_TYPE = "type";
 
+    static final ImportProvider PROVIDER = new ImportProvider() {
+        private XmlReader xmlReader;
+
+        public NodeReader getReader() throws IOException {
+            if (xmlReader == null) {
+                try {
+                    xmlReader = new XmlReader();
+                } catch (Throwable t) {
+                    throw (IOException) new IOException(t.getMessage()).initCause(t);
+                }
+            }
+            return xmlReader;
+        }
+    };
+
     private KXmlParser xmlParser;
 
     XmlReader() {
