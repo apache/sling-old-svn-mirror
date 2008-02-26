@@ -37,9 +37,10 @@ import org.mozilla.javascript.tools.debugger.ScopeProvider;
 /**
  * The <code>RhinoJavaScriptEngineFactory</code> TODO
  */
-public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory implements ScopeProvider {
+public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
+        implements ScopeProvider {
 
-    public final static String JS_SCRIPT_EXTENSION = "js";
+    public final static String ECMA_SCRIPT_EXTENSION = "ecma";
 
     public final static String ESP_SCRIPT_EXTENSION = "esp";
 
@@ -49,6 +50,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         ScriptablePrintWriter.class };
 
     private final String languageVersion;
+
     private Scriptable rootScope;
 
     public RhinoJavaScriptEngineFactory() {
@@ -62,11 +64,10 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
         languageVersion = String.valueOf(cx.getLanguageVersion());
         Context.exit();
 
-        setExtensions(JS_SCRIPT_EXTENSION, ESP_SCRIPT_EXTENSION);
+        setExtensions(ECMA_SCRIPT_EXTENSION, ESP_SCRIPT_EXTENSION);
         setMimeTypes("text/javascript", "application/ecmascript",
             "application/javascript");
-        setNames("ecma", "javascript", JS_SCRIPT_EXTENSION,
-            ESP_SCRIPT_EXTENSION);
+        setNames("javascript", ECMA_SCRIPT_EXTENSION, ESP_SCRIPT_EXTENSION);
     }
 
     public ScriptEngine getScriptEngine() {
@@ -80,7 +81,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
     public String getLanguageVersion() {
         return languageVersion;
     }
-    
+
     public Scriptable getScope() {
         return getRootScope();
     }
@@ -95,7 +96,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
 
                     // register the host object
                     ScriptableObject.defineClass(rootScope, clazz);
-                    final ScriptableObject host = (ScriptableObject)clazz.newInstance();
+                    final ScriptableObject host = (ScriptableObject) clazz.newInstance();
 
                     if (SlingWrapper.class.isAssignableFrom(clazz)) {
                         // SlingWrappers can map to several classes if needed
@@ -105,8 +106,10 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory im
                                 hostWrapper.getClassName());
                         }
                     } else {
-                        // but other ScriptableObjects need to be registered as well
-                        SlingWrapFactory.INSTANCE.registerWrapper(host.getClass(),host.getClassName());
+                        // but other ScriptableObjects need to be registered as
+                        // well
+                        SlingWrapFactory.INSTANCE.registerWrapper(
+                            host.getClass(), host.getClassName());
                     }
                 } catch (Throwable t) {
                     // TODO: log
