@@ -27,7 +27,7 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 public class UjaxSessionInfoTest extends HttpTestBase {
     
     public void testSessionInfo() throws IOException {
-        final String content = getContent(HTTP_BASE_URL + "/ujax:sessionInfo.json", CONTENT_TYPE_JSON);
+        final String content = getContent(HTTP_BASE_URL + "/ujax.sessionInfo.json", CONTENT_TYPE_JSON);
         
         // assume workspace name contains "default", might not
         // always be the case as the default workspace is selected
@@ -36,6 +36,6 @@ public class UjaxSessionInfoTest extends HttpTestBase {
     }
     
     public void testNonexistentUjaxUrl() throws IOException {
-        assertHttpStatus(HTTP_BASE_URL + "/ujax:nothing", HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + "/ujax.nothing", HttpServletResponse.SC_NOT_FOUND);
     }
 }
