@@ -18,9 +18,9 @@
  */
 package org.apache.sling.servlets;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-
 import junit.framework.TestCase;
+
+import org.apache.sling.api.SlingHttpServletRequest;
 
 public class RedirectServletTest extends TestCase {
 
@@ -59,7 +59,7 @@ public class RedirectServletTest extends TestCase {
         String extension = null;
         String suffix = null;
         String queryString = null;
-        assertEquals(expected, base, selectors, extension, suffix, queryString,
+        assertEquals(expected, base, null, extension, suffix, queryString,
             target);
 
         selectors = null;

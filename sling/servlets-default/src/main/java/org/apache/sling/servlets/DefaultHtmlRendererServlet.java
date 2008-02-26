@@ -31,25 +31,25 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
- * 
+ *
  * @scr.service
  *  interface="javax.servlet.Servlet"
- *  
- * @scr.component 
- *  immediate="true" 
+ *
+ * @scr.component
+ *  immediate="true"
  *  metatype="false"
- *  
- * @scr.property 
+ *
+ * @scr.property
  *  name="service.description"
  *  value="Default HTML Renderer Servlet"
- *  
- * @scr.property 
- *  name="service.vendor" 
+ *
+ * @scr.property
+ *  name="service.vendor"
  *  value="The Apache Software Foundation"
  *
- * Use this as the default servlet for POST requests for Sling 
- * @scr.property 
- *  name="sling.servlet.resourceTypes" 
+ * Use this as the default servlet for html get requests for Sling
+ * @scr.property
+ *  name="sling.servlet.resourceTypes"
  *  value="sling/servlet/default"
  * @scr.property
  *  name="sling.servlet.extensions"

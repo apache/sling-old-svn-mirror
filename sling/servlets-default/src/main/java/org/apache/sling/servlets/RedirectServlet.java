@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,7 +30,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.api.wrappers.SlingRequestPaths;
 
 /**
  * The <code>RedirectServlet</code> implements support for GET requests to
@@ -53,7 +51,7 @@ import org.apache.sling.api.wrappers.SlingRequestPaths;
  * sent where the target is the relative URL from the current resource to the
  * target resource. Selectors, extension, suffix and query string are also
  * appended to the redirect URL.
- * 
+ *
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Request Redirect Servlet"
@@ -140,7 +138,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         } else {
             postFix = null;
         }
-        
+
 
         StringBuffer pathBuf = new StringBuffer();
 
@@ -148,7 +146,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         if (postFix != null) {
             basePath += postFix;
         }
-        
+
         makeRelative(pathBuf, basePath, targetPath);
 
         if (postFix != null) {
