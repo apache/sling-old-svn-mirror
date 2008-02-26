@@ -33,25 +33,25 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as plain text.
- * 
+ *
  * @scr.service
  *  interface="javax.servlet.Servlet"
- *  
- * @scr.component 
- *  immediate="true" 
+ *
+ * @scr.component
+ *  immediate="true"
  *  metatype="false"
- *  
- * @scr.property 
+ *
+ * @scr.property
  *  name="service.description"
  *  value="Default Plain Text Renderer Servlet"
- *  
- * @scr.property 
- *  name="service.vendor" 
+ *
+ * @scr.property
+ *  name="service.vendor"
  *  value="The Apache Software Foundation"
  *
- * Use this as the default servlet for POST requests for Sling 
- * @scr.property 
- *  name="sling.servlet.resourceTypes" 
+ * Use this as the default servlet for text get requests for Sling
+ * @scr.property
+ *  name="sling.servlet.resourceTypes"
  *  value="sling/servlet/default"
  * @scr.property
  *  name="sling.servlet.extensions"
