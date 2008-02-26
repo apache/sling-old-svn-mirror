@@ -23,12 +23,12 @@ import org.apache.sling.api.resource.Resource;
 /**
  * microsling request URI parser that provides SlingRequestPathInfo for the
  * current request, based on the path of the Resource. The values provided by
- * this depend on the Resource.getPath() value, as the ResourceResolver might use
- * all or only part of the request URI path to locate the resource (see also
+ * this depend on the Resource.getPath() value, as the ResourceResolver might
+ * use all or only part of the request URI path to locate the resource (see also
  * SLING-60 ). What we're after is the remainder of the path, the part that was
  * not used to locate the Resource, and we split that part in different
  * subparts: selectors, extension and suffix.
- *
+ * 
  * @see SlingRequestPathInfoTest for a number of examples.
  */
 public class SlingRequestPathInfo implements RequestPathInfo {
@@ -59,95 +59,52 @@ public class SlingRequestPathInfo implements RequestPathInfo {
         }
 
         resourcePath = r.getResourceMetadata().getResolutionPath();
-        if (resourcePath != null && !"/".equals(resourcePath)
+        if (resourcePath != null
             && pathToParse.length() >= resourcePath.length()) {
             pathToParse = pathToParse.substring(resourcePath.length());
         }
 
-        if (pathToParse.startsWith("/.")) {
-            final int lastDot = pathToParse.lastIndexOf('.');
-            
-            if (1==lastDot) {
-            	selectorString = null;
-                selectors = NO_SELECTORS;
-            } else {
-            	String tmpSel = pathToParse.substring(2, lastDot);
-                selectors = tmpSel.split("\\.");
-                selectorString = (selectors.length > 0) ? tmpSel : null;
-            	
-            	//selectorString = pathToParse.substring(firstDot, lastDot - firstDot);
-            	
-            }
-            
-            final int lastSlash = pathToParse.lastIndexOf('/');
-            if (lastSlash == 0) {
-            	suffix = "";
-            	extension = pathToParse.substring(lastDot + 1);
-            } else {
-            	final int secondSlash = pathToParse.indexOf("/", 1);
-            	suffix = pathToParse.substring(secondSlash);
-            	String prefix = pathToParse.substring(0, secondSlash);
-            	final int extensionDot = prefix.lastIndexOf(".");
-            	extension = prefix.substring(extensionDot + 1);
-            }
-        } else if (pathToParse.startsWith("/")) {
-            // resolution path is up in the hierarchy
-            // from request path: split the remainder
-            // in suffix and extension only
+        // separate selectors/ext from the suffix
+        int firstSlash = pathToParse.indexOf('/');
+        String pathToSplit;
+        if (firstSlash < 0) {
+            pathToSplit = pathToParse;
+            suffix = null;
+        } else {
+            pathToSplit = pathToParse.substring(0, firstSlash);
+            suffix = pathToParse.substring(firstSlash);
+        }
+
+        int lastDot = pathToSplit.lastIndexOf('.');
+
+        if (lastDot <= 1) {
+
+            // no selectors if only extension exists or selectors is empty
             selectorString = null;
             selectors = NO_SELECTORS;
-            final int lastDot = pathToParse.lastIndexOf('.');
-            final int lastSlash = pathToParse.lastIndexOf('/');
-            if(lastDot >= 0 && lastDot > lastSlash) {
-                suffix = pathToParse.substring(0, lastDot).substring(1);
-                extension = pathToParse.substring(lastDot + 1);
-            } else {
-                extension = null;
-                suffix = pathToParse;
-            }
 
         } else {
 
-            // separate selectors/ext from the suffix
-            int firstSlash = pathToParse.indexOf('/');
-            String pathToSplit;
-            if (firstSlash < 0) {
-                pathToSplit = pathToParse;
-                suffix = null;
-            } else {
-                pathToSplit = pathToParse.substring(0, firstSlash);
-                suffix = pathToParse.substring(firstSlash);
-            }
+            // no selectors if splitting would give an empty array
+            String tmpSel = pathToSplit.substring(1, lastDot);
+            selectors = tmpSel.split("\\.");
+            selectorString = (selectors.length > 0) ? tmpSel : null;
 
-
-            int lastDot = pathToSplit.lastIndexOf('.');
-
-            if (lastDot <= 1) {
-
-                // no selectors if only extension exists or selectors is empty
-                selectorString = null;
-                selectors = NO_SELECTORS;
-
-            } else {
-
-                // no selectors if splitting would give an empty array
-                String tmpSel = pathToSplit.substring(1, lastDot);
-                selectors = tmpSel.split("\\.");
-                selectorString = (selectors.length > 0) ? tmpSel : null;
-
-            }
-
-            // extension only if lastDot is not trailing
-            extension = (lastDot + 1 < pathToSplit.length())
-                    ? pathToSplit.substring(lastDot + 1)
-                    : null;
         }
+
+        // extension only if lastDot is not trailing
+        extension = (lastDot + 1 < pathToSplit.length())
+                ? pathToSplit.substring(lastDot + 1)
+                : null;
     }
 
-    private SlingRequestPathInfo(String resourcePath, String selectorString, String extension, String suffix) {
+    private SlingRequestPathInfo(String resourcePath, String selectorString,
+            String extension, String suffix) {
         this.resourcePath = resourcePath;
         this.selectorString = selectorString;
-        this.selectors = (selectorString != null) ? selectorString.split("\\.") : NO_SELECTORS;
+        this.selectors = (selectorString != null)
+                ? selectorString.split("\\.")
+                : NO_SELECTORS;
         this.extension = extension;
         this.suffix = suffix;
     }
