@@ -26,16 +26,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 /** Test the SlingRequestPathInfo class */
 public class SlingRequestPathInfoTest extends TestCase {
 
-    public void testSimplePath() {
-        RequestPathInfo p = new SlingRequestPathInfo(
-            new MockResource("/"), "/some/path.print.a4.html/some/suffix");
-        assertEquals("/", p.getResourcePath());
-        assertNull(p.getSelectorString());
-        assertEquals(0, p.getSelectors().length);
-        assertNull(p.getExtension());
-        assertEquals("/some/path.print.a4.html/some/suffix", p.getSuffix());
-    }
-
     public void testNullResource() {
         try {
             new SlingRequestPathInfo(null, "dontcare");
@@ -105,16 +95,6 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("/suffix", p.getSuffix());
     }
 
-    public void testSimpleSuffix() {
-        RequestPathInfo p = new SlingRequestPathInfo(
-            new MockResource("/"), "/some/path.print.a4.html/some/suffix");
-        assertEquals("/", p.getResourcePath());
-        assertNull(p.getSelectorString());
-        assertEquals(0, p.getSelectors().length);
-        assertNull(p.getExtension());
-        assertEquals("/some/path.print.a4.html/some/suffix", p.getSuffix());
-    }
-
     public void testAllOptions() {
         RequestPathInfo p = new SlingRequestPathInfo(
             new MockResource("/some/path"), "/some/path.print.a4.html/some/suffix");
@@ -139,8 +119,18 @@ public class SlingRequestPathInfoTest extends TestCase {
 
     public void testPathOnly() {
         RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
-            "/some/path/here"), "/some/path/here");
+        "/some/path/here"), "/some/path/here");
         assertEquals("/some/path/here", p.getResourcePath());
+        assertNull(p.getSelectorString());
+        assertEquals(0, p.getSelectors().length);
+        assertNull(p.getExtension());
+        assertNull(p.getSuffix());
+    }
+    
+    public void testPathWithExtensionOnly() {
+        RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
+            "/some/path/here.html"), "/some/path/here.html");
+        assertEquals("/some/path/here.html", p.getResourcePath());
         assertNull(p.getSelectorString());
         assertEquals(0, p.getSelectors().length);
         assertNull(p.getExtension());
@@ -189,16 +179,6 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("/some/suffix", p.getSuffix());
     }
 
-    public void testPartialResolutionA() {
-        RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
-            "/some"), "/some/path.print.a4.html/some/suffix");
-        assertEquals("/some", p.getResourcePath());
-        assertNull(p.getSelectorString());
-        assertEquals(0, p.getSelectors().length);
-        assertNull(p.getExtension());
-        assertEquals("/path.print.a4.html/some/suffix", p.getSuffix());
-    }
-
     public void testPartialResolutionB() {
         RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
             "/some/path"), "/some/path.print.a4.html/some/suffix");
@@ -232,40 +212,6 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("/some/suffix", p.getSuffix());
     }
 
-    public void testPartialResolutionE() {
-        RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
-            "/some/path.print.a4.html"), "/some/path.print.a4.html/some/suffix");
-        assertEquals("/some/path.print.a4.html", p.getResourcePath());
-        assertNull(p.getSelectorString());
-        assertEquals(0, p.getSelectors().length);
-        assertNull(p.getExtension());
-        assertEquals("/some/suffix", p.getSuffix());
-    }
-    
-    public void testJIRA_SLING_173_a() {
-        RequestPathInfo p = 
-            new SlingRequestPathInfo(
-                    new MockResource("/ujax-tests"), 
-                    "/ujax-tests/12005879509741.json"
-            );
-        assertEquals("/ujax-tests", p.getResourcePath());
-        assertNull(p.getSelectorString());
-        assertEquals("json",p.getExtension());
-        assertEquals("12005879509741",p.getSuffix());
-    }
-
-    public void testJIRA_SLING_173_b() {
-        RequestPathInfo p = 
-            new SlingRequestPathInfo(
-                    new MockResource("/ujax-tests"), 
-                    "/ujax-tests/12005879509741.json."
-            );
-        assertEquals("/ujax-tests", p.getResourcePath());
-        assertNull(p.getSelectorString());
-        assertEquals("",p.getExtension());
-        assertEquals("12005879509741.json",p.getSuffix());
-    }
-
     public void testJIRA_250_a() {
     	RequestPathInfo p = 
             new SlingRequestPathInfo(
@@ -285,7 +231,7 @@ public class SlingRequestPathInfoTest extends TestCase {
             );
         assertEquals("/", p.getResourcePath());
         assertEquals("json", p.getExtension());
-        assertEquals("", p.getSuffix());
+        assertNull(p.getSuffix());
         assertEquals("Selector string must not be null", "1", p.getSelectorString());
     }
     
@@ -309,7 +255,7 @@ public class SlingRequestPathInfoTest extends TestCase {
             );
         assertEquals("/", p.getResourcePath());
         assertEquals("json", p.getExtension());
-        assertEquals("", p.getSuffix());
+        assertNull(p.getSuffix());
         assertNull(p.getSelectorString());
     }
     
