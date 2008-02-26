@@ -31,6 +31,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,8 @@ public class Loader {
 
     public static final String EXT_XJSON = ".xjson";
 
+    public static final String ROOT_DESCRIPTOR = "/ROOT";
+
     // default content type for createFile()
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
@@ -72,11 +75,7 @@ public class Loader {
 
     private ContentLoaderService jcrContentHelper;
 
-    private XmlReader xmlReader;
-
-    private JsonReader jsonReader;
-
-    private XJsonReader xjsonReader;
+    private Map<String, ImportProvider> importProviders;
 
     private Map<String, List<String>> delayedReferences;
 
@@ -87,18 +86,22 @@ public class Loader {
         this.jcrContentHelper = jcrContentHelper;
         this.delayedReferences = new HashMap<String, List<String>>();
         this.delayedBundles = new LinkedList<Bundle>();
+        
+        importProviders = new LinkedHashMap<String, ImportProvider>();
+        importProviders.put(EXT_JCR_XML, null);
+        importProviders.put(EXT_JSON, JsonReader.PROVIDER);
+        importProviders.put(EXT_XJSON, XJsonReader.PROVIDER);
+        importProviders.put(EXT_XML, XmlReader.PROVIDER);
     }
 
     public void dispose() {
-        this.xmlReader = null;
-        this.jsonReader = null;
-        this.xjsonReader = null;
         this.delayedReferences = null;
         if (this.delayedBundles != null) {
             this.delayedBundles.clear();
             this.delayedBundles = null;
         }
         this.jcrContentHelper = null;
+        this.importProviders.clear();
     }
 
     public void registerBundle(Session session, Bundle bundle) {
@@ -203,6 +206,13 @@ public class Loader {
         }
 
         Set<URL> ignoreEntry = new HashSet<URL>();
+
+        // potential root node import/extension
+        URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle, path);
+        if (rootNodeDescriptor != null) {
+            ignoreEntry.add(rootNodeDescriptor);
+        }
+
         while (entries.hasMoreElements()) {
             final String entry = entries.nextElement();
             log.debug("Processing initial content entry {}", entry);
@@ -211,21 +221,18 @@ public class Loader {
                 String base = entry.substring(0, entry.length() - 1);
                 String name = this.getName(base);
 
-                Node node = null;
-                URL nodeDescriptor = bundle.getEntry(base + EXT_JCR_XML);
-                if (nodeDescriptor == null) {
-                    nodeDescriptor = bundle.getEntry(base + EXT_XML);
-                }
-                if (nodeDescriptor == null) {
-                    nodeDescriptor = bundle.getEntry(base + EXT_JSON);
-                }
-                if (nodeDescriptor == null) {
-                    nodeDescriptor = bundle.getEntry(base + EXT_XJSON);
+                URL nodeDescriptor = null;
+                for (String ext : importProviders.keySet()) {
+                    nodeDescriptor = bundle.getEntry(base + ext);
+                    if (nodeDescriptor != null) {
+                        break;
+                    }
                 }
 
                 // if we have a descriptor, which has not been processed yet,
                 // otherwise call crateFolder, which creates an nt:folder or
                 // returns an existing node (created by a descriptor)
+                Node node = null;
                 if (nodeDescriptor != null
                     && !ignoreEntry.contains(nodeDescriptor)) {
                     node = this.createNode(parent, name, nodeDescriptor);
@@ -280,21 +287,21 @@ public class Loader {
 
         InputStream ins = null;
         try {
-            NodeReader nodeReader;
+            // special treatment for system view imports
             if (nodeXML.getPath().toLowerCase().endsWith(EXT_JCR_XML)) {
                 return importSystemView(parent, name, nodeXML);
+            }
 
-            } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XML)) {
-                nodeReader = this.getXmlReader();
-
-            } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_JSON)) {
-                nodeReader = this.getJsonReader();
-
-            } else if (nodeXML.getPath().toLowerCase().endsWith(EXT_XJSON)) {
-                nodeReader = this.getXJsonReader();
-
-            } else {
-                // cannot find out the type
+            NodeReader nodeReader = null;
+            for (Map.Entry<String, ImportProvider> e: importProviders.entrySet()) {
+                if (nodeXML.getPath().toLowerCase().endsWith(e.getKey())) {
+                    nodeReader = e.getValue().getReader();
+                    break;
+                }
+            }
+            
+            // cannot find out the type
+            if (nodeReader == null) {
                 return null;
             }
 
@@ -329,15 +336,27 @@ public class Loader {
     private Node createNode(Node parentNode,
             org.apache.sling.jcr.resource.internal.loader.Node clNode)
             throws RepositoryException {
+
+        // ensure repository node
         Node node;
         if (parentNode.hasNode(clNode.getName())) {
             node = parentNode.getNode(clNode.getName());
         } else {
             node = parentNode.addNode(clNode.getName(),
                 clNode.getPrimaryNodeType());
+        }
 
-            if (clNode.getMixinNodeTypes() != null) {
-                for (String mixin : clNode.getMixinNodeTypes()) {
+        return setupNode(node, clNode);
+    }
+
+    private Node setupNode(Node node,
+            org.apache.sling.jcr.resource.internal.loader.Node clNode)
+            throws RepositoryException {
+
+        // ammend mixin node types
+        if (clNode.getMixinNodeTypes() != null) {
+            for (String mixin : clNode.getMixinNodeTypes()) {
+                if (!node.isNodeType(mixin)) {
                     node.addMixin(mixin);
                 }
             }
@@ -471,7 +490,7 @@ public class Loader {
      * encoding. In this case, this method decodes the name using the
      * <code>java.netURLDecoder</code> class with the <i>UTF-8</i> character
      * encoding.
-     *
+     * 
      * @param path The path from which to extract the name part.
      * @return The URL decoded name part.
      */
@@ -536,37 +555,11 @@ public class Loader {
             bundle.getSymbolicName());
     }
 
-    private XmlReader getXmlReader() throws IOException {
-        if (this.xmlReader == null) {
-            try {
-                this.xmlReader = new XmlReader();
-            } catch (Throwable t) {
-                throw (IOException) new IOException(t.getMessage()).initCause(t);
-            }
-        }
-
-        return this.xmlReader;
-    }
-
-    private JsonReader getJsonReader() {
-        if (this.jsonReader == null) {
-            this.jsonReader = new JsonReader();
-        }
-        return this.jsonReader;
-    }
-
-    private XJsonReader getXJsonReader() {
-        if (this.xjsonReader == null) {
-            this.xjsonReader = new XJsonReader();
-        }
-        return this.xjsonReader;
-    }
-
     /**
      * Import the XML file as JCR system or document view import. If the XML
      * file is not a valid system or document view export/import file,
      * <code>false</code> is returned.
-     *
+     * 
      * @param parent The parent node below which to import
      * @param nodeXML The URL to the XML file to import
      * @return <code>true</code> if the import succeeds, <code>false</code>
@@ -618,6 +611,54 @@ public class Loader {
                     ins.close();
                 } catch (IOException ignore) {
                     // ignore
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Imports mixin nodes and properties (and optionally child nodes) of the
+     * root node.
+     */
+    private URL importRootNode(Session session, Bundle bundle, String path)
+            throws RepositoryException {
+
+        InputStream ins = null;
+        try {
+            NodeReader nodeReader = null;
+            URL rootNodeDescriptor = null;
+            
+            for (Map.Entry<String, ImportProvider> e : importProviders.entrySet()) {
+                if (e.getValue() != null) {
+                    rootNodeDescriptor = bundle.getEntry(path + ROOT_DESCRIPTOR + e.getKey());
+                    if (rootNodeDescriptor != null) {
+                        nodeReader = e.getValue().getReader();
+                        break;
+                    }
+                }
+            }
+
+            // no root descriptor found
+            if (nodeReader == null) {
+                return null;
+            }
+
+            ins = rootNodeDescriptor.openStream();
+            org.apache.sling.jcr.resource.internal.loader.Node clNode = nodeReader.parse(ins);
+
+            setupNode(session.getRootNode(), clNode);
+
+            return rootNodeDescriptor;
+        } catch (RepositoryException re) {
+            throw re;
+        } catch (Throwable t) {
+            throw new RepositoryException(t.getMessage(), t);
+        } finally {
+            if (ins != null) {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
                 }
             }
         }
