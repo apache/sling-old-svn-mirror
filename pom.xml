@@ -99,6 +99,7 @@
         <module>sling/event</module>
         <module>sling/scheduler</module>
         <module>sling/sample</module>
+        <module>sling/servlets-default</module>
         <module>sling/servlets-standard</module>
         <module>sling/threads</module>
 
