@@ -30,6 +30,29 @@ import org.slf4j.LoggerFactory;
 
 /**
  * POST servlet that implements the ujax "protocol"
+ * 
+ * @scr.service
+ *  interface="javax.servlet.Servlet"
+ *  
+ * @scr.component 
+ *  immediate="true" 
+ *  metatype="false"
+ *  
+ * @scr.property 
+ *  name="service.description"
+ *  value="ujax Post Servlet"
+ *  
+ * @scr.property 
+ *  name="service.vendor" 
+ *  value="The Apache Software Foundation"
+ *
+ * Use this as the default servlet for POST requests for Sling 
+ * @scr.property 
+ *  name="sling.servlet.resourceTypes" 
+ *  value="sling/servlet/default"
+ * @scr.property
+ *  name="sling.servlet.methods"
+ *  value="POST"
  */
 public class UjaxPostServlet extends SlingAllMethodsServlet {
 
