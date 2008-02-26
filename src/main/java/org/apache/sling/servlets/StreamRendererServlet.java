@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -37,32 +36,31 @@ import org.apache.sling.api.resource.ResourceMetadata;
 
 /**
  * The <code>StreamRendererServlet</code> TODO
- * 
+ *
  * @scr.service
  *  interface="javax.servlet.Servlet"
- *  
- * @scr.component 
- *  immediate="true" 
+ *
+ * @scr.component
+ *  immediate="true"
  *  metatype="false"
- *  
- * @scr.property 
+ *
+ * @scr.property
  *  name="service.description"
  *  value="Default Streaming Renderer Servlet"
- *  
- * @scr.property 
- *  name="service.vendor" 
+ *
+ * @scr.property
+ *  name="service.vendor"
  *  value="The Apache Software Foundation"
  *
- * Use this as the default servlet for POST requests for Sling 
- * @scr.property 
- *  name="sling.servlet.resourceTypes" 
+ * @scr.property
+ *  name="sling.servlet.resourceTypes"
  *  value="sling/servlet/default"
- *  
+ *
  * Handler for .res requests
  * @scr.property
  *  name="sling.servlet.extensions"
  *  value="res"
- *  
+ *
  * Generic handler for all get requests
  * @scr.property
  *  name="sling.servlet.methods"
@@ -84,7 +82,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
                 "No default renderer found for extension='" + ext + "'");
             return;
         }
-        
+
         Resource resource = request.getResource();
 
         // cannot handle the request for missing resources
@@ -159,7 +157,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
      * Returns <code>true</code> if the request has a
      * <code>If-Modified-Since</code> header whose date value is later than
      * the last modification time given as <code>modifTime</code>.
-     * 
+     *
      * @param request The <code>ComponentRequest</code> checked for the
      *            <code>If-Modified-Since</code> header.
      * @param modifTime The last modification time to compare the header to.

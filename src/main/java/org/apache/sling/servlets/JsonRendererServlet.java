@@ -21,7 +21,6 @@ import java.io.IOException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
@@ -39,25 +38,25 @@ import org.slf4j.LoggerFactory;
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as a JSON data
  * block
- * 
+ *
  * @scr.service
  *  interface="javax.servlet.Servlet"
- *  
- * @scr.component 
- *  immediate="true" 
+ *
+ * @scr.component
+ *  immediate="true"
  *  metatype="false"
- *  
- * @scr.property 
+ *
+ * @scr.property
  *  name="service.description"
  *  value="Default JSON Renderer Servlet"
- *  
- * @scr.property 
- *  name="service.vendor" 
+ *
+ * @scr.property
+ *  name="service.vendor"
  *  value="The Apache Software Foundation"
  *
- * Use this as the default servlet for POST requests for Sling 
- * @scr.property 
- *  name="sling.servlet.resourceTypes" 
+ * Use this as the default servlet for json get requests for Sling
+ * @scr.property
+ *  name="sling.servlet.resourceTypes"
  *  values.0="sling/servlet/default"
  *  values.1="sling:redirect"
  * @scr.property
@@ -66,7 +65,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
-    private static final Logger log = LoggerFactory.getLogger(JsonRendererServlet.class);
+    private final Logger log = LoggerFactory.getLogger(JsonRendererServlet.class);
 
     private static final long serialVersionUID = 5577121546674133317L;
 
