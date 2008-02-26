@@ -135,7 +135,7 @@ public class NodetypeRenderingTest extends RenderingTestBase {
     }
 
     public void TODO_FAILS_testJsHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.js","html.js");
+        final String toDelete = uploadTestScript("rendering-test.ecma","html.ecma");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes JS marker",content.contains("Raw javascript template"));

@@ -52,7 +52,7 @@ public class JavascriptWrappersTest extends HttpTestBase {
     }
 
     public void testRecursiveDump() throws IOException {
-        final String toDelete = uploadTestScript(testRootNode.scriptPath, "dump-resource.js", "html.js");
+        final String toDelete = uploadTestScript(testRootNode.scriptPath, "dump-resource.ecma", "html.ecma");
         try {
             final String content = getContent(testRootNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
 
