@@ -53,21 +53,6 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
-    public JcrNodeResourceIterator(JcrNodeResource parent) {
-        try {
-            NodeIterator nodes = parent.getNode().getNodes();
-
-            this.resourceResolver = parent.getResourceResolver();
-            this.nodes = nodes;
-            this.nextResult = seek();
-        } catch (RepositoryException re) {
-            log.error("<init>: Cannot get children of resource " + parent, re);
-            this.resourceResolver = null;
-            this.nodes = null;
-            this.nextResult = null;
-        }
-    }
-
     public JcrNodeResourceIterator(ResourceResolver resourceResolver,
             NodeIterator nodes) {
         this.resourceResolver = resourceResolver;

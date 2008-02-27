@@ -258,6 +258,10 @@ public class ResourceProviderEntryTest extends TestCase {
             return null;
         }
 
+        public String getResourceSuperType() {
+            return null;
+        }
+        
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }
