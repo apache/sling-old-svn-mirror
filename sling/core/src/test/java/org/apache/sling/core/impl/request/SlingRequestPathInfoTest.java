@@ -272,6 +272,10 @@ public class SlingRequestPathInfoTest extends TestCase {
             throw new Error("MockResource does not implement this method");
         }
 
+        public String getResourceSuperType() {
+            throw new Error("MockResource does not implement this method");
+        }
+        
         public String getPath() {
             throw new Error("MockResource does not implement this method");
         }
