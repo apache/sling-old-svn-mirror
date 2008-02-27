@@ -22,7 +22,7 @@ import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQ
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_RESOLVER_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESPONSE_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SERVICE_LOCATOR_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SLING_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.services.ServiceLocator;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 
 /**
  * This class defines the scripting variables that are created by the
@@ -82,9 +82,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     /**
      * The name of the tag attribute used to define the name of the
-     * ServiceLocator scripting variable (value is "serviceLocatorName").
+     * SlingScriptHelper scripting variable (value is "slingName").
      */
-    public static final String ATTR_SERVICE_LOCATOR_NAME = "serviceLocatorName";
+    public static final String ATTR_SLING_NAME = "slingName";
 
     /**
      * The name of the tag attribute used to define the name of the
@@ -102,7 +102,7 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
     private static final String NODE_CLASS = Node.class.getName();
 
-    private static final String SERVICE_LOCATOR_CLASS = ServiceLocator.class.getName();
+    private static final String SLING_CLASS = SlingScriptHelper.class.getName();
 
     /**
      * Returns an Array of <code>VariableInfo</code> objects describing
@@ -131,8 +131,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
         addVar(varInfos, data, ATTR_RESOURCE_RESOLVER_NAME,
             DEFAULT_RESOURCE_RESOLVER_NAME, RESOURCE_RESOLVER_CLASS);
 
-        addVar(varInfos, data, ATTR_SERVICE_LOCATOR_NAME,
-            DEFAULT_SERVICE_LOCATOR_NAME, SERVICE_LOCATOR_CLASS);
+        addVar(varInfos, data, ATTR_SLING_NAME,
+            DEFAULT_SLING_NAME, SLING_CLASS);
 
         return varInfos.toArray(new VariableInfo[varInfos.size()]);
 
