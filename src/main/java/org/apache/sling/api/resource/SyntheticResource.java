@@ -59,6 +59,13 @@ public class SyntheticResource implements Resource {
     }
 
     /**
+     * Synthetic resources by default do not have a resource super type.
+     */
+    public String getResourceSuperType() {
+        return null;
+    }
+    
+    /**
      * Returns a resource metadata object containing just the path of this
      * resource as the {@link ResourceMetadata#RESOLUTION_PATH} property.
      */

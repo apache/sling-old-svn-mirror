@@ -46,6 +46,11 @@ public final class NonExistingResource implements Resource {
         return RESOURCE_TYPE_NON_EXISTING;
     }
 
+    // Non-existing resources have no super type
+    public String getResourceSuperType() {
+        return null;
+    }
+    
     public ResourceMetadata getResourceMetadata() {
         return resourceMetadata;
     }
