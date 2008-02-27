@@ -21,14 +21,12 @@ package org.apache.sling.core.impl;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.core.RequestUtil;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.servlets.ErrorHandler;
 
@@ -149,7 +147,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         ErrorHandler eh = getRequestData().getSlingMainServlet().getErrorHandler();
         eh.handleError(sc, msg, requestData.getSlingRequest(), this);
     }
-    
+
     @Override
     public void setStatus(int sc, String sm) {
         checkCommitted();
