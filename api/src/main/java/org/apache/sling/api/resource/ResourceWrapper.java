@@ -60,6 +60,10 @@ public class ResourceWrapper implements Resource {
         return resource.getResourceType();
     }
 
+    public String getResourceSuperType() {
+        return resource.getResourceSuperType();
+    }
+    
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return resource.adaptTo(type);
     }
