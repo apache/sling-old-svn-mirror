@@ -63,11 +63,13 @@ import org.slf4j.LoggerFactory;
     public Repository getRepository(String repositoryName, Hashtable<String, Object> jndiContext) {
         
         Repository result = null;
+        String tried = "";
         
         if(jndiContext == null || jndiContext.size() == 0) {
             log.info("jndiContext is null or empty, not trying JNDI");
         } else {
             log.debug("Trying to acquire Repository '" + repositoryName + "' via JNDI, context=" + jndiContext);
+            tried += "JNDI ";
             final ClassLoader old = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
@@ -85,7 +87,7 @@ import org.slf4j.LoggerFactory;
                 }
                 
             } catch (Throwable t) {
-                log.debug("Unable to acquire Repository '" + repositoryName + "' via JNDI, context=" + jndiContext, t);
+                log.info("Unable to acquire Repository '" + repositoryName + "' via JNDI, context=" + jndiContext, t);
             } finally {
                 Thread.currentThread().setContextClassLoader(old);
             }
@@ -96,18 +98,19 @@ import org.slf4j.LoggerFactory;
                 log.info("Repository name does not start with '" + RMI_PREFIX + "', not trying RMI");
             } else {
                 try {
+                    tried += "RMI ";
                     log.debug("Trying to acquire Repository '" + repositoryName + "' via RMI");
                     ClientRepositoryFactory crf = new ClientRepositoryFactory();
                     result = crf.getRepository(repositoryName);
                     log.info("Acquired Repository '" + repositoryName + "' via RMI");
                 } catch (Throwable t) {
-                    log.debug("Unable to acquire Repository '" + repositoryName + "' via RMI", t);
+                    log.info("Unable to acquire Repository '" + repositoryName + "' via RMI", t);
                 }
             }
         }
         
         if(result == null) {
-            log.info("Unable to acquire Repository '" + repositoryName + "'");
+            log.info("Unable to acquire Repository '" + repositoryName + "', tried " + tried);
         }
         
         return result;
