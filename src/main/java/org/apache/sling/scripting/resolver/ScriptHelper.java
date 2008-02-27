@@ -19,6 +19,11 @@
 package org.apache.sling.scripting.resolver;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -30,8 +35,12 @@ import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.api.services.InvalidServiceFilterSyntaxException;
 import org.apache.sling.scripting.resolver.impl.helper.OnDemandReaderRequest;
 import org.apache.sling.scripting.resolver.impl.helper.OnDemandWriterResponse;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
 /**
  * Simple script helper providing access to the (wrapped) response, the
@@ -47,8 +56,27 @@ public class ScriptHelper implements SlingScriptHelper {
 
     private final SlingHttpServletResponse response;
 
-    public ScriptHelper(SlingScript script, SlingHttpServletRequest request,
+    protected final BundleContext bundleContext;
+
+    /**
+     * The list of references - we don't need to synchronize this as we are
+     * running in one single request.
+     */
+    protected final List<ServiceReference> references = new ArrayList<ServiceReference>();
+
+    /** A map of found services. */
+    protected final Map<String, Object> services = new HashMap<String, Object>();
+
+    public ScriptHelper(BundleContext ctx, SlingScript script) {
+        this.bundleContext = ctx;
+        this.request = null;
+        this.response = null;
+        this.script = script;
+    }
+
+    public ScriptHelper(BundleContext ctx, SlingScript script, SlingHttpServletRequest request,
             SlingHttpServletResponse response) {
+        this.bundleContext = ctx;
         this.script = script;
         this.request = new OnDemandReaderRequest(request);
         this.response = new OnDemandWriterResponse(response);
@@ -95,5 +123,74 @@ public class ScriptHelper implements SlingScriptHelper {
                 throw new SlingServletException(se);
             }
         }
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#getService(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    public <ServiceType> ServiceType getService(Class<ServiceType> type) {
+        // TODO - we should make sure in the constructor that bundle context is not null
+        if ( this.bundleContext == null ) {
+            throw new IllegalAccessError("getService() can't be invoked without a bundle context.");
+        }
+        ServiceType service = (ServiceType) this.services.get(type.getName());
+        if (service == null) {
+            final ServiceReference ref = this.bundleContext.getServiceReference(type.getName());
+            if (ref != null) {
+                this.references.add(ref);
+                service = (ServiceType) this.bundleContext.getService(ref);
+                this.services.put(type.getName(), service);
+            }
+        }
+        return service;
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#getServices(java.lang.Class, java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    public <ServiceType> ServiceType[] getServices(
+            Class<ServiceType> serviceType, String filter)
+    throws InvalidServiceFilterSyntaxException {
+        // TODO - we should make sure in the constructor that bundle context is not null
+        if ( this.bundleContext == null ) {
+            throw new IllegalAccessError("getService() can't be invoked without a bundle context.");
+        }
+        try {
+            final ServiceReference[] refs = this.bundleContext.getServiceReferences(
+                serviceType.getName(), filter);
+            ServiceType[] result = null;
+            if (refs != null) {
+                final List<ServiceType> objects = new ArrayList<ServiceType>();
+                for (int i = 0; i < refs.length; i++) {
+                    this.references.add(refs[i]);
+                    final ServiceType service = (ServiceType) this.bundleContext.getService(refs[i]);
+                    if (service != null) {
+                        objects.add(service);
+                    }
+                }
+                if (objects.size() > 0) {
+                    result = (ServiceType[]) objects.toArray();
+                }
+            }
+            return result;
+        } catch (InvalidSyntaxException ise) {
+            throw new InvalidServiceFilterSyntaxException(filter,
+                "Invalid filter syntax", ise);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScriptHelper#dispose()
+     */
+    public void dispose() {
+        final Iterator<ServiceReference> i = this.references.iterator();
+        while (i.hasNext()) {
+            final ServiceReference ref = i.next();
+            this.bundleContext.ungetService(ref);
+        }
+        this.references.clear();
+        this.services.clear();
     }
 }
