@@ -53,7 +53,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
-import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.core.impl.auth.MissingRepositoryException;
@@ -65,7 +64,6 @@ import org.apache.sling.core.impl.helper.SlingFilterConfig;
 import org.apache.sling.core.impl.helper.SlingServletContext;
 import org.apache.sling.core.impl.request.ContentData;
 import org.apache.sling.core.impl.request.RequestData;
-import org.apache.sling.core.impl.services.ServiceLocatorImpl;
 import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
@@ -144,8 +142,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
 
     private String slingRoot;
-
-    private ServiceLocatorImpl slingServiceLocator;
 
     private SlingAuthenticator slingAuthenticator;
 
@@ -493,10 +489,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         return osgiComponentContext.getBundleContext();
     }
 
-    public ServiceLocator getServiceLocator() {
-        return slingServiceLocator;
-    }
-
     public SlingAuthenticator getSlingAuthenticator() {
         return slingAuthenticator;
     }
@@ -558,7 +550,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
         // setup servlet request processing helpers
         SlingServletContext tmpServletContext = new SlingServletContext(this);
-        slingServiceLocator = new ServiceLocatorImpl(bundleContext);
         slingAuthenticator = new SlingAuthenticator(bundleContext);
 
         // register the servlet and resources
@@ -631,10 +622,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         if (slingAuthenticator != null) {
             slingAuthenticator.dispose();
             slingAuthenticator = null;
-        }
-        if (slingServiceLocator != null) {
-            slingServiceLocator.dispose();
-            slingServiceLocator = null;
         }
 
         this.slingServletContext = null;
