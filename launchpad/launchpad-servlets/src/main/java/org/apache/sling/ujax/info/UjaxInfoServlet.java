@@ -24,7 +24,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -36,7 +35,7 @@ import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>UjaxInfoServlet</code> TODO
- * 
+ *
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="ujax Info Servlet"
@@ -80,7 +79,7 @@ public class UjaxInfoServlet extends SlingSafeMethodsServlet {
 
         }
     }
-
+/*
     private void listOptions(SlingHttpServletResponse response)
             throws IOException {
 
@@ -110,7 +109,7 @@ public class UjaxInfoServlet extends SlingSafeMethodsServlet {
         out.flush();
 
     }
-
+*/
     private void renderJson(SlingHttpServletResponse response,
             Map<String, String> data) throws IOException {
         // render data in JSON format
