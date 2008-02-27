@@ -38,8 +38,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.osgi.commons.OsgiUtil;
-import org.apache.sling.servlet.resolver.helper.PathSupport;
 import org.osgi.framework.ServiceReference;
 
 public class ServletResourceProvider implements ResourceProvider {
@@ -89,7 +89,7 @@ public class ServletResourceProvider implements ResourceProvider {
         for (String type : types) {
 
             // ensure namespace prefixes are converted to slashes
-            type = PathSupport.toPath(type);
+            type = JcrResourceUtil.resourceTypeToPath(type);
 
             // make absolute if relative
             if (!type.startsWith("/")) {
