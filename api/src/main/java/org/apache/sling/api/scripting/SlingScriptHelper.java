@@ -23,7 +23,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
-import org.apache.sling.api.services.InvalidServiceFilterSyntaxException;
 
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
