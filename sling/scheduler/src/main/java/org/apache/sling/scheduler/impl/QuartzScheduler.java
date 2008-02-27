@@ -77,9 +77,6 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the configuration. */
     static final String DATA_MAP_CONFIGURATION = "QuartzJobScheduler.Configuration";
 
-    /** Map key for the bundle context. */
-    static final String DATA_MAP_BUNDLE_CONTEXT = "QuartzJobScheduler.BundleContext";
-
     /** Map key for the logger. */
     static final String DATA_MAP_LOGGER = "QuartzJobScheduler.Logger";
 
@@ -219,7 +216,6 @@ public class QuartzScheduler implements Scheduler {
 
         jobDataMap.put(DATA_MAP_NAME, jobName);
         jobDataMap.put(DATA_MAP_RUN_CONCURRENT, (concurent? Boolean.TRUE: Boolean.FALSE));
-        jobDataMap.put(DATA_MAP_BUNDLE_CONTEXT, this.context.getBundleContext());
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
         if ( config != null ) {
             jobDataMap.put(DATA_MAP_CONFIGURATION, config);
