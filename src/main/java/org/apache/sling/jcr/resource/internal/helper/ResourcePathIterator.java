@@ -40,21 +40,21 @@ public class ResourcePathIterator implements Iterator<String> {
 
     /**
      * Creates a new instance iterating over the given path
-     * 
+     *
      * @param path The path to iterate over. If this is empty or
      *            <code>null</code> this iterator will not return anything.
      */
     public ResourcePathIterator(String path) {
 
         if (path == null || path.length() == 0) {
-            
+
             // null or empty path, there is nothing to return
             nextPath = null;
 
         } else {
 
             // find last non-slash character
-            int i = (path != null) ? path.length() - 1 : -1;
+            int i = path.length() - 1;
             while (i >= 0 && path.charAt(i) == '/') {
                 i--;
             }
