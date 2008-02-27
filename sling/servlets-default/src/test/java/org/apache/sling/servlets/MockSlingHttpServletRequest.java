@@ -39,7 +39,6 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.api.services.ServiceLocator;
 
 class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
@@ -116,10 +115,6 @@ class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public Enumeration<String> getResponseContentTypes() {
-        return null;
-    }
-
-    public ServiceLocator getServiceLocator() {
         return null;
     }
 

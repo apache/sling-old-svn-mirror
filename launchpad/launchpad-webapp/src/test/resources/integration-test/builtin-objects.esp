@@ -12,7 +12,7 @@
 		available 
 	-->
 	<%
-		var sc = request.getServiceLocator().getService(Packages.java.lang.String);
+		var sc = sling.getService(Packages.java.lang.String);
 	%>
 	<p>sc:<%= sc %></p>
 	

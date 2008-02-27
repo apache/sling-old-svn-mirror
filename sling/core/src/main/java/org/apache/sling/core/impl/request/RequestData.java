@@ -47,7 +47,6 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
@@ -542,10 +541,6 @@ public class RequestData implements BufferProvider {
 
     public RequestProgressTracker getRequestProgressTracker() {
         return requestProgressTracker;
-    }
-
-    public ServiceLocator getServiceLocator() {
-        return slingMainServlet.getServiceLocator();
     }
 
     /**
