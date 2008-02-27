@@ -27,53 +27,14 @@ import org.apache.sling.api.resource.ResourceResolver;
  * <code>Resource</code> interface which may be used to provide a resource
  * object which has no related repository item.
  * <p>
- * TODO: a similar interface exists in microsling, we might want to
- * consolidate (see SLING-129).
+ * @deprecated to be removed soooon
  */
-public class SyntheticResource implements Resource {
+public class SyntheticResource extends
+        org.apache.sling.api.resource.SyntheticResource {
 
-    /** The path of the synthetic resource */
-    private String path;
-
-    /** The type this synthetic resource assumes */
-    private String resourceType;
-
-    /** The metadat of this resource just containig the resource path */
-    private ResourceMetadata resourceMetadata;
-
-    /**
-     * Creates a synthetic content with the given path and component Id.
-     *
-     * @param path The path of the synthetic content
-     * @param resourceType The ID of the component rendering the synthetic
-     *            content
-     */
-    public SyntheticResource(String path, String resourceType) {
-        this.path = path;
-        this.resourceType = resourceType;
-        this.resourceMetadata = new ResourceMetadata();
-        this.resourceMetadata.put(ResourceMetadata.RESOLUTION_PATH, path);
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public String getResourceType() {
-        return resourceType;
-    }
-
-    public ResourceMetadata getResourceMetadata() {
-        return resourceMetadata;
-    }
-
-    /** synthetic resources have no provider */
-    public ResourceResolver getResourceResolver() {
-        return null;
-    }
-
-    public <Type> Type adaptTo(Class<Type> type) {
-        return null;
+    public SyntheticResource(ResourceResolver resourceResolver, String path,
+            String resourceType) {
+        super(resourceResolver, path, resourceType);
     }
 
 }
