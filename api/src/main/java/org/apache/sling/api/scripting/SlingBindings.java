@@ -19,6 +19,7 @@
 package org.apache.sling.api.scripting;
 
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.util.HashMap;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -57,6 +58,14 @@ public class SlingBindings extends HashMap<String, Object> {
      * This bound variable is required in the bindings given the script.
      */
     public static final String RESPONSE = "response";
+
+    /**
+     * The name of the global scripting variable providing the
+     * {@link java.io.Reader} object (value is "reader").
+     * <p>
+     * This bound variable is required in the bindings given the script.
+     */
+    public static final String READER = "reader";
 
     /**
      * The name of the global scripting variable providing the
@@ -216,6 +225,30 @@ public class SlingBindings extends HashMap<String, Object> {
         Object value = get(REQUEST);
         if (value instanceof SlingHttpServletRequest) {
             return (SlingHttpServletRequest) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #READER} property to <code>reader</code> if not
+     * <code>null</code>.
+     */
+    public void setReader(Reader reader) {
+        if (reader != null) {
+            put(READER, reader);
+        }
+    }
+
+    /**
+     * Returns the {@link #READER} property if not <code>null</code> and a
+     * <code>Reader</code> instance. Otherwise <code>null</code> is
+     * returned.
+     */
+    public Reader getReader() {
+        Object value = get(READER);
+        if (value instanceof Reader) {
+            return (Reader) value;
         }
 
         return null;

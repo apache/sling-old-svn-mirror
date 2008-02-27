@@ -20,6 +20,7 @@ package org.apache.sling.scripting.resolver.impl;
 
 import static org.apache.sling.api.scripting.SlingBindings.LOG;
 import static org.apache.sling.api.scripting.SlingBindings.OUT;
+import static org.apache.sling.api.scripting.SlingBindings.READER;
 import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
 import static org.apache.sling.api.scripting.SlingBindings.RESOURCE;
 import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
@@ -68,7 +69,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 	// name of the global variable containing the node to which the
 	// resource adapts (null if the resource does not adapt to a node
     private static final String NODE = "currentNode";
-    
+
     private Resource scriptResource;
 
     private ScriptEngine scriptEngine;
@@ -100,7 +101,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             ScriptContext ctx = new SimpleScriptContext();
             ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-            ctx.setReader(((SlingHttpServletRequest) bindings.get(REQUEST)).getReader());
+            ctx.setReader((Reader) bindings.get(READER));
             ctx.setWriter((Writer) bindings.get(OUT));
             ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
 
@@ -153,6 +154,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             SlingBindings props = new SlingBindings();
             props.setRequest((SlingHttpServletRequest) req);
             props.setResponse((SlingHttpServletResponse) res);
+            props.setReader(req.getReader());
             props.setFlush(true);
 
             res.setCharacterEncoding("UTF-8");
@@ -232,63 +234,74 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     private Bindings verifySlingBindings(String scriptName,
             SlingBindings slingBindings) throws IOException {
 
+    	Bindings bindings = new SimpleBindings();
+
         SlingHttpServletRequest request = slingBindings.getRequest();
-        if (request == null) {
-            throw fail(scriptName, REQUEST, "Missing or wrong type");
-        }
+        if (request != null) {
+            //throw fail(scriptName, REQUEST, "Missing or wrong type");
 
-        SlingHttpServletResponse response = slingBindings.getResponse();
-        if (response == null) {
-            throw fail(scriptName, RESPONSE, "Missing or wrong type");
-        }
-
-        Object resourceObject = slingBindings.get(RESOURCE);
-        if (resourceObject != null && !(resourceObject instanceof Resource)) {
-            throw fail(scriptName, RESOURCE, "Wrong type");
-        }
-
-        Object writerObject = slingBindings.get(OUT);
-        if (writerObject != null && !(writerObject instanceof PrintWriter)) {
-            throw fail(scriptName, OUT, "Wrong type");
-        }
-
-        SlingScriptHelper sling;
-
-        Object slingObject = slingBindings.get(SLING);
-        if (slingObject == null) {
-
-            sling = new ScriptHelper(this, request, response);
-
-        } else if (slingObject instanceof SlingScriptHelper) {
-
-            sling = (SlingScriptHelper) slingObject;
-
-            if (sling.getRequest() != request) {
-                throw fail(scriptName, REQUEST,
-                    "Not the same as request field of SlingScriptHelper");
+        	SlingHttpServletResponse response = slingBindings.getResponse();
+            if (response == null) {
+                throw fail(scriptName, RESPONSE, "Missing or wrong type");
             }
 
-            if (sling.getResponse() != response) {
-                throw fail(scriptName, RESPONSE,
-                    "Not the same as response field of SlingScriptHelper");
+            Object resourceObject = slingBindings.get(RESOURCE);
+            if (resourceObject != null && !(resourceObject instanceof Resource)) {
+                throw fail(scriptName, RESOURCE, "Wrong type");
             }
 
-            if (resourceObject != null
-                && sling.getRequest().getResource() != resourceObject) {
-                throw fail(scriptName, RESOURCE,
-                    "Not the same as resource of the SlingScriptHelper request");
+            Object writerObject = slingBindings.get(OUT);
+            if (writerObject != null && !(writerObject instanceof PrintWriter)) {
+                throw fail(scriptName, OUT, "Wrong type");
             }
 
-            if (writerObject != null
-                && sling.getResponse().getWriter() != writerObject) {
-                throw fail(scriptName, OUT,
-                    "Not the same as writer of the SlingScriptHelper response");
+            SlingScriptHelper sling;
+
+            Object slingObject = slingBindings.get(SLING);
+            if (slingObject == null) {
+
+                sling = new ScriptHelper(this, request, response);
+
+            } else if (slingObject instanceof SlingScriptHelper) {
+
+                sling = (SlingScriptHelper) slingObject;
+
+                if (sling.getRequest() != request) {
+                    throw fail(scriptName, REQUEST,
+                        "Not the same as request field of SlingScriptHelper");
+                }
+
+                if (sling.getResponse() != response) {
+                    throw fail(scriptName, RESPONSE,
+                        "Not the same as response field of SlingScriptHelper");
+                }
+
+                if (resourceObject != null
+                    && sling.getRequest().getResource() != resourceObject) {
+                    throw fail(scriptName, RESOURCE,
+                        "Not the same as resource of the SlingScriptHelper request");
+                }
+
+                if (writerObject != null
+                    && sling.getResponse().getWriter() != writerObject) {
+                    throw fail(scriptName, OUT,
+                        "Not the same as writer of the SlingScriptHelper response");
+                }
+
+            } else {
+
+                throw fail(scriptName, SLING, "Wrong type");
+
             }
 
-        } else {
-
-            throw fail(scriptName, SLING, "Wrong type");
-
+            // set base variables when executing inside a request
+            bindings.put(SLING, sling);
+            bindings.put(REQUEST, sling.getRequest());
+            bindings.put(READER, sling.getRequest().getReader());
+            bindings.put(RESPONSE, sling.getResponse());
+            bindings.put(RESOURCE, sling.getRequest().getResource());
+            bindings.put(OUT, sling.getResponse().getWriter());
+            bindings.put(NODE, sling.getRequest().getResource().adaptTo(Node.class));
         }
 
         Object logObject = slingBindings.get(LOG);
@@ -297,16 +310,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         } else if (!(logObject instanceof Logger)) {
             throw fail(scriptName, LOG, "Wrong type");
         }
-
-        // set base variables
-        Bindings bindings = new SimpleBindings();
-        bindings.put(SLING, sling);
-        bindings.put(REQUEST, sling.getRequest());
-        bindings.put(RESPONSE, sling.getResponse());
-        bindings.put(RESOURCE, sling.getRequest().getResource());
-        bindings.put(OUT, sling.getResponse().getWriter());
         bindings.put(LOG, logObject);
-        bindings.put(NODE, sling.getRequest().getResource().adaptTo(Node.class));
 
         // copy non-base variables
         for (Map.Entry<String, Object> entry : slingBindings.entrySet()) {
