@@ -84,6 +84,13 @@ import org.slf4j.LoggerFactory;
                     LocalAdapterFactory laf = new ClientAdapterFactory();
                     result = laf.getRepository(remoteRepo);
                     log.info("Acquired RemoteRepository '" + repositoryName + "' via JNDI");
+                    
+                } else {
+                    log.info(
+                        "Repository '" + repositoryName + "' acquired via JDNI " 
+                        + "does not implement the required interfaces, class="
+                        + repoObject.getClass().getName()
+                    );
                 }
                 
             } catch (Throwable t) {
