@@ -82,15 +82,6 @@
 
 
     <build>
-        <!-- Add the WebDAV extension to wagon to support WebDAV Deployment -->
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-webdav</artifactId>
-                <version>1.0-beta-1</version>
-            </extension>
-        </extensions>
-
         <plugins>
 
             <!-- Require Java 5 or higher for building -->
@@ -162,7 +153,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>1.2.1</version>
+                    <version>1.4.0</version>
                     <inherited>true</inherited>
                     <configuration>
                         <instructions>
