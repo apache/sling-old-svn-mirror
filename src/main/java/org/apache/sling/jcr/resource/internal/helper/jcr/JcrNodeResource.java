@@ -27,6 +27,7 @@ import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Iterator;
 
 import javax.jcr.Item;
@@ -34,56 +35,41 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource extends SlingAdaptable implements Resource,
-        Descendable {
+public class JcrNodeResource extends JcrItemResource implements Descendable {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ResourceResolver resourceResolver;
-
     private final Node node;
-
-    private final String path;
 
     private final String resourceType;
 
-    private final ResourceMetadata metadata;
-
     JcrNodeResource(ResourceResolver resourceResolver, Node node)
             throws RepositoryException {
-        this.resourceResolver = resourceResolver;
+        super(resourceResolver, node.getPath());
         this.node = node;
-        this.path = node.getPath();
-        metadata = new ResourceMetadata();
-        metadata.setResolutionPath(path);
         resourceType = getResourceTypeForNode(node);
 
         // check for nt:file metadata
-        setMetaData(node, metadata);
-    }
-
-    public String getPath() {
-        return path;
+        setMetaData(node, getResourceMetadata());
     }
 
     public String getResourceType() {
         return resourceType;
-    }
-
-    public ResourceMetadata getResourceMetadata() {
-        return metadata;
     }
 
     @SuppressWarnings("unchecked")
@@ -105,15 +91,11 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
             + ", path=" + getPath();
     }
 
-    public ResourceResolver getResourceResolver() {
-        return resourceResolver;
-    }
+    // ---------- internal -----------------------------------------------------
 
-    Node getNode() {
+    private Node getNode() {
         return node;
     }
-
-    // ---------- internal -----------------------------------------------------
 
     /**
      * Returns a stream to the <em>jcr:content/jcr:data</em> property if the
@@ -171,47 +153,36 @@ public class JcrNodeResource extends SlingAdaptable implements Resource,
     // ---------- Descendable interface ----------------------------------------
 
     public Iterator<Resource> listChildren() {
-        return new JcrNodeResourceIterator(this);
+        try {
+            if (getNode().hasNodes()) {
+                return new JcrNodeResourceIterator(getResourceResolver(),
+                    getNode().getNodes());
+            }
+        } catch (RepositoryException re) {
+            log.error("listChildren: Cannot get children of " + this, re);
+        }
+
+        return Collections.<Resource> emptyList().iterator();
     }
 
     public Resource getDescendent(String relPath) {
         try {
             if (node.hasNode(relPath)) {
-                return new JcrNodeResource(resourceResolver,
+                return new JcrNodeResource(getResourceResolver(),
                     node.getNode(relPath));
             } else if (node.hasProperty(relPath)) {
-                return new JcrPropertyResource(resourceResolver, getPath()
+                return new JcrPropertyResource(getResourceResolver(), getPath()
                     + "/" + relPath, node.getProperty(relPath));
             }
 
-            log.error("getResource: There is no node at {} below {}", path,
-                getPath());
+            log.error("getResource: There is no node at {} below {}",
+                getPath(), getPath());
             return null;
         } catch (RepositoryException re) {
             log.error("getResource: Problem accessing relative resource at "
-                + path, re);
+                + getPath(), re);
             return null;
         }
-    }
-
-    /**
-     * Compute the resource type of the given node, using either the
-     * SLING_RESOURCE_TYPE_PROPERTY, or the node's primary type, if the property
-     * is not set
-     */
-    public static String getResourceTypeForNode(Node node)
-            throws RepositoryException {
-        String result = null;
-
-        if (node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)) {
-            result = node.getProperty(SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
-        }
-
-        if (result == null || result.length() == 0) {
-            result = node.getPrimaryNodeType().getName();
-        }
-
-        return result;
     }
 
     private void setMetaData(Node node, ResourceMetadata metadata) {

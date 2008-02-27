@@ -26,6 +26,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -226,7 +228,37 @@ public class JcrResourceUtil {
         }
 
         // find the last slash
-        return path.substring(path.lastIndexOf('/')+1);
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
+    /**
+     * Returns the super type of the given resource type. This is the result of
+     * calling the <code>getResourceSuperType()</code> method on the
+     * <code>Resource</code> addressed by the <code>resourceType</code>. If
+     * the resource type does not address a resource or if the addressed
+     * resource has no resource super type, this method returns
+     * <code>null</code>.
+     * 
+     * @param resourceResolver The <code>ResourceResolver</code> used to
+     *            access the resource whose path (relative or absolute) is given
+     *            by the <code>resourceType</code> parameter.
+     * @param resourceType The resource type whose super type is to be returned.
+     *            This type is turned into a path by calling the
+     *            {@link #resourceTypeToPath(String)} method before trying to
+     *            get the resource through the <code>resourceResolver</code>.
+     * @return the super type of the <code>resourceType</code> or
+     *         <code>null</code> if the resource type does not address a
+     *         resource or if the addressed resource has no resource super type.
+     */
+    public static String getResourceSuperType(
+            ResourceResolver resourceResolver, String resourceType) {
+        // normalize resource type to a path string
+        String rtPath = resourceTypeToPath(resourceType);
+
+        // get a resource for the resource type
+        Resource rtResource = resourceResolver.getResource(rtPath);
+
+        // get the resource super type from the resource
+        return (rtResource != null) ? rtResource.getResourceSuperType() : null;
+    }
 }
