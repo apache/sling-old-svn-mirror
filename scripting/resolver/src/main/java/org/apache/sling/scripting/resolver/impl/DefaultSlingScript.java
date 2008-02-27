@@ -61,6 +61,7 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.resolver.ScriptHelper;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,9 +79,12 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     private Dictionary<String, String> initParameters;
 
-    DefaultSlingScript(Resource scriptResource, ScriptEngine scriptEngine) {
+    private final BundleContext bundleContext;
+
+    DefaultSlingScript(BundleContext bundleContext, Resource scriptResource, ScriptEngine scriptEngine) {
         this.scriptResource = scriptResource;
         this.scriptEngine = scriptEngine;
+        this.bundleContext = bundleContext;
     }
 
     // ---------- SlingScript interface ----------------------------------------
@@ -251,9 +255,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         if (slingObject == null) {
 
             if ( request != null ) {
-                slingObject = new ScriptHelper(null, this, request, slingBindings.getResponse());
+                slingObject = new ScriptHelper(this.bundleContext, this, request, slingBindings.getResponse());
             } else {
-                slingObject = new ScriptHelper(null, this);
+                slingObject = new ScriptHelper(this.bundleContext, this);
             }
         } else if (!(slingObject instanceof SlingScriptHelper) ) {
             throw fail(scriptName, SLING, "Wrong type");
