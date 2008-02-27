@@ -21,21 +21,19 @@ package org.apache.sling.ujax.info;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 
 public class SessionInfoProvider implements UjaxInfoProvider {
 
     static final String PROVIDER_LABEL = "sessionInfo";
-    
+
     public Map<String, String> getInfo(SlingHttpServletRequest request) {
         final Map<String, String> result = new HashMap<String, String>();
 
         final Session s = request.getResourceResolver().adaptTo(Session.class);
-        
+
         result.put("workspace",s.getWorkspace().getName());
         result.put("userID",s.getUserID());
 

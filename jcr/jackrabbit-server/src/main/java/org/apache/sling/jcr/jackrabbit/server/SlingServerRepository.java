@@ -109,7 +109,7 @@ public class SlingServerRepository extends AbstractSlingRepository
     protected Repository getDelegatee() throws RepositoryException {
         if (this.delegatee == null) {
             try {
-                this.delegatee = (Repository) this.getRepository();
+                this.delegatee = this.getRepository();
             } catch (IOException ioe) {
                 throw new RepositoryException(ioe.getMessage(), ioe);
             }
@@ -160,31 +160,30 @@ public class SlingServerRepository extends AbstractSlingRepository
     private Repository getRepository() throws RepositoryException, IOException, RepositoryAccessor.RepositoryUrlException {
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
-        
+
         // if the environment provides a repository override URL, other settings are ignored
         final String overrideUrl = (String) environment.get(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
-        
-        if(overrideUrl != null && overrideUrl.length() > 0) {
-            log.log(LogService.LOG_INFO, 
-                    "Will not use embedded repository due to property " + RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY 
+
+        if (overrideUrl != null && overrideUrl.length() > 0) {
+            log.log(LogService.LOG_INFO,
+                    "Will not use embedded repository due to property " + RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
                     + "=" + overrideUrl
                     + ", acquiring repository using that URL"
                     );
             return getRepositoryFromUrl(overrideUrl);
-            
-        } else {
-            log.log(LogService.LOG_INFO, 
-                    "Repository URL override property (" +  RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
-                    + ") not set, using embedded repository"); 
-            return getEmbeddedRepository(environment);
+
         }
+        log.log(LogService.LOG_INFO,
+                "Repository URL override property (" +  RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
+                + ") not set, using embedded repository");
+        return getEmbeddedRepository(environment);
     }
-    
+
     private Repository getRepositoryFromUrl(String repositoryUrl) throws RepositoryAccessor.RepositoryUrlException {
         return new RepositoryAccessor().getRepositoryFromURL(repositoryUrl);
     }
-    
-    private Repository getEmbeddedRepository(Dictionary<String, Object> environment) 
+
+    private Repository getEmbeddedRepository(Dictionary<String, Object> environment)
     throws RepositoryException, IOException {
 
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
