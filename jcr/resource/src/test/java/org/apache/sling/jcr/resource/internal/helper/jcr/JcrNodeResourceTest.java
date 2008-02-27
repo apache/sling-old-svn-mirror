@@ -25,53 +25,16 @@ import java.io.InputStream;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.swing.RootPaneContainer;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 
-public class JcrNodeResourceTest extends RepositoryTestBase {
-
-    private static final long TEST_MODIFIED = System.currentTimeMillis();
-
-    private static final String TEST_TYPE = "text/gurk";
-
-    private static final String TEST_ENCODING = "ISO-8859-1";
-
-    private static final byte[] TEST_DATA = { 'S', 'o', 'm', 'e', ' ', 'T',
-        'e', 's', 't' };
-
-    private String rootPath;
-
-    private Node rootNode;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        getSession();
-
-        try {
-            NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
-            nsr.registerNamespace(SlingConstants.NAMESPACE_PREFIX,
-                JcrResourceConstants.SLING_NAMESPACE_URI);
-        } catch (Exception e) {
-            // don't care for now
-        }
-
-        rootPath = "/test" + System.currentTimeMillis();
-        rootNode = getSession().getRootNode().addNode(rootPath.substring(1),
-            "nt:unstructured");
-        getSession().save();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        if (rootNode != null) {
-            rootNode.remove();
-            getSession().save();
-        }
-    }
+public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
     public void testNtFileNtResource() throws Exception {
 
@@ -141,6 +104,63 @@ public class JcrNodeResourceTest extends RepositoryTestBase {
         assertEquals(TEST_DATA, jnr.adaptTo(InputStream.class));
     }
 
+    public void testResourceType() throws Exception {
+        String name = "resourceType";
+        Node node = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
+        getSession().save();
+        
+        JcrNodeResource jnr = new JcrNodeResource(null, node);
+        assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
+        
+        String typeName = "some/resource/type";
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
+        getSession().save();
+        
+        jnr = new JcrNodeResource(null, node);
+        assertEquals(typeName, jnr.getResourceType());
+    }
+    
+    public void testResourceSuperType() throws Exception {
+        String name = "resourceSuperType";
+        String typeNodeName = "some_resource_type";
+        String typeName = rootPath + "/" + typeNodeName;
+        Node node = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
+        getSession().save();
+
+        Resource jnr = new JcrNodeResource(resourceResolver, node);
+        assertEquals(typeName, jnr.getResourceType());
+
+        // default super type is super type of node type
+        assertEquals(null, jnr.getResourceSuperType());
+
+        String superTypeName = "supertype";
+        Node typeNode = rootNode.addNode(typeNodeName, JcrConstants.NT_UNSTRUCTURED);
+        typeNode.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, superTypeName);
+        getSession().save();
+        
+        jnr = new JcrNodeResource(resourceResolver, node);
+        assertEquals(typeName, jnr.getResourceType());
+        assertEquals(superTypeName, jnr.getResourceSuperType());
+
+        // overwrite super type with direct property
+        String otherSuperTypeName = "othersupertype";
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, otherSuperTypeName);
+        getSession().save();
+        
+        jnr = new JcrNodeResource(resourceResolver, node);
+        assertEquals(typeName, jnr.getResourceType());
+        assertEquals(otherSuperTypeName, jnr.getResourceSuperType());
+
+        // remove direct property to get supertype again
+        node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).remove();
+        getSession().save();
+
+        jnr = new JcrNodeResource(resourceResolver, node);
+        assertEquals(typeName, jnr.getResourceType());
+        assertEquals(superTypeName, jnr.getResourceSuperType());
+    }
+
     private void setupResource(Node res) throws RepositoryException {
         res.setProperty(JcrConstants.JCR_LASTMODIFIED, TEST_MODIFIED);
         res.setProperty(JcrConstants.JCR_MIMETYPE, TEST_TYPE);
@@ -156,22 +176,5 @@ public class JcrNodeResourceTest extends RepositoryTestBase {
         assertEquals(TEST_TYPE, rm.getContentType());
         assertEquals(TEST_ENCODING, rm.getCharacterEncoding());
     }
-
-    private void assertEquals(byte[] expected, InputStream actual)
-            throws IOException {
-        if (actual == null) {
-            fail("Rsource stream is null");
-        } else {
-            try {
-                for (byte b : expected) {
-                    assertEquals(b, actual.read());
-                }
-            } finally {
-                try {
-                    actual.close();
-                } catch (IOException grok) {
-                }
-            }
-        }
-    }
+    
 }

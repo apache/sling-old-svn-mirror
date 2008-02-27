@@ -102,6 +102,11 @@ public class BundleResource extends SlingAdaptable implements Resource,
         return resourceType;
     }
 
+    /** Returns <code>null</code>, bundle resources have no super type */
+    public String getResourceSuperType() {
+        return null;
+    }
+    
     public ResourceMetadata getResourceMetadata() {
         return metadata;
     }

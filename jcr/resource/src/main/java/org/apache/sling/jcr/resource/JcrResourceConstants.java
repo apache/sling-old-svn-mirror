@@ -46,6 +46,15 @@ public class JcrResourceConstants {
     public static final String SLING_RESOURCE_TYPE_PROPERTY = "sling:resourceType";
 
     /**
+     * The name of the JCR Property that defines the resource super type (value
+     * is "sling:resourceSuperType"). The resource manager implementation of
+     * this bundle uses this property to defined the resource type of a loaded
+     * resource. If this property does not exist any non-mixin base type of the
+     * the primary node type is used as the resource super type.
+     */
+    public static final String SLING_RESOURCE_SUPER_TYPE_PROPERTY = "sling:resourceSuperType";
+
+    /**
      * The topic root for events published by this bundle (value is
      * "org/apache/sling/jcr/resource/ResourceEvent"). Event consumers should
      * register to "org/apache/sling/jcr/resource/ResourceEvent/*" to receive

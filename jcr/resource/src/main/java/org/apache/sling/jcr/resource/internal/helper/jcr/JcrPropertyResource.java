@@ -31,43 +31,22 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 
-public class JcrPropertyResource implements Resource {
-
-    private final ResourceResolver resourceResolver;
-
-    private final String path;
+public class JcrPropertyResource extends JcrItemResource {
 
     private final Property property;
 
     private final String resourceType;
 
-    private final ResourceMetadata metadata;
-
     public JcrPropertyResource(ResourceResolver resourceResolver, String path,
             Property property) throws RepositoryException {
-        this.resourceResolver = resourceResolver;
-        this.path = path;
+        super(resourceResolver, path);
         this.property = property;
-        this.resourceType = JcrNodeResource.getResourceTypeForNode(property.getParent())
+        this.resourceType = getResourceTypeForNode(property.getParent())
             + "/" + property.getName();
-        this.metadata = new ResourceMetadata();
-        this.metadata.setResolutionPath(path);
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public ResourceMetadata getResourceMetadata() {
-        return metadata;
     }
 
     public String getResourceType() {
         return resourceType;
-    }
-
-    public ResourceResolver getResourceResolver() {
-        return resourceResolver;
     }
 
     @SuppressWarnings("unchecked")
@@ -101,8 +80,8 @@ public class JcrPropertyResource implements Resource {
             // TODO: log
         }
 
-        // no adapter here
-        return null;
+        // try to use adapter factories
+        return super.adaptTo(type);
     }
 
     public Property getProperty() {
