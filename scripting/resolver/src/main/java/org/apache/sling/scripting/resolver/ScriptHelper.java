@@ -68,6 +68,9 @@ public class ScriptHelper implements SlingScriptHelper {
     protected final Map<String, Object> services = new HashMap<String, Object>();
 
     public ScriptHelper(BundleContext ctx, SlingScript script) {
+        if (ctx == null ) {
+            throw new IllegalArgumentException("Bundle context must not be null.");
+        }
         this.bundleContext = ctx;
         this.request = null;
         this.response = null;
@@ -76,6 +79,9 @@ public class ScriptHelper implements SlingScriptHelper {
 
     public ScriptHelper(BundleContext ctx, SlingScript script, SlingHttpServletRequest request,
             SlingHttpServletResponse response) {
+        if (ctx == null ) {
+            throw new IllegalArgumentException("Bundle context must not be null.");
+        }
         this.bundleContext = ctx;
         this.script = script;
         this.request = new OnDemandReaderRequest(request);
@@ -130,10 +136,6 @@ public class ScriptHelper implements SlingScriptHelper {
      */
     @SuppressWarnings("unchecked")
     public <ServiceType> ServiceType getService(Class<ServiceType> type) {
-        // TODO - we should make sure in the constructor that bundle context is not null
-        if ( this.bundleContext == null ) {
-            throw new IllegalAccessError("getService() can't be invoked without a bundle context.");
-        }
         ServiceType service = (ServiceType) this.services.get(type.getName());
         if (service == null) {
             final ServiceReference ref = this.bundleContext.getServiceReference(type.getName());
@@ -153,10 +155,6 @@ public class ScriptHelper implements SlingScriptHelper {
     public <ServiceType> ServiceType[] getServices(
             Class<ServiceType> serviceType, String filter)
     throws InvalidServiceFilterSyntaxException {
-        // TODO - we should make sure in the constructor that bundle context is not null
-        if ( this.bundleContext == null ) {
-            throw new IllegalAccessError("getService() can't be invoked without a bundle context.");
-        }
         try {
             final ServiceReference[] refs = this.bundleContext.getServiceReferences(
                 serviceType.getName(), filter);

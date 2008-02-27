@@ -31,6 +31,7 @@ import javax.script.ScriptEngineManager;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.service.component.ComponentContext;
@@ -40,19 +41,19 @@ import org.slf4j.LoggerFactory;
 /**
  *  AdapterFactory that adapts Resources to the DefaultSlingScript servlet,
  *  which executes the Resources as scripts.
- * 
+ *
  * @scr.component metatype="no"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Default SlingScriptResolver"
- * 
+ *
  * @scr.property name="adaptables"
  *               value="org.apache.sling.api.resource.Resource";
  * @scr.property name="adapters"
  *               values.0="org.apache.sling.api.scripting.SlingScript"
  *               values.1="javax.servlet.Servlet"
- * 
+ *
  * @scr.service interface="org.apache.sling.api.adapter.AdapterFactory"
- * 
+ *
  * @scr.reference name="ScriptEngineFactory"
  *                interface="javax.script.ScriptEngineFactory"
  *                cardinality="0..n" policy="dynamic"
@@ -76,8 +77,10 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
 
     private List<ScriptEngineFactory> engineSpiServices = new LinkedList<ScriptEngineFactory>();
 
+    private BundleContext bundleContext;
+
     //---------- AdapterFactory -----------------------------------------------
-    
+
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType getAdapter(Object adaptable,
             Class<AdapterType> type) {
@@ -90,7 +93,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
             ext);
         if (engine != null) {
             // unchecked cast
-            return (AdapterType) new DefaultSlingScript(resource, engine);
+            return (AdapterType) new DefaultSlingScript(this.bundleContext, resource, engine);
         }
 
         return null;
@@ -98,21 +101,21 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
 
     private ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
-            
+
             // create (empty) script engine manager
             ClassLoader loader = getClass().getClassLoader();
             ScriptEngineManager tmp = new ScriptEngineManager(loader);
-            
+
             // register script engines from bundles
             for (Bundle bundle : engineSpiBundles) {
                 registerFactories(tmp, bundle);
             }
-            
+
             // register script engines from registered services
             for (ScriptEngineFactory factory : engineSpiServices) {
                 registerFactory(tmp, factory);
             }
-            
+
             scriptEngineManager = tmp;
         }
         return scriptEngineManager;
@@ -186,9 +189,10 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
-        context.getBundleContext().addBundleListener(this);
+        this.bundleContext = context.getBundleContext();
+        this.bundleContext.addBundleListener(this);
 
-        Bundle[] bundles = context.getBundleContext().getBundles();
+        Bundle[] bundles = this.bundleContext.getBundles();
         for (Bundle bundle : bundles) {
             if (bundle.getState() == Bundle.ACTIVE
                 && bundle.getEntry(ENGINE_FACTORY_SERVICE) != null) {
@@ -203,6 +207,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         engineSpiBundles.clear();
         engineSpiServices.clear();
         scriptEngineManager = null;
+        this.bundleContext = null;
     }
 
     protected void bindScriptEngineFactory(
