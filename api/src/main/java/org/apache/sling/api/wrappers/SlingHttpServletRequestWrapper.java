@@ -34,7 +34,6 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.services.ServiceLocator;
 
 /**
  * The <code>SlingHttpServletRequestWrapper</code> class is a default wrapper
@@ -114,9 +113,4 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
     public Enumeration<String> getResponseContentTypes() {
         return getSlingRequest().getResponseContentTypes();
     }
-
-    public ServiceLocator getServiceLocator() {
-        return getSlingRequest().getServiceLocator();
-    }
-
 }

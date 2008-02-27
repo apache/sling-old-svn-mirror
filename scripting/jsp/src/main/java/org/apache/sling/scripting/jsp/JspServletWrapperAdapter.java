@@ -52,8 +52,9 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
      *             request parameter has an illegal value.
      */
     public void service(SlingScriptHelper scriptHelper) {
+        SlingHttpServletRequest request = scriptHelper.getRequest();
         try {
-            SlingHttpServletRequest request = scriptHelper.getRequest();
+            request.setAttribute(SlingScriptHelper.class.getName(), scriptHelper);
             service(request, scriptHelper.getResponse(), preCompile(request));
         } catch (SlingException se) {
             // rethrow as is
@@ -62,6 +63,8 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
             throw new SlingIOException(ioe);
         } catch (ServletException se) {
             throw new SlingServletException(se);
+        } finally {
+            request.removeAttribute(SlingScriptHelper.class.getName());
         }
     }
 
@@ -73,7 +76,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
      * trigger parsing all of the request parameters, and not give a servlet the
      * opportunity to call <code>request.setCharacterEncoding()</code> first.
      * </p>
-     * 
+     *
      * @param request The servlet requset we are processing
      * @throws IllegalArgumentException if an invalid parameter value for the
      *             <code>jsp_precompile</code> parameter name is specified

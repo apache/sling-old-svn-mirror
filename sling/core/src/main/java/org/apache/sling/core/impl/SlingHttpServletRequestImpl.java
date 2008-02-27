@@ -43,7 +43,6 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.impl.request.SlingRequestDispatcher;
@@ -82,10 +81,6 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         return getRequestData().getResourceResolver();
     }
 
-    public ServiceLocator getServiceLocator() {
-        return getRequestData().getServiceLocator();
-    }
-
     public RequestProgressTracker getRequestProgressTracker() {
         return getRequestData().getRequestProgressTracker();
     }
@@ -119,7 +114,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
             RequestDispatcherOptions options) {
         return (path != null) ? new SlingRequestDispatcher(path, options) : null;
     }
-    
+
     /**
      * @see javax.servlet.ServletRequestWrapper#getLocale()
      */
@@ -228,13 +223,13 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     @SuppressWarnings("unchecked")
     public Enumeration<String> getResponseContentTypes() {
         List<String> result = new ArrayList<String>();
-        
+
         // TODO for now this returns a single value
         final String singleType = getResponseContentType();
         if(singleType!=null) {
             result.add(singleType);
         }
-        
+
         return Collections.enumeration(result);
     }
 

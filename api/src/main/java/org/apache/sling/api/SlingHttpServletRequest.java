@@ -33,7 +33,6 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.services.ServiceLocator;
 
 /**
  * The <code>SlingHttpServletRequest</code> defines the interface to provide
@@ -58,7 +57,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
 
     /**
      * Returns the {@link Resource} object on whose behalf the servlet acts.
-     * 
+     *
      * @return The <code>Resource</code> object of this request.
      */
     Resource getResource();
@@ -66,14 +65,14 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
     /**
      * Returns the {@link ResourceResolver} which resolved the
      * {@link #getResource() resource} of this request.
-     * 
+     *
      * @return The resource resolver
      */
     ResourceResolver getResourceResolver();
 
     /**
      * Returns the {@link RequestPathInfo} pertaining to this request.
-     * 
+     *
      * @return the request path info.
      */
     RequestPathInfo getRequestPathInfo();
@@ -92,7 +91,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * <p>
      * This method is a shortcut for
      * <code>getRequestParameterMap().getValue(String)</code>.
-     * 
+     *
      * @param name a <code>String</code> specifying the name of the parameter
      * @return a {@link RequestParameter} representing the single value of the
      *         parameter
@@ -111,7 +110,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * <p>
      * This method is a shortcut for
      * <code>getRequestParameterMap().getValues(String)</code>.
-     * 
+     *
      * @param name a <code>String</code> containing the name of the parameter
      *            the value of which is requested
      * @return an array of {@link RequestParameter} objects containing the
@@ -129,7 +128,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * {@link RequestParameter} array (<code>RequestParameter[]</code>).
      * <p>
      * If no parameters exist this method returns an empty <code>Map</code>.
-     * 
+     *
      * @return an immutable <code>Map</code> containing parameter names as
      *         keys and parameter values as map values, or an empty
      *         <code>Map</code> if no parameters exist. The keys in the
@@ -146,7 +145,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * <p>
      * Returns <code>null</code> if a <code>RequestDispatcher</code> cannot
      * be returned for any reason.
-     * 
+     *
      * @param path a <code>String</code> specifying the pathname to the
      *            resource. If it is relative, it must be relative against the
      *            current servlet.
@@ -166,7 +165,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * <p>
      * Returns <code>null</code> if a <code>RequestDispatcher</code> cannot
      * be returned for any reason.
-     * 
+     *
      * @param resource The {@link Resource} instance whose response content may
      *            be included by the returned dispatcher.
      * @param options influence the rendering of the included Resource
@@ -186,7 +185,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
     /**
      * Returns the named cookie from the HTTP request or <code>null</code> if
      * no such cookie exists in the request.
-     * 
+     *
      * @param name The name of the cookie to return.
      * @return The named cookie or <code>null</code> if no such cookie exists.
      */
@@ -199,7 +198,7 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * For included resources this method will returned the same string as
      * returned by the <code>ServletResponse.getContentType()</code> without
      * the character set.
-     * 
+     *
      * @return preferred MIME type of the response
      */
     String getResponseContentType();
@@ -214,14 +213,14 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * containing a single entry which is the same string as returned by the
      * <code>ServletResponse.getContentType()</code> without the character
      * set.
-     * 
+     *
      * @return ordered list of MIME types for the response
      */
     Enumeration<String> getResponseContentTypes();
 
     /**
      * Returns the resource bundle for the given locale.
-     * 
+     *
      * @param locale the locale for which to retrieve the resource bundle. If
      *            this is <code>null</code>, the locale returned by
      *            {@link #getLocale()} is used to select the resource bundle.
@@ -233,13 +232,4 @@ public interface SlingHttpServletRequest extends HttpServletRequest {
      * Returns the {@link RequestProgressTracker} of this request.
      */
     RequestProgressTracker getRequestProgressTracker();
-
-    /**
-     * Returns a {@link ServiceLocator} instance which may be queried for helper
-     * services such as the
-     * {@link org.apache.sling.api.resource.ResourceResolver},
-     * {@link org.apache.sling.api.scripting.SlingScriptResolver} and
-     * {@link org.apache.sling.api.servlets.ServletResolver}.
-     */
-    ServiceLocator getServiceLocator();
 }

@@ -16,10 +16,6 @@
  */
 package org.apache.sling.ujax;
 
-import org.apache.jackrabbit.util.Text;
-import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.commons.mime.MimeTypeService;
-
 import java.io.IOException;
 import java.util.Calendar;
 
@@ -27,6 +23,10 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+
+import org.apache.jackrabbit.util.Text;
+import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.commons.mime.MimeTypeService;
 
 /**
  * Handles file uploads.
@@ -65,7 +65,7 @@ import javax.jcr.nodetype.NodeTypeManager;
  * this will create a new node with the type my:file below admin. if the hinted
  * type extends from nt:file an intermediate file node is created otherwise
  * directly a resource node.
- * 
+ *
  * @version $Rev$, $Date$
  */
 public class UjaxFileUploadHandler {
@@ -94,11 +94,17 @@ public class UjaxFileUploadHandler {
     private final UjaxPostProcessor ctx;
 
     /**
+     * The mime type service
+     */
+    private final MimeTypeService mimeTypeService;
+
+    /**
      * Constructs file upload handler
      * @param ctx the post processor
      */
-    public UjaxFileUploadHandler(UjaxPostProcessor ctx) {
+    public UjaxFileUploadHandler(UjaxPostProcessor ctx, MimeTypeService mts) {
         this.ctx = ctx;
+        this.mimeTypeService = mts;
     }
 
     /**
@@ -146,7 +152,7 @@ public class UjaxFileUploadHandler {
                 typeHint = null;
             }
         }
-        
+
         // also create an nt:file if the name contains an extension
         // the rationale is that if the file name is "important" we want
         // an nt:file, and an image name with an extension is probably "important"
@@ -172,7 +178,7 @@ public class UjaxFileUploadHandler {
             name = JCR_CONTENT;
             typeHint = NT_RESOURCE;
         }
-        
+
         // create resource node
         Node res = parent.addNode(name, typeHint);
         ctx.getChangeLog().onCreated(res.getPath());
@@ -187,9 +193,8 @@ public class UjaxFileUploadHandler {
         }
         if (contentType == null || contentType.equals("application/octet-stream")) {
             // try to find a better content type
-            MimeTypeService svc = ctx.getRequest().getServiceLocator().getService(MimeTypeService.class);
-            if (svc != null) {
-                contentType = svc.getMimeType(value.getFileName());
+            if (this.mimeTypeService != null) {
+                contentType = this.mimeTypeService.getMimeType(value.getFileName());
             }
             if (contentType == null || contentType.equals("application/octet-stream")) {
                 contentType = "application/octet-stream";

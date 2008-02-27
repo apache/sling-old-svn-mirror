@@ -134,7 +134,7 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>serviceLocatorName</name>
+            <name>slingName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
         </attribute>

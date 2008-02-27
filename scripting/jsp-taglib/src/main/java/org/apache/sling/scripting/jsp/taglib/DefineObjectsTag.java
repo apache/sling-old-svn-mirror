@@ -23,6 +23,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 
 /**
@@ -72,9 +73,9 @@ public class DefineObjectsTag extends TagSupport {
 
     /**
      * Default name for the scripting variable referencing the current
-     * <code>ServiceLocator</code> (value is "serviceLocator").
+     * <code>SlingScriptHelper</code> (value is "sling").
      */
-    public static final String DEFAULT_SERVICE_LOCATOR_NAME = "serviceLocator";
+    public static final String DEFAULT_SLING_NAME = "sling";
 
     private String requestName = DEFAULT_REQUEST_NAME;
 
@@ -90,7 +91,7 @@ public class DefineObjectsTag extends TagSupport {
 
     private String resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
 
-    private String serviceLocatorName = DEFAULT_SERVICE_LOCATOR_NAME;
+    private String slingName = DEFAULT_SLING_NAME;
 
     /**
      * Default constructor.
@@ -106,7 +107,7 @@ public class DefineObjectsTag extends TagSupport {
      * <li>current <code>Resource</code>
      * <li>current <code>Node</code> (if resource is a NodeProvider)
      * <li>current <code>ResourceResolver</code>
-     * <li>current <code>ServiceLocator</code>
+     * <li>current <code>SlingScriptHelper</code>
      * </ul>
      *
      * @return always {@link #EVAL_PAGE}.
@@ -122,7 +123,7 @@ public class DefineObjectsTag extends TagSupport {
         pageContext.setAttribute(responseName, res);
         pageContext.setAttribute(resourceName, resource);
         pageContext.setAttribute(resourceResolverName, resourceResolver);
-        pageContext.setAttribute(serviceLocatorName, req.getServiceLocator());
+        pageContext.setAttribute(slingName, req.getAttribute(SlingScriptHelper.class.getName()));
 
         Node node = resource.adaptTo(Node.class);
         if (node != null) {
@@ -170,7 +171,7 @@ public class DefineObjectsTag extends TagSupport {
         this.resourceResolverName = name;
     }
 
-    public void setServiceLocatorName(String name) {
-        this.serviceLocatorName = name;
+    public void setSlingName(String name) {
+        this.slingName = name;
     }
 }
