@@ -58,6 +58,12 @@ public interface Resource extends Adaptable {
     String getResourceType();
 
     /**
+     * Returns the super type of the type of the resource or <code>null</code>
+     * if the {@link #getResourceType()} has no supertype.
+     */
+    String getResourceSuperType();
+    
+    /**
      * Returns the metadata of this resource. The concrete data contained in the
      * {@link ResourceMetadata} object returned is implementation specific
      * except for the {@link ResourceMetadata#RESOLUTION_PATH} property which is
