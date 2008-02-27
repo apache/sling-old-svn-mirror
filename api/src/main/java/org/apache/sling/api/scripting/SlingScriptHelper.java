@@ -23,6 +23,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.services.InvalidServiceFilterSyntaxException;
 
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
@@ -53,7 +54,7 @@ public interface SlingScriptHelper {
     /**
      * Same as {@link #include(String,RequestDispatcherOptions)}, but using
      * empty options.
-     * 
+     *
      * @throws SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the include.
      * @throws SlingServletException Wrapping a <code>ServletException</code>
@@ -65,7 +66,7 @@ public interface SlingScriptHelper {
      * Helper method to include the result of processing the request for the
      * given <code>path</code> and <code>requestDispatcherOptions</code>.
      * This method is intended to be implemented as follows:
-     * 
+     *
      * <pre>
      * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path,
      *     &quot;option:xyz&quot;);
@@ -73,13 +74,13 @@ public interface SlingScriptHelper {
      *     dispatcher.include(getRequest(), getResponse());
      * }
      * </pre>
-     * 
+     *
      * <p>
      * This method creates a <code>RequestDispatcherOptions</code> object by
      * calling the
      * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
      * constructor.
-     * 
+     *
      * @param path The path to the resource to include.
      * @param requestDispatcherOptions influence the rendering of the included
      *            Resource
@@ -96,7 +97,7 @@ public interface SlingScriptHelper {
      * Helper method to include the result of processing the request for the
      * given <code>path</code> and <code>options</code>. This method is
      * intended to be implemented as follows:
-     * 
+     *
      * <pre>
      * RequestDispatcherOptions opts = new RequestDispatcherOptions();
      * opts.put(&quot;option&quot;, &quot;xyz&quot;);
@@ -105,7 +106,7 @@ public interface SlingScriptHelper {
      *     dispatcher.include(getRequest(), getResponse());
      * }
      * </pre>
-     * 
+     *
      * @param path The path to the resource to include.
      * @param options influence the rendering of the included Resource
      * @throws SlingIOException Wrapping a <code>IOException</code> thrown
@@ -117,4 +118,29 @@ public interface SlingScriptHelper {
      */
     void include(String path, RequestDispatcherOptions options);
 
+    /**
+     * Lookup a single service
+     *
+     * @param serviceName The name (interface) of the service.
+     * @return The service instance, or null if the service is not available.
+     */
+    <ServiceType> ServiceType getService(Class<ServiceType> type);
+
+    /**
+     * Lookup one or several services
+     *
+     * @param serviceName The name (interface) of the service.
+     * @param filter An optional filter (LDAP-like, see OSGi spec)
+     * @return The services object or null.
+     * @throws InvalidServiceFilterSyntaxException If the <code>filter</code>
+     *             string is not a valid OSGi service filter string.
+     */
+    <ServiceType> ServiceType[] getServices(Class<ServiceType> serviceType,
+            String filter);
+
+    /**
+     * Dispose the helper.
+     * This method can be used to clean up the script helper after the script is run.
+     */
+    void dispose();
 }

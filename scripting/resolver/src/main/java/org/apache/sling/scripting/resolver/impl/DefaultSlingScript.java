@@ -96,8 +96,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
         String scriptName = getScriptResource().getPath();
 
+        Bindings bindings = null;
         try {
-            Bindings bindings = verifySlingBindings(scriptName, props);
+            bindings = verifySlingBindings(scriptName, props);
 
             ScriptContext ctx = new SimpleScriptContext();
             ctx.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
@@ -127,6 +128,13 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             Throwable cause = (se.getCause() == null) ? se : se.getCause();
             throw new ScriptEvaluationException(scriptName, se.getMessage(),
                 cause);
+        } finally {
+            if ( bindings != null ) {
+                final SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SLING);
+                if ( helper != null ) {
+                    helper.dispose();
+                }
+            }
         }
     }
 
@@ -236,7 +244,23 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     	Bindings bindings = new SimpleBindings();
 
-        SlingHttpServletRequest request = slingBindings.getRequest();
+        final SlingHttpServletRequest request = slingBindings.getRequest();
+
+        // check sling object
+        Object slingObject = slingBindings.get(SLING);
+        if (slingObject == null) {
+
+            if ( request != null ) {
+                slingObject = new ScriptHelper(null, this, request, slingBindings.getResponse());
+            } else {
+                slingObject = new ScriptHelper(null, this);
+            }
+        } else if (!(slingObject instanceof SlingScriptHelper) ) {
+            throw fail(scriptName, SLING, "Wrong type");
+        }
+        final SlingScriptHelper sling = (SlingScriptHelper)slingObject;
+        bindings.put(SLING, sling);
+
         if (request != null) {
             //throw fail(scriptName, REQUEST, "Missing or wrong type");
 
@@ -255,16 +279,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 throw fail(scriptName, OUT, "Wrong type");
             }
 
-            SlingScriptHelper sling;
-
-            Object slingObject = slingBindings.get(SLING);
-            if (slingObject == null) {
-
-                sling = new ScriptHelper(this, request, response);
-
-            } else if (slingObject instanceof SlingScriptHelper) {
-
-                sling = (SlingScriptHelper) slingObject;
+            // if there is a provided sling script helper, check arguments
+            if (slingBindings.get(SLING) != null) {
 
                 if (sling.getRequest() != request) {
                     throw fail(scriptName, REQUEST,
@@ -287,15 +303,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                     throw fail(scriptName, OUT,
                         "Not the same as writer of the SlingScriptHelper response");
                 }
-
-            } else {
-
-                throw fail(scriptName, SLING, "Wrong type");
-
             }
 
             // set base variables when executing inside a request
-            bindings.put(SLING, sling);
             bindings.put(REQUEST, sling.getRequest());
             bindings.put(READER, sling.getRequest().getReader());
             bindings.put(RESPONSE, sling.getResponse());
