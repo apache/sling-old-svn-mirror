@@ -130,6 +130,10 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             return resourceType;
         }
 
+        public String getResourceSuperType() {
+            return null;
+        }
+        
         @SuppressWarnings("unchecked")
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             if (type == Node.class || type == Item.class) {
