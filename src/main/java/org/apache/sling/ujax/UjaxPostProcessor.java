@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.NamespaceException;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -335,12 +336,19 @@ public class UjaxPostProcessor {
             for (String path : paths) {
                 if (!path.equals("")) {
                     path = resolvePath(path);
-                    if (session.itemExists(path)) {
-                        session.getItem(path).remove();
-                        changeLog.onDeleted(path);
-                        log.debug("Deleted item {}", path);
-                    } else {
-                        log.debug("Item at {} not found for deletion, ignored", path);
+                    try {
+                        if (session.itemExists(path)) {
+                            session.getItem(path).remove();
+                            changeLog.onDeleted(path);
+                            log.debug("Deleted item {}", path);
+                        } else {
+                            log.debug("Item at {} not found for deletion, ignored", path);
+                        }
+                    } catch (NamespaceException e) {
+                        // ignore since deleting an item that has a missing
+                        // namespace is comparable to deleting an inexistent
+                        // item.
+                        log.warn("deleting {} caused {}", path, e.toString());
                     }
                 }
             }
