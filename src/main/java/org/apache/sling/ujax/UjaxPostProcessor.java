@@ -318,9 +318,8 @@ public class UjaxPostProcessor {
         }
         if (currentPath == null) {
             return rootPath + "/" + path;
-        } else {
-            return currentPath + "/" + path;
         }
+        return currentPath + "/" + path;
     }
 
     /**
