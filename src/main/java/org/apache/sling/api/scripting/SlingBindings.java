@@ -139,6 +139,28 @@ public class SlingBindings extends HashMap<String, Object> {
     public static final String LOG = "log";
 
     /**
+     * Helper method to get an object with a given type from this map.
+     * @return The searched object if it has the specified type, otherwise <code>null</code> is returned.
+     */
+    @SuppressWarnings("unchecked")
+    protected <ObjectType> ObjectType get(final String key, final Class<ObjectType> type) {
+        final Object o = this.get(key);
+        if ( type.isInstance(o) ) {
+            return (ObjectType)o;
+        }
+        return null;
+    }
+
+    /**
+     * Helper method which invokes {@link #put(String, Object)} only if the value is not null.
+     */
+    protected void safePut(final String key, final Object value) {
+        if ( value != null ) {
+            this.put(key, value);
+        }
+    }
+
+    /**
      * Sets the {@link #FLUSH} property to <code>flush</code>.
      */
     public void setFlush(boolean flush) {
@@ -150,9 +172,9 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>boolean</code>. Otherwise <code>false</code> is returned.
      */
     public boolean getFlush() {
-        Object value = get(FLUSH);
-        if (value instanceof Boolean) {
-            return (Boolean) value;
+        Boolean value = this.get(FLUSH, Boolean.class);
+        if (value != null ) {
+            return value;
         }
 
         return false;
@@ -163,9 +185,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setLog(Logger log) {
-        if (log != null) {
-            put(LOG, log);
-        }
+        this.safePut(LOG, log);
     }
 
     /**
@@ -174,12 +194,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * is returned.
      */
     public Logger getLog() {
-        Object value = get(LOG);
-        if (value instanceof Logger) {
-            return (Logger) value;
-        }
-
-        return null;
+        return this.get(LOG, Logger.class);
     }
 
     /**
@@ -187,9 +202,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setOut(PrintWriter out) {
-        if (out != null) {
-            put(OUT, out);
-        }
+        this.safePut(OUT, out);
     }
 
     /**
@@ -198,12 +211,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * returned.
      */
     public PrintWriter getOut() {
-        Object value = get(OUT);
-        if (value instanceof PrintWriter) {
-            return (PrintWriter) value;
-        }
-
-        return null;
+        return this.get(OUT, PrintWriter.class);
     }
 
     /**
@@ -211,9 +219,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setRequest(SlingHttpServletRequest request) {
-        if (request != null) {
-            put(REQUEST, request);
-        }
+        this.safePut(REQUEST, request);
     }
 
     /**
@@ -222,12 +228,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code> is returned.
      */
     public SlingHttpServletRequest getRequest() {
-        Object value = get(REQUEST);
-        if (value instanceof SlingHttpServletRequest) {
-            return (SlingHttpServletRequest) value;
-        }
-
-        return null;
+        return this.get(REQUEST, SlingHttpServletRequest.class);
     }
 
     /**
@@ -235,9 +236,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setReader(Reader reader) {
-        if (reader != null) {
-            put(READER, reader);
-        }
+        this.safePut(READER, reader);
     }
 
     /**
@@ -246,12 +245,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * returned.
      */
     public Reader getReader() {
-        Object value = get(READER);
-        if (value instanceof Reader) {
-            return (Reader) value;
-        }
-
-        return null;
+        return this.get(READER, Reader.class);
     }
 
     /**
@@ -259,9 +253,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setResource(Resource resource) {
-        if (resource != null) {
-            put(RESOURCE, resource);
-        }
+        this.safePut(RESOURCE, resource);
     }
 
     /**
@@ -270,12 +262,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * returned.
      */
     public Resource getResource() {
-        Object value = get(RESOURCE);
-        if (value instanceof Resource) {
-            return (Resource) value;
-        }
-
-        return null;
+        return this.get(RESOURCE, Resource.class);
     }
 
     /**
@@ -283,9 +270,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setResponse(SlingHttpServletResponse response) {
-        if (response != null) {
-            put(RESPONSE, response);
-        }
+        this.safePut(RESPONSE, response);
     }
 
     /**
@@ -294,12 +279,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code> is returned.
      */
     public SlingHttpServletResponse getResponse() {
-        Object value = get(RESPONSE);
-        if (value instanceof SlingHttpServletResponse) {
-            return (SlingHttpServletResponse) value;
-        }
-
-        return null;
+        return this.get(RESPONSE, SlingHttpServletResponse.class);
     }
 
     /**
@@ -307,9 +287,7 @@ public class SlingBindings extends HashMap<String, Object> {
      * <code>null</code>.
      */
     public void setSling(SlingScriptHelper sling) {
-        if (sling != null) {
-            put(SLING, sling);
-        }
+        this.safePut(SLING, sling);
     }
 
     /**
@@ -318,12 +296,6 @@ public class SlingBindings extends HashMap<String, Object> {
      * is returned.
      */
     public SlingScriptHelper getSling() {
-        Object value = get(SLING);
-        if (value instanceof SlingScriptHelper) {
-            return (SlingScriptHelper) value;
-        }
-
-        return null;
+        return this.get(SLING, SlingScriptHelper.class);
     }
-
 }
