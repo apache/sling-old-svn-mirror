@@ -19,9 +19,7 @@ package org.apache.sling.scheduler.impl;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.sling.api.services.ServiceLocator;
 import org.apache.sling.scheduler.JobContext;
-import org.osgi.framework.BundleContext;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -60,19 +58,12 @@ public class QuartzJobExecutor implements Job {
         try {
             logger.debug("Executing job {} with name {}", job, data.get(QuartzScheduler.DATA_MAP_NAME));
             if (job instanceof org.apache.sling.scheduler.Job) {
-                final BundleContext bundleContext = (BundleContext)data.get(QuartzScheduler.DATA_MAP_BUNDLE_CONTEXT);
-                final ServiceLocatorImpl serviceLocator = new ServiceLocatorImpl(bundleContext);
-
                 @SuppressWarnings("unchecked")
                 final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
                 final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
 
-                try {
-                    final JobContext jobCtx = new JobContextImpl(name, configuration, serviceLocator);
-                    ((org.apache.sling.scheduler.Job) job).execute(jobCtx);
-                } finally {
-                    serviceLocator.dispose();
-                }
+                final JobContext jobCtx = new JobContextImpl(name, configuration);
+                ((org.apache.sling.scheduler.Job) job).execute(jobCtx);
             } else if (job instanceof Runnable) {
                 ((Runnable) job).run();
             } else {
@@ -103,12 +94,10 @@ public class QuartzJobExecutor implements Job {
 
         protected final Map<String, Serializable> configuration;
         protected final String name;
-        protected final ServiceLocator serviceLocator;
 
-        public JobContextImpl(String name, Map<String, Serializable> config, ServiceLocator locator) {
+        public JobContextImpl(String name, Map<String, Serializable> config) {
             this.name = name;
             this.configuration = config;
-            this.serviceLocator = locator;
         }
 
         /**
@@ -123,13 +112,6 @@ public class QuartzJobExecutor implements Job {
          */
         public String getName() {
             return this.name;
-        }
-
-        /**
-         * @see org.apache.sling.scheduler.JobContext#getServiceLocator()
-         */
-        public ServiceLocator getServiceLocator() {
-            return this.serviceLocator;
         }
     }
 }
