@@ -18,17 +18,17 @@ package org.apache.sling.ujax;
 
 import java.util.Map;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.NamespaceException;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.commons.mime.MimeTypeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +117,7 @@ public class UjaxPostProcessor {
     public UjaxPostProcessor(SlingHttpServletRequest request, Session session,
                              NodeNameGenerator nodeNameGenerator,
                              DateParser dateParser,
-                             MimeTypeService mimeTypeService) {
+                             ServletContext servletContext) {
         this.request = request;
         this.session = session;
 
@@ -168,7 +168,7 @@ public class UjaxPostProcessor {
         this.nodeNameGenerator = nodeNameGenerator;
         this.dateParser = dateParser;
         propHandler = new UjaxPropertyValueHandler(this);
-        uploadHandler = new UjaxFileUploadHandler(this, mimeTypeService);
+        uploadHandler = new UjaxFileUploadHandler(this, servletContext);
     }
 
     /**
