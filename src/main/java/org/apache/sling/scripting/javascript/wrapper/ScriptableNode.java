@@ -116,6 +116,10 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
             return Undefined.instance;
         }
     }
+    
+    public ScriptableProperty jsFunction_getProperty(String name) throws RepositoryException {
+        return new ScriptableProperty(node.getProperty(name));
+    }
 
     public String jsFunction_getUUID() {
         try {
