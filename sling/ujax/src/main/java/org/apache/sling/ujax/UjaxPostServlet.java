@@ -91,6 +91,16 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     public static final String RP_MOVE_DEST = RP_PREFIX + "moveDest";
 
     /**
+     * Optional request parameter: move flags
+     */
+    public static final String RP_MOVE_FLAGS = RP_PREFIX + "moveFlags";
+
+    /**
+     * name of the 'replace' move flag
+     */
+    public static final String MOVE_FLAG_REPLACE = "replace";
+
+    /**
      * Optional request parameter: only request parameters starting with this prefix are
      * saved as Properties when creating a Node. Active only if at least one parameter
      * starts with this prefix, and defaults to {@link #DEFAULT_SAVE_PARAM_PREFIX}.
