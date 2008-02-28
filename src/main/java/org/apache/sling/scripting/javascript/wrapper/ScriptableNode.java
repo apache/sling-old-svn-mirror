@@ -100,11 +100,26 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
 
+    public ScriptableItemMap jsFunction_getNodes(String namePattern) {
+        try {
+            NodeIterator iter = null;
+            if(namePattern == null || "undefined".equals(namePattern)) {
+                iter = node.getNodes();
+            } else {
+                iter = node.getNodes(namePattern);
+            }
+            return new ScriptableItemMap(iter);
+        } catch (RepositoryException re) {
+            log.warn("Cannot get children of " + jsFunction_getPath() + " with pattern " + namePattern, re);
+            return new ScriptableItemMap();
+        }
+    }
+    
     public ScriptableItemMap jsFunction_getProperties() {
         try {
             return new ScriptableItemMap(node.getProperties());
         } catch (RepositoryException re) {
-            log.warn("Cannot get children of " + jsFunction_getPath(), re);
+            log.warn("Cannot get properties of " + jsFunction_getPath(), re);
             return new ScriptableItemMap();
         }
     }
