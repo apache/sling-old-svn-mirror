@@ -24,7 +24,6 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,11 +145,6 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
 
     /**
-     * @scr.reference
-     */
-    private MimeTypeService mimeTypeService;
-
-    /**
      * utility class for parsing date strings
      */
     private final DateParser dateParser = new DateParser(); {
@@ -199,7 +193,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         }
 
         // create the post context
-        return new UjaxPostProcessor(request, s, nodeNameGenerator, dateParser, mimeTypeService);
+        return new UjaxPostProcessor(request, s, nodeNameGenerator, dateParser, this.getServletContext());
     }
 
     /**
