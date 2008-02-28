@@ -102,6 +102,7 @@
         <module>sling/servlets-default</module>
         <module>sling/servlets-standard</module>
         <module>sling/threads</module>
+        <module>sling/ujax</module>
 
         <!-- Scripting Support -->
         <module>scripting/api</module>
@@ -114,7 +115,6 @@
         <module>scripting/velocity</module>
         
         <!-- Launcher -->
-        <module>launchpad/launchpad-servlets</module>
         <module>launchpad/launchpad-content</module>
         <module>launcher/app</module>
         <module>launcher/webapp</module>
