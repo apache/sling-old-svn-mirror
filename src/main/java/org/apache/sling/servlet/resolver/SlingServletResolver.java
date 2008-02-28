@@ -26,7 +26,9 @@ import static org.apache.sling.servlet.resolver.ServletResolverConstants.DEFAULT
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -60,6 +62,7 @@ import org.apache.sling.servlet.resolver.defaults.DefaultServlet;
 import org.apache.sling.servlet.resolver.helper.PathIterator;
 import org.apache.sling.servlet.resolver.helper.SlingServletConfig;
 import org.apache.sling.servlet.resolver.resource.ServletResourceProvider;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -576,6 +579,9 @@ public class SlingServletResolver implements ServletResolver,
 
         Dictionary<String, Object> params = new Hashtable<String, Object>();
         params.put(ResourceProvider.ROOTS, provider.getSerlvetPaths());
+        params.put(Constants.SERVICE_DESCRIPTION,
+            "ServletResourceProvider for Servlets at "
+                + Arrays.asList(provider.getSerlvetPaths()));
 
         ServiceRegistration reg = context.getBundleContext().registerService(
             ResourceProvider.SERVICE_NAME, provider, params);
