@@ -143,4 +143,27 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         final String code = "out.print(node.getProperty('text'));";
         assertEquals(testText, script.evalToString(code, data));
     }
+    
+    public void testGetNodesNoPattern() throws Exception {
+        final String path = "subgnnp_" + System.currentTimeMillis();
+        final String code =
+            "node.addNode('" + path + "_A');\n"
+            + "node.addNode('" + path + "_B');\n"
+            + "var nodes = node.getNodes();\n"
+            + "for (i in nodes) { out.print(nodes[i].getName() + ' '); }\n"
+        ;
+        assertEquals(path + "_A " + path + "_B ", script.evalToString(code, data));
+    }
+    
+    public void testGetNodesWithPattern() throws Exception {
+        final String path = "subgnnp_" + System.currentTimeMillis();
+        final String code =
+            "node.addNode('1_" + path + "_A');\n"
+            + "node.addNode('1_" + path + "_B');\n"
+            + "node.addNode('2_" + path + "_C');\n"
+            + "var nodes = node.getNodes('1_*');\n"
+            + "for (i in nodes) { out.print(nodes[i].getName() + ' '); }\n"
+        ;
+        assertEquals("1_" + path + "_A 1_" + path + "_B ", script.evalToString(code, data));
+    }
 }
