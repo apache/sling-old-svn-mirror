@@ -64,6 +64,9 @@
                         <Private-Package>
                             org.apache.sling.ujax.*
                         </Private-Package>
+                        <Sling-Bundle-Resources>
+                            /ujax/ujax.js
+                        </Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
             </plugin>
