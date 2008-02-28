@@ -113,6 +113,7 @@ public class UjaxPostProcessor {
      * @param nodeNameGenerator the node name generator. use a servlet scoped one,
      *        so that it can hold states.
      * @param dateParser helper for parsing date strings
+     * @param servletContext The ServletContext to use for file upload
      */
     public UjaxPostProcessor(SlingHttpServletRequest request, Session session,
                              NodeNameGenerator nodeNameGenerator,
@@ -289,9 +290,11 @@ public class UjaxPostProcessor {
      */
     public void run()  {
         try {
+            processCreate();
+            processMoves();
             processDeletes();
             processContent();
-            processMoves();
+            processOrder();
             if (session.hasPendingChanges()) {
                 session.save();
             }
@@ -365,6 +368,9 @@ public class UjaxPostProcessor {
             IllegalArgumentException {
         final String [] moveSrc = request.getParameterValues(UjaxPostServlet.RP_MOVE_SRC);
         final String [] moveDest = request.getParameterValues(UjaxPostServlet.RP_MOVE_DEST);
+        final String flags = request.getParameter(UjaxPostServlet.RP_MOVE_FLAGS);
+        final boolean isReplace = flags != null && flags.contains(UjaxPostServlet.MOVE_FLAG_REPLACE);
+
         if (moveSrc == null || moveDest == null) {
             return;
         }
@@ -387,12 +393,52 @@ public class UjaxPostProcessor {
             }
             src = resolvePath(src);
             dest = resolvePath(dest);
+            // delete destination if already exists
+            if (session.itemExists(dest)) {
+                if (isReplace) {
+                    session.getItem(dest).remove();
+                } else {
+                    throw new IllegalArgumentException("Unable to process move. destination item already exists " + dest);
+                }
+            }
             session.move(src, dest);
             changeLog.onMoved(src, dest);
             log.debug("moved {} to {}", src, dest);
         }
     }
 
+    /**
+     * Create node(s) according to current request
+     * @throws RepositoryException if a repository error occurs
+     * @throws ServletException if an internal error occurs
+     */
+    private void processCreate() throws RepositoryException, ServletException {
+        // get desired path.
+        currentPath = rootPath;
+
+        // check for star suffix in request
+        if (isCreateRequest) {
+            // If the path ends with a *, create a node under its parent, with
+            // a generated node name
+            currentPath += "/" + nodeNameGenerator.getNodeName(request.getRequestParameterMap(), getSavePrefix());
+
+            // if resulting path exists, add a suffix until it's not the case anymore
+            if (session.itemExists(currentPath)) {
+                for (int suffix = 0; suffix < 1000; suffix++) {
+                    String newPath = currentPath + "_" + suffix;
+                    if(!session.itemExists(newPath)) {
+                        currentPath = newPath;
+                        break;
+                    }
+                }
+            }
+            // if it still exists there are more than 1000 nodes ?
+            if (session.itemExists(currentPath)) {
+                throw new ServletException("Collision in generated node names for path=" + currentPath);
+            }
+            deepGetOrCreateNode(null, currentPath);
+        }
+    }
 
     /**
      * Create or update node(s) according to current request
@@ -400,38 +446,6 @@ public class UjaxPostProcessor {
      * @throws ServletException if an internal error occurs
      */
     private void processContent() throws RepositoryException, ServletException {
-        // get desired path.
-        String nodePath = rootPath;
-        // check for star suffix in request
-        if (isCreateRequest) {
-            // If the path ends with a *, create a node under its parent, with
-            // a generated node name
-            nodePath += "/" + nodeNameGenerator.getNodeName(request.getRequestParameterMap(), getSavePrefix());
-
-            // if resulting path exists, add a suffix until it's not the case anymore
-            if (session.itemExists(nodePath)) {
-                for (int suffix = 0; suffix < 1000; suffix++) {
-                    String newPath = nodePath + "_" + suffix;
-                    if(!session.itemExists(newPath)) {
-                        nodePath = newPath;
-                        break;
-                    }
-                }
-            }
-            // if it still exists there are more than 1000 nodes ?
-            if (session.itemExists(nodePath)) {
-                throw new ServletException("Collision in generated node names for path=" + nodePath);
-            }
-
-        }
-        currentPath = nodePath;
-
-        // process the "order" command if any
-        final String order = request.getParameter(UjaxPostServlet.RP_ORDER);
-        if  (order!=null) {
-            processNodeOrder(currentPath, order);
-        }
-
         // walk the request parameters, create and save nodes and properties
         for (Map.Entry<String, RequestParameter[]>  e: request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
@@ -567,24 +581,26 @@ public class UjaxPostProcessor {
     /**
      * If orderCode is ORDER_ZERO, move n so that it is the first child of its
      * parent
-     * @param nodePath path to the node to order
-     * @param orderCode code that specifies how to order
      * @throws RepositoryException if a repository error occurs
      */
-    private void processNodeOrder(String nodePath, String orderCode)
+    private void processOrder()
             throws RepositoryException {
-        if (UjaxPostServlet.ORDER_ZERO.equals(orderCode)) {
-            final Node n = deepGetOrCreateNode((String) null, nodePath);
-            final Node parent = n.getParent();
-            final String beforename=parent.getNodes().nextNode().getName();
-            parent.orderBefore(n.getName(), beforename);
-            if(log.isDebugEnabled()) {
-                log.debug("Node {} moved to be first child of its parent, " +
-                        "due to orderCode=" + orderCode, n.getPath());
-            }
-        } else {
-            if(log.isDebugEnabled()) {
-                log.debug("orderCode '{}' invalid, ignored", orderCode);
+        // process the "order" command if any
+        final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
+        if  (orderCode!=null) {
+            if (UjaxPostServlet.ORDER_ZERO.equals(orderCode)) {
+                final Node n = deepGetOrCreateNode(null, currentPath);
+                final Node parent = n.getParent();
+                final String beforename=parent.getNodes().nextNode().getName();
+                parent.orderBefore(n.getName(), beforename);
+                if(log.isDebugEnabled()) {
+                    log.debug("Node {} moved to be first child of its parent, " +
+                            "due to orderCode=" + orderCode, n.getPath());
+                }
+            } else {
+                if(log.isDebugEnabled()) {
+                    log.debug("orderCode '{}' invalid, ignored", orderCode);
+                }
             }
         }
     }
