@@ -23,10 +23,10 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.servlet.ServletContext;
 
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.commons.mime.MimeTypeService;
 
 /**
  * Handles file uploads.
@@ -94,17 +94,17 @@ public class UjaxFileUploadHandler {
     private final UjaxPostProcessor ctx;
 
     /**
-     * The mime type service
+     * The servlet context.
      */
-    private final MimeTypeService mimeTypeService;
+    private final ServletContext servletContext;
 
     /**
      * Constructs file upload handler
      * @param ctx the post processor
      */
-    public UjaxFileUploadHandler(UjaxPostProcessor ctx, MimeTypeService mts) {
+    public UjaxFileUploadHandler(UjaxPostProcessor ctx, ServletContext servletCtx) {
         this.ctx = ctx;
-        this.mimeTypeService = mts;
+        this.servletContext = servletCtx;
     }
 
     /**
@@ -193,9 +193,7 @@ public class UjaxFileUploadHandler {
         }
         if (contentType == null || contentType.equals("application/octet-stream")) {
             // try to find a better content type
-            if (this.mimeTypeService != null) {
-                contentType = this.mimeTypeService.getMimeType(value.getFileName());
-            }
+            contentType = this.servletContext.getMimeType(value.getFileName());
             if (contentType == null || contentType.equals("application/octet-stream")) {
                 contentType = "application/octet-stream";
             }
