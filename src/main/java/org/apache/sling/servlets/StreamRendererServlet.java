@@ -136,6 +136,11 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
                 response.setCharacterEncoding(encoding);
             }
 
+            long length = meta.getContentLength();
+            if (length > 0 && length < Integer.MAX_VALUE) {
+                response.setContentLength((int) length);
+            }
+            
             OutputStream out = response.getOutputStream();
 
             byte[] buf = new byte[1024];
