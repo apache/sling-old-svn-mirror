@@ -138,4 +138,9 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         ;
         assertEquals("nt:resource", script.evalToString(code, data));
     }
+
+    public void testGetProperty() throws Exception {
+        final String code = "out.print(node.getProperty('text'));";
+        assertEquals(testText, script.evalToString(code, data));
+    }
 }
