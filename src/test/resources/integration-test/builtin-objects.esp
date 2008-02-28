@@ -2,7 +2,6 @@
 <html>
 	<body>
 		<h1>ESP template</h1>
-		<p>resource.node.text:<%= resource.node.text %></p>
 		<p>currentNode.text:<%= currentNode.text %></p>
 	</body>
 	

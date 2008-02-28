@@ -1,15 +1,15 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.sling.ujax.UjaxPostServlet;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.ujax.UjaxPostServlet;
+
 public class ScriptBuiltinObjectsTest extends RenderingTestBase {
-    
+
     private String slingResourceType;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -36,7 +36,6 @@ public class ScriptBuiltinObjectsTest extends RenderingTestBase {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes ESP marker (" + content + ")",content.contains("ESP template"));
             assertTrue("Content includes test text (" + content + ")", content.contains(testText));
-            assertTrue("Content includes resource.node text (" + content + ")", content.contains("resource.node.text:" + testText));
             assertTrue("Content includes currentNode text (" + content + ")", content.contains("currentNode.text:" + testText));
             assertTrue("Content includes sc data (" + content + ")",content.contains("sc:null"));
             assertTrue("Content includes response data (" + content + ")",content.contains("SlingHttpServletResponse:false"));
@@ -44,5 +43,5 @@ public class ScriptBuiltinObjectsTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
 }
