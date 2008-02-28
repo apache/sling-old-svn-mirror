@@ -83,15 +83,29 @@ public class BundleResource extends SlingAdaptable implements Resource,
     public BundleResource(ResourceResolver resourceResolver, Bundle bundle, String path) {
         this.resourceResolver = resourceResolver;
         this.bundle = bundle;
-        this.path = path.endsWith("/")
-                ? path.substring(0, path.length() - 1)
-                : path;
-        this.resourceType = path.endsWith("/") ? NT_FOLDER : NT_FILE;
 
         metadata = new ResourceMetadata();
         metadata.setResolutionPath(path);
         metadata.setCreationTime(bundle.getLastModified());
         metadata.setModificationTime(bundle.getLastModified());
+
+        if (path.endsWith("/")) {
+            
+            this.path = path.substring(0, path.length() - 1);
+            this.resourceType = NT_FOLDER;
+            
+        } else {
+            
+            this.path = path;
+            this.resourceType = NT_FILE;
+
+            try {
+                URL url = bundle.getEntry(path);
+                metadata.setContentLength(url.openConnection().getContentLength());
+            } catch (Exception e) {
+                // don't care, we just have no content length
+            }
+        }
     }
 
     public String getPath() {

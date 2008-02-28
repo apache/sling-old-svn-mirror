@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.io.InputStream;
 import java.util.Calendar;
 
 import javax.jcr.Item;
@@ -27,12 +28,15 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JcrPropertyResource extends JcrItemResource {
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final Property property;
 
     private final String resourceType;
@@ -73,23 +77,48 @@ public class JcrPropertyResource extends JcrItemResource {
                 return (AdapterType) getProperty().getValue();
             } else if (type == Node.class) {
                 return (AdapterType) getProperty().getNode();
+            } else if (type == InputStream.class) {
+                return (AdapterType) getInputStream();
             }
         } catch (ValueFormatException vfe) {
-            // TODO: log
+            log.info("adaptTo: Problem accessing the property value of "
+                + getPath(), vfe);
         } catch (RepositoryException re) {
-            // TODO: log
+            log.info("adaptTo: Problem accessing the property " + getPath(), re);
         }
 
         // try to use adapter factories
         return super.adaptTo(type);
     }
 
-    public Property getProperty() {
-        return property;
-    }
-
     public String toString() {
         return getClass().getSimpleName() + ", type=" + getResourceType()
             + ", path=" + getPath();
+    }
+
+    private Property getProperty() {
+        return property;
+    }
+
+    private InputStream getInputStream() {
+        Property prop = getProperty();
+        
+        try {
+            // we set the content length only if the input stream is
+            // fetched. otherwise the repository needs to load the
+            // binary property which could cause performance loss
+            // for all resources that do need to provide the stream
+            long length = prop.getLength();
+            InputStream stream =  prop.getStream();
+            
+            getResourceMetadata().setContentLength(length);
+            return stream;
+        } catch (RepositoryException re) {
+            log.error("getInputStream: Problem accessing the property "
+                + getPath() + " stream", re);
+        }
+        
+        // fall back to none in case of an error
+        return null;
     }
 }
