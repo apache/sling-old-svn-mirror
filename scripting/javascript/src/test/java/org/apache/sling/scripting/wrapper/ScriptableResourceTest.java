@@ -52,15 +52,6 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(node.getPath(), script.eval("resource.getPath()", data));
     }
 
-    public void testNode() throws Exception {
-        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
-        data.put("resource", new TestResource(node));
-
-        // the path of the resource
-        assertEquals(node, script.eval("resource.node", data));
-        assertEquals(node, script.eval("resource.getNode()", data));
-    }
-
     public void testAdaptToNode() throws Exception {
         final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
         data.put("resource", new TestResource(node));
@@ -133,7 +124,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         public String getResourceSuperType() {
             return null;
         }
-        
+
         @SuppressWarnings("unchecked")
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             if (type == Node.class || type == Item.class) {
