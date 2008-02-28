@@ -18,8 +18,6 @@ package org.apache.sling.scripting.javascript.wrapper;
 
 import java.util.Iterator;
 
-import javax.jcr.Node;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.Context;
@@ -64,15 +62,6 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
 
     public Object jsFunction_getObject() {
         return toJS(resource.adaptTo(Object.class));
-    }
-
-    public Object jsFunction_getNode() {
-        return toJS(resource.adaptTo(Node.class));
-    }
-
-    /** alias for getNode */
-    public Object jsGet_node() {
-        return jsFunction_getNode();
     }
 
     public String jsFunction_getResourceType() {

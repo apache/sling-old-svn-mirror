@@ -2,24 +2,24 @@
 <html>
 	<body>
 		<h1>ESP template</h1>
-		<p class="main"><%= resource.node.text %></p>
+		<p class="main"><%= currentNode.text %></p>
 		
 		<h2>Test 1</h2>
 		<%
-			if(resource.node.pathToInclude) {
+			if(currentNode.pathToInclude) {
 			  %>
-			  <p>pathToInclude = <%= resource.node.pathToInclude %></p>
-  		  	  <p>Including <%= resource.node.pathToInclude %></p>
+			  <p>pathToInclude = <%= currentNode.pathToInclude %></p>
+  		  	  <p>Including <%= currentNode.pathToInclude %></p>
 			  <%
-			  sling.include(resource.node.pathToInclude);
+			  sling.include(currentNode.pathToInclude);
 			}
 		%>
 		
 		<h2>Test 2</h2>
 		<%
-			if(resource.node.testInfiniteLoop) {
+			if(currentNode.testInfiniteLoop) {
 			  %>
-			  <p>testInfiniteLoop = <%= resource.node.testInfiniteLoop %></p>
+			  <p>testInfiniteLoop = <%= currentNode.testInfiniteLoop %></p>
 			  <%
 			  // try to include the item itself, to cause an infinite loop
 			  sling.include(resource.getPath());
@@ -28,12 +28,12 @@
 		
 		<h2>Test 3</h2>
 		<%
-			if(resource.node.pathToInclude && resource.node.forceResourceType) {
+			if(currentNode.pathToInclude && currentNode.forceResourceType) {
 			  %>
-			  <p>pathToInclude = <%= resource.node.pathToInclude %></p>
-  		  	  <p>Including <%= resource.node.pathToInclude %></p>
+			  <p>pathToInclude = <%= currentNode.pathToInclude %></p>
+  		  	  <p>Including <%= currentNode.pathToInclude %></p>
 			  <%
-			  sling.include(resource.node.pathToInclude, resource.node.forceResourceType);
+			  sling.include(currentNode.pathToInclude, currentNode.forceResourceType);
 			}
 		%>
 	</body>

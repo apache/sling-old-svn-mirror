@@ -2,7 +2,7 @@
 <html>
 	<body>
 		ESP template
-		<p><%= resource.node.text %></p>
+		<p><%= currentNode.text %></p>
 	
 		<!-- test SLING-142, compact syntax -->
 		<div class="SLING-142" id="${'2' + '2'}"/>

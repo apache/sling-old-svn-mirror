@@ -2,6 +2,6 @@
 <html>
 	<body>
 		Template #3 for ESP tests 
-		<p><em><%= resource.node.text %></em></p>
+		<p><em><%= currentNode.text %></em></p>
 	</body>
 </html>
