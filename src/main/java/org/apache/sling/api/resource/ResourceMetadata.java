@@ -52,6 +52,18 @@ public class ResourceMetadata extends HashMap<String, Object> {
     public static final String CONTENT_TYPE = "sling.contentType";
 
     /**
+     * The name of the optional property providing the content length of the
+     * resource if the resource is streamable (value is "sling.contentLength").
+     * This property may be missing if the resource is not streamable or if the
+     * content length is not known.
+     * <p>
+     * Note, that unlike the other properties, this property may be set only
+     * after the resource has successfully been adapted to an
+     * <code>InputStream</code> for performance reasons.
+     */
+    public static final String CONTENT_LENGTH = "sling.contentLength";
+
+    /**
      * The name of the optional property providing the character encoding of the
      * resource if the resource is streamable and contains character data (value
      * is "sling.characterEncoding"). This property may be missing if the
@@ -122,6 +134,29 @@ public class ResourceMetadata extends HashMap<String, Object> {
         }
 
         return null;
+    }
+
+    /**
+     * Sets the {@link #CONTENT_LENGTH} property to <code>contentType</code>
+     * if not <code>null</code>.
+     */
+    public void setContentLength(long contentLength) {
+        if (contentLength > 0) {
+            put(CONTENT_LENGTH, contentLength);
+        }
+    }
+
+    /**
+     * Returns the {@link #CONTENT_LENGTH} property if not <code>null</code>
+     * and a <code>long</code>. Otherwise <code>-1</code> is returned.
+     */
+    public long getContentLength() {
+        Object value = get(CONTENT_LENGTH);
+        if (value instanceof Long) {
+            return (Long) value;
+        }
+
+        return -1;
     }
 
     /**
