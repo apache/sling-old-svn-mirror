@@ -98,9 +98,11 @@ public class JcrNodeResource extends JcrItemResource implements Descendable {
     }
 
     /**
-     * Returns a stream to the <em>jcr:content/jcr:data</em> property if the
-     * {@link #getRawData() raw data} is an <em>nt:file</em> node. Otherwise
-     * returns <code>null</code>.
+     * Returns a stream to the <em>jcr:data</em> property if the
+     * {@link #getNode() node} is an <em>nt:file</em> or <em>nt:resource</em>
+     * node. Otherwise returns <code>null</code>.
+     * If a valid stream can be returned, this method also sets the
+     * content length resource metadata.
      */
     private InputStream getInputStream() {
         // implement this for nt:file only
@@ -112,22 +114,39 @@ public class JcrNodeResource extends JcrItemResource implements Descendable {
                         ? node.getNode(JCR_CONTENT)
                         : node;
 
+                Property data;
+                
                 // if the node has a jcr:data property, use that property
                 if (content.hasProperty(JCR_DATA)) {
-                    return content.getProperty(JCR_DATA).getStream();
+                    data = content.getProperty(JCR_DATA);
+
+                } else {
+
+                    // otherwise try to follow default item trail
+                    try {
+                        Item item = content.getPrimaryItem();
+                        while (item.isNode()) {
+                            item = ((Node) item).getPrimaryItem();
+                        }
+                        data = ((Property) item);
+                    } catch (ItemNotFoundException infe) {
+                        // we don't actually care, but log for completeness
+                        log.debug("getInputStream: No primary items for "
+                            + toString(), infe);
+                        data = null;
+                    }
                 }
 
-                // otherwise try to follow default item trail
-                try {
-                    Item item = content.getPrimaryItem();
-                    while (item.isNode()) {
-                        item = ((Node) item).getPrimaryItem();
-                    }
-                    return ((Property) item).getStream();
-                } catch (ItemNotFoundException infe) {
-                    // we don't actually care, but log for completeness
-                    log.debug("getInputStream: No primary items for "
-                        + toString(), infe);
+                if (data != null) {
+                    // we set the content length only if the input stream is
+                    // fetched. otherwise the repository needs to load the
+                    // binary property which could cause performance loss
+                    // for all resources that do need to provide the stream
+                    long length = data.getLength();
+                    InputStream stream =  data.getStream();
+                    
+                    getResourceMetadata().setContentLength(length);
+                    return stream;
                 }
 
             } catch (RepositoryException re) {
