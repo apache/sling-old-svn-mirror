@@ -66,12 +66,12 @@ public class PropertyRenderingTest extends RenderingTestBase {
     }
     
     public void testTextNoExt() throws IOException {
-        final String data = getContent(displayUrl + "/text", CONTENT_TYPE_PLAIN);
+        final String data = getContent(displayUrl + "/text", null);
         assertEquals(testText, data);
     }
     
     public void testResourceTypeNoExt() throws IOException {
-        final String data = getContent(displayUrl + "/sling:resourceType", CONTENT_TYPE_PLAIN);
+        final String data = getContent(displayUrl + "/sling:resourceType", null);
         assertEquals(slingResourceType, data);
     }
 }
