@@ -24,23 +24,23 @@ import org.apache.commons.httpclient.methods.GetMethod;
 
 /** Test creating a Node using the MicroslingIntegrationTestClient */
 public class CreateNodeTest extends HttpTestBase {
-    
+
     public void testCreateNode() throws IOException {
         final String url = HTTP_BASE_URL + "/CreateNodeTest_1_" + System.currentTimeMillis();
-        
+
         // add some properties to the node
         final Map<String,String> props = new HashMap<String,String>();
         props.put("name1","value1");
         props.put("name2","value2");
-        
-        // POST and get URL of created node 
+
+        // POST and get URL of created node
         String urlOfNewNode = null;
         try {
             urlOfNewNode = testClient.createNode(url, props);
         } catch(IOException ioe) {
             fail("createNode failed: " + ioe);
         }
-        
+
         // get and check URL of created node
         final GetMethod get = new GetMethod(urlOfNewNode);
         final int status = httpClient.executeMethod(get);
@@ -48,28 +48,28 @@ public class CreateNodeTest extends HttpTestBase {
         final String responseBodyStr = get.getResponseBodyAsString();
         assertTrue(responseBodyStr.contains("value1"));
         assertTrue(responseBodyStr.contains("value2"));
-        
+
         // test default txt and html renderings
         getContent(urlOfNewNode, CONTENT_TYPE_PLAIN);
         getContent(urlOfNewNode + ".txt", CONTENT_TYPE_PLAIN);
         getContent(urlOfNewNode + ".html", CONTENT_TYPE_HTML);
         getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
-        
+
         // And extensions for which we have no renderer fail
         assertHttpStatus(urlOfNewNode + ".xml", 500);
         assertHttpStatus(urlOfNewNode + ".pdf", 500);
         assertHttpStatus(urlOfNewNode + ".someWeirdExtension", 500);
     }
-    
+
     public void testCreateNodeMultipart() throws IOException {
         final String url = HTTP_BASE_URL + "/CreateNodeTest_2_" + System.currentTimeMillis();
-        
+
         // add some properties to the node
         final Map<String,String> props = new HashMap<String,String>();
         props.put("name1","value1B");
         props.put("name2","value2B");
-        
-        // POST and get URL of created node 
+
+        // POST and get URL of created node
         String urlOfNewNode = null;
         try {
             urlOfNewNode = testClient.createNode(url, props, null, true);
@@ -85,4 +85,50 @@ public class CreateNodeTest extends HttpTestBase {
         assertTrue(responseBodyStr.contains("value1B"));
         assertTrue(responseBodyStr.contains("value2B"));
    }
+
+    public void testCreateNodeWithNodeType() throws IOException {
+        final String url = HTTP_BASE_URL + "/CreateNodeTest_3_" + System.currentTimeMillis();
+
+        // add node type param
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("ujax:nodeType","nt:unstructured");
+        props.put("name1","value1B");
+
+        // POST and get URL of created node
+        String urlOfNewNode = null;
+        try {
+            urlOfNewNode = testClient.createNode(url, props);
+        } catch(IOException ioe) {
+            fail("createNode failed: " + ioe);
+        }
+
+        // get and check URL of created node
+        final GetMethod get = new GetMethod(urlOfNewNode);
+        final int status = httpClient.executeMethod(get);
+        assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
+        final String responseBodyStr = get.getResponseBodyAsString();
+        assertTrue(responseBodyStr.contains("nt:unstructured"));
+    }
+
+    /** Disabled - See SLING-299
+    public void testCreateEmptyNode() throws IOException {
+        final String url = HTTP_BASE_URL + "/CreateNodeTest_4_" + System.currentTimeMillis();
+
+        // add node type param
+        final Map<String,String> props = new HashMap<String,String>();
+
+        // POST and get URL of created node
+        String urlOfNewNode = null;
+        try {
+            urlOfNewNode = testClient.createNode(url, props);
+        } catch(IOException ioe) {
+            fail("createNode failed: " + ioe);
+        }
+
+        // get and check URL of created node
+        final GetMethod get = new GetMethod(urlOfNewNode);
+        final int status = httpClient.executeMethod(get);
+        assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
+    }
+    */
 }
