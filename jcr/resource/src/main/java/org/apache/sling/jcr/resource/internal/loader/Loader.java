@@ -340,8 +340,18 @@ public class Loader {
         // ensure repository node
         Node node;
         if (parentNode.hasNode(clNode.getName())) {
+            
+            // use existing node
             node = parentNode.getNode(clNode.getName());
+            
+        } else if (clNode.getPrimaryNodeType() == null) {
+            
+            // node explicit node type, use repository default
+            node = parentNode.addNode(clNode.getName());
+            
         } else {
+            
+            // explicit primary node type
             node = parentNode.addNode(clNode.getName(),
                 clNode.getPrimaryNodeType());
         }

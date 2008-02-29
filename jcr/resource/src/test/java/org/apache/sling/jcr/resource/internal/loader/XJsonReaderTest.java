@@ -65,7 +65,7 @@ public class XJsonReaderTest extends TestCase {
         String json = "{}";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -75,7 +75,7 @@ public class XJsonReaderTest extends TestCase {
         String json = "     {  }     ";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -85,7 +85,7 @@ public class XJsonReaderTest extends TestCase {
         String json = "";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -95,7 +95,7 @@ public class XJsonReaderTest extends TestCase {
         String json = "             ";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -321,7 +321,9 @@ public class XJsonReaderTest extends TestCase {
     private JSONObject toJsonObject(Node node) throws JSONException {
         JSONObject obj = new JSONObject();
 
-        obj.putOpt("jcr:primaryType", node.getPrimaryNodeType());
+        if (node.getPrimaryNodeType() != null) {
+            obj.putOpt("jcr:primaryType", node.getPrimaryNodeType());
+        }
 
         if (node.getMixinNodeTypes() != null) {
             obj.putOpt("jcr:mixinTypes", this.toJsonArray(node.getMixinNodeTypes()));
