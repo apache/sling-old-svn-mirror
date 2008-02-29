@@ -299,6 +299,7 @@ public class UjaxPostProcessor {
                 session.save();
             }
         } catch (Exception e) {
+            log.error("Exception during response processing.", e);
             error = e;
         } finally {
             try {
@@ -436,7 +437,7 @@ public class UjaxPostProcessor {
             if (session.itemExists(currentPath)) {
                 throw new ServletException("Collision in generated node names for path=" + currentPath);
             }
-            deepGetOrCreateNode(null, currentPath);
+            deepGetOrCreateNode(null, currentPath, true);
         }
     }
 
@@ -460,6 +461,10 @@ public class UjaxPostProcessor {
             }
             // ignore field with a '@DefaultValue' suffix. this is dealt in RequestProperty
             if (paramName.endsWith(UjaxPostServlet.DEFAULT_VALUE_SUFFIX)) {
+                continue;
+            }
+            // skip FormEncoding parameter
+            if ( paramName.equals("FormEncoding") ) {
                 continue;
             }
             // skip parameters that do not start with the save prefix
@@ -493,7 +498,7 @@ public class UjaxPostProcessor {
             }
             // create property helper and get parent node
             RequestProperty prop = new RequestProperty(this, propertyName, values);
-            Node parent = deepGetOrCreateNode(currentPath, prop.getParentPath());
+            Node parent = deepGetOrCreateNode(currentPath, prop.getParentPath(), true);
 
             // call handler
             if (prop.isFileUpload()) {
@@ -510,14 +515,15 @@ public class UjaxPostProcessor {
      *
      * @param parent path to the parent node, may be null if path is absolute
      * @param path path to node that needs to be deep-created
+     * @param isCreate is this a node creation
      * @return node at path
      * @throws RepositoryException if an error occurs
      * @throws IllegalArgumentException if the path is relative and parent
      *         is <code>null</code>
      */
-    private Node deepGetOrCreateNode(String parent, String path)
+    private Node deepGetOrCreateNode(String parent, String path, boolean isCreate)
             throws RepositoryException {
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("Deep-creating Node '{}/{}'", parent, path);
         }
         if (path.equals("")) {
@@ -540,11 +546,30 @@ public class UjaxPostProcessor {
         String[] pathelems = path.substring(1).split("/");
         Node node = session.getRootNode();
 
-        for (String name: pathelems) {
+        for(int i=0; i<pathelems.length; i++) {
+            final String name = pathelems[i];
             if (node.hasNode(name)) {
                 node = node.getNode(name);
             } else {
-                node = node.addNode(name);
+                boolean isLast = (i == pathelems.length - 1);
+                if ( isLast && isCreate ) {
+                    // check for node type
+                    final String nodeType = request.getParameter(UjaxPostServlet.RP_NODE_TYPE);
+                    if ( nodeType != null ) {
+                        node = node.addNode(name, nodeType);
+                    } else {
+                        node = node.addNode(name);
+                    }
+                    // check for mixin types
+                    final String[] mixinTypes = request.getParameterValues(UjaxPostServlet.RP_MIXIN_TYPES);
+                    if ( mixinTypes != null ) {
+                        for(int m=0; m<mixinTypes.length; m++) {
+                            node.addMixin(mixinTypes[m]);
+                        }
+                    }
+                } else {
+                    node = node.addNode(name);
+                }
                 changeLog.onCreated(node.getPath());
             }
         }
@@ -589,7 +614,7 @@ public class UjaxPostProcessor {
         final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
         if  (orderCode!=null) {
             if (UjaxPostServlet.ORDER_ZERO.equals(orderCode)) {
-                final Node n = deepGetOrCreateNode(null, currentPath);
+                final Node n = deepGetOrCreateNode(null, currentPath, false);
                 final Node parent = n.getParent();
                 final String beforename=parent.getNodes().nextNode().getName();
                 parent.orderBefore(n.getName(), beforename);
