@@ -35,14 +35,12 @@ import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a Bundle entry */
-public class BundleResource extends SlingAdaptable implements Resource,
-        Descendable {
+public class BundleResource extends SlingAdaptable implements Resource {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -209,23 +207,8 @@ public class BundleResource extends SlingAdaptable implements Resource,
         return null;
     }
 
-    // ---------- Descendable interface ----------------------------------------
-
-    public Iterator<Resource> listChildren() {
+    Iterator<Resource> listChildren() {
         return new BundleResourceIterator(this);
-    }
-
-    public Resource getDescendent(String relPath) {
-
-        // only consider folder resources for descendents
-        if (!isFile()) {
-            URL descendent = bundle.getEntry(path + relPath);
-            if (descendent != null) {
-                new BundleResource(resourceResolver, bundle, descendent.getPath());
-            }
-        }
-
-        return null;
     }
 
     Bundle getBundle() {
