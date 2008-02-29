@@ -71,6 +71,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 	// resource adapts (null if the resource does not adapt to a node
     private static final String NODE = "currentNode";
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private Resource scriptResource;
 
     private ScriptEngine scriptEngine;
@@ -170,7 +172,13 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             props.setFlush(true);
 
             res.setCharacterEncoding("UTF-8");
-            res.setContentType(request.getResponseContentType());
+            // try to set content type
+            final String contentType = request.getResponseContentType();
+            if ( contentType != null ) {
+                res.setContentType(contentType);
+            } else {
+                logger.warn("No response content type defined for request {}.", request.getRequestURI());
+            }
 
             // evaluate the script now using the ScriptEngine
             eval(props);
