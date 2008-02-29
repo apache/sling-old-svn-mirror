@@ -21,6 +21,8 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
+import java.util.Iterator;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
@@ -114,5 +116,11 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
         return result;
     }
+    
+    /**
+     * Returns an iterator over the child resources or <code>null</code> if
+     * there are none.
+     */
+    abstract Iterator<Resource> listChildren();
 
 }

@@ -19,10 +19,8 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.security.AccessControlException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -40,7 +38,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
@@ -185,23 +182,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
     }
 
     public Iterator<Resource> listChildren(Resource parent) {
-        if (parent instanceof Descendable) {
-            return ((Descendable) parent).listChildren();
-        }
-
-        try {
-            parent = getResource(parent.getPath());
-            if (parent instanceof Descendable) {
-                return ((Descendable) parent).listChildren();
-            }
-        } catch (SlingException se) {
-            log.warn("listChildren: Error trying to resolve parent resource "
-                + parent.getPath(), se);
-        }
-
-        // return an empty iterator if parent has no node
-        List<Resource> empty = Collections.emptyList();
-        return empty.iterator();
+        return rootProvider.listChildren(parent);
     }
 
     public Iterator<Resource> findResources(String query, String language)

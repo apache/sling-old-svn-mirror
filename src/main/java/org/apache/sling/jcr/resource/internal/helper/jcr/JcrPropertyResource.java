@@ -20,6 +20,8 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Iterator;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -28,6 +30,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +122,11 @@ public class JcrPropertyResource extends JcrItemResource {
         }
         
         // fall back to none in case of an error
+        return null;
+    }
+    
+    @Override
+    Iterator<Resource> listChildren() {
         return null;
     }
 }

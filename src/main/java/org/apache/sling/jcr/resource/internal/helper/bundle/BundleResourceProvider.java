@@ -19,8 +19,12 @@
 package org.apache.sling.jcr.resource.internal.helper.bundle;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +33,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.osgi.framework.Bundle;
 
 public class BundleResourceProvider implements ResourceProvider {
@@ -77,9 +82,82 @@ public class BundleResourceProvider implements ResourceProvider {
         return BundleResource.getResource(resourceResolver, bundle, path);
     }
 
-    public Iterator<Resource> listChildren(Resource parent)
+    public Iterator<Resource> listChildren(final Resource parent)
             throws SlingException {
-        // TODO Auto-generated method stub
-        return null;
+
+        // bundle resources can handle this request directly
+        if (parent instanceof BundleResource) {
+            return ((BundleResource) parent).listChildren();
+        }
+
+        // otherwise create an iterator which builds the entries based on
+        // the contents of the roots list
+        return new Iterator<Resource>() {
+            private final String parentPath;
+
+            private final ResourceResolver resolver;
+
+            private final Iterator<String> roots;
+
+            private Resource nextResult;
+            
+            private final Set<String> visited = new HashSet<String>();
+            {
+                String pp = parent.getPath();
+                if (!pp.endsWith("/")) {
+                    pp = pp.concat("/");
+                }
+                parentPath = pp;
+                resolver = parent.getResourceResolver();
+                roots = Arrays.asList(getRoots()).iterator();
+                nextResult = seek();
+            }
+
+            public boolean hasNext() {
+                return nextResult != null;
+            }
+
+            public Resource next() {
+                if (nextResult == null) {
+                    throw new NoSuchElementException();
+                }
+                
+                Resource result = nextResult;
+                nextResult = seek();
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
+
+            private Resource seek() {
+                Resource result = null;
+                while (result == null && roots.hasNext()) {
+                    String path = roots.next();
+                    if (path.startsWith(parentPath)) {
+                        int nextSlash = path.indexOf('/', parentPath.length());
+                        if (nextSlash < 0) {
+                            result = BundleResource.getResource(resolver,
+                                bundle, path);
+                        } else {
+
+                            path = path.substring(0, nextSlash);
+                            if (!visited.contains(path)) {
+                                visited.add(path);
+                                if (resolver.getResource(path) == null) {
+                                    result = new SyntheticResource(resolver,
+                                        path, RESOURCE_TYPE_SYNTHETIC);
+                                }
+                            }
+                        }
+                    }
+
+                }
+                
+                return result;
+            }
+        };
+
     }
 }
