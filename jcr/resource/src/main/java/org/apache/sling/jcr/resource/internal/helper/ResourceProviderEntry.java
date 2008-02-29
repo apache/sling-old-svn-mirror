@@ -19,13 +19,19 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
 
 /**
  * The <code>ResourceProviderEntry</code> class represents a node in the tree
@@ -57,7 +63,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     /**
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider.
-     *
+     * 
      * @param path The relative path supported by the provider
      * @param provider The resource provider to encapsulate by this entry.
      */
@@ -69,7 +75,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider,
      * and a number of inital child entries.
-     *
+     * 
      * @param path The relative path supported by the provider
      * @param provider The resource provider to encapsulate by this entry.
      */
@@ -104,60 +110,91 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * Returns the resource with the given path or <code>null</code> if
      * neither the resource provider of this entry nor the resource provider of
      * any of the child entries can provide the resource.
-     *
+     * 
      * @param path The path to the resource to return.
      * @return The resource for the path or <code>null</code> if no resource
      *         can be found.
-     * @throws org.apache.sling.api.SlingException if an error occurrs trying to access an existing
-     *             resource.
+     * @throws org.apache.sling.api.SlingException if an error occurrs trying to
+     *             access an existing resource.
      */
     public Resource getResource(ResourceResolver resourceResolver, String path) {
         return getResource(resourceResolver, path, path);
     }
 
-    /**
-     * Returns the resource with the given path or <code>null</code> if
-     * neither the resource provider of this entry nor the resource provider of
-     * any of the child entries can provide the resource.
-     * <p>
-     * This method implements the {@link #getResource(String)} method
-     * recursively calling itself on any child provide entries matching the
-     * path.
-     *
-     * @param path The path to the resource to return relative to the parent
-     *            resource provider entry, which called this method.
-     * @param fullPath The actual path to the resource as provided to the
-     *            {@link #getResource(String)} method.
-     * @return The resource for the path or <code>null</code> if no resource
-     *         can be found.
-     * @throws SlingException if an error occurrs trying to access an existing
-     *             resource.
-     */
-    private Resource getResource(ResourceResolver resourceResolver,
-            String path, String fullPath) {
-        if (path.equals(this.path)) {
-            return getResourceProvider().getResource(resourceResolver, fullPath);
-        } else if (path.startsWith(this.prefix)) {
-            if (entries != null) {
+    public Iterator<Resource> listChildren(final Resource resource) {
+        return new Iterator<Resource>() {
+            private final Iterator<ResourceProvider> providers;
 
-                // consider relative path for further checks
-                path = path.substring(this.prefix.length());
+            private Iterator<Resource> resources;
 
-                for (ResourceProviderEntry entry : entries) {
-                    Resource test = entry.getResource(resourceResolver, path,
-                        fullPath);
-                    if (test != null) {
-                        return test;
-                    }
+            private Resource nextResource;
+
+            private Map<String, Resource> delayed;
+
+            private Iterator<Resource> delayedIter;
+
+            {
+                String path = resource.getPath();
+                if (!path.endsWith("/")) {
+                    path += "/";
                 }
+
+                // gather the providers in linked set, such that we keep
+                // the order of addition and make sure we only get one entry
+                // for each resource provider
+                Set<ResourceProvider> providersSet = new LinkedHashSet<ResourceProvider>();
+                getResourceProviders(path, providersSet);
+                
+                providers = providersSet.iterator();
+                delayed = new HashMap<String, Resource>();
+                nextResource = seek();
             }
 
-            // no more specific provider, return mine
-            return getResourceProvider().getResource(resourceResolver, fullPath);
-        }
+            public boolean hasNext() {
+                return nextResource != null;
+            }
 
-        // no match for my prefix, return null
-        return null;
+            public Resource next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                Resource result = nextResource;
+                nextResource = seek();
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException("remove");
+            }
+
+            private Resource seek() {
+                for (;;) {
+                    while ((resources == null || !resources.hasNext())
+                        && providers.hasNext()) {
+                        ResourceProvider provider = providers.next();
+                        resources = provider.listChildren(resource);
+                    }
+
+                    if (resources != null && resources.hasNext()) {
+                        Resource res = resources.next();
+                        if (res instanceof SyntheticResource) {
+                            delayed.put(res.getPath(), res);
+                        } else {
+                            return res;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                if (delayedIter == null) {
+                    delayedIter = delayed.values().iterator();
+                }
+
+                return delayedIter.hasNext() ? delayedIter.next() : null;
+            }
+        };
     }
 
     public boolean addResourceProvider(String prefix, ResourceProvider provider) {
@@ -257,6 +294,90 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
     public int compareTo(ResourceProviderEntry o) {
         return prefix.compareTo(o.prefix);
+    }
+
+    // ---------- internal -----------------------------------------------------
+
+    /**
+     * Returns the resource with the given path or <code>null</code> if
+     * neither the resource provider of this entry nor the resource provider of
+     * any of the child entries can provide the resource.
+     * <p>
+     * This method implements the {@link #getResource(String)} method
+     * recursively calling itself on any child provide entries matching the
+     * path.
+     * 
+     * @param path The path to the resource to return relative to the parent
+     *            resource provider entry, which called this method.
+     * @param fullPath The actual path to the resource as provided to the
+     *            {@link #getResource(String)} method.
+     * @return The resource for the path or <code>null</code> if no resource
+     *         can be found.
+     * @throws SlingException if an error occurrs trying to access an existing
+     *             resource.
+     */
+    private Resource getResource(ResourceResolver resourceResolver,
+            String path, String fullPath) {
+        if (path.equals(this.path)) {
+            return getResourceProvider().getResource(resourceResolver, fullPath);
+        } else if (path.startsWith(this.prefix)) {
+            if (entries != null) {
+
+                // consider relative path for further checks
+                path = path.substring(this.prefix.length());
+
+                for (ResourceProviderEntry entry : entries) {
+                    Resource test = entry.getResource(resourceResolver, path,
+                        fullPath);
+                    if (test != null) {
+                        return test;
+                    }
+                }
+            }
+
+            // no more specific provider, return mine
+            return getResourceProvider().getResource(resourceResolver, fullPath);
+        }
+
+        // no match for my prefix, return null
+        return null;
+    }
+
+    /**
+     * Returns all resource providers which provider resources whose prefix is
+     * the given path.
+     * 
+     * @param path The prefix path to match the resource provider roots against
+     * @param providers The set of already found resource providers to which
+     * any additional resource providers are added.
+     */
+    private void getResourceProviders(String path,
+            Set<ResourceProvider> providers) {
+        if (path.startsWith(this.prefix)) {
+
+            if (entries != null) {
+
+                // consider relative path for further checks
+                path = path.substring(this.prefix.length());
+
+                for (ResourceProviderEntry entry : entries) {
+                    if (path.length() == 0) {
+                        providers.add(entry.getResourceProvider());
+                    } else {
+                        entry.getResourceProviders(path, providers);
+                    }
+                }
+            }
+
+            // add myself to the list
+            providers.add(getResourceProvider());
+            
+        } else if (this.prefix.startsWith(path)) {
+
+            // add myself to the list, as the path is my root
+            providers.add(getResourceProvider());
+
+        }
     }
 
 }

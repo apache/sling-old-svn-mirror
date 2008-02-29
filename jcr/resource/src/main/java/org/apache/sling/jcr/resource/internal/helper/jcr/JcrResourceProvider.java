@@ -18,10 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import java.security.AccessControlException;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -35,7 +32,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
-import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,23 +82,31 @@ public class JcrResourceProvider implements ResourceProvider {
     }
 
     public Iterator<Resource> listChildren(Resource parent) {
-        if (parent instanceof Descendable) {
-            return ((Descendable) parent).listChildren();
-        }
+        
+        JcrItemResource parentItemResource;
+        
+        // short cut for known JCR resources
+        if (parent instanceof JcrItemResource) {
+        
+            parentItemResource = (JcrItemResource) parent;
 
-        try {
-            parent = getResource(parent.getResourceResolver(), parent.getPath());
-            if (parent instanceof Descendable) {
-                return ((Descendable) parent).listChildren();
+        } else {
+            
+            // try to get the JcrItemResource for the parent path to list
+            // children
+            try {
+                parentItemResource = createResource(
+                    parent.getResourceResolver(), parent.getPath());
+            } catch (RepositoryException re) {
+                parentItemResource = null;
             }
-        } catch (SlingException se) {
-            log.warn("listChildren: Error trying to resolve parent resource "
-                + parent.getPath(), se);
+            
         }
 
-        // return an empty iterator if parent has no node
-        List<Resource> empty = Collections.emptyList();
-        return empty.iterator();
+        // return children if there is a parent item resource, else null
+        return (parentItemResource != null)
+                ? parentItemResource.listChildren()
+                : null;
     }
 
     public Session getSession() {
@@ -124,7 +128,7 @@ public class JcrResourceProvider implements ResourceProvider {
      * @throws AccessControlException If the item really exists but this content
      *             manager's session has no read access to it.
      */
-    private Resource createResource(ResourceResolver resourceResolver,
+    private JcrItemResource createResource(ResourceResolver resourceResolver,
             String path) throws RepositoryException {
         if (itemExists(path)) {
             Item item = getSession().getItem(path);

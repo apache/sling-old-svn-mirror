@@ -23,7 +23,6 @@ import static org.apache.jackrabbit.JcrConstants.JCR_ENCODING;
 import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED;
 import static org.apache.jackrabbit.JcrConstants.JCR_MIMETYPE;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -35,21 +34,16 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.net.URLFactory;
-import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.internal.helper.Descendable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
-public class JcrNodeResource extends JcrItemResource implements Descendable {
+public class JcrNodeResource extends JcrItemResource {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -171,7 +165,8 @@ public class JcrNodeResource extends JcrItemResource implements Descendable {
 
     // ---------- Descendable interface ----------------------------------------
 
-    public Iterator<Resource> listChildren() {
+    @Override
+    Iterator<Resource> listChildren() {
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
@@ -182,26 +177,6 @@ public class JcrNodeResource extends JcrItemResource implements Descendable {
         }
 
         return Collections.<Resource> emptyList().iterator();
-    }
-
-    public Resource getDescendent(String relPath) {
-        try {
-            if (node.hasNode(relPath)) {
-                return new JcrNodeResource(getResourceResolver(),
-                    node.getNode(relPath));
-            } else if (node.hasProperty(relPath)) {
-                return new JcrPropertyResource(getResourceResolver(), getPath()
-                    + "/" + relPath, node.getProperty(relPath));
-            }
-
-            log.error("getResource: There is no node at {} below {}",
-                getPath(), getPath());
-            return null;
-        } catch (RepositoryException re) {
-            log.error("getResource: Problem accessing relative resource at "
-                + getPath(), re);
-            return null;
-        }
     }
 
     private void setMetaData(Node node, ResourceMetadata metadata) {
