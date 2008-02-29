@@ -67,7 +67,7 @@ public class JsonReaderTest extends TestCase {
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
         assertEquals(name, node.getName());
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -79,7 +79,7 @@ public class JsonReaderTest extends TestCase {
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
         assertEquals(name, node.getName());
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -91,7 +91,7 @@ public class JsonReaderTest extends TestCase {
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
         assertEquals(name, node.getName());
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -103,7 +103,7 @@ public class JsonReaderTest extends TestCase {
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
         assertEquals(name, node.getName());
-        assertEquals("nt:unstructured", node.getPrimaryNodeType());
+        assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
         assertNull("No children expected", node.getChildren());
@@ -331,7 +331,10 @@ public class JsonReaderTest extends TestCase {
         JSONObject obj = new JSONObject();
 
         obj.putOpt("name", node.getName());
-        obj.putOpt("primaryNodeType", node.getPrimaryNodeType());
+        
+        if (node.getPrimaryNodeType() != null) {
+            obj.putOpt("primaryNodeType", node.getPrimaryNodeType());
+        }
 
         if (node.getMixinNodeTypes() != null) {
             obj.putOpt("mixinNodeTypes", this.toJsonArray(node.getMixinNodeTypes()));
