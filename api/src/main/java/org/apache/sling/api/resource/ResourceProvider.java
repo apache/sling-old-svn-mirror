@@ -49,6 +49,16 @@ public interface ResourceProvider {
     static final String ROOTS = "provider.roots";
 
     /**
+     * The resource type be set on resources returned by the
+     * {@link #listChildren(Resource)} method to enable traversing the resource
+     * tree down to a deeply nested provided resource which has no concrete
+     * parent hierarchy (value is"sling:syntheticResourceProviderResource").
+     * 
+     * @see #listChildren(Resource)
+     */
+    static final String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
+
+    /**
      * Returns a resource from this resource provider or <code>null</code> if
      * the resource provider cannot find it. The path should have one of the
      * {@link #ROOTS} strings as its prefix.
@@ -58,7 +68,7 @@ public interface ResourceProvider {
      * parametrize the resource resolution. An example of such parametrization
      * is support for a JSR-311 style resource provider to support the
      * parametrized URL patterns.
-     *
+     * 
      * @param resourceResolver The {@link ResourceResolver} to which the
      *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
@@ -73,7 +83,7 @@ public interface ResourceProvider {
      * Returns a resource from this resource provider or <code>null</code> if
      * the resource provider cannot find it. The path should have one of the
      * {@link #ROOTS} strings as its prefix.
-     *
+     * 
      * @param resourceResolver The {@link ResourceResolver} to which the
      *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
@@ -89,9 +99,16 @@ public interface ResourceProvider {
      * {@link Resource} instances are attached to the same
      * {@link ResourceResolver} as the given <code>parent</code> resource.
      * <p>
-     * This method is only called for resource providers whose root path list
-     * contains an entry which is a prefix for the path of the parent resource.
-     *
+     * This method may be called for resource providers whose root path list
+     * contains a path such that the resource path is a prefix of the list
+     * entry. This allows for the enumeration of deeply nested provided
+     * resources for which no actual parent hierarchy exists.
+     * <p>
+     * The returned iterator may in turn contain resources which do not actually
+     * exist but are required to traverse the resource tree. Such resources
+     * SHOULD be {@link SyntheticResource} objects whose resource type MUST be
+     * set to {@link #RESOURCE_TYPE_SYNTHETIC}.
+     * 
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects or
      *         <code>null</code> if the resource provider has no children for
