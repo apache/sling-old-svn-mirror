@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
  *  content.
  */
 public class GetWithSuffixTest extends RenderingTestBase {
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -45,7 +45,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
         scriptPath = "/apps/nt/unstructured";
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
     }
-    
+
     public void testWithExactUrl() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
@@ -56,7 +56,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void testGETScript() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","GET.esp");
         try {
@@ -65,8 +65,8 @@ public class GetWithSuffixTest extends RenderingTestBase {
             assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
 
             final String content2 = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertTrue("Content includes ESP marker",content2.contains("ESP template"));
+            assertTrue("Content contains formatted test text",content2.contains("<p>" + testText + "</p>"));
         } finally {
             testClient.delete(toDelete);
         }
@@ -83,7 +83,7 @@ public class GetWithSuffixTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     /** behavior seems slightly different if using GET.esp vs. html.esp for the
      *  script name, verify that both give a 404
      */
