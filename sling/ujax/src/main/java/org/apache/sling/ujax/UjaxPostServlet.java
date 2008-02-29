@@ -150,6 +150,18 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     public static final String DEFAULT_VALUE_SUFFIX = "@DefaultValue";
 
     /**
+     * Optional request parameter: if provided and a new node is created it
+     * specifies the node type of the newly created node.
+     */
+    public static final String RP_NODE_TYPE = RP_PREFIX + "nodeType";
+
+    /**
+     * Optional request parameter: if provided and a new node is created it
+     * specifies the additional mixin types of the newly created node.
+     */
+    public static final String RP_MIXIN_TYPES = RP_PREFIX + "mixinTypes";
+
+    /**
      * utility class for generating node names
      */
     private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
@@ -172,7 +184,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     protected void doPost(SlingHttpServletRequest request,
                           SlingHttpServletResponse response)
             throws ServletException, IOException {
-
+            
         // create a post processor and process changes
         UjaxPostProcessor p = createPostProcessor(request);
         p.run();
