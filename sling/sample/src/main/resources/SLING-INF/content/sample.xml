@@ -30,11 +30,7 @@
 <node>
     <primaryNodeType>nt:unstructured</primaryNodeType>
     
-    <!-- the children components and content must also be nt:unstructured -->
-    <node>
-        <name>components</name>
-        <primaryNodeType>nt:unstructured</primaryNodeType>
-    </node>
+    <!-- the child content must also be nt:unstructured -->
     <node>
         <name>content</name>
         <primaryNodeType>nt:unstructured</primaryNodeType>
