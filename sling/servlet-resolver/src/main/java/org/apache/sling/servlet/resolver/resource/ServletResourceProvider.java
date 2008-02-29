@@ -157,55 +157,20 @@ public class ServletResourceProvider implements ResourceProvider {
     }
 
     public Iterator<Resource> listChildren(final Resource parent) {
-        return new Iterator<Resource>() {
-
-            private Iterator<String> pathIter;
-
-            private String parentPath;
-
-            private Resource next;
-
-            {
-                pathIter = resourcePaths.iterator();
-                parentPath = parent.getPath() + "/";
-                next = seek();
-            }
-
-            public boolean hasNext() {
-                return next != null;
-            }
-
-            public Resource next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-
-                Resource result = next;
-                next = seek();
-                return result;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException("remove");
-            }
-
-            private Resource seek() {
-                while (pathIter.hasNext()) {
-                    String path = pathIter.next();
-                    if (path.startsWith(parentPath)
-                        && path.indexOf('/', parentPath.length()) < 0) {
-                        return new ServletResource(
-                            parent.getResourceResolver(), servlet, path);
-                    }
-                }
-
-                return null;
-            }
-
-        };
+        return new ServletResourceIterator(this, parent);
     }
 
+    Servlet getServlet() {
+        return servlet;
+    }
+    
+    Iterator<String> getServletPathIterator() {
+        return resourcePaths.iterator();
+    }
+    
     public String[] getSerlvetPaths() {
         return resourcePaths.toArray(new String[resourcePaths.size()]);
     }
+    
+    
 }
