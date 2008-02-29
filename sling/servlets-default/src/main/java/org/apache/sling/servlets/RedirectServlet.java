@@ -140,12 +140,23 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
         }
 
 
+        String basePath = request.getResource().getPath();
+        
+        // make sure the target path is absolute
+        if (!targetPath.startsWith("/")) {
+            if (!basePath.endsWith("/")) {
+                targetPath = "/".concat(targetPath);
+            }
+            targetPath = basePath.concat(targetPath);
+        }
+        
+        // append optional selectors etc.to the base path
+        if (postFix != null) {
+            basePath = basePath.concat(postFix);
+        }
+
         StringBuffer pathBuf = new StringBuffer();
 
-        String basePath = request.getResource().getPath();
-        if (postFix != null) {
-            basePath += postFix;
-        }
 
         makeRelative(pathBuf, basePath, targetPath);
 
