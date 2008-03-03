@@ -91,8 +91,7 @@ public class CreateNodeTest extends HttpTestBase {
 
         // add node type param
         final Map<String,String> props = new HashMap<String,String>();
-        props.put("ujax:nodeType","nt:unstructured");
-        props.put("name1","value1B");
+        props.put("jcr:primaryType","nt:folder");
 
         // POST and get URL of created node
         String urlOfNewNode = null;
@@ -102,17 +101,54 @@ public class CreateNodeTest extends HttpTestBase {
             fail("createNode failed: " + ioe);
         }
 
-        // get and check URL of created node
-        final GetMethod get = new GetMethod(urlOfNewNode);
-        final int status = httpClient.executeMethod(get);
-        assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
-        final String responseBodyStr = get.getResponseBodyAsString();
-        assertTrue(responseBodyStr.contains("nt:unstructured"));
+        String content = getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
+        assertJavascript("nt:folder", content, "out.println(data['jcr:primaryType'])");
     }
 
-    /** Disabled - See SLING-299
+    public void testCreateNewNodeWithNodeType() throws IOException {
+        final String url = HTTP_BASE_URL + "/CreateNodeTest_4_" + System.currentTimeMillis() + "/*";
+
+        // add node type param
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("jcr:primaryType","nt:folder");
+
+        // POST and get URL of created node
+        String urlOfNewNode = null;
+        try {
+            urlOfNewNode = testClient.createNode(url, props);
+        } catch(IOException ioe) {
+            fail("createNode failed: " + ioe);
+        }
+
+        String content = getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
+        assertJavascript("nt:folder", content, "out.println(data['jcr:primaryType'])");
+    }
+
+    public void testDeepCreateNodeWithNodeType() throws IOException {
+        final String url = HTTP_BASE_URL + "/CreateNodeTest_5_" + System.currentTimeMillis();
+
+        // add node type param
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("jcr:primaryType","nt:folder");
+        props.put("foo/jcr:primaryType","nt:folder");
+        props.put("foo/bar/jcr:primaryType","nt:folder");
+
+        // POST and get URL of created node
+        String urlOfNewNode = null;
+        try {
+            urlOfNewNode = testClient.createNode(url, props);
+        } catch(IOException ioe) {
+            fail("createNode failed: " + ioe);
+        }
+
+        String content = getContent(urlOfNewNode + ".3.json", CONTENT_TYPE_JSON);
+        assertJavascript("nt:folder", content, "out.println(data['jcr:primaryType'])");
+        assertJavascript("nt:folder", content, "out.println(data.foo['jcr:primaryType'])");
+        assertJavascript("nt:folder", content, "out.println(data.foo.bar['jcr:primaryType'])");
+    }
+
     public void testCreateEmptyNode() throws IOException {
-        final String url = HTTP_BASE_URL + "/CreateNodeTest_4_" + System.currentTimeMillis();
+        final String url = HTTP_BASE_URL + "/CreateNodeTest_6_" + System.currentTimeMillis();
 
         // add node type param
         final Map<String,String> props = new HashMap<String,String>();
@@ -130,5 +166,4 @@ public class CreateNodeTest extends HttpTestBase {
         final int status = httpClient.executeMethod(get);
         assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
     }
-    */
 }
