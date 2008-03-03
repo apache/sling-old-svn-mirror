@@ -31,8 +31,8 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.sling.jcr.api.AbstractSlingRepository;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.ComponentContext;
@@ -110,9 +110,6 @@ public class SlingServerRepository extends AbstractSlingRepository
         if (this.delegatee == null) {
             try {
                 this.delegatee = this.getRepository();
-                if(this.delegatee != null) {
-                    repositoryAvailable();
-                }
             } catch (IOException ioe) {
                 throw new RepositoryException(ioe.getMessage(), ioe);
             }

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Hashtable;
 
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
