@@ -334,16 +334,6 @@ public abstract class AbstractSlingRepository
         this.loader = new Loader(this);
 
         componentContext.getBundleContext().addBundleListener(this);
-
-        // TODO: Consider running this in the background !!
-        Bundle[] bundles = componentContext.getBundleContext().getBundles();
-        for (int i = 0; i < bundles.length; i++) {
-            if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
-                // load content for bundles which are neither INSTALLED nor
-                // UNINSTALLED
-                this.loader.registerBundle(bundles[i]);
-            }
-        }
     }
 
     /**
@@ -365,6 +355,20 @@ public abstract class AbstractSlingRepository
         }
 
         this.componentContext = null;
+    }
+    
+    /** TODO: temp fix for SLING-294: must be called by child classes to perform tasks
+     *  that must happen only once a Repository becomes available
+     */
+    protected void repositoryAvailable() {
+        Bundle[] bundles = componentContext.getBundleContext().getBundles();
+        for (int i = 0; i < bundles.length; i++) {
+            if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+                // load content for bundles which are neither INSTALLED nor
+                // UNINSTALLED
+                this.loader.registerBundle(bundles[i]);
+            }
+        }
     }
 
     /**
