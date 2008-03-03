@@ -44,6 +44,32 @@ public class RedirectServletTest extends TestCase {
         assertEquals("../x/y", toRedirect(base, target));
     }
 
+    public void testChild() {
+        String base = "/a.html";
+        String target = "/a/b.html";
+        assertEquals("a/b.html", toRedirect(base, target));
+        
+        base = "/a";
+        target = "/a/b.html";
+        assertEquals("a/b.html", toRedirect(base, target));
+
+        base = "/a";
+        target = "/a/b";
+        assertEquals("a/b", toRedirect(base, target));
+        
+        base = "/a.html";
+        target = "/a/b/c.html";
+        assertEquals("a/b/c.html", toRedirect(base, target));
+        
+        base = "/a";
+        target = "/a/b/c.html";
+        assertEquals("a/b/c.html", toRedirect(base, target));
+
+        base = "/a";
+        target = "/a/b/c";
+        assertEquals("a/b/c", toRedirect(base, target));
+    }
+    
     public void testUnCommon() {
         String base = "/a/b/c/d";
         String target = "/w/x/y/z";
