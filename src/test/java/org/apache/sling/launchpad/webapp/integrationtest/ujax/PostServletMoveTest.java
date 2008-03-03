@@ -24,16 +24,16 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Test node move via the MicrojaxPostServlet */
 public class PostServletMoveTest extends HttpTestBase {
-    public static final String TEST_BASE_PATH = "/ujax-tests";
-    private String testPath;
+
+    public static final String TEST_BASE_PATH = "/ujax-move-tests";
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        testPath = TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
 
-    public void XtestMoveNodeAbsolute() throws IOException {
+    public void testMoveNodeAbsolute() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/abs/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
@@ -46,7 +46,8 @@ public class PostServletMoveTest extends HttpTestBase {
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
-    public void XtestMoveNodeRelative() throws IOException {
+    public void testMoveNodeRelative() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/rel/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
@@ -59,7 +60,8 @@ public class PostServletMoveTest extends HttpTestBase {
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
-    public void XtestMoveNodeNew() throws IOException {
+    public void testMoveNodeNew() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
@@ -67,14 +69,13 @@ public class PostServletMoveTest extends HttpTestBase {
         props.clear();
         props.put("ujax:moveSrc", testPath + "/src");
         props.put("ujax:moveDest", "new");
-        // special case - need force creation of the new node 
-        props.put("jcr:created", "");
         String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
         String content = getContent(newNode + "/new.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
     public void testMoveNodeExistingFail() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/exist/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
@@ -101,6 +102,7 @@ public class PostServletMoveTest extends HttpTestBase {
     }
 
     public void testMoveNodeExistingReplace() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/replace/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
