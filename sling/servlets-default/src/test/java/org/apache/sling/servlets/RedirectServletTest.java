@@ -52,7 +52,7 @@ public class RedirectServletTest extends TestCase {
         base = "/a";
         target = "/a/b.html";
         assertEquals("a/b.html", toRedirect(base, target));
-
+        
         base = "/a";
         target = "/a/b";
         assertEquals("a/b", toRedirect(base, target));
@@ -64,9 +64,71 @@ public class RedirectServletTest extends TestCase {
         base = "/a";
         target = "/a/b/c.html";
         assertEquals("a/b/c.html", toRedirect(base, target));
-
+        
         base = "/a";
         target = "/a/b/c";
+        assertEquals("a/b/c", toRedirect(base, target));
+    }
+    
+    public void testChildNonRoot() {
+        String base = "/x/a.html";
+        String target = "/x/a/b.html";
+        assertEquals("a/b.html", toRedirect(base, target));
+        
+        base = "/x/a";
+        target = "/x/a/b.html";
+        assertEquals("a/b.html", toRedirect(base, target));
+        
+        base = "/x/a";
+        target = "/x/a/b";
+        assertEquals("a/b", toRedirect(base, target));
+        
+        base = "/x/a.html";
+        target = "/x/a/b/c.html";
+        assertEquals("a/b/c.html", toRedirect(base, target));
+        
+        base = "/x/a";
+        target = "/x/a/b/c.html";
+        assertEquals("a/b/c.html", toRedirect(base, target));
+        
+        base = "/x/a";
+        target = "/x/a/b/c";
+        assertEquals("a/b/c", toRedirect(base, target));
+    }
+    
+    public void testChildRelative() {
+        String base = "/a";
+        String target = "b.html";
+        assertEquals("a/b.html", toRedirect(base, target));
+        
+        base = "/a";
+        target = "b";
+        assertEquals("a/b", toRedirect(base, target));
+        
+        base = "/a";
+        target = "b/c.html";
+        assertEquals("a/b/c.html", toRedirect(base, target));
+        
+        base = "/a";
+        target = "b/c";
+        assertEquals("a/b/c", toRedirect(base, target));
+    }
+    
+    public void testChildNonRootRelative() {
+        String base = "/x/a";
+        String target = "b.html";
+        assertEquals("a/b.html", toRedirect(base, target));
+        
+        base = "/x/a";
+        target = "b";
+        assertEquals("a/b", toRedirect(base, target));
+        
+        base = "/x/a";
+        target = "b/c.html";
+        assertEquals("a/b/c.html", toRedirect(base, target));
+
+        base = "/x/a";
+        target = "b/c";
         assertEquals("a/b/c", toRedirect(base, target));
     }
     
