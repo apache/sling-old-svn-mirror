@@ -138,7 +138,7 @@ public class NodeTypeLoader {
             }
         }
 
-        log.warn("Repository is not Jackrabbit based, cannot import node types");
+        log.warn("Repository does not implement JackrabbitNodeTypeManager, cannot import node types");
         return false;
     }
 }
