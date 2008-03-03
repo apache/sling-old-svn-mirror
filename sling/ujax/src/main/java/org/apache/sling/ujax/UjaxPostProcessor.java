@@ -16,11 +16,12 @@
  */
 package org.apache.sling.ujax;
 
-import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletContext;
@@ -44,6 +45,11 @@ public class UjaxPostProcessor {
      */
     private static final Logger log = LoggerFactory.getLogger(UjaxPostProcessor.class);
 
+    public static final String ORDER_FIRST = "first";
+    public static final String ORDER_BEFORE = "before ";
+    public static final String ORDER_AFTER = "after ";
+    public static final String ORDER_LAST = "last";    
+    
     /**
      * log that records the changes applied during the processing of the
      * post request.
@@ -670,32 +676,91 @@ public class UjaxPostProcessor {
         }
         return savePrefix;
     }
-
-    /**
-     * If orderCode is ORDER_ZERO, move n so that it is the first child of its
-     * parent
-     * @throws RepositoryException if a repository error occurs
-     */
-    private void processOrder()
-            throws RepositoryException {
-        // process the "order" command if any
+    
+    private void processOrder() throws RepositoryException {
         final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
         if  (orderCode!=null) {
-            if (UjaxPostServlet.ORDER_ZERO.equals(orderCode)) {
-                final Node n = deepGetOrCreateNode(currentPath);
-                final Node parent = n.getParent();
-                final String beforename=parent.getNodes().nextNode().getName();
-                parent.orderBefore(n.getName(), beforename);
-                if(log.isDebugEnabled()) {
-                    log.debug("Node {} moved to be first child of its parent, " +
-                            "due to orderCode=" + orderCode, n.getPath());
-                }
-            } else {
-                if(log.isDebugEnabled()) {
-                    log.debug("orderCode '{}' invalid, ignored", orderCode);
-                }
-            }
+            final Node n = deepGetOrCreateNode(currentPath);
+            orderNode(n, orderCode);
         }
     }
 
+    /**
+     * Orders the given node according to the specified command.
+     *
+     * The following syntax is supported:
+     * <xmp>
+     * | first    | before all child nodes
+     * | before A | before child node A
+     * | after A  | after child node A
+     * | last     | after all nodes
+     * | N        | at a specific position, N being an integer
+     * </xmp>
+     *
+     * @param node node to order
+     * @param command spcifies the ordering type
+     * @throws RepositoryException if an error occurs
+     */
+    private void orderNode(Node node, String command)
+            throws RepositoryException {
+        Node parent = node.getParent();
+        String next = null;
+        if (command.equals(ORDER_FIRST)) {
+            next =  parent.getNodes().nextNode().getName();
+        } else if (command.equals(ORDER_LAST)) {
+            next = "";
+        } else if (command.startsWith(ORDER_BEFORE)) {
+            next = command.substring(ORDER_BEFORE.length());
+        } else if (command.startsWith(ORDER_AFTER)) {
+            String name = command.substring(ORDER_AFTER.length());
+            NodeIterator iter = parent.getNodes();
+            while (iter.hasNext()) {
+                Node n = iter.nextNode();
+                if (n.getName().equals(name)) {
+                    if (iter.hasNext()) {
+                        next = iter.nextNode().getName();
+                    } else {
+                        next = "";
+                    }
+                }
+            }
+        } else {
+            // check for integer
+            try {
+                // 01234
+                // abcde  move a -> 2 (above 3)
+                // bcade  move a -> 1 (above 1)
+                // bacde
+                int newPos = Integer.parseInt(command);
+                next = "";
+                NodeIterator iter = parent.getNodes();
+                while (iter.hasNext() && newPos >= 0) {
+                    Node n = iter.nextNode();
+                    if (n.getName().equals(node.getName())) {
+                        // if old node is found before index, need to
+                        // inc index
+                        newPos++;
+                    }
+                    if (newPos == 0) {
+                        next = n.getName();
+                        break;
+                    }
+                    newPos--;
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("provided node ordering command is invalid: " + command);
+            }
+        }
+        if (next != null) {
+            if (next.equals("")) {
+                next = null;
+            }
+            parent.orderBefore(node.getName(), next);
+            if(log.isDebugEnabled()) {
+                log.debug("Node {} moved '{}'", node.getPath(), command);
+            }
+        } else {
+            throw new IllegalArgumentException("provided node ordering command is invalid: " + command);
+        }
+    }
 }
