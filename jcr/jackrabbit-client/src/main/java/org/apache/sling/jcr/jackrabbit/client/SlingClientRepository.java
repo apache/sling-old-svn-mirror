@@ -25,8 +25,8 @@ import java.util.Hashtable;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.jcr.api.AbstractSlingRepository;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.service.log.LogService;
 
@@ -75,9 +75,6 @@ public class SlingClientRepository extends AbstractSlingRepository
     protected Repository getDelegatee() throws RepositoryException {
         if (this.delegatee == null) {
             this.delegatee = this.getRepository();
-            if(this.delegatee != null) {
-                repositoryAvailable();
-            }
         }
 
         return this.delegatee;
@@ -85,18 +82,6 @@ public class SlingClientRepository extends AbstractSlingRepository
 
     protected LogService getLog() {
         return this.log;
-    }
-
-    //---------- SCR integration ----------------------------------------------
-
-    // set logger
-    protected void bindLogService(LogService log) {
-        this.log = log;
-    }
-
-    // remove logger
-    protected void unbindLogService(LogService log) {
-        this.log = null;
     }
 
     //---------- Repository Publication ---------------------------------------
