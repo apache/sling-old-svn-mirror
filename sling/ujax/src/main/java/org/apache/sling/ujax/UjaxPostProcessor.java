@@ -17,6 +17,7 @@
 package org.apache.sling.ujax;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
@@ -33,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Holds various states and encapsulates method that are neede to handle a
+ * Holds various states and encapsulates methods that are needed to handle a
  * ujax post request.
  */
 public class UjaxPostProcessor {
@@ -42,7 +43,6 @@ public class UjaxPostProcessor {
      * default log
      */
     private static final Logger log = LoggerFactory.getLogger(UjaxPostProcessor.class);
-
 
     /**
      * log that records the changes applied during the processing of the
@@ -105,6 +105,12 @@ public class UjaxPostProcessor {
      * records any error
      */
     private Exception error;
+
+    /**
+     * map of properties that form the content
+     */
+    private Map<String, RequestProperty> reqProperties = new LinkedHashMap<String, RequestProperty>();
+
 
     /**
      * Creates a new post processor
@@ -267,9 +273,7 @@ public class UjaxPostProcessor {
         return ret.toString();
     }
 
-
-
-    /**
+   /**
      * Returns any recorded error or <code>null</code>
      * @return an error or null
      */
@@ -283,33 +287,6 @@ public class UjaxPostProcessor {
      */
     public SlingHttpServletRequest getRequest() {
         return request;
-    }
-
-    /**
-     * Processes the actions defined by the request
-     */
-    public void run()  {
-        try {
-            processCreate();
-            processMoves();
-            processDeletes();
-            processContent();
-            processOrder();
-            if (session.hasPendingChanges()) {
-                session.save();
-            }
-        } catch (Exception e) {
-            log.error("Exception during response processing.", e);
-            error = e;
-        } finally {
-            try {
-                if (session.hasPendingChanges()) {
-                    session.refresh(false);
-                }
-            } catch (RepositoryException e) {
-                log.warn("RepositoryException in finally block: {}", e.getMessage(), e);
-            }
-        }
     }
 
     /**
@@ -327,6 +304,45 @@ public class UjaxPostProcessor {
             return rootPath + "/" + path;
         }
         return currentPath + "/" + path;
+    }
+
+    /**
+     * Processes the actions defined by the request in the followin order
+     * <ol>
+     * <li>calculate the 'currentPath' respecting a 'create suffix'
+     * <li>collect all content properties included in the request
+     * <li>create new node
+     * <li>perform 'moves'
+     * <li>perform 'deletes'
+     * <li>write back content
+     * <li>process node ordering
+     * </ol>
+     */
+    public void run()  {
+        try {
+            // do not change order unless you have a very good reason.
+            initCurrentPath();
+            collectContent();
+            processCreate();
+            processMoves();
+            processDeletes();
+            writeContent();
+            processOrder();
+            if (session.hasPendingChanges()) {
+                session.save();
+            }
+        } catch (Exception e) {
+            log.error("Exception during response processing.", e);
+            error = e;
+        } finally {
+            try {
+                if (session.hasPendingChanges()) {
+                    session.refresh(false);
+                }
+            } catch (RepositoryException e) {
+                log.warn("RepositoryException in finally block: {}", e.getMessage(), e);
+            }
+        }
     }
 
     /**
@@ -409,11 +425,13 @@ public class UjaxPostProcessor {
     }
 
     /**
-     * Create node(s) according to current request
+     * Initialize the current path. If this is a create request, a new node
+     * name is generated.
+     *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
-    private void processCreate() throws RepositoryException, ServletException {
+    private void initCurrentPath() throws RepositoryException, ServletException {
         // get desired path.
         currentPath = rootPath;
 
@@ -437,17 +455,50 @@ public class UjaxPostProcessor {
             if (session.itemExists(currentPath)) {
                 throw new ServletException("Collision in generated node names for path=" + currentPath);
             }
-            deepGetOrCreateNode(null, currentPath, true);
         }
     }
 
     /**
-     * Create or update node(s) according to current request
+     * Create node(s) according to current request
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
-    private void processContent() throws RepositoryException, ServletException {
-        // walk the request parameters, create and save nodes and properties
+    private void processCreate() throws RepositoryException, ServletException {
+        // create new node in any case
+        deepGetOrCreateNode(currentPath);
+    }
+
+    /**
+     * Writes back the content
+     *
+     * @throws RepositoryException if a repository error occurs
+     * @throws ServletException if an internal error occurs
+     */
+    private void writeContent() throws RepositoryException, ServletException {
+        for (RequestProperty prop: reqProperties.values()) {
+            Node parent = deepGetOrCreateNode(prop.getParentPath());
+            // skip jcr special propeties
+            if (prop.getName().equals("jcr:primaryType") ||
+                    prop.getName().equals("jcr:mixinTypes")) {
+                continue;
+            }
+            if (prop.isFileUpload()) {
+                uploadHandler.setFile(parent, prop);
+            } else {
+                propHandler.setProperty(parent, prop);
+            }
+        }
+    }
+
+    /**
+     * Collects the properties that form the content to be written back to the
+     * repository.
+     *
+     * @throws RepositoryException if a repository error occurs
+     * @throws ServletException if an internal error occurs
+     */
+    private void collectContent() throws RepositoryException, ServletException {
+        // walk the request parameters and collect the properties
         for (Map.Entry<String, RequestParameter[]>  e: request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
 
@@ -455,16 +506,16 @@ public class UjaxPostProcessor {
             if(paramName.startsWith(UjaxPostServlet.RP_PREFIX)) {
                 continue;
             }
-            // ignore field with a '@TypeHint' suffix. this is dealt in RequestProperty
+            // ignore field with a '@TypeHint' suffix. this is dealt with later
             if (paramName.endsWith(UjaxPostServlet.TYPE_HINT_SUFFIX)) {
                 continue;
             }
-            // ignore field with a '@DefaultValue' suffix. this is dealt in RequestProperty
+            // ignore field with a '@DefaultValue' suffix. this is dealt with later
             if (paramName.endsWith(UjaxPostServlet.DEFAULT_VALUE_SUFFIX)) {
                 continue;
             }
-            // skip FormEncoding parameter
-            if ( paramName.equals("FormEncoding") ) {
+            // SLING-298: skip FormEncoding parameter
+            if (paramName.equals("FormEncoding")) {
                 continue;
             }
             // skip parameters that do not start with the save prefix
@@ -496,82 +547,99 @@ public class UjaxPostProcessor {
                     continue;
                 }
             }
-            // create property helper and get parent node
-            RequestProperty prop = new RequestProperty(this, propertyName, values);
-            Node parent = deepGetOrCreateNode(currentPath, prop.getParentPath(), true);
-
-            // call handler
-            if (prop.isFileUpload()) {
-                uploadHandler.setFile(parent, prop);
-            } else {
-                propHandler.setProperty(parent, prop);
+            // create property helper and add it to the list
+            String propPath = propertyName;
+            if (!propPath.startsWith("/")) {
+                propPath = currentPath + "/" + propertyName;
             }
+            RequestProperty prop = new RequestProperty(propPath, values);
+
+            // @TypeHint example
+            // <input type="text" name="./age" />
+            // <input type="hidden" name="./age@TypeHint" value="long" />
+            // causes the setProperty using the 'long' property type
+            final String thName = getSavePrefix() + propertyName + UjaxPostServlet.TYPE_HINT_SUFFIX;
+            final RequestParameter rp = request.getRequestParameter(thName);
+            if (rp != null) {
+                prop.setTypeHint(rp.getString());
+            }
+
+            // @DefaultValue
+            final String dvName = getSavePrefix() + propertyName + UjaxPostServlet.DEFAULT_VALUE_SUFFIX;
+            prop.setDefaultValues(request.getRequestParameters(dvName));
+
+            reqProperties.put(propPath, prop);
         }
+    }
+
+    /**
+     * Checks the collected content for a jcr:primaryType property at the
+     * specified path.
+     * @param path path to check
+     * @return the primary type or <code>null</code>
+     */
+    private String getPrimaryType(String path) {
+        RequestProperty prop = reqProperties.get(path + "/jcr:primaryType");
+        return prop == null ? null : prop.getStringValues()[0];
+    }
+
+    /**
+     * Checks the collected content for a jcr:mixinTypes property at the
+     * specified path.
+     * @param path path to check
+     * @return the mixin types or <code>null</code>
+     */
+    private String[] getMixinTypes(String path) {
+        RequestProperty prop = reqProperties.get(path + "/jcr:mixinTypes");
+        return prop == null ? null : prop.getStringValues();
     }
 
     /**
      * Deep gets or creates a node, parent-padding with default nodes nodes.
      * If the path is empty, the given parent node is returned.
      *
-     * @param parent path to the parent node, may be null if path is absolute
      * @param path path to node that needs to be deep-created
-     * @param isCreate is this a node creation
      * @return node at path
      * @throws RepositoryException if an error occurs
      * @throws IllegalArgumentException if the path is relative and parent
      *         is <code>null</code>
      */
-    private Node deepGetOrCreateNode(String parent, String path, boolean isCreate)
+    private Node deepGetOrCreateNode(String path)
             throws RepositoryException {
         if (log.isDebugEnabled()) {
-            log.debug("Deep-creating Node '{}/{}'", parent, path);
+            log.debug("Deep-creating Node '{}'", path);
         }
-        if (path.equals("")) {
-            if (parent == null || !parent.startsWith("/")) {
-                throw new IllegalArgumentException("parent must be an absolute path for relative paths.");
-            }
-            path = parent;
-        } else if (path.charAt(0) != '/') {
-            // prepend parent path if path is relative
-            if (parent == null || !parent.startsWith("/")) {
-                throw new IllegalArgumentException("parent must be an absolute path for relative paths.");
-            }
-            if (parent.endsWith("/")) {
-                path = parent + path;
-            } else {
-                path = parent + "/" + path;
-            }
+        if (path == null || !path.startsWith("/")) {
+            throw new IllegalArgumentException("path must be an absolute path.");
         }
-
-        String[] pathelems = path.substring(1).split("/");
+        int from = 1;
         Node node = session.getRootNode();
-
-        for(int i=0; i<pathelems.length; i++) {
-            final String name = pathelems[i];
+        while (from > 0) {
+            final int to = path.indexOf('/', from);
+            final String name = to < 0
+                    ? path.substring(from)
+                    : path.substring(from, to);
             if (node.hasNode(name)) {
                 node = node.getNode(name);
             } else {
-                boolean isLast = (i == pathelems.length - 1);
-                if ( isLast && isCreate ) {
-                    // check for node type
-                    final String nodeType = request.getParameter(UjaxPostServlet.RP_NODE_TYPE);
-                    if ( nodeType != null ) {
-                        node = node.addNode(name, nodeType);
-                    } else {
-                        node = node.addNode(name);
-                    }
-                    // check for mixin types
-                    final String[] mixinTypes = request.getParameterValues(UjaxPostServlet.RP_MIXIN_TYPES);
-                    if ( mixinTypes != null ) {
-                        for(int m=0; m<mixinTypes.length; m++) {
-                            node.addMixin(mixinTypes[m]);
-                        }
-                    }
+                final String tmpPath = to < 0 ? path : path.substring(0, to);
+                // check for node type
+                final String nodeType = getPrimaryType(tmpPath);
+                if (nodeType != null) {
+                    node = node.addNode(name, nodeType);
                 } else {
                     node = node.addNode(name);
                 }
+                // check for mixin types
+                final String[] mixinTypes = getMixinTypes(tmpPath);
+                if (mixinTypes != null) {
+                    for (String mix: mixinTypes) {
+                        node.addMixin(mix);
+                    }
+                }
                 changeLog.onCreated(node.getPath());
             }
+            from = to + 1;
         }
         return node;
     }
@@ -614,7 +682,7 @@ public class UjaxPostProcessor {
         final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
         if  (orderCode!=null) {
             if (UjaxPostServlet.ORDER_ZERO.equals(orderCode)) {
-                final Node n = deepGetOrCreateNode(null, currentPath, false);
+                final Node n = deepGetOrCreateNode(currentPath);
                 final Node parent = n.getParent();
                 final String beforename=parent.getNodes().nextNode().getName();
                 parent.orderBefore(n.getName(), beforename);
