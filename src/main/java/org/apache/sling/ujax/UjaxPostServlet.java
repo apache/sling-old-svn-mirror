@@ -119,11 +119,6 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
     public static final String RP_ORDER = RP_PREFIX + "order";
 
     /**
-     * Code value for RP_ORDER
-     */
-    public static final String ORDER_ZERO = "0";
-
-    /**
      * Optional request parameter: redirect to the specified URL after POST
      */
     public static final String RP_REDIRECT_TO =  RP_PREFIX + "redirect";
