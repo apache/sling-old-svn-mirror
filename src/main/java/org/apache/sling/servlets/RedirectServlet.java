@@ -51,7 +51,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * sent where the target is the relative URL from the current resource to the
  * target resource. Selectors, extension, suffix and query string are also
  * appended to the redirect URL.
- *
+ * 
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Request Redirect Servlet"
@@ -139,9 +139,8 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             postFix = null;
         }
 
-
         String basePath = request.getResource().getPath();
-        
+
         // make sure the target path is absolute
         if (!targetPath.startsWith("/")) {
             if (!basePath.endsWith("/")) {
@@ -149,14 +148,13 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             }
             targetPath = basePath.concat(targetPath);
         }
-        
+
         // append optional selectors etc.to the base path
         if (postFix != null) {
             basePath = basePath.concat(postFix);
         }
 
         StringBuffer pathBuf = new StringBuffer();
-
 
         makeRelative(pathBuf, basePath, targetPath);
 
@@ -183,7 +181,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
         // find first non-matching part
         int off;
-        for (off = 0; off < bParts.length && off < tParts.length
+        for (off = 0; off < (bParts.length - 1) && off < tParts.length
             && bParts[off].equals(tParts[off]); off++);
 
         for (int i = bParts.length - off; i > 1; i--) {
