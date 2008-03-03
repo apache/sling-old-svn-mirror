@@ -30,59 +30,43 @@ public class RequestProperty {
 
     public static final String DEFAULT_NULL = UjaxPostServlet.RP_PREFIX + "null";
 
-    private final String typeHint;
+    private final String path;
 
-    private final String relPath;
-
-    private final String propName;
+    private final String name;
 
     private final String parentPath;
 
     private final RequestParameter[] values;
 
-    private RequestParameter[] defaultValues;
+    private String[] stringValues;
 
-    public RequestProperty(UjaxPostProcessor ctx, String relPath,
-                           RequestParameter[] values) {
-        this.relPath = relPath;
+    private String typeHint;
+
+    private RequestParameter[] defaultValues = EMPTY_PARAM_ARRAY;
+
+    public RequestProperty(String path, RequestParameter[] values) {
+        assert path.startsWith("/");
+        this.path = path;
         this.values = values;
-
-        // split the relative path identifying the property to be saved
-        if (this.relPath.indexOf("/")>=0) {
-            parentPath = this.relPath.substring(0, this.relPath.lastIndexOf("/"));
-            propName = this.relPath.substring(this.relPath.lastIndexOf("/") + 1);
-        } else {
-            parentPath = "";
-            propName = this.relPath;
-        }
-
-        // @TypeHint example
-        // <input type="text" name="./age" />
-        // <input type="hidden" name="./age@TypeHint" value="long" />
-        // causes the setProperty using the 'long' property type
-        final String thName = ctx.getSavePrefix() + this.relPath + UjaxPostServlet.TYPE_HINT_SUFFIX;
-        final RequestParameter rp = ctx.getRequest().getRequestParameter(thName);
-        typeHint = rp == null ? null : rp.getString();
-
-        // @DefaultValue
-        final String dvName = ctx.getSavePrefix() + this.relPath + UjaxPostServlet.DEFAULT_VALUE_SUFFIX;
-        defaultValues = ctx.getRequest().getRequestParameters(dvName);
-        if (defaultValues == null) {
-            defaultValues = EMPTY_PARAM_ARRAY;
-        }
-
+        this.parentPath = path.substring(0, path.lastIndexOf("/"));
+        this.name = path.substring(path.lastIndexOf("/") + 1);
     }
 
     public String getTypeHint() {
         return typeHint;
     }
 
-    public String getRelPath() {
-        return relPath;
+
+    public void setTypeHint(String typeHint) {
+        this.typeHint = typeHint;
+    }
+
+    public String getPath() {
+        return path;
     }
 
     public String getName() {
-        return propName;
+        return name;
     }
 
     public String getParentPath() {
@@ -95,6 +79,14 @@ public class RequestProperty {
 
     public RequestParameter[] getDefaultValues() {
         return defaultValues;
+    }
+
+    public void setDefaultValues(RequestParameter[] defaultValues) {
+        if (defaultValues == null) {
+            this.defaultValues = EMPTY_PARAM_ARRAY;
+        } else {
+            this.defaultValues = defaultValues;
+        }
     }
 
     public boolean isFileUpload() {
@@ -130,28 +122,31 @@ public class RequestProperty {
      *         removed.
      */
     public String[] getStringValues() {
-        if (values.length > 1) {
-            // TODO: how the default values work for MV props is not very clear
-            String[] ret = new String[values.length];
-            for (int i=0; i<ret.length; i++) {
-                ret[i] = values[i].getString();
-            }
-            return ret;
-        }
-        String value = values[0].getString();
-        if (value.equals("")) {
-            if (defaultValues.length == 1) {
-                String defValue = defaultValues[0].getString();
-                if (defValue.equals(DEFAULT_IGNORE)) {
-                    // ignore means, do not create empty values
-                    return new String[0];
-                } else if (defValue.equals(DEFAULT_NULL)) {
-                    // null means, remove property if exist
-                    return null;
+        if (stringValues == null) {
+            if (values.length > 1) {
+                // TODO: how the default values work for MV props is not very clear
+                stringValues = new String[values.length];
+                for (int i=0; i<stringValues.length; i++) {
+                    stringValues[i] = values[i].getString();
                 }
-                value = defValue;
+            } else {
+                String value = values[0].getString();
+                if (value.equals("")) {
+                    if (defaultValues.length == 1) {
+                        String defValue = defaultValues[0].getString();
+                        if (defValue.equals(DEFAULT_IGNORE)) {
+                            // ignore means, do not create empty values
+                            return new String[0];
+                        } else if (defValue.equals(DEFAULT_NULL)) {
+                            // null means, remove property if exist
+                            return null;
+                        }
+                        value = defValue;
+                    }
+                }
+                stringValues = new String[]{value};
             }
         }
-        return new String[]{value};
+        return stringValues;
     }
 }
