@@ -21,6 +21,7 @@
 # A simple, old format, mime.types file
 #
 application/andrew-inset       ez
+application/json               json
 application/mac-binhex40       hqx
 application/mac-compactpro     cpt
 application/msexcel            xls xlsx
@@ -46,7 +47,6 @@ application/x-gtar             gtar
 application/x-gzip             gz tgz
 application/x-hdf              hdf
 application/x-javascript       js
-application/json               json
 application/x-koan             skd skm skp skt
 application/x-latex            latex
 application/x-netcdf           cdf nc
