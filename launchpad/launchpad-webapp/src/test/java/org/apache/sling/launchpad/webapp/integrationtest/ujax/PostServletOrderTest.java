@@ -20,75 +20,190 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
-
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.ujax.UjaxPostServlet;
 
 /** Test the order option for node creation via the MicrojaxPostServlet */
 public class PostServletOrderTest extends HttpTestBase {
-    public static final String TEST_BASE_PATH = "/ujax-tests";
-    private String postUrl;
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
-    }
-    
-   public void testPostPathIsUnique() throws IOException {
-        assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
-                "Path must not exist before test: " + postUrl);
-    }
 
-    /** Create several nodes without the order option, and check ordering */
+    public static final String TEST_BASE_PATH = "/ujax-tests-order";
+
+    private static final String[] DEFAULT_ORDER = new String[]{"a","b","c","d"};
+
+    /*
+        does not work (yet) since rhino does not preserve order of
+        object elements.
+
+    private static final String TEST_SCRIPT =
+            "var s=''; " +
+            "for (var a in data) {" +
+            "   var n = data[a];" +
+            "   if (typeof(n) == 'object') s += a + ',';" +
+            "}" +
+            "out.println(s);";
+     */
+
+    /**
+     * Create nodes and check if they are in default order
+     */
     public void testStandardOrder() throws IOException {
-        final String [] nodeUrl = new String[4];
-        nodeUrl[0] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
-        nodeUrl[1] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
-        nodeUrl[2] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
-        nodeUrl[3] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, null);
-        
-        final String [] nodeName = new String[nodeUrl.length];
-        for(int i = 0;  i < nodeUrl.length; i++) {
-            nodeName[i] = nodeUrl[i].substring(nodeUrl[i].lastIndexOf('/') + 1);
-        }
-
-        // check that nodes appear in creation order in their parent's list of children
-        final String json = getContent(postUrl + ".1.json", CONTENT_TYPE_JSON);
-        for(int i = 0;  i < nodeUrl.length - 1; i++) {
-            final int posA = json.indexOf(nodeName[i]);
-            final int posB = json.indexOf(nodeName[i + 1]);
-            if(posB <= posA) {
-                fail("Expected '" + nodeName[i] + "' to come before '" + nodeName[i + 1] + "' in JSON data '" + json + "'");
-            }
-        }
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+        verifyOrder(postUrl, DEFAULT_ORDER);
     }
     
-    /** Create several nodes with the order option, and check ordering */
-    public void testZeroOrder() throws IOException {
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="first" request
+     */
+    public void testOrderFirst() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","first");
+        testClient.createNode(postUrl + "/c", props);
+        verifyOrder(postUrl, new String[]{"c", "a", "b", "d"});
+    }
+
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="last" request
+     */
+    public void testOrderLast() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","last");
+        testClient.createNode(postUrl + "/c", props);
+        verifyOrder(postUrl, new String[]{"a", "b", "d", "c"});
+    }
+
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="before" request
+     */
+    public void testOrderBefore() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","before b");
+        testClient.createNode(postUrl + "/c", props);
+        verifyOrder(postUrl, new String[]{"a", "c", "b", "d"});
+    }
+
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="after" request
+     */
+    public void testOrderAfter() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","after c");
+        testClient.createNode(postUrl + "/b", props);
+        verifyOrder(postUrl, new String[]{"a", "c", "b", "d"});
+    }
+
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="N" request, where new position is greater than old one.
+     */
+    public void testOrderIntToBack() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","2");
+        testClient.createNode(postUrl + "/a", props);
+        verifyOrder(postUrl, new String[]{"b", "c", "a", "d"});
+    }
+    
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="N" request, where new position is less than old one.
+     */
+    public void testOrderIntToFront() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","1");
+        testClient.createNode(postUrl + "/d", props);
+        verifyOrder(postUrl, new String[]{"a", "d", "b", "c"});
+    }
+
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="0" request
+     */
+    public void testOrderIntZero() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("ujax:order","0");
-        
-        final String [] nodeUrl = new String[4];
-        nodeUrl[0] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
-        nodeUrl[1] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
-        nodeUrl[2] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
-        nodeUrl[3] = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, props);
-        
-        final String [] nodeName = new String[nodeUrl.length];
-        for(int i = 0;  i < nodeUrl.length; i++) {
-            nodeName[i] = nodeUrl[i].substring(nodeUrl[i].lastIndexOf('/') + 1);
-        }
+        testClient.createNode(postUrl + "/d", props);
+        verifyOrder(postUrl, new String[]{"d", "a", "b", "c"});
+    }
 
-        // check that nodes appear in reverse creation order in their parent's list of children
-        final String json = getContent(postUrl + ".1.json", CONTENT_TYPE_JSON);
-        for(int i = 0;  i < nodeUrl.length - 1; i++) {
-            final int posA = json.indexOf(nodeName[i]);
-            final int posB = json.indexOf(nodeName[i + 1]);
-            if(posA <= posB) {
-                fail("Expected '" + nodeName[i] + " to come after " + nodeName[i + 1] + " in JSON data '" + json + "'");
+    /**
+     * Create nodes and check if they are in correct order after a
+     * ujax:order="N" request, where new position is out of bounds
+     */
+    public void testOrderIntOOB() throws IOException {
+        final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+        createNodes(postUrl, DEFAULT_ORDER);
+
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("ujax:order","100");
+        testClient.createNode(postUrl + "/a", props);
+        verifyOrder(postUrl, new String[]{"b", "c", "d", "a"});
+    }
+
+    /**
+     * Create test nodes
+     */
+    private String[] createNodes(String parentUrl, String[] names)
+            throws IOException {
+        String[] urls = new String[names.length];
+        for (int i=0; i<names.length; i++) {
+            urls[i] = testClient.createNode(parentUrl + "/" + names[i], null);
+        }
+        return urls;
+    }
+
+    /**
+     * Verify node order
+     */
+    private void verifyOrder(String parentUrl, String[] names)
+            throws IOException {
+        // check that nodes appear in creation order in their parent's list of children
+        final String content = getContent(parentUrl + ".1.json", CONTENT_TYPE_JSON);
+        String expected = "";
+        for (String n: names) {
+            expected +=n + ",";
+        }
+        //assertJavascript(expected, content, TEST_SCRIPT);
+        try {
+            String actual = "";
+            JSONObject obj = new JSONObject(content);
+            JSONArray n = obj.names();
+            for (int i=0; i<n.length(); i++) {
+                String name = n.getString(i);
+                Object o = obj.get(name);
+                if (o instanceof JSONObject) {
+                    actual += name + ",";
+                }
             }
+            assertEquals(expected, actual);
+        } catch (JSONException e) {
+            throw new IOException(e.toString());
         }
     }
  }
