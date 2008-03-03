@@ -53,6 +53,10 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
@@ -61,9 +65,11 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Export-Package>
+                            org.apache.sling.jcr.base;
                             org.apache.sling.jcr.base.util;version=${pom.version},
                         </Export-Package>
                         <Private-Package>
+                            org.apache.sling.jcr.base.internal.*,
                             org.apache.jackrabbit.rmi.*
                         </Private-Package>
                         <Import-Package>
@@ -82,18 +88,28 @@
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <scope>compile</scope>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.api</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
-          <dependency>
+        <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
             <scope>compile</scope>
         </dependency>
+        <!-- OSGi Libraries -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 
