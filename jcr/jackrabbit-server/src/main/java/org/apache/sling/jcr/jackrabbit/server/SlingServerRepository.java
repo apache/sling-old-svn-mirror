@@ -110,6 +110,9 @@ public class SlingServerRepository extends AbstractSlingRepository
         if (this.delegatee == null) {
             try {
                 this.delegatee = this.getRepository();
+                if(this.delegatee != null) {
+                    repositoryAvailable();
+                }
             } catch (IOException ioe) {
                 throw new RepositoryException(ioe.getMessage(), ioe);
             }

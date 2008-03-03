@@ -75,6 +75,9 @@ public class SlingClientRepository extends AbstractSlingRepository
     protected Repository getDelegatee() throws RepositoryException {
         if (this.delegatee == null) {
             this.delegatee = this.getRepository();
+            if(this.delegatee != null) {
+                repositoryAvailable();
+            }
         }
 
         return this.delegatee;
