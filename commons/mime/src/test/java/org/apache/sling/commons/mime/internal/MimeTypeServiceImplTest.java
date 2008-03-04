@@ -39,6 +39,8 @@ public class MimeTypeServiceImplTest extends TestCase {
 
     private static final String TXT = "txt";
 
+    private static final String APT = "apt";
+
     private static final String TEXT_PLAIN = "text/plain";
 
     private MimeTypeServiceImpl service;
@@ -65,12 +67,13 @@ public class MimeTypeServiceImplTest extends TestCase {
 
     public void testTxtMapping() throws Exception {
 
-        this.service.registerMimeType(TEXT_PLAIN, TXT, LOG);
+        this.service.registerMimeType(TEXT_PLAIN, TXT, LOG, APT);
 
-        assertEquals(TEXT_PLAIN, this.service.getMimeType("file." + TXT));
-        assertEquals(TEXT_PLAIN, this.service.getMimeType(TXT));
-        assertEquals(TEXT_PLAIN, this.service.getMimeType("file." + LOG));
-        assertEquals(TEXT_PLAIN, this.service.getMimeType(LOG));
+        final String [] exts = { TXT, LOG, APT };
+        for(String ext : exts) {
+            assertEquals("Extension " + ext + " (1)", TEXT_PLAIN, this.service.getMimeType("file." + ext));
+            assertEquals("Extension " + ext + " (2)", TEXT_PLAIN, this.service.getMimeType(ext));
+        }
 
         assertEquals(TEXT_PLAIN,
             this.service.getMimeType(("file." + TXT).toUpperCase()));
@@ -91,10 +94,11 @@ public class MimeTypeServiceImplTest extends TestCase {
         try {
             this.service.registerMimeType(ins);
 
-            assertEquals(TEXT_PLAIN, this.service.getMimeType("file." + TXT));
-            assertEquals(TEXT_PLAIN, this.service.getMimeType(TXT));
-            assertEquals(TEXT_PLAIN, this.service.getMimeType("file." + LOG));
-            assertEquals(TEXT_PLAIN, this.service.getMimeType(LOG));
+            final String [] exts = { TXT, LOG, APT };
+            for(String ext : exts) {
+                assertEquals("Extension " + ext + " (1)", TEXT_PLAIN, this.service.getMimeType("file." + ext));
+                assertEquals("Extension " + ext + " (2)", TEXT_PLAIN, this.service.getMimeType(ext));
+            }
 
             assertEquals(TEXT_PLAIN,
                 this.service.getMimeType(("file." + TXT).toUpperCase()));
