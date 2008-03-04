@@ -21,6 +21,7 @@ package org.apache.sling.apt.parser.internal;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Map;
 
 import org.apache.maven.doxia.module.apt.AptParseException;
 import org.apache.maven.doxia.module.apt.AptParser;
@@ -52,7 +53,11 @@ public class SlingAptParserImpl implements SlingAptParser {
     }
     
     public void parse(Reader input, Writer output) throws IOException, SlingAptParseException {
-        final Sink sink = new CustomAptSink(output);
+        parse(input, output, null);
+    }
+    
+    public void parse(Reader input, Writer output, Map<String, Object> options) throws IOException, SlingAptParseException {
+        final Sink sink = new CustomAptSink(output, options);
         final AptParser parser = new CustomAptParser(macroProvider);
         try {
             parser.parse(input, sink);
