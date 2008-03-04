@@ -119,8 +119,8 @@
         <module>launchpad/app</module>
 
         <!-- Extensions -->
-        <module>extensions/apt/apt-parser</module>
-        <module>extensions/apt/apt-servlet</module>
+        <module>extensions/apt/parser</module>
+        <module>extensions/apt/servlet</module>
 
     </modules>
     <distributionManagement>
