@@ -118,6 +118,10 @@
         <module>launchpad/launchpad-content</module>
         <module>launchpad/app</module>
 
+        <!-- Extensions -->
+        <module>extensions/apt/apt-parser</module>
+        <module>extensions/apt/apt-servlet</module>
+
     </modules>
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
