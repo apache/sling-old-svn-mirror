@@ -169,7 +169,7 @@ public abstract class AbstractSlingRepository
 
     /**
      * @see org.apache.sling.jcr.api.SlingRepository#getDefaultWorkspace()
-     * Declared final to make sure the SLING-256 rule is enforced. 
+     * Declared final to make sure the SLING-256 rule is enforced.
      */
     public final String getDefaultWorkspace() {
         if(defaultWorkspace == null || defaultWorkspace.trim().length() == 0) {
@@ -243,7 +243,7 @@ public abstract class AbstractSlingRepository
         }
 
         try {
-            getLog().log(LogService.LOG_DEBUG, 
+            getLog().log(LogService.LOG_DEBUG,
                     "Logging in to workspace '" + workspace + "'");
             return this.getPoolManager().login(credentials, workspace);
         } catch (NoSuchWorkspaceException nswe) {
@@ -339,14 +339,14 @@ public abstract class AbstractSlingRepository
 
         // TODO: Consider running this in the background !!
         // FIXME: Commented while SLING-132 is still unfixed
-//        Bundle[] bundles = componentContext.getBundleContext().getBundles();
-//        for (int i = 0; i < bundles.length; i++) {
-//            if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
-//                // load content for bundles which are neither INSTALLED nor
-//                // UNINSTALLED
-//                this.loader.registerBundle(bundles[i]);
-//            }
-//        }
+        Bundle[] bundles = componentContext.getBundleContext().getBundles();
+        for (int i = 0; i < bundles.length; i++) {
+            if ((bundles[i].getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+                // load content for bundles which are neither INSTALLED nor
+                // UNINSTALLED
+                this.loader.registerBundle(bundles[i]);
+            }
+        }
     }
 
     /**
