@@ -116,8 +116,7 @@
         
         <!-- Launcher -->
         <module>launchpad/launchpad-content</module>
-        <module>launcher/app</module>
-        <module>launcher/webapp</module>
+        <module>launchpad/app</module>
 
     </modules>
     <distributionManagement>
