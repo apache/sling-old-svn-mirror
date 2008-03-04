@@ -114,8 +114,8 @@
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
         
-        <!-- Launcher -->
-        <module>launchpad/launchpad-content</module>
+        <!-- Launchpad -->
+        <module>launchpad/content</module>
         <module>launchpad/app</module>
 
         <!-- Extensions -->
@@ -153,7 +153,7 @@
           <activeByDefault>true</activeByDefault>
         </activation>
         <modules>
-          <module>launchpad/launchpad-webapp</module>
+          <module>launchpad/webapp</module>
         </modules>
       </profile>
     </profiles>
