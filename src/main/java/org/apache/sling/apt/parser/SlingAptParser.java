@@ -21,11 +21,23 @@ package org.apache.sling.apt.parser;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.Map;
 
 /** APT parser interface for Sling */
 public interface SlingAptParser {
+    
+    /** Set this option to "false" to disable the generation of
+     *  an HTML page skeleton (html, head, body tags)
+     */
+    String OPT_HTML_SKELETON = "apt.parser.html.skeleton";
+    
     /** Parse the given input, which must be in APT format, and
      *  write the HTML result to output.
      */
     void parse(Reader input, Writer output) throws IOException, SlingAptParseException;
+    
+    /** Parse the given input, which must be in APT format, and
+     *  write the HTML result to output, taking specified options into account
+     */
+    void parse(Reader input, Writer output, Map<String, Object> options) throws IOException, SlingAptParseException;
 }

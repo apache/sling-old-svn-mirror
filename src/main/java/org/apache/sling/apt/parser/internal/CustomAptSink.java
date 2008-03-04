@@ -19,16 +19,35 @@
 package org.apache.sling.apt.parser.internal;
 
 import java.io.Writer;
+import java.util.Map;
 
 import org.apache.maven.doxia.module.apt.AptSink;
+import org.apache.sling.apt.parser.SlingAptParser;
 
 /** AptSink which outputs (X)HTML */
 class CustomAptSink extends AptSink {
+
+    private final boolean generateHtmlSkeleton;
+    private String title;
     
-    CustomAptSink(Writer w) {
+    CustomAptSink(Writer w, Map<String, Object> options) {
         super(w);
+        
+        if(options==null) {
+            generateHtmlSkeleton = true;
+        } else {
+            generateHtmlSkeleton = !("false".equals(options.get(SlingAptParser.OPT_HTML_SKELETON)));
+        }
     }
     
+    @Override
+    public void title_()
+    {
+        if ( getBuffer().length() > 0 ) {
+            title = getBuffer().toString();
+            resetBuffer();
+        }
+    }
     @Override
     public void sectionTitle1() {
         write("<h1>");
@@ -92,10 +111,23 @@ class CustomAptSink extends AptSink {
     
     @Override
     public void head_() {
+        if(generateHtmlSkeleton) {
+            if(title!=null) {
+                write("\n<title>");
+                write(title);
+                write("</title>");
+            }
+            write("\n</head>");
+        }
+        setHeadFlag(false);
     }
 
     @Override
     public void head() {
+        if(generateHtmlSkeleton) {
+            write("<html>\n<head>");
+        }
+        setHeadFlag(true);
     }
 
     @Override
@@ -123,4 +155,17 @@ class CustomAptSink extends AptSink {
         write("<hr/>\n");
     }
 
+    @Override
+    public void body_() {
+        if(generateHtmlSkeleton) {
+            write("</body>\n</html>\n");
+        }
+    }
+
+    @Override
+    public void body() {
+        if(generateHtmlSkeleton) {
+            write("\n<body>");
+        }
+    }
 }

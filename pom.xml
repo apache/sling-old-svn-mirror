@@ -68,7 +68,8 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.apt.parser.internal,
-                            org.apache.maven.doxia.*
+                            org.apache.maven.doxia.*,
+                            org.codehaus.plexus.util.*
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -85,7 +86,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
