@@ -20,6 +20,8 @@ package org.apache.sling.apt.parser.internal;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
@@ -27,6 +29,7 @@ import org.apache.maven.doxia.macro.Macro;
 import org.apache.maven.doxia.macro.MacroExecutionException;
 import org.apache.maven.doxia.macro.MacroRequest;
 import org.apache.maven.doxia.sink.Sink;
+import org.apache.sling.apt.parser.SlingAptParser;
 
 /** Test the SlingAptParserImpl.
  * 
@@ -40,6 +43,13 @@ import org.apache.maven.doxia.sink.Sink;
 public class SlingAptParserImplTest extends TestCase implements MacroResolver {
     
     final SlingAptParserImpl parser = new SlingAptParserImpl(this);
+    
+    private final static Map<String, Object> DEFAULT_OPTIONS;
+    
+    static {
+        DEFAULT_OPTIONS = new HashMap<String, Object> ();
+        DEFAULT_OPTIONS.put(SlingAptParser.OPT_HTML_SKELETON, "false");
+    }
     
     private static class SlingTestMacro implements Macro {
         public void execute(Sink sink, MacroRequest request) throws MacroExecutionException {
@@ -55,10 +65,14 @@ public class SlingAptParserImplTest extends TestCase implements MacroResolver {
         return null;
     }
 
-    protected void parse(String input, String expected) throws Exception {
+    protected void parse(String input, String expected, Map<String, Object> options) throws Exception {
         final StringWriter out = new StringWriter();
-        parser.parse(new StringReader(input), out);
+        parser.parse(new StringReader(input), out, options);
         assertEquals(expected, out.toString().trim());
+    }
+    
+    protected void parse(String input, String expected) throws Exception {
+        parse(input, expected, DEFAULT_OPTIONS);
     }
     
     public void testNullReader() throws Exception {
@@ -121,5 +135,14 @@ public class SlingAptParserImplTest extends TestCase implements MacroResolver {
     public void testMacroNotFound() throws Exception {
         final String badName = "MacroThatDoesNotExist"; 
         parse("%{" + badName + "}", "APT macro not found: '" + badName + "'");
+    }
+    
+    public void testTitle() throws Exception {
+        final String input = " ---- \n test title \n ---- \n\nH1 title now";
+        final String expected = 
+            "<html>\n<head>\n<title>test title</title>\n</head>"
+            + "\n<body><h1>H1 title now</h1>\n</body>\n</html>"
+        ;
+        parse(input, expected, null);
     }
 }
