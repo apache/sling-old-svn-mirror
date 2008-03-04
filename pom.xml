@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/launchpad-webapp
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/webapp
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/launchpad-webapp
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/webapp
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/launchpad-webapp
+            http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/webapp
         </url>
     </scm>
 
