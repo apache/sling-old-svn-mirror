@@ -29,7 +29,12 @@ public class SimpleAptRenderingTest extends HttpTestBase {
             
             // .apt.aptml converts APT to html
             final String content = getContent(HTTP_BASE_URL + "/apt-test/apt-test.apt.aptml", CONTENT_TYPE_HTML);
-            assertTrue("h1 parsed as expected (" + content + ")", content.contains("<h1>Simple APT file test"));
+            assertTrue("HTML opening tag present (" + content + ")", content.startsWith("<html>"));
+            assertTrue("HTML closing tag present (" + content + ")", content.endsWith("</html>\n"));
+            assertTrue("title parsed as expected (" + content + ")", content.contains("<title>Simple APT file test</title>"));
+            assertTrue("body opening tag is present (" + content + ")", content.contains("</head>\n<body>"));
+            assertTrue("body closing tag is present (" + content + ")", content.endsWith("</body>\n</html>\n"));
+            assertTrue("h1 parsed as expected (" + content + ")", content.contains("<h1>h1 heading"));
             assertTrue("h2 parsed as expected (" + content + ")", content.contains("<h2>h2 heading"));
             assertTrue("h3 parsed as expected (" + content + ")", content.contains("<h3>h3 heading"));
         } finally {
