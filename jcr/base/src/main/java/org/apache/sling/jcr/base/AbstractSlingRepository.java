@@ -663,7 +663,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
     
     private void startRepositoryPinger() {
-        if (repositoryPinger != null) {
+        if (repositoryPinger == null) {
             // make sure the ping will be running
             running = true;
             
