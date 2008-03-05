@@ -69,7 +69,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 5577121546674133317L;
 
-    private static final String responseContentType = "application/json";
+    static final String responseContentType = "application/json";
 
     private final JsonItemWriter itemWriter;
 
