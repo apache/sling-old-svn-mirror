@@ -802,8 +802,7 @@ public class SessionPool {
                     session.logout();
                 }
             } catch (Exception e) {
-                log.warn("Unexpected problem logging out session "
-                    + session.getUserID(), e);
+                log.info("Unexpected problem logging out session " + session, e);
             }
         }
     }
