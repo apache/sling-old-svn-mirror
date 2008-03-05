@@ -66,6 +66,12 @@ import org.slf4j.LoggerFactory;
  * on a Servlet Request wide basis such as the repository session, the
  * persistence manager, etc.
  *
+ * The setup order is:
+ * <ol>
+ *   <li>Invoke constructor</li>
+ *   <li>Invoke initResource()</li>
+ *   <li>Invoke initServlet()</li>
+ * </ol>
  * @see ContentData
  */
 public class RequestData implements BufferProvider {
@@ -136,10 +142,14 @@ public class RequestData implements BufferProvider {
         this.resourceResolver = resourceResolver;
     }
 
-    public void init() {
-
-        // resolve the resource and the request path info, will never be null
+    public Resource initResource() {
+        // resolve the resource
         Resource resource = resourceResolver.resolve(getServletRequest());
+        return resource;
+    }
+
+    public void initServlet(final Resource resource) {
+        // the resource and the request path info, will never be null
         RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource,
             getServletRequest().getPathInfo());
         ContentData contentData = pushContent(resource, requestPathInfo);
