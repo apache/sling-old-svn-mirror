@@ -55,6 +55,8 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
+                <!-- Require fix for FELIX-507 -->
+                <version>1.0.4-SNAPSHOT</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -140,7 +142,6 @@
                         </Private-Package>
                         <Import-Package>
                             org.apache.sling.jcr.api,
-                            org.apache.sling.jcr.base.util,
 
                             javax.jcr.*,
 
@@ -180,11 +181,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.base</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
+            <version>1.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
