@@ -117,7 +117,7 @@ public class SessionPool {
      * sessions from this pool to drop below the configured number of maximum
      * active sessions.
      *
-     * @see #PARAM_MAX_ACTIVE_SESSIONS_WAIT
+     * @see #PROPERTY_MAX_ACTIVE_SESSIONS_WAIT
      * @see #DEFAULT_MAX_ACTIVE_SESSIONS_WAIT
      * @see #getMaxActiveSessionsWait()
      * @see #setMaxActiveSessionsWait(long)
