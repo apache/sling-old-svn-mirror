@@ -52,7 +52,7 @@ import org.osgi.service.log.LogService;
  * Extensions of this class will have to declare the following
  * <code>scr.property</code> tags to have them declared automatically in the
  * respective component and metatype definitions by the maven-sling-plugin:
- * 
+ *
  * @scr.component
  */
 public abstract class AbstractSlingRepository implements SlingRepository,
@@ -72,10 +72,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /** @scr.property valueRef="DEFAULT_ADMIN_PASS" */
     public static final String PROPERTY_ADMIN_PASS = "admin.password";
-    
+
     /** @scr.property valueRef="DEFAULT_POLL_ACTIVE"  */
     public static final String PROPERTY_POLL_ACTIVE = "poll.active";
-    
+
     /** @scr.property valueRef="DEFAULT_POLL_INACTIVE" */
     public static final String PROPERTY_POLL_INACTIVE = "poll.inactive";
 
@@ -83,7 +83,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * The name of the configuration parameter containing the maximum number of
      * seconds to wait for the number of currently active sessions to drop be
      * low the upper limit before giving up (value is "pool.maxActiveWait").
-     * 
+     *
      * @scr.property value="1" type="Integer"
      */
     public static final String PROPERTY_MAX_ACTIVE_SESSIONS_WAIT = "pool.maxActiveWait";
@@ -91,7 +91,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     /**
      * The name of the configuration parameter containing the upper limit of the
      * simultaneously active sessions (value is "pool.maxActive").
-     * 
+     *
      * @scr.property value="-1" type="Integer"
      */
     public static final String PROPERTY_MAX_ACTIVE_SESSIONS = "pool.maxActive";
@@ -99,12 +99,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     /**
      * The name of the configuration parameter containing the upper limit of the
      * currently idle sessions to keep in the pool (value is "pool.maxIdle").
-     * 
+     *
      * @scr.property value="10" type="Integer"
      */
     public static final String PROPERTY_MAX_IDLE_SESSIONS = "pool.maxIdle";
-
-    public static final String DEFAULT_WORKSPACE = "default";
 
     public static final String DEFAULT_ANONYMOUS_USER = "anonymous";
 
@@ -113,25 +111,25 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     public static final String DEFAULT_ADMIN_USER = "admin";
 
     public static final String DEFAULT_ADMIN_PASS = "admin";
-    
+
     /**
      * The default value for the number of seconds to wait between two
      * consecutive checks while the repository is active (value is 10).
      */
     public static final int DEFAULT_POLL_ACTIVE = 10;
-    
+
     /**
      * The default value for the number of seconds to wait between two
      * consecutive checks while the repository is not active (value is 10).
      */
     public static final int DEFAULT_POLL_INACTIVE = 10;
-    
+
     /** The minimum number of seconds allowed for any of the two poll times */
     public static final int MIN_POLL = 2;
 
     /** @scr.reference bind="bindLog" unbind="unbindLog" */
     private LogService log;
-    
+
     private ComponentContext componentContext;
 
     private Repository repository;
@@ -241,7 +239,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#getDescriptor(java.lang.String)
      */
     public String getDescriptor(String name) {
@@ -256,7 +254,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#getDescriptorKeys()
      */
     public String[] getDescriptorKeys() {
@@ -270,7 +268,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     //---------- Session Pool support -----------------------------------------
-    
+
     protected final SessionPoolManager getPoolManager() {
         if (this.poolManager == null) {
             this.poolManager = new SessionPoolManager(this.getRepository(),
@@ -311,7 +309,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         final SessionPool pool = new SessionPool(mgr, credentials);
         return pool;
     }
-    
+
     // ---------- logging ------------------------------------------------------
 
     protected void log(int level, String message) {
@@ -345,7 +343,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * returns <code>null</code> if not repository is available. Any problems
      * trying to acquire the repository must be caught and logged as
      * appropriate.
-     * 
+     *
      * @return The acquired JCR <code>Repository</code> or <code>null</code>
      *         if not repository can be acquired.
      */
@@ -379,7 +377,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * <p>
      * Implementations may overwrite this method but MUST call this base class
      * implementation first.
-     * 
+     *
      * @param repository The JCR <code>Repository</code> to setup.
      */
     protected void setupRepository(Repository repository) {
@@ -395,7 +393,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * <p>
      * This method may be overwritten to register the component with different
      * types.
-     * 
+     *
      * @return The OSGi <code>ServiceRegistration</code> object representing
      *         the registered service.
      */
@@ -427,7 +425,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * access checks. The contract of this method must be obeyed, though in a
      * sense, the <code>true</code> must only be returned if
      * <code>repository</code> is actually usable.
-     * 
+     *
      * @param repository The JCR <code>Repository</code> to check for
      *            availability.
      * @return <code>true</code> if <code>repository</code> is not
@@ -465,7 +463,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * This method is meant for cleanup tasks before the repository is actually
      * disposed off. Extensions of this class may overwrite but must call this
      * base class implementation.
-     * 
+     *
      * @param repository
      */
     protected void tearDown(Repository repository) {
@@ -485,7 +483,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * Disposes off the given <code>repository</code>. This base class
      * implementation does nothing. Extensions should overwrite if any special
      * disposal operation is required.
-     * 
+     *
      * @param repository
      */
     protected void disposeRepository(Repository repository) {
@@ -493,12 +491,12 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     //---------- SynchronousBundleListener ------------------------------------
-    
+
     /**
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     * 
+     *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -511,11 +509,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     // register types when the bundle gets installed
                     theLoader.registerBundle(event.getBundle());
                     break;
-    
+
                 case BundleEvent.UNINSTALLED:
                     theLoader.unregisterBundle(event.getBundle());
                     break;
-                    
+
                 case BundleEvent.UPDATED:
                     theLoader.updateBundle(event.getBundle());
             }
@@ -530,7 +528,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /**
      * This method must be called if overwritten by implementations !!
-     * 
+     *
      * @throws nothing, but allow derived classes to throw any Exception
      */
     protected void activate(ComponentContext componentContext) throws Exception {
@@ -541,7 +539,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         // ensure the default workspace is not null and not empty
         this.defaultWorkspace = this.getProperty(properties,
-            PROPERTY_DEFAULT_WORKSPACE, DEFAULT_WORKSPACE);
+            PROPERTY_DEFAULT_WORKSPACE, null);
         if (this.defaultWorkspace != null
             && this.defaultWorkspace.length() == 0) {
             this.defaultWorkspace = null;
@@ -559,7 +557,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         setPollTimeActive(getIntProperty(properties, PROPERTY_POLL_ACTIVE));
         setPollTimeInActive(getIntProperty(properties, PROPERTY_POLL_INACTIVE));
-        
+
         componentContext.getBundleContext().addBundleListener(this);
 
         startRepositoryPinger();
@@ -567,7 +565,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /**
      * This method must be called if overwritten by implementations !!
-     * 
+     *
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
@@ -578,11 +576,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         this.componentContext = null;
     }
-    
+
     protected void bindLog(LogService log) {
         this.log = log;
     }
-    
+
     protected void unbindLog(LogService log) {
         if (this.log == log) {
             log = null;
@@ -661,12 +659,12 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         }
         pollTimeInActive = 1000L * seconds;
     }
-    
+
     private void startRepositoryPinger() {
         if (repositoryPinger == null) {
             // make sure the ping will be running
             running = true;
-            
+
             // create and start the thread
             repositoryPinger = new Thread(this, "Repository Pinger");
             repositoryPinger.start();
@@ -674,7 +672,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     private void stopRepositoryPinger() {
-        
+
         // make sure the thread is terminating
         running = false;
 
@@ -683,10 +681,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         if (rpThread == null) {
             return;
         }
-        
+
         // clear the repositoryPinger thread field
         repositoryPinger = null;
-        
+
         // notify the thread for it to be able to shut down
         synchronized (rpThread) {
             rpThread.notifyAll();
@@ -705,24 +703,24 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 "stopRepositoryPinger: Timed waiting for thread "
                     + rpThread + " to terminate");
         }
-        
+
     }
 
     private boolean startRepository() {
         try {
             Repository newRepo = acquireRepository();
             if (newRepo != null) {
-                
+
                 // ensure we really have the repository
                 if (pingRepository(newRepo)) {
                     repository = newRepo;
-    
+
                     setupRepository(newRepo);
                     repositoryService = registerService();
-    
+
                     return true;
                 }
-                
+
                 // otherwise let go off the repository and fail startup
                 log(LogService.LOG_INFO, "startRepository: Acquired Repository is not responsive, failing");
                 disposeRepository(repository);
@@ -781,7 +779,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     public void run() {
         long pollTime = pollTimeInActive;
         Object waitLock = repositoryPinger;
-        
+
         try {
 
             while (running) {
@@ -799,7 +797,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                         "run: Repository not accessible any more, unregistering service");
                     stopRepository();
                     pollTime = pollTimeInActive;
-                    
+
                 } else {
 
                     log(LogService.LOG_DEBUG,
