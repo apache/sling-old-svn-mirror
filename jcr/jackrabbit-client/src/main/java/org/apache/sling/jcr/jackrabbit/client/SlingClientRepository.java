@@ -31,7 +31,7 @@ import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.service.log.LogService;
 
 /**
- * The <code>RepositorySPIImpl</code> TODO
+ * The <code>SlingClientRepository</code> TODO
  *
  * @scr.component label="%repository.name" description="%repository.description"
  *          factory="org.apache.sling.jcr.client.SlingClientRepositoryFactory"
@@ -39,17 +39,6 @@ import org.osgi.service.log.LogService;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
  *      value="Factory for non-embedded JCR Repository Instances"
- *
- * @scr.service
- *
- * @scr.property value="" name="defaultWorkspace"
- * @scr.property value="anonymous" name="anonymous.name"
- * @scr.property value="anonymous" name="anonymous.password"
- * @scr.property value="admin" name="admin.name"
- * @scr.property value="admin" name="admin.password"
- * @scr.property value="-1" type="Integer" name="pool.maxActive"
- * @scr.property value="10" type="Integer" name="pool.maxIdle"
- * @scr.property value="1" type="Integer" name="pool.maxActiveWait"
  *
  * @scr.property name="java.naming.factory.initial"
  *               value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"
@@ -63,61 +52,34 @@ public class SlingClientRepository extends AbstractSlingRepository
      */
     public static final String REPOSITORY_NAME = "name";
 
-    /**
-     * @scr.reference
-     */
-    private LogService log;
-
-    private Repository delegatee;
-
-    //---------- AbstractSlingRepository methods ------------------------------
-
-    protected Repository getDelegatee() throws RepositoryException {
-        if (this.delegatee == null) {
-            this.delegatee = this.getRepository();
-        }
-
-        return this.delegatee;
-    }
-
-    protected LogService getLog() {
-        return this.log;
-    }
-
     //---------- Repository Publication ---------------------------------------
 
-    private Repository getRepository() throws RepositoryException {
+    @Override
+    protected Repository acquireRepository() {
+        Repository repository = super.acquireRepository();
+        if (repository != null) {
+            return repository;
+        }
+
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
         Repository repo = null;
 
-        // if the environment provides a repository override URL, other settings are ignored (SLING-260)
-        final String overrideUrl = (String) environment.get(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
-        
-        if(overrideUrl != null && overrideUrl.length() > 0) {
-            log.log(LogService.LOG_INFO, 
-                    "Will not use embedded repository due to property " + RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY 
-                    + "=" + overrideUrl
-                    + ", acquiring repository using that URL"
-                    );
-            repo = new RepositoryAccessor().getRepositoryFromURL(overrideUrl);
-            
-        } else {
-            log.log(LogService.LOG_INFO, 
-                    "Repository URL override property (" +  RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
-                    + ") not set, using name/context settings");
-            
-            String repoName = (String) environment.get(REPOSITORY_NAME);
-            if (repoName == null) {
-                throw new RepositoryException("Missing property 'name'");
-            }
-    
-            final Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
-            repo = new RepositoryAccessor().getRepository(repoName, jndiContext);
-            if(repo == null) {
-                throw new RepositoryException("Cannot acquire repository '" + repoName + "'");
-            }
+        String repoName = (String) environment.get(REPOSITORY_NAME);
+        if (repoName == null) {
+            log(LogService.LOG_ERROR,
+                "acquireRepository: Missing property 'name'");
+            return null;
         }
+
+        final Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
+        repo = new RepositoryAccessor().getRepository(repoName, jndiContext);
+        if (repo == null) {
+            log(LogService.LOG_ERROR,
+                "acquireRepository: Cannot acquire repository '" + repoName
+                    + "'");
+        }
+
         return repo;
     }
 
