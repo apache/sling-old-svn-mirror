@@ -252,7 +252,27 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         try {
 
             // initialize the request data - resolve resource and servlet
-            requestData.init();
+            Resource resource = null;
+            try {
+                resource = requestData.initResource();
+            } catch (AccessControlException ace) {
+                // SLING-309
+                // if this is the anonymous user, send request to authenticate
+                if ( request.getAttribute(HttpContext.AUTHENTICATION_TYPE) == null ) {
+                    getSlingAuthenticator().requestAuthentication(request, response);
+                    return;
+                }
+
+                // if this is not the anonymous user, send 404
+                // try to request authentication fail, if not possible
+                log.info(
+                    "service: Authenticated user {} does not have enough rights to executed requested action",
+                    request.getRemoteUser());
+                getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
+                        null, request, response);
+                return;
+            }
+            requestData.initServlet(resource);
 
             Filter[] filters = requestFilterChain.getFilters();
             if (filters != null) {
@@ -292,11 +312,12 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
         } catch (AccessControlException ace) {
 
-            // try to request authentication fail, if not possible
+            // SLING-309 if anything goes wrong, send 404
             log.info(
                 "service: Authenticated user {} does not have enough rights to executed requested action",
                 request.getRemoteUser());
-            getSlingAuthenticator().requestAuthentication(request, response);
+            getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
+                    null, request, response);
 
         } catch (Throwable t) {
 
