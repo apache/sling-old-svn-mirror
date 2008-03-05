@@ -297,6 +297,8 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 curPath = it.next();
                 resource = getResourceInternal(curPath);
             }
+        } catch (AccessControlException ace) {
+            throw ace;
         } catch (Exception ex) {
             throw new SlingException("Problem trying " + curPath
                 + " for request path " + uriPath, ex);
