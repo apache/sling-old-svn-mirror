@@ -61,9 +61,19 @@ public class Loader implements NamespaceMapper {
     /** Namespace prefix table. */
     private final Map<Long, NamespaceEntry[]> namespaceTable = new HashMap<Long, NamespaceEntry[]>();
 
-    public Loader(AbstractSlingRepository repository) {
+    public Loader(AbstractSlingRepository repository, Bundle[] existingBundles) {
         this.slingRepository = repository;
         this.delayedBundles = new LinkedList<Bundle>();
+
+        // scan existing bundles
+        for (Bundle bundle : existingBundles) {
+            if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
+                // load content for bundles which are neither INSTALLED nor
+                // UNINSTALLED
+                registerBundle(bundle);
+            }
+        }
+
     }
 
     public void dispose() {

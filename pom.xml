@@ -54,6 +54,8 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
+                <!-- require fix for FELIX-506 -->
+                <version>1.0.4-SNAPSHOT</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -95,6 +97,8 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
+            <!-- require fix for JCR-1454 -->
+            <version>1.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <!-- OSGi Libraries -->
