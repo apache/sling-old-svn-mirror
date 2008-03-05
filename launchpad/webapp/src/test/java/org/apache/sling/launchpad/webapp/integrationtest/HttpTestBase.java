@@ -38,6 +38,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
 import org.apache.sling.ujax.UjaxPostServlet;
@@ -253,11 +254,20 @@ public class HttpTestBase extends TestCase {
         }
     }
 
+    /** retrieve the contents of given URL and assert its content type */
+    protected String getContent(String url, String expectedContentType) throws IOException {
+        return getContent(url, expectedContentType, null);
+    }
+    
     /** retrieve the contents of given URL and assert its content type
      * @throws IOException
      * @throws HttpException */
-    protected String getContent(String url, String expectedContentType) throws IOException {
+    protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
         final GetMethod get = new GetMethod(url);
+        if(params != null) {
+            final NameValuePair [] nvp = new NameValuePair[0];
+            get.setQueryString(params.toArray(nvp));
+        }
         final int status = httpClient.executeMethod(get);
         assertEquals("Expected status 200 for " + url,200,status);
         final Header h = get.getResponseHeader("Content-Type");
