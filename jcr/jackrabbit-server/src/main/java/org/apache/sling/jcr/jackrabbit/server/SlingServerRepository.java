@@ -33,39 +33,21 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
-import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.framework.Bundle;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 /**
- * The <code>RepositorySPIImpl</code> TODO
+ * The <code>SlingServerRepository</code> TODO
  *
  * @scr.component label="%repository.name" description="%repository.description"
  *          factory="org.apache.sling.jcr.jackrabbit.server.SlingServerRepositoryFactory"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"
- *      value="Factory for embeded Jackrabbit Repository Instances"
- *
- * @scr.service
- *
- * @scr.property value="" name="defaultWorkspace"
- * @scr.property value="anonymous" name="anonymous.name"
- * @scr.property value="anonymous" name="anonymous.password"
- * @scr.property value="admin" name="admin.name"
- * @scr.property value="admin" name="admin.password"
- * @scr.property value="-1" type="Integer" name="pool.maxActive"
- * @scr.property value="10" type="Integer" name="pool.maxIdle"
- * @scr.property value="1" type="Integer" name="pool.maxActiveWait"
+ *      value="Factory for embedded Jackrabbit Repository Instances"
  */
 public class SlingServerRepository extends AbstractSlingRepository
         implements Repository, SlingRepository {
-
-    /**
-     * @scr.property value="true" type="Boolean"
-     */
-    public static final String PROPERTY_REPOSITORY_AUTOSTART = "autostart";
 
     /**
      * The name of the configuration property defining the URL to the
@@ -97,112 +79,46 @@ public class SlingServerRepository extends AbstractSlingRepository
      */
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
-    /**
-     * @scr.reference
-     */
-    private LogService log;
-
-    private Repository delegatee;
-
-    //---------- AbstractSlingRepository methods ------------------------------
-
-    protected Repository getDelegatee() throws RepositoryException {
-        if (this.delegatee == null) {
-            try {
-                this.delegatee = this.getRepository();
-            } catch (IOException ioe) {
-                throw new RepositoryException(ioe.getMessage(), ioe);
-            }
+    //---------- Repository Management ----------------------------------------
+    
+    @Override
+    protected Repository acquireRepository() {
+        Repository repository = super.acquireRepository();
+        if (repository != null) {
+            return repository;
         }
-
-        return this.delegatee;
-    }
-
-    protected LogService getLog() {
-        return this.log;
-    }
-
-    //---------- SCR integration ----------------------------------------------
-
-    // activate this service
-    protected void activate(ComponentContext componentContext) throws Exception {
-        // set up the base class (session pooling etc)
-        super.activate(componentContext);
-
-        // setup the repository from descriptor
-        Object autoStart = componentContext.getProperties().get(PROPERTY_REPOSITORY_AUTOSTART);
-        if (autoStart instanceof Boolean && ((Boolean) autoStart).booleanValue()) {
-            // have the exception thrown go up the chain ...
-            this.getDelegatee();
-        }
-    }
-
-    // deactivate this service
-    protected void deactivate(ComponentContext componentContext) {
-        if (this.delegatee != null) {
-            try {
-                if(this.delegatee instanceof RepositoryImpl) {
-                    ((RepositoryImpl)this.delegatee).shutdown();
-                } else {
-                    log.log(LogService.LOG_WARNING, "Repository is not a RepositoryImpl, cannot shut it down");
-                }
-            } catch (Throwable t) {
-                this.log(LogService.LOG_ERROR, "Unexpected problem shutting down repository", t);
-            }
-        }
-
-        // deactivate the base class (session pooling etc.)
-        super.deactivate(componentContext);
-    }
-
-    //---------- Repository Publication ---------------------------------------
-
-    private Repository getRepository() throws RepositoryException, IOException, RepositoryAccessor.RepositoryUrlException {
+        
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
-
-        // if the environment provides a repository override URL, other settings are ignored
-        final String overrideUrl = (String) environment.get(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
-
-        if (overrideUrl != null && overrideUrl.length() > 0) {
-            log.log(LogService.LOG_INFO,
-                    "Will not use embedded repository due to property " + RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
-                    + "=" + overrideUrl
-                    + ", acquiring repository using that URL"
-                    );
-            return getRepositoryFromUrl(overrideUrl);
-
-        }
-        log.log(LogService.LOG_INFO,
-                "Repository URL override property (" +  RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY
-                + ") not set, using embedded repository");
-        return getEmbeddedRepository(environment);
-    }
-
-    private Repository getRepositoryFromUrl(String repositoryUrl) throws RepositoryAccessor.RepositoryUrlException {
-        return new RepositoryAccessor().getRepositoryFromURL(repositoryUrl);
-    }
-
-    private Repository getEmbeddedRepository(Dictionary<String, Object> environment)
-    throws RepositoryException, IOException {
-
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
         String home = (String) environment.get(REPOSITORY_HOME_DIR);
 
         InputStream ins = null;
-
-        // check whether the URL is a file path
-        File configFile = new File(configURLObj);
-        if (configFile.canRead()) {
-            ins = new FileInputStream(configFile);
-        } else {
-            URL configURL = new URL(configURLObj);
-            ins = configURL.openStream();
-        }
-
         try {
+
+            // check whether the URL is a file path
+            File configFile = new File(configURLObj);
+            if (configFile.canRead()) {
+                ins = new FileInputStream(configFile);
+            } else {
+                URL configURL = new URL(configURLObj);
+                ins = configURL.openStream();
+            }
+
             RepositoryConfig crc = RepositoryConfig.create(ins, home);
             return RepositoryImpl.create(crc);
+            
+        } catch (IOException ioe) {
+            
+            log(LogService.LOG_ERROR,
+                "acquireRepository: IO problem starting repository from "
+                    + configURLObj + " in " + home, ioe);
+            
+        } catch (RepositoryException re) {
+            
+            log(LogService.LOG_ERROR,
+                "acquireRepository: Repository problem starting repository from "
+                    + configURLObj + " in " + home, re);
         } finally {
             if (ins != null) {
                 try {
@@ -212,9 +128,31 @@ public class SlingServerRepository extends AbstractSlingRepository
                 }
             }
         }
+        
+        // got no repository ....
+        return null;
     }
+    
+    @Override
+    protected void disposeRepository(Repository repository) {
+        super.disposeRepository(repository);
 
-
+        if (repository instanceof RepositoryImpl) {
+            
+            try {
+                ((RepositoryImpl) repository).shutdown();
+            } catch (Throwable t) {
+                log(LogService.LOG_ERROR,
+                    "deactivate: Unexpected problem shutting down repository",
+                    t);
+            }
+            
+        } else {
+            log(LogService.LOG_INFO,
+                "Repository is not a RepositoryImpl, nothing to do");
+        }
+    }
+    
     //---------- Helper -------------------------------------------------------
 
     public static void copyFile(Bundle bundle, String entryPath, File destFile) throws FileNotFoundException, IOException {
