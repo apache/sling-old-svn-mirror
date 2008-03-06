@@ -131,7 +131,8 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.0.3</version>
+                    <!-- require fix for FELIX-506 and FELIX-507 -->
+                    <version>1.0.4-SNAPSHOT</version>
                     <executions>
                         <execution>
                             <id>generate-scr-scrdescriptor</id>
