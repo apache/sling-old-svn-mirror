@@ -88,7 +88,7 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
  *                cardinality="0..n" policy="dynamic"
  */
-public class SlingMainServlet extends GenericServlet implements ErrorHandler {
+public class SlingMainServlet extends GenericServlet implements ErrorHandler, HttpContext {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
@@ -110,6 +110,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
     private ComponentContext osgiComponentContext;
 
     private List<ServiceReference> delayedComponentFilters;
+    
+    private boolean activated;
 
     /**
      * The server information to report in the {@link #getServerInfo()} method.
@@ -575,32 +577,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
 
         // register the servlet and resources
         try {
-            HttpContext httpContext = new HttpContext() {
-                public String getMimeType(String name) {
-                    return mimeTypeService.getMimeType(name);
-                }
-
-                public URL getResource(String name) {
-                    return null;
-                }
-
-                public boolean handleSecurity(HttpServletRequest request,
-                        HttpServletResponse response) {
-                    try {
-                        return slingAuthenticator.authenticate(request,
-                            response);
-                    } catch (MissingRepositoryException mre) {
-                        log.error(
-                            "handleSecurity: Cannot authenticate request", mre);
-                        return false;
-                    }
-                }
-            };
-
             Dictionary<String, String> servletConfig = toStringConfig(configuration);
 
             this.httpService.registerServlet(this.slingRoot, this,
-                servletConfig, httpContext);
+                servletConfig, this);
 
             log.info("{} ready to serve requests", this.getServerInfo());
 
@@ -630,6 +610,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
                 initFilter(componentContext, serviceReference);
             }
         }
+        
+        activated = true;
     }
 
     protected void deactivate(ComponentContext componentContext) {
@@ -648,6 +630,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         this.slingServletContext = null;
         this.osgiComponentContext = null;
 
+        activated = false;
         log.info(this.getServerInfo() + " shut down");
     }
 
@@ -752,4 +735,33 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler {
         return stringConfig;
     }
 
+    /** {@inheritDoc} */
+    public String getMimeType(String name) {
+        ensureActivated();
+        return mimeTypeService.getMimeType(name);
+    }
+
+    /** {@inheritDoc} */
+    public URL getResource(String name) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    public boolean handleSecurity(HttpServletRequest request, HttpServletResponse response) {
+        ensureActivated();
+        try {
+            return slingAuthenticator.authenticate(request,
+                response);
+        } catch (MissingRepositoryException mre) {
+            log.error(
+                "handleSecurity: Cannot authenticate request", mre);
+            return false;
+        }
+    }
+    
+    protected void ensureActivated() {
+        if(!activated) {
+            throw new IllegalStateException("SlingMainServlet is inactive");
+        }
+    }
 }
