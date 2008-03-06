@@ -19,19 +19,14 @@
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.swing.RootPaneContainer;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
@@ -108,18 +103,18 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         String name = "resourceType";
         Node node = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
         getSession().save();
-        
+
         JcrNodeResource jnr = new JcrNodeResource(null, node);
         assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
-        
+
         String typeName = "some/resource/type";
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
         getSession().save();
-        
+
         jnr = new JcrNodeResource(null, node);
         assertEquals(typeName, jnr.getResourceType());
     }
-    
+
     public void testResourceSuperType() throws Exception {
         String name = "resourceSuperType";
         String typeNodeName = "some_resource_type";
@@ -138,7 +133,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         Node typeNode = rootNode.addNode(typeNodeName, JcrConstants.NT_UNSTRUCTURED);
         typeNode.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, superTypeName);
         getSession().save();
-        
+
         jnr = new JcrNodeResource(resourceResolver, node);
         assertEquals(typeName, jnr.getResourceType());
         assertEquals(superTypeName, jnr.getResourceSuperType());
@@ -147,7 +142,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         String otherSuperTypeName = "othersupertype";
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, otherSuperTypeName);
         getSession().save();
-        
+
         jnr = new JcrNodeResource(resourceResolver, node);
         assertEquals(typeName, jnr.getResourceType());
         assertEquals(otherSuperTypeName, jnr.getResourceSuperType());
@@ -176,5 +171,5 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertEquals(TEST_TYPE, rm.getContentType());
         assertEquals(TEST_ENCODING, rm.getCharacterEncoding());
     }
-    
+
 }

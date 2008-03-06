@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.io.InputStream;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Iterator;
 
 import javax.jcr.Item;
@@ -39,7 +38,7 @@ public class JcrPropertyResource extends JcrItemResource {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final Property property;
 
     private final String resourceType;
@@ -105,7 +104,7 @@ public class JcrPropertyResource extends JcrItemResource {
 
     private InputStream getInputStream() {
         Property prop = getProperty();
-        
+
         try {
             // we set the content length only if the input stream is
             // fetched. otherwise the repository needs to load the
@@ -113,18 +112,18 @@ public class JcrPropertyResource extends JcrItemResource {
             // for all resources that do need to provide the stream
             long length = prop.getLength();
             InputStream stream =  prop.getStream();
-            
+
             getResourceMetadata().setContentLength(length);
             return stream;
         } catch (RepositoryException re) {
             log.error("getInputStream: Problem accessing the property "
                 + getPath() + " stream", re);
         }
-        
+
         // fall back to none in case of an error
         return null;
     }
-    
+
     @Override
     Iterator<Resource> listChildren() {
         return null;

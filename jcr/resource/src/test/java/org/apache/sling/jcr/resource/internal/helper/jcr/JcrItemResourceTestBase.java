@@ -18,17 +18,13 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
@@ -45,14 +41,14 @@ public class JcrItemResourceTestBase extends RepositoryTestBase {
         'e', 's', 't' };
 
     protected ResourceResolver resourceResolver;
-    
+
     protected String rootPath;
 
     protected Node rootNode;
 
     protected void setUp() throws Exception {
         super.setUp();
-    
+
         resourceResolver = new MockResourceResolver(getSession());
 
         try {
