@@ -54,8 +54,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-                <!-- require fix for FELIX-506 -->
-                <version>1.0.4-SNAPSHOT</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
