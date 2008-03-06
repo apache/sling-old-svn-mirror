@@ -1,4 +1,4 @@
-/*
+ /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 
 /**
@@ -29,6 +27,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * <p>
  * @deprecated to be removed soooon
  */
+@Deprecated
 public class SyntheticResource extends
         org.apache.sling.api.resource.SyntheticResource {
 
