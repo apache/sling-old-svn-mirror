@@ -31,7 +31,7 @@
     <properties>
         <pkgArtifactId>jackrabbit-text-extractors</pkgArtifactId>
         <pkgVersion>1.4</pkgVersion>
-        <pkgSnapshot>-SNAPSHOT</pkgSnapshot> <!-- declare empty for release version -->
+        <pkgSnapshot></pkgSnapshot><!-- declare empty for release version -->
         <pomVersion>0002</pomVersion>
         <osgiVersion>${pkgVersion}.0</osgiVersion>
     </properties>
@@ -72,80 +72,31 @@
                             org.apache.jackrabbit.extractor;version=${pkgVersion}
                         </Export-Package>
                         <Private-Package>
-                        	org.apache.jackrabbit.extractor.impl,
-                        	
-                            <!--
-                                org.apache.poi.*,
-                                org.pdfbox.*,
-                            -->
-                            <!-- subset of the poi 2.5.1 library -->
-                            org.apache.poi.ddf, 
-                            org.apache.poi.hdf.model.hdftypes,
-                            org.apache.poi.hpsf, 
-                            org.apache.poi.hpsf.wellknown,
-                            org.apache.poi.hssf.eventmodel, 
-                            org.apache.poi.hssf.model, 
-                            org.apache.poi.hssf.record, 
-                            org.apache.poi.hssf.record.aggregates, 
-                            org.apache.poi.hssf.record.formula, 
-                            org.apache.poi.hssf.usermodel,
-                            org.apache.poi.hssf.util, 
-                            org.apache.poi.hwpf.model, 
-                            org.apache.poi.hwpf.model.io,
-                            org.apache.poi.hwpf.model.types,
-                            org.apache.poi.hwpf.sprm,
-                            org.apache.poi.hwpf.usermodel,
-                            org.apache.poi.poifs.dev, 
-                            org.apache.poi.poifs.eventfilesystem,
-                            org.apache.poi.poifs.filesystem,
-                            org.apache.poi.poifs.property, 
-                            org.apache.poi.poifs.storage, 
-                            org.apache.poi.util, 
-                            
-                            <!-- subset of the PDFBox 0.6.4 library -->
-                            org.pdfbox.afmparser,
-                            org.pdfbox.afmtypes,
-                            org.pdfbox.cmapparser,
-                            org.pdfbox.cmaptypes,
-                            org.pdfbox.cos, 
-                            org.pdfbox.encoding,
-                            org.pdfbox.filter,
-                            org.pdfbox.encryption, 
-                            org.pdfbox.exceptions, 
-                            org.pdfbox.io, 
-                            org.pdfbox.pdfparser,
-                            org.pdfbox.pdmodel,
-                            org.pdfbox.pdmodel.annotation,
-                            org.pdfbox.pdmodel.annotation.interactive, 
-                            org.pdfbox.pdmodel.common, 
-                            org.pdfbox.pdmodel.font, 
-                            org.pdfbox.persistence.util,
-                            org.pdfbox.util, 
-
-                            <!-- textmining 0.4 extractors -->
-                            org.textmining.text.extraction.*,
-
-                        	org.apache.xerces.*,
-                        	org.cyberneko.*,
-
-							org.apache.xml.*, 
-							org.xml.sax.*,
-
-
-                        	javax.xml.*,
-
-                        	org.w3c.*
+                        	org.apache.jackrabbit.extractor.impl
                         </Private-Package>
                         <Import-Package>
                             org.apache.commons.logging, 
-                            org.apache.log4j
+                            org.apache.log4j,
+                            org.slf4j,
+							org.xml.sax.*,
+                        	javax.xml.*,
+                        	org.w3c.*
                         </Import-Package>
                         <DynamicImport-Package>
-                            javax.swing.text, javax.swing.text.rtf,
+                            javax.swing.*,javax.imageio.*,
+                            org.apache.lucene.*,org.apache.tools.*,
                             org.apache.log4j.spi, org.apache.xml.resolver,
                             org.apache.xml.resolver.readers,
                             sun.io
                         </DynamicImport-Package>
+                        <Embed-Dependency>
+                            tm-extractors,
+                            pdfbox;version=0.7.2,
+                            poi;version=3.0.1-FINAL,
+                            poi-scratchpad;version=3.0.1-FINAL,
+                            nekohtml,
+                            xercesImpl
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -159,14 +110,19 @@
             <version>${pkgVersion}${pkgSnapshot}</version>
         </dependency>
         <dependency>
-            <groupId>poi</groupId>
+            <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>2.5.1-final-20040804</version>
+            <version>3.0.1-FINAL</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <version>3.0.1-FINAL</version>
         </dependency>
         <dependency>
             <groupId>pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
-            <version>0.6.4</version>
+            <version>0.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.textmining</groupId>
@@ -179,11 +135,6 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>2.8.1</version>
-        </dependency>
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.3.03</version>
         </dependency>
         <dependency>
             <groupId>nekohtml</groupId>
