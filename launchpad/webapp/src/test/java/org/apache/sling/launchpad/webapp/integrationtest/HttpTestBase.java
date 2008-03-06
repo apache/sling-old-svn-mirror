@@ -38,7 +38,6 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
 import org.apache.sling.ujax.UjaxPostServlet;
@@ -66,7 +65,7 @@ public class HttpTestBase extends TestCase {
     protected HttpClient httpClient;
 
     private static Boolean slingStartupOk;
-    
+
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
      *  older test classes do not use it, but it might simplify them.
@@ -258,7 +257,7 @@ public class HttpTestBase extends TestCase {
     protected String getContent(String url, String expectedContentType) throws IOException {
         return getContent(url, expectedContentType, null);
     }
-    
+
     /** retrieve the contents of given URL and assert its content type
      * @throws IOException
      * @throws HttpException */

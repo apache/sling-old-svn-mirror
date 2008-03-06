@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -71,7 +70,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingServletResolver</code> TODO
- * 
+ *
  * @scr.component label="%servletresolver.name"
  *                description="%servletresolver.description"
  * @scr.property name="service.description" value="Sling Servlet Resolver and
@@ -166,7 +165,7 @@ public class SlingServletResolver implements ServletResolver,
                 }
             }
         }
-        
+
         // (4) default script name and default servlet name and selectors
         if (servlet == null) {
             pathIterator.reset(DEFAULT_SERVLET_NAME);

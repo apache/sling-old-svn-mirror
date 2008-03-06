@@ -23,7 +23,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;

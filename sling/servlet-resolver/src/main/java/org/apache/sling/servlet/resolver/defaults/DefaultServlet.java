@@ -20,7 +20,6 @@ package org.apache.sling.servlet.resolver.defaults;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;

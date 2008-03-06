@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.servlet.Servlet;
@@ -163,14 +162,14 @@ public class ServletResourceProvider implements ResourceProvider {
     Servlet getServlet() {
         return servlet;
     }
-    
+
     Iterator<String> getServletPathIterator() {
         return resourcePaths.iterator();
     }
-    
+
     public String[] getSerlvetPaths() {
         return resourcePaths.toArray(new String[resourcePaths.size()]);
     }
-    
-    
+
+
 }
