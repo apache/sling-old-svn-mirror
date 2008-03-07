@@ -71,9 +71,11 @@
                         <Export-Package>
                             org.apache.jackrabbit.extractor;version=${pkgVersion}
                         </Export-Package>
+                        <!-- there is no impl package yet
                         <Private-Package>
                         	org.apache.jackrabbit.extractor.impl
                         </Private-Package>
+                        -->
                         <Import-Package>
                             org.apache.commons.logging, 
                             org.apache.log4j,
@@ -91,7 +93,7 @@
                         </DynamicImport-Package>
                         <Embed-Dependency>
                             tm-extractors,
-                            pdfbox;version=0.7.2,
+                            pdfbox;version=0.7.1,
                             poi;version=3.0.1-FINAL,
                             poi-scratchpad;version=3.0.1-FINAL,
                             nekohtml,
@@ -122,7 +124,7 @@
         <dependency>
             <groupId>pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
-            <version>0.7.2</version>
+            <version>0.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.textmining</groupId>
