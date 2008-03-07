@@ -33,6 +33,12 @@
         <metatype:AD id="org.apache.sling.osgi.log.file" type="String"
             default="logs/error.log" name="%log.file.name"
             description="%log.file.description" />
+        <metatype:AD id="org.apache.sling.osgi.log.file.number" type="Integer"
+            default="5" name="%log.file.number.name"
+            description="%log.file.number.description" />
+        <metatype:AD id="org.apache.sling.osgi.log.file.size" type="String"
+            default="10mb" name="%log.file.size.name"
+            description="%log.file.size.description" />
         <metatype:AD id="org.apache.sling.osgi.log.pattern" type="String"
             default="%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n"
             name="%log.pattern.name"
