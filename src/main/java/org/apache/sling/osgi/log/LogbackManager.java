@@ -43,6 +43,7 @@ import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
+import ch.qos.logback.core.util.FileSize;
 
 /**
  * The <code>LogbackManager</code> manages the loggers used by the LogService
@@ -66,12 +67,20 @@ public class LogbackManager implements ManagedService {
 
     public static final String LOG_FILE = "org.apache.sling.osgi.log.file";
 
+    public static final String LOG_FILE_NUMBER = "org.apache.sling.osgi.log.file.number";
+    
+    public static final String LOG_FILE_SIZE = "org.apache.sling.osgi.log.file.size";
+
     public static final String LOG_PATTERN = "org.apache.sling.osgi.log.pattern";
 
     public static final String LOG_CONFIG_URL = "org.apache.sling.osgi.log.url";
 
     public static final String LOG_PATTERN_DEFAULT = "%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n";
 
+    public static final int LOG_FILE_NUMBER_DEFAULT = 5;
+    
+    public static final String LOG_FILE_SIZE_DEFAULT = "10MB";
+    
     /**
      * default log category - set during init()
      */
@@ -284,15 +293,39 @@ public class LogbackManager implements ManagedService {
                 logDir.mkdirs();
             }
 
-            // keep 4 old log files
+            // get number of files and ensure minimum and default
+            Object fileNumObj = context.getProperty(LOG_FILE_NUMBER);
+            int fileNum = -1;
+            if (fileNumObj instanceof Number) {
+                fileNum = ((Number) fileNumObj).intValue();
+            } else if (fileNumObj != null) {
+                try {
+                    fileNum = Integer.parseInt(fileNumObj.toString());
+                } catch (NumberFormatException nfe) {
+                    // don't care
+                }
+            }
+            if (fileNum <= 0) {
+                fileNum = LOG_FILE_NUMBER_DEFAULT;
+            }
+            
+            // keep the number old log files
             FixedWindowRollingPolicy rolling = new FixedWindowRollingPolicy();
             rolling.setFileNamePattern(logFileName + ".%i");
-            rolling.setMaxIndex(4);
+            rolling.setMinIndex(0);
+            rolling.setMaxIndex(fileNum - 1);
             rolling.setContext(loggerContext);
 
+            // get the log file size
+            Object fileSizeObj = context.getProperty(LOG_FILE_SIZE);
+            String fileSize = (fileSizeObj != null) ? fileSizeObj.toString() : null;
+            if (fileSize == null || fileSize.length() == 0) {
+                fileSize = LOG_FILE_SIZE_DEFAULT; 
+            }
+                
             // switch log file after 1MB
             SizeBasedTriggeringPolicy trigger = new SizeBasedTriggeringPolicy();
-            trigger.setMaxFileSize("1mb");
+            trigger.setMaxFileSize(fileSize);
             trigger.setContext(loggerContext);
 
             // define the default appender
