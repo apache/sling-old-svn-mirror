@@ -78,11 +78,12 @@
         <!-- The JCR sub project -->
         <module>jcr/api</module>
         <module>jcr/base</module>
-        <module>jcr/resource</module>
         <module>jcr/classloader</module>
-        <module>jcr/ocm</module>
+        <module>jcr/jackrabbit.text.extractors</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
+        <module>jcr/ocm</module>
+        <module>jcr/resource</module>
         <module>jcr/webdav</module>
         
         <!-- OSGi -->
