@@ -708,31 +708,36 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     private boolean startRepository() {
         try {
+            log(LogService.LOG_INFO, "startRepository: calling acquireRepository()");
             Repository newRepo = acquireRepository();
             if (newRepo != null) {
 
                 // ensure we really have the repository
+                log(LogService.LOG_INFO, "startRepository: got a Repository, calling pingRepository()");
                 if (pingRepository(newRepo)) {
                     repository = newRepo;
 
+                    log(LogService.LOG_INFO, "startRepository: pingRepository() successful, calling setupRepository()");
                     setupRepository(newRepo);
+                    log(LogService.LOG_INFO, "startRepository: calling registerService()");
                     repositoryService = registerService();
+                    log(LogService.LOG_INFO, "registerService() successful");
 
                     return true;
                 }
 
-                // otherwise let go off the repository and fail startup
-                log(LogService.LOG_INFO, "startRepository: Acquired Repository is not responsive, failing");
+                // otherwise let go of the repository and fail startup
+                log(LogService.LOG_INFO, "startRepository: pingRepository() failed, calling disposeRepository()");
                 disposeRepository(repository);
             }
         } catch (Throwable t) {
             // consider an uncaught problem an error
             log(
                 LogService.LOG_ERROR,
-                "startRepository: Uncaught problem trying to provide repository access",
+                "startRepository: Uncaught Throwable trying to access Repository, calling stopRepository()",
                 t);
 
-            // repository might be partially start, stop anything left
+            // repository might be partially started, stop anything left
             stopRepository();
         }
 
