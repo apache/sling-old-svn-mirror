@@ -73,7 +73,7 @@ class UjaxPropertyValueHandler {
     /**
      * Set property on given node, with some automatic values when user provides
      * the field name but no value.
-     * 
+     *
      * html example for testing:
      * <xmp>
      *   <input type="hidden" name="created"/>
@@ -182,7 +182,7 @@ class UjaxPropertyValueHandler {
             throws RepositoryException {
 
         // no explicit typehint
-        int type = PropertyType.STRING;
+        int type = PropertyType.UNDEFINED;
         if (prop.getTypeHint() != null) {
             try {
                 type = PropertyType.valueFromName(prop.getTypeHint());
@@ -217,9 +217,13 @@ class UjaxPropertyValueHandler {
                 }
                 // fall back to default behaviour
             }
-            ctx.getChangeLog().onModified(
-                parent.setProperty(prop.getName(), values[0], type).getPath()
-            );
+            final Property p;
+            if ( type == PropertyType.UNDEFINED ) {
+                p = parent.setProperty(prop.getName(), values[0]);
+            } else {
+                p = parent.setProperty(prop.getName(), values[0], type);
+            }
+            ctx.getChangeLog().onModified(p.getPath());
         } else {
             removePropertyIfExists(parent, prop.getName());
             if (type == PropertyType.DATE) {
@@ -233,9 +237,13 @@ class UjaxPropertyValueHandler {
                 }
                 // fall back to default behaviour
             }
-            ctx.getChangeLog().onModified(
-                parent.setProperty(prop.getName(), values, type).getPath()
-            );
+            final Property p;
+            if ( type == PropertyType.UNDEFINED ) {
+                p = parent.setProperty(prop.getName(), values);
+            } else {
+                p = parent.setProperty(prop.getName(), values, type);
+            }
+            ctx.getChangeLog().onModified(p.getPath());
         }
     }
 
