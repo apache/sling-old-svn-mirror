@@ -323,8 +323,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     protected void log(int level, String message, Throwable t) {
         LogService log = this.log;
         if (log != null) {
-            log.log(this.componentContext.getServiceReference(), level,
-                message, t);
+            if(componentContext != null) {
+                log.log(componentContext.getServiceReference(), level, message, t);
+            } else {
+                log.log(level, message, t);
+            }
         }
     }
 
@@ -725,7 +728,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     setupRepository(newRepo);
                     log(LogService.LOG_INFO, "startRepository: calling registerService()");
                     repositoryService = registerService();
-                    log(LogService.LOG_INFO, "registerService() successful");
+                    log(LogService.LOG_INFO, "registerService() successful, registration=" + repositoryService);
 
                     return true;
                 }
@@ -751,6 +754,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     private void stopRepository() {
         if (repositoryService != null) {
             try {
+                log(LogService.LOG_INFO, "Unregistering SlingRepository service, registration=" + repositoryService);
                 unregisterService(repositoryService);
             } catch (Throwable t) {
                 log(
