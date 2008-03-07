@@ -169,9 +169,13 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     /**
      * Returns the default workspace, which may be <code>null</code> meaning
      * to use the repository provided default workspace.
+     * Declared final to make sure the SLING-256 rule is enforced.
      */
     public final String getDefaultWorkspace() {
-        // Declared final to make sure the SLING-256 rule is enforced.
+        if(defaultWorkspace == null || defaultWorkspace.trim().length() == 0) {
+            // SLING-256
+            return null;
+        }
         return this.defaultWorkspace;
     }
 
