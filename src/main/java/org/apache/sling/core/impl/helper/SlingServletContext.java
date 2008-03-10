@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.sling.core.impl.SlingMainServlet;
 import org.apache.sling.core.impl.request.SlingRequestDispatcher;
@@ -110,16 +111,27 @@ public class SlingServletContext implements ServletContext {
      * {@link SlingMainServlet} is running.
      */
     public String getServletContextName() {
-        return getServletContext().getServletContextName();
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getServletContextName();
+        }
+        
+        return null;
     }
 
     /** Returns the context path of the web application. (Servlet API 2.5) */
     public String getContextPath() {
-        try {
-            return (String) getServletContext().getClass().getMethod("getContextPath", (Class<?>[]) null).invoke(getServletContext(), (Object[]) null);
-        } catch (Exception ignore) {
-            return null;
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            try {
+                return (String) delegatee.getClass().getMethod(
+                    "getContextPath", (Class<?>[]) null).invoke(
+                    getServletContext(), (Object[]) null);
+            } catch (Throwable ignore) {
+            }
         }
+
+        return null;
     }
 
     /**
@@ -128,7 +140,12 @@ public class SlingServletContext implements ServletContext {
      * which the {@link SlingMainServlet} is running.
      */
     public String getInitParameter(String name) {
-        return getServletContext().getInitParameter(name);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getInitParameter(name);
+        }
+        
+        return null;
     }
 
     /**
@@ -138,7 +155,12 @@ public class SlingServletContext implements ServletContext {
      */
     @SuppressWarnings("unchecked")
     public Enumeration<String> getInitParameterNames() {
-        return getServletContext().getInitParameterNames();
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getInitParameterNames();
+        }
+        
+        return null;
     }
 
     // ---------- attributes ---------------------------------------------------
@@ -149,7 +171,12 @@ public class SlingServletContext implements ServletContext {
      * running.
      */
     public Object getAttribute(String name) {
-        return getServletContext().getAttribute(name);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getAttribute(name);
+        }
+        
+        return null;
     }
 
     /**
@@ -159,7 +186,12 @@ public class SlingServletContext implements ServletContext {
      */
     @SuppressWarnings("unchecked")
     public Enumeration<String> getAttributeNames() {
-        return getServletContext().getAttributeNames();
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getAttributeNames();
+        }
+        
+        return Collections.enumeration(Collections.<String>emptyList());
     }
 
     /**
@@ -168,7 +200,10 @@ public class SlingServletContext implements ServletContext {
      * running.
      */
     public void removeAttribute(String name) {
-        getServletContext().removeAttribute(name);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            delegatee.removeAttribute(name);
+        }
     }
 
     /**
@@ -177,7 +212,10 @@ public class SlingServletContext implements ServletContext {
      * {@link SlingMainServlet} is running.
      */
     public void setAttribute(String name, Object object) {
-        getServletContext().setAttribute(name, object);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            delegatee.setAttribute(name, object);
+        }
     }
 
     // ---------- Servlet Container information --------------------------------
@@ -197,7 +235,12 @@ public class SlingServletContext implements ServletContext {
      * running.
      */
     public int getMajorVersion() {
-        return getServletContext().getMajorVersion();
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getMajorVersion();
+        }
+        
+        return 2; // hard coded major version as fall back
     }
 
     /**
@@ -207,7 +250,12 @@ public class SlingServletContext implements ServletContext {
      * running.
      */
     public int getMinorVersion() {
-        return getServletContext().getMinorVersion();
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getMinorVersion();
+        }
+        
+        return 4; // hard coded minor version as fall back
     }
 
     // ---------- MIME type mapping --------------------------------------------
@@ -218,7 +266,12 @@ public class SlingServletContext implements ServletContext {
      * {@link SlingMainServlet} is running.
      */
     public String getMimeType(String file) {
-        return getServletContext().getMimeType(file);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getMimeType(file);
+        }
+        
+        return null;
     }
 
     // ---------- Request Dispatcher -------------------------------------------
@@ -243,7 +296,12 @@ public class SlingServletContext implements ServletContext {
      * {@link SlingMainServlet} is running.
      */
     public RequestDispatcher getNamedDispatcher(String name) {
-        return getServletContext().getNamedDispatcher(name);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getNamedDispatcher(name);
+        }
+        
+        return null;
     }
 
     // ---------- Resource Access ----------------------------------------------
@@ -254,7 +312,12 @@ public class SlingServletContext implements ServletContext {
      * running.
      */
     public URL getResource(String path) throws MalformedURLException {
-        return getServletContext().getResource(path);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getResource(path);
+        }
+        
+        return null;
     }
 
     /**
@@ -263,7 +326,12 @@ public class SlingServletContext implements ServletContext {
      * running.
      */
     public InputStream getResourceAsStream(String path) {
-        return getServletContext().getResourceAsStream(path);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getResourceAsStream(path);
+        }
+        
+        return null;
     }
 
     /**
@@ -273,7 +341,12 @@ public class SlingServletContext implements ServletContext {
      */
     @SuppressWarnings("unchecked")
     public Set<String> getResourcePaths(String parentPath) {
-        return getServletContext().getResourcePaths(parentPath);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getResourcePaths(parentPath);
+        }
+        
+        return null;
     }
 
     /**
@@ -283,7 +356,12 @@ public class SlingServletContext implements ServletContext {
      * is running.
      */
     public String getRealPath(String path) {
-        return getServletContext().getRealPath(path);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getRealPath(path);
+        }
+        
+        return null;
     }
 
     // ---------- logging ------------------------------------------------------
@@ -312,7 +390,12 @@ public class SlingServletContext implements ServletContext {
      * the {@link SlingMainServlet} is running.
      */
     public ServletContext getContext(String uripath) {
-        return getServletContext().getContext(uripath);
+        ServletContext delegatee = getServletContext();
+        if (delegatee != null) {
+            return delegatee.getContext(uripath);
+        }
+        
+        return null;
     }
 
     /** Returns <code>null</code> as defined in Servlet API 2.4 */
@@ -342,5 +425,4 @@ public class SlingServletContext implements ServletContext {
     private ServletContext getServletContext() {
         return slingMainServlet.getServletContext();
     }
-
 }
