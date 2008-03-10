@@ -567,6 +567,16 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         componentContext.getBundleContext().addBundleListener(this);
 
+        // immediately try to start the repository while activating
+        // this component instance
+        try {
+            startRepository();
+        } catch (Throwable t) {
+            log(LogService.LOG_WARNING,
+                "activate: Unexpected problem starting repository", t);
+        }
+        
+        // launche the background repository checker now
         startRepositoryPinger();
     }
 
@@ -579,8 +589,22 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
         componentContext.getBundleContext().removeBundleListener(this);
 
+        // stop the background thread
         stopRepositoryPinger();
 
+        // ensure the repository is really disposed off
+        if (repository != null || repositoryService != null) {
+            log(LogService.LOG_INFO,
+                "deactivate: Repository still running, forcing shutdown");
+
+            try {
+                stopRepository();
+            } catch (Throwable t) {
+                log(LogService.LOG_WARNING,
+                    "deactivate: Unexpected problem stopping repository", t);
+            }
+        }
+        
         this.componentContext = null;
     }
 
@@ -715,26 +739,28 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     private boolean startRepository() {
         try {
-            log(LogService.LOG_INFO, "startRepository: calling acquireRepository()");
+            log(LogService.LOG_DEBUG, "startRepository: calling acquireRepository()");
             Repository newRepo = acquireRepository();
             if (newRepo != null) {
 
                 // ensure we really have the repository
-                log(LogService.LOG_INFO, "startRepository: got a Repository, calling pingRepository()");
+                log(LogService.LOG_DEBUG, "startRepository: got a Repository, calling pingRepository()");
                 if (pingRepository(newRepo)) {
                     repository = newRepo;
 
-                    log(LogService.LOG_INFO, "startRepository: pingRepository() successful, calling setupRepository()");
+                    log(LogService.LOG_DEBUG, "startRepository: pingRepository() successful, calling setupRepository()");
                     setupRepository(newRepo);
-                    log(LogService.LOG_INFO, "startRepository: calling registerService()");
+                    
+                    log(LogService.LOG_DEBUG, "startRepository: calling registerService()");
                     repositoryService = registerService();
-                    log(LogService.LOG_INFO, "registerService() successful, registration=" + repositoryService);
+                    
+                    log(LogService.LOG_DEBUG, "registerService() successful, registration=" + repositoryService);
 
                     return true;
                 }
 
                 // otherwise let go of the repository and fail startup
-                log(LogService.LOG_INFO, "startRepository: pingRepository() failed, calling disposeRepository()");
+                log(LogService.LOG_DEBUG, "startRepository: pingRepository() failed, calling disposeRepository()");
                 disposeRepository(repository);
             }
         } catch (Throwable t) {
@@ -754,7 +780,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     private void stopRepository() {
         if (repositoryService != null) {
             try {
-                log(LogService.LOG_INFO, "Unregistering SlingRepository service, registration=" + repositoryService);
+                log(LogService.LOG_DEBUG, "Unregistering SlingRepository service, registration=" + repositoryService);
                 unregisterService(repositoryService);
             } catch (Throwable t) {
                 log(
@@ -797,36 +823,37 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
             while (running) {
 
-                Repository repo = repository;
-                if (repo == null && running) {
-
-                    if (startRepository()) {
-                        pollTime = pollTimeActive;
+                // wait first before starting to check
+                synchronized (waitLock) {
+                    try {
+                        waitLock.wait(pollTime);
+                    } catch (InterruptedException ie) {
+                        // don't care, go ahead
                     }
-
-                } else if (!pingRepository(repo)) {
-
-                    log(LogService.LOG_INFO,
-                        "run: Repository not accessible any more, unregistering service");
-                    stopRepository();
-                    pollTime = pollTimeInActive;
-
-                } else {
-
-                    log(LogService.LOG_DEBUG,
-                        "run: Repository available, checking again in "
-                            + pollTime + "ms");
                 }
 
-
-                // only wait if still running
-                synchronized (waitLock) {
-                    if (running) {
-                        try {
-                            waitLock.wait(pollTime);
-                        } catch (InterruptedException ie) {
-                            // don't care, go ahead
+                // only apply any checks if we are running after waiting
+                if (running) {
+                    
+                    Repository repo = repository;
+                    if (repo == null) {
+    
+                        if (startRepository()) {
+                            pollTime = pollTimeActive;
                         }
+    
+                    } else if (!pingRepository(repo)) {
+    
+                        log(LogService.LOG_INFO,
+                            "run: Repository not accessible any more, unregistering service");
+                        stopRepository();
+                        pollTime = pollTimeInActive;
+    
+                    } else {
+    
+                        log(LogService.LOG_DEBUG,
+                            "run: Repository available, checking again in "
+                                + pollTime + "ms");
                     }
                 }
             }
