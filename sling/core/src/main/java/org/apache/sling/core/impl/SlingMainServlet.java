@@ -627,7 +627,11 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             slingAuthenticator = null;
         }
 
-        this.slingServletContext = null;
+        if (slingServletContext != null) {
+            slingServletContext.dispose();
+            slingServletContext = null;
+        }
+
         this.osgiComponentContext = null;
 
         activated = false;
