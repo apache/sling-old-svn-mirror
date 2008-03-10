@@ -168,7 +168,6 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             SlingBindings props = new SlingBindings();
             props.setRequest((SlingHttpServletRequest) req);
             props.setResponse((SlingHttpServletResponse) res);
-            props.setReader(req.getReader());
             props.setFlush(true);
 
             res.setCharacterEncoding("UTF-8");
