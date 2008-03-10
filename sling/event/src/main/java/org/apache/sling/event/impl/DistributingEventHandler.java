@@ -75,7 +75,7 @@ public class DistributingEventHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getCleanUpQueryString()
+     * Return the query string for the clean up.
      */
     protected String getCleanUpQueryString() {
         final Calendar deleteBefore = Calendar.getInstance();
@@ -104,31 +104,29 @@ public class DistributingEventHandler
             this.logger.debug("Cleaning up repository, removing all entries older than {} minutes.", this.cleanupPeriod);
 
             final String queryString = this.getCleanUpQueryString();
-            if ( queryString != null ) {
-                // we create an own session for concurrency issues
-                Session s = null;
-                try {
-                    s = this.createSession();
-                    final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                    logger.debug("Executing query {}", queryString);
-                    final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
-                    final NodeIterator iter = q.execute().getNodes();
-                    int count = 0;
-                    while ( iter.hasNext() ) {
-                        final Node eventNode = iter.nextNode();
-                        eventNode.remove();
-                        count++;
-                    }
-                    parentNode.save();
-                    logger.debug("Removed {} entries from the repository.", count);
+            // we create an own session for concurrency issues
+            Session s = null;
+            try {
+                s = this.createSession();
+                final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                logger.debug("Executing query {}", queryString);
+                final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
+                final NodeIterator iter = q.execute().getNodes();
+                int count = 0;
+                while ( iter.hasNext() ) {
+                    final Node eventNode = iter.nextNode();
+                    eventNode.remove();
+                    count++;
+                }
+                parentNode.save();
+                logger.debug("Removed {} entries from the repository.", count);
 
-                } catch (RepositoryException e) {
-                    // in the case of an error, we just log this as a warning
-                    this.logger.warn("Exception during repository cleanup.", e);
-                } finally {
-                    if ( s != null ) {
-                        s.logout();
-                    }
+            } catch (RepositoryException e) {
+                // in the case of an error, we just log this as a warning
+                this.logger.warn("Exception during repository cleanup.", e);
+            } finally {
+                if ( s != null ) {
+                    s.logout();
                 }
             }
         }
