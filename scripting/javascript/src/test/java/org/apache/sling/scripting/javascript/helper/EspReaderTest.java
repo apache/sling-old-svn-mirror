@@ -245,12 +245,36 @@ public class EspReaderTest extends TestCase {
         assertEquals(expected, actual);
     }
     
-    public void DISABLED_SEE_SLING_253_testEqualSigns() throws IOException {
+    public void testEqualSigns() throws IOException {
         final String input = "currentNode.text=<%= currentNode.text %>";
         final String expected = 
             "out=response.writer;" 
             + "out.write(\"currentNode.text=\");"
             + "out.write( currentNode.text );"
+            ;
+        final String actual = parse(input);
+        assertEquals(expected, actual);
+    }
+    
+    public void testSingleQuoted() throws IOException {
+        final String input = "currentNode.text='<%= currentNode.text %>'";
+        final String expected = 
+            "out=response.writer;" 
+            + "out.write(\"currentNode.text='\");"
+            + "out.write( currentNode.text );"
+            + "out.write(\"'\");"
+            ;
+        final String actual = parse(input);
+        assertEquals(expected, actual);
+    }
+    
+    public void testDoubleQuoted() throws IOException {
+        final String input = "currentNode.text=\"<%= currentNode.text %>\"";
+        final String expected = 
+            "out=response.writer;" 
+            + "out.write(\"currentNode.text=\\\"\");"
+            + "out.write( currentNode.text );"
+            + "out.write(\"\\\"\");"
             ;
         final String actual = parse(input);
         assertEquals(expected, actual);
