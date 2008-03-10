@@ -46,8 +46,8 @@ import org.mozilla.javascript.ScriptableObject;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
-    public static final String HTTP_BASE_URL = System.getProperty("launchpad.http.server.url", "http://localhost:8888");
-    public static final String WEBDAV_BASE_URL = System.getProperty("launchpad.webdav.server.url", "http://localhost:8888/dav/default");
+    public static final String HTTP_BASE_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
+    public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", "http://localhost:8888/dav/default"));
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
@@ -92,6 +92,13 @@ public class HttpTestBase extends TestCase {
             testClient.delete(nodeUrl);
         }
     };
+    
+    protected static String removeEndingSlash(String str) {
+        if(str != null && str.endsWith("/")) {
+            return str.substring(0, str.length() - 1);
+        }
+        return str;
+    }
 
     @Override
     protected void setUp() throws Exception {
