@@ -376,6 +376,14 @@ public class SlingSafeMethodsServlet extends GenericServlet {
     }
 
     /**
+     * Returns the simple class name of this servlet class. Extensions of this
+     * class may overwrite to return more specific information.
+     */
+    public String getServletInfo() {
+        return getClass().getSimpleName();
+    }
+
+    /**
      * Helper method called by
      * {@link #doOptions(HttpServletRequest, HttpServletResponse)} to calculate
      * the value of the <em>Allow</em> header sent as the response to the HTTP
