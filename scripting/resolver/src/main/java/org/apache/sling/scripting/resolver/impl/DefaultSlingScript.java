@@ -96,9 +96,10 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     }
 
     /**
+     * @see org.apache.sling.api.scripting.SlingScript#eval(org.apache.sling.api.scripting.SlingBindings)
      * @throws ScriptEvaluationException
      */
-    public void eval(SlingBindings props) {
+    public Object eval(SlingBindings props) {
 
         String scriptName = getScriptResource().getPath();
 
@@ -115,7 +116,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             Reader reader = getScriptReader();
 
             // evaluate the script
-            scriptEngine.eval(reader, ctx);
+            final Object result = scriptEngine.eval(reader, ctx);
 
             // optionall flush the output channel
             Object flushObject = bindings.get(SlingBindings.FLUSH);
@@ -126,6 +127,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             // allways flush the error channel
             ctx.getErrorWriter().flush();
 
+            return result;
         } catch (IOException ioe) {
             throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
                 ioe);

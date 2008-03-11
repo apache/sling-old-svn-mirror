@@ -46,10 +46,11 @@ public interface SlingScript {
      *            evaluating the script. Any bound variables must conform to the
      *            requirements of the {@link SlingBindings} predefined variables
      *            set.
+     * @return The value returned by the script.
      * @throws ScriptEvaluationException If an error occurrs executing the
      *             script or preparing the script execution. The cause of the
      *             evaluation execption is available as the exception cause.
      */
-    void eval(SlingBindings props);
+    Object eval(SlingBindings props);
 
 }
