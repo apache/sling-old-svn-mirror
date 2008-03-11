@@ -25,6 +25,7 @@ import java.util.Iterator;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -67,24 +68,35 @@ public class JcrPropertyResource extends JcrItemResource {
         try {
             if (type == String.class) {
                 return (AdapterType) getProperty().getString();
+                
             } else if (type == Boolean.class) {
                 return (AdapterType) new Boolean(getProperty().getBoolean());
+                
             } else if (type == Long.class) {
                 return (AdapterType) new Long(getProperty().getLong());
+                
             } else if (type == Double.class) {
                 return (AdapterType) new Double(getProperty().getDouble());
+                
             } else if (type == Calendar.class) {
                 return (AdapterType) getProperty().getDate();
+                
             } else if (type == Value.class) {
                 return (AdapterType) getProperty().getValue();
-            } else if (type == Node.class) {
+                
+            } else if (type == Node.class
+                && getProperty().getType() == PropertyType.REFERENCE) {
                 return (AdapterType) getProperty().getNode();
+                
             } else if (type == InputStream.class) {
                 return (AdapterType) getInputStream();
             }
+            
         } catch (ValueFormatException vfe) {
-            log.info("adaptTo: Problem accessing the property value of "
-                + getPath(), vfe);
+            log.info("adaptTo: Problem accessing the property value of {}: {}",
+                getPath(), vfe.getMessage());
+            log.debug("adaptTo: Cause", vfe);
+            
         } catch (RepositoryException re) {
             log.info("adaptTo: Problem accessing the property " + getPath(), re);
         }
