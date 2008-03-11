@@ -33,6 +33,7 @@ import javax.servlet.http.Cookie;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
 
 /**
  * The <code>CustomLogFormat</code> class implements the support for log format
@@ -65,14 +66,14 @@ class CustomLogFormat {
      *
      * @param request The {@link org.apache.sling.component.ComponentResponse}
      *            used to extract values for the log message.
-     * @param response The {@link LoggerResponse} used to extract values for the
+     * @param response The {@link SlingHttpServletResponseImpl} used to extract values for the
      *            log message.
      *
      * @return The formatted log message or <code>null</code> if this log
      *         formatter has not been initialized with a valid log format
      *         pattern.
      */
-    String format(SlingHttpServletRequest request, LoggerResponse response) {
+    String format(SlingHttpServletRequest request, SlingHttpServletResponseImpl response) {
         if (this.logParameters != null) {
             StringBuffer buf = new StringBuffer();
             for (int i=0; i < this.logParameters.length; i++) {
@@ -341,7 +342,7 @@ class CustomLogFormat {
     //---------- Parameter support --------------------------------------------
 
     static interface Parameter {
-        void print(StringBuffer dest, SlingHttpServletRequest request, LoggerResponse response);
+        void print(StringBuffer dest, SlingHttpServletRequest request, SlingHttpServletResponseImpl response);
     }
 
     static class PlainTextParameter implements Parameter {
@@ -350,7 +351,7 @@ class CustomLogFormat {
             this.value = value;
         }
         public void print(StringBuffer dest, SlingHttpServletRequest request,
-                LoggerResponse response) {
+                SlingHttpServletResponseImpl response) {
             dest.append(this.value);
         }
         public String toString() {
@@ -389,9 +390,9 @@ class CustomLogFormat {
         }
 
         protected abstract String getValue(SlingHttpServletRequest request);
-        protected abstract String getValue(LoggerResponse response);
+        protected abstract String getValue(SlingHttpServletResponseImpl response);
 
-        public final void print(StringBuffer dest, SlingHttpServletRequest request, LoggerResponse response) {
+        public final void print(StringBuffer dest, SlingHttpServletRequest request, SlingHttpServletResponseImpl response) {
             if (this.printOk(response.getStatus())) {
                 String value = this.isRequest ? this.getValue(request) : this.getValue(response);
                 dest.append((value == null) ? "-" : value);
@@ -515,7 +516,7 @@ class CustomLogFormat {
             return null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -529,7 +530,7 @@ class CustomLogFormat {
             return Thread.currentThread().getName();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -543,7 +544,7 @@ class CustomLogFormat {
             return null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return String.valueOf(response.getRequestId());
         }
     }
@@ -557,7 +558,7 @@ class CustomLogFormat {
             return null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             int count = response.getCount();
             if (count == 0) {
                 return (this.getParName() == 'b') ? "-" : "0";
@@ -601,7 +602,7 @@ class CustomLogFormat {
             return null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             long time = this.requestStart ? response.getRequestStart() : response.getRequestEnd();
             return timeFormatted(time);
         }
@@ -641,7 +642,7 @@ class CustomLogFormat {
             return null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             long time = response.getRequestDuration();
             if (this.seconds) {
                 time /= 1000;
@@ -659,7 +660,7 @@ class CustomLogFormat {
             return request.getRemoteAddr();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -673,7 +674,7 @@ class CustomLogFormat {
             return request.getRemoteHost();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -687,7 +688,7 @@ class CustomLogFormat {
             return request.getLocalAddr();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -701,7 +702,7 @@ class CustomLogFormat {
             return String.valueOf(request.getServerPort());
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -715,7 +716,7 @@ class CustomLogFormat {
             return request.getServerName();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -730,7 +731,7 @@ class CustomLogFormat {
             return (resource != null) ? resource.getPath() : null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -748,7 +749,7 @@ class CustomLogFormat {
                 + " " + request.getProtocol();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -762,7 +763,7 @@ class CustomLogFormat {
             return request.getProtocol();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -776,7 +777,7 @@ class CustomLogFormat {
             return request.getMethod();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -790,7 +791,7 @@ class CustomLogFormat {
             return request.getRequestURI();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -805,7 +806,7 @@ class CustomLogFormat {
             return (query == null || query.length() == 0) ? "" : "?" + query;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -819,7 +820,7 @@ class CustomLogFormat {
             return request.getRemoteUser();
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return null;
         }
     }
@@ -833,7 +834,7 @@ class CustomLogFormat {
             return null;
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return String.valueOf(response.getStatus());
         }
     }
@@ -850,7 +851,7 @@ class CustomLogFormat {
             return (cookie == null) ? null : escape(cookie.toString());
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             Cookie cookie = response.getCookie(this.cookieName);
             return (cookie == null) ? null : escape(cookie.toString());
         }
@@ -877,7 +878,7 @@ class CustomLogFormat {
             return escape(value);
         }
 
-        protected String getValue(LoggerResponse response) {
+        protected String getValue(SlingHttpServletResponseImpl response) {
             return escape(response.getHeaders(this.headerName));
         }
     }

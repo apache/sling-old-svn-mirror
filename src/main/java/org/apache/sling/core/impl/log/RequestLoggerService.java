@@ -23,12 +23,13 @@ import java.util.Dictionary;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.core.RequestLog;
+import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>RequestLoggerService</code> is a factory component which gets
- * configuration to register loggers for the {@link RequestLoggerFilter}.
+ * configuration to register loggers for the {@link RequestLogger}.
  *
  * @scr.component label="%request.log.service.name"
  *                description="%request.log.service.description"
@@ -110,7 +111,7 @@ public class RequestLoggerService {
         this.logFormat = null;
     }
 
-    void log(SlingHttpServletRequest request, LoggerResponse response) {
+    void log(SlingHttpServletRequest request, SlingHttpServletResponseImpl response) {
         if (this.log != null && this.logFormat != null) {
             this.log.write(this.logFormat.format(request, response));
         }

@@ -18,23 +18,16 @@
  */
 package org.apache.sling.core.impl.log;
 
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Properties;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.core.impl.SlingHttpServletResponseImpl;
 import org.osgi.framework.BundleContext;
 
 /**
- * The <code>RequestLoggerFilter</code> is a request level filter, which
+ * The <code>RequestLogger</code> is a request level filter, which
  * provides customizable logging or requests handled by Sling. This filter is
  * inserted as the first filter in the request level filter chain and therefore
  * is the first filter called when processing a request and the last filter
@@ -42,17 +35,14 @@ import org.osgi.framework.BundleContext;
  *
  * @scr.component immediate="true" label="%request.log.name"
  *                description="%request.log.description"
- * @scr.property name="service.description" value="Request Logger Filter"
+ * @scr.property name="service.description" value="Request Logger"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="-2147483648" type="Integer"
- *               private="true"
- * @scr.service
+ * @scr.service interface="org.apache.sling.core.impl.log.RequestLogger"
  * @scr.reference name="RequestLoggerService"
  *                interface="org.apache.sling.core.impl.log.RequestLoggerService"
  *                cardinality="0..n" policy="dynamic"
  */
-public class RequestLoggerFilter implements Filter {
+public class RequestLogger {
 
     /**
      * @scr.property value="logs/request.log"
@@ -152,16 +142,6 @@ public class RequestLoggerFilter implements Filter {
     private RequestLoggerService accessLog;
 
     /**
-     * No further initialization needed by this instance as the full
-     * configuration has already been done by the
-     * {@link #activate(org.osgi.service.component.ComponentContext)} method.
-     *
-     * @param config Not used.
-     */
-    public void init(FilterConfig config) {
-    }
-
-    /**
      * Filters the request as follows:
      * <ol>
      * <li>Creates a wrapper around the <code>response</code> object to catch
@@ -185,29 +165,24 @@ public class RequestLoggerFilter implements Filter {
      * @throws ServletException Forwarded if thrown by any filter in the chain
      *             or by the Component called to handle the request.
      */
-    public void doFilter(ServletRequest sRequest, ServletResponse response,
-            FilterChain filterChain) throws IOException,
-            ServletException {
+    
+    public void logRequestEntry(SlingHttpServletRequest request, SlingHttpServletResponse response) {
 
-        SlingHttpServletRequest request = (SlingHttpServletRequest) sRequest;
-        LoggerResponse loggerResponse = new LoggerResponse(
-            (SlingHttpServletResponse) response, this.requestCounter++);
-
-        // log the request start
-        if (this.requestEntry != null) {
-            for (int i = 0; i < this.requestEntry.length; i++) {
-                this.requestEntry[i].log(request, loggerResponse);
+        if (response instanceof SlingHttpServletResponseImpl) {
+            // log the request start
+            if (this.requestEntry != null) {
+                for (int i = 0; i < this.requestEntry.length; i++) {
+                    this.requestEntry[i].log(request,
+                        (SlingHttpServletResponseImpl) response);
+                }
             }
         }
-
-        try {
-
-            // continue request processing without any more intervention
-            filterChain.doFilter(request, loggerResponse);
-
-        } finally {
-
-            // signal the end of the request
+    }
+    
+    public void logRequestExit(SlingHttpServletRequest request, SlingHttpServletResponse response) {
+        // signal the end of the request
+        if (response instanceof SlingHttpServletResponseImpl) {
+            SlingHttpServletResponseImpl loggerResponse = (SlingHttpServletResponseImpl) response;
             loggerResponse.requestEnd();
 
             // log the request end
@@ -217,14 +192,6 @@ public class RequestLoggerFilter implements Filter {
                 }
             }
         }
-    }
-
-    /**
-     * No further shutdown needed by this instance as the full configuration
-     * will bee done by the
-     * {@link #deactivate(org.osgi.service.component.ComponentContext)} method.
-     */
-    public void destroy() {
     }
 
     // ---------- SCR Integration ----------------------------------------------
