@@ -146,7 +146,12 @@ var ujax = null;
 			and therefore need some additions before they are sent
 			to the server
 			*/
-			path=ujax.baseurl+path+".json";
+			if(maxlevels == "0" || maxlevels) {
+			  maxlevels = "." + maxlevels;
+			} else {
+			  maxlevels = "";
+			}
+			path=ujax.baseurl + path + maxlevels + ".json";
 		}
 	    //checking for a trailing "/*"
 	    if (path.indexOf("/*")>=0) return obj;
@@ -173,7 +178,7 @@ var ujax = null;
 		var httpcon = ujax.getXHR();
 		if (httpcon) {
 			var params = "ujax:delete="+path;
-			httpcon.open('POST', ujax.baseurl + ujax.currentPath, false);
+			httpcon.open('POST', ujax.baseurl + path, false);
 
 			// Send the proper header information along with the request
 			httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -205,7 +210,7 @@ var ujax = null;
 	 * @type Object
 	 */
 	ujax.getSessionInfo = function() {
-	    var res=ujax.httpGet(ujax.baseurl+"/ujax:sessionInfo.json");
+	    var res=ujax.httpGet(ujax.baseurl+"/ujax.sessionInfo.json");
 	    if(res.status == 200) {
 	    	return ujax.evalString(res.responseText);
 	    }
