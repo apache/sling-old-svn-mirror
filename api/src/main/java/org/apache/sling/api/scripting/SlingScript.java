@@ -53,4 +53,20 @@ public interface SlingScript {
      */
     Object eval(SlingBindings props);
 
+    /**
+     * Evaluates this script using the bound variables as global variables to
+     * the script and then calls the given method with the arguments.
+     *
+     * @param props The {@link SlingBindings} providing the bound variables for
+     *            evaluating the script. Any bound variables must conform to the
+     *            requirements of the {@link SlingBindings} predefined variables
+     *            set.
+     * @param name The name of the method to call.
+     * @param args The arguments for the method call.
+     * @return The value returned by the method from the script.
+     * @throws ScriptEvaluationException If an error occurrs executing the
+     *             script or preparing the script execution. The cause of the
+     *             evaluation execption is available as the exception cause.
+     */
+    Object call(SlingBindings props, String method, Object... args);
 }

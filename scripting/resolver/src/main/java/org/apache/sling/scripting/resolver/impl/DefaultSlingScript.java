@@ -32,7 +32,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -40,6 +42,7 @@ import java.util.Map;
 
 import javax.jcr.Node;
 import javax.script.Bindings;
+import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
@@ -100,8 +103,17 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
      * @throws ScriptEvaluationException
      */
     public Object eval(SlingBindings props) {
+        return this.call(props, null);
+    }
 
-        String scriptName = getScriptResource().getPath();
+    // ---------- Servlet interface --------------------------------------------
+
+    /**
+     * @see org.apache.sling.api.scripting.SlingScript#call(org.apache.sling.api.scripting.SlingBindings, java.lang.String, java.lang.Object[])
+     * @throws ScriptEvaluationException
+     */
+    public Object call(SlingBindings props, String method, Object... args) {
+        final String scriptName = getScriptResource().getPath();
 
         Bindings bindings = null;
         try {
@@ -114,10 +126,21 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
 
             Reader reader = getScriptReader();
+            if ( method != null && !(this.scriptEngine instanceof Invocable)) {
+                reader = getWrapperReader(reader, method, args);
+            }
 
             // evaluate the script
             final Object result = scriptEngine.eval(reader, ctx);
 
+            // call method - if supplied and script engine supports direct invocation
+            if ( method != null && (this.scriptEngine instanceof Invocable)) {
+                try {
+                    ((Invocable)scriptEngine).invokeFunction(method, Arrays.asList(args).toArray());
+                } catch (NoSuchMethodException e) {
+                    throw new ScriptEvaluationException(scriptName, "Method " + method + " not found in script.", e);
+                }
+            }
             // optionall flush the output channel
             Object flushObject = bindings.get(SlingBindings.FLUSH);
             if (flushObject instanceof Boolean && (Boolean) flushObject) {
@@ -145,8 +168,6 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             }
         }
     }
-
-    // ---------- Servlet interface --------------------------------------------
 
     public void init(ServletConfig servletConfig) {
         if (servletConfig != null) {
@@ -250,6 +271,66 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         // converting the stream data using UTF-8 encoding, which is
         // the default encoding used
         return new BufferedReader(new InputStreamReader(input, encoding));
+    }
+
+    private Reader getWrapperReader(final Reader scriptReader, final String method, final Object... args) {
+        final StringBuffer buffer = new StringBuffer(method);
+        buffer.append('(');
+        for(Object o : args) {
+            buffer.append('"');
+            buffer.append(o);
+            buffer.append('"');
+        }
+        buffer.append(')');
+        final String msg = buffer.toString();
+        return new Reader() {
+
+            protected boolean doAppend = false;
+
+            protected StringReader methodReader = new StringReader(msg);
+            /**
+             * @see java.io.Reader#close()
+             */
+            public void close() throws IOException {
+                scriptReader.close();
+            }
+
+            @Override
+            public int read(char[] cbuf, int start, int len) throws IOException {
+                if ( doAppend ) {
+                    return methodReader.read(cbuf, start, len);
+                }
+                int readLen = scriptReader.read(cbuf, start, len);
+                if ( readLen == -1 ) {
+                    doAppend = true;
+                    return this.read(cbuf, start, len);
+                }
+                return readLen;
+            }
+
+            @Override
+            public int read() throws IOException {
+                if ( doAppend ) {
+                    return methodReader.read();
+                }
+                int value = scriptReader.read();
+                if ( value == -1 ) {
+                    doAppend = true;
+                    return methodReader.read();
+                }
+                return value;
+            }
+
+            @Override
+            public int read(char[] cbuf) throws IOException {
+                return this.read(cbuf, 0, cbuf.length);
+            }
+
+            @Override
+            public boolean ready() throws IOException {
+                return scriptReader.ready();
+            }
+        };
     }
 
     private Bindings verifySlingBindings(String scriptName,
