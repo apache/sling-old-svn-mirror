@@ -30,7 +30,6 @@ import java.util.Set;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 import org.apache.sling.core.impl.SlingMainServlet;
 import org.apache.sling.core.impl.request.SlingRequestDispatcher;
@@ -115,7 +114,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getServletContextName();
         }
-        
+
         return null;
     }
 
@@ -144,7 +143,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getInitParameter(name);
         }
-        
+
         return null;
     }
 
@@ -159,7 +158,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getInitParameterNames();
         }
-        
+
         return null;
     }
 
@@ -175,7 +174,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getAttribute(name);
         }
-        
+
         return null;
     }
 
@@ -190,7 +189,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getAttributeNames();
         }
-        
+
         return Collections.enumeration(Collections.<String>emptyList());
     }
 
@@ -239,7 +238,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getMajorVersion();
         }
-        
+
         return 2; // hard coded major version as fall back
     }
 
@@ -254,7 +253,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getMinorVersion();
         }
-        
+
         return 4; // hard coded minor version as fall back
     }
 
@@ -270,7 +269,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getMimeType(file);
         }
-        
+
         return null;
     }
 
@@ -300,7 +299,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getNamedDispatcher(name);
         }
-        
+
         return null;
     }
 
@@ -316,7 +315,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getResource(path);
         }
-        
+
         return null;
     }
 
@@ -330,7 +329,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getResourceAsStream(path);
         }
-        
+
         return null;
     }
 
@@ -345,7 +344,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getResourcePaths(parentPath);
         }
-        
+
         return null;
     }
 
@@ -360,7 +359,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getRealPath(path);
         }
-        
+
         return null;
     }
 
@@ -394,7 +393,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             return delegatee.getContext(uripath);
         }
-        
+
         return null;
     }
 
