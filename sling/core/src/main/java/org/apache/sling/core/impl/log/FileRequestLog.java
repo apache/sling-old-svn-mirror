@@ -42,7 +42,7 @@ import org.apache.sling.core.RequestLog;
  * not recommended to call the {@link #init(String)} method multiple times. When
  * the class is not used any more the {@link #dispose()} method should be called
  * to clean up, namely to close all open files. This lifecycle behaviour is
- * forced by the {@link RequestLoggerFilter} component, which calls the
+ * forced by the {@link RequestLogger} component, which calls the
  * {@link #init(String)} method on filter component activation and calls the
  * {@link #dispose()} metod on filter component deactivation.
  * <p>

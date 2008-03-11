@@ -97,6 +97,12 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * @see #dumpText(PrintWriter)
      */
     private static final String DUMP_FORMAT = "%1$7d (%2$tF %2$tT) %3$s%n";
+    
+    /**
+     * The name of the timer tracking the processing time of the complete
+     * process.
+     */
+    private static final String REQUEST_PROCESSING_TIMER = "Request Processing";
 
     /**
      * The system time at creation of this instance or the last {@link #reset()}.
@@ -131,8 +137,7 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
         namedTimerEntries.clear();
 
         // enter start message
-        processingStart = System.currentTimeMillis();
-        log(processingStart, "Starting Request Processing");
+        processingStart = startTimerInternal(REQUEST_PROCESSING_TIMER);
     }
 
     public Iterator<String> getMessages() {
@@ -163,7 +168,8 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * See the class comments for the rough format of each message line.
      */
     public void dump(PrintWriter writer) {
-        log("Dumping SlingRequestProgressTracker Entries");
+        logTimer(REQUEST_PROCESSING_TIMER,
+            "Dumping SlingRequestProgressTracker Entries");
 
         Iterator<String> messages = getMessages();
         while (messages.hasNext()) {
@@ -197,16 +203,25 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * reset to the current time.
      */
     public void startTimer(String name) {
+        startTimerInternal(name);
+    }
+    
+    /**
+     * Actually starts the named timer and returns the start time in
+     * milliseconds
+     */
+    private long startTimerInternal(String name) {
         long timer = System.currentTimeMillis();
         namedTimerEntries.put(name, timer);
 
         log(timer, "Starting " + name);
+
+        return timer;
     }
 
     /**
-     * Logs an entry with the message set to
-     * the name of the timer and the number of milliseconds ellapsed since the
-     * timer start.
+     * Logs an entry with the message set to the name of the timer and the
+     * number of milliseconds ellapsed since the timer start.
      */
     public void logTimer(String name) {
         if (namedTimerEntries.containsKey(name)) {
