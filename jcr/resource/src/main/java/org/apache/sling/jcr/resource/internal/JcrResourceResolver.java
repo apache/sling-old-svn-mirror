@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.security.AccessControlException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -87,10 +86,6 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return result;
     }
 
-    /**
-     * @throws AccessControlException If an item would exist but is not readable
-     *             to this manager's session.
-     */
     public Resource resolve(String uri) throws SlingException {
 
         // resolve virtual uri
@@ -106,10 +101,6 @@ public class JcrResourceResolver extends SlingAdaptable implements
             // translate url to a mapped url structure
             Resource result = urlToResource(uri);
             return result;
-
-        } catch (AccessControlException ace) {
-            // rethrow AccessControlExceptions to be handled
-            throw ace;
 
         } catch (SlingException se) {
             // rethrow SlingException as it is declared
@@ -297,8 +288,6 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 curPath = it.next();
                 resource = getResourceInternal(curPath);
             }
-        } catch (AccessControlException ace) {
-            throw ace;
         } catch (Exception ex) {
             throw new SlingException("Problem trying " + curPath
                 + " for request path " + uriPath, ex);
@@ -309,9 +298,6 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     /**
      * Creates a JcrNodeResource with the given path if existing
-     *
-     * @throws AccessControlException If an item exists but this manager has no
-     *             read access
      */
     protected Resource getResourceInternal(String path) {
 
