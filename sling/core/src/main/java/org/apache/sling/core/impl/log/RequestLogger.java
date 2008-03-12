@@ -141,31 +141,6 @@ public class RequestLogger {
      */
     private RequestLoggerService accessLog;
 
-    /**
-     * Filters the request as follows:
-     * <ol>
-     * <li>Creates a wrapper around the <code>response</code> object to catch
-     * headers and provide request information at the end. The wrapper also
-     * provides customized PrintWriter and ServletOutputStream object which
-     * count the number of characters and bytes transferred.</li>
-     * <li>Calls loggers configured to be used at request entry time.</li>
-     * <li>Forwards the request to the next filter in the chain.</li>
-     * <li>Records the time of request termination.</li>
-     * <li>Calls loggers configured to be used at request exit time.</li>
-     * </ol>
-     *
-     * @param sRequest The <code>ServletRequest</code> representing the
-     *            request input sent from the client.
-     * @param response The <code>ServletResponse</code> representing the
-     *            response to be sent back to the client.
-     * @param filterChain The <code>FilterChain</code> used to
-     *            forward the request on to the next filter.
-     * @throws IOException Forwarded if thrown by any filter in the chain or by
-     *             the Component called to handle the request.
-     * @throws ServletException Forwarded if thrown by any filter in the chain
-     *             or by the Component called to handle the request.
-     */
-    
     public void logRequestEntry(SlingHttpServletRequest request, SlingHttpServletResponse response) {
 
         if (response instanceof SlingHttpServletResponseImpl) {
@@ -178,7 +153,7 @@ public class RequestLogger {
             }
         }
     }
-    
+
     public void logRequestExit(SlingHttpServletRequest request, SlingHttpServletResponse response) {
         // signal the end of the request
         if (response instanceof SlingHttpServletResponseImpl) {

@@ -142,7 +142,7 @@ public class RequestData implements BufferProvider {
     public Resource initResource(ResourceResolver resourceResolver) {
         // keep the resource resolver for request processing
         this.resourceResolver = resourceResolver;
-        
+
         // resolve the resource
         requestProgressTracker.startTimer("ResourceResolution");
         Resource resource = resourceResolver.resolve(getServletRequest());
@@ -422,7 +422,7 @@ public class RequestData implements BufferProvider {
      * sent and the method terminates.
      * <p>
      * If the the servlet exists, the
-     * {@link CoreConstants#SLING_CURRENT_SERVLET_NAME} request attribute is set
+     * {@link org.apache.sling.core.CoreConstants#SLING_CURRENT_SERVLET_NAME} request attribute is set
      * to the name of that servlet and that servlet name is also set as the
      * {@link #setActiveServletName(String) currently active servlet}. After
      * the termination of the servlet (normal or throwing a Throwable) the
