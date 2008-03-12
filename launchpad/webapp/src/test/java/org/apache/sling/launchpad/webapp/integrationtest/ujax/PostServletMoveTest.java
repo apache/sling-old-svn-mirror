@@ -17,8 +17,8 @@
 package org.apache.sling.launchpad.webapp.integrationtest.ujax;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
@@ -118,6 +118,38 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
+    }
+
+    public void testMoveNodeDeep() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+
+        props.clear();
+        props.put("ujax:moveSrc", testPath + "/src");
+        props.put("ujax:moveDest", "deep/new");
+        String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
+        String content = getContent(newNode + "/deep/new.json", CONTENT_TYPE_JSON);
+        assertJavascript("Hello", content, "out.println(data.text)");
+    }
+
+    public void testMoveNodeDeepFail() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/new_fail/" + System.currentTimeMillis();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+
+        props.clear();
+        props.put("ujax:moveSrc", testPath + "/src");
+        props.put("ujax:moveDest", "/some/not/existing/structure");
+        try {
+            testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
+            // not quite correct. should check status response
+            fail("Moving node to a 'forgein' locaition should fail.");
+        } catch (IOException e) {
+            // ignore
+        }
     }
 
  }
