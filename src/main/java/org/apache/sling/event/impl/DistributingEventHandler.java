@@ -39,7 +39,7 @@ import org.osgi.service.event.EventAdmin;
  * @scr.component inherit="true"
  * @scr.property name="event.topics" value="*"
  * @scr.property name="event.filter" value="(event.distribute=*)"
- * @scr.property name="repository.path" value="/sling/events"
+ * @scr.property name="repository.path" value="/var/eventing/distribution"
  *
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
