@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.ujax;
+package org.apache.sling.ujax.impl;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -129,7 +129,7 @@ class UjaxPropertyValueHandler {
     private void setCurrentDate(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        ctx.getChangeLog().onModified(
+        ctx.getHtmlResponse().onModified(
             parent.setProperty(name, now).getPath()
         );
     }
@@ -143,7 +143,7 @@ class UjaxPropertyValueHandler {
     private void setCurrentUser(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        ctx.getChangeLog().onModified(
+        ctx.getHtmlResponse().onModified(
             parent.setProperty(name, parent.getSession().getUserID()).getPath()
         );
     }
@@ -194,13 +194,13 @@ class UjaxPropertyValueHandler {
         String[] values = prop.getStringValues();
         if (values == null) {
             // remove property
-            ctx.getChangeLog().onDeleted(
+            ctx.getHtmlResponse().onDeleted(
                 removePropertyIfExists(parent, prop.getName())
             );
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
-                ctx.getChangeLog().onModified(
+                ctx.getHtmlResponse().onModified(
                     parent.setProperty(prop.getName(), "").getPath()
                 );
             }
@@ -210,7 +210,7 @@ class UjaxPropertyValueHandler {
                 // try conversion
                 Calendar c = ctx.getDateParser().parse(values[0]);
                 if (c != null) {
-                    ctx.getChangeLog().onModified(
+                    ctx.getHtmlResponse().onModified(
                         parent.setProperty(prop.getName(), c).getPath()
                     );
                     return;
@@ -223,14 +223,14 @@ class UjaxPropertyValueHandler {
             } else {
                 p = parent.setProperty(prop.getName(), values[0], type);
             }
-            ctx.getChangeLog().onModified(p.getPath());
+            ctx.getHtmlResponse().onModified(p.getPath());
         } else {
             removePropertyIfExists(parent, prop.getName());
             if (type == PropertyType.DATE) {
                 // try conversion
                 Value[] c = ctx.getDateParser().parse(values, ValueFactoryImpl.getInstance());
                 if (c != null) {
-                    ctx.getChangeLog().onModified(
+                    ctx.getHtmlResponse().onModified(
                         parent.setProperty(prop.getName(), c).getPath()
                     );
                     return;
@@ -243,7 +243,7 @@ class UjaxPropertyValueHandler {
             } else {
                 p = parent.setProperty(prop.getName(), values, type);
             }
-            ctx.getChangeLog().onModified(p.getPath());
+            ctx.getHtmlResponse().onModified(p.getPath());
         }
     }
 

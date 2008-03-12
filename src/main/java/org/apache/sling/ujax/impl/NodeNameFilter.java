@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ujax;
+package org.apache.sling.ujax.impl;
 
 /** Filter a String so that it can be used as a NodeName */
 public class NodeNameFilter {

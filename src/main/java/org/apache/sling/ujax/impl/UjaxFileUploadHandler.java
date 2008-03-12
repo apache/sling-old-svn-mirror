@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ujax;
+package org.apache.sling.ujax.impl;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -174,14 +174,14 @@ public class UjaxFileUploadHandler {
         if (createNtFile) {
             // create nt:file
             parent = parent.addNode(name, typeHint);
-            ctx.getChangeLog().onCreated(parent.getPath());
+            ctx.getHtmlResponse().onCreated(parent.getPath());
             name = JCR_CONTENT;
             typeHint = NT_RESOURCE;
         }
 
         // create resource node
         Node res = parent.addNode(name, typeHint);
-        ctx.getChangeLog().onCreated(res.getPath());
+        ctx.getHtmlResponse().onCreated(res.getPath());
 
         // get content type
         String contentType = value.getContentType();
@@ -200,14 +200,14 @@ public class UjaxFileUploadHandler {
         }
 
         // set properties
-        ctx.getChangeLog().onModified(
+        ctx.getHtmlResponse().onModified(
             res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance()).getPath()
         );
-        ctx.getChangeLog().onModified(
+        ctx.getHtmlResponse().onModified(
             res.setProperty(JCR_MIMETYPE, contentType).getPath()
         );
         try {
-            ctx.getChangeLog().onModified(
+            ctx.getHtmlResponse().onModified(
                 res.setProperty(JCR_DATA, value.getInputStream()).getPath()
             );
         } catch (IOException e) {
