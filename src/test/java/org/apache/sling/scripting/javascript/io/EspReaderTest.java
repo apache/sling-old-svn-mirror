@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.javascript.helper;
+package org.apache.sling.scripting.javascript.io;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -27,6 +27,7 @@ import javax.script.ScriptException;
 import junit.framework.TestCase;
 
 import org.apache.sling.scripting.ScriptEngineHelper;
+import org.apache.sling.scripting.javascript.io.EspReader;
 
 /**
  * The <code>EspReaderTest</code> contains some simple test cases for the
