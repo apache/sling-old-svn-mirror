@@ -126,16 +126,8 @@ public class ParameterSupport {
             final String[] values = (String[]) entry.getValue();
 
             for (int i = 0; i < values.length; i++) {
-                final EncodedRequestParameter rp = new EncodedRequestParameter(
-                    Util.ENCODING_DEFAULT);
-                try {
-                    rp.setContent(values[i].getBytes(Util.ENCODING_DEFAULT));
-                } catch (UnsupportedEncodingException ue) {
-                    throw new Error(
-                        "Unexpected UnsupportedEncodingException for encoding="
-                            + Util.ENCODING_DEFAULT);
-                }
-                parameters.addParameter(name, rp);
+                parameters.addParameter(name, new ContainerRequestParameter(
+                    values[i], Util.ENCODING_DEFAULT));
             }
 
         }

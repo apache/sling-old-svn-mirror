@@ -27,10 +27,13 @@ import org.apache.commons.fileupload.FileItem;
 /**
  * The <code>MultipartRequestParameter</code> TODO
  */
-class MultipartRequestParameter extends AbstractEncodedParameter {
+class MultipartRequestParameter extends AbstractRequestParameter {
 
     private final FileItem delegatee;
+
     private String encodedFileName;
+
+    private String cachedValue;
 
     /**
      *
@@ -42,6 +45,12 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
 
     void dispose() {
         this.delegatee.delete();
+    }
+
+    @Override
+    void setEncoding(String encoding) {
+        super.setEncoding(encoding);
+        cachedValue = null;
     }
 
     /**
@@ -98,23 +107,29 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
     public String getString() {
         // only apply encoding in the case of a form field
         if (this.isFormField()) {
-            return this.getEncodedString();
+            if (this.cachedValue == null) {
+                // try explicit encoding if available
+                byte[] data = get();
+                String encoding = getEncoding();
+                if (encoding != null) {
+                    try {
+                        this.cachedValue = new String(data, encoding);
+                    } catch (UnsupportedEncodingException uee) {
+                        // don't care, fall back to platform default
+                    }
+                }
+
+                // if there is no encoding, or an illegal encoding,
+                // use platform default
+                if (cachedValue == null) {
+                    cachedValue = new String(data);
+                }
+            }
+
+            return this.cachedValue;
         }
 
         return this.delegatee.getString();
-    }
-
-    protected String decode(byte[] data, String encoding) {
-        if (encoding != null) {
-            try {
-                return new String(data, encoding);
-            } catch (UnsupportedEncodingException uee) {
-                // TODO: handle
-            }
-        }
-
-        // if there is no encoding, or an illegal encoding, use platform default
-        return new String(data);
     }
 
     /**
@@ -136,6 +151,7 @@ class MultipartRequestParameter extends AbstractEncodedParameter {
             return this.getString();
         }
 
-        return "File: " + this.getFileName() + " (" + this.getSize() + " bytes)";
+        return "File: " + this.getFileName() + " (" + this.getSize()
+            + " bytes)";
     }
 }

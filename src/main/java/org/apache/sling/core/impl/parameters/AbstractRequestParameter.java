@@ -20,32 +20,20 @@ package org.apache.sling.core.impl.parameters;
 
 import org.apache.sling.api.request.RequestParameter;
 
-abstract class AbstractEncodedParameter implements RequestParameter {
+abstract class AbstractRequestParameter implements RequestParameter {
 
     private String encoding;
-    private String cachedValue;
 
-    protected AbstractEncodedParameter(String encoding) {
+    protected AbstractRequestParameter(String encoding) {
         this.encoding = encoding;
     }
 
     void setEncoding(String encoding) {
         this.encoding = encoding;
-        this.cachedValue = null;
     }
 
     String getEncoding() {
         return this.encoding;
     }
 
-    String getEncodedString() {
-        if (this.cachedValue == null) {
-            // try explicit encoding if available
-            this.cachedValue = this.decode(this.get(), this.encoding);
-        }
-
-        return this.cachedValue;
-    }
-
-    protected abstract String decode(byte[] data, String encoding);
 }
