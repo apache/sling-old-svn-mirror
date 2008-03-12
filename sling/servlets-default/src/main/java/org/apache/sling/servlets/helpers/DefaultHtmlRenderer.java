@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.helpers;
 
 import java.io.PrintWriter;
 
