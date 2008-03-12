@@ -16,11 +16,11 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.sling.ujax.UjaxPostServlet;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /** Test creating a Node and rendering it using scripts in
  *  various supported languages, using nodetype-based

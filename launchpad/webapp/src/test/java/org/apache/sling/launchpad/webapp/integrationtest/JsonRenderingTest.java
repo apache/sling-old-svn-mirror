@@ -22,7 +22,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.ujax.UjaxPostServlet;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /** Test creating Nodes and rendering them in JSON */
 public class JsonRenderingTest extends HttpTestBase {

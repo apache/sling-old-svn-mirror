@@ -16,12 +16,12 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.ujax;
 
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.ujax.UjaxPostServlet;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /** {#link UjaxPropertyValueSetter} sets the value of some properties
  *  with default values if they are empty. This is tested here with various cases.

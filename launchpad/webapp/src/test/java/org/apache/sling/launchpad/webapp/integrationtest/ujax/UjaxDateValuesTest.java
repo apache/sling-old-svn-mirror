@@ -17,14 +17,14 @@
 package org.apache.sling.launchpad.webapp.integrationtest.ujax;
 
 import java.io.IOException;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Date;
-import java.text.SimpleDateFormat;
+import java.util.Map;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.ujax.UjaxPostServlet;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /**
  *  checks if the date parsing for non jcr-dates works.

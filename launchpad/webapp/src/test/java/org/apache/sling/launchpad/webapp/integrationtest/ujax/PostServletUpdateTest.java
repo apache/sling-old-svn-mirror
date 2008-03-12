@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.ujax.UjaxPostServlet;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /** Test node updates via the MicrojaxPostServlet */
 public class PostServletUpdateTest extends HttpTestBase {

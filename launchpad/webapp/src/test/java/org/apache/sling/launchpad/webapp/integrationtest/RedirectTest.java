@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.ujax.UjaxPostServlet;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /** Test creating Nodes and rendering them in JSON */
 public class RedirectTest extends HttpTestBase {
