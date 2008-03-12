@@ -95,6 +95,7 @@
 
         <!-- Sling -->
         <module>sling/core</module>
+        <module>sling/httpauth</module>
         <module>sling/adapter</module>
         <module>sling/servlet-resolver</module>
         <module>sling/event</module>
