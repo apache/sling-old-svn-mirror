@@ -54,7 +54,7 @@ import org.osgi.service.event.EventAdmin;
  * @scr.property name="event.topics" refValues="EventUtil.TOPIC_TIMED_EVENT"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
- * @scr.property name="repository.path" value="/sling/timed-events"
+ * @scr.property name="repository.path" value="/var/eventing/timed-jobs"
  */
 public class TimedJobHandler
     extends AbstractRepositoryEventHandler
