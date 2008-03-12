@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.ujax.impl.UjaxPostServlet;
 
@@ -127,8 +129,8 @@ import org.apache.sling.ujax.impl.UjaxPostServlet;
         assertTrue("Response contains infinite loop error message",
                 content.contains("InfiniteIncludeLoopException"));
         
-        // TODO_FAILS_ see SLING-207
-        // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR,status);
+        final int status = get.getStatusCode();
+        assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
     }
     
     public void testForcedResourceType() throws IOException {
