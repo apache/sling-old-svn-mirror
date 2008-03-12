@@ -88,14 +88,6 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         return jsFunction_getMetadata();
     }
 
-    // TODO a wrapper would be more convenient than an Iterator,
-    // but in my tests ScriptableItemMap didn't seem to allow
-    // proper wrapping of its elements: javascript constructor
-    // not found when scope = ScriptableItemMap
-    public Iterator<Resource> jsGet_children() {
-        return resource.getResourceResolver().listChildren(resource);
-    }
-
     public Object jsFunction_getResourceResolver() {
         return toJS(resource.getResourceResolver());
     }
