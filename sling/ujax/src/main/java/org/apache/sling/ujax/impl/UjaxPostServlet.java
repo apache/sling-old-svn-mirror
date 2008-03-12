@@ -14,17 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ujax;
+package org.apache.sling.ujax.impl;
 
 import java.io.IOException;
 
 import javax.jcr.Session;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.ujax.HtmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,15 +173,15 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         // create a post processor and process changes
         UjaxPostProcessor p = createPostProcessor(request);
         p.run();
+        HtmlResponse resp = p.getHtmlResponse();
 
         // check for redirect url
-        String redirect = getRedirectUrl(p);
-        if (redirect != null && p.getError() == null) {
+        String redirect = getRedirectUrl(request, resp);
+        if (redirect != null && resp.getError() == null) {
             response.sendRedirect(redirect);
         } else {
             // create a html response and send
-            UjaxHtmlResponse resp = new UjaxHtmlResponse(p, response);
-            resp.send();
+            resp.send(response, false);
         }
     }
 
@@ -206,10 +208,10 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
-    protected String getRedirectUrl(UjaxPostProcessor ctx) {
+    protected String getRedirectUrl(HttpServletRequest request, HtmlResponse ctx) {
         // redirect param has priority (but see below, magic star)
-        String result = ctx.getRequest().getParameter(RP_REDIRECT_TO);
-        if (result != null) {
+        String result = request.getParameter(RP_REDIRECT_TO);
+        if (result != null && ctx.getPath() != null) {
 
             // redirect to created/modified Resource
             int star = result.indexOf('*');
@@ -222,11 +224,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
                 }
 
                 // append the name of the manipulated node
-                String nodePath = ctx.getCurrentPath();
-                if (nodePath == null) {
-                    nodePath = ctx.getRootPath();
-                }
-                buf.append(JcrResourceUtil.getName(nodePath));
+                buf.append(JcrResourceUtil.getName(ctx.getPath()));
 
                 // anything after the star
                 if (star < result.length() - 1) {
