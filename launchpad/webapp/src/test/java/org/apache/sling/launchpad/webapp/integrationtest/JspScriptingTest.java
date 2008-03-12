@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.sling.ujax.UjaxPostServlet;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 
 /** Test JSP scripting
  *  TODO this class can be generalized to be used for any scripting language,
