@@ -32,7 +32,6 @@ import junit.framework.TestCase;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -40,7 +39,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
-import org.apache.sling.ujax.UjaxPostServlet;
+import org.apache.sling.ujax.impl.UjaxPostServlet;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
