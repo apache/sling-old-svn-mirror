@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ujax;
+package org.apache.sling.ujax.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,6 +31,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
+import org.apache.sling.ujax.HtmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +52,6 @@ public class UjaxPostProcessor {
     public static final String ORDER_LAST = "last";    
     
     /**
-     * log that records the changes applied during the processing of the
-     * post request.
-     */
-    private final ChangeLog changeLog = new ChangeLog();
-
-    /**
      * handler that deals with properties
      */
     private final UjaxPropertyValueHandler propHandler;
@@ -71,6 +66,9 @@ public class UjaxPostProcessor {
      */
     private final NodeNameGenerator nodeNameGenerator;
 
+    // TODO
+    private final String rootPath;
+    
     /**
      * utility class for parsing date strings
      */
@@ -87,31 +85,13 @@ public class UjaxPostProcessor {
     private final Session session;
 
     /**
-     * the root path of this processor.
-     */
-    private final String rootPath;
-
-    /**
-     * path of the node that was targeted or created.
-     */
-    private String currentPath;
-
-    /**
      * prefix of which the names of request properties must start with
      * in order to be regardes as input values.
      */
     private String savePrefix;
 
-    /**
-     * indicates if the request contains a 'star suffix'
-     */
-    private boolean isCreateRequest;
-
-    /**
-     * records any error
-     */
-    private Exception error;
-
+    private HtmlResponse htmlResponse;
+    
     /**
      * map of properties that form the content
      */
@@ -133,9 +113,12 @@ public class UjaxPostProcessor {
                              ServletContext servletContext) {
         this.request = request;
         this.session = session;
+        this.htmlResponse = new HtmlResponse();
+        
+        htmlResponse.setReferer(request.getHeader("referer"));
 
         // default to non-creating request (trailing DEFAULT_CREATE_SUFFIX)
-        isCreateRequest = false;
+        htmlResponse.setCreateRequest(false);
 
         // calculate the paths
         StringBuffer rootPathBuf = new StringBuffer();
@@ -168,7 +151,7 @@ public class UjaxPostProcessor {
             } else if (suffix.endsWith(UjaxPostServlet.DEFAULT_CREATE_SUFFIX)) {
                 suffix = suffix.substring(0, suffix.length()
                     - UjaxPostServlet.DEFAULT_CREATE_SUFFIX.length());
-                isCreateRequest = true;
+                htmlResponse.setCreateRequest(true);
             }
 
             // append the remains of the suffix to the path buffer
@@ -176,20 +159,11 @@ public class UjaxPostProcessor {
 
         }
 
-        rootPath = rootPathBuf.toString();
-
+        this.rootPath = rootPathBuf.toString();
         this.nodeNameGenerator = nodeNameGenerator;
         this.dateParser = dateParser;
         propHandler = new UjaxPropertyValueHandler(this);
         uploadHandler = new UjaxFileUploadHandler(this, servletContext);
-    }
-
-    /**
-     * Returns the change log.
-     * @return the change log.
-     */
-    public ChangeLog getChangeLog() {
-        return changeLog;
     }
 
     /**
@@ -198,54 +172,6 @@ public class UjaxPostProcessor {
      */
     public Session getSession() {
         return session;
-    }
-
-    /**
-     * Returns the root path of this processor.
-     * @return the root path of this processor.
-     */
-    public String getRootPath() {
-        return rootPath;
-    }
-
-    /**
-     * Returns the path of the node that was the parent of the property
-     * modifications.
-     * @return the path of the 'current' node.
-     */
-    public String getCurrentPath() {
-        return currentPath;
-    }
-
-    /**
-     * Returns <code>true</code> if this was a create request.
-     * @return <code>true</code> if this was a create request.
-     */
-    public boolean isCreateRequest() {
-        return isCreateRequest;
-    }
-
-    /**
-     * Returns the location of the modification. this is the externalized form
-     * of the current path.
-     * @return the location of the modification.
-     */
-    public String getLocation() {
-        if (currentPath == null) {
-            return externalizePath(rootPath);
-        }
-        return externalizePath(currentPath);
-    }
-
-    /**
-     * Returns the parent location of the modification. this is the externalized
-     * form of the parent node of the current path.
-     * @return the location of the modification.
-     */
-    public String getParentLocation() {
-        String path = currentPath == null ? rootPath : currentPath;
-        path = path.substring(0, path.lastIndexOf('/'));
-        return externalizePath(path);
     }
 
     /**
@@ -279,14 +205,23 @@ public class UjaxPostProcessor {
         return ret.toString();
     }
 
-   /**
-     * Returns any recorded error or <code>null</code>
-     * @return an error or null
-     */
-    public Exception getError() {
-        return error;
-    }
+    public HtmlResponse getHtmlResponse() {
+        
+        String path = htmlResponse.getPath();
+        if (path == null) {
+            path = rootPath;
+        }
 
+        // location
+        htmlResponse.setLocation(externalizePath(path));
+
+        // parent location
+        path = path.substring(0, path.lastIndexOf('/'));
+        htmlResponse.setParentLocation(externalizePath(path));
+
+        return htmlResponse;
+    }
+    
     /**
      * Returns the request of this processor
      * @return the sling servlet request
@@ -302,14 +237,15 @@ public class UjaxPostProcessor {
      * @return the given path if it starts with a '/';
      *         a resolved path otherwise.
      */
-    public String resolvePath(String path) {
-        if (path.startsWith("/")) {
-            return path;
+    public String resolvePath(String relPath) {
+        if (relPath.startsWith("/")) {
+            return relPath;
         }
-        if (currentPath == null) {
-            return rootPath + "/" + path;
+        String path = htmlResponse.getPath();
+        if (path == null) {
+            path = rootPath;
         }
-        return currentPath + "/" + path;
+        return path + "/" + relPath;
     }
 
     /**
@@ -339,7 +275,7 @@ public class UjaxPostProcessor {
             }
         } catch (Exception e) {
             log.error("Exception during response processing.", e);
-            error = e;
+            htmlResponse.setError(e);
         } finally {
             try {
                 if (session.hasPendingChanges()) {
@@ -365,7 +301,7 @@ public class UjaxPostProcessor {
                     try {
                         if (session.itemExists(path)) {
                             session.getItem(path).remove();
-                            changeLog.onDeleted(path);
+                            htmlResponse.onDeleted(path);
                             log.debug("Deleted item {}", path);
                         } else {
                             log.debug("Item at {} not found for deletion, ignored", path);
@@ -425,7 +361,7 @@ public class UjaxPostProcessor {
                 }
             }
             session.move(src, dest);
-            changeLog.onMoved(src, dest);
+            htmlResponse.onMoved(src, dest);
             log.debug("moved {} to {}", src, dest);
         }
     }
@@ -439,29 +375,31 @@ public class UjaxPostProcessor {
      */
     private void initCurrentPath() throws RepositoryException, ServletException {
         // get desired path.
-        currentPath = rootPath;
+        String path = rootPath;
 
         // check for star suffix in request
-        if (isCreateRequest) {
+        if (htmlResponse.isCreateRequest()) {
             // If the path ends with a *, create a node under its parent, with
             // a generated node name
-            currentPath += "/" + nodeNameGenerator.getNodeName(request.getRequestParameterMap(), getSavePrefix());
+            path += "/" + nodeNameGenerator.getNodeName(request.getRequestParameterMap(), getSavePrefix());
 
             // if resulting path exists, add a suffix until it's not the case anymore
-            if (session.itemExists(currentPath)) {
+            if (session.itemExists(path)) {
                 for (int suffix = 0; suffix < 1000; suffix++) {
-                    String newPath = currentPath + "_" + suffix;
+                    String newPath = path + "_" + suffix;
                     if(!session.itemExists(newPath)) {
-                        currentPath = newPath;
+                        path = newPath;
                         break;
                     }
                 }
             }
             // if it still exists there are more than 1000 nodes ?
-            if (session.itemExists(currentPath)) {
-                throw new ServletException("Collision in generated node names for path=" + currentPath);
+            if (session.itemExists(path)) {
+                throw new ServletException("Collision in generated node names for path=" + path);
             }
         }
+        
+        htmlResponse.setPath(path);
     }
 
     /**
@@ -471,7 +409,7 @@ public class UjaxPostProcessor {
      */
     private void processCreate() throws RepositoryException, ServletException {
         // create new node in any case
-        deepGetOrCreateNode(currentPath);
+        deepGetOrCreateNode(htmlResponse.getPath());
     }
 
     /**
@@ -556,7 +494,7 @@ public class UjaxPostProcessor {
             // create property helper and add it to the list
             String propPath = propertyName;
             if (!propPath.startsWith("/")) {
-                propPath = currentPath + "/" + propertyName;
+                propPath = htmlResponse.getPath() + "/" + propertyName;
             }
             RequestProperty prop = new RequestProperty(propPath, values);
 
@@ -643,7 +581,7 @@ public class UjaxPostProcessor {
                         node.addMixin(mix);
                     }
                 }
-                changeLog.onCreated(node.getPath());
+                htmlResponse.onCreated(node.getPath());
             }
             from = to + 1;
         }
@@ -680,7 +618,7 @@ public class UjaxPostProcessor {
     private void processOrder() throws RepositoryException {
         final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
         if  (orderCode!=null) {
-            final Node n = deepGetOrCreateNode(currentPath);
+            final Node n = deepGetOrCreateNode(htmlResponse.getPath());
             orderNode(n, orderCode);
         }
     }

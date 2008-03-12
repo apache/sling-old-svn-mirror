@@ -61,8 +61,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>
+                            org.apache.sling.ujax
+                        </Export-Package>
                         <Private-Package>
-                            org.apache.sling.ujax.*
+                            org.apache.sling.ujax.impl.*
                         </Private-Package>
                         <Sling-Bundle-Resources>
                             /ujax/ujax.js
