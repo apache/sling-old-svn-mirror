@@ -354,8 +354,8 @@ public class SlingAuthenticator implements ManagedService {
         if (authHandlerCache == null
             || authHandlerTrackerCount < authHandlerTracker.getTrackingCount()) {
             Object[] services = authHandlerTracker.getServices();
-            AuthenticationHandler[] ac = new AuthenticationHandler[services.length];
-            for (int i = 0; i < services.length; i++) {
+            AuthenticationHandler[] ac = new AuthenticationHandler[services == null ? 0 : services.length];
+            for (int i = 0; i < ac.length; i++) {
                 ac[i] = (AuthenticationHandler) services[i];
             }
             authHandlerCache = ac;
