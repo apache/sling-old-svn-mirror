@@ -47,9 +47,6 @@ public interface ServletResolver {
      *            selection of the servlet.
      * @return The servlet whose <code>service</code> method may be called to
      *         handle the request.
-     * @throws java.security.AccessControlException If the script to which the request
-     *             resolves cannot be accessed due to access control
-     *             restrictions.
      * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs while trying to find
      *             an appropriate servlet to handle the request or if no servlet
      *             could be resolved to handle the request.
