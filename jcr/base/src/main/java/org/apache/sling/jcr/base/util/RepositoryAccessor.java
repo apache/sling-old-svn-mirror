@@ -57,7 +57,7 @@ public class RepositoryAccessor {
     /**
      * First try to access the Repository via JNDI (unless jndiContext is null),
      * and if not successful try RMI.
-     * 
+     *
      * @param repositoryName JNDI name or RMI URL (must start with "rmi://") of
      *            the Repository
      * @param jndiContext if null, JNDI is not tried
@@ -139,11 +139,11 @@ public class RepositoryAccessor {
 
     /**
      * Acquire a Repository from the given URL
-     * 
+     *
      * @param url for RMI, an RMI URL. For JNDI, "jndi://", followed by the JNDI
      *            repository name, followed by a colon and a comma-separated
      *            list of JNDI context values, for example:
-     * 
+     *
      * <pre>
      *      jndi://jackrabbit:java.naming.factory.initial=org.SomeClass,java.naming.provider.url=http://foo.com
      * </pre>
@@ -175,11 +175,10 @@ public class RepositoryAccessor {
 
             return getRepository(name, jndiContext);
 
-        } else {
-
-            // Use URL as is
-            return getRepository(url, null);
         }
+
+        // Use URL as is
+        return getRepository(url, null);
     }
 
     /**

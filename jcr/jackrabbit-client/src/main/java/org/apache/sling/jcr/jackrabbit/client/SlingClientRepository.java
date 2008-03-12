@@ -26,7 +26,6 @@ import javax.jcr.Repository;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
-import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.osgi.service.log.LogService;
 
 /**

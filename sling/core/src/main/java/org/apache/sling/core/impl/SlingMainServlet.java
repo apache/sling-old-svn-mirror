@@ -24,7 +24,6 @@ import static org.apache.sling.core.CoreConstants.SESSION;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.SocketException;
 import java.net.URL;
 import java.security.AccessControlException;
@@ -112,7 +111,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
     private ComponentContext osgiComponentContext;
 
     private List<ServiceReference> delayedComponentFilters;
-    
+
     /**
      * The server information to report in the {@link #getServerInfo()} method.
      * By default this is just the {@link #PRODUCT_NAME}. The
@@ -141,7 +140,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private RequestLogger requestLogger;
-    
+
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
@@ -230,7 +229,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         if (requestLogger != null) {
             requestLogger.logRequestEntry(request, response);
         }
-        
+
         Session session = null;
         try {
             // check that we have all required services
@@ -251,7 +250,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
                 sendError(status, err, null, servletRequest, servletResponse);
                 return;
             }
-    
+
             // get JCR Session
             session = (Session) servletRequest.getAttribute(SESSION);
             if (session == null) {
@@ -275,10 +274,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
                 processor.doFilter(request, response);
 
             } else {
-                
+
                 // no filters, directly call resource level filters and servlet
                 processRequest(request, response);
-                
+
             }
 
         } catch (ResourceNotFoundException rnfe) {
@@ -331,7 +330,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             if (requestLogger != null) {
                 requestLogger.logRequestExit(request, response);
             }
-            
+
             // dispose any request data
             requestData.dispose();
 
@@ -739,13 +738,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
     }
 
     //---------- HttpContext interface ----------------------------------------
-    
+
     public String getMimeType(String name) {
         MimeTypeService mtservice = mimeTypeService;
         if (mtservice != null) {
             return mtservice.getMimeType(name);
         }
-        
+
         log.debug(
             "getMimeType: MimeTypeService not available, cannot resolve mime type for {}",
             name);
@@ -780,16 +779,16 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                     "Cannot handle requests due to missing Repository");
             }
-            
+
         } else {
-            
+
             response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                 "Sling not ready to serve requests");
-            
+
         }
 
         // fall back to security failure and request termination
         return false;
     }
-    
+
 }
