@@ -262,28 +262,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             }
 
             // initialize the request data - resolve resource and servlet
-            Resource resource = null;
-            try {
-                ResourceResolver resolver = getResourceResolverFactory().getResourceResolver(
-                    session);
-                resource = requestData.initResource(resolver);
-            } catch (AccessControlException ace) {
-                // SLING-309
-                // if this is the anonymous user, send request to authenticate
-                if ( request.getAttribute(HttpContext.AUTHENTICATION_TYPE) == null ) {
-                    getSlingAuthenticator().requestAuthentication(request, response);
-                    return;
-                }
-
-                // if this is not the anonymous user, send 404
-                // try to request authentication fail, if not possible
-                log.info(
-                    "service: Authenticated user {} does not have enough rights to executed requested action",
-                    request.getRemoteUser());
-                getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
-                        null, request, response);
-                return;
-            }
+            ResourceResolver resolver = getResourceResolverFactory().getResourceResolver(
+                session);
+            Resource resource = requestData.initResource(resolver);
             requestData.initServlet(resource);
 
             Filter[] filters = requestFilterChain.getFilters();
@@ -325,12 +306,12 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
 
         } catch (AccessControlException ace) {
 
-            // SLING-309 if anything goes wrong, send 404
+            // SLING-319 if anything goes wrong, send 403/FORBIDDEN
             log.info(
                 "service: Authenticated user {} does not have enough rights to executed requested action",
                 request.getRemoteUser());
-            getErrorHandler().handleError(HttpServletResponse.SC_NOT_FOUND,
-                    null, request, response);
+            getErrorHandler().handleError(HttpServletResponse.SC_FORBIDDEN,
+                null, request, response);
 
         } catch (Throwable t) {
 
