@@ -148,15 +148,6 @@ public class JcrResourceResolverFactoryImpl implements
     // the search path for ResourceResolver.getResource(String)
     private String[] searchPath;
 
-    /**
-     * Map of administrative sessions used to check item existence. Indexed by
-     * workspace name. The map is filled on-demand. The sessions are closed when
-     * the factory is deactivated.
-     *
-     * @see #itemReallyExists(Session, String)
-     */
-    private Map<String, Session> adminSessions = new HashMap<String, Session>();
-
     private ResourceProviderEntry rootProviderEntry;
 
     private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
@@ -173,7 +164,7 @@ public class JcrResourceResolverFactoryImpl implements
      */
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            this, session, rootProviderEntry.getEntries());
+            session, rootProviderEntry.getEntries());
         return new JcrResourceResolver(sessionRoot, this);
     }
 
@@ -258,29 +249,6 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     // ---------- Implementation helpers --------------------------------------
-
-    /**
-     * check existence of an item with admin session, used by
-     * JcrResourceResolver
-     */
-    public boolean itemReallyExists(Session clientSession, String path)
-            throws RepositoryException {
-
-        // assume this session has more access rights than the client Session
-        String workSpace = clientSession.getWorkspace().getName();
-        Session adminSession = getAdminSession(workSpace);
-
-        // SLING-159: Workaround for method throwing when called with
-        // a malformed path
-        try {
-            return adminSession.itemExists(path);
-        } catch (RepositoryException re) {
-            log.info(
-                "itemReallyExists: Error checking for existence of {}: {}",
-                path, re.toString());
-            return false;
-        }
-    }
 
     /** If uri is a virtual URI returns the real URI, otherwise returns null */
     String virtualToRealUri(String virtualUri) {
@@ -422,13 +390,6 @@ public class JcrResourceResolverFactoryImpl implements
     protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
-        Session[] sessions = adminSessions.values().toArray(
-            new Session[adminSessions.size()]);
-        adminSessions.clear();
-        for (int i = 0; i < sessions.length; i++) {
-            sessions[i].logout();
-        }
-
         this.componentContext = null;
     }
 
@@ -475,32 +436,6 @@ public class JcrResourceResolverFactoryImpl implements
     /** Returns the JCR repository used by this factory */
     protected SlingRepository getRepository() {
         return repository;
-    }
-
-    /**
-     * Returns an administrative session to the given workspace or the default
-     * workspaces if the supplied name is <code>null</code>.
-     */
-    private Session getAdminSession(String workspaceName)
-            throws RepositoryException {
-
-        // ensure workspace name
-        if (workspaceName == null) {
-            workspaceName = getRepository().getDefaultWorkspace();
-        }
-        
-        synchronized (adminSessions) {
-            // HashMap allows null keys, so this should be ok even 
-            // with a null workspaceName
-            Session adminSession = adminSessions.get(workspaceName);
-            if (adminSession != null && adminSession.isLive()) {
-                return adminSession;
-            }
-
-            adminSession = getRepository().loginAdministrative(workspaceName);
-            adminSessions.put(workspaceName, adminSession);
-            return adminSession;
-        }
     }
 
 }
