@@ -56,8 +56,6 @@ public interface SlingScriptResolver {
      * @param name The script name. Must not be <code>null</code>.
      * @return The {@link SlingScript} to which the name resolved or
      *         <code>null</code> otherwise.
-     * @throws java.security.AccessControlException If the requested script cannot be accessed
-     *             due to access control restrictions.
      * @throws org.apache.sling.api.SlingException If an error occurrs trying to resolve the name.
      */
     SlingScript findScript(ResourceResolver resourceResolver, String name);
