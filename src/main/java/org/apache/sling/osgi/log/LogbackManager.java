@@ -141,7 +141,8 @@ public class LogbackManager implements ManagedService {
         if (properties != null) {
             this.configureLogback(new ConfigProperties() {
                 public String getProperty(String name) {
-                    return (String) properties.get(name);
+                    final Object obj = properties.get(name);
+                    return (obj == null) ? null : obj.toString();
                 }
             });
         }
@@ -293,13 +294,11 @@ public class LogbackManager implements ManagedService {
             }
 
             // get number of files and ensure minimum and default
-            Object fileNumObj = context.getProperty(LOG_FILE_NUMBER);
+            String fileNumProp = context.getProperty(LOG_FILE_NUMBER);
             int fileNum = -1;
-            if (fileNumObj instanceof Number) {
-                fileNum = ((Number) fileNumObj).intValue();
-            } else if (fileNumObj != null) {
+            if (fileNumProp != null) {
                 try {
-                    fileNum = Integer.parseInt(fileNumObj.toString());
+                    fileNum = Integer.parseInt(fileNumProp.toString());
                 } catch (NumberFormatException nfe) {
                     // don't care
                 }
@@ -316,8 +315,7 @@ public class LogbackManager implements ManagedService {
             rolling.setContext(loggerContext);
 
             // get the log file size
-            Object fileSizeObj = context.getProperty(LOG_FILE_SIZE);
-            String fileSize = (fileSizeObj != null) ? fileSizeObj.toString() : null;
+            String fileSize = context.getProperty(LOG_FILE_SIZE);
             if (fileSize == null || fileSize.length() == 0) {
                 fileSize = LOG_FILE_SIZE_DEFAULT;
             }
