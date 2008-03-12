@@ -3,9 +3,7 @@
 function dumpResource(r, level) {
 	out.print(level + " " + r + '\n');
 	
-	// TODO for now, "children" returns a Java
-	// iterator, need a javascript wrapper
-	var iterator = r.children;
+	var iterator = r.resourceResolver.listChildren(r);
 	while(iterator.hasNext()) {
 		dumpResource(iterator.next(), level + 1);
 	}
