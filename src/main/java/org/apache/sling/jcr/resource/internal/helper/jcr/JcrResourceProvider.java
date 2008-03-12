@@ -31,7 +31,6 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,15 +45,9 @@ public class JcrResourceProvider implements ResourceProvider {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    protected static final String ACTION_READ = "read";
-
-    private final JcrResourceResolverFactoryImpl factory;
-
     private final Session session;
 
-    public JcrResourceProvider(JcrResourceResolverFactoryImpl factory,
-            Session session) {
-        this.factory = factory;
+    public JcrResourceProvider(Session session) {
         this.session = session;
     }
 
@@ -125,8 +118,6 @@ public class JcrResourceProvider implements ResourceProvider {
      * @return The <code>Resource</code> for the item at the given path.
      * @throws RepositoryException If an error occurrs accessingor checking the
      *             item in the repository.
-     * @throws AccessControlException If the item really exists but this content
-     *             manager's session has no read access to it.
      */
     private JcrItemResource createResource(ResourceResolver resourceResolver,
             String path) throws RepositoryException {
@@ -159,29 +150,16 @@ public class JcrResourceProvider implements ResourceProvider {
      * @return <code>true</code> if the item exists and this content manager's
      *         session has read access. If the item does not exist,
      *         <code>false</code> is returned ignoring access control.
-     * @throws RepositoryException
-     * @throws java.security.AccessControlException If the item really exists but this content
-     *             manager's session has no read access to it.
      */
-    public boolean itemExists(String path) throws RepositoryException {
-        if (factory.itemReallyExists(getSession(), path)) {
-            checkPermission(path, ACTION_READ);
-            return true;
+    public boolean itemExists(String path) {
+        
+        try {
+            return getSession().itemExists(path);
+        } catch (RepositoryException re) {
+            log.info("itemExists: Error checking for existence of {}: {}",
+                path, re.toString());
+            return false;
         }
-
-        return false;
+  
     }
-
-    /**
-     * @param path
-     * @param actions
-     * @throws RepositoryException
-     * @throws java.security.AccessControlException if this manager does not have the
-     *             permission for the listed action(s).
-     */
-    protected void checkPermission(String path, String actions)
-            throws RepositoryException {
-        getSession().checkPermission(path, actions);
-    }
-
 }

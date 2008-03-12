@@ -20,18 +20,15 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
 public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     private final Session session;
 
-    public JcrResourceProviderEntry(
-            JcrResourceResolverFactoryImpl resourceResolverFactory,
-            Session session, ResourceProviderEntry[] entries) {
-        super("/", new JcrResourceProvider(resourceResolverFactory, session),
-            entries);
+    public JcrResourceProviderEntry(Session session,
+            ResourceProviderEntry[] entries) {
+        super("/", new JcrResourceProvider(session), entries);
 
         this.session = session;
     }
