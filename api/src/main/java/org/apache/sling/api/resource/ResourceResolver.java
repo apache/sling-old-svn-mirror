@@ -52,9 +52,6 @@ public interface ResourceResolver extends Adaptable {
      * @param request The http servlet request object used to resolve the
      *            resource for.
      * @return The {@link Resource} for the request.
-     * @throws java.security.AccessControlException if the user authenticated with the request
-     *             does not have enough rights to access the resource to which
-     *             the request maps.
      * @throws org.apache.sling.api.SlingException A subclass of this exception is thrown if the
      *             resource to which the request maps cannot be retrieved.
      */
@@ -77,9 +74,6 @@ public interface ResourceResolver extends Adaptable {
      * @param absPath The absolute path to be mapped to a resource.
      * @return The {@link Resource} mapped from the path or <code>null</code>
      *         if no resource can be found for the path.
-     * @throws java.security.AccessControlException if the user authenticated with the request
-     *             does not have enough rights to access the resource to which
-     *             the request maps.
      * @throws org.apache.sling.api.SlingException A subclass of this exception is thrown if the
      *             resource to which the request maps cannot be retrieved.
      */
@@ -121,9 +115,6 @@ public interface ResourceResolver extends Adaptable {
      *            relative path to a resource.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws java.security.AccessControlException if an item exists at the <code>path</code>
-     *             but the session of this resource manager has no read access
-     *             to the item.
      * @throws org.apache.sling.api.SlingException If an error occurrs trying to load the resource
      *             object from the path.
      */
@@ -151,9 +142,6 @@ public interface ResourceResolver extends Adaptable {
      *            this method.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws java.security.AccessControlException if an item exists at the <code>path</code>
-     *             but the session of this resource manager has no read access
-     *             to the item.
      * @throws org.apache.sling.api.SlingException If an error occurrs trying to load the resource
      *             object from the path or if <code>base</code> is
      *             <code>null</code> and <code>path</code> is relative.
