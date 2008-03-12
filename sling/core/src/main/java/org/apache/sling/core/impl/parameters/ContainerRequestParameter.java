@@ -23,27 +23,39 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 /**
- * The <code>EncodedRequestParameter</code> TODO
+ * The <code>ContainerRequestParameter</code> TODO
  */
-public class EncodedRequestParameter extends AbstractEncodedParameter {
+public class ContainerRequestParameter extends AbstractRequestParameter {
+
+    private final String value;
 
     private byte[] content;
 
-    EncodedRequestParameter(String encoding) {
+    ContainerRequestParameter(String value, String encoding) {
         super(encoding);
-        this.content = Util.NO_CONTENT;
+        this.value = value;
+        this.content = null;
     }
 
-    void setContent(byte[] content) {
-        this.content = content;
-        super.setEncoding(this.getEncoding());
+    @Override
+    void setEncoding(String encoding) {
+        super.setEncoding(encoding);
+        content = null;
     }
 
     /**
      * @see org.apache.sling.api.request.RequestParameter#get()
      */
     public byte[] get() {
-        return this.content;
+        if (content == null) {
+            try {
+                content = getString().getBytes(getEncoding());
+            } catch (Exception e) {
+                // UnsupportedEncodingException, IllegalArgumentException
+                content = getString().getBytes();
+            }
+        }
+        return content;
     }
 
     /**
@@ -80,13 +92,14 @@ public class EncodedRequestParameter extends AbstractEncodedParameter {
      * @see org.apache.sling.api.request.RequestParameter#getString()
      */
     public String getString() {
-        return this.getEncodedString();
+        return value;
     }
 
     /**
      * @see org.apache.sling.api.request.RequestParameter#getString(java.lang.String)
      */
-    public String getString(String encoding) throws UnsupportedEncodingException {
+    public String getString(String encoding)
+            throws UnsupportedEncodingException {
         return new String(this.get(), encoding);
     }
 
@@ -102,19 +115,4 @@ public class EncodedRequestParameter extends AbstractEncodedParameter {
         return this.getString();
     }
 
-    protected String decode(byte[] data, String encoding) {
-        if (encoding != null) {
-            try {
-                String value = new String(data, Util.ENCODING_DIRECT);
-                return value; // URLDecoder.decode(value, encoding);
-            } catch (UnsupportedEncodingException uue) {
-                // not expected, use default encoding anyway ...
-            } catch (IllegalArgumentException iae) {
-                // due to illegal encoding in value, ignore for now
-            }
-        }
-
-        // if still here, use platform default encoding
-        return new String(data);
-    }
 }

@@ -104,8 +104,8 @@ class Util {
             RequestParameter[] params = paramEntry.getValue();
             String parName = null;
             for (int i = 0; i < params.length; i++) {
-                if (params[i] instanceof AbstractEncodedParameter) {
-                    AbstractEncodedParameter param = (AbstractEncodedParameter) params[i];
+                if (params[i] instanceof AbstractRequestParameter) {
+                    AbstractRequestParameter param = (AbstractRequestParameter) params[i];
 
                     // fix encoding if different
                     if (param.getEncoding() == null) {
