@@ -72,7 +72,7 @@ public class SlingClientRepository extends AbstractSlingRepository
         }
 
         final Hashtable<String, Object> jndiContext = this.fromDictionary(environment);
-        repo = new RepositoryAccessor().getRepository(repoName, jndiContext);
+        repo = getRepositoryAccessor().getRepository(repoName, jndiContext);
         if (repo == null) {
             log(LogService.LOG_ERROR,
                 "acquireRepository: Cannot acquire repository '" + repoName
