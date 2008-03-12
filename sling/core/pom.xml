@@ -93,6 +93,13 @@
                             org.apache.sling.core.impl,
                             org.apache.sling.core.impl.*
                         </Private-Package>
+                        <Import-Package>
+                            javax.portlet;resolution:=optional,
+                            *
+                        </Import-Package>
+                        <Embed-Dependency>
+                            commons-fileupload
+                        </Embed-Dependency>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/selection.cnd,SLING-INF/nodetypes/references.cnd
                         </Sling-Nodetypes>
