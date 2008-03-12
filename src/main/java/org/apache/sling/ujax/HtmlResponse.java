@@ -1,0 +1,393 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.sling.ujax;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
+/**
+ * Generator for a HTML status response that displays the changes made in a
+ * ujax post request.
+ *
+ * see <a href="HtmlResponse.html">HtmlResponse.html</a> for the format.
+ */
+public class HtmlResponse {
+
+    /**
+     * some human readable title like: 200 Created /foo/bar
+     */
+    public static final String PN_TITLE = "title";
+
+    /**
+     * status code. more or less http response status codes
+     */
+    public static final String PN_STATUS_CODE = "status.code";
+
+    /**
+     * some human readable status message
+     */
+    public static final String PN_STATUS_MESSAGE = "status.message";
+
+    /**
+     * externaly mapped location url of the modified path
+     */
+    public static final String PN_LOCATION = "location";
+
+    /**
+     * externaly mapped location url of the parent of the modified path
+     */
+    public static final String PN_PARENT_LOCATION = "parentLocation";
+
+    /**
+     * the path of the modified item. this is usually the addressed resource
+     * or in case of a creation request (eg: /foo/*) the path of the newly
+     * created node.
+     */
+    public static final String PN_PATH = "path";
+
+    /**
+     * the referrer of the request
+     */
+    public static final String PN_REFERER = "referer";
+
+    // TODO
+    public static final String PN_IS_CREATED = "isCreate";
+    
+    /**
+     * human readable changelog
+     */
+    public static final String PN_CHANGE_LOG = "changeLog";
+
+    // TODO
+    public static final String PN_ERROR = "error";
+    
+    /**
+     * name of the html template
+     */
+    private static final String TEMPLATE_NAME = "HtmlResponse.html";
+
+    /**
+     * list of changes
+     */
+    private final StringBuffer changes = new StringBuffer();
+
+    /**
+     * Properties of the response
+     */
+    private final Map<String, Object> properties = new HashMap<String, Object>();
+
+    /**
+     * Creates a new ujax html response
+     * @param provider the status provider
+     */
+    public HtmlResponse() {
+    }
+
+    //---------- Settings for the response ------------------------------------
+    
+    /**
+     * Returns the path of the node that was the parent of the property
+     * modifications.
+     * @return the path of the 'current' node.
+     */
+    public String getPath() {
+        return getProperty(PN_PATH, String.class);
+    }
+    
+    public void setPath(String path) {
+        setProperty(PN_PATH, path);
+    }
+
+    /**
+     * Returns <code>true</code> if this was a create request.
+     * @return <code>true</code> if this was a create request.
+     */
+    public boolean isCreateRequest() {
+        return getProperty(PN_IS_CREATED, Boolean.class);
+    }
+    
+    public void setCreateRequest(boolean isCreateRequest) {
+        setProperty(PN_IS_CREATED, isCreateRequest);
+    }
+
+    /**
+     * Returns the location of the modification. this is the externalized form
+     * of the current path.
+     * @return the location of the modification.
+     */
+    public String getLocation() {
+        return getProperty(PN_LOCATION, String.class);
+    }
+
+    public void setLocation(String location) {
+        setProperty(PN_LOCATION, location);
+    }
+    
+    /**
+     * Returns the parent location of the modification. this is the externalized
+     * form of the parent node of the current path.
+     * @return the location of the modification.
+     */
+    public String getParentLocation() {
+        return getProperty(PN_PARENT_LOCATION, String.class);
+    }
+
+    public void setParentLocation(String parentLocation) {
+        setProperty(PN_PARENT_LOCATION, parentLocation);
+    }
+    
+    /**
+     * Returns any recorded error or <code>null</code>
+      * @return an error or <code>null</code>
+      */
+    public Throwable getError() {
+        return getProperty(PN_ERROR, Throwable.class);
+    }
+
+    public void setError(Throwable error) {
+        setProperty(PN_ERROR, error);
+    }
+    
+    /**
+     * Returns the referer as from the 'referer' request header.
+     * @return the referer or <code>null</code> if the referer is empty.
+     */
+    public String getReferer() {
+        return getProperty(PN_REFERER, String.class);
+    }
+
+    public void setReferer(String referer) {
+        setProperty(PN_REFERER, referer);
+    }
+    
+    //---------- ChangeLog ----------------------------------------------------
+    
+    /**
+     * Records a 'modified' change
+     * @param path path of the item that was modified
+     */
+    public void onModified(String path) {
+        onChange("modified", path);
+    }
+
+    /**
+     * Records a 'created' change
+     * @param path path of the item that was created
+     */
+    public void onCreated(String path) {
+        onChange("created", path);
+    }
+
+    /**
+     * Records a 'deleted' change
+     * @param path path of the item that was deleted
+     */
+    public void onDeleted(String path) {
+        if (path != null) {
+            onChange("deleted", path);
+        }
+    }
+
+    /**
+     * Records a 'moved' change.
+     * <p/>
+     * Note: the moved change only records the basic move command. the implied
+     * changes on the moved properties and sub nodes are not recorded.
+     *
+     * @param srcPath source path of the node that was moved
+     * @param dstPath destination path of the node that was moved.
+     */
+    public void onMoved(String srcPath, String dstPath) {
+        onChange("moved", srcPath, dstPath);
+    }
+
+    private void onChange(String type, String... arguments) {
+        changes.append(type);
+        String delim = "(";
+        for (String a: arguments) {
+            changes.append(delim);
+            changes.append('\"');
+            changes.append(a);
+            changes.append('\"');
+            delim = ", ";
+        }
+        changes.append(");<br/>");
+    }
+    
+    //---------- Response Generation ------------------------------------------
+    
+    /**
+     * prepares the response properties
+     */
+    private void prepare() {
+        String path = getPath();
+        if (getProperty(PN_STATUS_CODE) == null) {
+            if (getError() != null) {
+                setStatus(500, getError().toString());
+                setTitle("Error while processing " + path);
+            } else {
+                if (isCreateRequest()) {
+                    setStatus(201, "Created");
+                    setTitle("Content created " + path);
+                } else {
+                    setStatus(200, "OK");
+                    setTitle("Content modified " + path);
+                }
+            }
+        }
+        
+        String referer = getReferer();
+        if (referer == null) {
+            referer = "";
+        }
+        setReferer(referer);
+        
+        // get changelog
+        changes.insert(0, "<pre>");
+        changes.append("</pre>");
+        setProperty(PN_CHANGE_LOG, changes.toString());
+    }
+
+    /**
+     * sets the response status code properties
+     * @param code the code
+     * @param message the message
+     */
+    public void setStatus(int code, String message) {
+        setProperty(PN_STATUS_CODE, code);
+        setProperty(PN_STATUS_MESSAGE, message);
+    }
+
+    /**
+     * Sets the title of the respose message
+     * @param title the title
+     */
+    public void setTitle(String title) {
+        setProperty(PN_TITLE, title);
+    }
+
+    /**
+     * Sets a generic response property with the given
+     * @param name name of the property
+     * @param value value of the property
+     */
+    public void setProperty(String name, Object value) {
+        properties.put(name, value);
+    }
+    
+    /**
+     * Returns the generic response property with the given name and type or
+     * <code>null</code> if no such property exists or the property is not
+     * of the requested type.
+     */
+    @SuppressWarnings("unchecked")
+    public <Type> Type getProperty(String name, Class<Type> type) {
+        Object value = getProperty(name);
+        if (type.isInstance(value)) {
+            return (Type) value;
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Returns the generic response property with the given name and type or
+     * <code>null</code> if no such property exists.
+     */
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+
+    /**
+     * Writes the response to the given writer and replaces all ${var} patterns
+     * by the value of the respective property. if the property is not defined
+     * the pattern is not modified.
+     * @param response to send to
+     * @param setStatus whether to set the status code on the response  
+     * @throws IOException if an i/o exception occurs
+     */
+    public void send(HttpServletResponse response, boolean setStatus) throws IOException {
+        prepare();
+        
+        if (setStatus) {
+            Object status = getProperty(PN_STATUS_CODE);
+            if (status instanceof Number) {
+                response.setStatus(((Number) status).intValue());
+            }
+        }
+        
+        response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+        
+        Writer out = response.getWriter();
+        InputStream template = getClass().getResourceAsStream(TEMPLATE_NAME);
+        Reader in = new BufferedReader(new InputStreamReader(template));
+        StringBuffer varBuffer = new StringBuffer();
+        int state = 0;
+        int read;
+        while ((read = in.read()) >= 0) {
+            char c = (char) read;
+            switch (state) {
+                // initial
+                case 0:
+                    if (c=='$') {
+                        state = 1;
+                    } else {
+                        out.write(c);
+                    }
+                    break;
+                // $ read
+                case 1:
+                    if (c=='{') {
+                        state = 2;
+                    } else {
+                        state = 0;
+                        out.write('$');
+                        out.write(c);
+                    }
+                    break;
+                // { read
+                case 2:
+                    if (c=='}') {
+                        state = 0;
+                        Object prop = properties.get(varBuffer.toString());
+                        if (prop == null) {
+                            out.write("${");
+                            out.write(varBuffer.toString());
+                            out.write("}");
+                        } else {
+                            out.write(prop.toString());
+                        }
+                        varBuffer.setLength(0);
+                    } else {
+                        varBuffer.append(c);
+                    }
+            }
+        }
+        in.close();
+        out.flush();
+    }
+    
+}

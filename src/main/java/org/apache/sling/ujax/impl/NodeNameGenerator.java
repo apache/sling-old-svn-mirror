@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ujax;
+package org.apache.sling.ujax.impl;
 
 import java.util.LinkedList;
 import java.util.List;
