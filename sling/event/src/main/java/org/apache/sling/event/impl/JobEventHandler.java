@@ -56,7 +56,7 @@ import org.osgi.service.event.EventAdmin;
  * @scr.property name="event.topics" refValues="EventUtil.TOPIC_JOB"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
- * @scr.property name="repository.path" value="/sling/jobs"
+ * @scr.property name="repository.path" value="/var/eventing/jobs"
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
  * @scr.service interface="java.lang.Runnable"
