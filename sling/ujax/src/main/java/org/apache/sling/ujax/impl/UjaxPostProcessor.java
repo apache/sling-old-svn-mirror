@@ -357,7 +357,22 @@ public class UjaxPostProcessor {
                 if (isReplace) {
                     session.getItem(dest).remove();
                 } else {
-                    throw new IllegalArgumentException("Unable to process move. destination item already exists " + dest);
+                    throw new IllegalArgumentException(
+                        "Unable to process move. destination item already exists "
+                            + dest);
+                }
+            } else {
+                // check if path to destination exists and create it, but only
+                // if it's a descendant of the current node
+                String dstParent = dest.substring(0, dest.lastIndexOf('/'));
+                if (!dstParent.equals("") && !session.itemExists(dstParent)) {
+                    if (dstParent.startsWith(htmlResponse.getPath() + "/")) {
+                        deepGetOrCreateNode(dstParent);
+                    } else {
+                        throw new IllegalArgumentException(
+                            "Unable to process move. destination's parent does not exist "
+                                + dest);
+                    }
                 }
             }
             session.move(src, dest);
