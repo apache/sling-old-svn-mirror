@@ -65,19 +65,14 @@
                             org.apache.sling.scheduler
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scheduler.impl,
-                            org.quartz.*,
-                            org.apache.commons.pool.*,
-                            org.apache.commons.jocl.*,
-                            org.apache.commons.dbcp.*
+                            org.apache.sling.scheduler.impl
                         </Private-Package>
                         <DynamicImport-Package>
-                            javax.ejb
+                            javax.ejb,org.apache.commons.logging.impl
                         </DynamicImport-Package>
-                        <Include-Resource>
-                            {maven-resources},
-                            @quartz-1.5.2.jar!/**
-                        </Include-Resource>
+                        <Embed-Dependency>
+                            quartz,commons-pool,commons-dbcp,commons-beanutils,commons-digester
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -125,6 +120,16 @@
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
             <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-digester</groupId>
+            <artifactId>commons-digester</artifactId>
+            <version>1.8</version>
         </dependency>
     </dependencies>
 </project>
