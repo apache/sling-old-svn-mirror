@@ -27,7 +27,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * The <code>LoginServlet</code> TODO
- * 
+ *
  * @scr.component metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="HTTP Header Login Servlet"
@@ -47,22 +47,23 @@ public class LoginServlet extends SlingSafeMethodsServlet {
 
         prolog(pw);
 
+        final String contexPath = request.getContextPath();
         String authType = request.getAuthType();
         String user = request.getRemoteUser();
 
         if (authType == null) {
-            login(pw);
+            login(pw, contexPath);
         } else {
-            logout(pw, user);
+            logout(pw, contexPath, user);
         }
 
         epilog(pw);
     }
 
-    private void login(PrintWriter pw) {
+    private void login(PrintWriter pw, String contextPath) {
 
         pw.println("<script>");
-        ajax(pw);
+        ajax(pw, contextPath);
         pw.println("function loginuser() {");
         pw.println("    var user = document.forms['login'].usr.value;");
         pw.println("    var pass = document.forms['login'].pwd.value;");
@@ -81,9 +82,9 @@ public class LoginServlet extends SlingSafeMethodsServlet {
         pw.println("</form>");
     }
 
-    private void logout(PrintWriter pw, String user) {
+    private void logout(PrintWriter pw, String contextPath, String user) {
         pw.println("<script>");
-        ajax(pw);
+        ajax(pw, contextPath);
         pw.println("function logoutuser() {");
 
         pw.println("    try {");
@@ -144,7 +145,7 @@ public class LoginServlet extends SlingSafeMethodsServlet {
         pw.println("<div id=\"main\">");
     }
 
-    private void ajax(PrintWriter pw) {
+    private void ajax(PrintWriter pw, final String contextPath) {
         pw.println("//-----------------------------------------------------------------------------");
         pw.println("// Ajax Support");
 
@@ -181,7 +182,7 @@ public class LoginServlet extends SlingSafeMethodsServlet {
         pw.println("             xmlhttp.abort();");
         pw.println("         }");
 
-        pw.println("         xmlhttp.open('GET', '/?"
+        pw.println("         xmlhttp.open('GET', '" + contextPath + "?"
             + AuthorizationHeaderAuthenticationHandler.REQUEST_LOGIN_PARAMETER
             + "=1', false, user, pass);");
 
