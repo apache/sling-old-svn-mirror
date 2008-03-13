@@ -59,17 +59,33 @@ public class BundleResource extends SlingAdaptable implements Resource {
 
     public static BundleResource getResource(ResourceResolver resourceResolver, Bundle bundle, String path) {
 
-        // if the entry has no trailing slash, try to with a trailing
-        // slash in case the entry would be a folder
-        if (!path.endsWith("/")) {
-            BundleResource br = getResource(resourceResolver, bundle, path + "/");
-            if (br != null) {
-                return br;
+        // first try, whether the bundle has an entry with a trailing slash
+        // which would be a folder. In this case we check whether the
+        // repository contains an item with the same path. If so, we
+        // don't create a BundleResource but instead return null to be
+        // able to return an item-based resource
+        URL entry = bundle.getEntry(path + "/");
+        if (entry != null) {
+            Session session = resourceResolver.adaptTo(Session.class);
+            if (session != null) {
+                try {
+                    if (session.itemExists(path)) {
+                        return null;
+                    }
+                } catch (RepositoryException re) {
+                    // don't care
+                }
             }
         }
 
-        // has trailing slash or not a folder, try path itself
-        URL entry = bundle.getEntry(path);
+        // if there is no entry with a trailing slash, try plain name
+        // which would then of course be a file
+        if (entry == null) {
+            entry = bundle.getEntry(path);
+        }
+        
+        // here we either have a folder for which no same-named item exists
+        // or a bundle file
         if (entry != null) {
             return new BundleResource(resourceResolver, bundle, path);
         }
@@ -133,16 +149,6 @@ public class BundleResource extends SlingAdaptable implements Resource {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
-        } else if (type == Node.class) {
-            Item item = getItem();
-            if (item != null && item.isNode()) {
-                return (Type) item;
-            }
-        } else if (type == Property.class) {
-            Item item = getItem();
-            if (item != null && !item.isNode()) {
-                return (Type) item;
-            }
         }
 
         // fall back to nothing
@@ -191,22 +197,6 @@ public class BundleResource extends SlingAdaptable implements Resource {
         return url;
     }
     
-    /** Return a JCR Item which may be located at the resource path */
-    private Item getItem() {
-        Session session = getResourceResolver().adaptTo(Session.class);
-        if (session != null) {
-            try {
-                if (session.itemExists(getPath())) {
-                    return session.getItem(getPath());
-                }
-            } catch (RepositoryException re) {
-                log.info("getItem: Cannot get item for resource " + this, re);
-            }
-        }
-        
-        return null;
-    }
-
     Iterator<Resource> listChildren() {
         return new BundleResourceIterator(this);
     }
