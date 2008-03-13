@@ -18,59 +18,42 @@
  */
 package org.apache.sling.servlets;
 
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.SlingException;
-import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Session;
-import javax.jcr.Node;
-import javax.jcr.Value;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.QueryResult;
-import javax.jcr.query.RowIterator;
-import javax.jcr.query.Row;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
- *
- * @scr.service
- *  interface="javax.servlet.Servlet"
- *
- * @scr.component
- *  immediate="true"
- *  metatype="false"
- *
- * @scr.property
- *  name="service.description"
- *  value="Default Query Servlet"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
- *
- * Use this as the default query servlet for json get requests for Sling
- * @scr.property
- *  name="sling.servlet.resourceTypes"
- *  value="sling/servlet/default"
- *
- * @scr.property
- *  name="sling.servlet.extensions"
- *  value="json"
- *
- * @scr.property
- *  name="sling.servlet.selectors"
- *  value="query"
+ * 
+ * @scr.service interface="javax.servlet.Servlet"
+ * @scr.component immediate="true" metatype="false"
+ * @scr.property name="service.description" value="Default Query Servlet"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ *               Use this as the default query servlet for json get requests for
+ *               Sling
+ * @scr.property name="sling.servlet.resourceTypes"
+ *               value="sling/servlet/default"
+ * @scr.property name="sling.servlet.extensions" value="json"
+ * @scr.property name="sling.servlet.selectors" value="query"
  */
 public class JsonQueryServlet extends SlingSafeMethodsServlet {
     private final Logger log = LoggerFactory.getLogger(JsonQueryServlet.class);
@@ -104,35 +87,37 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     /**
      * Dumps the result as JSON object.
-     *
+     * 
      * @param req request
      * @param resp response
      * @throws IOException in case the search will unexpectedly fail
      */
     private void dumpResult(SlingHttpServletRequest req,
-                            SlingHttpServletResponse resp) throws IOException {
+            SlingHttpServletResponse resp) throws IOException {
         try {
-            Session s = req.getResourceResolver().adaptTo(Session.class);
-            if (s == null) {
-                throw new IOException("No JCR Session available");
-            }
+            ResourceResolver resolver = req.getResourceResolver();
+
             String statement = req.getParameter(STATEMENT);
-            String queryType =
-                    (req.getParameter(QUERY_TYPE) != null &&
-                            req.getParameter(QUERY_TYPE).equals(Query.SQL)) ?
-                            Query.SQL : Query.XPATH;
-            QueryManager qm = s.getWorkspace().getQueryManager();
-            Query query = qm.createQuery(statement, queryType);
-            QueryResult result = query.execute();
-            RowIterator rows = result.getRows();
-            String cols[] = result.getColumnNames();
-            resp.setContentType(JsonRendererServlet.responseContentType);
-            final JSONWriter w = new JSONWriter(resp.getWriter());
-            w.array();
+            String queryType = (req.getParameter(QUERY_TYPE) != null && req.getParameter(
+                QUERY_TYPE).equals(Query.SQL)) ? Query.SQL : Query.XPATH;
+
+            Iterator<Map<String, Object>> result = resolver.queryResources(
+                statement, queryType);
+
             if (req.getParameter(OFFSET) != null) {
                 long skip = Long.parseLong(req.getParameter(OFFSET));
-                rows.skip(skip);
+                while (skip > 0 && result.hasNext()) {
+                    result.next();
+                    skip--;
+                }
             }
+
+            resp.setContentType(JsonRendererServlet.responseContentType);
+            resp.setCharacterEncoding("UTF-8");
+
+            final JSONWriter w = new JSONWriter(resp.getWriter());
+            w.array();
+
             long count = -1;
             if (req.getParameter(ROWS) != null) {
                 count = Long.parseLong(req.getParameter(ROWS));
@@ -140,7 +125,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
             List<String> properties = new ArrayList<String>();
             if (req.getParameterValues(PROPERTY) != null) {
-                for (String property: req.getParameterValues(PROPERTY)) {
+                for (String property : req.getParameterValues(PROPERTY)) {
                     properties.add(property);
                 }
             }
@@ -151,64 +136,99 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
             }
 
             // iterate through the result set and build the "json result"
-            while (rows.hasNext() && count != 0) {
-                Row row = rows.nextRow();
-                String path = row.getValue("jcr:path").getString();
-                Node node = (Node) s.getItem(path);
-                String name = node.getName();
+            while (result.hasNext() && count != 0) {
+                Map<String, Object> row = result.next();
 
                 w.object();
+                String path = row.get("jcr:path").toString();
+
                 w.key("name");
-                w.value(name);
-                for (String colName: cols) {
+                w.value(JcrResourceUtil.getName(path));
+
+                // dump columns
+                for (String colName : row.keySet()) {
                     w.key(colName);
                     String strValue = "";
                     if (colName.equals(REP_EXCERPT)) {
-                        Value ev = row.getValue("rep:excerpt(" + exerptPath + ")");
-                        strValue = ev == null ? "" : ev.getString();
+                        Object ev = row.get("rep:excerpt(" + exerptPath + ")");
+                        strValue = (ev == null) ? "" : ev.toString();
                     } else {
-                        Value value = row.getValue(colName);
-                        strValue = formatValue(value);
+                        strValue = formatValue(row.get(colName));
                     }
                     w.value(strValue);
                 }
 
                 // load properties and add it to the result set
-                for (String property: properties) {
-                    if (node.hasProperty(property)) {
-                        Value value = node.getProperty(property).getValue();
-                        String strValue = formatValue(value);
-                        w.key(property);
-                        w.value(strValue);
-                    }
+                if (!properties.isEmpty()) {
+                    Resource nodeRes = resolver.getResource(path);
+                    dumpProperties(w, nodeRes, properties);
                 }
+                
                 w.endObject();
                 count--;
             }
             w.endArray();
         } catch (JSONException je) {
             throw wrapException(je);
-        } catch (RepositoryException re) {
-            throw wrapException(re);
         }
     }
 
-    private String formatValue(Value value) {
-        String strValue = "";
-        try {
-            if (value != null) {
-                switch (value.getType()) {
-                    case PropertyType.DATE: strValue = value.getDate().toString(); break;
-                    case PropertyType.LONG: strValue = String.valueOf(value.getLong());break;
-                    case PropertyType.DOUBLE: strValue = String.valueOf(value.getDouble()); break;
-                    case PropertyType.BINARY: strValue = "[binary]"; break;
-                    default:
-                        strValue = value.getString();
-                }
-            }
-        } catch (RepositoryException re) {
-            // ignore
+    private void dumpProperties(JSONWriter w, Resource nodeRes,
+            List<String> properties) throws JSONException {
+        
+        // nothing to do if there is no resource
+        if (nodeRes == null) {
+            return;
         }
+        
+        
+        ResourceResolver resolver = nodeRes.getResourceResolver();
+        for (String property : properties) {
+            Resource prop = resolver.getResource(nodeRes, property);
+            if (prop != null) {
+                String strValue;
+                Value value = prop.adaptTo(Value.class);
+                if (value != null) {
+                    strValue = formatValue(value);
+                } else {
+                    strValue = prop.adaptTo(String.class);
+                    if (strValue == null) {
+                        strValue = "";
+                    }
+                }
+                w.key(property);
+                w.value(strValue);
+            }
+        }
+
+    }
+
+    private String formatValue(Value value) {
+        try {
+            return formatValue(JcrResourceUtil.toJavaObject(value));
+        } catch (RepositoryException re) {
+            // might log
+        }
+        return "";
+    }
+    
+    private String formatValue(Object value) {
+        String strValue;
+        if (value instanceof InputStream) {
+            // binary value comes as a LazyInputStream
+            strValue = "[binary]";
+
+            // just to be clean, close the stream
+            try {
+                ((InputStream) value).close();
+            } catch (IOException ignore) {
+            }
+        } else if (value != null) {
+            strValue = value.toString();
+        } else {
+            strValue = "";
+        }
+
         return strValue;
     }
 
