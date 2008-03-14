@@ -1,0 +1,40 @@
+-------------------------------------------------------------------------------
+DojoX RPC Extras
+-------------------------------------------------------------------------------
+Version 1.0
+Release date: 07/01/2007
+-------------------------------------------------------------------------------
+Project state:
+yahoo.smd: stable
+-------------------------------------------------------------------------------
+Project authors
+	Dustin Machi
+-------------------------------------------------------------------------------
+Project description
+
+Extra utilities for use with dojo.rpc as well as additional smd descriptions
+for specific services.
+-------------------------------------------------------------------------------
+Dependencies:
+
+Dojo Core (package loader, dojo.rpc).
+-------------------------------------------------------------------------------
+Documentation
+
+See RPC documentation at http://dojotoolkit.org/
+
+-------------------------------------------------------------------------------
+Installation instructions
+
+Grab the following from the Dojo SVN Repository:
+http://svn.dojotoolkit.org/var/src/dojo/dojox/trunk/rpc/*
+
+Install into the following directory structure:
+/dojox/rpc/
+
+...which should be at the same level as your Dojo checkout.
+
+The use of the actual utilities varies, but typically additional software 
+will be included with dojo.require() and smd files for services can be loaded
+manually with an xhr request or can be provided by url to the service when created
+
