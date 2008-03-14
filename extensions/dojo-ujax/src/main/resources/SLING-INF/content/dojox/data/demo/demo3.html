@@ -1,0 +1,62 @@
+<!--
+  This file is a demo of multiple dojo.data aware widgets using different datastore implementations for displaying data.
+-->
+<html>
+<head>
+	<title>Demo of Multiple Widgets using the µjax Data Store</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+    @import "../../../dojox/grid/_grid/tundraGrid.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true, usePlainJson: true, debugAtAllCosts: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.Tree");
+		dojo.require("dojox.data.SlingNodeStore");
+    dojo.require("dojox.data.SlingPropertyStore");
+    dojo.require("dojox.grid._data.model");
+    dojo.require("dojox.grid.Grid");
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		DEMO:  µjax Data Store
+	</h1>
+
+  <!-- the data store -->
+  <div dojoType="dojox.data.SlingNodeStore" url="/dojo/dojo" jsId="propertyStore">
+  </div>
+  
+
+  
+  <h3>
+		Widgets using µjaxStore:
+	</h3>
+  
+    <!-- the data model (for the grid) -->
+  <div dojoType="dojox.grid.data.DojoData" jsId="propertyModel" 
+    store="propertyStore" clientSort="true" query="{ level: 2 }"> 
+  </div>
+  
+  <script type="text/javascript">
+  var tableview = {
+    cells: [
+      [
+        {name: "URI", field: "sling:uri", width:"200px" },
+        {name: "Created", field: "jcr:created", width:"200px" },
+        {name: "Primary Type", field: "jcr:primaryType", width:"200px" }
+      ]
+    ]
+  };
+  
+  var tablestructure = [ tableview ];
+  </script>
+  
+  <div id="grid" dojoType="dojox.Grid" model="propertyModel" structure="tablestructure"></div>
+</body>
+</html>
