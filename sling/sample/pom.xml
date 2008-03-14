@@ -104,8 +104,8 @@
                         </Include-Resource>
 
                         <Sling-Bundle-Resources>
-                            /sling/scripts/org/apache/sling/sample,
-                            /classes/org/apache/jsp/sling/scripts/org/apache/sling/sample
+                            /apps/sling/sample,
+                            /classes/org/apache/jsp/apps/sling/sample
                         </Sling-Bundle-Resources>
 
                     </instructions>
