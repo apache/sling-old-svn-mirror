@@ -1,0 +1,42 @@
+-------------------------------------------------------------------------------
+Project Name
+-------------------------------------------------------------------------------
+Version X.XXX
+Release date: MM/DD/YYYY
+-------------------------------------------------------------------------------
+Project state:
+experimental
+-------------------------------------------------------------------------------
+Credits
+	Brad Neuberg
+	Alex Russell
+-------------------------------------------------------------------------------
+Project description
+
+dojox.storage provides a JavaScript abstraction for persistent storage
+as well as pluggable implementations which typically use native browser extensions
+(e.g. Flash player, Gears)
+
+-------------------------------------------------------------------------------
+Dependencies:
+
+FlashStorageProvider requires the Flash player [ currently NOT operational ]
+GearsStorageProvider requires the Gears extension
+
+The open source mtasc compiler (www.mtasc.org) is needed to build the
+ActionScript into SWF format.  The SWF object is maintained within svn, so
+this step is only necessary if Storage.as is modified.  A sample build script
+is provided (build.sh)
+
+-------------------------------------------------------------------------------
+Documentation
+
+TBD
+
+-------------------------------------------------------------------------------
+Installation instructions
+
+TBD
+
+-------------------------------------------------------------------------------
+Additional Notes
