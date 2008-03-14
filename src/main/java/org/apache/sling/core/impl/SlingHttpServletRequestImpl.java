@@ -43,6 +43,7 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.core.impl.helper.NullResourceBundle;
 import org.apache.sling.core.impl.parameters.ParameterSupport;
 import org.apache.sling.core.impl.request.RequestData;
 import org.apache.sling.core.impl.request.SlingRequestDispatcher;
@@ -201,8 +202,11 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
      * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(java.util.Locale)
      */
     public ResourceBundle getResourceBundle(Locale locale) {
-        // TODO should use our resource bundle !!
-        return null;
+        if (locale == null) {
+            locale = getLocale();
+        }
+        
+        return new NullResourceBundle(locale);
     }
 
     /**
@@ -211,7 +215,6 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     public String getResponseContentType() {
         if(responseContentType == null) {
             final String ext = getRequestPathInfo().getExtension();
-            // TODO use Sling mime-type service??
             responseContentType = requestData.getSlingMainServlet().getServletContext().getMimeType("dummy." + ext);
         }
         return responseContentType;
