@@ -219,40 +219,9 @@ public class SlingAuthenticator implements ManagedService {
 
                 return true;
 
-            } catch (TooManySessionsException se) {
-
-                // to many users, send a 503 Service Unavailable
-                log.info("authenticate: Too many sessions for user: {}",
-                    se.getMessage());
-
-                try {
-                    res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-                        "Too Many Users");
-                } catch (IOException ioe) {
-                    log.error("authenticate: Cannot send status 503 to client",
-                        ioe);
-                }
-
-            } catch (LoginException e) {
-
-                // request authentication information and send 403 (Forbidden)
-                // if no handler can request authentication information.
-                log.info("authenticate: Unable to authenticate: {}",
-                    e.getMessage());
-                requestAuthentication(req, res);
-
             } catch (RepositoryException re) {
 
-                // general problem, send a 500 Internal Server Error
-                log.error("authenticate: Unable to authenticate", re);
-
-                try {
-                    res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Data Access Failure");
-                } catch (IOException ioe) {
-                    log.error("authenticate: Cannot send status 500 to client",
-                        ioe);
-                }
+                handleLoginFailure(req, res, re);
 
             }
 
@@ -389,28 +358,61 @@ public class SlingAuthenticator implements ManagedService {
                 Session session = getRepository().login();
                 setAttributes(session, null, req);
                 return true;
-            } catch (TooManySessionsException se) {
-                log.error(
-                    "getAnonymousSession: Too many anonymous users active", se);
-            } catch (LoginException le) {
-                log.error(
-                    "getAnonymousSession: Login failure, requesting authentication",
-                    le);
             } catch (RepositoryException re) {
-                log.error("getAnonymousSession: Cannot get anonymous session",
-                    re);
+                // cannot login > fail login, do not try to authenticate
+                handleLoginFailure(req, res, re);
+                return false;
             }
-        } else {
-            log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
         }
-
+        
         // request authentication now, and fail if not possible
+        log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
         requestAuthentication(req, res);
 
         // fallback to no session
         return false;
     }
 
+    private void handleLoginFailure(HttpServletRequest request,
+            HttpServletResponse response, RepositoryException reason) {
+        
+        if (reason instanceof TooManySessionsException) {
+
+            // to many users, send a 503 Service Unavailable
+            log.info("authenticate: Too many sessions for user: {}",
+                reason.getMessage());
+
+            try {
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+                    "Too Many Users");
+            } catch (IOException ioe) {
+                log.error("authenticate: Cannot send status 503 to client", ioe);
+            }
+
+        } else if (reason instanceof LoginException) {
+
+            // request authentication information and send 403 (Forbidden)
+            // if no handler can request authentication information.
+            log.info("authenticate: Unable to authenticate: {}",
+                reason.getMessage());
+            requestAuthentication(request, response);
+
+        } else {
+
+            // general problem, send a 500 Internal Server Error
+            log.error("authenticate: Unable to authenticate", reason);
+
+            try {
+                response.sendError(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Data Access Failure");
+            } catch (IOException ioe) {
+                log.error("authenticate: Cannot send status 500 to client", ioe);
+            }
+        }
+        
+    }
+    
     // TODO
     private void sendFailure(HttpServletResponse res) {
         try {
