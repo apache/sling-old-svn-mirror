@@ -100,14 +100,6 @@ public class LocaleResolverFilter implements Filter {
         this.defaultLocale = this.toLocale(localeString);
     }
 
-    protected void bindLocaleResolver(LocaleResolver localeResolver) {
-        this.localeResolver = localeResolver;
-    }
-
-    protected void unbindLocaleResolver(LocaleResolver localeResolver) {
-        this.localeResolver = null;
-    }
-
     // ---------- internal -----------------------------------------------------
 
     private Locale toLocale(String localeString) {
