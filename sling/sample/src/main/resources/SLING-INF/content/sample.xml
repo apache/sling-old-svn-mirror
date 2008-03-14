@@ -23,13 +23,12 @@
     
     Defining the node in this sample.xml file overwrites the default node
     type nt:folder which would have been used for the sample directory if
-    this file would not be available. See the node /sample/page/jsp for
-    example, which has no definition in any XML or JSON file and thus is
+    this file would not be available. See the node /apps/sling/SampleContent
+    for example, which has no definition in any XML or JSON file and thus is
     created as an nt:folder node.
 -->
 <node>
     <primaryNodeType>nt:unstructured</primaryNodeType>
-    
     <!-- the child content must also be nt:unstructured -->
     <node>
         <name>content</name>
