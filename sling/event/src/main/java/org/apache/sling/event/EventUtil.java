@@ -24,6 +24,8 @@ import java.util.Hashtable;
 
 import org.apache.sling.event.EventUtil.JobStatusNotifier.NotifierContext;
 import org.osgi.service.event.Event;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>EventUtil</code> class is an utility class for
@@ -75,6 +77,8 @@ public abstract class EventUtil {
 
     /** The date for the timed event. */
     public static final String PROPERTY_TIMED_EVENT_DATE = "event.timed.date";
+
+    private final static Logger logger = LoggerFactory.getLogger(EventUtil.class);
 
     /**
      * Create a distributable event.
@@ -181,6 +185,8 @@ public abstract class EventUtil {
                 boolean result = false;
                 try {
                     result = processor.process(job);
+                } catch (Throwable t) {
+                    logger.error("Unhandled error occured in job processor " + t.getMessage(), t);
                 } finally {
                     if ( result ) {
                         EventUtil.finishedJob(job);
