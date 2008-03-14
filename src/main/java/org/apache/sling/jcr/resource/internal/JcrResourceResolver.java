@@ -207,8 +207,11 @@ public class JcrResourceResolver extends SlingAdaptable implements
                     try {
                         Value[] values = rows.nextRow().getValues();
                         for (int i = 0; i < values.length; i++) {
-                            row.put(colNames[i],
-                                JcrResourceUtil.toJavaObject(values[i]));
+                            Value v = values[i];
+                            if (v != null) {
+                                row.put(colNames[i],
+                                    JcrResourceUtil.toJavaObject(values[i]));
+                            }
                         }
                     } catch (RepositoryException re) {
                         log.error(
