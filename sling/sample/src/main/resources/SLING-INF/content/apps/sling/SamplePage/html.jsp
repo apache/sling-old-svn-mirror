@@ -24,14 +24,15 @@
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
 
 <%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects mappedObjectName="samplePage" mappedObjectClass="SamplePage" />
+<sling:defineObjects mappedObjectName="samplePage"
+	mappedObjectClass="SamplePage" />
 <%-- This is a top level component, so we have to draw the html and head tags --%>
 <html>
 <head>
-<title><%= samplePage.getTitle() %></title>
+<title><%=samplePage.getTitle()%></title>
 </head>
 <body>
-<h1><%= samplePage.getTitle() %></h1>
+<h1><%=samplePage.getTitle()%></h1>
 
 <table style="border: none; height: 90%;">
 	<tr valign="top">
@@ -39,7 +40,8 @@
 			style="padding-top: 20px; padding-right: 20px; background-color: cornsilk">
 		<%
 		    final String naviRootPath = "/sample/content";
-		    Resource naviRoot = new SyntheticResource(naviRootPath,
+		    Resource naviRoot = new SyntheticResource(
+		        resource.getResourceResolver(), naviRootPath,
 		        Navigation.RESOURCE_TYPE);
 		%> <sling:include resource="<%= naviRoot %>" /></td>
 		<td>
