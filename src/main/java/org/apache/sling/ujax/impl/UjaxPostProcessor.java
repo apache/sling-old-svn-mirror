@@ -49,8 +49,8 @@ public class UjaxPostProcessor {
     public static final String ORDER_FIRST = "first";
     public static final String ORDER_BEFORE = "before ";
     public static final String ORDER_AFTER = "after ";
-    public static final String ORDER_LAST = "last";    
-    
+    public static final String ORDER_LAST = "last";
+
     /**
      * handler that deals with properties
      */
@@ -68,7 +68,7 @@ public class UjaxPostProcessor {
 
     // TODO
     private final String rootPath;
-    
+
     /**
      * utility class for parsing date strings
      */
@@ -91,7 +91,7 @@ public class UjaxPostProcessor {
     private String savePrefix;
 
     private HtmlResponse htmlResponse;
-    
+
     /**
      * map of properties that form the content
      */
@@ -114,7 +114,7 @@ public class UjaxPostProcessor {
         this.request = request;
         this.session = session;
         this.htmlResponse = new HtmlResponse();
-        
+
         htmlResponse.setReferer(request.getHeader("referer"));
 
         // default to non-creating request (trailing DEFAULT_CREATE_SUFFIX)
@@ -206,7 +206,7 @@ public class UjaxPostProcessor {
     }
 
     public HtmlResponse getHtmlResponse() {
-        
+
         String path = htmlResponse.getPath();
         if (path == null) {
             path = rootPath;
@@ -221,7 +221,7 @@ public class UjaxPostProcessor {
 
         return htmlResponse;
     }
-    
+
     /**
      * Returns the request of this processor
      * @return the sling servlet request
@@ -233,7 +233,7 @@ public class UjaxPostProcessor {
     /**
      * Resolves the given path with respect to the current root path.
      *
-     * @param path the path to resolve
+     * @param relPath the path to resolve
      * @return the given path if it starts with a '/';
      *         a resolved path otherwise.
      */
@@ -413,7 +413,7 @@ public class UjaxPostProcessor {
                 throw new ServletException("Collision in generated node names for path=" + path);
             }
         }
-        
+
         htmlResponse.setPath(path);
     }
 
@@ -629,7 +629,7 @@ public class UjaxPostProcessor {
         }
         return savePrefix;
     }
-    
+
     private void processOrder() throws RepositoryException {
         final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
         if  (orderCode!=null) {
