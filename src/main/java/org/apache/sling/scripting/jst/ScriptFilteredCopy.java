@@ -26,8 +26,8 @@ import java.io.Writer;
 /** Copy the ECT script to the output, filtering <script>
  *  tags on the way (see SLING-114 comment 10/Dec/07 01:00 AM).
  *  To simplify things, assumes each out.write statement is on
- *  its own line in input.  
- */  
+ *  its own line in input.
+ */
 class ScriptFilteredCopy {
 
     /** Read r line-by-line, process lines that need to be
@@ -37,7 +37,7 @@ class ScriptFilteredCopy {
         final BufferedReader br = new BufferedReader(r);
         String line = null;
         while( (line = br.readLine()) != null) {
-            final String toWrite = processLine(line); 
+            final String toWrite = processLine(line);
             w.write(toWrite, 0, toWrite.length());
             w.write('\n');
         }
@@ -47,21 +47,20 @@ class ScriptFilteredCopy {
      *  <pre>
      *      out.write("something and a <script> tag");
      *  </pre>
-     *  
+     *
      *  Into
      *   <pre>
      *      out.write("something and a <");
      *      out.write("script> tag");
      *   </pre>
-     *   
-     *  To work around browsers problems when they 
-     *  see a </script> tag in a String. 
+     *
+     *  To work around browsers problems when they
+     *  see a </script> tag in a String.
      */
     String processLine(String line) {
         if(line.startsWith("out.write(") && line.endsWith("\");")) {
             return line.replaceAll("script>","\");\nout.write(\"script>");
-        } else {
-            return line;
         }
+        return line;
     }
 }
