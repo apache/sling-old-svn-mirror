@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.sling.core.RequestLog;
@@ -64,7 +63,7 @@ class FileRequestLog implements RequestLog {
     private static File relPathRoot;
 
     // The map of shared open files (actually PrintWriter instances)
-    private static Map logFiles = new HashMap();
+    private static Map<String, PrintWriter> logFiles = new HashMap<String, PrintWriter>();
 
     // Initialize class with the root directory for relative log file paths
     static void init(String relPathRoot) {
@@ -73,15 +72,14 @@ class FileRequestLog implements RequestLog {
 
     // Dispose class by closing all open PrintWeiter instances
     static void dispose() {
-        for (Iterator li = logFiles.values().iterator(); li.hasNext();) {
-            Writer w = (Writer) li.next();
+        for (final Writer w : logFiles.values()) {
             try {
                 w.close();
             } catch (IOException ioe) {
                 // don't care
             }
-            li.remove();
         }
+        logFiles.clear();
     }
 
     // The PrintWriter used by this instance to write the messages
@@ -98,7 +96,7 @@ class FileRequestLog implements RequestLog {
         fileName = file.getAbsolutePath();
 
         synchronized (logFiles) {
-            this.output = (PrintWriter) logFiles.get(fileName);
+            this.output = logFiles.get(fileName);
             if (this.output == null) {
 
                 // ensure location of the log file

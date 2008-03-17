@@ -74,7 +74,7 @@ public class HtmlResponse {
 
     // TODO
     public static final String PN_IS_CREATED = "isCreate";
-    
+
     /**
      * human readable changelog
      */
@@ -82,7 +82,7 @@ public class HtmlResponse {
 
     // TODO
     public static final String PN_ERROR = "error";
-    
+
     /**
      * name of the html template
      */
@@ -100,13 +100,12 @@ public class HtmlResponse {
 
     /**
      * Creates a new ujax html response
-     * @param provider the status provider
      */
     public HtmlResponse() {
     }
 
     //---------- Settings for the response ------------------------------------
-    
+
     /**
      * Returns the path of the node that was the parent of the property
      * modifications.
@@ -115,7 +114,7 @@ public class HtmlResponse {
     public String getPath() {
         return getProperty(PN_PATH, String.class);
     }
-    
+
     public void setPath(String path) {
         setProperty(PN_PATH, path);
     }
@@ -127,7 +126,7 @@ public class HtmlResponse {
     public boolean isCreateRequest() {
         return getProperty(PN_IS_CREATED, Boolean.class);
     }
-    
+
     public void setCreateRequest(boolean isCreateRequest) {
         setProperty(PN_IS_CREATED, isCreateRequest);
     }
@@ -144,7 +143,7 @@ public class HtmlResponse {
     public void setLocation(String location) {
         setProperty(PN_LOCATION, location);
     }
-    
+
     /**
      * Returns the parent location of the modification. this is the externalized
      * form of the parent node of the current path.
@@ -157,7 +156,7 @@ public class HtmlResponse {
     public void setParentLocation(String parentLocation) {
         setProperty(PN_PARENT_LOCATION, parentLocation);
     }
-    
+
     /**
      * Returns any recorded error or <code>null</code>
       * @return an error or <code>null</code>
@@ -169,7 +168,7 @@ public class HtmlResponse {
     public void setError(Throwable error) {
         setProperty(PN_ERROR, error);
     }
-    
+
     /**
      * Returns the referer as from the 'referer' request header.
      * @return the referer or <code>null</code> if the referer is empty.
@@ -181,9 +180,9 @@ public class HtmlResponse {
     public void setReferer(String referer) {
         setProperty(PN_REFERER, referer);
     }
-    
+
     //---------- ChangeLog ----------------------------------------------------
-    
+
     /**
      * Records a 'modified' change
      * @param path path of the item that was modified
@@ -235,9 +234,9 @@ public class HtmlResponse {
         }
         changes.append(");<br/>");
     }
-    
+
     //---------- Response Generation ------------------------------------------
-    
+
     /**
      * prepares the response properties
      */
@@ -257,13 +256,13 @@ public class HtmlResponse {
                 }
             }
         }
-        
+
         String referer = getReferer();
         if (referer == null) {
             referer = "";
         }
         setReferer(referer);
-        
+
         // get changelog
         changes.insert(0, "<pre>");
         changes.append("</pre>");
@@ -296,7 +295,7 @@ public class HtmlResponse {
     public void setProperty(String name, Object value) {
         properties.put(name, value);
     }
-    
+
     /**
      * Returns the generic response property with the given name and type or
      * <code>null</code> if no such property exists or the property is not
@@ -308,10 +307,10 @@ public class HtmlResponse {
         if (type.isInstance(value)) {
             return (Type) value;
         }
-        
+
         return null;
     }
-    
+
     /**
      * Returns the generic response property with the given name and type or
      * <code>null</code> if no such property exists.
@@ -325,22 +324,22 @@ public class HtmlResponse {
      * by the value of the respective property. if the property is not defined
      * the pattern is not modified.
      * @param response to send to
-     * @param setStatus whether to set the status code on the response  
+     * @param setStatus whether to set the status code on the response
      * @throws IOException if an i/o exception occurs
      */
     public void send(HttpServletResponse response, boolean setStatus) throws IOException {
         prepare();
-        
+
         if (setStatus) {
             Object status = getProperty(PN_STATUS_CODE);
             if (status instanceof Number) {
                 response.setStatus(((Number) status).intValue());
             }
         }
-        
+
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
-        
+
         Writer out = response.getWriter();
         InputStream template = getClass().getResourceAsStream(TEMPLATE_NAME);
         Reader in = new BufferedReader(new InputStreamReader(template));
@@ -389,5 +388,5 @@ public class HtmlResponse {
         in.close();
         out.flush();
     }
-    
+
 }
