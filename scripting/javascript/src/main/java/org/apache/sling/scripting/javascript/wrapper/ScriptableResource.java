@@ -16,8 +16,6 @@
  */
 package org.apache.sling.scripting.javascript.wrapper;
 
-import java.util.Iterator;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.Context;

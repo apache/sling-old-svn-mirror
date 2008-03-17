@@ -215,7 +215,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
     // ---------- Error handling through Sling Error Resolver -----------------
 
-    
+
     @Override
     public void sendRedirect(String location) throws IOException {
         super.sendRedirect(location);
@@ -454,7 +454,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     }
 
     //---------- byte/character counting output channels ----------------------
-    
+
     // byte transfer counting ServletOutputStream
     private static class LoggerResponseOutputStream extends ServletOutputStream {
         private ServletOutputStream delegatee;

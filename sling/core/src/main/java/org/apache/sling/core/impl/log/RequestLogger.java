@@ -19,7 +19,7 @@
 package org.apache.sling.core.impl.log;
 
 import java.util.Dictionary;
-import java.util.Properties;
+import java.util.Hashtable;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -94,17 +94,6 @@ public class RequestLogger {
      * \"%{Referer}i\" \"%{User-Agent}i\"").
      */
     private static final String ACCESS_LOG_FORMAT = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
-
-    /**
-     * The counter for request gone through this filter. As this is the first
-     * request level filter hit, this counter should actually count each request
-     * which at least enters the request level component filter processing.
-     * <p>
-     * This counter is reset to zero, when this component is activated. That is,
-     * each time this component is restarted (system start, bundle start,
-     * reconfiguration), the request counter restarts at zero.
-     */
-    private int requestCounter;
 
     /**
      * The list of {@link RequestLoggerService} called when the request enters
@@ -185,14 +174,12 @@ public class RequestLogger {
             org.osgi.service.component.ComponentContext osgiContext) {
 
         BundleContext bundleContext = osgiContext.getBundleContext();
+        @SuppressWarnings("unchecked")
         Dictionary props = osgiContext.getProperties();
 
         // initialize the FileRequestLog with sling.home as the root for
         // relative log file paths
         FileRequestLog.init(bundleContext.getProperty("sling.home"));
-
-        // reset the request counter
-        this.requestCounter = 0;
 
         // prepare the request loggers if a name is configured and the
         // request loggers are enabled
@@ -318,7 +305,7 @@ public class RequestLogger {
     private RequestLoggerService createRequestLoggerService(
             BundleContext bundleContext, boolean onEntry, Object format,
             Object output, Object outputType) {
-        Properties config = new Properties();
+        final Hashtable<String, Object> config = new Hashtable<String, Object>();
         config.put(RequestLoggerService.PARAM_ON_ENTRY, onEntry
                 ? Boolean.TRUE
                 : Boolean.FALSE);

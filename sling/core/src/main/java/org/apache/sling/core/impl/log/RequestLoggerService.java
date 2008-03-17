@@ -74,11 +74,11 @@ public class RequestLoggerService {
     public RequestLoggerService() {
     }
 
-    RequestLoggerService(BundleContext bundleContext, Dictionary configuration) {
+    RequestLoggerService(BundleContext bundleContext, Dictionary<String, Object> configuration) {
         this.setup(bundleContext, configuration);
     }
 
-    void setup(BundleContext bundleContext, Dictionary configuration) {
+    void setup(BundleContext bundleContext, Dictionary<String, Object> configuration) {
         // whether to log on request entry or request exit
         Object onEntryObject = configuration.get(PARAM_ON_ENTRY);
         this.onEntry = (onEntryObject instanceof Boolean)
@@ -123,6 +123,7 @@ public class RequestLoggerService {
 
     // ---------- SCR integration ----------------------------------------------
 
+    @SuppressWarnings("unchecked")
     protected void activate(ComponentContext context) {
         this.setup(context.getBundleContext(), context.getProperties());
     }

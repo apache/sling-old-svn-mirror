@@ -25,9 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -46,7 +43,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ResourceResolver resourceResolver;
-    
+
     private final Bundle bundle;
 
     private final String path;
@@ -83,7 +80,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
         if (entry == null) {
             entry = bundle.getEntry(path);
         }
-        
+
         // here we either have a folder for which no same-named item exists
         // or a bundle file
         if (entry != null) {
@@ -104,12 +101,12 @@ public class BundleResource extends SlingAdaptable implements Resource {
         metadata.setModificationTime(bundle.getLastModified());
 
         if (path.endsWith("/")) {
-            
+
             this.path = path.substring(0, path.length() - 1);
             this.resourceType = NT_FOLDER;
-            
+
         } else {
-            
+
             this.path = path;
             this.resourceType = NT_FILE;
 
@@ -134,7 +131,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
     public String getResourceSuperType() {
         return null;
     }
-    
+
     public ResourceMetadata getResourceMetadata() {
         return metadata;
     }
@@ -142,7 +139,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
     public ResourceResolver getResourceResolver() {
         return resourceResolver;
     }
-    
+
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
         if (type == InputStream.class) {
@@ -196,7 +193,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
 
         return url;
     }
-    
+
     Iterator<Resource> listChildren() {
         return new BundleResourceIterator(this);
     }
