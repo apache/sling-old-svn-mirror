@@ -45,6 +45,7 @@ public class SlingAptParserImplTest extends TestCase implements MacroResolver {
     final SlingAptParserImpl parser = new SlingAptParserImpl(this);
     
     private final static Map<String, Object> DEFAULT_OPTIONS;
+    private final static String EOL = System.getProperty( "line.separator" );
     
     static {
         DEFAULT_OPTIONS = new HashMap<String, Object> ();
@@ -121,7 +122,7 @@ public class SlingAptParserImplTest extends TestCase implements MacroResolver {
     public void testSections() throws Exception {
         parse(
             "Top\n\n* s1\n\n** s2\n\n** s2b\n\n*** s3\n\n para",
-            "<h1>Top</h1><h2>s1</h2><h3>s2</h3>\n<h3>s2b</h3><h4>s3</h4><p>para</p>"
+            "<h1>Top</h1><h2>s1</h2><h3>s2</h3>" + EOL + "<h3>s2b</h3><h4>s3</h4><p>para</p>"
         );
     }
 
