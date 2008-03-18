@@ -463,6 +463,27 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // fall back to unavailable
         return false;
     }
+    
+    /** Ping our current repository and check that admin login (required by Sling) works. */ 
+    protected boolean pingAndCheck() {
+        if(repository == null) {
+            throw new IllegalStateException("Repository is null");
+        }
+        
+        boolean result = false;
+        
+        if(pingRepository(repository)) {
+            try {
+                final Session s = loginAdministrative(getDefaultWorkspace());
+                s.logout();
+                result = true;
+            } catch(RepositoryException re) {
+                log.log(LogService.LOG_INFO, "pingAndCheck; loginAdministrative failed", re);
+            }
+        }
+        
+        return result;
+    }
 
     /**
      * Unregisters the service represented by the
@@ -761,20 +782,27 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     "startRepository: got a Repository, calling pingRepository()");
                 if (pingRepository(newRepo)) {
                     repository = newRepo;
-
-                    log(LogService.LOG_DEBUG,
-                        "startRepository: pingRepository() successful, calling setupRepository()");
-                    setupRepository(newRepo);
-
-                    log(LogService.LOG_DEBUG,
-                        "startRepository: calling registerService()");
-                    repositoryService = registerService();
-
-                    log(LogService.LOG_DEBUG,
-                        "registerService() successful, registration="
-                            + repositoryService);
-
-                    return true;
+                    
+                    if(!pingAndCheck()) {
+                        repository = null;
+                        log(LogService.LOG_DEBUG, "pingRepository() successful but pingAndCheck() fails, will try again");
+                        return false;
+                        
+                    } else {
+                        log(LogService.LOG_DEBUG,
+                            "startRepository: pingRepository() and pingAndCheck() successful, calling setupRepository()");
+                        setupRepository(newRepo);
+    
+                        log(LogService.LOG_DEBUG,
+                            "startRepository: calling registerService()");
+                        repositoryService = registerService();
+    
+                        log(LogService.LOG_DEBUG,
+                            "registerService() successful, registration="
+                                + repositoryService);
+    
+                        return true;
+                    }
                 }
 
                 // otherwise let go of the repository and fail startup
@@ -863,7 +891,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                             pollTime = pollTimeActive;
                         }
 
-                    } else if (!pingRepository(repo)) {
+                    } else if (!pingAndCheck()) {
 
                         log(LogService.LOG_INFO,
                             "run: Repository not accessible any more, unregistering service");
