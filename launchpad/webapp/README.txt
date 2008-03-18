@@ -1,5 +1,8 @@
 This webapp contains the necessary bundles to run launchpad.
 
+See also the "Discover Sling in 15 minutes" page at
+http://incubator.apache.org/sling/site/discover-sling-in-15-minutes.html
+
 How to run this
 ---------------
 
@@ -32,7 +35,27 @@ representation, including the value of the "title" property.
 
 Add a txt or json extension to see other output formats.
 
-We hope to have a "Getting started with the Launchpad" document on the Sling website
-(http://incubator.apache.org/sling/) soon - but it's not there yet. 
+Integration tests
+-----------------
+This module provides a number of integration tests, that run automatically when
+doing a full build, and test Sling via its client HTTP interfaces.
 
-  	 	      
+These tests can also be run against another instance of Sling, for example to
+test it in another web container than the embedded Jetty that is used during the
+Maven build.
+
+See pom.xml for the parameters that control these integration tests. Here's an
+example of running them against a Sling instance running on host xyzzy, port 1234,
+with the Sling webapp mounted under /foo:
+
+   mvn -o -s /dev/null \
+    -Dhttp.port=1234
+    -Dtest.host=xyzzy \
+    -Dhttp.base.path=foo \
+    -Dwebdav.workspace.path=foo/dav/default \
+    -Dtest=**/integrationtest/**/*Test.java
+
+The  -s /dev/null parameter disables all your local Maven settings, to make sure
+they don't interfere. Feel free to remove that if you know what you're doing.
+
+To run a single test, other values can be used for the "-Dtest" parameter.
