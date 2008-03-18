@@ -48,7 +48,7 @@ See pom.xml for the parameters that control these integration tests. Here's an
 example of running them against a Sling instance running on host xyzzy, port 1234,
 with the Sling webapp mounted under /foo:
 
-   mvn -o -s /dev/null \
+   mvn -o -s /dev/null test \
     -Dhttp.port=1234
     -Dtest.host=xyzzy \
     -Dhttp.base.path=foo \
