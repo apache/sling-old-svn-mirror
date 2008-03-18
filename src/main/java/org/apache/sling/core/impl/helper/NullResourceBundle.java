@@ -43,7 +43,7 @@ public class NullResourceBundle extends ResourceBundle {
 
     @Override
     protected Object handleGetObject(String key) {
-        return null;
+        return key;
     }
 
 }
