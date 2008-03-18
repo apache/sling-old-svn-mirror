@@ -97,7 +97,7 @@ public class JobEventHandler
     /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" */
     protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
-    /** We remove everything which is older than 10 min by default. */
+    /** We remove everything which is older than 5 min by default. */
     protected int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
 
     /**

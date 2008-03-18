@@ -51,13 +51,13 @@ public class DistributingEventHandler
     extends AbstractRepositoryEventHandler
     implements Runnable {
 
-    /** Default clean up time is 30 minutes. */
-    protected static final int DEFAULT_CLEANUP_PERIOD = 30;
+    /** Default clean up time is 15 minutes. */
+    protected static final int DEFAULT_CLEANUP_PERIOD = 15;
 
     /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" */
     protected static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
-    /** We remove everything which is older than 30min by default. */
+    /** We remove everything which is older than 15min by default. */
     protected int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
 
     /**
