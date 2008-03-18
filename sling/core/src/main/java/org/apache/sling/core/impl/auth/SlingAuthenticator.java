@@ -384,7 +384,7 @@ public class SlingAuthenticator implements ManagedService {
 
             try {
                 response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-                    "Too Many Users");
+                    "SlingAuthenticator: Too Many Users");
             } catch (IOException ioe) {
                 log.error("authenticate: Cannot send status 503 to client", ioe);
             }
@@ -405,7 +405,7 @@ public class SlingAuthenticator implements ManagedService {
             try {
                 response.sendError(
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Data Access Failure");
+                    "SlingAuthenticator: data access error, reason=" + reason.getClass().getSimpleName());
             } catch (IOException ioe) {
                 log.error("authenticate: Cannot send status 500 to client", ioe);
             }
