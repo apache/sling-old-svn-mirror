@@ -372,15 +372,8 @@
             <!--
                 By default, do not run the integration tests in the test phase, as they have
                 no Sling instance to talk to.
-                
-                To run integration tests against a running instance of Sling (useful to quickly
-                run some of them) use for example:
-                
-                mvn test -Dtest=**/integrationtest/**/*Test.java
-                
-                or
-                
-                mvn test -Dtest=IncludeTest   
+                See README.txt for how to run the integration tests against a running instance
+                of Sling.
             -->
             <id>disableIntegrationTestsInTestPhase</id>
             <activation>
