@@ -117,15 +117,6 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see javax.servlet.ServletRequestWrapper#getLocale()
-     */
-    public Locale getLocale() {
-        return (this.getRequestData() != null)
-                ? this.getRequestData().getLocale()
-                : super.getLocale();
-    }
-
-    /**
      * @see javax.servlet.ServletRequestWrapper#getParameter(java.lang.String)
      */
     public String getParameter(String name) {
