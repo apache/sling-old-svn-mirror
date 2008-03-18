@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
-import java.util.Locale;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -99,8 +98,6 @@ public class RequestData implements BufferProvider {
     private ResourceResolver resourceResolver;
 
     private RequestProgressTracker requestProgressTracker;
-
-    private Locale locale;
 
     /** the current ContentData */
     private ContentData currentContentData;
@@ -537,20 +534,6 @@ public class RequestData implements BufferProvider {
      */
     public boolean isContentIncluded() {
         return contentDataStack != null && !contentDataStack.isEmpty();
-    }
-
-    /**
-     * @return the locale
-     */
-    public Locale getLocale() {
-        return locale;
-    }
-
-    /**
-     * @param locale the locale to set
-     */
-    public void setLocale(Locale locale) {
-        this.locale = locale;
     }
 
     public ResourceResolver getResourceResolver() {
