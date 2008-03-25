@@ -28,26 +28,27 @@ import org.apache.sling.apt.parser.SlingAptParser;
 class CustomAptSink extends AptSink {
 
     private final boolean generateHtmlSkeleton;
+
     private String title;
-    
+
     CustomAptSink(Writer w, Map<String, Object> options) {
         super(w);
-        
-        if(options==null) {
+
+        if (options == null) {
             generateHtmlSkeleton = true;
         } else {
             generateHtmlSkeleton = !("false".equals(options.get(SlingAptParser.OPT_HTML_SKELETON)));
         }
     }
-    
+
     @Override
-    public void title_()
-    {
-        if ( getBuffer().length() > 0 ) {
+    public void title_() {
+        if (getBuffer().length() > 0) {
             title = getBuffer().toString();
             resetBuffer();
         }
     }
+
     @Override
     public void sectionTitle1() {
         write("<h1>");
@@ -57,7 +58,7 @@ class CustomAptSink extends AptSink {
     public void sectionTitle1_() {
         write("</h1>");
     }
-    
+
     @Override
     public void sectionTitle2_() {
         write("</h2>");
@@ -108,24 +109,23 @@ class CustomAptSink extends AptSink {
         write("<li>");
     }
 
-    
     @Override
     public void head_() {
-        if(generateHtmlSkeleton) {
-            if(title!=null) {
-                write("\n<title>");
+        if (generateHtmlSkeleton) {
+            if (title != null) {
+                write(EOL + "<title>");
                 write(title);
                 write("</title>");
             }
-            write("\n</head>");
+            write(EOL + "</head>");
         }
         setHeadFlag(false);
     }
 
     @Override
     public void head() {
-        if(generateHtmlSkeleton) {
-            write("<html>\n<head>");
+        if (generateHtmlSkeleton) {
+            write("<html>" + EOL + "<head>");
         }
         setHeadFlag(true);
     }
@@ -149,23 +149,23 @@ class CustomAptSink extends AptSink {
     public void link_() {
         write("</a>");
     }
-    
+
     @Override
     public void horizontalRule() {
-        write("<hr/>\n");
+        write("<hr/>" + EOL);
     }
 
     @Override
     public void body_() {
-        if(generateHtmlSkeleton) {
-            write("</body>\n</html>\n");
+        if (generateHtmlSkeleton) {
+            write("</body>" + EOL + "</html>" + EOL);
         }
     }
 
     @Override
     public void body() {
-        if(generateHtmlSkeleton) {
-            write("\n<body>");
+        if (generateHtmlSkeleton) {
+            write(EOL + "<body>");
         }
     }
 }
