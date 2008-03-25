@@ -114,6 +114,7 @@
         <module>scripting/javascript</module>
         <module>scripting/jsp</module>
         <module>scripting/jsp-taglib</module>
+        <module>scripting/jst</module>
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
         
