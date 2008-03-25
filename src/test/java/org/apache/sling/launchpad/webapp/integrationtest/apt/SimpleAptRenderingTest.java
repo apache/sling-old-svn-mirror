@@ -20,7 +20,9 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 public class SimpleAptRenderingTest extends HttpTestBase {
     
-    public void testAptDocument() throws Exception {
+     private final static String EOL = System.getProperty( "line.separator" );
+
+     public void testAptDocument() throws Exception {
         testClient.mkdirs(WEBDAV_BASE_URL, "/apt-test");
         final String toDelete = uploadTestScript("/apt-test", "apt/apt-test.apt", "apt-test.apt");
         try {
@@ -30,10 +32,10 @@ public class SimpleAptRenderingTest extends HttpTestBase {
             // .apt.aptml converts APT to html
             final String content = getContent(HTTP_BASE_URL + "/apt-test/apt-test.apt.aptml", CONTENT_TYPE_HTML);
             assertTrue("HTML opening tag present (" + content + ")", content.startsWith("<html>"));
-            assertTrue("HTML closing tag present (" + content + ")", content.endsWith("</html>\n"));
+            assertTrue("HTML closing tag present (" + content + ")", content.endsWith("</html>" + EOL));
             assertTrue("title parsed as expected (" + content + ")", content.contains("<title>Simple APT file test</title>"));
-            assertTrue("body opening tag is present (" + content + ")", content.contains("</head>\n<body>"));
-            assertTrue("body closing tag is present (" + content + ")", content.endsWith("</body>\n</html>\n"));
+            assertTrue("body opening tag is present (" + content + ")", content.contains("</head>" + EOL + "<body>"));
+            assertTrue("body closing tag is present (" + content + ")", content.endsWith("</body>" + EOL + "</html>" + EOL));
             assertTrue("h1 parsed as expected (" + content + ")", content.contains("<h1>h1 heading"));
             assertTrue("h2 parsed as expected (" + content + ")", content.contains("<h2>h2 heading"));
             assertTrue("h3 parsed as expected (" + content + ")", content.contains("<h3>h3 heading"));
