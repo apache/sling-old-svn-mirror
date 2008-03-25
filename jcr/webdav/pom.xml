@@ -64,7 +64,7 @@
                         <Bundle-Category>sling,jcr</Bundle-Category>
                         <!-- No Export-Package -->
                         <Private-Package>
-                            org.apache.sling.jcr.webdav,
+                            org.apache.sling.jcr.webdav.impl.*,
                             org.apache.jackrabbit;
                             org.apache.jackrabbit.commons.iterator;
                             org.apache.jackrabbit.name;

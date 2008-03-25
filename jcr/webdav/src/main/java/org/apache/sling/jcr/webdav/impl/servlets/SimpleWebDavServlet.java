@@ -16,30 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.webdav;
+package org.apache.sling.jcr.webdav.impl.servlets;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import javax.jcr.Repository;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.jackrabbit.webdav.simple.ResourceConfig;
-import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
 
 /**
  * The <code>SimpleWebDavServlet</code>
  * 
  * @scr.component
  */
-public class SimpleWebDavServlet extends SimpleWebdavServlet {
+public class SimpleWebDavServlet extends AbstractSlingWebDavServlet {
 
     /** @scr.property value="/dav" */
     private static final String PROP_CONTEXT = "dav.root";
@@ -52,49 +49,47 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
     /** @scr.reference */
     private HttpService httpService;
 
-    /** @scr.reference */
-    private SlingRepository repository;
-
     // the alias under which the servlet is registered, null if not
     private String contextPath;
 
-    @Override
-    public Repository getRepository() {
-        return repository;
-    }
-    
     // ---------- AbstractWebdavServlet overwrite ------------------------------
 
     @Override
     protected void service(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
-        
+
         final String pinfo = request.getPathInfo();
-        
+
         if (pinfo == null || "/".equals(pinfo)) {
-            // redirect to the default workspace if directly addressing the servlet
-            // and if the default workspace name is not null (in which case we'd need
+            // redirect to the default workspace if directly addressing the
+            // servlet
+            // and if the default workspace name is not null (in which case we'd
+            // need
             // to login to find out the actual workspace name, SLING-256)
-            if(repository.getDefaultWorkspace() == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                        "JCR workspace name required, please add it to the end of the URL"
+            SlingRepository slingRepo = (SlingRepository) getRepository();
+            if (slingRepo.getDefaultWorkspace() == null) {
+                response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "JCR workspace name required, please add it to the end of the URL"
                         + " (for the Jackrabbit embedded repository the default name is 'default') ");
             } else {
                 String uri = request.getRequestURI();
                 if (pinfo == null) {
                     uri += "/";
                 }
-                uri += repository.getDefaultWorkspace();
+                uri += slingRepo.getDefaultWorkspace();
                 response.sendRedirect(uri);
             }
         }
-        
+
         super.service(request, response);
     }
-    
+
     // ---------- SCR integration ----------------------------------------------
 
-    protected void activate(ComponentContext componentContext) throws Exception {
+    protected void activate(ComponentContext componentContext)
+            throws NamespaceException, ServletException {
+
         Dictionary<?, ?> props = componentContext.getProperties();
 
         String context = getString(props, PROP_CONTEXT, DEFAULT_CONTEXT);
@@ -108,25 +103,11 @@ public class SimpleWebDavServlet extends SimpleWebdavServlet {
             initparams.put(INIT_PARAM_AUTHENTICATE_HEADER, "Basic Realm=\""
                 + value + "\"");
         }
-        
-        // for now, the ResourceConfig is fixed
-        final String configPath = "/webdav-resource-config.xml";
-        final ResourceConfig rc = new ResourceConfig();
-        final URL cfg = getClass().getResource(configPath);
-        if(cfg == null) {
-            throw new IOException("ResourceConfig source not found:" + configPath);
-        }
-        rc.parse(cfg);
-        setResourceConfig(rc);
 
-        // value = getString(props, INIT_PARAM_MISSING_AUTH_MAPPING, null);
-        // if (value != null) {
-        // initparams.put(INIT_PARAM_MISSING_AUTH_MAPPING, value);
-        // }
-
-          // Register servlet, and set the contextPath field to signal successful registration
-          httpService.registerServlet(context, this, initparams, null);
-          this.contextPath = context;
+        // Register servlet, and set the contextPath field to signal successful
+        // registration
+        httpService.registerServlet(context, this, initparams, null);
+        this.contextPath = context;
     }
 
     protected void deactivate(ComponentContext context) {
