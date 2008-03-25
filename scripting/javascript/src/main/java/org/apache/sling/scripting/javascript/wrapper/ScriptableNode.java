@@ -32,7 +32,9 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
@@ -56,11 +58,6 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     private Node node;
 
     public ScriptableNode() {
-    }
-
-    public ScriptableNode(Node item) {
-        super();
-        this.node = item;
     }
 
     public void jsConstructor(Object res) {
@@ -91,16 +88,16 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         return ScriptRuntime.toObject(this, node.getNode(path));
     }
 
-    public ScriptableItemMap jsFunction_getChildren() {
+    public Object jsFunction_getChildren() {
         try {
-            return new ScriptableItemMap(node.getNodes());
+            return toScriptableItemMap(node.getNodes());
         } catch (RepositoryException re) {
             log.warn("Cannot get children of " + jsFunction_getPath(), re);
-            return new ScriptableItemMap();
+            return toScriptableItemMap(null);
         }
     }
 
-    public ScriptableItemMap jsFunction_getNodes(String namePattern) {
+    public Object jsFunction_getNodes(String namePattern) {
         try {
             NodeIterator iter = null;
             if(namePattern == null || "undefined".equals(namePattern)) {
@@ -108,19 +105,19 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
             } else {
                 iter = node.getNodes(namePattern);
             }
-            return new ScriptableItemMap(iter);
+            return toScriptableItemMap(iter);
         } catch (RepositoryException re) {
             log.warn("Cannot get children of " + jsFunction_getPath() + " with pattern " + namePattern, re);
-            return new ScriptableItemMap();
+            return toScriptableItemMap(null);
         }
     }
     
-    public ScriptableItemMap jsFunction_getProperties() {
+    public Object jsFunction_getProperties() {
         try {
-            return new ScriptableItemMap(node.getProperties());
+            return toScriptableItemMap(node.getProperties());
         } catch (RepositoryException re) {
             log.warn("Cannot get properties of " + jsFunction_getPath(), re);
-            return new ScriptableItemMap();
+            return toScriptableItemMap(null);
         }
     }
 
@@ -132,8 +129,10 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
     }
     
-    public ScriptableProperty jsFunction_getProperty(String name) throws RepositoryException {
-        return new ScriptableProperty(node.getProperty(name));
+    public Object jsFunction_getProperty(String name) throws RepositoryException {
+        Object[] args = { node.getProperty(name) };
+        return ScriptRuntime.newObject(Context.getCurrentContext(), this,
+            ScriptableProperty.CLASSNAME, args);
     }
 
     public String jsFunction_getUUID() {
@@ -296,7 +295,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         try {
             NodeIterator it = node.getNodes(name);
             while (it.hasNext()) {
-                items.add(new ScriptableNode(it.nextNode()));
+                items.add(ScriptRuntime.toObject(this, it.nextNode()));
             }
         } catch (RepositoryException e) {
             log.debug("RepositoryException while collecting Node children",e);
@@ -311,13 +310,13 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
                 if (prop.getDefinition().isMultiple()) {
                     Value[] values = prop.getValues();
                     for (int i=0;i<values.length;i++) {
-                        items.add(wrap(values[i], type));
+                        items.add(wrap(values[i]));
                     }
                 } else {
                     if (type==PropertyType.REFERENCE) {
-                        items.add(new ScriptableNode(prop.getNode()));
+                        items.add(ScriptRuntime.toObject(this, prop.getNode()));
                     } else {
-                        items.add(wrap(prop.getValue(), type));
+                        items.add(wrap(prop.getValue()));
                     }
                 }
             }
@@ -338,19 +337,9 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     }
 
     /** Wrap JCR Values in a simple way */
-    private Scriptable wrap(Value value, int type) throws ValueFormatException, IllegalStateException, RepositoryException {
-        Object valObj;
-        if (type==PropertyType.BINARY) {
-            valObj = value.getBoolean();
-        } else if (type==PropertyType.DOUBLE) {
-            valObj = value.getDouble();
-        } else if (type==PropertyType.LONG) {
-            valObj = value.getLong();
-        } else {
-            valObj = value.getString();
-        }
-
-        return ScriptRuntime.toObject(this, valObj);
+    private Scriptable wrap(Value value) throws ValueFormatException,
+            IllegalStateException, RepositoryException {
+        return ScriptRuntime.toObject(this, JcrResourceUtil.toJavaObject(value));
     }
 
     @Override
@@ -409,5 +398,13 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     // returns the wrapped node
     public Object unwrap() {
         return node;
+    }
+    
+    //---------- Helper -------------------------------------------------------
+    
+    private Object toScriptableItemMap(Iterator<?> iter) {
+        Object[] args = (iter != null) ? new Object[] { iter } : null;
+        return ScriptRuntime.newObject(Context.getCurrentContext(), this,
+            ScriptableItemMap.CLASSNAME, args);
     }
 }

@@ -32,6 +32,8 @@ import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
 import org.apache.sling.scripting.javascript.RhinoJavaScriptEngineFactory;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Wrapper;
 
 /** Helpers to run javascript code fragments in tests */
 public class ScriptEngineHelper {
@@ -81,7 +83,17 @@ public class ScriptEngineHelper {
         ctx.setBindings(b, ScriptContext.ENGINE_SCOPE);
         ctx.setWriter(sw);
         ctx.setErrorWriter(new OutputStreamWriter(System.err));
-        return getEngine().eval(javascriptCode, ctx);
+        Object result = getEngine().eval(javascriptCode, ctx);
+        
+        if (result instanceof Wrapper) {
+            result = ((Wrapper) result).unwrap();
+        }
+        
+        if (result instanceof ScriptableObject) {
+            result = ((ScriptableObject) result).getDefaultValue(null);
+        }
+
+        return result;
     }
 
 }

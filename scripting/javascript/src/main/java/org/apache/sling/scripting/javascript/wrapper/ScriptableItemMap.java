@@ -42,23 +42,21 @@ public class ScriptableItemMap extends ScriptableObject {
     private Map<String, Item> items = new LinkedHashMap<String, Item>();
 
     public ScriptableItemMap() {
-        // prevent modification, seal the object
-        sealObject();
     }
 
-    public ScriptableItemMap(Iterator<?> itemIterator) {
-        while (itemIterator.hasNext()) {
-            Item item = (Item) itemIterator.next();
-            try {
-                items.put(item.getName(), item);
-            } catch (RepositoryException re) {
-                log.error("ScriptableItemMap<init>: Cannot get name of item "
-                    + item, re);
+    public void jsConstructor(Object res) {
+        if (res instanceof Iterator) {
+            Iterator<?> itemIterator = (Iterator<?>) res;
+            while (itemIterator.hasNext()) {
+                Item item = (Item) itemIterator.next();
+                try {
+                    items.put(item.getName(), item);
+                } catch (RepositoryException re) {
+                    log.error("ScriptableItemMap<init>: Cannot get name of item "
+                        + item, re);
+                }
             }
         }
-
-        // prevent modification, seal the object
-        sealObject();
     }
 
     @Override
