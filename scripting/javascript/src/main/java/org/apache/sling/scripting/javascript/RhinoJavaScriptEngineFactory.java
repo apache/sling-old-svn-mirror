@@ -33,6 +33,8 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.tools.debugger.ScopeProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>RhinoJavaScriptEngineFactory</code> TODO
@@ -49,6 +51,9 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
         ScriptableProperty.class, ScriptableItemMap.class,
         ScriptablePrintWriter.class };
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final String languageVersion;
 
     private Scriptable rootScope;
@@ -112,7 +117,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
                             host.getClass(), host.getClassName());
                     }
                 } catch (Throwable t) {
-                    // TODO: log
+                    log.warn("getRootScope: Cannot prepare host object " + clazz, t);
                 }
             }
         }
