@@ -27,21 +27,16 @@ import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 
-public class ScriptableProperty extends ScriptableObject implements SlingWrapper {
+public class ScriptableProperty extends ScriptableObject implements
+        SlingWrapper {
 
     public static final String CLASSNAME = "Property";
-    public static final Class<?> [] WRAPPED_CLASSES = { Property.class };
+
+    public static final Class<?>[] WRAPPED_CLASSES = { Property.class };
 
     private Property property;
 
     public ScriptableProperty() {
-    }
-
-    public ScriptableProperty(Property property) {
-        this.property = property;
-    }
-
-    public void jsConstructor() {
     }
 
     public void jsConstructor(Object res) {
@@ -53,7 +48,7 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
         return CLASSNAME;
     }
 
-    public Class<?> [] getWrappedClasses() {
+    public Class<?>[] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
 
@@ -209,9 +204,57 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
         return property.isModified();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public Object getDefaultValue(Class typeHint) {
+    public Object jsFunction_valueOf(String hint) {
+        if ("undefined".equals(hint)) {
+            
+            try {
+                switch (property.getType()) {
+                    case PropertyType.BOOLEAN:
+                        return property.getBoolean();
+                    case PropertyType.DATE:
+                        return property.getDate();
+                    case PropertyType.DOUBLE:
+                        return property.getDouble();
+                    case PropertyType.LONG:
+                        return property.getLong();
+                    default:
+                        return toString();
+                }
+            } catch (RepositoryException re) {
+                // don't care, just return the string value
+                return toString();
+            }
+            
+        } else if ("object".equals(hint)) {
+            // return this as a Scriptable :-)
+            return this;
+            
+        } else if ("function".equals(hint)) {
+            // cannot return this as a Function
+            return Undefined.instance;
+            
+        } else if ("boolean".equals(hint)) {
+            // boolean value
+            try {
+                property.getBoolean();
+            } catch (RepositoryException re) {
+                return false;
+            }
+            
+        } else if ("number".equals(hint)) {
+            // numeric value
+            try {
+                property.getDouble();
+            } catch (RepositoryException re) {
+                return 0.0;
+            }
+        }
+
+        // unknown hint or "string"
+        return toString();
+    }
+
+    public Object jsFunction_toString() {
         return toString();
     }
 
@@ -224,7 +267,7 @@ public class ScriptableProperty extends ScriptableObject implements SlingWrapper
         }
     }
 
-    //---------- Wrapper interface --------------------------------------------
+    // ---------- Wrapper interface --------------------------------------------
 
     public Object unwrap() {
         return property;
