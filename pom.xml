@@ -60,7 +60,7 @@
         <http.base.path></http.base.path>
 
         <!-- path suffix for WebDAV access to the repository -->
-        <webdav.workspace.path></webdav.workspace.path>
+        <webdav.workspace.path>dav/default</webdav.workspace.path>
 
         <!-- hostname for integration tests -->
         <test.host>localhost</test.host>
