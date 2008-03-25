@@ -18,6 +18,8 @@
  */
 package org.apache.sling.scripting.wrapper;
 
+import java.util.Calendar;
+
 import javax.jcr.Node;
 import javax.jcr.Property;
 
@@ -33,6 +35,10 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
     private Node node;
     private Property textProperty;
     private String testText;
+    private Property numProperty;
+    private double testNum;
+    private Property calProperty;
+    private Calendar testCal;
     private ScriptEngineHelper.Data data;
     
     @Override
@@ -44,10 +50,20 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         node.setProperty("text", testText);
         node.setProperty("otherProperty", node.getPath());
         
+        testNum = System.currentTimeMillis();
+        node.setProperty("num", testNum);
+        
+        testCal = Calendar.getInstance();
+        node.setProperty("cal", testCal);
+        
         data = new ScriptEngineHelper.Data();
         data.put("node", node);
         textProperty = node.getProperty("text");
         data.put("property", textProperty);
+        numProperty = node.getProperty("num");
+        data.put("numProperty", numProperty);
+        calProperty = node.getProperty("cal");
+        data.put("calProperty", calProperty);
     }
 
     public void testDefaultValue() throws Exception {
@@ -79,23 +95,57 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
 
     public void testViaPropertyNoWrappers() throws Exception {
         assertEquals(
-                testText,
-                script.evalToString("out.print(property.value.string)", data)
+            testText,
+            script.evalToString("out.print(property.value.string)", data)
         );
     }
     
     public void testViaPropertyWithWrappers() throws Exception {
-        // TODO why does that not return the property value??
         assertEquals(
-                textProperty.getPath(),
-                script.evalToString("out.print(property)", data)
+            textProperty.getString(),
+            script.evalToString("out.print(property)", data)
         );
     }
     
     public void testViaNodeDirectPropertyAccess() throws Exception {
         assertEquals(
-                testText,
-                script.evalToString("out.print(node.text)", data)
+            testText,
+            script.evalToString("out.print(node.text)", data)
+        );
+    }
+    
+    public void testViaPropertyNoWrappersNum() throws Exception {
+        assertEquals(
+            testNum,
+            script.eval("numProperty.value.getDouble()", data)
+        );
+    }
+    
+    public void testViaPropertyWithWrappersNum() throws Exception {
+        assertEquals(
+            testNum,
+            script.eval("0+numProperty", data)
+        );
+    }
+    
+    public void testViaNodeDirectPropertyAccessNum() throws Exception {
+        assertEquals(
+            testNum,
+            script.eval("node.num", data)
+        );
+    }
+    
+    public void testViaPropertyNoWrappersCal() throws Exception {
+        assertEquals(
+                testCal,
+                script.eval("calProperty.value.getDate()", data)
+        );
+    }
+    
+    public void testViaNodeDirectPropertyAccessCal() throws Exception {
+        assertEquals(
+                testCal,
+                script.eval("node.cal", data)
         );
     }
     
