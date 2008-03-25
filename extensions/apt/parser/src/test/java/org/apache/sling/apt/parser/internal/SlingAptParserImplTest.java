@@ -141,8 +141,8 @@ public class SlingAptParserImplTest extends TestCase implements MacroResolver {
     public void testTitle() throws Exception {
         final String input = " ---- \n test title \n ---- \n\nH1 title now";
         final String expected = 
-            "<html>\n<head>\n<title>test title</title>\n</head>"
-            + "\n<body><h1>H1 title now</h1>\n</body>\n</html>"
+            "<html>" + EOL + "<head>" + EOL + "<title>test title</title>" + EOL + "</head>"
+             + EOL + "<body><h1>H1 title now</h1>" + EOL + "</body>" + EOL + "</html>"
         ;
         parse(input, expected, null);
     }
