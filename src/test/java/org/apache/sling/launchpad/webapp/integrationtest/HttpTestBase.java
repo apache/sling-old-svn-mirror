@@ -46,7 +46,7 @@ import org.mozilla.javascript.ScriptableObject;
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
-    public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", "http://localhost:8888/dav/default"));
+    public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", "http://localhost:8888"));
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
@@ -202,20 +202,22 @@ public class HttpTestBase extends TestCase {
 
         // Also check that the WebDAV root is ready
         {
-            final HttpAnyMethod options = new HttpAnyMethod("OPTIONS",WEBDAV_BASE_URL);
+            // need the trailing slash in case the base URL is the context root
+            final String webDavUrl = WEBDAV_BASE_URL + "/";
+            final HttpAnyMethod options = new HttpAnyMethod("OPTIONS",webDavUrl);
             final int status = httpClient.executeMethod(options);
             if(status!=200) {
-                throw new IOException("Expected status 200 but got " + status + " for OPTIONS at URL=" + WEBDAV_BASE_URL);
+                throw new IOException("Expected status 200 but got " + status + " for OPTIONS at URL=" + webDavUrl);
             }
 
             // The Allow header tells us that we're talking to a WebDAV server
             final Header h = options.getResponseHeader("Allow");
             if(h == null) {
-                throw new IOException("Response does not contain Allow header, at URL=" + WEBDAV_BASE_URL);
+                throw new IOException("Response does not contain Allow header, at URL=" + webDavUrl);
             } else if(h.getValue() == null) {
-                throw new IOException("Allow header has null value at URL=" + WEBDAV_BASE_URL);
+                throw new IOException("Allow header has null value at URL=" + webDavUrl);
             } else if(!h.getValue().contains("PROPFIND")) {
-                throw new IOException("Allow header (" + h.getValue() + " does not contain PROPFIND, at URL=" + WEBDAV_BASE_URL);
+                throw new IOException("Allow header (" + h.getValue() + " does not contain PROPFIND, at URL=" + webDavUrl);
             }
         }
 
