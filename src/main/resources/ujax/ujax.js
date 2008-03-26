@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -316,28 +316,35 @@ var ujax = null;
 	    while (elems.length > i) {
 	        var elem=elems[i];
 	        var a=elem.name;
-	        if (a.indexOf(formfieldprefix)==0) {
+	        
+			if (a.indexOf("/")==0) {
+				var nodepath=a.substring(0,a.lastIndexOf("/"));
+				var propname=a.substring(a.lastIndexOf("/")+1);
+				var node=ujax.getContent(nodepath);
+				var propval=node[propname];
+			} else if (a.indexOf(formfieldprefix)==0) {
 	            var propname=a.substring(formfieldprefix.length);
-	            if (tree[propname]) {
-	            	if (elem.type == "file") {
-	            		// cannot edit uplodaded files for now
-	                } else if (elem.type == "checkbox") {
-	                    var vals;
-	                    if (typeof(tree[propname])=="object") vals=tree[a.substring(2)];
-	                    else {
-	                        vals=new Array();
-	                        vals[0]=tree[propname];
-	                    }
-	                    var j=0;
-	                    while (vals.length > j) {
-	                        if (vals[j] == elem.value) elem.checked=true;
-	                        j++;
-	                    }
-	                 } else {
-	                    elem.value=tree[propname];
-	                 }
-	            }
-	
+				var propval=tree[propname];
+			}
+			
+			if (propval) {
+            	if (elem.type == "file") {
+            		// cannot edit uplodaded files for now
+                } else if (elem.type == "checkbox") {
+                    var vals;
+                    if (typeof(propval)=="object") vals=propval;
+                    else {
+                        vals=new Array();
+                        vals[0]=propval;
+                    }
+                    var j=0;
+                    while (vals.length > j) {
+                        if (vals[j] == elem.value) elem.checked=true;
+                        j++;
+                    }
+                 } else {
+                    elem.value=propval;
+                 }
 	        }
 	        i++;
 	    }
