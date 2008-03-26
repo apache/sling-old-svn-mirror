@@ -49,7 +49,7 @@ example of running them against a Sling instance running on host xyzzy, port 123
 with the Sling webapp mounted under /foo:
 
    mvn -o -s /dev/null test \
-    -Dhttp.port=1234
+    -Dhttp.port=1234 \
     -Dtest.host=xyzzy \
     -Dhttp.base.path=foo \
     -Dwebdav.workspace.path=foo/dav/default \
