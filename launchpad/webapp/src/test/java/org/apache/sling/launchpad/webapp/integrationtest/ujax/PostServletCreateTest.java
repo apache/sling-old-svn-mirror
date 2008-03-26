@@ -51,6 +51,16 @@ public class PostServletCreateTest extends HttpTestBase {
                 location.contains(postUrl + "/"));
     }
     
+    public void testCreateNodeWithExtension() throws IOException {
+        final String location = testClient.createNode(postUrl + UjaxPostServlet.DEFAULT_CREATE_SUFFIX + ".html", null);
+        assertHttpStatus(location, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must have generated name",
+                !location.endsWith("/*"));
+        assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
+                location.contains(postUrl + "/"));
+    }
+    
     public void testCreateNodeAtSpecificUrl() throws IOException {
         final String specifiedLocation = postUrl + "/specified-location";
         final String location = testClient.createNode(specifiedLocation, null);
