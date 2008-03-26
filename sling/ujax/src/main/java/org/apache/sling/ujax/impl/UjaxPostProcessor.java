@@ -146,9 +146,10 @@ public class UjaxPostProcessor {
             int dotPos = suffix.indexOf('.');
             if (dotPos > 0) {
                 suffix = suffix.substring(0, dotPos);
+            }
 
-            // otherwise check whether it is a create request (trailing /*)
-            } else if (suffix.endsWith(UjaxPostServlet.DEFAULT_CREATE_SUFFIX)) {
+            // and check whether it is a create request (trailing /*)
+            if (suffix.endsWith(UjaxPostServlet.DEFAULT_CREATE_SUFFIX)) {
                 suffix = suffix.substring(0, suffix.length()
                     - UjaxPostServlet.DEFAULT_CREATE_SUFFIX.length());
                 htmlResponse.setCreateRequest(true);
