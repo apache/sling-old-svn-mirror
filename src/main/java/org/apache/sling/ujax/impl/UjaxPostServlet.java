@@ -24,9 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.ujax.HtmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
