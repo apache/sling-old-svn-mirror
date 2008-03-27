@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ujax;
+package org.apache.sling.api.servlets;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Generator for a HTML status response that displays the changes made in a
- * ujax post request.
+ * post request.
  *
  * see <a href="HtmlResponse.html">HtmlResponse.html</a> for the format.
  */
@@ -99,7 +99,7 @@ public class HtmlResponse {
     private final Map<String, Object> properties = new HashMap<String, Object>();
 
     /**
-     * Creates a new ujax html response
+     * Creates a new html response
      */
     public HtmlResponse() {
     }
