@@ -20,20 +20,28 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import javax.jcr.Session;
 
+import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
 public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     private final Session session;
+    
+    private final JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
 
     public JcrResourceProviderEntry(Session session,
-            ResourceProviderEntry[] entries) {
-        super("/", new JcrResourceProvider(session), entries);
+            ResourceProviderEntry[] entries, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) {
+        super("/", new JcrResourceProvider(session, defaultResourceTypeProvider), entries);
 
         this.session = session;
+        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
     }
 
     public Session getSession() {
         return session;
+    }
+    
+    public JcrDefaultResourceTypeProvider getDefaultResourceTypeProvider() {
+        return defaultResourceTypeProvider;
     }
 }

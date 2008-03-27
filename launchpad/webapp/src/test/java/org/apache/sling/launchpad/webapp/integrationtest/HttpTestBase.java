@@ -65,6 +65,9 @@ public class HttpTestBase extends TestCase {
 
     private static Boolean slingStartupOk;
 
+    /** URLs stored here are deleted in tearDown */
+    protected final List<String> urlsToDelete = new LinkedList<String>();
+
     /** Class that creates a test node under the given parentPath, and
      *  stores useful values for testing. Created for JspScriptingTest,
      *  older test classes do not use it, but it might simplify them.
@@ -121,6 +124,15 @@ public class HttpTestBase extends TestCase {
         testClient = new UslingIntegrationTestClient(httpClient);
 
         waitForSlingStartup();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        
+        for(String url : urlsToDelete) {
+            testClient.delete(url);
+        }
     }
 
     /** On the server side, initialization of Sling bundles is done
