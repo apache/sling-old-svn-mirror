@@ -79,6 +79,7 @@
         <module>jcr/api</module>
         <module>jcr/base</module>
         <module>jcr/classloader</module>
+        <module>jcr/default-rtp</module>
         <module>jcr/jackrabbit.text.extractors</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
