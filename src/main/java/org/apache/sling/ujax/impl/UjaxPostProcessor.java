@@ -30,8 +30,8 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.ujax.HtmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
