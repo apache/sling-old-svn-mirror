@@ -32,7 +32,7 @@ public class SyntheticResource implements Resource {
     private final String path;
 
     /** The type this synthetic resource assumes */
-    private final String resourceType;
+    private String resourceType;
 
     /** The metadat of this resource just containig the resource path */
     private final ResourceMetadata resourceMetadata;
@@ -56,6 +56,14 @@ public class SyntheticResource implements Resource {
 
     public String getResourceType() {
         return resourceType;
+    }
+    
+    protected void setResourceType(String resourceType) {
+        if(this.resourceType != null) {
+            throw new IllegalArgumentException("Resource type already set (" 
+                    + this.resourceType + "), cannot change it");
+        }
+        this.resourceType = resourceType;
     }
 
     /**

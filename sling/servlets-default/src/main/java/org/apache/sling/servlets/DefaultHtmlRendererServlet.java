@@ -93,7 +93,8 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
                 pw.println("<html><body>");
                 renderer.render(pw, r, node);
                 pw.println("</body></html>");
-            } else {
+                
+            } else if(p != null) {
                 // for properties, we just output the String value
                 renderer.render(pw, r, p);
             }
