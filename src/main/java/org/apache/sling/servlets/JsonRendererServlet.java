@@ -102,11 +102,11 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-        // Do we have a Node?
+        // Send empty response if we don't have a Node
         final Node n = r.adaptTo(Node.class);
         if (n == null) {
-            resp.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED,
-                "Can only dump nodes");
+            resp.setContentType(responseContentType);
+            resp.setCharacterEncoding("UTF-8");
             return;
         }
 
