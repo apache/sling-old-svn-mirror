@@ -27,4 +27,4 @@
   - sling:key (string)
   - sling:message (undefined)
 
-[sling:messageEntry] > nt:unstructured, sling:message  
+[sling:messageEntry] > nt:hierarchyNode, sling:message  
