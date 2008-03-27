@@ -36,7 +36,6 @@
     <description>
         Provides a configurable path-based default resource type
         for Resources which do not have an explicit one.
-        RMI
     </description>
 
     <scm>
