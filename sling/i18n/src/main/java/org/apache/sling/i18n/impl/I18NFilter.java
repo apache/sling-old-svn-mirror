@@ -21,7 +21,6 @@ package org.apache.sling.i18n.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
@@ -59,11 +58,6 @@ public class I18NFilter implements Filter {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(I18NFilter.class.getName());
 
-    /**
-     * @scr.property value="en_US"
-     */
-    public static final String PAR_DEFAULT_LOCALE = "locale.default";
-
     private static LocaleResolver DEFAULT_LOCALE_RESOLVER = new LocaleResolver() {
         public List<Locale> resolveLocale(SlingHttpServletRequest request) {
 
@@ -88,8 +82,6 @@ public class I18NFilter implements Filter {
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     ResourceBundleProvider resourceBundleProvider;
 
-    private Locale defaultLocale;
-
     public void init(FilterConfig filterConfig) {
         // nothing to do
     }
@@ -99,7 +91,7 @@ public class I18NFilter implements Filter {
 
         // wrap with our ResourceBundle provisioning
         request = new I18NSlingHttpServletRequest(request,
-            resourceBundleProvider, localeResolver, defaultLocale);
+            resourceBundleProvider, localeResolver);
 
         // and forward the request
         chain.doFilter(request, response);
@@ -110,13 +102,6 @@ public class I18NFilter implements Filter {
     }
 
     // ---------- SCR Integration ----------------------------------------------
-
-    protected void activate(org.osgi.service.component.ComponentContext context) {
-        @SuppressWarnings("unchecked")
-        Dictionary<String, Object> configuration = context.getProperties();
-        String localeString = (String) configuration.get(PAR_DEFAULT_LOCALE);
-        this.defaultLocale = this.toLocale(localeString);
-    }
 
     protected void bindLocaleResolver(LocaleResolver localeResolver) {
         this.localeResolver = localeResolver;
@@ -130,65 +115,6 @@ public class I18NFilter implements Filter {
 
     // ---------- internal -----------------------------------------------------
 
-    private Locale toLocale(String localeString) {
-        if (localeString == null || localeString.length() == 0) {
-            return Locale.getDefault();
-        }
-
-        // check whether we have an exact match locale
-        Locale[] available = Locale.getAvailableLocales();
-        for (int i = 0; i < available.length; i++) {
-            if (available[i].toString().equals(localeString)) {
-                return available[i];
-            }
-        }
-
-        // check language and country
-        String[] parts = localeString.split("_");
-        if (parts.length == 0) {
-            return Locale.getDefault();
-        }
-
-        // at least language is available
-        String lang = parts[0];
-        String[] langs = Locale.getISOLanguages();
-        for (int i = 0; i < langs.length; i++) {
-            if (langs[i].equals(lang)) {
-                lang = null; // signal ok
-                break;
-            }
-        }
-        if (lang != null) {
-            parts[0] = Locale.getDefault().getLanguage();
-        }
-
-        // only language
-        if (parts.length == 1) {
-            return new Locale(parts[0]);
-        }
-
-        // country is also available
-        String country = parts[1];
-        String[] countries = Locale.getISOCountries();
-        for (int i = 0; i < countries.length; i++) {
-            if (countries[i].equals(lang)) {
-                lang = null; // signal ok
-                break;
-            }
-        }
-        if (country != null) {
-            parts[1] = Locale.getDefault().getCountry();
-        }
-
-        // language and country
-        if (parts.length == 2) {
-            return new Locale(parts[0], parts[1]);
-        }
-
-        // language, country and variant
-        return new Locale(parts[0], parts[1], parts[2]);
-    }
-
     // ---------- internal class -----------------------------------------------
 
     private static class I18NSlingHttpServletRequest extends
@@ -198,19 +124,16 @@ public class I18NFilter implements Filter {
 
         private final LocaleResolver localeResolver;
 
-        private final Locale defaultLocale;
-
         private Locale locale;
 
         private List<Locale> localeList;
 
         I18NSlingHttpServletRequest(ServletRequest delegatee,
                 ResourceBundleProvider bundleProvider,
-                LocaleResolver localeResolver, Locale defaultLocale) {
+                LocaleResolver localeResolver) {
             super((SlingHttpServletRequest) delegatee);
             this.bundleProvider = bundleProvider;
             this.localeResolver = localeResolver;
-            this.defaultLocale = defaultLocale;
         }
 
         @Override
@@ -239,7 +162,7 @@ public class I18NFilter implements Filter {
             if (locale == null) {
                 List<Locale> localeList = getLocaleList();
                 if (localeList.isEmpty()) {
-                    locale = defaultLocale;
+                    locale = bundleProvider.getDefaultLocale();
                 } else {
                     locale = localeList.get(0);
                 }
