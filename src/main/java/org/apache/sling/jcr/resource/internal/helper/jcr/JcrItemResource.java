@@ -30,6 +30,7 @@ import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 abstract class JcrItemResource extends SlingAdaptable implements Resource {
@@ -44,11 +45,15 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
     private final ResourceMetadata metadata;
 
     private String resourceSuperType;
-
-    protected JcrItemResource(ResourceResolver resourceResolver, String path) {
+    
+    protected final JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
+    
+    protected JcrItemResource(ResourceResolver resourceResolver, 
+            String path, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
+        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
 
         metadata = new ResourceMetadata();
         metadata.setResolutionPath(path);
@@ -108,6 +113,10 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
         if (node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)) {
             result = node.getProperty(SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
+        }
+        
+        if (result == null && defaultResourceTypeProvider != null) {
+            result = defaultResourceTypeProvider.getResourceTypeForNode(node);
         }
 
         if (result == null || result.length() == 0) {

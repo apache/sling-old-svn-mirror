@@ -48,10 +48,10 @@ public class MockResourceResolver implements ResourceResolver {
             Item item = session.getItem(path);
             
             if (item.isNode()) {
-                return new JcrNodeResource(this, (Node) item);
+                return new JcrNodeResource(this, (Node) item, null);
             }
             
-            return new JcrPropertyResource(this, path, (Property) item);
+            return new JcrPropertyResource(this, path, (Property) item, null);
         } catch (Exception e) {
             // don't care
         }
