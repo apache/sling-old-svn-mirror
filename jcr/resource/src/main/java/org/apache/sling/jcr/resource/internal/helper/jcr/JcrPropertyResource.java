@@ -32,6 +32,7 @@ import javax.jcr.ValueFormatException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +46,8 @@ public class JcrPropertyResource extends JcrItemResource {
     private final String resourceType;
 
     public JcrPropertyResource(ResourceResolver resourceResolver, String path,
-            Property property) throws RepositoryException {
-        super(resourceResolver, path);
+            Property property, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) throws RepositoryException {
+        super(resourceResolver, path, defaultResourceTypeProvider);
         this.property = property;
         this.resourceType = getResourceTypeForNode(property.getParent())
             + "/" + property.getName();

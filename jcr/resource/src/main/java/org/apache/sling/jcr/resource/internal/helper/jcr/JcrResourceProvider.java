@@ -31,6 +31,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +47,11 @@ public class JcrResourceProvider implements ResourceProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Session session;
+    private final JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
 
-    public JcrResourceProvider(Session session) {
+    public JcrResourceProvider(Session session, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) {
         this.session = session;
+        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -127,14 +130,14 @@ public class JcrResourceProvider implements ResourceProvider {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     path);
-                return new JcrNodeResource(resourceResolver, (Node) item);
+                return new JcrNodeResource(resourceResolver, (Node) item, defaultResourceTypeProvider);
             }
 
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
                 path);
             return new JcrPropertyResource(resourceResolver, path,
-                (Property) item);
+                (Property) item, defaultResourceTypeProvider);
         }
 
         log.debug("createResource: No JCR Item exists at path '{}'", path);

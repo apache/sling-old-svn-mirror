@@ -25,6 +25,7 @@ import javax.jcr.NodeIterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,15 +48,18 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
+    
+    private final JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
 
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
     public JcrNodeResourceIterator(ResourceResolver resourceResolver,
-            NodeIterator nodes) {
+            NodeIterator nodes, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
+        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
         this.nextResult = seek();
     }
 
@@ -84,7 +88,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (nodes.hasNext()) {
             try {
-                return new JcrNodeResource(resourceResolver, nodes.nextNode());
+                return new JcrNodeResource(resourceResolver, nodes.nextNode(), defaultResourceTypeProvider);
             } catch (Throwable t) {
                 log.error(
                     "seek: Problem creating Resource for next node, skipping",

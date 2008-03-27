@@ -39,6 +39,7 @@ import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +53,9 @@ public class JcrNodeResource extends JcrItemResource {
 
     private final String resourceType;
 
-    JcrNodeResource(ResourceResolver resourceResolver, Node node)
+    JcrNodeResource(ResourceResolver resourceResolver, Node node, JcrDefaultResourceTypeProvider defaultResourceTypeProvider)
             throws RepositoryException {
-        super(resourceResolver, node.getPath());
+        super(resourceResolver, node.getPath(), defaultResourceTypeProvider);
         this.node = node;
         resourceType = getResourceTypeForNode(node);
 
@@ -170,7 +171,7 @@ public class JcrNodeResource extends JcrItemResource {
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
-                    getNode().getNodes());
+                    getNode().getNodes(), defaultResourceTypeProvider);
             }
         } catch (RepositoryException re) {
             log.error("listChildren: Cannot get children of " + this, re);
