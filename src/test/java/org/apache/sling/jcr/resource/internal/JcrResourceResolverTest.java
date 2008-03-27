@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
+import org.apache.sling.jcr.resource.internal.helper.starresource.SyntheticStarResource;
 
 public class JcrResourceResolverTest extends RepositoryTestBase {
 
@@ -163,6 +164,22 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             assertNotNull(res);
             assertEquals("GET request resolution does not go up the path",
                 Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+        }
+    }
+    
+    public void testStarResource() throws Exception {
+        final String path = rootPath + "/" + System.currentTimeMillis() + "/*.html";
+        
+        {
+            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "GET"));
+            assertNotNull(res);
+            assertEquals(SyntheticStarResource.class.getName(), res.getClass().getName());
+            assertEquals(SyntheticStarResource.DEFAULT_RESOURCE_TYPE, res.getResourceType());
+        }
+        
+        {
+            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "POST"));
+            assertEquals(NonExistingResource.class.getName(), res.getClass().getName());
         }
     }
 

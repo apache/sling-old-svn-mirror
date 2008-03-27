@@ -41,6 +41,7 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
+import org.apache.sling.jcr.resource.internal.helper.starresource.SyntheticStarResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,11 @@ public class JcrResourceResolver extends SlingAdaptable implements
         Resource result = resolve(pathInfo);
 
         if (result == null) {
-            result = new NonExistingResource(this, pathInfo);
+            if(SyntheticStarResource.appliesTo(request)) {
+                result = new SyntheticStarResource(this, pathInfo, rootProvider.getDefaultResourceTypeProvider());
+            } else {
+                result = new NonExistingResource(this, pathInfo);
+            }
         }
 
         return result;
