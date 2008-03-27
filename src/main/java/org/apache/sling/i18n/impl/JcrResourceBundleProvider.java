@@ -61,18 +61,29 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     /** @scr.property value="" */
     private static final String PROP_PASS = "password";
 
+    /**
+     * @scr.property value="en"
+     */
+    public static final String PAR_DEFAULT_LOCALE = "locale.default";
+
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private SlingRepository repository;
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private JcrResourceResolverFactory resourceResolverFactory;
 
+    private Locale defaultLocale = Locale.ENGLISH;
+    
     private Credentials repoCredentials;
 
     private ResourceResolver resourceResolver;
 
     private Map<Locale, ResourceBundle> resourceBundleCache = new HashMap<Locale, ResourceBundle>();
 
+    public Locale getDefaultLocale() {
+        return defaultLocale;
+    }
+    
     public ResourceBundle getResourceBundle(Locale locale) {
         if (locale == null) {
             locale = Locale.getDefault();
@@ -117,8 +128,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         } else if (locale.getCountry().length() != 0) {
             return new Locale(locale.getLanguage());
         } else if (!locale.getLanguage().equals(
-            Locale.getDefault().getLanguage())) {
-            return Locale.getDefault();
+            defaultLocale.getLanguage())) {
+            return defaultLocale;
         }
 
         // no more parents
@@ -186,6 +197,65 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         }
     }
 
+    private Locale toLocale(String localeString) {
+        if (localeString == null || localeString.length() == 0) {
+            return Locale.getDefault();
+        }
+
+        // check whether we have an exact match locale
+        Locale[] available = Locale.getAvailableLocales();
+        for (int i = 0; i < available.length; i++) {
+            if (available[i].toString().equals(localeString)) {
+                return available[i];
+            }
+        }
+
+        // check language and country
+        String[] parts = localeString.split("_");
+        if (parts.length == 0) {
+            return Locale.getDefault();
+        }
+
+        // at least language is available
+        String lang = parts[0];
+        String[] langs = Locale.getISOLanguages();
+        for (int i = 0; i < langs.length; i++) {
+            if (langs[i].equals(lang)) {
+                lang = null; // signal ok
+                break;
+            }
+        }
+        if (lang != null) {
+            parts[0] = Locale.getDefault().getLanguage();
+        }
+
+        // only language
+        if (parts.length == 1) {
+            return new Locale(parts[0]);
+        }
+
+        // country is also available
+        String country = parts[1];
+        String[] countries = Locale.getISOCountries();
+        for (int i = 0; i < countries.length; i++) {
+            if (countries[i].equals(lang)) {
+                lang = null; // signal ok
+                break;
+            }
+        }
+        if (country != null) {
+            parts[1] = Locale.getDefault().getCountry();
+        }
+
+        // language and country
+        if (parts.length == 2) {
+            return new Locale(parts[0], parts[1]);
+        }
+
+        // language, country and variant
+        return new Locale(parts[0], parts[1], parts[2]);
+    }
+
     // ---------- EventListener ------------------------------------------------
 
     public void onEvent(EventIterator events) {
@@ -207,6 +277,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
             char[] pwd = (pass == null) ? new char[0] : pass.toCharArray();
             repoCredentials = new SimpleCredentials(user, pwd);
         }
+
+        String localeString = (String) props.get(PAR_DEFAULT_LOCALE);
+        this.defaultLocale = toLocale(localeString);
     }
 
     protected void bindRepository(SlingRepository repository) {

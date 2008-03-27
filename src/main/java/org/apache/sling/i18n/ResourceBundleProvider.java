@@ -29,12 +29,16 @@ import java.util.ResourceBundle;
 public interface ResourceBundleProvider {
 
     /**
+     * Returns the default <code>Locale</code> assumed by this instance.
+     */
+    Locale getDefaultLocale();
+
+    /**
      * Returns a <code>ResourceBundle</code> for the given locale.
      * 
      * @param locale The <code>Locale</code> for which to return the resource
-     *            bundle. If this is <code>null</code> the platform default
-     *            locale as returned by <code>Locale.getDefault()</code> is
-     *            assumed.
+     *            bundle. If this is <code>null</code> the default locale as
+     *            returned by {@link #getDefaultLocale()} is assumed.
      * @return The <code>ResourceBundle</code> for the given locale
      * @throws MissingResourceException If the service is not capable of
      *             returning a <code>ResourceBundle</code>
