@@ -30,7 +30,7 @@ import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 /** Used to provide the equivalent of an empty Node for GET requests
  *  to *.something (SLING-344)
  */
-public class SyntheticStarResource extends SyntheticResource {
+public class StarResource extends SyntheticResource {
     
     public final static String PATH_PATTERN = "/*.";
     public final static String PATH_CLEAN_SUFFIX = "/*";
@@ -43,7 +43,7 @@ public class SyntheticStarResource extends SyntheticResource {
         }
     }
     
-    public SyntheticStarResource(ResourceResolver resourceResolver, String path, JcrDefaultResourceTypeProvider drtp) throws SlingException {
+    public StarResource(ResourceResolver resourceResolver, String path, JcrDefaultResourceTypeProvider drtp) throws SlingException {
         super(resourceResolver, convertPath(path), null);
         
         // The only way we can set a meaningful resource type is via the drtp
@@ -73,7 +73,7 @@ public class SyntheticStarResource extends SyntheticResource {
         return null;
     }
     
-    /** True if a SyntheticStarResource should be used for the given request, if
+    /** True if a StarResource should be used for the given request, if
      *  a real Resource was not found */
     public static boolean appliesTo(HttpServletRequest request) {
         return "GET".equals(request.getMethod()) && request.getPathInfo().contains(PATH_PATTERN);
