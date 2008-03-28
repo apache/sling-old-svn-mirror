@@ -24,7 +24,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /** Fake NodeType when only some methods work, as needed to support
- *  the SyntheticStarResource.
+ *  the StarResource.
  */
 class FakeNodeType implements NodeType {
 

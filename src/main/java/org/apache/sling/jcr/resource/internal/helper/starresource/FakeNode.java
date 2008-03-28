@@ -52,7 +52,7 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
-/** Used by SyntheticStarResource, a fake node that only has a path,
+/** Used by StarResource, a fake node that only has a path,
  *  but no values.
  */
 
