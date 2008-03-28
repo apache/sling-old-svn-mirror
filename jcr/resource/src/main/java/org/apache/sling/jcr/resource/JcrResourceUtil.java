@@ -29,6 +29,7 @@ import javax.jcr.query.QueryResult;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.slf4j.Logger;
@@ -262,6 +263,24 @@ public class JcrResourceUtil {
 
         // get the resource super type from the resource
         return (rtResource != null) ? rtResource.getResourceSuperType() : null;
+    }
+
+    /**
+     * Returns <code>true</code> if the resource <code>res</code> is a
+     * synthetic resource.
+     * <p>
+     * This method checks whether the resource is an instance of the
+     * <code>org.apache.sling.resource.SyntheticResource</code> class.
+     * 
+     * @param res The <code>Resource</code> to check whether it is a synthetic
+     *            resource.
+     * @return <code>true</code> if <code>res</code> is a synthetic
+     *         resource. <code>false</code> is returned if <code>res</code>
+     *         is <code>null</code> or not an instance of the
+     *         <code>org.apache.sling.resource.SyntheticResource</code> class.
+     */
+    public static boolean isSyntheticResource(Resource res) {
+        return res instanceof SyntheticResource;
     }
 
     /**
