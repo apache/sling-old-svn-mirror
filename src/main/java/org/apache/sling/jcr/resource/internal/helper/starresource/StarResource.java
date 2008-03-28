@@ -47,7 +47,8 @@ public class StarResource extends SyntheticResource {
     /** True if a StarResource should be used for the given request, if
      *  a real Resource was not found */
     public static boolean appliesTo(HttpServletRequest request) {
-        return "GET".equals(request.getMethod()) && request.getPathInfo().contains(PATH_PATTERN);
+        String path = request.getPathInfo();
+        return path.contains(PATH_PATTERN) || path.endsWith(PATH_CLEAN_SUFFIX);
     }
 
     /**
