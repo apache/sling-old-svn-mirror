@@ -40,7 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
-import org.apache.sling.jcr.resource.internal.helper.starresource.SyntheticStarResource;
+import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 
 public class JcrResourceResolverTest extends RepositoryTestBase {
 
@@ -173,8 +173,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         {
             final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, "GET"));
             assertNotNull(res);
-            assertEquals(SyntheticStarResource.class.getName(), res.getClass().getName());
-            assertEquals(SyntheticStarResource.DEFAULT_RESOURCE_TYPE, res.getResourceType());
+            assertEquals(StarResource.class.getName(), res.getClass().getName());
+            assertEquals(StarResource.DEFAULT_RESOURCE_TYPE, res.getResourceType());
         }
         
         {
