@@ -32,6 +32,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +125,8 @@ public class UjaxPostProcessor {
         StringBuffer rootPathBuf = new StringBuffer();
         String suffix;
         Resource currentResource = request.getResource();
-        if (Resource.RESOURCE_TYPE_NON_EXISTING.equals(currentResource.getResourceType())) {
+        if (JcrResourceUtil.isNonExistingResource(currentResource)
+                || JcrResourceUtil.isStarResource(currentResource)) {
 
             // no resource, treat the missing resource path as suffix
             suffix = currentResource.getPath();
