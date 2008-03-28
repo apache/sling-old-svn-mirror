@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
@@ -41,6 +42,21 @@ public class StarResource extends SyntheticResource {
         SyntheticStarResourceException(String reason, Throwable cause) {
             super(reason, cause);
         }
+    }
+    
+    /** True if a StarResource should be used for the given request, if
+     *  a real Resource was not found */
+    public static boolean appliesTo(HttpServletRequest request) {
+        return "GET".equals(request.getMethod()) && request.getPathInfo().contains(PATH_PATTERN);
+    }
+
+    /**
+     * Returns true if the path of the resource ends with the
+     * {@link #PATH_CLEAN_SUFFIX} and therefore should be considered a star
+     * resource.
+     */
+    public static boolean isStarResource(Resource res) {
+        return res.getPath().endsWith(PATH_CLEAN_SUFFIX);
     }
     
     public StarResource(ResourceResolver resourceResolver, String path, JcrDefaultResourceTypeProvider drtp) throws SlingException {
@@ -73,12 +89,6 @@ public class StarResource extends SyntheticResource {
         return null;
     }
     
-    /** True if a StarResource should be used for the given request, if
-     *  a real Resource was not found */
-    public static boolean appliesTo(HttpServletRequest request) {
-        return "GET".equals(request.getMethod()) && request.getPathInfo().contains(PATH_PATTERN);
-    }
-
     /** Cleanup our path, for example /foo/*.html becomes /foo/* */
     protected static String convertPath(String path) {
         final int index = path.indexOf(PATH_PATTERN);
