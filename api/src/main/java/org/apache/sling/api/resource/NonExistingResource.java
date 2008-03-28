@@ -21,53 +21,22 @@ package org.apache.sling.api.resource;
 /**
  * Simple helper class representing nonexisting resources.
  */
-public final class NonExistingResource implements Resource {
-
-    private final ResourceResolver resourceResolver;
-
-    private final String resourceURI;
-
-    private final ResourceMetadata resourceMetadata;
+public final class NonExistingResource extends SyntheticResource {
 
     public NonExistingResource(ResourceResolver resourceResolver,
             String resourceURI) {
-        this.resourceResolver = resourceResolver;
-        this.resourceURI = resourceURI;
-
-        resourceMetadata = new ResourceMetadata();
-        resourceMetadata.setResolutionPath(resourceURI);
+        super(resourceResolver, resourceURI, RESOURCE_TYPE_NON_EXISTING);
     }
 
-    public String getPath() {
-        return resourceURI;
-    }
-
-    public String getResourceType() {
+    public final String getResourceType() {
+        // overwrite to prevent overwriting of this method in extensions of
+        // this class because the specific resource type is the marker of a
+        // NonExistingResource
         return RESOURCE_TYPE_NON_EXISTING;
     }
 
-    // Non-existing resources have no super type
-    public String getResourceSuperType() {
-        return null;
-    }
-    
-    public ResourceMetadata getResourceMetadata() {
-        return resourceMetadata;
-    }
-
-    public ResourceResolver getResourceResolver() {
-        return resourceResolver;
-    }
-
-    /**
-     * Returns <code>null</code> because a non-existing resource cannot adapt
-     * to anything.
-     */
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        return null;
-    }
-
     public String toString() {
+        // overwrite to only list the class name and path, type is irrelevant
         return getClass().getSimpleName() + ", path=" + getPath();
     }
 }
