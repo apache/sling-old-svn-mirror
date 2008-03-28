@@ -125,8 +125,7 @@ public class UjaxPostProcessor {
         StringBuffer rootPathBuf = new StringBuffer();
         String suffix;
         Resource currentResource = request.getResource();
-        if (JcrResourceUtil.isNonExistingResource(currentResource)
-                || JcrResourceUtil.isStarResource(currentResource)) {
+        if (JcrResourceUtil.isSyntheticResource(currentResource)) {
 
             // no resource, treat the missing resource path as suffix
             suffix = currentResource.getPath();
