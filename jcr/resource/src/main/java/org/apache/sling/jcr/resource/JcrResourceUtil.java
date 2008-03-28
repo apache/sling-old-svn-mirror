@@ -26,9 +26,11 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
+import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,5 +262,45 @@ public class JcrResourceUtil {
 
         // get the resource super type from the resource
         return (rtResource != null) ? rtResource.getResourceSuperType() : null;
+    }
+
+    /**
+     * Returns <code>true</code> if the resource <code>res</code> is a "star
+     * resource". A <i>star resource</i> is a resource returned from the
+     * <code>ResourceResolver.resolve(HttpServletRequest)</code> whose path
+     * terminates in a <code>/*</code>. Generally such resource result from
+     * requests to something like <code>/some/path/*</code> or
+     * <code>/some/path/*.html</code> which may be used web applications to
+     * uniformly handle resources to be created.
+     * <p>
+     * This method checks whether the resource path ends with a <code>/*</code>
+     * indicating such a star resource.
+     * 
+     * @param res The <code>Resource</code> to check whether it is a star
+     *            resource.
+     * @return <code>true</code> if <code>res</code> is to be considered a
+     *         star resource.
+     * @throws NullPointerException if <code>res</code> is <code>null</code>.
+     */
+    public static boolean isStarResource(Resource res) {
+        return StarResource.isStarResource(res);
+    }
+
+    /**
+     * Returns <code>true</code> if the resource <code>res</code> is a
+     * non-existing resource.
+     * <p>
+     * This method checks the resource type of the resource to match the
+     * well-known resource type <code>sling:nonexisting</code> of the
+     * <code>NonExistingResource</code> class defined in the Sling API.
+     * 
+     * @param res The <code>Resource</code> to check whether it is a
+     *            non-existing resource.
+     * @return <code>true</code> if <code>res</code> is to be considered a
+     *         non-existing resource.
+     * @throws NullPointerException if <code>res</code> is <code>null</code>.
+     */
+    public static boolean isNonExistingResource(Resource res) {
+        return NonExistingResource.RESOURCE_TYPE_NON_EXISTING.equals(res.getResourceType());
     }
 }
