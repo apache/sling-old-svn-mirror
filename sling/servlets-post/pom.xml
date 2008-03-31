@@ -60,11 +60,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.ujax
-                        </Export-Package>
                         <Private-Package>
-                            org.apache.sling.ujax.impl.*
+                            org.apache.sling.servlets.post.impl,
+                            org.apache.sling.servlets.post.impl.info
                         </Private-Package>
                         <Sling-Bundle-Resources>
                             /sling/sling.js

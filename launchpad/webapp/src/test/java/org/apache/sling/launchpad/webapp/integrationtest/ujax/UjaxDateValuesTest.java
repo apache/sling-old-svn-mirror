@@ -24,7 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.ujax.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.UjaxPostServlet;
 
 /**
  *  checks if the date parsing for non jcr-dates works.
