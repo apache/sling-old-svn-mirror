@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.ujax.impl.info;
+package org.apache.sling.servlets.post.impl.info;
 
 import java.io.IOException;
 import java.io.PrintWriter;
