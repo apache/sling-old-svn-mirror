@@ -26,25 +26,24 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.ujax</artifactId>
+    <artifactId>org.apache.sling.servlets.post</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling microjax (ujax)</name>
+    <name>Sling Default POST Servlets</name>
     <description>
-        Microjax aka ujax is a simple client side API to access the
-        repository and consists of a Servlet to update JCR content
+        Provides default POST servlets.
     </description>
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/ujax
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets-post
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/ujax
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets-post
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/ujax
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/servlets-post
         </url>
     </scm>
 
