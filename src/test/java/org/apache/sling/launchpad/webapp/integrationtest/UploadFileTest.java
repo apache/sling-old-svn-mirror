@@ -22,12 +22,12 @@ import java.io.IOException;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 /**
- * Test uploading files using the ujax post servlet (SLING-168)
+ * Test uploading files using the Sling post servlet (SLING-168)
  */
 public class UploadFileTest extends HttpTestBase {
 
     private static final String TEST_FILE = "src/test/resources/integration-test/file-to-upload.txt";
-    
+
     public void testDistinctResource() throws IOException {
         String folderPath = "/UploadFileTest_1_" + System.currentTimeMillis();
         final String url = HTTP_BASE_URL + folderPath;
@@ -118,7 +118,7 @@ public class UploadFileTest extends HttpTestBase {
 
         // get and check URL of created file
         String urlOfFileNode = url + "/file";
-        
+
         /*
         TODO: does not work, since no nt:file resource type handler present ???
 
@@ -130,7 +130,7 @@ public class UploadFileTest extends HttpTestBase {
         final byte[] data = get.getResponseBody();
         assertEquals("size of file must be same", localFile.length(), data.length);
         */
-        
+
         String webdavUrl = WEBDAV_BASE_URL + folderPath + "/file";
         final GetMethod get = new GetMethod(webdavUrl);
         final int status = httpClient.executeMethod(get);

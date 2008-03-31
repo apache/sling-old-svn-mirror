@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -94,7 +95,7 @@ public class HttpTestBase extends TestCase {
             testClient.delete(nodeUrl);
         }
     };
-    
+
     protected static String removeEndingSlash(String str) {
         if(str != null && str.endsWith("/")) {
             return str.substring(0, str.length() - 1);
@@ -129,7 +130,7 @@ public class HttpTestBase extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        
+
         for(String url : urlsToDelete) {
             testClient.delete(url);
         }
@@ -138,7 +139,7 @@ public class HttpTestBase extends TestCase {
     /** On the server side, initialization of Sling bundles is done
      *  asynchronously once the webapp is started. This method checks
      *  that everything's ready on the server side, by calling an URL
-     *  that requires the UjaxPostServlet and the JCR repository to
+     *  that requires the SlingPostServlet and the JCR repository to
      *  work correctly.
      */
     protected void waitForSlingStartup() throws Exception {

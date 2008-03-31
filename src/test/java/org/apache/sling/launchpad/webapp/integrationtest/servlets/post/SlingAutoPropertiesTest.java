@@ -27,19 +27,19 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
 
 /** {#link MicrojaxPropertyValueSetter} sets the value of some properties
  *  automatically if they are empty. This is tested here with various cases.
- */  
+ */
 
 public class SlingAutoPropertiesTest extends HttpTestBase {
 
-    public static final String TEST_BASE_PATH = "/ujax-tests";
+    public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
-    
+
    public void testPostPathIsUnique() throws IOException {
         assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
                 "Path must not exist before test: " + postUrl);
@@ -48,15 +48,15 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
     public void testCreatedAndModified() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("a","123");
-        
+
         props.put("created","");
         props.put("createdBy","");
         props.put("lastModified","");
         props.put("lastModifiedBy","");
-        
+
         final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
-        
+
         assertJavascript("123", content, "out.println(data.a)");
         assertJavascript("admin", content, "out.println(data.createdBy)");
         assertJavascript("admin", content, "out.println(data.lastModifiedBy)");
@@ -70,10 +70,10 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
         } catch(InterruptedException ignored) {
             // ignore
         }
-        
+
         testClient.createNode(createdNodeUrl, props);
         content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
-        
+
         assertJavascript("123", content, "out.println(data.a)");
         assertJavascript("admin", content, "out.println(data.createdBy)");
         assertJavascript("admin", content, "out.println(data.lastModifiedBy)");
@@ -81,19 +81,19 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
         assertJavascript("true", content, "out.println(data.lastModified.length > 0)");
         assertJavascript("true", content, "out.println(data.lastModified > data.created)");
     }
-    
+
     public void testWithSpecificValues() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("a","123");
-        
+
         props.put("created","a");
         props.put("createdBy","b");
         props.put("lastModified","c");
         props.put("lastModifiedBy","d");
-        
+
         final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
-        
+
         assertJavascript("123", content, "out.println(data.a)");
         assertJavascript("a", content, "out.println(data.created)");
         assertJavascript("b", content, "out.println(data.createdBy)");
