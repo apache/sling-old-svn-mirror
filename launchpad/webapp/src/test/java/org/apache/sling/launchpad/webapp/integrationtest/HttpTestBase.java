@@ -39,7 +39,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
-import org.apache.sling.servlets.post.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.SlingPostServlet;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -84,7 +84,7 @@ public class HttpTestBase extends TestCase {
             }
             testText = "This is a test node " + System.currentTimeMillis();
             properties.put("text", testText);
-            nodeUrl = testClient.createNode(parentPath + UjaxPostServlet.DEFAULT_CREATE_SUFFIX, properties);
+            nodeUrl = testClient.createNode(parentPath + SlingPostServlet.DEFAULT_CREATE_SUFFIX, properties);
             resourceType = properties.get(SLING_RESOURCE_TYPE);
             scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
             testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);

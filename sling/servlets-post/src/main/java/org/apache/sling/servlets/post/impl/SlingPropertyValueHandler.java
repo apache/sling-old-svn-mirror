@@ -34,7 +34,7 @@ import org.apache.jackrabbit.value.ValueFactoryImpl;
  * value. For example, "lastModified" with an empty value is stored as the
  * current Date.
  */
-class UjaxPropertyValueHandler {
+class SlingPropertyValueHandler {
 
     /**
      * Defins a map of auto properties
@@ -54,7 +54,7 @@ class UjaxPropertyValueHandler {
     /**
      * the post processor
      */
-    private final UjaxPostProcessor ctx;
+    private final SlingPostProcessor ctx;
 
     /**
      * current date for all properties in this request
@@ -65,7 +65,7 @@ class UjaxPropertyValueHandler {
      * Constructs a propert value handler
      * @param ctx the post processor
      */
-    public UjaxPropertyValueHandler(UjaxPostProcessor ctx) {
+    public SlingPropertyValueHandler(SlingPostProcessor ctx) {
         this.ctx = ctx;
     }
 
