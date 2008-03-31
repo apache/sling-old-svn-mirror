@@ -22,20 +22,20 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
-/** Test the ujax:sessionInfo resource */
+/** Test the sling:sessionInfo resource */
 
 public class SlingSessionInfoTest extends HttpTestBase {
-    
+
     public void testSessionInfo() throws IOException {
-        final String content = getContent(HTTP_BASE_URL + "/ujax.sessionInfo.json", CONTENT_TYPE_JSON);
-        
+        final String content = getContent(HTTP_BASE_URL + "/sling.sessionInfo.json", CONTENT_TYPE_JSON);
+
         // assume workspace name contains "default", might not
         // always be the case as the default workspace is selected
         // by the JCR implementation due to SLING-256
         assertJavascript("admin.true", content, "out.println(data.userID + '.' + (data.workspace.indexOf('default') >= 0) )");
     }
-    
-    public void testNonexistentUjaxUrl() throws IOException {
-        assertHttpStatus(HTTP_BASE_URL + "/ujax.nothing", HttpServletResponse.SC_NOT_FOUND);
+
+    public void testNonexistentSlingUrl() throws IOException {
+        assertHttpStatus(HTTP_BASE_URL + "/sling.nothing", HttpServletResponse.SC_NOT_FOUND);
     }
 }

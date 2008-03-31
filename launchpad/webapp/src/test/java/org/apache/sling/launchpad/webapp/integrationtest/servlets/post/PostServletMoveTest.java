@@ -25,7 +25,7 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 /** Test node move via the MicrojaxPostServlet */
 public class PostServletMoveTest extends HttpTestBase {
 
-    public static final String TEST_BASE_PATH = "/ujax-move-tests";
+    public static final String TEST_BASE_PATH = "/sling-move-tests";
 
     @Override
     protected void setUp() throws Exception {
@@ -39,8 +39,8 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("ujax:moveSrc", testPath + "/src");
-        props.put("ujax:moveDest", testPath + "/dest");
+        props.put("sling:post:moveSrc", testPath + "/src");
+        props.put("sling:post:moveDest", testPath + "/dest");
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -53,8 +53,8 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("ujax:moveSrc", "src");
-        props.put("ujax:moveDest", "dest");
+        props.put("sling:post:moveSrc", "src");
+        props.put("sling:post:moveDest", "dest");
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -67,8 +67,8 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("ujax:moveSrc", testPath + "/src");
-        props.put("ujax:moveDest", "new");
+        props.put("sling:post:moveSrc", testPath + "/src");
+        props.put("sling:post:moveDest", "new");
         String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
         String content = getContent(newNode + "/new.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -85,8 +85,8 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put("ujax:moveSrc", testPath + "/src");
-        props.put("ujax:moveDest", testPath + "/dest");
+        props.put("sling:post:moveSrc", testPath + "/src");
+        props.put("sling:post:moveDest", testPath + "/dest");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath, props);
         } catch (IOException ioe) {
@@ -95,7 +95,7 @@ public class PostServletMoveTest extends HttpTestBase {
                 throw ioe;
             }
         }
-        
+
         // expect unmodified dest
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello Destination", content, "out.println(data.text)");
@@ -112,9 +112,9 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put("ujax:moveSrc", testPath + "/src");
-        props.put("ujax:moveDest", testPath + "/dest");
-        props.put("ujax:moveFlags", "replace");  // replace dest
+        props.put("sling:post:moveSrc", testPath + "/src");
+        props.put("sling:post:moveDest", testPath + "/dest");
+        props.put("sling:post:moveFlags", "replace");  // replace dest
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -127,8 +127,8 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("ujax:moveSrc", testPath + "/src");
-        props.put("ujax:moveDest", "deep/new");
+        props.put("sling:post:moveSrc", testPath + "/src");
+        props.put("sling:post:moveDest", "deep/new");
         String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
         String content = getContent(newNode + "/deep/new.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -141,8 +141,8 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("ujax:moveSrc", testPath + "/src");
-        props.put("ujax:moveDest", "/some/not/existing/structure");
+        props.put("sling:post:moveSrc", testPath + "/src");
+        props.put("sling:post:moveDest", "/some/not/existing/structure");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
             // not quite correct. should check status response

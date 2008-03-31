@@ -27,15 +27,15 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
 
 /** Test node updates via the MicrojaxPostServlet */
 public class PostServletUpdateTest extends HttpTestBase {
-    public static final String TEST_BASE_PATH = "/ujax-tests";
+    public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
-    
+
    public void testPostPathIsUnique() throws IOException {
         assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
                 "Path must not exist before test: " + postUrl);
@@ -45,11 +45,11 @@ public class PostServletUpdateTest extends HttpTestBase {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("./a","123");
         props.put("./b","456");
-        
+
         final String location = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
-        
+
         props.put("./a","789");
         // the testClient method is called createNode but all it does is a POST,
         // so it can be used for updates as well
@@ -58,16 +58,16 @@ public class PostServletUpdateTest extends HttpTestBase {
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("789456", content, "out.println(data.a + data.b)");
     }
-    
+
     public void testUpdateNoChanges() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("./a","123");
         props.put("./b","456");
-        
+
         final String location = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
-        
+
         props.clear();
         // the testClient method is called createNode but all it does is a POST,
         // so it can be used for updates as well
@@ -76,21 +76,21 @@ public class PostServletUpdateTest extends HttpTestBase {
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
     }
-    
+
     public void testUpdateSomeChanges() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("./a","123");
         props.put("./b","456");
         props.put("C","not stored");
-        
+
         final String location = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
-        
+
         props.clear();
         props.put("./b","457");
         props.put("C","still not stored");
-        
+
         // the testClient method is called createNode but all it does is a POST,
         // so it can be used for updates as well
         final String newLocation = testClient.createNode(location, props);
@@ -98,5 +98,5 @@ public class PostServletUpdateTest extends HttpTestBase {
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123457", content, "out.println(data.a + data.b)");
     }
-    
+
  }

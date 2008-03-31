@@ -32,7 +32,7 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
 
 public class SlingDateValuesTest extends HttpTestBase {
 
-    public static final String TEST_BASE_PATH = "/ujax-tests";
+    public static final String TEST_BASE_PATH = "/sling-tests";
 
     // TODO: the commented formats do not work beacuse of SLING-242
     //       the + of the timezone offset is stripped by sling
