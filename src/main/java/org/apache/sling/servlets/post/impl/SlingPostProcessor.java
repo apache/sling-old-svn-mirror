@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Holds various states and encapsulates methods that are needed to handle a
- * ujax post request.
+ * post request.
  */
 public class SlingPostProcessor {
 
@@ -463,7 +463,7 @@ public class SlingPostProcessor {
         for (Map.Entry<String, RequestParameter[]>  e: request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
 
-            // do not store parameters with names starting with ujax:
+            // do not store parameters with names starting with sling:post
             if(paramName.startsWith(SlingPostServlet.RP_PREFIX)) {
                 continue;
             }
