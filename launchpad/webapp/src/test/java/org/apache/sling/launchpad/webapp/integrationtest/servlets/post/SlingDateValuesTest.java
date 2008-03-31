@@ -30,7 +30,7 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
  *  checks if the date parsing for non jcr-dates works.
  */
 
-public class UjaxDateValuesTest extends HttpTestBase {
+public class SlingDateValuesTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/ujax-tests";
 

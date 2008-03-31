@@ -24,7 +24,7 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 
 /** Test the ujax:sessionInfo resource */
 
-public class UjaxSessionInfoTest extends HttpTestBase {
+public class SlingSessionInfoTest extends HttpTestBase {
     
     public void testSessionInfo() throws IOException {
         final String content = getContent(HTTP_BASE_URL + "/ujax.sessionInfo.json", CONTENT_TYPE_JSON);
