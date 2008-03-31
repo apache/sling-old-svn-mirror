@@ -26,9 +26,9 @@ public class RequestProperty {
 
     private static final RequestParameter[] EMPTY_PARAM_ARRAY = new RequestParameter[0];
 
-    public static final String DEFAULT_IGNORE = UjaxPostServlet.RP_PREFIX + "ignore";
+    public static final String DEFAULT_IGNORE = SlingPostServlet.RP_PREFIX + "ignore";
 
-    public static final String DEFAULT_NULL = UjaxPostServlet.RP_PREFIX + "null";
+    public static final String DEFAULT_NULL = SlingPostServlet.RP_PREFIX + "null";
 
     private final String path;
 

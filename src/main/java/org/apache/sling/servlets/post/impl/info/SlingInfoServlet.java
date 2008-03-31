@@ -42,9 +42,9 @@ import org.osgi.service.component.ComponentContext;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.paths" value="/ujax"
  */
-public class UjaxInfoServlet extends SlingSafeMethodsServlet {
+public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
-    private Map<String, UjaxInfoProvider> infoProviders = new HashMap<String, UjaxInfoProvider>();
+    private Map<String, SlingInfoProvider> infoProviders = new HashMap<String, SlingInfoProvider>();
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -54,7 +54,7 @@ public class UjaxInfoServlet extends SlingSafeMethodsServlet {
 
         if (request.getRequestPathInfo().getSelectors().length > 0) {
             String label = request.getRequestPathInfo().getSelectors()[0];
-            UjaxInfoProvider uip = infoProviders.get(label);
+            SlingInfoProvider uip = infoProviders.get(label);
             if (uip != null) {
                 data = uip.getInfo(request);
             }

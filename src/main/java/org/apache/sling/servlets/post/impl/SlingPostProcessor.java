@@ -40,12 +40,12 @@ import org.slf4j.LoggerFactory;
  * Holds various states and encapsulates methods that are needed to handle a
  * ujax post request.
  */
-public class UjaxPostProcessor {
+public class SlingPostProcessor {
 
     /**
      * default log
      */
-    private static final Logger log = LoggerFactory.getLogger(UjaxPostProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(SlingPostProcessor.class);
 
     public static final String ORDER_FIRST = "first";
     public static final String ORDER_BEFORE = "before ";
@@ -55,12 +55,12 @@ public class UjaxPostProcessor {
     /**
      * handler that deals with properties
      */
-    private final UjaxPropertyValueHandler propHandler;
+    private final SlingPropertyValueHandler propHandler;
 
     /**
      * handler that deals with file upload
      */
-    private final UjaxFileUploadHandler uploadHandler;
+    private final SlingFileUploadHandler uploadHandler;
 
     /**
      * utility class for generating node names
@@ -108,7 +108,7 @@ public class UjaxPostProcessor {
      * @param dateParser helper for parsing date strings
      * @param servletContext The ServletContext to use for file upload
      */
-    public UjaxPostProcessor(SlingHttpServletRequest request, Session session,
+    public SlingPostProcessor(SlingHttpServletRequest request, Session session,
                              NodeNameGenerator nodeNameGenerator,
                              DateParser dateParser,
                              ServletContext servletContext) {
@@ -150,9 +150,9 @@ public class UjaxPostProcessor {
             }
 
             // and check whether it is a create request (trailing /*)
-            if (suffix.endsWith(UjaxPostServlet.DEFAULT_CREATE_SUFFIX)) {
+            if (suffix.endsWith(SlingPostServlet.DEFAULT_CREATE_SUFFIX)) {
                 suffix = suffix.substring(0, suffix.length()
-                    - UjaxPostServlet.DEFAULT_CREATE_SUFFIX.length());
+                    - SlingPostServlet.DEFAULT_CREATE_SUFFIX.length());
                 htmlResponse.setCreateRequest(true);
             }
 
@@ -164,8 +164,8 @@ public class UjaxPostProcessor {
         this.rootPath = rootPathBuf.toString();
         this.nodeNameGenerator = nodeNameGenerator;
         this.dateParser = dateParser;
-        propHandler = new UjaxPropertyValueHandler(this);
-        uploadHandler = new UjaxFileUploadHandler(this, servletContext);
+        propHandler = new SlingPropertyValueHandler(this);
+        uploadHandler = new SlingFileUploadHandler(this, servletContext);
     }
 
     /**
@@ -196,7 +196,7 @@ public class UjaxPostProcessor {
         ret.append(request.getResourceResolver().map(path));
 
         // append optional extension
-        String ext = request.getParameter(UjaxPostServlet.RP_DISPLAY_EXTENSION);
+        String ext = request.getParameter(SlingPostServlet.RP_DISPLAY_EXTENSION);
         if (ext != null && ext.length() > 0) {
             if (ext.charAt(0) != '.') {
                 ret.append('.');
@@ -295,7 +295,7 @@ public class UjaxPostProcessor {
      * @throws RepositoryException if a repository error occurs
      */
     private void processDeletes() throws RepositoryException {
-        final String [] paths = request.getParameterValues(UjaxPostServlet.RP_DELETE_PATH);
+        final String [] paths = request.getParameterValues(SlingPostServlet.RP_DELETE_PATH);
         if (paths != null) {
             for (String path : paths) {
                 if (!path.equals("")) {
@@ -327,10 +327,10 @@ public class UjaxPostProcessor {
      */
     private void processMoves() throws RepositoryException,
             IllegalArgumentException {
-        final String [] moveSrc = request.getParameterValues(UjaxPostServlet.RP_MOVE_SRC);
-        final String [] moveDest = request.getParameterValues(UjaxPostServlet.RP_MOVE_DEST);
-        final String flags = request.getParameter(UjaxPostServlet.RP_MOVE_FLAGS);
-        final boolean isReplace = flags != null && flags.contains(UjaxPostServlet.MOVE_FLAG_REPLACE);
+        final String [] moveSrc = request.getParameterValues(SlingPostServlet.RP_MOVE_SRC);
+        final String [] moveDest = request.getParameterValues(SlingPostServlet.RP_MOVE_DEST);
+        final String flags = request.getParameter(SlingPostServlet.RP_MOVE_FLAGS);
+        final boolean isReplace = flags != null && flags.contains(SlingPostServlet.MOVE_FLAG_REPLACE);
 
         if (moveSrc == null || moveDest == null) {
             return;
@@ -464,15 +464,15 @@ public class UjaxPostProcessor {
             final String paramName = e.getKey();
 
             // do not store parameters with names starting with ujax:
-            if(paramName.startsWith(UjaxPostServlet.RP_PREFIX)) {
+            if(paramName.startsWith(SlingPostServlet.RP_PREFIX)) {
                 continue;
             }
             // ignore field with a '@TypeHint' suffix. this is dealt with later
-            if (paramName.endsWith(UjaxPostServlet.TYPE_HINT_SUFFIX)) {
+            if (paramName.endsWith(SlingPostServlet.TYPE_HINT_SUFFIX)) {
                 continue;
             }
             // ignore field with a '@DefaultValue' suffix. this is dealt with later
-            if (paramName.endsWith(UjaxPostServlet.DEFAULT_VALUE_SUFFIX)) {
+            if (paramName.endsWith(SlingPostServlet.DEFAULT_VALUE_SUFFIX)) {
                 continue;
             }
             // SLING-298: skip FormEncoding parameter
@@ -490,7 +490,7 @@ public class UjaxPostProcessor {
             // SLING-130: VALUE_FROM_SUFFIX means take the value of this
             // property from a different field
             RequestParameter[] values = e.getValue();
-            final int vfIndex = propertyName.indexOf(UjaxPostServlet.VALUE_FROM_SUFFIX);
+            final int vfIndex = propertyName.indexOf(SlingPostServlet.VALUE_FROM_SUFFIX);
             if (vfIndex >= 0) {
                 // @ValueFrom example:
                 // <input name="./Text@ValueFrom" type="hidden" value="fulltext" />
@@ -519,14 +519,14 @@ public class UjaxPostProcessor {
             // <input type="text" name="./age" />
             // <input type="hidden" name="./age@TypeHint" value="long" />
             // causes the setProperty using the 'long' property type
-            final String thName = getSavePrefix() + propertyName + UjaxPostServlet.TYPE_HINT_SUFFIX;
+            final String thName = getSavePrefix() + propertyName + SlingPostServlet.TYPE_HINT_SUFFIX;
             final RequestParameter rp = request.getRequestParameter(thName);
             if (rp != null) {
                 prop.setTypeHint(rp.getString());
             }
 
             // @DefaultValue
-            final String dvName = getSavePrefix() + propertyName + UjaxPostServlet.DEFAULT_VALUE_SUFFIX;
+            final String dvName = getSavePrefix() + propertyName + SlingPostServlet.DEFAULT_VALUE_SUFFIX;
             prop.setDefaultValues(request.getRequestParameters(dvName));
 
             reqProperties.put(propPath, prop);
@@ -613,9 +613,9 @@ public class UjaxPostProcessor {
      */
     public String getSavePrefix() {
         if (savePrefix == null) {
-            savePrefix = request.getParameter(UjaxPostServlet.RP_SAVE_PARAM_PREFIX);
+            savePrefix = request.getParameter(SlingPostServlet.RP_SAVE_PARAM_PREFIX);
             if (savePrefix == null) {
-                savePrefix = UjaxPostServlet.DEFAULT_SAVE_PARAM_PREFIX;
+                savePrefix = SlingPostServlet.DEFAULT_SAVE_PARAM_PREFIX;
             }
             if (savePrefix.length() > 0) {
                 String prefix = "";
@@ -633,7 +633,7 @@ public class UjaxPostProcessor {
     }
 
     private void processOrder() throws RepositoryException {
-        final String orderCode = request.getParameter(UjaxPostServlet.RP_ORDER);
+        final String orderCode = request.getParameter(SlingPostServlet.RP_ORDER);
         if  (orderCode!=null) {
             final Node n = deepGetOrCreateNode(htmlResponse.getPath());
             orderNode(n, orderCode);
