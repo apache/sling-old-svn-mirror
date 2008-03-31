@@ -115,9 +115,9 @@ public class UslingIntegrationTestClient {
         // the properties of the client
         Map<String, String> nodeProperties = new HashMap<String, String>();
 
-        // add ujax specific properties
-        nodeProperties.put("ujax:redirect", url);
-        nodeProperties.put("ujax:displayExtension", "");
+        // add sling specific properties
+        nodeProperties.put("sling:post:redirect", url);
+        nodeProperties.put("sling:post:displayExtension", "");
 
         // take over any client provided properties
         if (clientNodeProperties != null) {
@@ -186,7 +186,7 @@ public class UslingIntegrationTestClient {
         post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
 
         final int status = httpClient.executeMethod(post);
-        if(status!=200) { // fmeschbe: The default ujax status is 200, not 302
+        if(status!=200) { // fmeschbe: The default sling status is 200, not 302
             throw new IOException("Expected status code 200 for POST, got " + status + ", URL=" + url);
         }
     }
