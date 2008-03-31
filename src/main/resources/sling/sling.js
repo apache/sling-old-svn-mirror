@@ -16,7 +16,7 @@
  */
 
 /**
- * 	The ujax javascript client gives access to a JCR repository
+ * 	The sling javascript client gives access to a JCR repository
  *	from client-side java code, using ujax as a back-end.	   
  *	 
  * @version $Rev: $, $Date: 2007-03-27 16:30:52 +0200 (Tue, 27 Mar 2007) $
@@ -28,7 +28,7 @@ var ujax = null;
 (function() {
 
 	ujax = new Object();
-	ujax.NAME_OF_THIS_FILE = "ujax.js";
+	ujax.NAME_OF_THIS_FILE = "sling.js";
 	
 	/** This method tries to figure out what to do with a page */
 	ujax.wizard = function() {
