@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launchpad.webapp.integrationtest.ujax;
+package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
