@@ -48,7 +48,7 @@ import org.apache.sling.servlets.helpers.DefaultHtmlRenderer;
 /** Experimental JST script engine: converts a JST template (using the
  *  same templating syntax as ESP) to client-side javascript code
  *  that renders the page.
- *  
+ *
  *  THIS IS STILL VERY ROUGH (2008/03/11), CONSIDER EXPERIMENTAL!!
  */
 public class JstScriptEngine extends AbstractSlingScriptEngine {
@@ -61,7 +61,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
         super(scriptEngineFactory);
 
         // TODO hardcoded for now...
-        libraryScripts.add("/ujax/ujax.js");
+        libraryScripts.add("/sling/sling.js");
         htmlRenderer = new DefaultHtmlRenderer();
     }
 
@@ -83,7 +83,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
 
             // to render we must have either a Node or a SyntheticResourceData
             final Node n = r.adaptTo(Node.class);
-            
+
             // output HEAD with javascript initializations
             // TODO we should instead parse (at least minimally) the template file, and inject our
             // stuff in the right places
@@ -94,7 +94,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
             // library scripts
             final SlingHttpServletRequest request = helper.getRequest();
             for(String lib : libraryScripts) {
-                final String fullScriptPath = 
+                final String fullScriptPath =
                     SlingRequestPaths.getContextPath(request)
                     + SlingRequestPaths.getServletPath(request)
                     + lib
@@ -148,7 +148,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
 
         } catch(JSONException je) {
             throw new ScriptException(je);
-            
+
         }
 
         return null;
