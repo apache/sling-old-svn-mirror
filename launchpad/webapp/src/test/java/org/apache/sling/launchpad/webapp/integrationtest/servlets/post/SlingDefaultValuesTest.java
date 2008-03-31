@@ -27,7 +27,7 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
  *  with default values if they are empty. This is tested here with various cases.
  */
 
-public class UjaxDefaultValuesTest extends HttpTestBase {
+public class SlingDefaultValuesTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
