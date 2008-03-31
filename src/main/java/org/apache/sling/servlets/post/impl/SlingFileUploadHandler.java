@@ -68,7 +68,7 @@ import org.apache.sling.api.request.RequestParameter;
  *
  * @version $Rev$, $Date$
  */
-public class UjaxFileUploadHandler {
+public class SlingFileUploadHandler {
 
     /**
      * The CVS/SVN id
@@ -91,7 +91,7 @@ public class UjaxFileUploadHandler {
     /**
      * the post processor
      */
-    private final UjaxPostProcessor ctx;
+    private final SlingPostProcessor ctx;
 
     /**
      * The servlet context.
@@ -102,7 +102,7 @@ public class UjaxFileUploadHandler {
      * Constructs file upload handler
      * @param ctx the post processor
      */
-    public UjaxFileUploadHandler(UjaxPostProcessor ctx, ServletContext servletCtx) {
+    public SlingFileUploadHandler(SlingPostProcessor ctx, ServletContext servletCtx) {
         this.ctx = ctx;
         this.servletContext = servletCtx;
     }

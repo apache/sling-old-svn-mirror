@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
-public interface UjaxInfoProvider {
+public interface SlingInfoProvider {
 
     Map<String, String> getInfo(SlingHttpServletRequest request);
     
