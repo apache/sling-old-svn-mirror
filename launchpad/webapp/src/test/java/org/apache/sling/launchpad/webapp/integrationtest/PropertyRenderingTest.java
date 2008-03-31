@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.ujax.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.UjaxPostServlet;
 
 /** Test the rendering of JCR Properties, directly addressed by URLs.
  *  See SLING-133

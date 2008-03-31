@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.ujax.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.UjaxPostServlet;
 
 /** {#link MicrojaxPropertyValueSetter} sets the value of some properties
  *  automatically if they are empty. This is tested here with various cases.

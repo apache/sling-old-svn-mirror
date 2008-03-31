@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.ujax.impl;
+package org.apache.sling.servlets.post.impl;
 
 import java.util.Calendar;
 import java.util.HashMap;

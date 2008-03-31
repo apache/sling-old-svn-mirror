@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.ujax.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.UjaxPostServlet;
 
 public class ScriptBuiltinObjectsTest extends RenderingTestBase {
 
