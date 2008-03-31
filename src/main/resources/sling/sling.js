@@ -17,43 +17,43 @@
 
 /**
  * 	The sling javascript client gives access to a JCR repository
- *	from client-side java code, using ujax as a back-end.	   
+ *	from client-side java code, using the sling post servlet as a back-end.	   
  *	 
  * @version $Rev: $, $Date: 2007-03-27 16:30:52 +0200 (Tue, 27 Mar 2007) $
  */
 
-var ujax = null;
+var sling = null;
 
-// start ujax code scope
+// start sling code scope
 (function() {
 
-	ujax = new Object();
-	ujax.NAME_OF_THIS_FILE = "sling.js";
+	sling = new Object();
+	sling.NAME_OF_THIS_FILE = "sling.js";
 	
 	/** This method tries to figure out what to do with a page */
-	ujax.wizard = function() {
+	sling.wizard = function() {
 	    //TODO add lots of magic here
-	    var form=document.getElementById("ujaxform");
+	    var form=document.getElementById("slingform");
 	    if (!form) form=document.forms[0];
 	    if (form) {
 	        var sp=new Object();
 	        sp.formElement=form;
-	        ujax.setupPage(sp);
+	        sling.setupPage(sp);
 	    }
 	
 	}
-	/** Call this to merge ujax data in an HTML page
+	/** Call this to merge sling data in an HTML page
 		TODO deprecate other functions
 	*/
-	ujax.setupPage = function(options) {
-	  var tree = ujax.getContent(ujax._getJsonUrl(),1);
+	sling.setupPage = function(options) {
+	  var tree = sling.getContent(sling._getJsonUrl(),1);
 	  
 	  if(options.formElement) {
-		ujax._setFormValues(options.formElement,ujax._getJsonUrl(),tree);
+		sling._setFormValues(options.formElement,sling._getJsonUrl(),tree);
 	  }
 	  
 	  if(options.displayElement) {
-	  	ujax.displayValues(options.displayElement,tree);
+	  	sling.displayValues(options.displayElement,tree);
 	  }
 	}
 	
@@ -63,8 +63,8 @@ var ujax = null;
 	 * @return the XHR object, use .responseText for the data
 	 * @type String
 	 */
-	ujax.httpGet = function(url) {
-	    var httpcon = ujax.getXHR();
+	sling.httpGet = function(url) {
+	    var httpcon = sling.getXHR();
 	    if (httpcon) {
 			httpcon.open('GET', url, false);
 			httpcon.send(null);
@@ -81,14 +81,14 @@ var ujax = null;
 	 * @return The result
 	 * @type String
 	 */
-	ujax.dumpObj = function(obj, level) {
+	sling.dumpObj = function(obj, level) {
 		var res="";
 		for (var a in obj) {
 			if (typeof(obj[a])!="object") {
 				res+=a+":"+obj[a]+"  ";
 			} else {
 				res+=a+": { ";
-				res+=ujax.dumpObj(obj[a])+"} ";
+				res+=sling.dumpObj(obj[a])+"} ";
 			}
 		}
 		return (res);
@@ -102,7 +102,7 @@ var ujax = null;
 	 * @return An Array of names of properties that exist in a tree
 	 * @type Array
 	 */
-	ujax.getAllPropNames = function(obj, names) {
+	sling.getAllPropNames = function(obj, names) {
 		var root=false;
 	    if (!names) {
 	        names=new Object();
@@ -134,10 +134,10 @@ var ujax = null;
 	 * @return An Object tree of content nodes and properties, null if not found
 	 * @type Object
 	 */
-	ujax.getContent = function(path, maxlevels, filter) {
+	sling.getContent = function(path, maxlevels, filter) {
 	    var obj=new Object();
 	    if (!path)  {
-	        path=ujax.currentPath;
+	        path=sling.currentPath;
 	    }
 	    if (path.indexOf("/")==0) {
 			/*
@@ -151,7 +151,7 @@ var ujax = null;
 			} else {
 			  maxlevels = "";
 			}
-			path=ujax.baseurl + path + maxlevels + ".json";
+			path=sling.baseurl + path + maxlevels + ".json";
 		}
 	    //checking for a trailing "/*"
 	    if (path.indexOf("/*")>=0) return obj;
@@ -159,10 +159,10 @@ var ujax = null;
 		// TODO for now we explicitely defeat caching on this...there must be a better way
 		// but in tests IE6 tends to cache too much
 		var passThroughCacheParam = "?clock=" + new Date().getTime();
-	    var res=ujax.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
+	    var res=sling.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
 	    
 	    if(res.status == 200) {
-	    	var obj=ujax.evalString(res.responseText);
+	    	var obj=sling.evalString(res.responseText);
 			if (!filter) {
 				for (var a in obj) {
 					if (a.indexOf("jcr:")==0) delete(obj[a]);
@@ -174,11 +174,11 @@ var ujax = null;
 	}
 	
 	/** Remove content by path */
-	ujax.removeContent = function(path) {
-		var httpcon = ujax.getXHR();
+	sling.removeContent = function(path) {
+		var httpcon = sling.getXHR();
 		if (httpcon) {
-			var params = "ujax:delete="+path;
-			httpcon.open('POST', ujax.baseurl + path, false);
+			var params = "sling:post:delete="+path;
+			httpcon.open('POST', sling.baseurl + path, false);
 
 			// Send the proper header information along with the request
 			httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -192,7 +192,7 @@ var ujax = null;
 	}
 	
 	/** eval str, accepting various object delimiters */
-	ujax.evalString = function(str) {
+	sling.evalString = function(str) {
 		var obj = null;
 	    if(str.indexOf('[')==0) {
 		    eval("obj="+str);
@@ -209,16 +209,16 @@ var ujax = null;
 	 * @return An Object tree containing the session information, null if server status <> 200
 	 * @type Object
 	 */
-	ujax.getSessionInfo = function() {
-	    var res=ujax.httpGet(ujax.baseurl+"/ujax.sessionInfo.json");
+	sling.getSessionInfo = function() {
+	    var res=sling.httpGet(sling.baseurl+"/sling.sessionInfo.json");
 	    if(res.status == 200) {
-	    	return ujax.evalString(res.responseText);
+	    	return sling.evalString(res.responseText);
 	    }
 	    return null;
 	}
 	
 	/** Replace extension in a path */
-	ujax._replaceExtension = function(path,newExtension) {
+	sling._replaceExtension = function(path,newExtension) {
 		var i = path.lastIndexOf(".");
 		if(i >= 0) path = path.substring(0,i);
 		i = path.lastIndexOf(".");
@@ -229,17 +229,17 @@ var ujax = null;
 	/** Get the JSON data URL that for the current page
 	 *	(assuming a .extension for the current page, .html or something else)	
 	 */
-	ujax._getJsonUrl = function() {
-	  return ujax._replaceExtension(window.location.href,".json");
+	sling._getJsonUrl = function() {
+	  return sling._replaceExtension(window.location.href,".json");
 	}
 	
 	/** Get the content repository path from the URL
 	 *	(assuming a .extension for the current page, .html or something else)
 	 */
-	ujax._getPath = function() {
+	sling._getPath = function() {
 	
-	    var noextensions=ujax._replaceExtension(window.location.href,"");
-	    var path=noextensions.substring(ujax.baseurl.length);
+	    var noextensions=sling._replaceExtension(window.location.href,"");
+	    var path=noextensions.substring(sling.baseurl.length);
 	    return (path);
 	}
 	
@@ -247,15 +247,15 @@ var ujax = null;
 	 *	with an id like ./stuff, has its innerHTML set to the value of stuff
 	 *	in the tree, if it exists.
 	 */
-	ujax.displayValues = function(container,tree) {
+	sling.displayValues = function(container,tree) {
 	  if(!tree) {
-	    tree = ujax.getContent(ujax._getJsonUrl(),1);
+	    tree = sling.getContent(sling._getJsonUrl(),1);
 	  }
 	  
 	  var elements = container.getElementsByTagName("*"); 
 	  var toSet = new Array();
 	  for (var i = 0; i < elements.length; i++) { 
-	    var value = ujax._getElementValue(elements[i],tree);
+	    var value = sling._getElementValue(elements[i],tree);
 	    if(value) {
 	      toSet[toSet.length] = { e:elements[i], v:value };
 	    }
@@ -267,7 +267,7 @@ var ujax = null;
 	}
 	
 	/** If e has an ID that matches a property of tree, set e's innerHTML accordingly */
-	ujax._getElementValue = function(e,tree) {
+	sling._getElementValue = function(e,tree) {
 	  var id = e.getAttribute("id");
 	  if(id) {
 	    return tree[id.substring(2)];
@@ -284,7 +284,7 @@ var ujax = null;
 	 * Returns an object indicating whether data was found on the server.
 	 *
 	 */
-	ujax._setFormValues = function(form, path, tree) {
+	sling._setFormValues = function(form, path, tree) {
 		var result = new Object();
 		
 	    /** TODO: deal with abolute paths?
@@ -295,7 +295,7 @@ var ujax = null;
 	    form.setAttribute("action", path);
 	
 	    if (!tree) {
-			tree=ujax.getContent(path,1);
+			tree=sling.getContent(path,1);
 	    }
 	
 	    var elems=form.elements;
@@ -320,7 +320,7 @@ var ujax = null;
 			if (a.indexOf("/")==0) {
 				var nodepath=a.substring(0,a.lastIndexOf("/"));
 				var propname=a.substring(a.lastIndexOf("/")+1);
-				var node=ujax.getContent(nodepath);
+				var node=sling.getContent(nodepath);
 				var propval=node[propname];
 			} else if (a.indexOf(formfieldprefix)==0) {
 	            var propname=a.substring(formfieldprefix.length);
@@ -356,7 +356,7 @@ var ujax = null;
 	 *  @return The Path parameter isolated from the URL
 	 *  @type String
 	 */
-	ujax.TODO_NOT_USED_isolatePathFromUrl = function(url) {
+	sling.TODO_NOT_USED_isolatePathFromUrl = function(url) {
 	  var pattern = "[\\?&]Path=([^&#]*)";
 	  var regex = new RegExp( pattern );
 	  var results = regex.exec( url );
@@ -372,7 +372,7 @@ var ujax = null;
 	 *	Get an XMLHttpRequest in a portable way
 	 *		
 	 */
-	ujax.getXHR = function () {
+	sling.getXHR = function () {
 		var xhr=null;
 		
 		if(!xhr) {
@@ -403,18 +403,18 @@ var ujax = null;
 		}
 		
 		if(!xhr) {
-			alert("Unable to access XMLHttpRequest object, ujax will not work!");
+			alert("Unable to access XMLHttpRequest object, sling will not work!");
 		}
 		
 		return xhr;
 	}
 	
-	// obtain the base_url to communicate with ujax on the server
+	// obtain the base_url to communicate with sling on the server
 	var scripts = document.getElementsByTagName("SCRIPT")
 	var script = scripts[scripts.length-1].src
-	ujax.baseurl = script.substring(0,script.length - ("/" + ujax.NAME_OF_THIS_FILE.length));
-	ujax.currentPath = ujax._getPath();
-	ujax.isNew  = (ujax.currentPath.indexOf("/*")>=0)?true:false;
+	sling.baseurl = script.substring(0,script.length - ("/" + sling.NAME_OF_THIS_FILE.length));
+	sling.currentPath = sling._getPath();
+	sling.isNew  = (sling.currentPath.indexOf("/*")>=0)?true:false;
 
-// end ujax code scope	
+// end sling code scope	
 })();

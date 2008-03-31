@@ -34,11 +34,11 @@ import org.apache.sling.commons.json.io.JSONWriter;
 import org.osgi.service.component.ComponentContext;
 
 /**
- * The <code>UjaxInfoServlet</code> TODO
+ * The <code>SlingInfoServlet</code> TODO
  *
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
- * @scr.property name="service.description" value="ujax Info Servlet"
+ * @scr.property name="service.description" value="Sling Info Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.paths" value="/ujax"
  */
@@ -90,13 +90,13 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
         final PrintWriter out = response.getWriter();
 
         out.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
-        out.println("<html><head><title>Ujax Info Providers</title></head>");
+        out.println("<html><head><title>Sling Info Providers</title></head>");
         out.println("<body><h1>Select from the following Providers</h1>");
 
         out.println("<table>");
         for (String label : infoProviders.keySet()) {
             out.print("<tr><td>");
-            out.print("<a href='ujax.");
+            out.print("<a href='sling.");
             out.print(label);
             out.print(".html'>");
             out.print(label);
@@ -144,8 +144,8 @@ public class SlingInfoServlet extends SlingSafeMethodsServlet {
         final PrintWriter out = response.getWriter();
 
         out.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
-        out.println("<html><head><title>Ujax Info</title></head>");
-        out.println("<body><h1>Ujax Info</h1>");
+        out.println("<html><head><title>Sling Info</title></head>");
+        out.println("<body><h1>Sling Info</h1>");
 
         out.println("<table>");
         for (Map.Entry<String, String> e : data.entrySet()) {
