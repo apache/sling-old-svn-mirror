@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.sling.ujax.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.UjaxPostServlet;
 
 /** Test the {link ScriptHelper#include) functionality */
  public class IncludeTest extends HttpTestBase {
