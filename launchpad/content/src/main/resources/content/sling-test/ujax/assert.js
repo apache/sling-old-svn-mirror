@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-// Minimal javascript assertion framework, used for ujax automated testing.
+// Minimal javascript assertion framework, used for sling client library automated testing.
 
 function assert(message,condition) {
   if(condition != true) {

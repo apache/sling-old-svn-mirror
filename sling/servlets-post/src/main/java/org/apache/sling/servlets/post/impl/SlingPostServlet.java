@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * POST servlet that implements the ujax "protocol"
+ * POST servlet that implements the sling client library "protocol"
  *
  * @scr.service
  *  interface="javax.servlet.Servlet"
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.property
  *  name="service.description"
- *  value="ujax Post Servlet"
+ *  value="Sling Post Servlet"
  *
  * @scr.property
  *  name="service.vendor"
@@ -67,9 +67,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     /**
      * Prefix for parameter names which control this POST
-     * (ujax stands for "microjax", RP_ stands for "request param")
+     * (RP_ stands for "request param")
      */
-    public static final String RP_PREFIX = "ujax:";
+    public static final String RP_PREFIX = "sling:post:";
 
     /**
      * suffix that indicates node creation
@@ -169,7 +169,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     protected void doPost(SlingHttpServletRequest request,
                           SlingHttpServletResponse response)
             throws ServletException, IOException {
-            
+
         // create a post processor and process changes
         SlingPostProcessor p = createPostProcessor(request);
         p.run();
