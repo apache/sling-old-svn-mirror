@@ -56,14 +56,14 @@ import org.slf4j.LoggerFactory;
  *  name="sling.servlet.methods"
  *  value="POST"
  */
-public class UjaxPostServlet extends SlingAllMethodsServlet {
+public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private static final long serialVersionUID = 1837674988291697074L;
 
     /**
      * default log
      */
-    private static final Logger log = LoggerFactory.getLogger(UjaxPostServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(SlingPostServlet.class);
 
     /**
      * Prefix for parameter names which control this POST
@@ -171,7 +171,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
             throws ServletException, IOException {
             
         // create a post processor and process changes
-        UjaxPostProcessor p = createPostProcessor(request);
+        SlingPostProcessor p = createPostProcessor(request);
         p.run();
         HtmlResponse resp = p.getHtmlResponse();
 
@@ -192,7 +192,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
      * @throws ServletException if no session can be aquired or if there is a
      *         repository error.
      */
-    private UjaxPostProcessor createPostProcessor(SlingHttpServletRequest request)
+    private SlingPostProcessor createPostProcessor(SlingHttpServletRequest request)
             throws ServletException {
         Session s = request.getResourceResolver().adaptTo(Session.class);
         if (s == null) {
@@ -200,7 +200,7 @@ public class UjaxPostServlet extends SlingAllMethodsServlet {
         }
 
         // create the post context
-        return new UjaxPostProcessor(request, s, nodeNameGenerator, dateParser, this.getServletContext());
+        return new SlingPostProcessor(request, s, nodeNameGenerator, dateParser, this.getServletContext());
     }
 
     /**

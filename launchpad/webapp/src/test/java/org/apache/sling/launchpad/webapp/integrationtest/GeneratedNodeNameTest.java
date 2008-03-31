@@ -20,14 +20,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.servlets.post.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.SlingPostServlet;
 
 /** Test the generation of node names for POST requests to URLS
  *  ending in / *
  */
 public class GeneratedNodeNameTest extends HttpTestBase {
     
-    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
+    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
 
     public void testTitle() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();

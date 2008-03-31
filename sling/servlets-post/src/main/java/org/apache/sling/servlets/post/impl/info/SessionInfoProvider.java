@@ -25,7 +25,7 @@ import javax.jcr.Session;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
-public class SessionInfoProvider implements UjaxInfoProvider {
+public class SessionInfoProvider implements SlingInfoProvider {
 
     static final String PROVIDER_LABEL = "sessionInfo";
 

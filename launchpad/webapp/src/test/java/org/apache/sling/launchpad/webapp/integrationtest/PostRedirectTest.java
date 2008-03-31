@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.servlets.post.impl.UjaxPostServlet;
+import org.apache.sling.servlets.post.impl.SlingPostServlet;
 
 /** Test the various redirect options for POST, SLING-126 */
 public class PostRedirectTest extends HttpTestBase {
@@ -28,7 +28,7 @@ public class PostRedirectTest extends HttpTestBase {
     private String postPath = "CreateNodeTest/" + System.currentTimeMillis();
 
     private String postUrl = HTTP_BASE_URL + "/" + postPath
-        + UjaxPostServlet.DEFAULT_CREATE_SUFFIX;
+        + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
 
     public void testForcedRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
