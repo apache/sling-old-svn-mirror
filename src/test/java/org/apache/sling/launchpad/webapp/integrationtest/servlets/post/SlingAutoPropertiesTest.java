@@ -29,7 +29,7 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
  *  automatically if they are empty. This is tested here with various cases.
  */  
 
-public class UjaxAutoPropertiesTest extends HttpTestBase {
+public class SlingAutoPropertiesTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/ujax-tests";
     private String postUrl;
