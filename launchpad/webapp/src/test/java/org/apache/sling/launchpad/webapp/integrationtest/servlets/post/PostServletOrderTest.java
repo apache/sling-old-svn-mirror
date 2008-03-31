@@ -28,7 +28,7 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 /** Test the order option for node creation via the MicrojaxPostServlet */
 public class PostServletOrderTest extends HttpTestBase {
 
-    public static final String TEST_BASE_PATH = "/ujax-tests-order";
+    public static final String TEST_BASE_PATH = "/sling-tests-order";
 
     private static final String[] DEFAULT_ORDER = new String[]{"a","b","c","d"};
 
@@ -53,115 +53,115 @@ public class PostServletOrderTest extends HttpTestBase {
         createNodes(postUrl, DEFAULT_ORDER);
         verifyOrder(postUrl, DEFAULT_ORDER);
     }
-    
+
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="first" request
+     * sling:post:order="first" request
      */
     public void testOrderFirst() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","first");
+        props.put("sling:post:order","first");
         testClient.createNode(postUrl + "/c", props);
         verifyOrder(postUrl, new String[]{"c", "a", "b", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="last" request
+     * sling:post:order="last" request
      */
     public void testOrderLast() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","last");
+        props.put("sling:post:order","last");
         testClient.createNode(postUrl + "/c", props);
         verifyOrder(postUrl, new String[]{"a", "b", "d", "c"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="before" request
+     * sling:post:order="before" request
      */
     public void testOrderBefore() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","before b");
+        props.put("sling:post:order","before b");
         testClient.createNode(postUrl + "/c", props);
         verifyOrder(postUrl, new String[]{"a", "c", "b", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="after" request
+     * sling:post:order="after" request
      */
     public void testOrderAfter() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","after c");
+        props.put("sling:post:order","after c");
         testClient.createNode(postUrl + "/b", props);
         verifyOrder(postUrl, new String[]{"a", "c", "b", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="N" request, where new position is greater than old one.
+     * sling:post:order="N" request, where new position is greater than old one.
      */
     public void testOrderIntToBack() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","2");
+        props.put("sling:post:order","2");
         testClient.createNode(postUrl + "/a", props);
         verifyOrder(postUrl, new String[]{"b", "c", "a", "d"});
     }
-    
+
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="N" request, where new position is less than old one.
+     * sling:post:order="N" request, where new position is less than old one.
      */
     public void testOrderIntToFront() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","1");
+        props.put("sling:post:order","1");
         testClient.createNode(postUrl + "/d", props);
         verifyOrder(postUrl, new String[]{"a", "d", "b", "c"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="0" request
+     * sling:post:order="0" request
      */
     public void testOrderIntZero() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","0");
+        props.put("sling:post:order","0");
         testClient.createNode(postUrl + "/d", props);
         verifyOrder(postUrl, new String[]{"d", "a", "b", "c"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * ujax:order="N" request, where new position is out of bounds
+     * sling:post:order="N" request, where new position is out of bounds
      */
     public void testOrderIntOOB() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("ujax:order","100");
+        props.put("sling:post:order","100");
         testClient.createNode(postUrl + "/a", props);
         verifyOrder(postUrl, new String[]{"b", "c", "d", "a"});
     }

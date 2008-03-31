@@ -32,7 +32,7 @@ public class PostRedirectTest extends HttpTestBase {
 
     public void testForcedRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("ujax:redirect", "http://forced/");
+        params.put("sling:post:redirect", "http://forced/");
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
 
@@ -45,7 +45,7 @@ public class PostRedirectTest extends HttpTestBase {
 
     public void testDefaultRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("ujax:redirect", null);
+        params.put("sling:post:redirect", null);
         final String location = testClient.createNode(postUrl, null, null,
             false);
         assertTrue("With no headers or parameters, redirect (" + location
@@ -55,7 +55,7 @@ public class PostRedirectTest extends HttpTestBase {
 
     public void testMagicStarRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("ujax:redirect", "*");
+        params.put("sling:post:redirect", "*");
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
         final String location = testClient.createNode(postUrl, params, headers,
@@ -68,7 +68,7 @@ public class PostRedirectTest extends HttpTestBase {
     public void testMagicStarRedirectPrefix() throws IOException {
         String prefix = "xyz/";
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("ujax:redirect", prefix + "*");
+        params.put("sling:post:redirect", prefix + "*");
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
         final String location = testClient.createNode(postUrl, params, headers,
@@ -80,7 +80,7 @@ public class PostRedirectTest extends HttpTestBase {
     public void testMagicStarRedirectSuffix() throws IOException {
         String suffix = "/xyz.html";
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("ujax:redirect", "*" + suffix);
+        params.put("sling:post:redirect", "*" + suffix);
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
         final String location = testClient.createNode(postUrl, params, headers,
@@ -93,7 +93,7 @@ public class PostRedirectTest extends HttpTestBase {
         String prefix = "xyz/";
         String suffix = "/xyz.html";
         final Map<String, String> params = new HashMap<String, String>();
-        params.put("ujax:redirect", prefix + "*" + suffix);
+        params.put("sling:post:redirect", prefix + "*" + suffix);
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
         final String location = testClient.createNode(postUrl, params, headers,
