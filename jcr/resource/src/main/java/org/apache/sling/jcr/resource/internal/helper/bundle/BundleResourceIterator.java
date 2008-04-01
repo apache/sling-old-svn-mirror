@@ -70,7 +70,7 @@ class BundleResourceIterator implements Iterator<Resource> {
 
         } else {
             // trailing slash to enumerate children
-            String parentPath = parent.getPath() + "/";
+            String parentPath = parent.getPath().concat("/");
 
             this.resourceResolver = parent.getResourceResolver();
             this.bundle = parent.getBundle();
@@ -79,6 +79,22 @@ class BundleResourceIterator implements Iterator<Resource> {
             this.prefixLength = parentPath.length();
             this.nextResult = seek();
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+    BundleResourceIterator(ResourceResolver resourceResolver, Bundle bundle, String parentPath) {
+        // trailing slash to enumerate children
+        if (!parentPath.endsWith("/")) {
+            parentPath = parentPath.concat("/");
+        }
+
+        this.resourceResolver = resourceResolver;
+        this.bundle = bundle;
+        // unchecked cast
+        this.entries = bundle.getEntryPaths(parentPath);
+        this.prefixLength = parentPath.length();
+        this.nextResult = (entries != null) ? seek() : null;
+        
     }
 
     /** Returns true if there is another Resource available */

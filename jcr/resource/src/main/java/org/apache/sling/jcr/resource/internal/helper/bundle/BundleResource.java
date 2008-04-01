@@ -61,7 +61,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
         // repository contains an item with the same path. If so, we
         // don't create a BundleResource but instead return null to be
         // able to return an item-based resource
-        URL entry = bundle.getEntry(path + "/");
+        URL entry = bundle.getEntry(path.concat("/"));
         if (entry != null) {
             Session session = resourceResolver.adaptTo(Session.class);
             if (session != null) {
@@ -73,6 +73,9 @@ public class BundleResource extends SlingAdaptable implements Resource {
                     // don't care
                 }
             }
+            
+            // append the slash to path for next steps
+            path = path.concat("/");
         }
 
         // if there is no entry with a trailing slash, try plain name
