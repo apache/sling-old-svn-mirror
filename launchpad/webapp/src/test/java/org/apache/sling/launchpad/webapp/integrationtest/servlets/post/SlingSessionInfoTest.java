@@ -27,7 +27,7 @@ import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 public class SlingSessionInfoTest extends HttpTestBase {
 
     public void testSessionInfo() throws IOException {
-        final String content = getContent(HTTP_BASE_URL + "/sling.sessionInfo.json", CONTENT_TYPE_JSON);
+        final String content = getContent(HTTP_BASE_URL + "/system/sling/info.sessionInfo.json", CONTENT_TYPE_JSON);
 
         // assume workspace name contains "default", might not
         // always be the case as the default workspace is selected
