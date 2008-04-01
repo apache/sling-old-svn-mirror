@@ -40,7 +40,7 @@ import org.osgi.service.component.ComponentContext;
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Sling Info Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.paths" value="/ujax"
+ * @scr.property name="sling.servlet.paths" value="/system/sling/info"
  */
 public class SlingInfoServlet extends SlingSafeMethodsServlet {
 
