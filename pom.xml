@@ -61,8 +61,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>
-                            org.apache.sling.servlets.post.impl,
-                            org.apache.sling.servlets.post.impl.info
+                            org.apache.sling.servlets.post.impl
                         </Private-Package>
                         <Sling-Bundle-Resources>
                             /sling/sling.js
@@ -77,10 +76,6 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
