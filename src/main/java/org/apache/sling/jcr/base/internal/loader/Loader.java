@@ -112,8 +112,8 @@ public class Loader implements NamespaceMapper {
     }
 
     public void updateBundle(Bundle bundle) {
-        this.unregisterNamespaces(bundle);
-        this.registerNamespaces(bundle);
+        unregisterBundle(bundle);
+        registerBundle(bundle);
     }
 
     /**
