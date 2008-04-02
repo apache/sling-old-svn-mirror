@@ -46,7 +46,7 @@ public class RepositoryClassLoaderProviderImpl
         implements RepositoryClassLoaderProvider {
 
     /**
-     * @scr.property values0="/classes"
+     * @scr.property values0="/var/classes"
      */
     public static final String CLASS_PATH_PROP = "classpath";
 
