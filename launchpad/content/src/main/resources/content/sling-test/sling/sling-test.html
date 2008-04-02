@@ -18,9 +18,9 @@
 -->
 
 <head>
-	<title>&micro;jax test page</title>
+	<title>Sling client library test page</title>
 	
-	<script src="/sling/sling.js"></script>
+	<script src="/bundles/sling/sling.js"></script>
 	<script src="assert.js"></script>
 	
 	<style type="text/css">
@@ -41,13 +41,13 @@
 
 <body onload="runTests()">
 
-<h1>Automated &micro;jax tests</h1>
+<h1>Automated Sling client library tests</h1>
 <p class="warning">TODO: for now, running these tests requires setting <em>Allow
 Anonymous Access</em> to <em>false</em> on the Sling <em>Authentication
 Filter</em> configuration page.</p>
 
 <p>Loading this page executes some simple automated javascript tests
-of the &micro;jax library.</p>
+of the Sling client library.</p>
 
 <h2>Test results</h2>
 <p>If all goes well, the paragraph styled <span class="output">like
@@ -67,7 +67,7 @@ should show the JSON data of the nodes created by the test cases.</p>
 
 <script language="javascript">
 	  function slingPost(url,params) {
-	    var httpcon = sling.getXHR();
+	    var httpcon = Sling.getXHR();
 	    httpcon.open("POST", url, false);
 	    httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	    httpcon.setRequestHeader("Content-length", params.length);
@@ -87,7 +87,7 @@ should show the JSON data of the nodes created by the test cases.</p>
 	  }
 	  
 	  function verifyPostedElement() {
-	    var data = sling.getContent(testPath,1);
+	    var data = Sling.getContent(testPath,1);
 	    assertNotNull("data",data);
 	    assertEquals("title matches","hello",data.title);
 	    assertEquals("time matches",now,data.time);
@@ -99,7 +99,8 @@ should show the JSON data of the nodes created by the test cases.</p>
 	  }
 	  
 	  function testGetSessionInfo() {
-	    var session = sling.getSessionInfo();
+	    var session = Sling.getSessionInfo();
+	    assertNotNull("Sling.getSessionInfo()", session);
 	    assertEquals("session.userID is a string","string",typeof(session.userID));
         assertEquals("session.userID == 'admin'","admin",session.userID);
 	    assertEquals("session.workspace is a string","string",typeof(session.workspace));
@@ -111,19 +112,19 @@ should show the JSON data of the nodes created by the test cases.</p>
 	    var c = slingPost(deletePath,"title=hello&created=&dummy=&time=" + now);
 	    assert("Expected 200 status for POST",c.status == 200);
 	    
-	    var data = sling.getContent(deletePath,1);
+	    var data = Sling.getContent(deletePath,1);
 	    assertNotNull("data must be found before removeContent",data);
 	    
-	    var d = sling.removeContent(deletePath);
+	    var d = Sling.removeContent(deletePath);
 	    assert("Expected 200 status for removeContent, got " + d.status,d.status == 200);
-	    data = sling.getContent(deletePath,1);
+	    data = Sling.getContent(deletePath,1);
 	    assertNull("data should be gone after deletePath (" + deletePath + ")",data);
 	  }
 	  
 	  function testJsonLevels() {
 	    var c = slingPost(baseTestPath + "/json-levels", "title=JsonLevelsTest");
-	    var data0 = sling.getContent(baseTestPath,0);
-	    var data1 = sling.getContent(baseTestPath,1);
+	    var data0 = Sling.getContent(baseTestPath,0);
+	    var data1 = Sling.getContent(baseTestPath,1);
 	    assert("Level 0 must not provide child", typeof data0['json-levels'] == "undefined");
 	    assert("Level 1 must provide child", typeof data1['json-levels'] == "object");
 	    assert("Level 1 must provide child title", data1['json-levels'].title == "JsonLevelsTest");
