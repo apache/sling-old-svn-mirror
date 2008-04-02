@@ -703,7 +703,7 @@ public class JobEventHandler
                     retryCount = (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
                 }
                 retryCount++;
-                if ( retryCount >= retries ) {
+                if ( retryCount > retries ) {
                     reschedule = false;
                 }
                 // update event with retry count
