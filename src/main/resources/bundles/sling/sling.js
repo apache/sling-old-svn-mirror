@@ -22,38 +22,38 @@
  * @version $Rev: $, $Date: 2007-03-27 16:30:52 +0200 (Tue, 27 Mar 2007) $
  */
 
-var sling = null;
+var Sling = null;
 
 // start sling code scope
 (function() {
 
-	sling = new Object();
-	sling.NAME_OF_THIS_FILE = "sling.js";
+	Sling = new Object();
+	Sling.NAME_OF_THIS_FILE = "Sling.js";
 	
 	/** This method tries to figure out what to do with a page */
-	sling.wizard = function() {
+	Sling.wizard = function() {
 	    //TODO add lots of magic here
 	    var form=document.getElementById("slingform");
 	    if (!form) form=document.forms[0];
 	    if (form) {
 	        var sp=new Object();
 	        sp.formElement=form;
-	        sling.setupPage(sp);
+	        Sling.setupPage(sp);
 	    }
 	
 	}
 	/** Call this to merge sling data in an HTML page
 		TODO deprecate other functions
 	*/
-	sling.setupPage = function(options) {
-	  var tree = sling.getContent(sling._getJsonUrl(),1);
+	Sling.setupPage = function(options) {
+	  var tree = Sling.getContent(Sling._getJsonUrl(),1);
 	  
 	  if(options.formElement) {
-		sling._setFormValues(options.formElement,sling._getJsonUrl(),tree);
+		Sling._setFormValues(options.formElement,Sling._getJsonUrl(),tree);
 	  }
 	  
 	  if(options.displayElement) {
-	  	sling.displayValues(options.displayElement,tree);
+	  	Sling.displayValues(options.displayElement,tree);
 	  }
 	}
 	
@@ -63,8 +63,8 @@ var sling = null;
 	 * @return the XHR object, use .responseText for the data
 	 * @type String
 	 */
-	sling.httpGet = function(url) {
-	    var httpcon = sling.getXHR();
+	Sling.httpGet = function(url) {
+	    var httpcon = Sling.getXHR();
 	    if (httpcon) {
 			httpcon.open('GET', url, false);
 			httpcon.send(null);
@@ -81,14 +81,14 @@ var sling = null;
 	 * @return The result
 	 * @type String
 	 */
-	sling.dumpObj = function(obj, level) {
+	Sling.dumpObj = function(obj, level) {
 		var res="";
 		for (var a in obj) {
 			if (typeof(obj[a])!="object") {
 				res+=a+":"+obj[a]+"  ";
 			} else {
 				res+=a+": { ";
-				res+=sling.dumpObj(obj[a])+"} ";
+				res+=Sling.dumpObj(obj[a])+"} ";
 			}
 		}
 		return (res);
@@ -102,7 +102,7 @@ var sling = null;
 	 * @return An Array of names of properties that exist in a tree
 	 * @type Array
 	 */
-	sling.getAllPropNames = function(obj, names) {
+	Sling.getAllPropNames = function(obj, names) {
 		var root=false;
 	    if (!names) {
 	        names=new Object();
@@ -134,10 +134,10 @@ var sling = null;
 	 * @return An Object tree of content nodes and properties, null if not found
 	 * @type Object
 	 */
-	sling.getContent = function(path, maxlevels, filter) {
+	Sling.getContent = function(path, maxlevels, filter) {
 	    var obj=new Object();
 	    if (!path)  {
-	        path=sling.currentPath;
+	        path=Sling.currentPath;
 	    }
 	    if (path.indexOf("/")==0) {
 			/*
@@ -151,7 +151,7 @@ var sling = null;
 			} else {
 			  maxlevels = "";
 			}
-			path=sling.baseurl + path + maxlevels + ".json";
+			path=Sling.baseurl + path + maxlevels + ".json";
 		}
 	    //checking for a trailing "/*"
 	    if (path.indexOf("/*")>=0) return obj;
@@ -159,10 +159,10 @@ var sling = null;
 		// TODO for now we explicitely defeat caching on this...there must be a better way
 		// but in tests IE6 tends to cache too much
 		var passThroughCacheParam = "?clock=" + new Date().getTime();
-	    var res=sling.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
+	    var res=Sling.httpGet(path + passThroughCacheParam + (maxlevels?"&maxlevels="+maxlevels:""));
 	    
 	    if(res.status == 200) {
-	    	var obj=sling.evalString(res.responseText);
+	    	var obj=Sling.evalString(res.responseText);
 			if (!filter) {
 				for (var a in obj) {
 					if (a.indexOf("jcr:")==0) delete(obj[a]);
@@ -174,11 +174,11 @@ var sling = null;
 	}
 	
 	/** Remove content by path */
-	sling.removeContent = function(path) {
-		var httpcon = sling.getXHR();
+	Sling.removeContent = function(path) {
+		var httpcon = Sling.getXHR();
 		if (httpcon) {
 			var params = "sling:post:delete="+path;
-			httpcon.open('POST', sling.baseurl + path, false);
+			httpcon.open('POST', Sling.baseurl + path, false);
 
 			// Send the proper header information along with the request
 			httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -192,7 +192,7 @@ var sling = null;
 	}
 	
 	/** eval str, accepting various object delimiters */
-	sling.evalString = function(str) {
+	Sling.evalString = function(str) {
 		var obj = null;
 	    if(str.indexOf('[')==0) {
 		    eval("obj="+str);
@@ -209,16 +209,16 @@ var sling = null;
 	 * @return An Object tree containing the session information, null if server status <> 200
 	 * @type Object
 	 */
-	sling.getSessionInfo = function() {
-	    var res=sling.httpGet(sling.baseurl+"/sling.sessionInfo.json");
+	Sling.getSessionInfo = function() {
+	    var res=Sling.httpGet(Sling.baseurl+"/system/sling/info.sessionInfo.json");
 	    if(res.status == 200) {
-	    	return sling.evalString(res.responseText);
+	    	return Sling.evalString(res.responseText);
 	    }
 	    return null;
 	}
 	
 	/** Replace extension in a path */
-	sling._replaceExtension = function(path,newExtension) {
+	Sling._replaceExtension = function(path,newExtension) {
 		var i = path.lastIndexOf(".");
 		if(i >= 0) path = path.substring(0,i);
 		i = path.lastIndexOf(".");
@@ -229,17 +229,17 @@ var sling = null;
 	/** Get the JSON data URL that for the current page
 	 *	(assuming a .extension for the current page, .html or something else)	
 	 */
-	sling._getJsonUrl = function() {
-	  return sling._replaceExtension(window.location.href,".json");
+	Sling._getJsonUrl = function() {
+	  return Sling._replaceExtension(window.location.href,".json");
 	}
 	
 	/** Get the content repository path from the URL
 	 *	(assuming a .extension for the current page, .html or something else)
 	 */
-	sling._getPath = function() {
+	Sling._getPath = function() {
 	
-	    var noextensions=sling._replaceExtension(window.location.href,"");
-	    var path=noextensions.substring(sling.baseurl.length);
+	    var noextensions=Sling._replaceExtension(window.location.href,"");
+	    var path=noextensions.substring(Sling.baseurl.length);
 	    return (path);
 	}
 	
@@ -247,15 +247,15 @@ var sling = null;
 	 *	with an id like ./stuff, has its innerHTML set to the value of stuff
 	 *	in the tree, if it exists.
 	 */
-	sling.displayValues = function(container,tree) {
+	Sling.displayValues = function(container,tree) {
 	  if(!tree) {
-	    tree = sling.getContent(sling._getJsonUrl(),1);
+	    tree = Sling.getContent(Sling._getJsonUrl(),1);
 	  }
 	  
 	  var elements = container.getElementsByTagName("*"); 
 	  var toSet = new Array();
 	  for (var i = 0; i < elements.length; i++) { 
-	    var value = sling._getElementValue(elements[i],tree);
+	    var value = Sling._getElementValue(elements[i],tree);
 	    if(value) {
 	      toSet[toSet.length] = { e:elements[i], v:value };
 	    }
@@ -267,7 +267,7 @@ var sling = null;
 	}
 	
 	/** If e has an ID that matches a property of tree, set e's innerHTML accordingly */
-	sling._getElementValue = function(e,tree) {
+	Sling._getElementValue = function(e,tree) {
 	  var id = e.getAttribute("id");
 	  if(id) {
 	    return tree[id.substring(2)];
@@ -284,7 +284,7 @@ var sling = null;
 	 * Returns an object indicating whether data was found on the server.
 	 *
 	 */
-	sling._setFormValues = function(form, path, tree) {
+	Sling._setFormValues = function(form, path, tree) {
 		var result = new Object();
 		
 	    /** TODO: deal with abolute paths?
@@ -295,7 +295,7 @@ var sling = null;
 	    form.setAttribute("action", path);
 	
 	    if (!tree) {
-			tree=sling.getContent(path,1);
+			tree=Sling.getContent(path,1);
 	    }
 	
 	    var elems=form.elements;
@@ -320,7 +320,7 @@ var sling = null;
 			if (a.indexOf("/")==0) {
 				var nodepath=a.substring(0,a.lastIndexOf("/"));
 				var propname=a.substring(a.lastIndexOf("/")+1);
-				var node=sling.getContent(nodepath);
+				var node=Sling.getContent(nodepath);
 				var propval=node[propname];
 			} else if (a.indexOf(formfieldprefix)==0) {
 	            var propname=a.substring(formfieldprefix.length);
@@ -356,7 +356,7 @@ var sling = null;
 	 *  @return The Path parameter isolated from the URL
 	 *  @type String
 	 */
-	sling.TODO_NOT_USED_isolatePathFromUrl = function(url) {
+	Sling.TODO_NOT_USED_isolatePathFromUrl = function(url) {
 	  var pattern = "[\\?&]Path=([^&#]*)";
 	  var regex = new RegExp( pattern );
 	  var results = regex.exec( url );
@@ -372,7 +372,7 @@ var sling = null;
 	 *	Get an XMLHttpRequest in a portable way
 	 *		
 	 */
-	sling.getXHR = function () {
+	Sling.getXHR = function () {
 		var xhr=null;
 		
 		if(!xhr) {
@@ -412,9 +412,9 @@ var sling = null;
 	// obtain the base_url to communicate with sling on the server
 	var scripts = document.getElementsByTagName("SCRIPT")
 	var script = scripts[scripts.length-1].src
-	sling.baseurl = script.substring(0,script.length - ("/" + sling.NAME_OF_THIS_FILE.length));
-	sling.currentPath = sling._getPath();
-	sling.isNew  = (sling.currentPath.indexOf("/*")>=0)?true:false;
+	Sling.baseurl = script.substring(0,script.length - ("/" + Sling.NAME_OF_THIS_FILE.length));
+	Sling.currentPath = Sling._getPath();
+	Sling.isNew  = (Sling.currentPath.indexOf("/*")>=0)?true:false;
 
 // end sling code scope	
 })();

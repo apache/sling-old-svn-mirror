@@ -64,7 +64,7 @@
                             org.apache.sling.servlets.post.impl
                         </Private-Package>
                         <Sling-Bundle-Resources>
-                            /sling/sling.js
+                            /bundles/sling/sling.js
                         </Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
