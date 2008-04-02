@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="jasper.mappedfile" value="true" type="Boolean"
  * @scr.property name="jasper.modificationTestInterval" value="4" type="Integer"
  * @scr.property name="jasper.reloading" value="false" type="Boolean"
- * @scr.property name="jasper.scratchdir" value="/classes"
+ * @scr.property name="jasper.scratchdir" value="/var/classes"
  * @scr.property name="jasper.trimSpaces" value="false" type="Boolean"
  * @scr.property name="jasper.displaySourceFragments" value="true"
  *               type="Boolean"
