@@ -193,6 +193,13 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
      * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(java.util.Locale)
      */
     public ResourceBundle getResourceBundle(Locale locale) {
+        return getResourceBundle(null, locale);
+    }
+    
+    /**
+     * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(String, Locale)
+     */
+    public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         if (locale == null) {
             locale = getLocale();
         }
