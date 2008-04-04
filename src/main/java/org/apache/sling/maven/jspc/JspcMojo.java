@@ -88,7 +88,6 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @parameter expression="${jspc.outputDirectory}"
      *            default-value="${project.build.outputDirectory}"
      * @required
-     * @readonly
      */
     private String outputDirectory;
 
@@ -131,7 +130,7 @@ public class JspcMojo extends AbstractMojo implements Options {
     private boolean jasperTrimSpaces;
 
     /**
-     * @parameter expression="${jspc.failOnError}" default-value="false"
+     * @parameter expression="${jspc.failOnError}" default-value="true"
      */
     private boolean failOnError;
 
