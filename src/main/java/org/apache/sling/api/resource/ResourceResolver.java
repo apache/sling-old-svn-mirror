@@ -153,7 +153,7 @@ public interface ResourceResolver extends Adaptable {
      * to search for resources by relative path. If no search path is set an
      * empty array is returned.
      * <p>
-     * The returns array of Strings is a copy of the internal vaue, so
+     * The returns array of Strings is a copy of the internal value, so
      * modifications to this array have no influence on the operation of the
      * ResourceResolver.
      */
