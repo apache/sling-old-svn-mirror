@@ -30,7 +30,6 @@ public class NodeNameGenerator {
 
     private static final List<String> DEFAULT_NAMES = new LinkedList<String>();
     static {
-        DEFAULT_NAMES.add(SlingPostServlet.RP_NODE_NAME);
         DEFAULT_NAMES.add("title");
         DEFAULT_NAMES.add("jcr:title");
         DEFAULT_NAMES.add("name");
@@ -73,42 +72,58 @@ public class NodeNameGenerator {
             prefix = "";
         }
 
+        String valueToUse = null;
+        boolean doFilter = true;
+
         // find the first request parameter that matches one of
         // our parameterNames, in order, and has a value
-        String valueToUse = null;
-        if(parameters!=null) {
-            for(String param : parameterNames) {
-                if(valueToUse != null) {
-                    break;
+        if (parameters!=null) {
+            // we first check for the special sling parameter
+            final RequestParameter specialParam = parameters.getValue(SlingPostServlet.RP_NODE_NAME);
+            if ( specialParam != null ) {
+                if ( specialParam.getString() != null && specialParam.getString().length() > 0 ) {
+                    valueToUse = specialParam.getString();
+                    doFilter = false;
                 }
-                RequestParameter[] pp = parameters.get(prefix + param);
-                // check without prefix for exact match, like everything staring with sling:post:
-                if ( pp == null ) {
-                    pp = parameters.get(param);
-                }
-                if (pp!=null) {
-                    for(RequestParameter p : pp) {
-                        valueToUse = p.getString();
-                        if(valueToUse != null && valueToUse.length() > 0) {
-                            break;
+            }
+
+            if ( valueToUse == null ) {
+                for(String param : parameterNames) {
+                    if(valueToUse != null) {
+                        break;
+                    }
+                    final RequestParameter[] pp = parameters.get(prefix + param);
+                    if (pp!=null) {
+                        for(RequestParameter p : pp) {
+                            valueToUse = p.getString();
+                            if(valueToUse != null && valueToUse.length() > 0) {
+                                break;
+                            }
+                            valueToUse = null;
                         }
-                        valueToUse = null;
                     }
                 }
             }
         }
         String result;
-        if(valueToUse != null) {
-            // filter value so that it works as a node name
-            result = filter.filter(valueToUse);
+        if (valueToUse != null) {
+            // should we filter?
+            if ( doFilter ) {
+                // filter value so that it works as a node name
+                result = filter.filter(valueToUse);
+            } else {
+                result = valueToUse;
+            }
         } else {
             // default value if none provided
             result = nextCounter() + "_" + System.currentTimeMillis();
         }
 
-        // max length
-        if(result.length() > maxLength) {
-            result = result.substring(0,maxLength);
+        if ( doFilter ) {
+            // max length
+            if (result.length() > maxLength) {
+                result = result.substring(0,maxLength);
+            }
         }
 
         return result;
