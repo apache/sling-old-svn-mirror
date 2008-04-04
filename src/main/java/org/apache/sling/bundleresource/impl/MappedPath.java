@@ -20,6 +20,7 @@ package org.apache.sling.bundleresource.impl;
 
 class MappedPath {
 
+    private static final char prefixSeparatorChar = '!';
     private final String resourceRoot;
     private final String resourceRootPrefix;
     private final String entryRoot;
@@ -28,10 +29,10 @@ class MappedPath {
     static MappedPath create(String configPath) {
         String resourceRoot;
         String entryRoot;
-        int pipe = configPath.indexOf('¦');
-        if (pipe >= 0) {
-            entryRoot = configPath.substring(pipe + 1);
-            resourceRoot = configPath.substring(0, pipe).concat(entryRoot);
+        int prefixSep = configPath.indexOf(prefixSeparatorChar);
+        if (prefixSep >= 0) {
+            entryRoot = configPath.substring(prefixSep + 1);
+            resourceRoot = configPath.substring(0, prefixSep).concat(entryRoot);
         } else {
             resourceRoot = configPath;
             entryRoot = null;
