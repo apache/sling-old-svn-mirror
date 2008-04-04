@@ -39,9 +39,9 @@ import org.apache.sling.commons.json.io.JSONWriter;
  *  are threadsafe.
  */
 public class JsonItemWriter {
-    
+
     private static DateFormat calendarFormat;
-    
+
     private final Set<String> propertyNamesToIgnore;
 
     /** Create a JsonItemWriter
@@ -74,7 +74,7 @@ public class JsonItemWriter {
     public void dump(Property p, Writer w) throws JSONException, ValueFormatException, RepositoryException {
         final JSONWriter jw = new JSONWriter(w);
         jw.object();
-        writeProperty(jw, 0, p);
+        writeProperty(jw, p);
         jw.endObject();
     }
 
@@ -93,16 +93,7 @@ public class JsonItemWriter {
                 continue;
             }
 
-            if (!prop.getDefinition().isMultiple()) {
-                writeProperty(w, currentRecursionLevel, prop);
-            } else {
-                w.key(prop.getName()); 
-                w.array();
-                for(Value v : prop.getValues()) {
-                    dumpValue(w, v);
-                }
-                w.endArray();
-            }
+            writeProperty(w, prop);
         }
 
         // the child nodes
@@ -134,19 +125,38 @@ public class JsonItemWriter {
     /**
      * Write a single property
      */
-    protected void writeProperty(JSONWriter w, int indent, Property p)
+    protected void writeProperty(JSONWriter w, Property p)
     throws ValueFormatException, RepositoryException, JSONException {
-        if(p.getType() == PropertyType.BINARY) {
-            // TODO for now we mark binary properties with an initial star in their name
-            // (star is not allowed as a JCR property name)
+        // special handling for binaries: we dump the length and not the length
+                if (p.getType() == PropertyType.BINARY) {
+            // TODO for now we mark binary properties with an initial colon in their name
+            // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
-            w.key("*" + p.getName());
+            w.key(":" + p.getName());
+            if (!p.getDefinition().isMultiple()) {
+                w.value(p.getLength());
+            } else {
+                final long[] sizes = p.getLengths();
+                w.array();
+                for(int i=0;i<sizes.length;i++) {
+                    w.value(sizes[i]);
+                }
+                w.endArray();
+            }
+            return;
+        }
+        w.key(p.getName());
 
+        if (!p.getDefinition().isMultiple()) {
+            dumpValue(w, p.getValue());
         } else {
             w.key(p.getName());
+            w.array();
+            for(Value v : p.getValues()) {
+                dumpValue(w, v);
+            }
+            w.endArray();
         }
-
-        dumpValue(w, p.getValue());
     }
 
     /**
@@ -154,7 +164,7 @@ public class JsonItemWriter {
      * conversions are done:
      * <table>
      *   <tr><th>JSR Property Type</th><th>JSON Value Type</th></tr>
-     *   <tr><td>BINARY</td><td>size of binary value as long<sup>1</sup></td></tr>
+     *   <tr><td>BINARY</td><td>always 0 as long</td></tr>
      *   <tr><td>DATE</td><td>converted date string as defined by ECMA</td></tr>
      *   <tr><td>BOOLEAN</td><td>boolean</td></tr>
      *   <tr><td>LONG</td><td>long</td></tr>
@@ -162,7 +172,7 @@ public class JsonItemWriter {
      *   <tr><td><i>all other</li></td><td>string</td></tr>
      * </table>
      * <sup>1</sup> Currently not implemented and uses 0 as default.
-     * 
+     *
      * @param w json writer
      * @param v value to dump
      */
@@ -172,18 +182,17 @@ public class JsonItemWriter {
 
         switch (v.getType()) {
             case PropertyType.BINARY:
-                // TODO return the binary size
                 w.value(0);
                 break;
 
             case PropertyType.DATE:
                 w.value(format(v.getDate()));
                 break;
-            
+
             case PropertyType.BOOLEAN:
                 w.value(v.getBoolean());
                 break;
-            
+
             case PropertyType.LONG:
                 w.value(v.getLong());
                 break;
@@ -196,7 +205,7 @@ public class JsonItemWriter {
                 w.value(v.getString());
         }
     }
-    
+
     public static synchronized String format(Calendar date) {
         if (calendarFormat == null) {
             calendarFormat = new SimpleDateFormat(
