@@ -56,12 +56,14 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
     private final List<String> libraryScripts = new LinkedList<String>();
     private final DefaultHtmlRenderer htmlRenderer;
     private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
+    
+    // TODO should be configurable or synced with the actual location
+    public final static String SLING_JS_PATH = "/bundles/sling/sling.js";
 
     JstScriptEngine(ScriptEngineFactory scriptEngineFactory) {
         super(scriptEngineFactory);
 
-        // TODO hardcoded for now...
-        libraryScripts.add("/sling/sling.js");
+        libraryScripts.add(SLING_JS_PATH);
         htmlRenderer = new DefaultHtmlRenderer();
     }
 
