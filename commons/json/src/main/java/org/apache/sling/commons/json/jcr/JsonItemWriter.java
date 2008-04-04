@@ -150,7 +150,6 @@ public class JsonItemWriter {
         if (!p.getDefinition().isMultiple()) {
             dumpValue(w, p.getValue());
         } else {
-            w.key(p.getName());
             w.array();
             for(Value v : p.getValues()) {
                 dumpValue(w, v);
