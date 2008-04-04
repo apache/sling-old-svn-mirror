@@ -126,6 +126,9 @@
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
 
+        <!-- Samples -->
+        <module>samples</module>
+
     </modules>
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
