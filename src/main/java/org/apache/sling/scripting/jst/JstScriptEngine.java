@@ -58,7 +58,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
     private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
     
     // TODO should be configurable or synced with the actual location
-    public final static String SLING_JS_PATH = "/bundles/sling/sling.js";
+    public final static String SLING_JS_PATH = "/system/sling.js";
 
     JstScriptEngine(ScriptEngineFactory scriptEngineFactory) {
         super(scriptEngineFactory);
