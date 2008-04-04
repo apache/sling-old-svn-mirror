@@ -106,6 +106,7 @@
         <module>sling/servlets-default</module>
         <module>sling/servlets-post</module>
         <module>sling/threads</module>
+        <module>sling/bundleresource</module>
 
         <!-- Scripting Support -->
         <module>scripting/api</module>
