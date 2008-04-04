@@ -18,9 +18,11 @@
  */
 package org.apache.sling.i18n.impl;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -31,11 +33,13 @@ import org.apache.sling.api.resource.ResourceResolver;
 
 public class JcrResourceBundle extends ResourceBundle {
 
-    static final String PROP_KEY = "sling:key";
+    private static final String JCR_PATH = "jcr:path";
+
+    private static final String PROP_KEY = "sling:key";
 
     private static final String PROP_VALUE = "sling:message";
 
-    private static final String QUERY_BASE = "//element(*,mix:language)[@jcr:language='%s']/*";
+    private static final String QUERY_BASE = "//element(*,mix:language)[@jcr:language='%s'%s]/*";
 
     private static final String QUERY_LOAD_FULLY = QUERY_BASE + "/(@"
         + PROP_KEY + "|@" + PROP_VALUE + ")";
@@ -49,10 +53,16 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private boolean fullyLoaded;
 
-    protected final Locale locale;
+    private final Locale locale;
 
-    JcrResourceBundle(Locale locale, ResourceResolver resourceResolver) {
+    private final String baseName;
+
+    private String[] searchPath;
+
+    JcrResourceBundle(Locale locale, String baseName,
+            ResourceResolver resourceResolver) {
         this.locale = locale;
+        this.baseName = baseName;
         this.resourceResolver = resourceResolver;
         this.resources = new HashMap<String, Object>();
         this.fullyLoaded = false;
@@ -88,23 +98,47 @@ public class JcrResourceBundle extends ResourceBundle {
                 resources.put(key, value);
             }
         }
-        return value;
+
+        return (value != null) ? value : key;
     }
 
     private void loadFully() {
         if (!fullyLoaded) {
+
             Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
                 getFullLoadQuery(), Query.XPATH);
+
+            String[] path = getSearchPath();
+
+            List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
+            for (int i = 0; i < path.length; i++) {
+                res0.add(new HashMap<String, Object>());
+            }
+            Map<String, Object> rest = new HashMap<String, Object>();
+
             while (bundles.hasNext()) {
-                Map<String, Object> resource = bundles.next();
-                Object key = resource.get(PROP_KEY);
-                if (key instanceof String && !resources.containsKey(key)) {
-                    Object value = resource.get(PROP_VALUE);
-                    if (value != null) {
-                        resources.put((String) key, value);
+                Map<String, Object> row = bundles.next();
+                String jcrPath = (String) row.get(JCR_PATH);
+                String key = (String) row.get(PROP_KEY);
+
+                Map<String, Object> dst = rest;
+                for (int i = 0; i < path.length; i++) {
+                    if (jcrPath.startsWith(path[i])) {
+                        dst = res0.get(i);
+                        break;
                     }
                 }
+
+                dst.put(key, row.get(PROP_VALUE));
             }
+
+            for (int i = path.length - 1; i >= 0; i--) {
+                rest.putAll(res0.get(i));
+            }
+
+            resources.putAll(rest);
+
+            fullyLoaded = true;
         }
     }
 
@@ -113,19 +147,74 @@ public class JcrResourceBundle extends ResourceBundle {
         Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
             getResourceQuery(key), Query.XPATH);
         if (bundles.hasNext()) {
-            Map<String, Object> resource = bundles.next();
-            return resource.get(PROP_VALUE);
+
+            String[] path = getSearchPath();
+
+            Map<String, Object> currentValue = null;
+            int currentWeight = path.length;
+
+            while (bundles.hasNext() && currentWeight > 0) {
+                Map<String, Object> resource = bundles.next();
+                String jcrPath = (String) resource.get(JCR_PATH);
+
+                for (int i = 0; i < currentWeight; i++) {
+                    if (jcrPath.startsWith(path[i])) {
+                        currentWeight = i;
+                        currentValue = resource;
+                        break;
+                    }
+                }
+
+                // the path is not listed, check the current resource if
+                // none has yet been set
+                if (currentValue == null) {
+                    currentValue = resource;
+                }
+            }
+
+            return currentValue.get(PROP_VALUE);
         }
 
         return null;
     }
 
     private String getFullLoadQuery() {
-        return String.format(QUERY_LOAD_FULLY, getLocale());
+        return String.format(QUERY_LOAD_FULLY, getLocale(), getBaseNameTerm());
     }
 
     private String getResourceQuery(String key) {
-        return String.format(QUERY_LOAD_RESOURCE, getLocale(), key);
+        return String.format(QUERY_LOAD_RESOURCE, getLocale(),
+            getBaseNameTerm(), key);
     }
 
+    private String getBaseNameTerm() {
+        if (baseName == null) {
+            return "";
+        }
+
+        StringBuffer buf = new StringBuffer(" and @sling:basename");
+
+        if (baseName.length() > 0) {
+            buf.append("='").append(baseName).append('\'');
+        }
+
+        return buf.toString();
+    }
+
+    private String[] getSearchPath() {
+        if (searchPath == null) {
+            String[] path = resourceResolver.getSearchPath();
+
+            // ensure trailing slash
+            for (int i = 0; i < path.length; i++) {
+                if (!path[i].endsWith("/")) {
+                    path[i] = path[i].concat("/");
+                }
+            }
+
+            searchPath = path;
+        }
+
+        return searchPath;
+    }
 }
