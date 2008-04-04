@@ -106,6 +106,10 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
         return getSlingRequest().getResourceBundle(locale);
     }
 
+    public ResourceBundle getResourceBundle(String baseName, Locale locale) {
+        return getSlingRequest().getResourceBundle(baseName, locale);
+    }
+    
     public String getResponseContentType() {
         return getSlingRequest().getResponseContentType();
     }
