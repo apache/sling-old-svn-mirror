@@ -205,25 +205,33 @@ class SlingPropertyValueHandler {
                 );
             }
         } else if (values.length == 1) {
-            removePropertyIfExists(parent, prop.getName());
-            if (type == PropertyType.DATE) {
-                // try conversion
-                Calendar c = ctx.getDateParser().parse(values[0]);
-                if (c != null) {
-                    ctx.getHtmlResponse().onModified(
-                        parent.setProperty(prop.getName(), c).getPath()
-                    );
-                    return;
+            final String removePath = removePropertyIfExists(parent, prop.getName());
+            // if the provided value is the empty string, we don't have to do anything.
+            if ( values[0].length() == 0 ) {
+                if ( removePath != null ) {
+                    ctx.getHtmlResponse().onDeleted(removePath);
                 }
-                // fall back to default behaviour
-            }
-            final Property p;
-            if ( type == PropertyType.UNDEFINED ) {
-                p = parent.setProperty(prop.getName(), values[0]);
             } else {
-                p = parent.setProperty(prop.getName(), values[0], type);
+                // modify property
+                if (type == PropertyType.DATE) {
+                    // try conversion
+                    Calendar c = ctx.getDateParser().parse(values[0]);
+                    if (c != null) {
+                        ctx.getHtmlResponse().onModified(
+                            parent.setProperty(prop.getName(), c).getPath()
+                        );
+                        return;
+                    }
+                    // fall back to default behaviour
+                }
+                final Property p;
+                if ( type == PropertyType.UNDEFINED ) {
+                    p = parent.setProperty(prop.getName(), values[0]);
+                } else {
+                    p = parent.setProperty(prop.getName(), values[0], type);
+                }
+                ctx.getHtmlResponse().onModified(p.getPath());
             }
-            ctx.getHtmlResponse().onModified(p.getPath());
         } else {
             removePropertyIfExists(parent, prop.getName());
             if (type == PropertyType.DATE) {
