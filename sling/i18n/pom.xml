@@ -66,11 +66,12 @@
                             org.apache.sling.i18n
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.i18n.impl
+                            org.apache.sling.i18n.impl.*
                         </Private-Package>
 
                         <Sling-Nodetypes>
-                            SLING-INF/nodetypes/language.cnd,
+                            SLING-INF/nodetypes/jcrlanguage.cnd,
+                            SLING-INF/nodetypes/slinglanguage.cnd,
                             SLING-INF/nodetypes/message.cnd
                         </Sling-Nodetypes>
 

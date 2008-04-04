@@ -17,14 +17,13 @@
 //  under the License.
 //
 
+<mix = 'http://www.jcp.org/jcr/mix/1.0'>
 <sling = 'http://sling.apache.org/jcr/sling/1.0'>
 
-// Mixin node type for a single key to message mapping
-// This mixin node type may be applied to any node such, that mappings
-// may be located just inside some existing node hierarchy
-[sling:Message]
+// The sling:language mixin node type allows to list one or more base
+// names of resource bundles to which the messages below this language
+// node belong.
+[sling:Language] > mix:language
     mixin
-  - sling:key (string)
-  - sling:message (undefined)
-
-[sling:MessageEntry] > nt:hierarchyNode, sling:Message  
+  - sling:basename (string)
+  - sling:basename (string) multiple
