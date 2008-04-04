@@ -105,6 +105,10 @@ class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     public ResourceBundle getResourceBundle(Locale locale) {
         return null;
     }
+    
+    public ResourceBundle getResourceBundle(String baseName, Locale locale) {
+        return null;
+    }
 
     public ResourceResolver getResourceResolver() {
         return null;
