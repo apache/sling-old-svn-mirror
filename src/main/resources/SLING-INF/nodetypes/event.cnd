@@ -21,13 +21,13 @@
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 
-[slingevent:Events] > nt:base, mix:lockable
+[slingevent:Events] > nt:folder, mix:lockable
   + * (slingevent:Event)
 
-[slingevent:TimedEvents] > nt:base, mix:lockable
+[slingevent:TimedEvents] > nt:folder, mix:lockable
  + * (slingevent:TimedEvent)
 
-[slingevent:Jobs] > nt:base, mix:lockable
+[slingevent:Jobs] > nt:folder, mix:lockable
   + * (slingevent:Job)
   
 [slingevent:Event] > nt:base
