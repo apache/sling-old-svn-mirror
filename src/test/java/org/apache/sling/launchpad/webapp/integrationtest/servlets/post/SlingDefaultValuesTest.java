@@ -46,7 +46,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         // default behaviour writes empty string
-        assertJavascript("", content, "out.println(data.a)");
+        assertJavascript("undefined", content, "out.println(\"\" + data.a)");
 
         // overwrite with "123"
         props.put("a", "123");
@@ -60,7 +60,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         testClient.createNode(createdNodeUrl, props);
         content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
-        assertJavascript("", content, "out.println(data.a)");
+        assertJavascript("undefined", content, "out.println(\"\" + data.a)");
     }
 
     public void testWithSpecificDefault() throws IOException {
