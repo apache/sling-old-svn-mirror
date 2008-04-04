@@ -18,11 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.BUNDLE_RESOURCE_ROOTS;
-
 import java.util.ArrayList;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,11 +36,9 @@ import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
-import org.apache.sling.jcr.resource.internal.helper.bundle.BundleResourceProvider;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.apache.sling.osgi.commons.OsgiUtil;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -75,7 +70,7 @@ import org.slf4j.LoggerFactory;
  *                cardinality="0..n" policy="dynamic"
  */
 public class JcrResourceResolverFactoryImpl implements
-        JcrResourceResolverFactory, BundleListener {
+        JcrResourceResolverFactory {
 
     /**
      * @scr.property value="true" type="Boolean"
@@ -156,8 +151,6 @@ public class JcrResourceResolverFactoryImpl implements
 
     private ResourceProviderEntry rootProviderEntry;
 
-    private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
-
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
     }
@@ -172,36 +165,6 @@ public class JcrResourceResolverFactoryImpl implements
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry.getEntries(), defaultResourceTypeProvider);
         return new JcrResourceResolver(sessionRoot, this);
-    }
-
-    // ---------- BundleListener -----------------------------------------------
-
-    /**
-     * Loads and unloads any components provided by the bundle whose state
-     * changed. If the bundle has been started, the components are loaded. If
-     * the bundle is about to stop, the components are unloaded.
-     *
-     * @param event The <code>BundleEvent</code> representing the bundle state
-     *            change.
-     */
-    public void bundleChanged(BundleEvent event) {
-
-        //
-        // NOTE:
-        // This is synchronous - take care to not block the system !!
-        //
-
-        switch (event.getType()) {
-            case BundleEvent.STARTED:
-                // register resource provider for the started bundle
-                addBundleResourceProvider(event.getBundle());
-                break;
-
-            case BundleEvent.STOPPED:
-                // remove resource provider after the bundle has stopped
-                removeBundleResourceProvider(event.getBundle());
-                break;
-        }
     }
 
     // ---------- EventAdmin Event Dispatching ---------------------------------
@@ -281,62 +244,12 @@ public class JcrResourceResolverFactoryImpl implements
         return searchPath;
     }
 
-    // ---------- Bundle provided resources -----------------------------------
-
-    private void addBundleResourceProvider(Bundle bundle) {
-        String prefixes = (String) bundle.getHeaders().get(
-            BUNDLE_RESOURCE_ROOTS);
-        if (prefixes != null) {
-            BundleResourceProvider brp = new BundleResourceProvider(bundle,
-                prefixes);
-            String[] rootPaths = brp.getRoots();
-            for (String rootPath : rootPaths) {
-                try {
-                    rootProviderEntry.addResourceProvider(rootPath, brp);
-                } catch (IllegalStateException ise) {
-                    log.error(
-                        "addBundleResourceProvider: A ResourceProvider for {} is already registered",
-                        rootPath);
-                }
-            }
-            bundleResourceProviderMap.put(bundle.getBundleId(), brp);
-        }
-    }
-
-    private void removeBundleResourceProvider(Bundle bundle) {
-        BundleResourceProvider brp = bundleResourceProviderMap.get(bundle.getBundleId());
-        if (brp != null) {
-            String[] rootPaths = brp.getRoots();
-            for (String rootPath : rootPaths) {
-                // TODO: Do not remove this path, if another resource
-                // owns it. This may be the case if adding the provider
-                // yielded an IllegalStateException
-                rootProviderEntry.removeResourceProvider(rootPath);
-            }
-        }
-    }
-
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
         this.componentContext = componentContext;
         this.serviceReference = componentContext.getServiceReference();
-
-        componentContext.getBundleContext().addBundleListener(this);
-
-        try {
-            Bundle[] bundles = componentContext.getBundleContext().getBundles();
-            for (Bundle bundle : bundles) {
-                if (bundle.getState() == Bundle.ACTIVE) {
-                    // add bundle resource provider for active bundles
-                    addBundleResourceProvider(bundle);
-                }
-            }
-        } catch (Throwable t) {
-            log.error("activate: Problem while loading initial content and"
-                + " registering mappings for existing bundles", t);
-        }
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
@@ -394,8 +307,6 @@ public class JcrResourceResolverFactoryImpl implements
 
     /** Deativates this component, called by SCR to take out of service */
     protected void deactivate(ComponentContext componentContext) {
-        componentContext.getBundleContext().removeBundleListener(this);
-
         this.componentContext = null;
     }
 
