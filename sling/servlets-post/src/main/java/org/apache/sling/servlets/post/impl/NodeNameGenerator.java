@@ -27,9 +27,23 @@ import org.apache.sling.api.request.RequestParameterMap;
  *  See SLING-128.
  */
 public class NodeNameGenerator {
-    private List<String> parameterNames;
+
+    private static final List<String> DEFAULT_NAMES = new LinkedList<String>();
+    static {
+        DEFAULT_NAMES.add(SlingPostServlet.RP_NODE_NAME);
+        DEFAULT_NAMES.add("title");
+        DEFAULT_NAMES.add("jcr:title");
+        DEFAULT_NAMES.add("name");
+        DEFAULT_NAMES.add("description");
+        DEFAULT_NAMES.add("jcr:description");
+        DEFAULT_NAMES.add("abstract");
+    }
+
+    private final List<String> parameterNames;
     private final NodeNameFilter filter = new NodeNameFilter();
+
     public static final int DEFAULT_MAX_NAME_LENGTH = 20;
+
     private int maxLength = DEFAULT_MAX_NAME_LENGTH;
     private int counter;
 
@@ -38,14 +52,8 @@ public class NodeNameGenerator {
     }
 
     public NodeNameGenerator(List<String> parameterNames) {
-        if(parameterNames == null) {
-            this.parameterNames = new LinkedList<String>();
-            this.parameterNames.add("title");
-            this.parameterNames.add("jcr:title");
-            this.parameterNames.add("name");
-            this.parameterNames.add("description");
-            this.parameterNames.add("jcr:description");
-            this.parameterNames.add("abstract");
+        if (parameterNames == null) {
+            this.parameterNames = DEFAULT_NAMES;
         } else {
             this.parameterNames = parameterNames;
         }
@@ -73,8 +81,12 @@ public class NodeNameGenerator {
                 if(valueToUse != null) {
                     break;
                 }
-                final RequestParameter[] pp = parameters.get(prefix + param);
-                if(pp!=null) {
+                RequestParameter[] pp = parameters.get(prefix + param);
+                // check without prefix for exact match, like everything staring with sling:post:
+                if ( pp == null ) {
+                    pp = parameters.get(param);
+                }
+                if (pp!=null) {
                     for(RequestParameter p : pp) {
                         valueToUse = p.getString();
                         if(valueToUse != null && valueToUse.length() > 0) {

@@ -103,6 +103,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     public static final String MOVE_FLAG_REPLACE = "replace";
 
     /**
+     * Optional request paramter specifying the node name for a newly created now.
+     */
+    public static final String RP_NODE_NAME = RP_PREFIX + "nodeName";
+
+    /**
      * Optional request parameter: only request parameters starting with this prefix are
      * saved as Properties when creating a Node. Active only if at least one parameter
      * starts with this prefix, and defaults to {@link #DEFAULT_SAVE_PARAM_PREFIX}.
@@ -199,7 +204,6 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             throw new ServletException("No JCR Session available");
         }
 
-        // create the post context
         return new SlingPostProcessor(request, s, nodeNameGenerator, dateParser, this.getServletContext());
     }
 
