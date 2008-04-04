@@ -173,7 +173,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <scope>provded</scope> 
+            <scope>provded</scope>
         </dependency>
 
         <!-- the most important bundle after the framework: logging -->
@@ -183,7 +183,7 @@
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- the web based OSGi framework console -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -269,33 +269,25 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.servlet.resolver
-            </artifactId>
+            <artifactId>org.apache.sling.servlet.resolver</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.servlets.default
-            </artifactId>
+            <artifactId>org.apache.sling.servlets.default</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.servlets.post
-            </artifactId>
+            <artifactId>org.apache.sling.servlets.post</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.jcr.default.rtp
-            </artifactId>
+            <artifactId>org.apache.sling.jcr.default.rtp</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
@@ -331,13 +323,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.commons.mime
-            </artifactId>
+            <artifactId>org.apache.sling.commons.mime</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- JCR oriented bundles -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -353,9 +343,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.jcr.resource
-            </artifactId>
+            <artifactId>org.apache.sling.jcr.resource</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
@@ -367,7 +355,9 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
+            <artifactId>
+                org.apache.sling.jcr.jackrabbit.server
+            </artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
@@ -385,8 +375,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.classloader</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>
-                org.apache.sling.jcr.classloader
+                org.apache.sling.bundleresource.impl
             </artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
@@ -399,21 +395,17 @@
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- scripting -->
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.scripting.api
-            </artifactId>
+            <artifactId>org.apache.sling.scripting.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.scripting.resolver
-            </artifactId>
+            <artifactId>org.apache.sling.scripting.resolver</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
@@ -427,9 +419,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.scripting.jsp
-            </artifactId>
+            <artifactId>org.apache.sling.scripting.jsp</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>
