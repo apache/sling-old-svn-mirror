@@ -26,7 +26,7 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
  *  ending in / *
  */
 public class GeneratedNodeNameTest extends HttpTestBase {
-    
+
     private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
 
     public void testTitle() throws IOException {
@@ -36,7 +36,15 @@ public class GeneratedNodeNameTest extends HttpTestBase {
         final String expect = "hello_there";
         assertTrue("Location " + location + " ends with " + expect,location.endsWith(expect));
     }
-    
+
+    public void testSlingPostNodeNameParam() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("sling:post:nodeName", "MyNodeName");
+        final String location = testClient.createNode(postUrl, props);
+        final String expect = "MyNodeName";
+        assertTrue("Location " + location + " ends with " + expect,location.endsWith(expect));
+    }
+
     public void testTitleWithSavePrefix() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
         props.put("./title", "Hello There 2");
@@ -45,19 +53,19 @@ public class GeneratedNodeNameTest extends HttpTestBase {
         final String expect = "hello_there_2";
         assertTrue("Location " + location + " ends with " + expect,location.endsWith(expect));
     }
-    
+
     public void testCollision() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
         props.put("title", "Hello There");
-        
+
         // posting twice with the same title must work, and return different locations
         final String locationA = testClient.createNode(postUrl, props);
         final String locationB = testClient.createNode(postUrl, props);
-        
+
         assertFalse("Locations A and B must be different (" + locationA + "," + locationB + ")",
                 locationA.equals(locationB));
     }
-    
+
     public void testNoParams() throws IOException {
         final String location = testClient.createNode(postUrl, null);
         assertTrue("Location end with a digit",Character.isDigit(location.charAt(location.length() - 1)));
