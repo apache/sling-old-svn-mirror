@@ -138,13 +138,18 @@ public class I18NFilter implements Filter {
 
         @Override
         public ResourceBundle getResourceBundle(Locale locale) {
+            return getResourceBundle(null, locale);
+        }
+
+        @Override
+        public ResourceBundle getResourceBundle(String baseName, Locale locale) {
             if (bundleProvider != null) {
                 if (locale == null) {
                     locale = getLocale();
                 }
 
                 try {
-                    return bundleProvider.getResourceBundle(locale);
+                    return bundleProvider.getResourceBundle(baseName, locale);
                 } catch (MissingResourceException mre) {
                     log.warn(
                         "getResourceBundle: Cannot get ResourceBundle from provider",
@@ -154,9 +159,9 @@ public class I18NFilter implements Filter {
                 log.info("getResourceBundle: ResourceBundleProvider not available, calling default implementation");
             }
 
-            return super.getResourceBundle(locale);
+            return super.getResourceBundle(baseName, locale);
         }
-
+        
         @Override
         public Locale getLocale() {
             if (locale == null) {

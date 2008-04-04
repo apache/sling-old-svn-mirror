@@ -54,19 +54,17 @@ import org.slf4j.LoggerFactory;
 public class JcrResourceBundleProvider implements ResourceBundleProvider,
         EventListener {
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     /** @scr.property value="" */
     private static final String PROP_USER = "user";
 
     /** @scr.property value="" */
     private static final String PROP_PASS = "password";
 
-    /**
-     * @scr.property value="en"
-     */
-    public static final String PAR_DEFAULT_LOCALE = "locale.default";
+    /** @scr.property value="en" */
+    private static final String PROP_DEFAULT_LOCALE = "locale.default";
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private SlingRepository repository;
@@ -74,13 +72,32 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private JcrResourceResolverFactory resourceResolverFactory;
 
+    /**
+     * The default Locale as configured with the <i>locale.default</i>
+     * configuration property. This defaults to <code>Locale.ENGLISH</code> if
+     * the configuration property is not set.
+     */
     private Locale defaultLocale = Locale.ENGLISH;
 
+    /**
+     * The credentials to access the repository or <code>null</code> to use
+     * access the repository as the anonymous user, which is the case if the
+     * <i>user</i> property is not set in the configuration.
+     */
     private Credentials repoCredentials;
 
+    /**
+     * The resource resolver used to access the resource bundles. This object is
+     * retrieved from the {@link #resourceResolverFactory} using the anonymous
+     * session or the session acquired using the {@link #repoCredentials}.
+     */
     private ResourceResolver resourceResolver;
 
-    private Map<Locale, ResourceBundle> resourceBundleCache = new HashMap<Locale, ResourceBundle>();
+    /**
+     * Matrix of cached resource bundles. The first key is the resource bundle
+     * base name, the second key is the Locale.
+     */
+    private final Map<String, Map<Locale, ResourceBundle>> resourceBundleCache = new HashMap<String, Map<Locale, ResourceBundle>>();
 
     // ---------- ResourceBundleProvider ---------------------------------------
 
@@ -105,11 +122,15 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      *             is not available to access the resources.
      */
     public ResourceBundle getResourceBundle(Locale locale) {
+        return getResourceBundle(null, locale);
+    }
+
+    public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         if (locale == null) {
             locale = defaultLocale;
         }
 
-        return getResourceBundleInternal(locale);
+        return getResourceBundleInternal(baseName, locale);
     }
 
     // ---------- EventListener ------------------------------------------------
@@ -150,7 +171,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
             repoCredentials = new SimpleCredentials(user, pwd);
         }
 
-        String localeString = (String) props.get(PAR_DEFAULT_LOCALE);
+        String localeString = (String) props.get(PROP_DEFAULT_LOCALE);
         this.defaultLocale = toLocale(localeString);
     }
 
@@ -213,26 +234,35 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      *             created and the <code>ResourceResolver</code> is not
      *             available to access the resources.
      */
-    private ResourceBundle getResourceBundleInternal(Locale locale) {
-        ResourceBundle resourceBundle;
-
+    private ResourceBundle getResourceBundleInternal(String baseName,
+            Locale locale) {
+        ResourceBundle resourceBundle = null;
         synchronized (resourceBundleCache) {
-            resourceBundle = resourceBundleCache.get(locale);
+            Map<Locale, ResourceBundle> appBundles = resourceBundleCache.get(baseName);
+            if (appBundles != null) {
+                resourceBundle = appBundles.get(locale);
+            }
         }
 
         if (resourceBundle == null) {
-            resourceBundle = createResourceBundle(locale);
+            resourceBundle = createResourceBundle(baseName, locale);
 
             synchronized (resourceBundleCache) {
+                Map<Locale, ResourceBundle> appBundles = resourceBundleCache.get(baseName);
+                if (appBundles == null) {
+                    appBundles = new HashMap<Locale, ResourceBundle>();
+                    resourceBundleCache.put(baseName, appBundles);
+                }
+
                 // while creating the resource bundle, another thread may
                 // have created the same and already stored it in the cache.
                 // in this case we don't use the one we just created but use
                 // the bundle from the cache. Otherwise, we store our bundle
                 // in the cache and keep using it.
-                if (resourceBundleCache.containsKey(locale)) {
-                    resourceBundle = resourceBundleCache.get(locale);
+                if (appBundles.containsKey(locale)) {
+                    resourceBundle = appBundles.get(locale);
                 } else {
-                    resourceBundleCache.put(locale, resourceBundle);
+                    appBundles.put(locale, resourceBundle);
                 }
             }
 
@@ -247,7 +277,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * @throws MissingResourceException If the <code>ResourceResolver</code>
      *             is not available to access the resources.
      */
-    private ResourceBundle createResourceBundle(Locale locale) {
+    private ResourceBundle createResourceBundle(String baseName, Locale locale) {
 
         ResourceResolver resolver = getResourceResolver();
         if (resolver == null) {
@@ -256,12 +286,13 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                 "ResourceResolver not available", getClass().getName(), "");
         }
 
-        JcrResourceBundle bundle = new JcrResourceBundle(locale, resolver);
+        JcrResourceBundle bundle = new JcrResourceBundle(locale, baseName,
+            resolver);
 
         // set parent resource bundle
         Locale parentLocale = getParentLocale(locale);
         if (parentLocale != null) {
-            bundle.setParent(getResourceBundleInternal(parentLocale));
+            bundle.setParent(getResourceBundleInternal(baseName, parentLocale));
         }
 
         return bundle;
