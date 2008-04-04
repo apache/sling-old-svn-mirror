@@ -235,7 +235,7 @@ public abstract class AbstractRepositoryEventHandler
                 while ( st.hasMoreTokens() ) {
                     final String token = st.nextToken();
                     if ( !node.hasNode(token) ) {
-                        node.addNode(token, "nt:unstructured");
+                        node.addNode(token, "nt:folder");
                         node.save();
                     }
                     node = node.getNode(token);
