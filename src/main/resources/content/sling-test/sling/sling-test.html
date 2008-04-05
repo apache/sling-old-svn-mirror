@@ -82,7 +82,7 @@ should show the JSON data of the nodes created by the test cases.</p>
 	  var testPath = baseTestPath + "/test-" + now;
 	  
 	  function testPost() {
-	    var c = slingPost(testPath,"title=hello&created=&dummy=&time=" + now);
+	    var c = slingPost(testPath,"title=hello&created=&empty=&time=" + now);
 	    assert("Expected 200 status for POST",c.status == 200);
 	  }
 	  
@@ -94,8 +94,7 @@ should show the JSON data of the nodes created by the test cases.</p>
 	    assertEquals("created property is a string","string",typeof(data.created));
         // TODO implement 'created' autoset property
 	    // assert("created property is not empty",data.created.length > 0);
-	    assertEquals("dummy property is a string","string",typeof(data.dummy));
-	    assert("dummy property is empty",data.dummy.length == 0);
+	    assertEquals("empty property is not stored","undefined",typeof(data.dummy));
 	  }
 	  
 	  function testGetSessionInfo() {
