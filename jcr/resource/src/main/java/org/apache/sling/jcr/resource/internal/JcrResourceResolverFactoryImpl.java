@@ -32,7 +32,7 @@ import org.apache.commons.collections.bidimap.TreeBidiMap;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
+import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
@@ -123,7 +123,7 @@ public class JcrResourceResolverFactoryImpl implements
      * 
      * @scr.reference cardinality="0..1" policy="dynamic"
      */
-    private JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
+    private JcrResourceTypeProvider defaultResourceTypeProvider;
 
     // list of ResourceProvider services bound before activation of the
     // component

@@ -31,7 +31,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
+import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +47,9 @@ public class JcrResourceProvider implements ResourceProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Session session;
-    private final JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
+    private final JcrResourceTypeProvider defaultResourceTypeProvider;
 
-    public JcrResourceProvider(Session session, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) {
+    public JcrResourceProvider(Session session, JcrResourceTypeProvider defaultResourceTypeProvider) {
         this.session = session;
         this.defaultResourceTypeProvider = defaultResourceTypeProvider;
     }
