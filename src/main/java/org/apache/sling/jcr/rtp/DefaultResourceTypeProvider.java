@@ -23,7 +23,7 @@ import java.util.Dictionary;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
+import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.description" value="Sling Default Resource Type Provider"
  * @scr.service
  */
-public class DefaultResourceTypeProvider implements JcrDefaultResourceTypeProvider {
+public class DefaultResourceTypeProvider implements JcrResourceTypeProvider {
 
     /**
      *  Name of the configurable property name that defines mappings. The default values
