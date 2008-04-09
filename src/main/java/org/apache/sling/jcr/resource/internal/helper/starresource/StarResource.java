@@ -26,7 +26,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
+import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 
 /** Used to provide the equivalent of an empty Node for GET requests
  *  to *.something (SLING-344)
@@ -60,7 +60,7 @@ public class StarResource extends SyntheticResource {
         return res.getPath().endsWith(PATH_CLEAN_SUFFIX);
     }
     
-    public StarResource(ResourceResolver resourceResolver, String path, JcrDefaultResourceTypeProvider drtp) throws SlingException {
+    public StarResource(ResourceResolver resourceResolver, String path, JcrResourceTypeProvider drtp) throws SlingException {
         super(resourceResolver, convertPath(path), null);
         
         // The only way we can set a meaningful resource type is via the drtp
