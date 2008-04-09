@@ -437,7 +437,7 @@
                 <scope>provided</scope>
             </dependency>
 
-            <!-- Real JCR and CRX libraries -->
+            <!-- Real JCR and Jackrabbit libraries -->
             <dependency>
                 <groupId>javax.jcr</groupId>
                 <artifactId>jcr</artifactId>
@@ -453,19 +453,19 @@
             <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
                 <artifactId>jackrabbit-jcr-commons</artifactId>
-                <version>1.4</version>
+                <version>1.4.2</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
                 <artifactId>jackrabbit-core</artifactId>
-                <version>1.4</version>
+                <version>1.4.2</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.jackrabbit</groupId>
                 <artifactId>jackrabbit-jcr-rmi</artifactId>
-                <version>1.4</version>
+                <version>1.4.1</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
