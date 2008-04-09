@@ -95,8 +95,6 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
-            <!-- require fix for JCR-1454 -->
-            <version>1.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <!-- OSGi Libraries -->
