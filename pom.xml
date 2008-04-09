@@ -120,23 +120,7 @@
                             version="1.4"
                         </Export-Package>
                         <Private-Package>
-                            <!-- !org.apache.jackrabbit.*, -->
-                            org.apache.sling.jcr.jackrabbit.server.*,
-                            META-INF.services.*;-split-package:=merge-first,
-
-                            <!-- Jackrabbit Text Extractors -->
-                            org.apache.jackrabbit.extractor,
-
-                            <!-- (server side) rmi packages -->
-                            org.apache.jackrabbit.rmi.*,
-
-                            EDU.oswego.cs.dl.util.concurrent.*,
-                            org.apache.lucene.*, org.apache.derby.*,
-                            
-                            <!-- needed since the move to Jackrabbit 1.4 -->
-                            org.apache.jackrabbit.spi.commons.conversion.*,
-                            org.apache.jackrabbit.spi.commons.namespace.*,
-                            org.apache.jackrabbit.spi.*,
+                            org.apache.sling.jcr.jackrabbit.server
                         </Private-Package>
                         <Import-Package>
                             org.apache.sling.jcr.api,
@@ -147,6 +131,9 @@
                             javax.security.*,
                             org.apache.commons.collections.*,
                             org.apache.jackrabbit.api,
+
+                            <!-- Jackrabbit Text Extractors -->
+                            org.apache.jackrabbit.extractor,
 
                             org.osgi.framework, org.osgi.service.cm,
                             org.osgi.service.component,
@@ -159,8 +146,17 @@
                         <!-- Embedd some libraries -->
                         <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Dependency>
-                            jackrabbit-jcr-rmi;jackrabbit-core;jackrabbit-jcr-commons;inline=true
+                            jackrabbit-jcr-rmi;
+                            jackrabbit-core;
+                            jackrabbit-jcr-commons;
+                            jackrabbit-spi-commons;
+                            jackrabbit-spi;
+                            lucene-core;
+                            derby;
+                            concurrent
                         </Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
+
 
                     </instructions>
                 </configuration>
@@ -184,8 +180,6 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
-            <!-- Required for JCR-1406 -->
-            <version>1.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
