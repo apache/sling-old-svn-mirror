@@ -25,7 +25,7 @@ import javax.jcr.NodeIterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.JcrDefaultResourceTypeProvider;
+import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +49,14 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
     
-    private final JcrDefaultResourceTypeProvider defaultResourceTypeProvider;
+    private final JcrResourceTypeProvider defaultResourceTypeProvider;
 
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
     public JcrNodeResourceIterator(ResourceResolver resourceResolver,
-            NodeIterator nodes, JcrDefaultResourceTypeProvider defaultResourceTypeProvider) {
+            NodeIterator nodes, JcrResourceTypeProvider defaultResourceTypeProvider) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
         this.defaultResourceTypeProvider = defaultResourceTypeProvider;

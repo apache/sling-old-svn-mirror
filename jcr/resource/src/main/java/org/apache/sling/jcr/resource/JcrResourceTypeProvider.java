@@ -24,7 +24,7 @@ import javax.jcr.RepositoryException;
 /** Provide a resourceType for JCR Nodes which do not have
  *  a sling:resourceType property.
  */ 
-public interface JcrDefaultResourceTypeProvider {
+public interface JcrResourceTypeProvider {
     
     /** Return the default resource type to use for Node n, when
      *  n has not sling:resourceType property  
