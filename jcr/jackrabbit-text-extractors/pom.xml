@@ -32,12 +32,12 @@
         <pkgArtifactId>jackrabbit-text-extractors</pkgArtifactId>
         <pkgVersion>1.4</pkgVersion>
         <pkgSnapshot></pkgSnapshot><!-- declare empty for release version -->
-        <pomVersion>0002</pomVersion>
+        <pomVersion>0003</pomVersion>
         <osgiVersion>${pkgVersion}.0</osgiVersion>
     </properties>
 
-    <artifactId>${pom.groupId}.${pkgArtifactId}</artifactId>
-    <version>${osgiVersion}-${pomVersion}-SNAPSHOT</version>
+    <artifactId>org.apache.sling.jcr.${pkgArtifactId}</artifactId>
+    <version>${osgiVersion}-${pomVersion}-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>${pkgArtifactId} bundle</name>
     <description>
