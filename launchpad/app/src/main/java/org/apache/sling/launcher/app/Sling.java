@@ -111,8 +111,6 @@ public class Sling implements BundleActivator {
     /** Pseduo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
 
-    public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
-
     /**
      * The name of the configuration property defining the Sling home directory
      * (value is "sling.home"). This is a Platform file system directory below
@@ -181,6 +179,8 @@ public class Sling implements BundleActivator {
      * file through Web Application parameters or other properties files.
      */
     public static final String CONFIG_PROPERTIES = "sling.properties";
+
+    public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
     /**
      * The simple logger to log messages during startup and shutdown to
@@ -400,6 +400,8 @@ public class Sling implements BundleActivator {
         // resolve boot delegation and system packages
         this.resolve(props, "org.osgi.framework.bootdelegation",
             "sling.bootdelegation.");
+        this.resolve(props, "org.osgi.framework.system.packages",
+            "sling.system.packages.");
 
         // reset back the sling home property
         // might have been overwritten by system properties, included
@@ -495,23 +497,23 @@ public class Sling implements BundleActivator {
      * <code>prefix</code> (e.g. <code>sling.bootdelegation.</code>).
      * <ol>
      * <li>Each such property is checked, whether it actually starts with
-     * <code>prefix<b>class.</b></code>. In this class, the rest of the
-     * property name is assumed to be a fully qualified class name which is
-     * check, whether it is visible. If so, the value of the property is
-     * appended to the value of the <code>osgiProp</code>. If the class
-     * cannot be loaded, the property is ignored.
+     * <code>prefix<b>class.</b></code>. If so, the rest of the property
+     * name is assumed to be a fully qualified class name which is check,
+     * whether it is visible. If so, the value of the property is appended to
+     * the value of the <code>osgiProp</code>. If the class cannot be loaded,
+     * the property is ignored.
      * <li>Otherwise, if the property does not contain a fully qualified class
      * name, the value of the property is simply appended to the
      * <code>osgiProp</code>.
      * </ol>
-     *
+     * 
      * @param props The <code>Properties</code> to be scanned.
      * @param osgiProp The name of the property in <code>props</code> to which
      *            any matching property values are appended.
      * @param prefix The prefix of properties to handle.
      */
     private void resolve(Map<String, String> props, String osgiProp,
-            String prefix) throws BundleException {
+            String prefix) {
         final String propVal = props.get(osgiProp);
         StringBuffer prop = new StringBuffer(propVal == null ? "" : propVal);
         boolean mod = false;
@@ -526,16 +528,19 @@ public class Sling implements BundleActivator {
                         Class.forName(className, true,
                             this.getClass().getClassLoader());
                     } catch (Throwable t) {
-                        this.logger.log(Logger.LOG_DEBUG, "Class " + className + " not found. Ignoring '" + pEntry.getValue() + "' for property " + osgiProp);
                         // don't really care, but class checking failed, so we
                         // do not add
+                        this.logger.log(Logger.LOG_DEBUG, "Class " + className
+                            + " not found. Ignoring '" + pEntry.getValue()
+                            + "' for property " + osgiProp);
                         continue;
                     }
                 }
 
                 // get here if class is known or no checker class
-                this.logger.log(Logger.LOG_DEBUG, "Adding '" + pEntry.getValue() + "' to property " + osgiProp);
-                if ( prop.length() > 0 ) {
+                this.logger.log(Logger.LOG_DEBUG, "Adding '"
+                    + pEntry.getValue() + "' to property " + osgiProp);
+                if (prop.length() > 0) {
                     prop.append(',');
                 }
                 prop.append(pEntry.getValue());
@@ -545,7 +550,8 @@ public class Sling implements BundleActivator {
 
         // replace the property with the modified property
         if (mod) {
-            this.logger.log(Logger.LOG_DEBUG, "Setting property " + osgiProp + " to " + prop.toString());
+            this.logger.log(Logger.LOG_DEBUG, "Setting property " + osgiProp
+                + " to " + prop.toString());
             props.put(osgiProp, prop.toString());
         }
     }
