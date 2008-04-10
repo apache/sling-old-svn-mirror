@@ -62,11 +62,9 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testDefaultPrimaryNodeType() throws IOException {
-        String name = "test";
-        String json = "{ \"name\": \"" + name + "\" }";
+        String json = "{}";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(name, node.getName());
         assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
@@ -74,11 +72,9 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testDefaultPrimaryNodeTypeWithSurroundWhitespace() throws IOException {
-        String name = "test";
-        String json = "     { \"name\": \"" + name + "\" }     ";
+        String json = "     {  }     ";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(name, node.getName());
         assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
@@ -86,11 +82,9 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testDefaultPrimaryNodeTypeWithoutEnclosingBraces() throws IOException {
-        String name = "test";
-        String json = "\"name\": \"" + name + "\"";
+        String json = "";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(name, node.getName());
         assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
@@ -98,11 +92,9 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testDefaultPrimaryNodeTypeWithoutEnclosingBracesWithSurroundWhitespace() throws IOException {
-        String name = "test";
-        String json = "       \"name\": \"" + name + "\"      ";
+        String json = "             ";
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
-        assertEquals(name, node.getName());
         assertNull(node.getPrimaryNodeType());
         assertNull("No mixins expected", node.getMixinNodeTypes());
         assertNull("No properties expected", node.getProperties());
@@ -110,9 +102,8 @@ public class JsonReaderTest extends TestCase {
     }
 
     public void testExplicitePrimaryNodeType() throws IOException {
-        String name = "test";
         String type = "xyz:testType";
-        String json = "{ \"name\": \"" + name + "\", \"primaryNodeType\": \"" + type + "\" }";
+        String json = "{ \"jcr:primaryType\": \"" + type + "\" }";
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -121,7 +112,7 @@ public class JsonReaderTest extends TestCase {
 
     public void testMixinNodeTypes1() throws JSONException, IOException {
         Set<Object> mixins = this.toSet(new Object[]{ "xyz:mix1" });
-        String json = "{ \"name\": \"test\", \"mixinNodeTypes\": " + this.toJsonArray(mixins) + "}";
+        String json = "{ \"jcr:mixinTypes\": " + this.toJsonArray(mixins) + "}";
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -130,7 +121,7 @@ public class JsonReaderTest extends TestCase {
 
     public void testMixinNodeTypes2() throws JSONException, IOException {
         Set<Object> mixins = this.toSet(new Object[]{ "xyz:mix1", "abc:mix2" });
-        String json = "{ \"name\": \"test\", \"mixinNodeTypes\": " + this.toJsonArray(mixins) + "}";
+        String json = "{ \"jcr:mixinTypes\": " + this.toJsonArray(mixins) + "}";
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -139,7 +130,7 @@ public class JsonReaderTest extends TestCase {
 
     public void testPropertiesNone() throws IOException, JSONException {
         List<Property> properties = null;
-        String json = "{ \"name\": \"test\", \"properties\": " + this.toJsonObject(properties) + "}";
+        String json = "{ \"properties\": " + this.toJsonObject(properties) + "}";
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -152,14 +143,14 @@ public class JsonReaderTest extends TestCase {
         prop.setName("p1");
         prop.setValue("v1");
         properties.add(prop);
-
-        String json = "{ \"name\": \"test\",  \"properties\": " + this.toJsonObject(properties) + "}";
-
+        
+        String json = this.toJsonObject(properties).toString();
+        
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
         assertEquals(new HashSet<Property>(properties), new HashSet<Property>(node.getProperties()));
     }
-
+    
     public void testPropertiesTwoSingleValue() throws IOException, JSONException {
         List<Property> properties = new ArrayList<Property>();
         Property prop = new Property();
@@ -171,7 +162,7 @@ public class JsonReaderTest extends TestCase {
         prop.setValue("v2");
         properties.add(prop);
 
-        String json = "{ \"name\": \"test\", \"properties\": " + this.toJsonObject(properties) + "}";
+        String json = this.toJsonObject(properties).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -185,7 +176,7 @@ public class JsonReaderTest extends TestCase {
         prop.addValue("v1");
         properties.add(prop);
 
-        String json = "{ \"name\": \"test\", \"properties\": " + this.toJsonObject(properties) + "}";
+        String json = this.toJsonObject(properties).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -199,7 +190,7 @@ public class JsonReaderTest extends TestCase {
         prop.addValue(null); // empty multivalue property
         properties.add(prop);
 
-        String json = "{ \"name\": \"test\", \"properties\": " + this.toJsonObject(properties) + "}";
+        String json = this.toJsonObject(properties).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -208,7 +199,7 @@ public class JsonReaderTest extends TestCase {
 
     public void testChildrenNone() throws IOException, JSONException {
         List<Node> nodes = null;
-        String json = "{ \"name\": \"test\", \"nodes\": " + this.toJsonObject(nodes) + "}";
+        String json = this.toJsonObject(nodes).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -221,7 +212,7 @@ public class JsonReaderTest extends TestCase {
         child.setName("p1");
         nodes.add(child);
 
-        String json = "{ \"name\": \"test\", \"nodes\": " + this.toJsonArray(nodes).toString() + "}";
+        String json = this.toJsonObject(nodes).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -235,7 +226,7 @@ public class JsonReaderTest extends TestCase {
         child.addMixinNodeType("p1:mix");
         nodes.add(child);
 
-        String json = "{ \"name\": \"test\", \"nodes\": " + this.toJsonArray(nodes) + "}";
+        String json = this.toJsonObject(nodes).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -251,7 +242,7 @@ public class JsonReaderTest extends TestCase {
         child.setName("p2");
         nodes.add(child);
 
-        String json = "{ \"name\": \"test\", \"nodes\": " + this.toJsonArray(nodes) + "}";
+        String json = this.toJsonObject(nodes).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -268,7 +259,7 @@ public class JsonReaderTest extends TestCase {
         child.addProperty(prop);
         nodes.add(child);
 
-        String json = "{ \"name\": \"test\", \"nodes\": " + this.toJsonArray(nodes) + "}";
+        String json = this.toJsonObject(nodes).toString();
 
         Node node = this.parse(json);
         assertNotNull("Expecting node", node);
@@ -330,22 +321,24 @@ public class JsonReaderTest extends TestCase {
     private JSONObject toJsonObject(Node node) throws JSONException {
         JSONObject obj = new JSONObject();
 
-        obj.putOpt("name", node.getName());
-        
         if (node.getPrimaryNodeType() != null) {
-            obj.putOpt("primaryNodeType", node.getPrimaryNodeType());
+            obj.putOpt("jcr:primaryType", node.getPrimaryNodeType());
         }
 
         if (node.getMixinNodeTypes() != null) {
-            obj.putOpt("mixinNodeTypes", this.toJsonArray(node.getMixinNodeTypes()));
+            obj.putOpt("jcr:mixinTypes", this.toJsonArray(node.getMixinNodeTypes()));
         }
 
         if (node.getProperties() != null) {
-            obj.putOpt("properties", this.toJsonObject(node.getProperties()));
+            for (Property prop : node.getProperties()) {
+                obj.put(prop.getName(), toJsonObject(prop));
+            }
         }
 
         if (node.getChildren() != null) {
-            obj.putOpt("nodes", this.toJsonArray(node.getChildren()));
+            for (Node child : node.getChildren()) {
+                obj.put(child.getName(), toJsonObject(child));
+            }
         }
 
         return obj;
@@ -355,13 +348,12 @@ public class JsonReaderTest extends TestCase {
         if (!property.isMultiValue() && PropertyType.TYPENAME_STRING.equals(property.getType())) {
             return this.toJsonObject(property.getValue());
         }
-        JSONObject obj = new JSONObject();
+        Object obj;
         if (property.isMultiValue()) {
-            obj.putOpt("value", this.toJsonArray(property.getValues()));
+            obj = this.toJsonArray(property.getValues());
         } else {
-            obj.putOpt("value", this.toJsonObject(property.getValue()));
+            obj = this.toJsonObject(property.getValue());
         }
-        obj.putOpt("type", property.getType());
 
         return obj;
     }

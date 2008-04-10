@@ -22,7 +22,8 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jcr.PropertyType;
 
@@ -35,6 +36,18 @@ import org.apache.sling.commons.json.JSONObject;
  * The <code>JsonReader</code> TODO
  */
 class JsonReader implements NodeReader {
+
+    private static final Set<String> ignoredNames = new HashSet<String>();
+    static {
+        ignoredNames.add("jcr:primaryType");
+        ignoredNames.add("jcr:mixinTypes");
+        ignoredNames.add("jcr:uuid");
+        ignoredNames.add("jcr:baseVersion");
+        ignoredNames.add("jcr:predecessors");
+        ignoredNames.add("jcr:successors");
+        ignoredNames.add("jcr:checkedOut");
+        ignoredNames.add("jcr:created");
+    }
 
     static final ImportProvider PROVIDER = new ImportProvider() {
         private JsonReader jsonReader;
@@ -63,91 +76,56 @@ class JsonReader implements NodeReader {
         }
     }
 
-    protected Node createNode(String name, JSONObject nodeDescriptor) throws JSONException {
+    protected Node createNode(String name, JSONObject obj) throws JSONException {
         Node node = new Node();
         node.setName(name);
 
-        Object primaryType = nodeDescriptor.opt("primaryNodeType");
+        Object primaryType = obj.opt("jcr:primaryType");
         if (primaryType != null) {
             node.setPrimaryNodeType(String.valueOf(primaryType));
         }
 
-        Object mixinsObject = nodeDescriptor.opt("mixinNodeTypes");
+        Object mixinsObject = obj.opt("jcr:mixinTypes");
         if (mixinsObject instanceof JSONArray) {
             JSONArray mixins = (JSONArray) mixinsObject;
-            for (int i=0; i < mixins.length(); i++) {
+            for (int i = 0; i < mixins.length(); i++) {
                 node.addMixinNodeType(mixins.getString(i));
             }
         }
 
-        Object propertiesObject = nodeDescriptor.opt("properties");
-        if (propertiesObject instanceof JSONObject) {
-            JSONObject properties = (JSONObject) propertiesObject;
-            for (Iterator<String> pi=properties.keys(); pi.hasNext(); ) {
-                String propName = pi.next();
-                Property prop = this.createProperty(propName, properties.get(propName));
-                node.addProperty(prop);
-            }
-        }
-
-        Object nodesObject = nodeDescriptor.opt("nodes");
-        if (nodesObject instanceof JSONArray) {
-            JSONArray nodes = (JSONArray) nodesObject;
-            for (int i=0; i < nodes.length(); i++) {
-                Object entry = nodes.opt(i);
-                if (entry instanceof JSONObject) {
-                    JSONObject nodeObject = (JSONObject) entry;
-                    String nodeName = nodeObject.optString("name", null);
-                    if (nodeName == null) {
-                        nodeName = "000000" + i;
-                        nodeName = nodeName.substring(nodeName.length()-6);
-                    }
-                    Node child = this.createNode(nodeName, nodeObject);
+        // add properties and nodes
+        JSONArray names = obj.names();
+        for (int i = 0; names != null && i < names.length(); i++) {
+            String n = names.getString(i);
+            // skip well known objects
+            if (!ignoredNames.contains(n)) {
+                Object o = obj.get(n);
+                if (o instanceof JSONObject) {
+                    Node child = this.createNode(n, (JSONObject) o);
                     node.addChild(child);
+                } else if (o instanceof JSONArray) {
+                    Property prop = createProperty(n, o);
+                    node.addProperty(prop);
+                } else {
+                    Property prop = createProperty(n, o);
+                    node.addProperty(prop);
                 }
             }
         }
-
         return node;
     }
 
-    protected Property createProperty(String name, Object propDescriptorObject) throws JSONException {
-        if (propDescriptorObject == null) {
-            return null;
-        }
-
+    protected Property createProperty(String name, Object value)
+            throws JSONException {
         Property property = new Property();
         property.setName(name);
-
-        Object value;
-        String type;
-        if (propDescriptorObject instanceof JSONObject) {
-            JSONObject propDescriptor = (JSONObject) propDescriptorObject;
-
-            value = propDescriptor.opt("value");
-            if (value == null) {
-                // check multivalue
-                value = propDescriptor.opt("values");
-                if (value == null) {
-                    // missing value, ignore property
-                    return null;
-                }
-            }
-
-            Object typeObject = propDescriptor.opt("type");
-            type = (typeObject != null)  ? String.valueOf(typeObject) : null;
-
-        } else {
-            value = propDescriptorObject;
-            type = null;
-        }
 
         // assume simple value
         if (value instanceof JSONArray) {
             // multivalue
             JSONArray array = (JSONArray) value;
             if (array.length() > 0) {
-                for (int i=0; i < array.length(); i++) {
+                for (int i = 0; i < array.length(); i++) {
                     property.addValue(array.get(i));
                 }
                 value = array.opt(0);
@@ -160,8 +138,8 @@ class JsonReader implements NodeReader {
             // single value
             property.setValue(String.valueOf(value));
         }
-
-        property.setType((type != null) ? type : this.getType(value));
+        // set type
+        property.setType(getType(value));
 
         return property;
     }
