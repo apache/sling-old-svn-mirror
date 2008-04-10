@@ -82,6 +82,20 @@
 
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>.</directory>
+                <targetPath>META-INF</targetPath>
+                <includes>
+                    <include>LICENSE*</include>
+                    <include>NOTICE*</include>
+                    <include>DISCLAIMER</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
 
             <!-- Require Java 5 or higher for building -->
@@ -180,6 +194,16 @@
                     <artifactId>maven-plugin-plugin</artifactId>
                     <version>2.3</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.0-alpha-4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2-beta-2</version>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
@@ -204,6 +228,45 @@
                 <id>install-bundle</id>
                 <goals>
                   <goal>install</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+              <descriptorRefs>
+                <descriptorRef>bin</descriptorRef>
+                <descriptorRef>project</descriptorRef>
+              </descriptorRefs>
+            </configuration>
+            <executions>
+              <execution>
+                <id>make-assembly</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attached</goal>
                 </goals>
               </execution>
             </executions>
