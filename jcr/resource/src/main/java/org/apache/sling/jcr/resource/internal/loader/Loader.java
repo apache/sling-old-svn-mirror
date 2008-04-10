@@ -63,8 +63,6 @@ public class Loader {
 
     public static final String EXT_JSON = ".json";
 
-    public static final String EXT_XJSON = ".xjson";
-
     public static final String ROOT_DESCRIPTOR = "/ROOT";
 
     // default content type for createFile()
@@ -90,7 +88,6 @@ public class Loader {
         importProviders = new LinkedHashMap<String, ImportProvider>();
         importProviders.put(EXT_JCR_XML, null);
         importProviders.put(EXT_JSON, JsonReader.PROVIDER);
-        importProviders.put(EXT_XJSON, JsonReader.PROVIDER);
         importProviders.put(EXT_XML, XmlReader.PROVIDER);
     }
 
@@ -255,8 +252,7 @@ public class Loader {
                 }
 
                 // install if it is a descriptor
-                if (entry.endsWith(EXT_XML) || entry.endsWith(EXT_JSON)
-                    || entry.endsWith(EXT_XJSON)) {
+                if (entry.endsWith(EXT_XML) || entry.endsWith(EXT_JSON)) {
                     if (this.createNode(parent, this.getName(entry), file) != null) {
                         ignoreEntry.add(file);
                         continue;
@@ -683,8 +679,6 @@ public class Loader {
             diff = EXT_XML.length();
         } else if (name.endsWith(EXT_JSON)) {
             diff = EXT_JSON.length();
-        } else if (name.endsWith(EXT_XJSON)) {
-            diff = EXT_XJSON.length();
         } else {
             return name;
         }
