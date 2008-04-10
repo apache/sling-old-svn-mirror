@@ -90,7 +90,7 @@ public class Loader {
         importProviders = new LinkedHashMap<String, ImportProvider>();
         importProviders.put(EXT_JCR_XML, null);
         importProviders.put(EXT_JSON, JsonReader.PROVIDER);
-        importProviders.put(EXT_XJSON, XJsonReader.PROVIDER);
+        importProviders.put(EXT_XJSON, JsonReader.PROVIDER);
         importProviders.put(EXT_XML, XmlReader.PROVIDER);
     }
 
