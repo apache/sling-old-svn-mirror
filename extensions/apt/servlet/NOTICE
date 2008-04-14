@@ -1,5 +1,8 @@
-Apache Sling Dojo JavaScript Library
-Copyright 2007-2008 The Apache Software Foundation
+Apache Sling APT Servlet
+Copyright 2008 The Apache Software Foundation
+
+Based on source code originally developed by
+Day Software (http://www.day.com/).
 
 
 I. Included Software
@@ -7,9 +10,6 @@ I. Included Software
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 Licensed under the Apache License 2.0.
-
-This product includes software developed at
-The Dojo Foundation (http://www.dojotoolkit.org/).
 
 
 II. Used Software
