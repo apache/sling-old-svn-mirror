@@ -18,12 +18,12 @@ package org.apache.sling.cache.impl;
 
 import java.io.IOException;
 
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
  * The <code>CacheFilter</code> class is a component level filter implementing
@@ -38,15 +38,15 @@ import org.apache.sling.component.ComponentResponse;
  * @scr.property name="filter.order" value="-1000" type="Integer" private="true"
  * @scr.service
  */
-public class CacheFilter extends AbstractCacheFilter implements ComponentFilter {
+public class CacheFilter extends AbstractCacheFilter implements Filter {
 
-    /**
-     * @see org.apache.sling.component.ComponentFilter#doFilter(org.apache.sling.component.ComponentRequest, org.apache.sling.component.ComponentResponse, org.apache.sling.component.ComponentFilterChain)
-     */
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
+    public void init(FilterConfig config) throws ServletException {
+        // TODO Auto-generated method stub
 
+    }
+
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain filterChain) throws IOException, ServletException {
         // Actually, this needs to be done:
         // -> can we handle this from the cache ?
         // -> if not, is this cacheable ??
@@ -87,9 +87,6 @@ public class CacheFilter extends AbstractCacheFilter implements ComponentFilter 
 
         // currently there is no caching, so just forward
         filterChain.doFilter(request, response);
-    }
-
-    public void init(ComponentContext context) {
     }
 
     public void destroy() {

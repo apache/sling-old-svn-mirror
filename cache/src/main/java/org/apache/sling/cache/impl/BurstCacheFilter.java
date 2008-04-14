@@ -18,12 +18,12 @@ package org.apache.sling.cache.impl;
 
 import java.io.IOException;
 
-import org.apache.sling.component.ComponentContext;
-import org.apache.sling.component.ComponentException;
-import org.apache.sling.component.ComponentFilter;
-import org.apache.sling.component.ComponentFilterChain;
-import org.apache.sling.component.ComponentRequest;
-import org.apache.sling.component.ComponentResponse;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
  * The <code>BurstCacheFilter</code> is a global Request Component API filter,
@@ -39,17 +39,17 @@ import org.apache.sling.component.ComponentResponse;
  * @scr.service
  */
 public class BurstCacheFilter extends AbstractCacheFilter implements
-    ComponentFilter {
+    Filter {
 
-    public void doFilter(ComponentRequest request, ComponentResponse response,
-            ComponentFilterChain filterChain) throws IOException,
-            ComponentException {
-
+    public void doFilter(ServletRequest req, ServletResponse res,
+            FilterChain chain) throws IOException, ServletException {
         // currently there is no caching, so just forward
-        filterChain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
 
-    public void init(ComponentContext context) {
+    public void init(FilterConfig config) throws ServletException {
+        // TODO Auto-generated method stub
+
     }
 
     public void destroy() {
