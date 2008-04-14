@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlet.resolver.mock;
 
 import java.io.BufferedReader;
 import java.security.Principal;
@@ -40,6 +40,11 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 
+/**
+ * Mock request object. This does not do anything useful, it just returns the
+ * constructor parameter <code>secure</code> in the <code>isSecure</code>
+ * method.
+ */
 public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     private final Resource resource;
@@ -48,16 +53,32 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     private final String queryString;
 
+    private boolean secure = false;
+
+    private MockResourceResolver mockResourceResolver;
+
+    private static final String METHOD = "GET";
+
+    public static final String RESOURCE_TYPE = "foo/bar";
+
     MockSlingHttpServletRequest() {
         this(null, null, null, null, null);
     }
 
     public MockSlingHttpServletRequest(String resourcePath, String selectors,
             String extension, String suffix, String queryString) {
-        this.resource = new SyntheticResource(null, resourcePath, null);
+        this.resource = new SyntheticResource(null, resourcePath, RESOURCE_TYPE);
         this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
             suffix);
         this.queryString = queryString;
+    }
+
+    public void setResourceResolver(MockResourceResolver resolver) {
+        this.mockResourceResolver = resolver;
+    }
+
+    public void setSecure(boolean secure) {
+        this.secure = secure;
     }
 
     public Cookie getCookie(String name) {
@@ -111,7 +132,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public ResourceResolver getResourceResolver() {
-        return null;
+        return mockResourceResolver;
     }
 
     public String getResponseContentType() {
@@ -155,7 +176,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public String getMethod() {
-        return null;
+        return METHOD;
     }
 
     public String getPathInfo() {
@@ -323,7 +344,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public boolean isSecure() {
-        return false;
+        return this.secure;
     }
 
     public void removeAttribute(String name) {
@@ -337,5 +358,4 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     public void setCharacterEncoding(String env) {
 
     }
-
 }
