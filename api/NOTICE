@@ -1,5 +1,21 @@
 Apache Sling API
-Copyright 2008 The Apache Software Foundation
+Copyright 2007-2008 The Apache Software Foundation
+
+
+I. Included Software
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
+Licensed under the Apache License 2.0.
+
+
+II. Used Software
+
+This product uses software developed at
+slf4j (http://www.sl4j.org)
+Licensed under the MIT License.
+
+
+III. License Summary
+- Apache License 2.0
+- MIT License
