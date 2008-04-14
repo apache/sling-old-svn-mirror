@@ -40,7 +40,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 
-class MockSlingHttpServletRequest implements SlingHttpServletRequest {
+public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     private final Resource resource;
 
@@ -52,7 +52,7 @@ class MockSlingHttpServletRequest implements SlingHttpServletRequest {
         this(null, null, null, null, null);
     }
 
-    MockSlingHttpServletRequest(String resourcePath, String selectors,
+    public MockSlingHttpServletRequest(String resourcePath, String selectors,
             String extension, String suffix, String queryString) {
         this.resource = new SyntheticResource(null, resourcePath, null);
         this.requestPathInfo = new MockRequestPathInfo(selectors, extension,

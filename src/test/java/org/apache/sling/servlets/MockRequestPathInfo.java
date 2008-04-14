@@ -28,7 +28,7 @@ class MockRequestPathInfo implements RequestPathInfo {
 
     private final String suffix;
 
-    MockRequestPathInfo(String selectors, String extension, String suffix) {
+    public MockRequestPathInfo(String selectors, String extension, String suffix) {
         this.selectors = selectors;
         this.extension = extension;
         this.suffix = suffix;
