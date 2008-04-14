@@ -79,9 +79,9 @@
         <module>jcr/base</module>
         <module>jcr/classloader</module>
         <module>jcr/default-rtp</module>
-        <module>jcr/jackrabbit-text-extractors</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
+        <module>jcr/jackrabbit-text-extractors</module>
         <module>jcr/ocm</module>
         <module>jcr/resource</module>
         <module>jcr/webdav</module>
@@ -101,7 +101,7 @@
         <module>sling/servlet-resolver</module>
         <module>sling/event</module>
         <module>sling/scheduler</module>
-        <!-- <module>sling/sample</module> -->
+        <module>sling/sample</module>
         <module>sling/servlets-default</module>
         <module>sling/servlets-post</module>
         <module>sling/threads</module>
@@ -118,16 +118,20 @@
         <module>scripting/ruby</module>
         <module>scripting/velocity</module>
         
-        <!-- Launchpad -->
-        <module>launchpad/content</module>
-        <module>launchpad/app</module>
-
         <!-- Extensions -->
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
+        <module>extensions/apt/dojo</module>
+        <module>extensions/apt/dojo-sling</module>
 
         <!-- Samples -->
-        <module>samples</module>
+        <module>samples/webloader/service</module>
+        <module>samples/webloader/ui</module>
+
+        <!-- Launchpad -->
+        <module>launchpad/content</module>
+        <module>launchpad/app</module>
+        <module>launchpad/jcrapp</module>
 
     </modules>
     <distributionManagement>
