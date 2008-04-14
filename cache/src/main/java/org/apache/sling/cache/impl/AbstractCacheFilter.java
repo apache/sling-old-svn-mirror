@@ -19,8 +19,8 @@ package org.apache.sling.cache.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.cache.CacheService;
-import org.apache.sling.component.ComponentRequest;
 
 
 /**
@@ -34,12 +34,12 @@ abstract class AbstractCacheFilter {
 
     List<CacheService> cacheServices;
 
-    protected CacheService getBurstCacheService(ComponentRequest request) {
+    protected CacheService getBurstCacheService(SlingHttpServletRequest request) {
         // return a cache service willing to handle burst caching for the request
         return null;
     }
 
-    protected CacheService getCacheService(ComponentRequest request) {
+    protected CacheService getCacheService(SlingHttpServletRequest request) {
         // return a cache service willing to handle this component rendering
         return null;
     }
