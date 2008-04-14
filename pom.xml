@@ -121,8 +121,8 @@
         <!-- Extensions -->
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
-        <module>extensions/apt/dojo</module>
-        <module>extensions/apt/dojo-sling</module>
+        <module>extensions/dojo</module>
+        <module>extensions/dojo-sling</module>
 
         <!-- Samples -->
         <module>samples/webloader/service</module>
