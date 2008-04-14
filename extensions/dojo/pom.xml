@@ -31,7 +31,7 @@
     <version>1.0.2.001-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling Dojo JavaScript Library</name>
+    <name>Sling - Dojo JavaScript Library</name>
     <description>
         This bundle provides the Dojo 1.0.2 JavaScript library and
         provides it as BundleResources.
