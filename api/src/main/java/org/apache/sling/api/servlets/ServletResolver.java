@@ -42,14 +42,20 @@ public interface ServletResolver {
      * The returned servlet must be assumed to be initialized and ready to run.
      * That is, the <code>init</code> nor the <code>destroy</code> methods
      * must <em>NOT</em> be called on the returned servlet.
-     *
+     * <p>
+     * This method must not return a <code>Servlet</code> instance
+     * implementing the {@link OptingServlet} interface and returning
+     * <code>false</code> when the
+     * {@link OptingServlet#accepts(SlingHttpServletRequest)} method is called.
+     * 
      * @param request The {@link SlingHttpServletRequest} object used to drive
      *            selection of the servlet.
      * @return The servlet whose <code>service</code> method may be called to
      *         handle the request.
-     * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs while trying to find
-     *             an appropriate servlet to handle the request or if no servlet
-     *             could be resolved to handle the request.
+     * @throws org.apache.sling.api.SlingException Is thrown if an error occurrs
+     *             while trying to find an appropriate servlet to handle the
+     *             request or if no servlet could be resolved to handle the
+     *             request.
      */
     Servlet resolveServlet(SlingHttpServletRequest request);
 
