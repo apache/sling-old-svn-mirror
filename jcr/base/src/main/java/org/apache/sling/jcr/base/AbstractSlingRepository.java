@@ -609,7 +609,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 "activate: Unexpected problem starting repository", t);
         }
 
-        // launche the background repository checker now
+        // launch the background repository checker now
         startRepositoryPinger();
     }
 
@@ -865,7 +865,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     public void run() {
-        long pollTime = pollTimeInActive;
+        // start polling with min value to be faster at system startup
+        // we'll increase the polling time after each try
+        long pollTime = MIN_POLL;
+        final long pollTimeIncrement = 1;
         Object waitLock = repositoryPinger;
 
         try {
@@ -875,7 +878,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 // wait first before starting to check
                 synchronized (waitLock) {
                     try {
-                        waitLock.wait(pollTime);
+                        log(LogService.LOG_DEBUG, "Waiting " + pollTime + " seconds before checking repository");
+                        waitLock.wait(pollTime * 1000L);
                     } catch (InterruptedException ie) {
                         // don't care, go ahead
                     }
@@ -894,9 +898,9 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     } else if (!pingAndCheck()) {
 
                         log(LogService.LOG_INFO,
-                            "run: Repository not accessible any more, unregistering service");
+                            "run: Repository not accessible, unregistering service");
                         stopRepository();
-                        pollTime = pollTimeInActive;
+                        pollTime = Math.min(pollTime + pollTimeIncrement, pollTimeInActive);
 
                     } else {
 
