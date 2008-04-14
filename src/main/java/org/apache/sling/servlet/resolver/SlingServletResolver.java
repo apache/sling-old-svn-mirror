@@ -52,6 +52,7 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.ServletResolver;
+import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
@@ -135,12 +136,12 @@ public class SlingServletResolver implements ServletResolver,
         PathIterator pathIterator = new PathIterator(
             request.getResource().getResourceType(),
             request.getRequestPathInfo().getSelectorString(), path);
-        servlet = getServlet(resolver, pathIterator, baseName);
+        servlet = getServlet(resolver, pathIterator, baseName, request);
 
         // (2) GET/HEAD and according to resource type and selectors
         if (servlet == null && !baseName.equals(request.getMethod())) {
             pathIterator.reset();
-            servlet = getServlet(resolver, pathIterator, request.getMethod());
+            servlet = getServlet(resolver, pathIterator, request.getMethod(), request);
         }
 
         // (3) Repeate steps (1) and (2) for the super type hierarchy
@@ -150,12 +151,12 @@ public class SlingServletResolver implements ServletResolver,
 
                 // (3a) default script name and according to resource type and selectors
                 pathIterator.reset(resourceSuperType);
-                servlet = getServlet(resolver, pathIterator, baseName);
+                servlet = getServlet(resolver, pathIterator, baseName, request);
 
                 // (3b) GET/HEAD and according to resource type and selectors
                 if (servlet == null && !baseName.equals(request.getMethod())) {
                     pathIterator.reset();
-                    servlet = getServlet(resolver, pathIterator, request.getMethod());
+                    servlet = getServlet(resolver, pathIterator, request.getMethod(), request);
                 }
 
                 // the next supertype or null
@@ -169,12 +170,12 @@ public class SlingServletResolver implements ServletResolver,
         // (4) default script name and default servlet name and selectors
         if (servlet == null) {
             pathIterator.reset(DEFAULT_SERVLET_NAME);
-            servlet = getServlet(resolver, pathIterator, baseName);
+            servlet = getServlet(resolver, pathIterator, baseName, request);
 
             // (5) GET/HEAD and default servlet name and selectors
             if (servlet == null && !baseName.equals(request.getMethod())) {
                 pathIterator.reset();
-                servlet = getServlet(resolver, pathIterator, request.getMethod());
+                servlet = getServlet(resolver, pathIterator, request.getMethod(), request);
             }
         }
 
@@ -258,7 +259,7 @@ public class SlingServletResolver implements ServletResolver,
         // search the servlet by absolute path
         PathIterator pathIterator = new PathIterator(
             ServletResolverConstants.ERROR_HANDLER_PATH, path);
-        Servlet servlet = getServlet(resolver, pathIterator, baseName);
+        Servlet servlet = getServlet(resolver, pathIterator, baseName, request);
         if (servlet == null) {
             servlet = getDefaultErrorServlet();
         }
@@ -301,7 +302,7 @@ public class SlingServletResolver implements ServletResolver,
             String baseName = tClass.getSimpleName();
 
             pathIterator.reset();
-            servlet = getServlet(resolver, pathIterator, baseName);
+            servlet = getServlet(resolver, pathIterator, baseName, request);
 
             // go to the base class
             tClass = tClass.getSuperclass();
@@ -324,13 +325,19 @@ public class SlingServletResolver implements ServletResolver,
     // ---------- internal helper ---------------------------------------------
 
     private Servlet getServlet(ResourceResolver resolver,
-            Iterator<String> paths, String baseName) {
+            Iterator<String> paths, String baseName,
+            SlingHttpServletRequest request) {
+
         while (paths.hasNext()) {
             String location = paths.next();
             try {
                 Servlet result = getServletAt(resolver, location, baseName);
                 if (result != null) {
-                    return result;
+                    boolean servletAcceptsRequest = !(result instanceof OptingServlet)
+                        || ((OptingServlet) result).accepts(request);
+                    if (servletAcceptsRequest) {
+                        return result;
+                    }
                 }
             } catch (SlingException se) {
                 log.warn("getServlet: Problem resolving servlet at " + location
