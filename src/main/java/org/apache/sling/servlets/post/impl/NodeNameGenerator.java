@@ -79,10 +79,10 @@ public class NodeNameGenerator {
         // our parameterNames, in order, and has a value
         if (parameters!=null) {
             // we first check for the special sling parameter
-            final RequestParameter specialParam = parameters.getValue(SlingPostServlet.RP_NODE_NAME);
+            final RequestParameter specialParam = parameters.getValue(SlingPostServlet.RP_NODE_NAME_HINT);
             if ( specialParam != null ) {
                 if ( specialParam.getString() != null && specialParam.getString().length() > 0 ) {
-                    valueToUse = specialParam.getString();
+                    valueToUse = NodeNameFilter.filterName(specialParam.getString());
                     doFilter = false;
                 }
             }
