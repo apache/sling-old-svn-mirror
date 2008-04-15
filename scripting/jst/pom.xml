@@ -95,7 +95,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.default</artifactId>
+            <artifactId>org.apache.sling.servlets.get</artifactId>
             <version>${pom.version}</version>
             <scope>compile</scope>
         </dependency>
