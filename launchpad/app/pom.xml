@@ -455,7 +455,7 @@
         </dependency>
 
         <!--
-            Commons Dependencies provided by the Apache Felix project
+            Commons Dependencies
         -->
         <dependency>
             <groupId>commons-io</groupId>
@@ -463,11 +463,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix.commons</groupId>
-            <artifactId>
-                org.apache.felix.commons.commons-collections
-            </artifactId>
-            <version>3.2.0-0001-SNAPSHOT</version>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
             <optional>true</optional>
         </dependency>
 
