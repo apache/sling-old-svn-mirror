@@ -98,9 +98,25 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     public static final String RP_MOVE_FLAGS = RP_PREFIX + "moveFlags";
 
     /**
-     * name of the 'replace' move flag
+     * Optional request parameter: copy the specified content paths
      */
-    public static final String MOVE_FLAG_REPLACE = "replace";
+    public static final String RP_COPY_SRC = RP_PREFIX + "copySrc";
+
+    /**
+     * Optional request parameter: copy the specified content paths to this
+     * destination
+     */
+    public static final String RP_COPY_DEST = RP_PREFIX + "copyDest";
+
+    /**
+     * Optional request parameter: copy flags
+     */
+    public static final String RP_COPY_FLAGS = RP_PREFIX + "copyFlags";
+
+    /**
+     * name of the 'replace' move/copy flag
+     */
+    public static final String FLAG_REPLACE = "replace";
 
     /**
      * Optional request paramter specifying a node name for a newly created node.
