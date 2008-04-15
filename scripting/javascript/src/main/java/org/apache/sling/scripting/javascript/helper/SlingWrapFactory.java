@@ -21,6 +21,8 @@ package org.apache.sling.scripting.javascript.helper;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.version.VersionHistory;
+
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.WrapFactory;
@@ -30,6 +32,8 @@ import org.slf4j.LoggerFactory;
 public class SlingWrapFactory extends WrapFactory {
 
     public static final SlingWrapFactory INSTANCE = new SlingWrapFactory();
+    
+    private static final Class<?>[] EXCLUDED_CLASSES = {VersionHistory.class};
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -73,7 +77,7 @@ public class SlingWrapFactory extends WrapFactory {
     }
 
     private String getHostObjectName(Class<?> javaClass) {
-        if(javaClass==null) {
+        if(javaClass==null || isExcluded(javaClass)) {
             return null;
         }
         String hostObjectName = wrappers.get(javaClass);
@@ -90,6 +94,18 @@ public class SlingWrapFactory extends WrapFactory {
         }
 
         return hostObjectName;
+    }
+
+    /*
+     * Is this class in the excluded class  list?
+     */
+    private boolean isExcluded(Class<?> javaClass) {
+        for (Class<?> type : EXCLUDED_CLASSES) {
+            if (type.isAssignableFrom(javaClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void registerWrapper(Class<?> javaClass, String hostObjectName) {
