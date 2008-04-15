@@ -49,7 +49,7 @@ public class PathBasedResourceTypeTest extends HttpTestBase {
         final String urlsToDelete = uploadTestScript(scriptPath, "rendering-test.esp", "html.esp");
         try {
             content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Test script marker found in content",content.contains("ESP template"));
+            assertTrue("Test script marker found in content (" + content + ")",content.contains("ESP template"));
         } finally {
             testClient.delete(urlsToDelete);
         }
@@ -64,6 +64,6 @@ public class PathBasedResourceTypeTest extends HttpTestBase {
         
         urlsToDelete.add(uploadTestScript(tn.scriptPath, "rendering-test-2.esp", "html.esp"));
         final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Test script marker found in content",content.contains("Template #2 for ESP tests"));
+        assertTrue("Test script marker found in content (" + content + ")",content.contains("Template #2 for ESP tests"));
     }
 }
