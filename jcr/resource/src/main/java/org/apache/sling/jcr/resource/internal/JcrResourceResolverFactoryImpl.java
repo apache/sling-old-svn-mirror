@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
  *                interface="org.apache.sling.api.resource.ResourceProvider"
  *                cardinality="0..n" policy="dynamic"
  * @scr.reference name="JcrResourceTypeProvider"
- *                interface="JcrResourceTypeProvider"
+ *                interface="org.apache.sling.jcr.resource.JcrResourceTypeProvider"
  *                cardinality="0..n" policy="dynamic"
 
  */
