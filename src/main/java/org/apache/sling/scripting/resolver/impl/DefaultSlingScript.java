@@ -116,6 +116,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         final String scriptName = getScriptResource().getPath();
 
         Bindings bindings = null;
+        Reader reader = null;
         try {
             bindings = verifySlingBindings(scriptName, props);
 
@@ -125,7 +126,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             ctx.setWriter((Writer) bindings.get(OUT));
             ctx.setErrorWriter(new LogWriter((Logger) bindings.get(LOG)));
 
-            Reader reader = getScriptReader();
+            reader = getScriptReader();
             if ( method != null && !(this.scriptEngine instanceof Invocable)) {
                 reader = getWrapperReader(reader, method, args);
             }
@@ -151,6 +152,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             ctx.getErrorWriter().flush();
 
             return result;
+            
         } catch (IOException ioe) {
             throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
                 ioe);
@@ -159,11 +161,22 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             Throwable cause = (se.getCause() == null) ? se : se.getCause();
             throw new ScriptEvaluationException(scriptName, se.getMessage(),
                 cause);
+            
         } finally {
+            // dispose of the SlingScriptHelper
             if ( bindings != null ) {
                 final SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SLING);
                 if ( helper != null ) {
                     helper.dispose();
+                }
+            }
+            
+            // close the script reader (SLING-380)
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignore) {
+                    // don't care
                 }
             }
         }
