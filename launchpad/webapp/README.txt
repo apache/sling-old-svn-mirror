@@ -59,3 +59,7 @@ The  -s /dev/null parameter disables all your local Maven settings, to make sure
 they don't interfere. Feel free to remove that if you know what you're doing.
 
 To run a single test, other values can be used for the "-Dtest" parameter.
+
+This is very useful during development: you can leave a Sling webapp instance
+running, update bundles in it using the mvn autoInstallBundle profile, and run
+specific integration tests quickly from another terminal.
