@@ -28,7 +28,7 @@ var Sling = null;
 (function() {
 
 	Sling = new Object();
-	Sling.NAME_OF_THIS_FILE = "Sling.js";
+	Sling.NAME_OF_THIS_FILE = "sling.js";
 	
 	/** This method tries to figure out what to do with a page */
 	Sling.wizard = function() {
