@@ -24,6 +24,9 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
@@ -87,7 +90,7 @@ public class SlingPostProcessor {
 
     /**
      * prefix of which the names of request properties must start with
-     * in order to be regardes as input values.
+     * in order to be regarded as input values.
      */
     private String savePrefix;
 
@@ -185,7 +188,7 @@ public class SlingPostProcessor {
     }
 
     /**
-     * Returns an external form of the given path prepeding the context path
+     * Returns an external form of the given path prepending the context path
      * and appending a display extension.
      * @param path the path to externalize
      * @return the url
@@ -251,7 +254,7 @@ public class SlingPostProcessor {
     }
 
     /**
-     * Processes the actions defined by the request in the followin order
+     * Processes the actions defined by the request in the following order
      * <ol>
      * <li>calculate the 'currentPath' respecting a 'create suffix'
      * <li>collect all content properties included in the request
@@ -269,6 +272,7 @@ public class SlingPostProcessor {
             collectContent();
             processCreate();
             processMoves();
+            processCopies();
             processDeletes();
             writeContent();
             processOrder();
@@ -330,7 +334,7 @@ public class SlingPostProcessor {
         final String [] moveSrc = request.getParameterValues(SlingPostServlet.RP_MOVE_SRC);
         final String [] moveDest = request.getParameterValues(SlingPostServlet.RP_MOVE_DEST);
         final String flags = request.getParameter(SlingPostServlet.RP_MOVE_FLAGS);
-        final boolean isReplace = flags != null && flags.contains(SlingPostServlet.MOVE_FLAG_REPLACE);
+        final boolean isReplace = flags != null && flags.contains(SlingPostServlet.FLAG_REPLACE);
 
         if (moveSrc == null || moveDest == null) {
             return;
@@ -380,6 +384,104 @@ public class SlingPostProcessor {
             session.move(src, dest);
             htmlResponse.onMoved(src, dest);
             log.debug("moved {} to {}", src, dest);
+        }
+    }
+
+    /**
+     * Copy nodes at the provided paths
+     *
+     * @throws RepositoryException if a repository error occurs
+     * @throws IllegalArgumentException if the move arguments are incorrect
+     */
+    private void processCopies() throws RepositoryException,
+            IllegalArgumentException {
+        final String [] copySrc = request.getParameterValues(SlingPostServlet.RP_COPY_SRC);
+        final String [] copyDst = request.getParameterValues(SlingPostServlet.RP_COPY_DEST);
+        final String flags = request.getParameter(SlingPostServlet.RP_COPY_FLAGS);
+        boolean isReplace = flags != null && flags.contains(SlingPostServlet.FLAG_REPLACE);
+
+        if (copySrc == null || copyDst == null) {
+            return;
+        }
+        if (copySrc.length != copyDst.length) {
+            throw new IllegalArgumentException("Unable to process copy. there " +
+                    "must be the same amount of source and destination parameters.");
+        }
+        for (int i=0; i<copySrc.length; i++) {
+            String src = copySrc[i];
+            String dst = copyDst[i];
+            if (src.equals(dst)) {
+                // ignore
+                continue;
+            }
+            if (src.equals("")) {
+                throw new IllegalArgumentException("Unable to process copy. source argument is empty.");
+            }
+            if (dst.equals("")) {
+                throw new IllegalArgumentException("Unable to process copy. destination argument is empty.");
+            }
+            src = resolvePath(src);
+            // special handling for "*" destinations. use the calculated new path.
+            if (dst.equals("*")) {
+                dst = htmlResponse.getPath();
+                // small hack, force replace
+                isReplace = true;
+            } else {
+                dst = resolvePath(dst);
+            }
+            // delete destination if already exists
+            String dstParent = dst.substring(0, dst.lastIndexOf('/'));
+            if (session.itemExists(dst)) {
+                if (isReplace) {
+                    session.getItem(dst).remove();
+                } else {
+                    throw new IllegalArgumentException(
+                        "Unable to process copy. destination item already exists "
+                            + dst);
+                }
+            } else {
+                // check if path to destination exists and create it, but only
+                // if it's a descendant of the current node
+                if (!dstParent.equals("") && !session.itemExists(dstParent)) {
+                    if (dstParent.startsWith(htmlResponse.getPath() + "/")) {
+                        deepGetOrCreateNode(dstParent);
+                    } else {
+                        throw new IllegalArgumentException(
+                            "Unable to process copy. destination's parent does not exist "
+                                + dst);
+                    }
+                }
+            }
+            copyNode((Node) session.getItem(src), (Node) session.getItem(dstParent), dst.substring(dst.lastIndexOf('/')+1));
+            htmlResponse.onCopied(src, dst);
+            log.debug("copy {} to {}", src, dst);
+        }
+    }
+
+    private void copyNode(Node src, Node dstParent, String name)
+            throws RepositoryException {
+        // create new node
+        Node dst = dstParent.addNode(name, src.getPrimaryNodeType().getName());
+        for (NodeType mix: src.getMixinNodeTypes()) {
+            dst.addMixin(mix.getName());
+        }
+        // copy the properties
+        for (PropertyIterator iter = src.getProperties(); iter.hasNext();) {
+            Property p = iter.nextProperty();
+            if (p.getDefinition().isProtected()) {
+                // skip
+            } else if (p.getDefinition().isMultiple()) {
+                dst.setProperty(p.getName(), p.getValues());
+            } else {
+                dst.setProperty(p.getName(), p.getValue());
+            }
+        }
+        // copy the child nodes
+        for (NodeIterator iter = src.getNodes(); iter.hasNext();) {
+            Node n = iter.nextNode();
+            if (!n.getDefinition().isProtected()) {
+                copyNode(n, dst, n.getName());
+            }
         }
     }
 
@@ -438,7 +540,7 @@ public class SlingPostProcessor {
     private void writeContent() throws RepositoryException, ServletException {
         for (RequestProperty prop: reqProperties.values()) {
             Node parent = deepGetOrCreateNode(prop.getParentPath());
-            // skip jcr special propeties
+            // skip jcr special properties
             if (prop.getName().equals("jcr:primaryType") ||
                     prop.getName().equals("jcr:mixinTypes")) {
                 continue;
@@ -653,7 +755,7 @@ public class SlingPostProcessor {
      * </xmp>
      *
      * @param node node to order
-     * @param command spcifies the ordering type
+     * @param command specifies the ordering type
      * @throws RepositoryException if an error occurs
      */
     private void orderNode(Node node, String command)

@@ -51,12 +51,12 @@ public class HtmlResponse {
     public static final String PN_STATUS_MESSAGE = "status.message";
 
     /**
-     * externaly mapped location url of the modified path
+     * externally mapped location url of the modified path
      */
     public static final String PN_LOCATION = "location";
 
     /**
-     * externaly mapped location url of the parent of the modified path
+     * externally mapped location url of the parent of the modified path
      */
     public static final String PN_PARENT_LOCATION = "parentLocation";
 
@@ -222,6 +222,19 @@ public class HtmlResponse {
         onChange("moved", srcPath, dstPath);
     }
 
+    /**
+     * Records a 'copied' change.
+     * <p/>
+     * Note: the copy change only records the basic copy command. the implied
+     * changes on the copied properties and sub nodes are not recorded.
+     *
+     * @param srcPath source path of the node that was copied
+     * @param dstPath destination path of the node that was copied.
+     */
+    public void onCopied(String srcPath, String dstPath) {
+        onChange("copied", srcPath, dstPath);
+    }
+
     private void onChange(String type, String... arguments) {
         changes.append(type);
         String delim = "(";
@@ -280,7 +293,7 @@ public class HtmlResponse {
     }
 
     /**
-     * Sets the title of the respose message
+     * Sets the title of the response message
      * @param title the title
      */
     public void setTitle(String title) {
