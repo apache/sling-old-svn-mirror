@@ -103,6 +103,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     public static final String MOVE_FLAG_REPLACE = "replace";
 
     /**
+     * Optional request paramter specifying a node name for a newly created node.
+     */
+    public static final String RP_NODE_NAME = RP_PREFIX + "name";
+
+    /**
      * Optional request paramter specifying a node hint for a newly created node.
      */
     public static final String RP_NODE_NAME_HINT = RP_PREFIX + "nameHint";
