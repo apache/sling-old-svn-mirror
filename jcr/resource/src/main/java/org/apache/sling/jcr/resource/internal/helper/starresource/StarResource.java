@@ -32,18 +32,18 @@ import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
  *  to *.something (SLING-344)
  */
 public class StarResource extends SyntheticResource {
-    
+
     public final static String PATH_PATTERN = "/*.";
     public final static String PATH_CLEAN_SUFFIX = "/*";
     public final static String DEFAULT_RESOURCE_TYPE = "sling:syntheticStarResource";
-    
+
     @SuppressWarnings("serial")
     static class SyntheticStarResourceException extends SlingException {
         SyntheticStarResourceException(String reason, Throwable cause) {
             super(reason, cause);
         }
     }
-    
+
     /** True if a StarResource should be used for the given request, if
      *  a real Resource was not found */
     public static boolean appliesTo(HttpServletRequest request) {
@@ -59,16 +59,20 @@ public class StarResource extends SyntheticResource {
     public static boolean isStarResource(Resource res) {
         return res.getPath().endsWith(PATH_CLEAN_SUFFIX);
     }
-    
-    public StarResource(ResourceResolver resourceResolver, String path, JcrResourceTypeProvider drtp) throws SlingException {
+
+    public StarResource(ResourceResolver resourceResolver, String path, JcrResourceTypeProvider[] jcrProviders) throws SlingException {
         super(resourceResolver, convertPath(path), null);
-        
+
         // The only way we can set a meaningful resource type is via the drtp
         final Node n = new FakeNode(getPath());
         String resourceType = null;
-        if(drtp != null) {
+        if (jcrProviders != null) {
             try {
-                resourceType = drtp.getResourceTypeForNode(n);
+                int index = 0;
+                while ( resourceType == null && index < jcrProviders.length ) {
+                    resourceType = jcrProviders[index].getResourceTypeForNode(n);
+                    index++;
+                }
             } catch(RepositoryException re) {
                 throw new SyntheticStarResourceException("getResourceTypeForNode failed", re);
             }
@@ -89,7 +93,7 @@ public class StarResource extends SyntheticResource {
         }
         return null;
     }
-    
+
     /** Cleanup our path, for example /foo/*.html becomes /foo/* */
     protected static String convertPath(String path) {
         final int index = path.indexOf(PATH_PATTERN);
@@ -98,5 +102,5 @@ public class StarResource extends SyntheticResource {
         }
         return path;
     }
-            
+
 }

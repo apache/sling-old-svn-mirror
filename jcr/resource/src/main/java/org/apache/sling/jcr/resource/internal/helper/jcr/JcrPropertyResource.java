@@ -45,9 +45,12 @@ public class JcrPropertyResource extends JcrItemResource {
 
     private final String resourceType;
 
-    public JcrPropertyResource(ResourceResolver resourceResolver, String path,
-            Property property, JcrResourceTypeProvider defaultResourceTypeProvider) throws RepositoryException {
-        super(resourceResolver, path, defaultResourceTypeProvider);
+    public JcrPropertyResource(ResourceResolver resourceResolver,
+                               String path,
+                               Property property,
+                               JcrResourceTypeProvider[] resourceTypeProviders)
+    throws RepositoryException {
+        super(resourceResolver, path, resourceTypeProviders);
         this.property = property;
         this.resourceType = getResourceTypeForNode(property.getParent())
             + "/" + property.getName();
@@ -69,35 +72,35 @@ public class JcrPropertyResource extends JcrItemResource {
         try {
             if (type == String.class) {
                 return (AdapterType) getProperty().getString();
-                
+
             } else if (type == Boolean.class) {
                 return (AdapterType) new Boolean(getProperty().getBoolean());
-                
+
             } else if (type == Long.class) {
                 return (AdapterType) new Long(getProperty().getLong());
-                
+
             } else if (type == Double.class) {
                 return (AdapterType) new Double(getProperty().getDouble());
-                
+
             } else if (type == Calendar.class) {
                 return (AdapterType) getProperty().getDate();
-                
+
             } else if (type == Value.class) {
                 return (AdapterType) getProperty().getValue();
-                
+
             } else if (type == Node.class
                 && getProperty().getType() == PropertyType.REFERENCE) {
                 return (AdapterType) getProperty().getNode();
-                
+
             } else if (type == InputStream.class) {
                 return (AdapterType) getInputStream();
             }
-            
+
         } catch (ValueFormatException vfe) {
             log.info("adaptTo: Problem accessing the property value of {}: {}",
                 getPath(), vfe.getMessage());
             log.debug("adaptTo: Cause", vfe);
-            
+
         } catch (RepositoryException re) {
             log.info("adaptTo: Problem accessing the property " + getPath(), re);
         }

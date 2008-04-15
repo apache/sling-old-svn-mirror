@@ -82,7 +82,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
         if (result == null) {
             if(StarResource.appliesTo(request)) {
-                result = new StarResource(this, pathInfo, rootProvider.getDefaultResourceTypeProvider());
+                result = new StarResource(this, pathInfo, rootProvider.getResourceTypeProviders());
             } else {
                 result = new NonExistingResource(this, pathInfo);
             }
@@ -186,7 +186,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
         try {
             QueryResult res = JcrResourceUtil.query(getSession(), query,
                 language);
-            return new JcrNodeResourceIterator(this, res.getNodes(), rootProvider.getDefaultResourceTypeProvider());
+            return new JcrNodeResourceIterator(this, res.getNodes(), rootProvider.getResourceTypeProviders());
         } catch (javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language,
                 iqe);

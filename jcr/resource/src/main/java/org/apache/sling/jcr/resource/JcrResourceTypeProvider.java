@@ -21,13 +21,16 @@ package org.apache.sling.jcr.resource;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-/** Provide a resourceType for JCR Nodes which do not have
- *  a sling:resourceType property.
- */ 
+/**
+ * Provide a resource type for repository nodes which do not have
+ * a sling:resourceType property.
+ */
 public interface JcrResourceTypeProvider {
-    
-    /** Return the default resource type to use for Node n, when
-     *  n has not sling:resourceType property  
+
+    /**
+     * Return the resource type to use for the node.
+     * @param n The node.
+     * @return The resource type to use or null.
      */
     String getResourceTypeForNode(Node n) throws RepositoryException;
 }
