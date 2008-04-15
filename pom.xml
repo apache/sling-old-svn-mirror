@@ -101,7 +101,6 @@
         <module>sling/servlet-resolver</module>
         <module>sling/event</module>
         <module>sling/scheduler</module>
-        <!-- <module>sling/sample</module>  -->
         <module>sling/servlets-default</module>
         <module>sling/servlets-post</module>
         <module>sling/threads</module>
@@ -125,6 +124,7 @@
         <module>extensions/dojo-sling</module>
 
         <!-- Samples -->
+        <!-- <module>samples/simple-demo</module>  -->
         <module>samples/webloader/service</module>
         <module>samples/webloader/ui</module>
 
