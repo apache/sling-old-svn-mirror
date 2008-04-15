@@ -53,9 +53,11 @@ public class JcrNodeResource extends JcrItemResource {
 
     private final String resourceType;
 
-    JcrNodeResource(ResourceResolver resourceResolver, Node node, JcrResourceTypeProvider defaultResourceTypeProvider)
+    JcrNodeResource(ResourceResolver resourceResolver,
+                    Node node,
+                    JcrResourceTypeProvider[] resourceTypeProviders)
             throws RepositoryException {
-        super(resourceResolver, node.getPath(), defaultResourceTypeProvider);
+        super(resourceResolver, node.getPath(), resourceTypeProviders);
         this.node = node;
         resourceType = getResourceTypeForNode(node);
 
@@ -110,7 +112,7 @@ public class JcrNodeResource extends JcrItemResource {
                         : node;
 
                 Property data;
-                
+
                 // if the node has a jcr:data property, use that property
                 if (content.hasProperty(JCR_DATA)) {
                     data = content.getProperty(JCR_DATA);
@@ -139,7 +141,7 @@ public class JcrNodeResource extends JcrItemResource {
                     // for all resources that do need to provide the stream
                     long length = data.getLength();
                     InputStream stream =  data.getStream();
-                    
+
                     getResourceMetadata().setContentLength(length);
                     return stream;
                 }
@@ -171,7 +173,7 @@ public class JcrNodeResource extends JcrItemResource {
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
-                    getNode().getNodes(), defaultResourceTypeProvider);
+                    getNode().getNodes(), this.resourceTypeProviders);
             }
         } catch (RepositoryException re) {
             log.error("listChildren: Cannot get children of " + this, re);

@@ -48,18 +48,18 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
-    
-    private final JcrResourceTypeProvider defaultResourceTypeProvider;
+
+    private final JcrResourceTypeProvider[] resourceTypeProviders;
 
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
     public JcrNodeResourceIterator(ResourceResolver resourceResolver,
-            NodeIterator nodes, JcrResourceTypeProvider defaultResourceTypeProvider) {
+            NodeIterator nodes, JcrResourceTypeProvider[] resourceTypeProviders) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
-        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
+        this.resourceTypeProviders = resourceTypeProviders;
         this.nextResult = seek();
     }
 
@@ -88,7 +88,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (nodes.hasNext()) {
             try {
-                return new JcrNodeResource(resourceResolver, nodes.nextNode(), defaultResourceTypeProvider);
+                return new JcrNodeResource(resourceResolver, nodes.nextNode(), resourceTypeProviders);
             } catch (Throwable t) {
                 log.error(
                     "seek: Problem creating Resource for next node, skipping",

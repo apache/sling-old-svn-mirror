@@ -45,15 +45,16 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
     private final ResourceMetadata metadata;
 
     private String resourceSuperType;
-    
-    protected final JcrResourceTypeProvider defaultResourceTypeProvider;
-    
-    protected JcrItemResource(ResourceResolver resourceResolver, 
-            String path, JcrResourceTypeProvider defaultResourceTypeProvider) {
+
+    protected final JcrResourceTypeProvider[] resourceTypeProviders;
+
+    protected JcrItemResource(ResourceResolver resourceResolver,
+                              String path,
+                              JcrResourceTypeProvider[] resourceTypeProviders) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
-        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
+        this.resourceTypeProviders = resourceTypeProviders;
 
         metadata = new ResourceMetadata();
         metadata.setResolutionPath(path);
@@ -114,9 +115,13 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
         if (node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)) {
             result = node.getProperty(SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
         }
-        
-        if (result == null && defaultResourceTypeProvider != null) {
-            result = defaultResourceTypeProvider.getResourceTypeForNode(node);
+
+        if (result == null && this.resourceTypeProviders != null) {
+            int index = 0;
+            while ( result == null && index < this.resourceTypeProviders.length ) {
+                result = this.resourceTypeProviders[index].getResourceTypeForNode(node);
+                index++;
+            }
         }
 
         if (result == null || result.length() == 0) {
@@ -125,7 +130,7 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
         return result;
     }
-    
+
     /**
      * Returns an iterator over the child resources or <code>null</code> if
      * there are none.

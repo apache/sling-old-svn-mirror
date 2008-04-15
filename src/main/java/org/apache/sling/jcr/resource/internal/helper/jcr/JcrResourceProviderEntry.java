@@ -26,22 +26,23 @@ import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     private final Session session;
-    
-    private final JcrResourceTypeProvider defaultResourceTypeProvider;
+
+    private final JcrResourceTypeProvider[] resourceTypeProviders;
 
     public JcrResourceProviderEntry(Session session,
-            ResourceProviderEntry[] entries, JcrResourceTypeProvider defaultResourceTypeProvider) {
-        super("/", new JcrResourceProvider(session, defaultResourceTypeProvider), entries);
+                                    ResourceProviderEntry[] entries,
+                                    JcrResourceTypeProvider[] resourceTypeProviders) {
+        super("/", new JcrResourceProvider(session, resourceTypeProviders), entries);
 
         this.session = session;
-        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
+        this.resourceTypeProviders = resourceTypeProviders;
     }
 
     public Session getSession() {
         return session;
     }
-    
-    public JcrResourceTypeProvider getDefaultResourceTypeProvider() {
-        return defaultResourceTypeProvider;
+
+    public JcrResourceTypeProvider[] getResourceTypeProviders() {
+        return resourceTypeProviders;
     }
 }
