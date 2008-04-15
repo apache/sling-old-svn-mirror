@@ -47,11 +47,11 @@ public class JcrResourceProvider implements ResourceProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Session session;
-    private final JcrResourceTypeProvider defaultResourceTypeProvider;
+    private final JcrResourceTypeProvider[] resourceTypeProviders;
 
-    public JcrResourceProvider(Session session, JcrResourceTypeProvider defaultResourceTypeProvider) {
+    public JcrResourceProvider(Session session, JcrResourceTypeProvider[] resourceTypeProviders) {
         this.session = session;
-        this.defaultResourceTypeProvider = defaultResourceTypeProvider;
+        this.resourceTypeProviders = resourceTypeProviders;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -78,16 +78,16 @@ public class JcrResourceProvider implements ResourceProvider {
     }
 
     public Iterator<Resource> listChildren(Resource parent) {
-        
+
         JcrItemResource parentItemResource;
-        
+
         // short cut for known JCR resources
         if (parent instanceof JcrItemResource) {
-        
+
             parentItemResource = (JcrItemResource) parent;
 
         } else {
-            
+
             // try to get the JcrItemResource for the parent path to list
             // children
             try {
@@ -96,7 +96,7 @@ public class JcrResourceProvider implements ResourceProvider {
             } catch (RepositoryException re) {
                 parentItemResource = null;
             }
-            
+
         }
 
         // return children if there is a parent item resource, else null
@@ -130,14 +130,14 @@ public class JcrResourceProvider implements ResourceProvider {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     path);
-                return new JcrNodeResource(resourceResolver, (Node) item, defaultResourceTypeProvider);
+                return new JcrNodeResource(resourceResolver, (Node) item, resourceTypeProviders);
             }
 
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
                 path);
             return new JcrPropertyResource(resourceResolver, path,
-                (Property) item, defaultResourceTypeProvider);
+                (Property) item, resourceTypeProviders);
         }
 
         log.debug("createResource: No JCR Item exists at path '{}'", path);
@@ -155,7 +155,7 @@ public class JcrResourceProvider implements ResourceProvider {
      *         <code>false</code> is returned ignoring access control.
      */
     public boolean itemExists(String path) {
-        
+
         try {
             return getSession().itemExists(path);
         } catch (RepositoryException re) {
@@ -163,6 +163,6 @@ public class JcrResourceProvider implements ResourceProvider {
                 path, re.toString());
             return false;
         }
-  
+
     }
 }
