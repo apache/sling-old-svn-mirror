@@ -351,7 +351,7 @@ public class JcrResourceResolverFactoryImpl implements
         }
         this.jcrResourceTypeProviders.add(new JcrResourceTypeProviderEntry(id,
                  ranking,
-                 (JcrResourceTypeProvider)this.componentContext.locateService("ResourceTypeProvider", reference)));
+                 (JcrResourceTypeProvider)this.componentContext.locateService("JcrResourceTypeProvider", reference)));
         Collections.sort(this.jcrResourceTypeProviders, new Comparator<JcrResourceTypeProviderEntry>() {
 
             public int compare(JcrResourceTypeProviderEntry o1,
