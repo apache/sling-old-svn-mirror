@@ -39,9 +39,17 @@ public class GeneratedNodeNameTest extends HttpTestBase {
 
     public void testSlingPostNodeNameParam() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
-        props.put("sling:post:nodeName", "MyNodeName");
+        props.put("sling:post:name", "MyNodeName");
         final String location = testClient.createNode(postUrl, props);
         final String expect = "MyNodeName";
+        assertTrue("Location " + location + " ends with " + expect,location.endsWith(expect));
+    }
+
+    public void testSlingPostNodeNameHintParam() throws IOException {
+        final Map<String,String> props = new HashMap<String,String>();
+        props.put("sling:post:nameHint", "AnotherNodeName");
+        final String location = testClient.createNode(postUrl, props);
+        final String expect = "AnotherNodeName".toLowerCase();
         assertTrue("Location " + location + " ends with " + expect,location.endsWith(expect));
     }
 

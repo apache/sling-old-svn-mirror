@@ -17,59 +17,39 @@
 package org.apache.sling.servlets.post.impl;
 
 
-/** Filter a String so that it can be used as a NodeName */
+/**
+ * Filter a String so that it can be used as a NodeName.
+ */
 public class NodeNameFilter {
 
     public static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789_";
     public static final char REPLACEMENT_CHAR = '_';
 
     public String filter(String nodeName) {
-      final StringBuffer sb  = new StringBuffer();
-      char lastAdded = 0;
+        final StringBuffer sb  = new StringBuffer();
+        char lastAdded = 0;
 
-      nodeName = nodeName.toLowerCase();
-      for(int i=0; i < nodeName.length(); i++) {
-        final char c = nodeName.charAt(i);
-        char toAdd = c;
+        nodeName = nodeName.toLowerCase();
+        for(int i=0; i < nodeName.length(); i++) {
+            final char c = nodeName.charAt(i);
+            char toAdd = c;
 
-        if(ALLOWED_CHARS.indexOf(c)< 0) {
-          if(lastAdded == REPLACEMENT_CHAR) {
-            // do not add several _ in a row
-            continue;
-          }
-          toAdd = REPLACEMENT_CHAR;
-        }
-
-        sb.append(toAdd);
-        lastAdded = toAdd;
-      }
-
-      if(sb.length()==0) {
-        sb.append(REPLACEMENT_CHAR);
-      }
-
-      return sb.toString();
-    }
-
-    /**
-     * Filter the node name for any invalid character and replace
-     * invalid characters with {@link #REPLACEMENT_CHAR}.
-     * @param nameHint The hint for the node name.
-     * @return A valid node name.
-     */
-    public static String filterName(final String nameHint) {
-        final StringBuffer sb  = new StringBuffer(nameHint.length());
-        final int len = nameHint.length();
-        for (int i = 0; i < len; i++) {
-            char c = nameHint.charAt(i);
-            if (Character.isWhitespace(c)
-                || c == ':' || c == '/'
-                || c == '[' || c == ']'
-                || c == '*' || c == '\'' || c == '\"') {
-                c = REPLACEMENT_CHAR;
+            if (ALLOWED_CHARS.indexOf(c) < 0) {
+                if (lastAdded == REPLACEMENT_CHAR) {
+                    // do not add several _ in a row
+                    continue;
+                }
+                toAdd = REPLACEMENT_CHAR;
             }
-            sb.append(c);
+
+            sb.append(toAdd);
+            lastAdded = toAdd;
         }
+
+        if (sb.length()==0) {
+            sb.append(REPLACEMENT_CHAR);
+        }
+
         return sb.toString();
     }
 }
