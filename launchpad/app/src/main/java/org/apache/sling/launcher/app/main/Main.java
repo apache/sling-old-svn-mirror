@@ -24,8 +24,9 @@ import java.util.Map;
 import org.apache.felix.framework.Logger;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
-import org.apache.sling.osgi.log.LogbackManager;
 import org.osgi.framework.BundleException;
+
+import org.apache.sling.osgi.log.LogManager;
 
 /**
  * The <code>Main</code> class is a simple Java Application which interprests
@@ -68,10 +69,10 @@ public class Main {
         "INFO", "DEBUG" };
 
     /** The Sling configuration property name setting the initial log level */
-    private static final String PROP_LOG_LEVEL = LogbackManager.LOG_LEVEL;
+    private static final String PROP_LOG_LEVEL = LogManager.LOG_LEVEL;
 
     /** The Sling configuration property name setting the initial log file */
-    private static final String PROP_LOG_FILE = LogbackManager.LOG_FILE;
+    private static final String PROP_LOG_FILE = LogManager.LOG_FILE;
 
     /** Default log level setting if no set on command line (value is "INFO"). */
     private static final int DEFAULT_LOG_LEVEL = Logger.LOG_INFO;
