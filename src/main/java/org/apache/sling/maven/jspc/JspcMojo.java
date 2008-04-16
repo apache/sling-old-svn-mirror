@@ -36,6 +36,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.logging.impl.LogFactoryImpl;
 import org.apache.commons.logging.impl.SimpleLog;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -448,18 +449,16 @@ public class JspcMojo extends AbstractMojo implements Options {
      */
     private void initClassLoader() throws IOException,
             DependencyResolutionRequiredException {
-
-        // Turn the classPath into URLs
-        List<?> classPath = project.getCompileClasspathElements();
-        ArrayList<URL> urls = new ArrayList<URL>();
-        for (Iterator<?> cpi = classPath.iterator(); cpi.hasNext();) {
-            String path = (String) cpi.next();
-            urls.add(new File(path).toURI().toURL());
+        List artifacts = project.getCompileArtifacts();
+        URL[] path = new URL[artifacts.size() + 1];
+        int i = 0;
+        for (Iterator ai=artifacts.iterator(); ai.hasNext(); ) {
+            Artifact a = (Artifact) ai.next();
+            path[i++] = a.getFile().toURI().toURL();
         }
-
-        URL urlsA[] = new URL[urls.size()];
-        urls.toArray(urlsA);
-        loader = new URLClassLoader(urlsA, getClass().getClassLoader());
+        final String targetDirectory = project.getBuild().getOutputDirectory();
+        path[path.length - 1] = new File(targetDirectory).toURI().toURL();
+        loader = new URLClassLoader(path, this.getClass().getClassLoader());
     }
 
     // ---------- Options interface --------------------------------------------
