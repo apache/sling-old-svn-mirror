@@ -20,7 +20,7 @@
 <metatype:MetaData
     xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0"
     localization="metatype">
-    <metatype:OCD id="org.apache.sling.osgi.log.LogbackManager"
+    <metatype:OCD id="org.apache.sling.osgi.log.LogManager"
         name="%log.name" description="%log.description">
         <metatype:AD id="org.apache.sling.osgi.log.level" type="String"
             default="info" name="%log.level.name"
@@ -40,14 +40,19 @@
             default="10mb" name="%log.file.size.name"
             description="%log.file.size.description" />
         <metatype:AD id="org.apache.sling.osgi.log.pattern" type="String"
-            default="%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n"
+            default="{0\,date\,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"
             name="%log.pattern.name"
             description="%log.pattern.description" />
+            
+<!-- 
+        Log File configuration is not supported at the moment
         <metatype:AD id="org.apache.sling.osgi.log.url" type="String"
             default="" name="%log.url.name"
             description="%log.url.description" />
+-->
+
     </metatype:OCD>
-    <metatype:Designate pid="org.apache.sling.osgi.log.LogbackManager">
-        <metatype:Object ocdref="org.apache.sling.osgi.log.LogbackManager" />
+    <metatype:Designate pid="org.apache.sling.osgi.log.LogManager">
+        <metatype:Object ocdref="org.apache.sling.osgi.log.LogManager" />
     </metatype:Designate>
 </metatype:MetaData>
