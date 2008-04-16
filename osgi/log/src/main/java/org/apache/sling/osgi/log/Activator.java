@@ -33,19 +33,19 @@ import org.osgi.service.log.LogService;
  */
 public class Activator implements BundleActivator {
 
-    private LogbackManager logbackManager;
+    private LogManager logManager;
 
     private LogSupport logSupport;
 
     public void start(BundleContext context) throws Exception {
-        this.logbackManager = new LogbackManager(context);
+        logManager = new LogManager(context);
 
-        this.logSupport = new LogSupport();
-        context.addBundleListener(this.logSupport);
-        context.addFrameworkListener(this.logSupport);
-        context.addServiceListener(this.logSupport);
+        logSupport = new LogSupport();
+        context.addBundleListener(logSupport);
+        context.addFrameworkListener(logSupport);
+        context.addServiceListener(logSupport);
 
-        LogServiceFactory lsf = new LogServiceFactory(this.logSupport);
+        LogServiceFactory lsf = new LogServiceFactory(logSupport);
         Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
@@ -53,7 +53,7 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         context.registerService(LogService.class.getName(), lsf, props);
 
-        LogReaderServiceFactory lrsf = new LogReaderServiceFactory(this.logSupport);
+        LogReaderServiceFactory lrsf = new LogReaderServiceFactory(logSupport);
         props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
@@ -63,7 +63,14 @@ public class Activator implements BundleActivator {
     }
 
     public void stop(BundleContext context) throws Exception {
-        this.logSupport.shutdown();
-        this.logbackManager.shutdown();
+        if (logSupport != null) {
+            logSupport.shutdown();
+            logSupport = null;
+        }
+        
+        if (logManager != null) {
+            logManager.shutdown();
+            logManager = null;
+        }
     }
 }
