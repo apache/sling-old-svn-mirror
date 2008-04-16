@@ -124,7 +124,7 @@
         <module>extensions/dojo-sling</module>
 
         <!-- Samples -->
-        <!-- <module>samples/simple-demo</module>  -->
+        <module>samples/simple-demo</module>
         <module>samples/webloader/service</module>
         <module>samples/webloader/ui</module>
 
