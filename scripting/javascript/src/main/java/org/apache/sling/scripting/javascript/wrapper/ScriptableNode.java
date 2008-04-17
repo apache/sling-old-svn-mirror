@@ -30,7 +30,10 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.version.VersionException;
 
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
@@ -269,6 +272,14 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
 
     public boolean jsFunction_getModified() {
         return node.isModified();
+    }
+    
+    public void jsFunction_remove() throws RepositoryException {
+        node.remove();
+    }
+
+    public boolean jsFunction_hasNode(String path) throws RepositoryException {
+        return node.hasNode(path);
     }
 
     /**

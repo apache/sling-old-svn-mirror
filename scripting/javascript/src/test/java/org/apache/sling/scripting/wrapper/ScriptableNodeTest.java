@@ -216,4 +216,15 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         ;
         assertEquals("1_" + path + "_A 1_" + path + "_B ", script.evalToString(code, data));
     }
+    
+    public void testRemoveNode() throws Exception {
+        final String code =
+            "node.addNode('toremove');\n"
+            + "out.print(node.hasNode('toremove'))\n"
+            + "out.print(' ')\n"
+            + "node.getNode('toremove').remove()\n"
+            + "out.print(node.hasNode('toremove'))\n"
+        ;
+        assertEquals("true false", script.evalToString(code, data));
+    }
 }
