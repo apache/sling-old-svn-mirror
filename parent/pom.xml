@@ -168,6 +168,7 @@
                             <Bundle-DocURL>
                                 http://incubator.apache.org/sling
                             </Bundle-DocURL>
+                            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
                         </instructions>
                     </configuration>
