@@ -46,4 +46,11 @@ public class SlingWrapFactoryTest extends RepositoryScriptingTestBase {
         assertNotNull(result);
     }
 
+    public void testVersionNotWrapped() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("node", node);
+        Object result = script.eval("node.getBaseVersion().getCreated()", data);
+        assertNotNull(result);
+    }
+
 }
