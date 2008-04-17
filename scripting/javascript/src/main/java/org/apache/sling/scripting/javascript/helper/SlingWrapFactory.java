@@ -21,6 +21,7 @@ package org.apache.sling.scripting.javascript.helper;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
 import org.mozilla.javascript.Context;
@@ -33,7 +34,7 @@ public class SlingWrapFactory extends WrapFactory {
 
     public static final SlingWrapFactory INSTANCE = new SlingWrapFactory();
     
-    private static final Class<?>[] EXCLUDED_CLASSES = {VersionHistory.class};
+    private static final Class<?>[] EXCLUDED_CLASSES = {VersionHistory.class, Version.class};
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
