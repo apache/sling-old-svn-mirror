@@ -40,6 +40,18 @@
         the bundle.
     </description>
 
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/samples/simple-demo
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/samples/simple-demo
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/samples/simple-demo
+        </url>
+    </scm>
+
     <build>
         <plugins>
             <!-- Handle the @ocm JavaDoc tags to generate the mapping descriptors -->
