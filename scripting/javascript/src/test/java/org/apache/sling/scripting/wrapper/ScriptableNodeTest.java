@@ -227,4 +227,10 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         ;
         assertEquals("true false", script.evalToString(code, data));
     }
+    
+    /** Test SLING-389 */
+    public void testForCurrentNode() throws Exception {
+        final String code = "for (var a in node) {}; out.print('ok')";
+        assertEquals("ok", script.evalToString(code, data));
+    }
 }
