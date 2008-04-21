@@ -60,9 +60,6 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
 
     private Node node;
 
-    public ScriptableNode() {
-    }
-
     public void jsConstructor(Object res) {
         this.node = (Node) res;
     }
@@ -356,21 +353,23 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     @Override
     public Object[] getIds() {
         Collection<String> ids = new ArrayList<String>();
-        try {
-            PropertyIterator pit = node.getProperties();
-            while (pit.hasNext()) {
-                ids.add(pit.nextProperty().getName());
+        if(node != null) {
+            try {
+                PropertyIterator pit = node.getProperties();
+                while (pit.hasNext()) {
+                    ids.add(pit.nextProperty().getName());
+                }
+            } catch (RepositoryException e) {
+                //do nothing, just do not list properties
             }
-        } catch (RepositoryException e) {
-            //do nothing, just do not list properties
-        }
-        try {
-            NodeIterator nit = node.getNodes();
-            while (nit.hasNext()) {
-                ids.add(nit.nextNode().getName());
+            try {
+                NodeIterator nit = node.getNodes();
+                while (nit.hasNext()) {
+                    ids.add(nit.nextNode().getName());
+                }
+            } catch (RepositoryException e) {
+                //do nothing, just do not list child nodes
             }
-        } catch (RepositoryException e) {
-            //do nothing, just do not list child nodes
         }
         return ids.toArray();
     }
