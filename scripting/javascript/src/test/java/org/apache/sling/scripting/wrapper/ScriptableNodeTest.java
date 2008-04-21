@@ -233,4 +233,17 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         final String code = "for (var a in node) {}; out.print('ok')";
         assertEquals("ok", script.evalToString(code, data));
     }
+    
+    public void testChildNodeAccess() throws Exception {
+        final String path = "subtcna_" + System.currentTimeMillis();
+        final String code =
+            "node.addNode('" + path + "');\n"
+            + "var n=node.getNode('" + path + "');\n"
+            + "out.print(n['jcr:primaryType']);\n"
+            + "out.print(' ');\n"
+            + "var n2=node['" + path + "'];\n"
+            + "out.print(n2['jcr:primaryType']);\n"
+        ;
+        assertEquals("nt:unstructured nt:unstructured", script.evalToString(code, data));
+    }
 }
