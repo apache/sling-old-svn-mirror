@@ -49,8 +49,42 @@
         </url>
     </scm>
 
+    <!-- Dojo Toolkit version and name -->
+    <properties>
+        <dojo.target>target/dojo</dojo.target>
+        <dojo.version>release-1.1.0</dojo.version>
+        <dojo.name>dojo-${dojo.version}.tar.gz</dojo.name>
+    </properties>
+
     <build>
         <plugins>
+        
+            <!--  Dynamically download the Dojo Toolkit while building -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <mkdir dir="${dojo.target}" />
+                                <get
+                                    src="http://download.dojotoolkit.org/${dojo.version}/${dojo.name}"
+                                    dest="${dojo.target}/${dojo.name}"
+                                    usetimestamp="true" />
+                                <untar src="target/dojo/${dojo.name}"
+                                    dest="${dojo.target}"
+                                    compression="gzip" />
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -60,6 +94,11 @@
                         <Export-Package>
                             <!-- Nothing to Export -->
                         </Export-Package>
+                        
+                        <!-- Include the downloaded Dojo Toolkit -->
+                        <Include-Resource>
+                            ${dojo.target}/dojo-${dojo.version},{maven-resources}
+                        </Include-Resource>
 
                         <!-- initial content to be loaded on bundle installation -->
                         <Sling-Initial-Content>
