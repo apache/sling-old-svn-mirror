@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.ocm;
 
-import org.apache.sling.api.SlingConstants;
 
 /**
  * The <code>OcmConstants</code> interface provides constant values
@@ -27,35 +26,16 @@ import org.apache.sling.api.SlingConstants;
 public class OcmConstants {
 
     /**
-     * The namespace URI used by Sling JCR for items and node types used by
-     * Sling (value is "http://sling.apache.org/jcr/sling/1.0"). This URI is
-     * ensured to be mapped to the Sling namespace prefix <em>sling</em> for
-     * any session used by the JCR Resource bundle through the
-     * <code>Sling-Namespaces</code> bundle manifest header.
-     */
-    public static final String SLING_NAMESPACE_URI = SlingConstants.NAMESPACE_URI_ROOT
-        + "jcr/sling/1.0";
-
-    /**
-     * The name of the JCR Property that defines the resource type of this node
-     * (value is "sling:resourceType"). The resource manager implementation of
-     * this bundle uses this property to defined the resource type of a loaded
-     * resource. If this property does not exist the primary node type is used
-     * as the resource type.
-     */
-    public static final String SLING_RESOURCE_TYPE_PROPERTY = "sling:resourceType";
-
-    /**
      * The topic root for events published by this bundle (value is
-     * "org/apache/sling/jcr/resource/ResourceEvent"). Event consumers should
-     * register to "org/apache/sling/jcr/resource/ResourceEvent/*" to receive
+     * "org/apache/sling/jcr/ocm/OCMEvent"). Event consumers should
+     * register to "org/apache/sling/jcr/ocm/OCMEvent/*" to receive
      * all events from this bundle.
      */
-    public static final String RESOURCE_EVENT = "org/apache/sling/jcr/resource/ResourceEvent";
+    public static final String RESOURCE_EVENT = "org/apache/sling/jcr/ocm/OCMEvent";
 
     /**
      * The name of the event sent after new Object Mappings have been registered
-     * (value is "org/apache/sling/jcr/resource/ResourceEvent/MAPPED").
+     * (value is "org/apache/sling/jcr/ocm/OCMEvent/MAPPED").
      * <p>
      * Events of this topics have two additional properties:
      * {@link #MAPPING_CLASS} and {@link #MAPPING_NODE_TYPE}.
@@ -64,7 +44,7 @@ public class OcmConstants {
 
     /**
      * The name of the event sent after Object Mappings have been unregistered
-     * (value is "org/apache/sling/jcr/resource/ResourceEvent/UNMAPPED").
+     * (value is "org/apache/sling/jcr/ocm/OCMEvent/UNMAPPED").
      * <p>
      * Events of this topics have two additional properties:
      * {@link #MAPPING_CLASS} and {@link #MAPPING_NODE_TYPE}.
