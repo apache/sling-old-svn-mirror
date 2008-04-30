@@ -36,11 +36,17 @@ public class PathEntry {
     /** The overwrite flag specifying if content should be overwritten or just initially added. */
     public static final String OVERWRITE_FLAG = "overwrite";
 
+    /** The uninstall flag specifying if content should be uninstalled. */
+    public static final String UNINSTALL_FLAG = "uninstall";
+
     /** The path for the initial content. */
     private final String path;
 
     /** Should existing content be overwritten? */
     private final boolean overwrite;
+
+    /** Should existing content be uninstalled? */
+    private final boolean uninstall;
 
     public static Iterator<PathEntry> getContentPaths(final Bundle bundle) {
         final List<PathEntry> entries = new ArrayList<PathEntry>();
@@ -62,7 +68,8 @@ public class PathEntry {
 
     public PathEntry(String path) {
         // check for overwrite flag
-        boolean overwrite = false;
+        boolean overwriteFlag = false;
+        Boolean uninstallFlag = null;
         int flagPos = path.indexOf(";");
         if ( flagPos != -1 ) {
             final StringTokenizer flagTokenizer = new StringTokenizer(path.substring(flagPos+1), ";");
@@ -70,15 +77,24 @@ public class PathEntry {
                 final String token = flagTokenizer.nextToken();
                 int pos = token.indexOf(":=");
                 if ( pos != -1 ) {
-                    if ( token.substring(0, pos).equals(OVERWRITE_FLAG) ) {
-                        overwrite = Boolean.valueOf(token.substring(pos+2));
+                    final String name = token.substring(0, pos);
+                    final String value = token.substring(pos+2);
+                    if ( name.equals(OVERWRITE_FLAG) ) {
+                        overwriteFlag = Boolean.valueOf(value).booleanValue();
+                    } else if (name.equals(UNINSTALL_FLAG) ) {
+                        uninstallFlag = Boolean.valueOf(value);
                     }
                 }
             }
             path = path.substring(0, flagPos);
         }
         this.path = path;
-        this.overwrite = overwrite;
+        this.overwrite = overwriteFlag;
+        if ( uninstallFlag != null ) {
+            this.uninstall = uninstallFlag;
+        } else {
+            this.uninstall = this.overwrite;
+        }
     }
 
     public String getPath() {
@@ -87,5 +103,9 @@ public class PathEntry {
 
     public boolean isOverwrite() {
         return this.overwrite;
+    }
+
+    public boolean isUninstall() {
+        return this.uninstall;
     }
 }

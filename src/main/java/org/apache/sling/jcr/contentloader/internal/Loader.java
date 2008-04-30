@@ -658,7 +658,7 @@ public class Loader {
                 bundle.getSymbolicName());
             while (pathIter.hasNext() ) {
                 final PathEntry entry = pathIter.next();
-                if ( entry.isOverwrite() ) {
+                if ( entry.isUninstall() ) {
                     this.uninstallFromPath(bundle, entry.getPath(), session.getRootNode());
                 } else {
                     log.debug("Ignoring to uninstall content at {}, overwrite flag is not set.", entry.getPath());
