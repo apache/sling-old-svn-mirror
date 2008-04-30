@@ -23,28 +23,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-class Node {
+class NodeDescription {
 
     private String name;
     private String primaryNodeType;
     private Set<String> mixinNodeTypes;
-    private List<Property> properties;
-    private List<Node> children;
+    private List<PropertyDescription> properties;
+    private List<NodeDescription> children;
 
     /**
      * @return the children
      */
-    List<Node> getChildren() {
+    List<NodeDescription> getChildren() {
         return children;
     }
 
     /**
      * @param children the children to set
      */
-    void addChild(Node child) {
+    void addChild(NodeDescription child) {
         if (child != null) {
             if (children == null) {
-                children = new ArrayList<Node>();
+                children = new ArrayList<NodeDescription>();
             }
 
             children.add(child);
@@ -102,17 +102,17 @@ class Node {
     /**
      * @return the properties
      */
-    List<Property> getProperties() {
+    List<PropertyDescription> getProperties() {
         return properties;
     }
 
     /**
      * @param properties the properties to set
      */
-    void addProperty(Property property) {
+    void addProperty(PropertyDescription property) {
         if (property != null) {
             if (properties == null) {
-                properties = new ArrayList<Property>();
+                properties = new ArrayList<PropertyDescription>();
             }
 
             properties.add(property);
@@ -130,11 +130,11 @@ class Node {
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
-        } else if (!(obj instanceof Node)) {
+        } else if (!(obj instanceof NodeDescription)) {
             return false;
         }
 
-        Node other = (Node) obj;
+        NodeDescription other = (NodeDescription) obj;
         return getName().equals(other.getName())
             && equals(getPrimaryNodeType(), other.getPrimaryNodeType())
             && equals(getMixinNodeTypes(), other.getMixinNodeTypes())

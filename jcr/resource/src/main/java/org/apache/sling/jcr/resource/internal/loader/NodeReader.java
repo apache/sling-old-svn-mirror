@@ -26,6 +26,6 @@ import java.io.InputStream;
  */
 interface NodeReader {
 
-    Node parse(InputStream ins) throws IOException;
+    NodeDescription parse(InputStream ins) throws IOException;
 
 }

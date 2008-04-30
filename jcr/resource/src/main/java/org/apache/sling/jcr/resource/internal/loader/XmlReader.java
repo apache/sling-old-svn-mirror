@@ -75,7 +75,7 @@ public class XmlReader implements NodeReader {
 
     // ---------- XML content access -------------------------------------------
 
-    public synchronized Node parse(InputStream ins) throws IOException {
+    public synchronized NodeDescription parse(InputStream ins) throws IOException {
         try {
             return this.parseInternal(ins);
         } catch (XmlPullParserException xppe) {
@@ -83,14 +83,14 @@ public class XmlReader implements NodeReader {
         }
     }
 
-    private Node parseInternal(InputStream ins) throws IOException,
+    private NodeDescription parseInternal(InputStream ins) throws IOException,
             XmlPullParserException {
         String currentElement = "<root>";
         LinkedList<String> elements = new LinkedList<String>();
-        Node currentNode = null;
-        LinkedList<Node> nodes = new LinkedList<Node>();
+        NodeDescription currentNode = null;
+        LinkedList<NodeDescription> nodes = new LinkedList<NodeDescription>();
         StringBuffer contentBuffer = new StringBuffer();
-        Property currentProperty = null;
+        PropertyDescription currentProperty = null;
 
         // set the parser input, use null encoding to force detection with
         // <?xml?>
@@ -104,10 +104,10 @@ public class XmlReader implements NodeReader {
                 currentElement = this.xmlParser.getName();
 
                 if (ELEM_PROPERTY.equals(currentElement)) {
-                    currentProperty = new Property();
+                    currentProperty = new PropertyDescription();
                 } else if (ELEM_NODE.equals(currentElement)) {
                     if (currentNode != null) nodes.add(currentNode);
-                    currentNode = new Node();
+                    currentNode = new NodeDescription();
                 }
 
             } else if (eventType == XmlPullParser.END_TAG) {
@@ -143,7 +143,7 @@ public class XmlReader implements NodeReader {
 
                 } else if (ELEM_NODE.equals(qName)) {
                     if (!nodes.isEmpty()) {
-                        Node parent = nodes.removeLast();
+                        NodeDescription parent = nodes.removeLast();
                         parent.addChild(currentNode);
                         currentNode = parent;
                     }

@@ -23,7 +23,7 @@ import java.util.List;
 
 import javax.jcr.PropertyType;
 
-class Property {
+class PropertyDescription {
     private String name;
     private String value;
     private List<String> values;
@@ -102,11 +102,11 @@ class Property {
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
-        } else if (!(obj instanceof Property)) {
+        } else if (!(obj instanceof PropertyDescription)) {
             return false;
         }
 
-        Property other = (Property) obj;
+        PropertyDescription other = (PropertyDescription) obj;
         return this.getName().equals(other.getName())
             && this.getType().equals(other.getType())
             && this.equals(this.getValues(), other.getValues())
