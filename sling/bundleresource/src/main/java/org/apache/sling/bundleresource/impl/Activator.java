@@ -18,8 +18,6 @@
  */
 package org.apache.sling.bundleresource.impl;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.BUNDLE_RESOURCE_ROOTS;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,17 +31,23 @@ import org.slf4j.LoggerFactory;
 
 public class Activator implements BundleActivator, BundleListener {
 
+    /**
+     * The name of the bundle manifest header listing the resource provider root
+     * paths provided by the bundle (value is "Sling-Bundle-Resources").
+     */
+    public static final String BUNDLE_RESOURCE_ROOTS = "Sling-Bundle-Resources";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private Map<Long, BundleResourceProvider> bundleResourceProviderMap = new HashMap<Long, BundleResourceProvider>();
-    
+
     private BundleContext bundleContext;
 
     public void start(BundleContext context) throws Exception {
 
         this.bundleContext = context;
-        
+
         context.addBundleListener(this);
 
         try {
@@ -86,7 +90,7 @@ public class Activator implements BundleActivator, BundleListener {
                 break;
         }
     }
-    
+
     // ---------- Bundle provided resources -----------------------------------
 
     private void addBundleResourceProvider(Bundle bundle) {
