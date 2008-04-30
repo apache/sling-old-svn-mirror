@@ -50,27 +50,11 @@ import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 
 /**
- * The <code>Sling</code> serves as a basic servlet for Project Sling. The
- * tasks of this servlet are as follows:
+ * The <code>Sling</code> serves as the starting point for Sling.
  * <ul>
- * <li>The {@link #init()} method launches Apache <code>Felix</code> as the
- * OSGi framework implementation we use.
- * <li>Registers as a service listener interested for services of type
- * <code>javax.servlet.Servlet</code>.
- * <li>Handles requests by delegating to a servlet which is expected to be
- * registered with the framework as a service of type
- * <code>javax.servlet.Servlet</code>. If no delegatee servlet has been
- * registered request handlings results in a temporary unavailability of the
- * servlet.
+ * <li>The {@link #Sling(Logger, ResourceProvider, Map)} method launches
+ * Apache <code>Felix</code> as the OSGi framework implementation we use.
  * </ul>
- * <p>
- * <b>Request Handling</b>
- * <p>
- * This servlet handles request by forwarding to a delegatee servlet. The
- * delegatee servlet is automatically retrieved from the service registry by the
- * {@link #getDelegatee()}. This method also makes sure, the such a servlet
- * actually exits by throwing an <code>UnvailableException</code> if not and
- * also makes sure the servlet is initialized.
  * <p>
  * <b>Launch Configuration</b>
  * <p>
@@ -96,15 +80,6 @@ import org.osgi.service.url.URLStreamHandlerService;
  * name is the catenation of <code>outer-</code> and the result of resolving
  * <code>${inner}</code>.
  * <p>
- * <b>Logging</b>
- * <p>
- * This servlet logs through the servlet container logging mechanism by calling
- * the <code>GenericServlet.log</code> methods. Bundles launched within the
- * framework provided by this servlet may use whatever logging mechanism they
- * choose to use. The Day Commons OSGI Log Bundle provides an OSGi Log Service
- * implementation, which also provides access to Apache Commons Logging, SLF4J
- * and Log4J logging. It is recommended that this bundle is used to setup and
- * configure logging for systems based on this servlet.
  */
 public class Sling implements BundleActivator {
 
@@ -506,7 +481,7 @@ public class Sling implements BundleActivator {
      * name, the value of the property is simply appended to the
      * <code>osgiProp</code>.
      * </ol>
-     * 
+     *
      * @param props The <code>Properties</code> to be scanned.
      * @param osgiProp The name of the property in <code>props</code> to which
      *            any matching property values are appended.
