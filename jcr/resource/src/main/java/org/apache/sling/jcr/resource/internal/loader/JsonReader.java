@@ -60,7 +60,7 @@ class JsonReader implements NodeReader {
         }
     };
     
-    public Node parse(InputStream ins) throws IOException {
+    public NodeDescription parse(InputStream ins) throws IOException {
         try {
             String jsonString = toString(ins).trim();
             if (!jsonString.startsWith("{")) {
@@ -76,8 +76,8 @@ class JsonReader implements NodeReader {
         }
     }
 
-    protected Node createNode(String name, JSONObject obj) throws JSONException {
-        Node node = new Node();
+    protected NodeDescription createNode(String name, JSONObject obj) throws JSONException {
+        NodeDescription node = new NodeDescription();
         node.setName(name);
 
         Object primaryType = obj.opt("jcr:primaryType");
@@ -101,13 +101,13 @@ class JsonReader implements NodeReader {
             if (!ignoredNames.contains(n)) {
                 Object o = obj.get(n);
                 if (o instanceof JSONObject) {
-                    Node child = this.createNode(n, (JSONObject) o);
+                    NodeDescription child = this.createNode(n, (JSONObject) o);
                     node.addChild(child);
                 } else if (o instanceof JSONArray) {
-                    Property prop = createProperty(n, o);
+                    PropertyDescription prop = createProperty(n, o);
                     node.addProperty(prop);
                 } else {
-                    Property prop = createProperty(n, o);
+                    PropertyDescription prop = createProperty(n, o);
                     node.addProperty(prop);
                 }
             }
@@ -115,9 +115,9 @@ class JsonReader implements NodeReader {
         return node;
     }
 
-    protected Property createProperty(String name, Object value)
+    protected PropertyDescription createProperty(String name, Object value)
             throws JSONException {
-        Property property = new Property();
+        PropertyDescription property = new PropertyDescription();
         property.setName(name);
 
         // assume simple value
