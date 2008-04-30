@@ -24,11 +24,12 @@ import javax.jcr.RepositoryException;
 
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
 import org.mozilla.javascript.ScriptRuntime;
-import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.Undefined;
 
-public class ScriptableProperty extends ScriptableObject implements
-        SlingWrapper {
+/** Wrap a JCR Property as a Scriptable */
+@SuppressWarnings("serial")
+public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
 
     public static final String CLASSNAME = "Property";
 
@@ -253,6 +254,20 @@ public class ScriptableProperty extends ScriptableObject implements
         // unknown hint or "string"
         return toString();
     }
+    
+    @Override
+    public Object get(String name, Scriptable start) {
+        final Object fromSuperclass = super.get(name, start);
+        if(fromSuperclass != Scriptable.NOT_FOUND) {
+            return fromSuperclass;
+        }
+
+        if(property == null) {
+            return Undefined.instance;
+        }
+        
+        return getNative(name, start);
+    }
 
     public Object jsFunction_toString() {
         return toString();
@@ -270,6 +285,16 @@ public class ScriptableProperty extends ScriptableObject implements
     // ---------- Wrapper interface --------------------------------------------
 
     public Object unwrap() {
+        return property;
+    }
+
+    @Override
+    protected Class<?> getStaticType() {
+        return Property.class;
+    }
+
+    @Override
+    protected Object getWrappedObject() {
         return property;
     }
 }

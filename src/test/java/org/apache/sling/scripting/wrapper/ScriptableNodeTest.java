@@ -149,6 +149,25 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         );
     }
     
+    public void testPropertyParent() throws Exception {
+        // need to use node.getProperty('num') to have a ScriptableProperty,
+        // node.num only returns a wrapped value
+        assertEquals(
+                "nt:unstructured",
+                script.eval("node.getProperty('num').parent['jcr:primaryType']", data)
+        );
+    }
+    
+    public void testPropertyAncestor() throws Exception {
+        // call getAncestor which is not explicitly defined in ScriptableProperty,
+        // to verify that all Property methods are available and that we get a 
+        // correctly wrapped result (SLING-397)
+        assertEquals(
+                "rep:root",
+                script.eval("node.getProperty('num').getAncestor(0)['jcr:primaryType']", data)
+        );
+    }
+    
     public void testPropertiesIterationNoWrapper() throws Exception {
         final String code = 
             "var props = node.getProperties();"
@@ -245,5 +264,29 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
             + "out.print(n2['jcr:primaryType']);\n"
         ;
         assertEquals("nt:unstructured nt:unstructured", script.evalToString(code, data));
+    }
+    
+    /** Verify that the getAncestor() method (which is not explicitely defined in ScriptableNode)
+     *  is available, to check SLING-397.
+     */
+    public void testGetAncestor() throws Exception {
+        {
+            final String code = "out.print(node.getAncestor(0).getPath());";
+            assertEquals("/", script.evalToString(code, data));
+        }
+        
+        {
+            final String code = "out.print(node.getAncestor(0)['jcr:primaryType']);";
+            assertEquals("rep:root", script.evalToString(code, data));
+        }
+    }
+    
+    public void testIsNodeType() throws Exception {
+        final String code = 
+            "out.print(node.isNodeType('nt:unstructured'));\n"
+            + "out.print(' ');\n"
+            + "out.print(node.isNodeType('nt:file'));"
+        ;
+        assertEquals("true false", script.evalToString(code, data));
     }
 }

@@ -30,10 +30,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.version.VersionException;
 
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
@@ -41,7 +38,6 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +46,8 @@ import org.slf4j.LoggerFactory;
  * A wrapper for JCR nodes that exposes all properties and child nodes as
  * properties of a Javascript object.
  */
-public class ScriptableNode extends ScriptableObject implements SlingWrapper {
+@SuppressWarnings("serial")
+public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
     public static final String CLASSNAME = "Node";
     public static final Class<?> [] WRAPPED_CLASSES = { Node.class };
@@ -71,7 +68,17 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
+    
+    @Override
+    protected Class<?> getStaticType() {
+        return Node.class;
+    }
 
+    @Override
+    protected Object getWrappedObject() {
+        return node;
+    }
+    
     public Object jsFunction_addNode(String path, String primaryType) throws RepositoryException {
         Node n = null;
         if(primaryType == null || "undefined".equals(primaryType)) {
@@ -246,7 +253,7 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
             return node.toString();
         }
     }
-
+    
     public Object jsFunction_getParent() {
         try {
             return ScriptRuntime.toObject(this, node.getParent());
@@ -333,11 +340,12 @@ public class ScriptableNode extends ScriptableObject implements SlingWrapper {
         }
 
         if (items.size()==0) {
-            return Scriptable.NOT_FOUND;
+            return getNative(name, start);
+            
         } else if (items.size()==1) {
             return items.iterator().next();
+            
         } else {
-            //TODO: add write support
             NativeArray result = new NativeArray(items.toArray());
             ScriptRuntime.setObjectProtoAndParent(result, this);
             return result;
