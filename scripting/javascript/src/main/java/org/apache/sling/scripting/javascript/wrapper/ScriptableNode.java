@@ -200,7 +200,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
     public Object jsFunction_getVersionHistory() {
         try {
-            return node.getVersionHistory();
+            return ScriptRuntime.toObject(this, node.getVersionHistory());
         } catch (RepositoryException re) {
             return Undefined.instance;
         }
@@ -208,7 +208,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
     public Object jsFunction_getBaseVersion() {
         try {
-            return node.getBaseVersion();
+            return ScriptRuntime.toObject(this, node.getBaseVersion());
         } catch (RepositoryException re) {
             return Undefined.instance;
         }
@@ -402,6 +402,10 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
         }
     }
 
+    public Class<?> jsGet_javascriptWrapperClass() {
+        return getClass();
+    }
+    
     @Override
     public String toString() {
         try {

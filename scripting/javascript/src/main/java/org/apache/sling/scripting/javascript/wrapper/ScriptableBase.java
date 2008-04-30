@@ -64,6 +64,12 @@ public abstract class ScriptableBase extends ScriptableObject {
     /** @return the static type to use for NativeJavaObject wrapping */
     protected abstract Class<?> getStaticType();
     
+    /** Used in testing, to check that the right wrapper is used. 
+     *  For some reason, defining the method here didn't work, it had to be
+     *  defined in all descendant classes.      
+     */
+    public abstract Class<?> jsGet_javascriptWrapperClass();
+    
     /** @return the Set of method names that clazz defines, i.e. all public methods
      *  with names that start with jsFunction_ */
     private Set<String> getJsMethodNames() {

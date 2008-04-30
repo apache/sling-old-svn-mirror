@@ -29,6 +29,8 @@ import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
 import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableProperty;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableResource;
+import org.apache.sling.scripting.javascript.wrapper.ScriptableVersion;
+import org.apache.sling.scripting.javascript.wrapper.ScriptableVersionHistory;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
@@ -47,9 +49,14 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
     public final static String ESP_SCRIPT_EXTENSION = "esp";
 
     private static final Class<?>[] HOSTOBJECT_CLASSES = {
-        ScriptableResource.class, ScriptableNode.class,
-        ScriptableProperty.class, ScriptableItemMap.class,
-        ScriptablePrintWriter.class };
+        ScriptableResource.class, 
+        ScriptableNode.class,
+        ScriptableProperty.class, 
+        ScriptableItemMap.class,
+        ScriptablePrintWriter.class,
+        ScriptableVersionHistory.class,
+        ScriptableVersion.class
+    };
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
