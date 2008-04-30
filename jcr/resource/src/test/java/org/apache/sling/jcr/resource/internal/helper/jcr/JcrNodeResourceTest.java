@@ -20,6 +20,9 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -156,6 +159,66 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertEquals(superTypeName, jnr.getResourceSuperType());
     }
 
+    public void testAdaptToMap() throws Exception {
+
+        String name = "adaptable";
+        Node res = rootNode.addNode(name, JcrConstants.NT_UNSTRUCTURED);
+        setupResource(res);
+        getSession().save();
+
+        res = rootNode.getNode(name);
+        JcrNodeResource jnr = new JcrNodeResource(null, res, null);
+
+        final Map<?, ?> props = jnr.adaptTo(Map.class);
+        
+        // assert we have properties at all, only fails if property
+        // retrieval fails for any reason
+        assertNotNull(props);
+        assertFalse(props.isEmpty());
+        
+        // assert all properties set up
+        assertEquals(TEST_MODIFIED, props.get(JcrConstants.JCR_LASTMODIFIED));
+        assertEquals(TEST_TYPE, props.get(JcrConstants.JCR_MIMETYPE));
+        assertEquals(TEST_ENCODING, props.get(JcrConstants.JCR_ENCODING));
+        assertEquals(TEST_DATA, (InputStream) props.get(JcrConstants.JCR_DATA));
+        
+        // assert JCR managed properties
+        assertEquals(JcrConstants.NT_UNSTRUCTURED, props.get(JcrConstants.JCR_PRIMARYTYPE));
+        
+        // assert we have nothing else left
+        final Set<String> existingKeys = new HashSet<String>();
+        existingKeys.add(JcrConstants.JCR_LASTMODIFIED);
+        existingKeys.add(JcrConstants.JCR_MIMETYPE);
+        existingKeys.add(JcrConstants.JCR_ENCODING);
+        existingKeys.add(JcrConstants.JCR_DATA);
+        existingKeys.add(JcrConstants.JCR_PRIMARYTYPE);
+        final Set<Object> crossCheck = new HashSet<Object>(props.keySet());
+        crossCheck.removeAll(existingKeys);
+        assertTrue(crossCheck.isEmpty());
+
+        // call a second time, ensure the map contains the same data again
+        final Map<?, ?> propsSecond = jnr.adaptTo(Map.class);
+        
+        // assert we have properties at all, only fails if property
+        // retrieval fails for any reason
+        assertNotNull(propsSecond);
+        assertFalse(propsSecond.isEmpty());
+        
+        // assert all properties set up
+        assertEquals(TEST_MODIFIED, propsSecond.get(JcrConstants.JCR_LASTMODIFIED));
+        assertEquals(TEST_TYPE, propsSecond.get(JcrConstants.JCR_MIMETYPE));
+        assertEquals(TEST_ENCODING, propsSecond.get(JcrConstants.JCR_ENCODING));
+        assertEquals(TEST_DATA, (InputStream) propsSecond.get(JcrConstants.JCR_DATA));
+        
+        // assert JCR managed properties
+        assertEquals(JcrConstants.NT_UNSTRUCTURED, propsSecond.get(JcrConstants.JCR_PRIMARYTYPE));
+        
+        // assert we have nothing else left
+        final Set<Object> crossCheck2 = new HashSet<Object>(propsSecond.keySet());
+        crossCheck2.removeAll(existingKeys);
+        assertTrue(crossCheck2.isEmpty());
+    }
+
     private void setupResource(Node res) throws RepositoryException {
         res.setProperty(JcrConstants.JCR_LASTMODIFIED, TEST_MODIFIED);
         res.setProperty(JcrConstants.JCR_MIMETYPE, TEST_TYPE);
@@ -172,4 +235,13 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertEquals(TEST_ENCODING, rm.getCharacterEncoding());
     }
 
+    private void assertProperty(Object expected, Object actual) {
+        if (expected != null) {
+            assertNotNull(actual);
+            
+            assertEquals(expected, actual);
+        } else {
+            assertNull(actual);
+        }
+    }
 }
