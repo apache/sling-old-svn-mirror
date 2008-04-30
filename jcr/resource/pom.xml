@@ -30,11 +30,9 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Resource Resolver and Initial Content Loader</name>
+    <name>Sling - Resource Resolver</name>
     <description>
-        This bundle provides two kinds of Repository Content related
-        functionality: The JCR based ResourceResolver and initial
-        content installation.
+        This bundle provides the JCR based ResourceResolver.
     </description>
 
     <scm>
@@ -62,26 +60,16 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.jcr.resource;version=${pom.version},
+                            org.apache.sling.jcr.resource;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.resource.internal.*,
-                            org.apache.jackrabbit.net,
-                            org.apache.jackrabbit;
-                            org.apache.jackrabbit.name;
-                            org.apache.jackrabbit.util;
-                            org.apache.jackrabbit.uuid;
-                            org.apache.jackrabbit.value;-split-package:=merge-first,
-                            org.kxml2.io, org.xmlpull.v1
+                            org.apache.jackrabbit.net
                         </Private-Package>
 
                         <Sling-Namespaces>
                             sling=http://sling.apache.org/jcr/sling/1.0
                         </Sling-Namespaces>
-
-                        <Embed-Dependency>
-                            jackrabbit-classloader, kxml2
-                        </Embed-Dependency>
 
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/resource.cnd
@@ -112,21 +100,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.mime</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.osgi.commons</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
@@ -136,21 +109,18 @@
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
+       <dependency>
+           <groupId>commons-collections</groupId>
+           <artifactId>commons-collections</artifactId>
+       </dependency>
 
         <!-- for adapting JCR resources to URLs -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
@@ -158,23 +128,13 @@
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>net.sf.kxml</groupId>
-            <artifactId>kxml2</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
-
       <!-- Testing -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.testing</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -183,7 +143,11 @@
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
