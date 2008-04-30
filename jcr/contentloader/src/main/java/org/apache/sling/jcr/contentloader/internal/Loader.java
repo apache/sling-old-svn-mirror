@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.loader;
+package org.apache.sling.jcr.contentloader.internal;
 
 import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
@@ -44,7 +44,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.resource.internal.ContentLoaderService;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

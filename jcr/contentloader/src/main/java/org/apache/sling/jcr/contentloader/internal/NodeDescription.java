@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.loader;
+package org.apache.sling.jcr.contentloader.internal;
 
 import java.util.ArrayList;
 import java.util.HashSet;

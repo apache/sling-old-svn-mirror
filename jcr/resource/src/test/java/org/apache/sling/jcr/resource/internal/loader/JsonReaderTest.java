@@ -32,6 +32,9 @@ import junit.framework.TestCase;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.jcr.contentloader.internal.JsonReader;
+import org.apache.sling.jcr.contentloader.internal.NodeDescription;
+import org.apache.sling.jcr.contentloader.internal.PropertyDescription;
 
 public class JsonReaderTest extends TestCase {
 
