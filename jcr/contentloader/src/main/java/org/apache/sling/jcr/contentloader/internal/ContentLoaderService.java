@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal;
+package org.apache.sling.jcr.contentloader.internal;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -30,7 +30,6 @@ import javax.jcr.lock.LockException;
 
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.loader.Loader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
