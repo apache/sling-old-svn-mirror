@@ -165,8 +165,9 @@
                                 org.apache.felix,org.apache.sling,org.apache.jackrabbit
                             </includeGroupIds>
                             <excludeArtifactIds>
-                              <!-- the app bundle is not needed, we only depend on it to get the same dependencies -->
-                              org.apache.sling.launchpad.app
+                              <!-- the app bundle is not needed, we only depend on it to get the same dependencies,
+                                   same is try for the base bundle -->
+                              org.apache.sling.launchpad.app,org.apache.sling.launchpad.base
                             </excludeArtifactIds>
                         </configuration>
                     </execution>
