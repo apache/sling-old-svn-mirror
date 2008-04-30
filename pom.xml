@@ -56,19 +56,6 @@
                 <artifactId>maven-scr-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-jcrocm-plugin</artifactId>
-                <version>2.0.0-incubator-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <id>generate-JCR-OCM-descriptor</id>
-                        <goals>
-                            <goal>ocm</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
