@@ -77,6 +77,16 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(Undefined.instance, script.eval(
             "resource.adaptTo(Packages.java.util.Date)", data));
     }
+    
+    public void testResourceWrapperClass() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+        
+        assertEquals(
+                "org.apache.sling.scripting.javascript.wrapper.ScriptableResource", 
+                script.eval("resource.javascriptWrapperClass.getName()", data)
+        );
+    }
 
     private void assertEquals(Node expected, Object actual) {
         while (actual instanceof Wrapper) {

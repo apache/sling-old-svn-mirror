@@ -158,6 +158,13 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         );
     }
     
+    public void testPropertyWrapperClass() throws Exception {
+        assertEquals(
+                "org.apache.sling.scripting.javascript.wrapper.ScriptableProperty", 
+                script.eval("node.getProperty('num').javascriptWrapperClass.getName()", data)
+        );
+    }
+    
     public void testPropertyAncestor() throws Exception {
         // call getAncestor which is not explicitly defined in ScriptableProperty,
         // to verify that all Property methods are available and that we get a 
@@ -288,5 +295,12 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
             + "out.print(node.isNodeType('nt:file'));"
         ;
         assertEquals("true false", script.evalToString(code, data));
+    }
+    
+    public void testNodeWrapperClass() throws Exception {
+        assertEquals(
+                "org.apache.sling.scripting.javascript.wrapper.ScriptableNode", 
+                script.eval("node.javascriptWrapperClass.getName()", data)
+        );
     }
 }

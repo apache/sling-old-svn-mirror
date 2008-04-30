@@ -21,9 +21,6 @@ package org.apache.sling.scripting.javascript.helper;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
-
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.WrapFactory;
@@ -34,7 +31,8 @@ public class SlingWrapFactory extends WrapFactory {
 
     public static final SlingWrapFactory INSTANCE = new SlingWrapFactory();
     
-    private static final Class<?>[] EXCLUDED_CLASSES = {VersionHistory.class, Version.class};
+    /** List of classes that must not be wrapped (added for SLING-382) */
+    private static final Class<?>[] EXCLUDED_CLASSES = {};
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -83,14 +81,16 @@ public class SlingWrapFactory extends WrapFactory {
         }
         String hostObjectName = wrappers.get(javaClass);
         if (hostObjectName == null) {
-            hostObjectName = getHostObjectName(javaClass.getSuperclass());
+            // before SLING-383 the superclass was tested first,
+            // but for Version and VersionHistory this would get 
+            // a Node wrapper, that's not what we want
+            final Class<?>[] javaInterfaces = javaClass.getInterfaces();
+            for (int i = 0; i < javaInterfaces.length && hostObjectName == null; i++) {
+                hostObjectName = getHostObjectName(javaInterfaces[i]);
+            }
 
             if (hostObjectName == null) {
-                Class<?>[] javaInterfaces = javaClass.getInterfaces();
-                for (int i = 0; i < javaInterfaces.length
-                    && hostObjectName == null; i++) {
-                    hostObjectName = getHostObjectName(javaInterfaces[i]);
-                }
+                hostObjectName = getHostObjectName(javaClass.getSuperclass());
             }
         }
 
