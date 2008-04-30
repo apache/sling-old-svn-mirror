@@ -89,7 +89,6 @@
         
         <!-- OSGi -->
         <module>osgi/commons</module>
-        <module>osgi/assembly</module>
         <module>osgi/console-web</module>
         <module>osgi/log</module>
         <module>osgi/obr</module>
