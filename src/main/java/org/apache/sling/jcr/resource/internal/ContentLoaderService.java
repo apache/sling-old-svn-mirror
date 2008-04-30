@@ -18,8 +18,15 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
 
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -35,8 +42,7 @@ import org.slf4j.LoggerFactory;
  * The <code>ContentLoaderService</code> is the service
  * providing the following functionality:
  * <ul>
- * <li>Bundle listener to load initial content and manage OCM mapping
- * descriptors provided by bundles.
+ * <li>Bundle listener to load initial content.
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
  *
@@ -46,6 +52,10 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
 public class ContentLoaderService implements SynchronousBundleListener {
+
+    public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
+
+    public static final String BUNDLE_CONTENT_NODE = "/var/sling/bundle-content";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -79,9 +89,9 @@ public class ContentLoaderService implements SynchronousBundleListener {
     // ---------- BundleListener -----------------------------------------------
 
     /**
-     * Loads and unloads any components provided by the bundle whose state
-     * changed. If the bundle has been started, the components are loaded. If
-     * the bundle is about to stop, the components are unloaded.
+     * Loads and unloads any content provided by the bundle whose state
+     * changed. If the bundle has been started, the content is loaded. If
+     * the bundle is about to stop, the content are unloaded.
      *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
@@ -94,23 +104,41 @@ public class ContentLoaderService implements SynchronousBundleListener {
         //
 
         switch (event.getType()) {
-            case BundleEvent.STARTING: // STARTED:
+            case BundleEvent.STARTING:
                 // register content when the bundle content is available
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.
                 try {
                     Session session = getAdminSession();
-                    initialContentLoader.registerBundle(session,
-                        event.getBundle());
+                    initialContentLoader.registerBundle(session, event.getBundle(), false);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem loading initial content of bundle "
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
                 }
-
-            case BundleEvent.UNINSTALLED:
-                initialContentLoader.unregisterBundle(event.getBundle());
+                break;
+            case BundleEvent.UPDATED:
+                try {
+                    Session session = getAdminSession();
+                    initialContentLoader.registerBundle(session, event.getBundle(), true);
+                } catch (Throwable t) {
+                    log.error(
+                        "bundleChanged: Problem updating initial content of bundle "
+                            + event.getBundle().getSymbolicName() + " ("
+                            + event.getBundle().getBundleId() + ")", t);
+                }
+                break;
+            case BundleEvent.STOPPED:
+                try {
+                    Session session = getAdminSession();
+                    initialContentLoader.unregisterBundle(session, event.getBundle());
+                } catch (Throwable t) {
+                    log.error(
+                        "bundleChanged: Problem unloading initial content of bundle "
+                            + event.getBundle().getSymbolicName() + " ("
+                            + event.getBundle().getBundleId() + ")", t);
+                }
                 break;
         }
     }
@@ -125,6 +153,31 @@ public class ContentLoaderService implements SynchronousBundleListener {
         return (mts != null) ? mts.getMimeType(name) : null;
     }
 
+    protected void createRepositoryPath(final Session writerSession, final String repositoryPath)
+    throws RepositoryException {
+        if ( !writerSession.itemExists(repositoryPath) ) {
+            Node node = writerSession.getRootNode();
+            String path = repositoryPath.substring(1);
+            int pos = path.lastIndexOf('/');
+            if ( pos != -1 ) {
+                final StringTokenizer st = new StringTokenizer(path.substring(0, pos), "/");
+                while ( st.hasMoreTokens() ) {
+                    final String token = st.nextToken();
+                    if ( !node.hasNode(token) ) {
+                        node.addNode(token, "sling:Folder");
+                        node.save();
+                    }
+                    node = node.getNode(token);
+                }
+                path = path.substring(pos + 1);
+            }
+            if ( !node.hasNode(path) ) {
+                node.addNode(path, "sling:Folder");
+                node.save();
+            }
+        }
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -135,7 +188,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
         try {
             final Session session = getAdminSession();
-
+            this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
                     + "bundles which are neither INSTALLED nor UNINSTALLED");
@@ -146,13 +199,13 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
-                    initialContentLoader.registerBundle(session, bundle);
+                    initialContentLoader.registerBundle(session, bundle, false);
                 } else {
                     ignored++;
                 }
 
             }
-            
+
             log.debug(
                     "Out of {} bundles, {} were not in a suitable state for initial content loading",
                     bundles.length, ignored
@@ -181,22 +234,95 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
     // ---------- internal helper ----------------------------------------------
 
-    /** Returns the JCR repository used by this factory */
+    /** Returns the JCR repository used by this service. */
     protected SlingRepository getRepository() {
         return repository;
     }
 
     /**
-     * Returns an administrative session to the given workspace or the default
-     * workspaces if the supplied name is <code>null</code>.
+     * Returns an administrative session to the default workspace.
      */
     private synchronized Session getAdminSession()
-            throws RepositoryException {
+    throws RepositoryException {
         if ( adminSession == null ) {
             adminSession = getRepository().loginAdministrative(null);
         }
         return adminSession;
     }
 
+    /**
+     * Return the bundle content info and make an exclusive lock.
+     * @param session
+     * @param bundle
+     * @return The map of bundle content info or null.
+     * @throws RepositoryException
+     */
+    public Map<String, Object> getBundleContentInfo(final Session session, final Bundle bundle)
+    throws RepositoryException {
+        final String nodeName = bundle.getSymbolicName();
+        final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
+        if ( !parentNode.hasNode(nodeName) ) {
+            try {
+                final Node bcNode = parentNode.addNode(nodeName, "nt:unstructured");
+                bcNode.addMixin("mix:lockable");
+                parentNode.save();
+            } catch (RepositoryException re) {
+                // for concurrency issues (running in a cluster) we ignore exceptions
+                this.log.warn("Unable to create node " + nodeName, re);
+                session.refresh(true);
+            }
+        }
+        final Node bcNode = parentNode.getNode(nodeName);
+        if ( bcNode.isLocked() ) {
+            return null;
+        }
+        try {
+            bcNode.lock(false, true);
+        } catch (LockException le) {
+            return null;
+        }
+        final Map<String, Object> info = new HashMap<String, Object>();
+        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED) ) {
+            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED,
+                    bcNode.getProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED).getBoolean());
+        } else {
+            info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
+        }
+        return info;
+    }
 
+    public void unlockBundleContentInto(final Session session,
+                                        final Bundle  bundle,
+                                        final boolean contentLoaded)
+    throws RepositoryException {
+        final String nodeName = bundle.getSymbolicName();
+        final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
+        final Node bcNode = parentNode.getNode(nodeName);
+        if ( contentLoaded ) {
+            bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, contentLoaded);
+            bcNode.setProperty("content-load-time", Calendar.getInstance());
+            bcNode.setProperty("content-loaded-by", bundle.getBundleContext().getProperty("sling.id"));
+            bcNode.setProperty("content-unload-time", (String)null);
+            bcNode.setProperty("content-unloaded-by", (String)null);
+            bcNode.save();
+        }
+        bcNode.unlock();
+    }
+
+    public void contentIsUninstalled(final Session session,
+                                     final Bundle  bundle) {
+        final String nodeName = bundle.getSymbolicName();
+        try {
+            final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
+            if ( parentNode.hasNode(nodeName) ) {
+                final Node bcNode = parentNode.getNode(nodeName);
+                bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
+                bcNode.setProperty("content-unload-time", Calendar.getInstance());
+                bcNode.setProperty("content-unloaded-by", bundle.getBundleContext().getProperty("sling.id"));
+                bcNode.save();
+            }
+        } catch (RepositoryException re) {
+            this.log.error("Unable to update bundle content info.", re);
+        }
+    }
 }
