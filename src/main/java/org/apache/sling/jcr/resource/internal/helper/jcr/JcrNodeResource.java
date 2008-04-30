@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
@@ -53,9 +54,8 @@ public class JcrNodeResource extends JcrItemResource {
 
     private final String resourceType;
 
-    JcrNodeResource(ResourceResolver resourceResolver,
-                    Node node,
-                    JcrResourceTypeProvider[] resourceTypeProviders)
+    JcrNodeResource(ResourceResolver resourceResolver, Node node,
+            JcrResourceTypeProvider[] resourceTypeProviders)
             throws RepositoryException {
         super(resourceResolver, node.getPath(), resourceTypeProviders);
         this.node = node;
@@ -77,6 +77,8 @@ public class JcrNodeResource extends JcrItemResource {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
+        } else if (type == Map.class) {
+            return (Type) new JcrPropertyMap(getNode()); // unchecked cast
         }
 
         // fall back to default implementation
@@ -97,9 +99,8 @@ public class JcrNodeResource extends JcrItemResource {
     /**
      * Returns a stream to the <em>jcr:data</em> property if the
      * {@link #getNode() node} is an <em>nt:file</em> or <em>nt:resource</em>
-     * node. Otherwise returns <code>null</code>.
-     * If a valid stream can be returned, this method also sets the
-     * content length resource metadata.
+     * node. Otherwise returns <code>null</code>. If a valid stream can be
+     * returned, this method also sets the content length resource metadata.
      */
     private InputStream getInputStream() {
         // implement this for nt:file only
@@ -140,7 +141,7 @@ public class JcrNodeResource extends JcrItemResource {
                     // binary property which could cause performance loss
                     // for all resources that do need to provide the stream
                     long length = data.getLength();
-                    InputStream stream =  data.getStream();
+                    InputStream stream = data.getStream();
 
                     getResourceMetadata().setContentLength(length);
                     return stream;
