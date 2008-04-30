@@ -114,7 +114,7 @@
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
-            <version>0.0.167</version>
+            <version>0.0.255</version>
         </dependency>
 
         <!-- for assembly bundle resolution -->
@@ -140,14 +140,4 @@
         </dependency>
     </dependencies>
 
-    <repositories>
-        <repository>
-            <id>aQute</id>
-            <name>aQute Repository</name>
-            <url>http://www.aqute.biz/repo</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
