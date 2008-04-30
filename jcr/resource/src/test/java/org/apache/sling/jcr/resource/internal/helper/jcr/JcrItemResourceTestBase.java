@@ -76,7 +76,7 @@ public class JcrItemResourceTestBase extends RepositoryTestBase {
     protected void assertEquals(byte[] expected, InputStream actual)
             throws IOException {
         if (actual == null) {
-            fail("Rsource stream is null");
+            fail("Resource stream is null");
         } else {
             try {
                 for (byte b : expected) {

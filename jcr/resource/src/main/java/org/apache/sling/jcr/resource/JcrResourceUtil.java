@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource;
 
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -73,6 +74,30 @@ public class JcrResourceUtil {
             default: // not actually expected
                 return value.getString();
         }
+    }
+
+    /**
+     * Converts the value(s) of a JCR Property to a corresponding Java Object.
+     * If the property has multiple values the result is an array of Java
+     * Objects representing the converted values of the property.
+     */
+    public static Object toJavaObject(Property property)
+            throws RepositoryException {
+        // multi-value property: return an array of values
+        if (property.getDefinition().isMultiple()) {
+            Value[] values = property.getValues();
+            Object[] result = new Object[values.length];
+            for (int i = 0; i < values.length; i++) {
+                Value value = values[i];
+                if (value != null) {
+                    result[i] = toJavaObject(value);
+                }
+            }
+            return result;
+        }
+
+        // single value property
+        return toJavaObject(property.getValue());
     }
 
     /**
