@@ -133,6 +133,10 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         return Undefined.instance;
     }
 
+    public Class<?> jsGet_javascriptWrapperClass() {
+        return getClass();
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
