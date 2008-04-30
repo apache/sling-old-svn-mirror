@@ -100,7 +100,7 @@
                             commons-fileupload
                         </Embed-Dependency>
                         <Sling-Nodetypes>
-                            SLING-INF/nodetypes/selection.cnd,SLING-INF/nodetypes/references.cnd
+                            SLING-INF/nodetypes/selection.cnd,SLING-INF/nodetypes/references.cnd,SLING-INF/nodetypes/content.cnd
                         </Sling-Nodetypes>
                     </instructions>
                 </configuration>
