@@ -208,9 +208,7 @@
                             <includes>
                                 <include>resources/**</include>
                                 <include>sling.properties</include>
-                                <include>
-                                    sling_install.properties
-                                </include>
+                                <include>sling_install.properties</include>
                                 <include>jre-*.properties</include>
                             </includes>
                             <excludes>
@@ -224,6 +222,16 @@
                                     resources/bundles/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
+                        </resource>
+                        <!-- selected WEB-INF resources -->
+                        <resource>
+                            <directory>
+                                ${basedir}/target/launchpad-app
+                            </directory>
+                            <targetPath>/</targetPath>
+                            <includes>
+                                <include>WEB-INF/jcr-client.properties</include>
+                            </includes>
                         </resource>
                     </webResources>
                 </configuration>
