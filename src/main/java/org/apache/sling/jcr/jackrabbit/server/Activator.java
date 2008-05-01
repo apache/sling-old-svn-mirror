@@ -144,7 +144,7 @@ public class Activator implements BundleActivator, ServiceListener {
             if(overrideUrl != null && overrideUrl.length() > 0) {
                 // Ignore other parameters if override URL (SLING-254) is set 
                 defaultConfig.put(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY, overrideUrl);
-                log.debug(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY + "=" + overrideUrl + 
+                log.info(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY + "=" + overrideUrl + 
                     ", using it to create the default configuration");
                 
             } else {
@@ -155,7 +155,7 @@ public class Activator implements BundleActivator, ServiceListener {
             Configuration config = ca.createFactoryConfiguration(SERVER_REPOSITORY_FACTORY_PID);
             config.update(defaultConfig);
 
-            log.debug("verifyConfiguration: Created configuration {} for {}",
+            log.info("verifyConfiguration: Created configuration {} for {}",
                 config.getPid(), config.getFactoryPid());
 
         } catch (Throwable t) {
@@ -167,8 +167,16 @@ public class Activator implements BundleActivator, ServiceListener {
     }
     
     private void initDefaultConfig(Hashtable<String, String> props, BundleContext bundleContext) throws IOException {
-        String slingHome = bundleContext.getProperty("sling.home");
-        log.debug("Creating default config, sling.home=" + slingHome);
+        File slingHome;
+        String slingHomePath = bundleContext.getProperty("sling.home");
+        if (slingHomePath != null) {
+            slingHome = new File(slingHomePath);
+        } else {
+            slingHome = new File("");
+        }
+        
+        // ensure slingHome is an absolute file and log its value
+        log.info("Creating default config, sling.home=" + slingHome);
 
         // make sure jackrabbit home exists
         File homeDir = new File(slingHome, this.getRepositoryName());
@@ -180,8 +188,8 @@ public class Activator implements BundleActivator, ServiceListener {
             }
         }
 
-        // ensure the configuration file
-        File configFile = new File(slingHome, "repository.xml");
+        // ensure the configuration file (inside the home Dir !)
+        File configFile = new File(homeDir, "repository.xml");
         SlingServerRepository.copyFile(bundleContext.getBundle(),
             "repository.xml", configFile);
 
