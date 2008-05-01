@@ -167,19 +167,16 @@ public class Activator implements BundleActivator, ServiceListener {
     }
     
     private void initDefaultConfig(Hashtable<String, String> props, BundleContext bundleContext) throws IOException {
-        File slingHome;
+        File homeDir;
         String slingHomePath = bundleContext.getProperty("sling.home");
         if (slingHomePath != null) {
-            slingHome = new File(slingHomePath);
+            homeDir = new File(slingHomePath, getRepositoryName());
         } else {
-            slingHome = new File("");
+            homeDir = new File(getRepositoryName());
         }
-        
-        // ensure slingHome is an absolute file and log its value
-        log.info("Creating default config, sling.home=" + slingHome);
 
         // make sure jackrabbit home exists
-        File homeDir = new File(slingHome, this.getRepositoryName());
+        log.info("Creating default config for Jackrabbit in " + homeDir);
         if (!homeDir.isDirectory()) {
             if (!homeDir.mkdirs()) {
                 log.info("verifyConfiguration: Cannot create Jackrabbit home "
