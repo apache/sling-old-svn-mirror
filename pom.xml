@@ -71,9 +71,6 @@
                             org.apache.sling.jcr.base.internal.*,
                             org.apache.jackrabbit.rmi.*
                         </Private-Package>
-                        <Import-Package>
-                            org.apache.xml.*; resolution:=optional, *
-                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -81,11 +78,6 @@
     </build>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>

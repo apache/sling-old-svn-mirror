@@ -27,7 +27,6 @@ import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitClientAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
-import org.apache.sling.api.SlingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +46,6 @@ public class RepositoryAccessor {
      * repository instead (SLING-254 and SLING-260)
      */
     public static final String REPOSITORY_URL_OVERRIDE_PROPERTY = "sling.repository.url";
-
-    public static class RepositoryUrlException extends SlingException {
-        RepositoryUrlException(String reason) {
-            super(reason);
-        }
-    }
 
     /**
      * First try to access the Repository via JNDI (unless jndiContext is null),
@@ -147,11 +140,13 @@ public class RepositoryAccessor {
      * <pre>
      *      jndi://jackrabbit:java.naming.factory.initial=org.SomeClass,java.naming.provider.url=http://foo.com
      * </pre>
+     * 
+     * @throws NullPointerException If <code>url</code> is <code>null</code>.
      */
-    public Repository getRepositoryFromURL(String url)
-            throws RepositoryUrlException {
+    public Repository getRepositoryFromURL(String url) {
+        
         if (url == null) {
-            throw new RepositoryUrlException("null URL");
+            throw new NullPointerException("url");
         }
 
         if (url.startsWith(JNDI_PREFIX)) {
