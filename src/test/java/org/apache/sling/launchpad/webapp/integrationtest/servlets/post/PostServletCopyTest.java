@@ -39,8 +39,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", testPath + "/dest");
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", testPath + "/dest");
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -53,8 +53,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("sling:post:copySrc", "src");
-        props.put("sling:post:copyDest", "dest");
+        props.put(":copySrc", "src");
+        props.put(":copyDest", "dest");
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -67,8 +67,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", "new");
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", "new");
         String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
         String content = getContent(newNode + "/new.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -81,8 +81,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", "*");
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", "*");
         String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
         String content = getContent(newNode + ".json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -99,8 +99,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", testPath + "/dest");
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", testPath + "/dest");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath, props);
         } catch (IOException ioe) {
@@ -126,9 +126,9 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", testPath + "/dest");
-        props.put("sling:post:copyFlags", "replace");  // replace dest
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", testPath + "/dest");
+        props.put(":copyFlags", "replace");  // replace dest
         testClient.createNode(HTTP_BASE_URL + testPath, props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -141,8 +141,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", "deep/new");
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", "deep/new");
         String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
         String content = getContent(newNode + "/deep/new.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
@@ -155,8 +155,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put("sling:post:copySrc", testPath + "/src");
-        props.put("sling:post:copyDest", "/some/not/existing/structure");
+        props.put(":copySrc", testPath + "/src");
+        props.put(":copyDest", "/some/not/existing/structure");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
             // not quite correct. should check status response
