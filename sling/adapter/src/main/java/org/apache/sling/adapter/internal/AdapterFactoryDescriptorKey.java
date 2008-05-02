@@ -18,7 +18,7 @@
  */
 package org.apache.sling.adapter.internal;
 
-import org.apache.sling.osgi.commons.OsgiUtil;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
