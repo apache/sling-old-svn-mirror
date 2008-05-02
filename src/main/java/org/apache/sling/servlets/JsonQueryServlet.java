@@ -34,6 +34,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
- * 
+ *
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
  * @scr.property name="service.description" value="Default Query Servlet"
@@ -87,7 +88,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     /**
      * Dumps the result as JSON object.
-     * 
+     *
      * @param req request
      * @param resp response
      * @throws IOException in case the search will unexpectedly fail
@@ -143,7 +144,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                 String path = row.get("jcr:path").toString();
 
                 w.key("name");
-                w.value(JcrResourceUtil.getName(path));
+                w.value(ResourceUtil.getName(path));
 
                 // dump columns
                 for (String colName : row.keySet()) {
@@ -163,7 +164,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                     Resource nodeRes = resolver.getResource(path);
                     dumpProperties(w, nodeRes, properties);
                 }
-                
+
                 w.endObject();
                 count--;
             }
@@ -175,13 +176,13 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     private void dumpProperties(JSONWriter w, Resource nodeRes,
             List<String> properties) throws JSONException {
-        
+
         // nothing to do if there is no resource
         if (nodeRes == null) {
             return;
         }
-        
-        
+
+
         ResourceResolver resolver = nodeRes.getResourceResolver();
         for (String property : properties) {
             Resource prop = resolver.getResource(nodeRes, property);
@@ -211,7 +212,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
         }
         return "";
     }
-    
+
     private String formatValue(Object value) {
         String strValue;
         if (value instanceof InputStream) {
