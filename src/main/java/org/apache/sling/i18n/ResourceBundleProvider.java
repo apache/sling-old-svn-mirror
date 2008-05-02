@@ -35,19 +35,19 @@ public interface ResourceBundleProvider {
 
     /**
      * Returns a <code>ResourceBundle</code> for the given locale.
-     * 
+     *
      * @param locale The <code>Locale</code> for which to return the resource
      *            bundle. If this is <code>null</code> the default locale as
      *            returned by {@link #getDefaultLocale()} is assumed.
      * @return The <code>ResourceBundle</code> for the given locale
-     * @throws MissingResourceException If the service is not capable of
+     * @throws java.util.MissingResourceException If the service is not capable of
      *             returning a <code>ResourceBundle</code>
      */
     ResourceBundle getResourceBundle(Locale locale);
 
     /**
      * Returns a <code>ResourceBundle</code> for the given locale.
-     * 
+     *
      * @param baseName The base name for the resource bundle. If this is
      *            <code>null</code>, the same resource bundle will be
      *            returned as when calling the
@@ -56,7 +56,7 @@ public interface ResourceBundleProvider {
      *            bundle. If this is <code>null</code> the default locale as
      *            returned by {@link #getDefaultLocale()} is assumed.
      * @return The <code>ResourceBundle</code> for the given locale
-     * @throws MissingResourceException If the service is not capable of
+     * @throws java.util.MissingResourceException If the service is not capable of
      *             returning a <code>ResourceBundle</code>
      */
     ResourceBundle getResourceBundle(String baseName, Locale locale);
