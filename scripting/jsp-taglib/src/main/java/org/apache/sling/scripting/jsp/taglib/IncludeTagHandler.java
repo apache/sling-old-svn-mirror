@@ -29,8 +29,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
@@ -61,7 +61,7 @@ public class IncludeTagHandler extends TagSupport {
 
     /**
      * Called after the body has been processed.
-     * 
+     *
      * @return whether additional evaluations of the body are desired
      */
     public int doEndTag() throws JspException {
@@ -81,9 +81,9 @@ public class IncludeTagHandler extends TagSupport {
             if (!path.startsWith("/")) {
                 path = request.getResource().getPath() + "/" + path;
             }
-            path = JcrResourceUtil.normalize(path);
+            path = ResourceUtil.normalize(path);
         }
-        
+
         // check the resource
         if (resource == null) {
             if (path == null) {
@@ -106,7 +106,7 @@ public class IncludeTagHandler extends TagSupport {
                 // might throw an IOException of course
                 pageContext.getOut().flush();
             }
-            
+
             // create a dispatcher for the resource or path
             RequestDispatcher dispatcher;
             if (resource != null) {
@@ -114,7 +114,7 @@ public class IncludeTagHandler extends TagSupport {
             } else {
                 dispatcher = request.getRequestDispatcher(path, opts);
             }
-            
+
             if (dispatcher != null) {
                 SlingHttpServletResponse response = new JspSlingHttpServletResponseWrapper(
                     pageContext);

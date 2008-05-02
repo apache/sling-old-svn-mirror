@@ -24,9 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -249,7 +249,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 }
 
                 // append the name of the manipulated node
-                buf.append(JcrResourceUtil.getName(ctx.getPath()));
+                buf.append(ResourceUtil.getName(ctx.getPath()));
 
                 // anything after the star
                 if (star < result.length() - 1) {

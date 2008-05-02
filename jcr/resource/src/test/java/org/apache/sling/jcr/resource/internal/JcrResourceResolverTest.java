@@ -37,9 +37,9 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 
@@ -167,7 +167,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
                 Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
         }
     }
-    
+
     public void testGetRemovesExtensionInResolution() throws Exception {
         final String path = rootPath + ".whatever";
         final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
@@ -185,7 +185,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         testStarResourceHelper(path, "PUT");
         testStarResourceHelper(path, "DELETE");
     }
-    
+
     public void testStarResourceExtension() throws Exception {
         final String path = rootPath + "/" + System.currentTimeMillis() + "/*.html";
         testStarResourceHelper(path, "GET");
@@ -193,7 +193,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         testStarResourceHelper(path, "PUT");
         testStarResourceHelper(path, "DELETE");
     }
-    
+
     public void testStarResourceSelectorExtension() throws Exception {
         final String path = rootPath + "/" + System.currentTimeMillis() + "/*.print.a4.html";
         testStarResourceHelper(path, "GET");
@@ -205,11 +205,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private void testStarResourceHelper(final String path, final String method) {
         final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, method));
         assertNotNull(res);
-        assertTrue(JcrResourceUtil.isStarResource(res));
+        assertTrue(ResourceUtil.isStarResource(res));
         assertEquals(StarResource.class.getName(), res.getClass().getName());
         assertEquals(StarResource.DEFAULT_RESOURCE_TYPE, res.getResourceType());
     }
-    
+
     private static class ResourceResolverTestRequest implements
             HttpServletRequest {
 
