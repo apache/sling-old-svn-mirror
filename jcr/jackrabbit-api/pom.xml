@@ -31,22 +31,20 @@
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Repository API Bundle</name>
+    <name>Sling - Jackrabbit API Bundle</name>
     <description>
-        This OSGi bundle provides the JCR packages as
-        well as a helper service interface to be implemented and
-        provided by repository providers.
+        This OSGi bundle provides the Jackrabbit API packages.
     </description>
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/api
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit-api
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/api
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit-api
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/api
+            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/jackrabbit-api
         </url>
     </scm>
 
@@ -62,14 +60,10 @@
                             sling,jcr,jackrabbit
                         </Bundle-Category>
                         <Export-Package>
-                            <!-- Export provider API selectively -->
-                            org.apache.sling.jcr.api;version=${pom.version},
-
-                            <!-- Re-export JCR API -->
-                            javax.jcr.*;version=1.0
-                        </Export-Package>    
+                            org.apache.jackrabbit.api;version=1.4
+                        </Export-Package>
                         <Import-Package>
-                            org.xml.sax.*;resolution:=optional,
+                            javax.transaction.*;org.xml.sax.*;resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
@@ -81,8 +75,8 @@
     <dependencies>
         <!-- The libraries to be re-exported -->
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-api</artifactId>
             <scope>compile</scope>
         </dependency>
     </dependencies>
