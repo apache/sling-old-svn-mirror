@@ -69,7 +69,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * Prefix for parameter names which control this POST
      * (RP_ stands for "request param")
      */
-    public static final String RP_PREFIX = "sling:post:";
+    public static final String RP_PREFIX = ":";
 
     /**
      * suffix that indicates node creation
