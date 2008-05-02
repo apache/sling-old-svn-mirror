@@ -72,6 +72,7 @@
         <!-- The commons sub project -->
         <module>commons/json</module>
         <module>commons/mime</module>
+        <module>commons/osgi</module>
         <module>commons/testing</module>
                 
         <!-- The JCR sub project -->
@@ -89,7 +90,6 @@
         <module>jcr/webdav</module>
         
         <!-- OSGi -->
-        <module>osgi/commons</module>
         <module>osgi/console-web</module>
         <module>osgi/log</module>
         <module>osgi/obr</module>
