@@ -37,8 +37,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.osgi.commons.OsgiUtil;
 import org.osgi.framework.ServiceReference;
 
 public class ServletResourceProvider implements ResourceProvider {
