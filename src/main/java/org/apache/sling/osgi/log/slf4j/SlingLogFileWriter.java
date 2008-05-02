@@ -21,7 +21,6 @@ package org.apache.sling.osgi.log.slf4j;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
@@ -30,8 +29,7 @@ public class SlingLogFileWriter extends SlingLogWriter {
     private static final long FACTOR_KB = 1024;
     private static final long FACTOR_MB = 1024 * FACTOR_KB;
     private static final long FACTOR_GB = 1024 * FACTOR_MB;
-    private static final long DEFAULT_MAX_SIZE = 10 * FACTOR_GB;
-    
+
     private final File file;
 
     private final String path;
@@ -43,15 +41,15 @@ public class SlingLogFileWriter extends SlingLogWriter {
     public SlingLogFileWriter(String logFileName, int fileNum, String fileSize) throws IOException {
         this(logFileName, fileNum, convertMaxSizeSpec(fileSize));
     }
-    
+
     public SlingLogFileWriter(String logFileName, int fileNum, long fileSize) throws IOException {
-        
+
         // make sure the file is absolute and derive the path from there
         File file = new File(logFileName);
         if (!file.isAbsolute()) {
             file = file.getAbsoluteFile();
         }
-        
+
         this.path = file.getAbsolutePath();
         this.file = file;
 
@@ -67,7 +65,7 @@ public class SlingLogFileWriter extends SlingLogWriter {
 
         checkRotate();
     }
-    
+
     private Writer createFile() throws IOException {
         // ensure parent path of the file to create
         file.getParentFile().mkdirs();
@@ -84,7 +82,7 @@ public class SlingLogFileWriter extends SlingLogWriter {
                 getDelegatee().close();
 
                 if (maxNum >= 0) {
-                    
+
                     // remove oldest file
                     File dstFile = new File(path + "." + maxNum);
                     if (dstFile.exists()) {
@@ -102,14 +100,14 @@ public class SlingLogFileWriter extends SlingLogWriter {
 
                     // rename youngest file
                     file.renameTo(dstFile);
-                    
+
                 } else {
-                    
+
                     // just remove the old file if we don't keep backups
                     file.delete();
-                    
+
                 }
-                
+
                 // create new file
                 setDelegatee(createFile());
             }
