@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * <code>ResourceBundleProvider</code> interface creating
  * <code>ResourceBundle</code> instances from resources stored in the
  * repository.
- * 
+ *
  * @scr.component immediate="true" label="%provider.name"
  *                description="%provider.description"
  * @scr.service interface="org.apache.sling.i18n.ResourceBundleProvider"
@@ -113,7 +113,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     /**
      * Returns the <code>ResourceBundle</code> for the given
      * <code>locale</code>.
-     * 
+     *
      * @param locale The <code>Locale</code> for which to return the resource
      *            bundle. If this is <code>null</code> the configured
      *            {@link #getDefaultLocale() default locale} is assumed.
@@ -137,13 +137,13 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
     /**
      * Called whenever something is changed inside of <code>jcr:language</code>
-     * or <code>sling:message</code> nodes. We just removed all cached
+     * or <code>sling:Message</code> nodes. We just removed all cached
      * resource bundles in this case to force reloading them.
      * <p>
      * This is much simpler than analyzing the events and trying to be clever
      * about which exact resource bundles to remove from the cache and at the
      * same time care for any resource bundle dependencies.
-     * 
+     *
      * @param events The actual JCR events are ignored by this implementation.
      */
     public void onEvent(EventIterator events) {
@@ -229,7 +229,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * Internal implementation of the {@link #getResourceBundle(Locale)} method
      * employing the cache of resource bundles. Creates the bundle if not
      * already cached.
-     * 
+     *
      * @throws MissingResourceException If the resource bundles needs to be
      *             created and the <code>ResourceResolver</code> is not
      *             available to access the resources.
@@ -273,7 +273,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
     /**
      * Creates the resource bundle for the give locale.
-     * 
+     *
      * @throws MissingResourceException If the <code>ResourceResolver</code>
      *             is not available to access the resources.
      */
@@ -331,7 +331,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * the repository and registers with the observation manager if not already
      * done so. If unable to connect to the repository, <code>null</code> is
      * returned.
-     * 
+     *
      * @return The <code>ResourceResolver</code> or <code>null</code> if
      *         unable to login to the repository. <code>null</code> is also
      *         returned if no <code>ResourceResolverFactory</code> or no
@@ -360,7 +360,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
                     ObservationManager om = s.getWorkspace().getObservationManager();
                     om.addEventListener(this, 255, "/", true, null,
-                        new String[] { "mix:language", "sling:message" }, true);
+                        new String[] { "mix:language", "sling:Message" }, true);
 
                     resourceResolver = fac.getResourceResolver(s);
 
