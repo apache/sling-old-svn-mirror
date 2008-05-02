@@ -141,6 +141,28 @@ public class ResourceUtil {
     }
 
     /**
+     * Utility method returns the parent resource of the resource.
+     * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
+     * @return The parent resource or null if the rsrc is the root.
+     */
+    public static Resource getParent(Resource rsrc) {
+        final String parentPath = getParent(rsrc.getPath());
+        if ( parentPath == null ) {
+            return null;
+        }
+        return rsrc.getResourceResolver().resolve(parentPath);
+    }
+
+    /**
+     * Utility method returns the parent resource of the resource.
+     * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
+     */
+    public static String getName(Resource rsrc) {
+        final String name = getName(rsrc.getPath());
+        return name;
+    }
+
+    /**
      * Utility method returns the name of the given <code>path</code>, which
      * is normalized by {@link #normalize(String)} before resolving the name.
      *
