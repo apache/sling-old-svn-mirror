@@ -675,13 +675,37 @@ public class SlingPostProcessor {
         if (path == null || !path.startsWith("/")) {
             throw new IllegalArgumentException("path must be an absolute path.");
         }
-        int from = 1;
-        Node node = session.getRootNode();
+        // get the starting node
+        String startingNodePath = path;
+        Node startingNode = null;
+        while ( startingNode == null ) {
+            if ( startingNodePath.equals("/") ) {
+                startingNode = session.getRootNode();
+            } else if ( session.itemExists(startingNodePath) ) {
+                startingNode = (Node)session.getItem(startingNodePath);
+            } else {
+                int pos = startingNodePath.lastIndexOf('/');
+                if (pos > 0 ) {
+                    startingNodePath = startingNodePath.substring(0, pos);
+                } else {
+                    startingNodePath = "/";
+                }
+            }
+        }
+        // is the searched node already existing?
+        if (startingNodePath.length() == path.length() ) {
+            return startingNode;
+        }
+        // create nodes
+        int from = (startingNodePath.length() == 1 ? 1 : startingNodePath.length() + 1);
+        Node node = startingNode;
         while (from > 0) {
             final int to = path.indexOf('/', from);
             final String name = to < 0
                     ? path.substring(from)
                     : path.substring(from, to);
+            // although the node should not exist (according to the first test above)
+            // we do a sanety check.
             if (node.hasNode(name)) {
                 node = node.getNode(name);
             } else {
