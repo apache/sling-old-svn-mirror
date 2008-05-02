@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
@@ -147,7 +148,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
         // if the path is absolute, normalize . and .. segements and get res
         if (path.startsWith("/")) {
-            path = JcrResourceUtil.normalize(path);
+            path = ResourceUtil.normalize(path);
             return (path != null) ? getResourceInternal(path) : null;
         }
 
