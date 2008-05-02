@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.commons;
+package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
