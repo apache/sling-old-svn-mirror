@@ -80,6 +80,7 @@
         <module>jcr/classloader</module>
         <module>jcr/contentloader</module>
         <module>jcr/default-rtp</module>
+        <module>jcr/jackrabbit-api</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
         <module>jcr/jackrabbit-text-extractors</module>
