@@ -56,112 +56,112 @@ public class PostServletOrderTest extends HttpTestBase {
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="first" request
+     * :order="first" request
      */
     public void testOrderFirst() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","first");
+        props.put(":order","first");
         testClient.createNode(postUrl + "/c", props);
         verifyOrder(postUrl, new String[]{"c", "a", "b", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="last" request
+     * :order="last" request
      */
     public void testOrderLast() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","last");
+        props.put(":order","last");
         testClient.createNode(postUrl + "/c", props);
         verifyOrder(postUrl, new String[]{"a", "b", "d", "c"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="before" request
+     * :order="before" request
      */
     public void testOrderBefore() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","before b");
+        props.put(":order","before b");
         testClient.createNode(postUrl + "/c", props);
         verifyOrder(postUrl, new String[]{"a", "c", "b", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="after" request
+     * :order="after" request
      */
     public void testOrderAfter() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","after c");
+        props.put(":order","after c");
         testClient.createNode(postUrl + "/b", props);
         verifyOrder(postUrl, new String[]{"a", "c", "b", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="N" request, where new position is greater than old one.
+     * :order="N" request, where new position is greater than old one.
      */
     public void testOrderIntToBack() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","2");
+        props.put(":order","2");
         testClient.createNode(postUrl + "/a", props);
         verifyOrder(postUrl, new String[]{"b", "c", "a", "d"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="N" request, where new position is less than old one.
+     * :order="N" request, where new position is less than old one.
      */
     public void testOrderIntToFront() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","1");
+        props.put(":order","1");
         testClient.createNode(postUrl + "/d", props);
         verifyOrder(postUrl, new String[]{"a", "d", "b", "c"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="0" request
+     * :order="0" request
      */
     public void testOrderIntZero() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","0");
+        props.put(":order","0");
         testClient.createNode(postUrl + "/d", props);
         verifyOrder(postUrl, new String[]{"d", "a", "b", "c"});
     }
 
     /**
      * Create nodes and check if they are in correct order after a
-     * sling:post:order="N" request, where new position is out of bounds
+     * :order="N" request, where new position is out of bounds
      */
     public void testOrderIntOOB() throws IOException {
         final String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
         createNodes(postUrl, DEFAULT_ORDER);
 
         final Map <String, String> props = new HashMap <String, String> ();
-        props.put("sling:post:order","100");
+        props.put(":order","100");
         testClient.createNode(postUrl + "/a", props);
         verifyOrder(postUrl, new String[]{"b", "c", "d", "a"});
     }

@@ -77,7 +77,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
     public void testWithIgnore() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("a","");
-        props.put("a@DefaultValue","sling:post:ignore");
+        props.put("a@DefaultValue",":ignore");
 
         final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
@@ -96,7 +96,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
 
         // now try to delete prop by sending empty string
         props.put("a","");
-        props.put("a@DefaultValue","sling:post:null");
+        props.put("a@DefaultValue",":null");
         testClient.createNode(createdNodeUrl, props);
         content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
