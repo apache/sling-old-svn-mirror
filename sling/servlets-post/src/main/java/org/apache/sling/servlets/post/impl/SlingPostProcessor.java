@@ -22,10 +22,10 @@ import java.util.Map;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -33,9 +33,9 @@ import javax.servlet.ServletException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +128,7 @@ public class SlingPostProcessor {
         StringBuffer rootPathBuf = new StringBuffer();
         String suffix;
         Resource currentResource = request.getResource();
-        if (JcrResourceUtil.isSyntheticResource(currentResource)) {
+        if (ResourceUtil.isSyntheticResource(currentResource)) {
 
             // no resource, treat the missing resource path as suffix
             suffix = currentResource.getPath();
