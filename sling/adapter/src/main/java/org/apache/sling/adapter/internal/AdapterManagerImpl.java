@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
-import org.apache.sling.osgi.commons.OsgiUtil;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
