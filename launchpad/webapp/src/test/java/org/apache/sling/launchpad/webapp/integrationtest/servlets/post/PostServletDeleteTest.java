@@ -54,7 +54,7 @@ public class PostServletDeleteTest extends HttpTestBase {
 
         // delete one and check
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
-        final String deleteCmd = "sling:post:delete";
+        final String deleteCmd = ":delete";
         params.add(new NameValuePair(deleteCmd,urlToNodePath(urlA)));
         assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");

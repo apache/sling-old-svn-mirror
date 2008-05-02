@@ -177,7 +177,7 @@ var Sling = null;
 	Sling.removeContent = function(path) {
 		var httpcon = Sling.getXHR();
 		if (httpcon) {
-			var params = "sling:post:delete="+path;
+			var params = ":delete="+path;
 			httpcon.open('POST', Sling.baseurl + path, false);
 
 			// Send the proper header information along with the request

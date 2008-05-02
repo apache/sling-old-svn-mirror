@@ -116,8 +116,8 @@ public class UslingIntegrationTestClient {
         Map<String, String> nodeProperties = new HashMap<String, String>();
 
         // add sling specific properties
-        nodeProperties.put("sling:post:redirect", url);
-        nodeProperties.put("sling:post:displayExtension", "");
+        nodeProperties.put(":redirect", url);
+        nodeProperties.put(":displayExtension", "");
 
         // take over any client provided properties
         if (clientNodeProperties != null) {

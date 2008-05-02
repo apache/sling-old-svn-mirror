@@ -127,7 +127,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("STUFF_a","123");
         props.put("STUFF_b","456");
         props.put("c","not saved");
-        props.put("sling:post:saveParamPrefix","STUFF_");
+        props.put(":saveParamPrefix","STUFF_");
         final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
@@ -141,7 +141,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("++a","123");
         props.put("++b","456");
         props.put("c","not saved");
-        props.put("sling:post:saveParamPrefix","++");
+        props.put(":saveParamPrefix","++");
         final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
