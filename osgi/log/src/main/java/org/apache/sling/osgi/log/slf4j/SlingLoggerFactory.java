@@ -19,10 +19,8 @@
 package org.apache.sling.osgi.log.slf4j;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +73,7 @@ public final class SlingLoggerFactory implements ILoggerFactory {
             t.printStackTrace(System.err);
         }
     }
-    
+
     // private constructor to prevent instantiation. This is a singleton class
     private SlingLoggerFactory() {
     }
@@ -86,7 +84,7 @@ public final class SlingLoggerFactory implements ILoggerFactory {
      * Returns a logger for the given name. If such a logger already exists the
      * same logger is returned. Otherwise a new instance is created and
      * configured with the current logging level, output and message format.
-     * 
+     *
      * @param name The name of the logger to return
      */
     public Logger getLogger(String name) {
@@ -105,7 +103,7 @@ public final class SlingLoggerFactory implements ILoggerFactory {
     /**
      * Configures this factory and all existing loggers with the new log level,
      * output and message format.
-     * 
+     *
      * @param logLevel The log level to be set. If this is not a valid
      *            {@link SlingLoggerLevel} value, the default <code>INFO</code>
      *            is assumed.
@@ -149,7 +147,7 @@ public final class SlingLoggerFactory implements ILoggerFactory {
             }
         }
     }
-    
+
     public List<SlingLogger> getLoggerList() {
         synchronized (loggers) {
             return new ArrayList<SlingLogger>(loggers.values());
@@ -167,5 +165,5 @@ public final class SlingLoggerFactory implements ILoggerFactory {
         logger.configure(level, output, messageFormat);
         return logger;
     }
-    
+
 }
