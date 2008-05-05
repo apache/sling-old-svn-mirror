@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.threads</artifactId>
+    <artifactId>org.apache.sling.commons.threads</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -38,13 +38,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/threads
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/threads
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/threads
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/threads
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/threads
+            http://svn.apache.org/viewvc/incubator/sling/trunk/commons/threads
         </url>
     </scm>
 
@@ -61,10 +61,10 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.threads
+                            org.apache.sling.commons.threads
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.threads.impl
+                            org.apache.sling.commons.threads.impl
                         </Private-Package>
                     </instructions>
                 </configuration>

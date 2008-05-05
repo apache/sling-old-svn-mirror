@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.threads.impl;
+package org.apache.sling.commons.threads.impl;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -25,9 +25,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.sling.threads.ThreadPool;
-import org.apache.sling.threads.ThreadPoolConfig;
-import org.apache.sling.threads.ThreadPoolManager;
+import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolConfig;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,7 +137,7 @@ public class DefaultThreadPool
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPool#getName()
+     * @see org.apache.sling.commons.threads.ThreadPool#getName()
      */
     public String getName() {
 	    return name;
@@ -145,14 +145,14 @@ public class DefaultThreadPool
 
 
     /**
-     * @see org.apache.sling.threads.ThreadPool#getConfiguration()
+     * @see org.apache.sling.commons.threads.ThreadPool#getConfiguration()
      */
     public ThreadPoolConfig getConfiguration() {
         return this.configuration;
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPool#execute(java.lang.Runnable)
+     * @see org.apache.sling.commons.threads.ThreadPool#execute(java.lang.Runnable)
      */
     public void execute(Runnable runnable) {
         if ( this.executor == null ) {
@@ -166,7 +166,7 @@ public class DefaultThreadPool
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPool#shutdown()
+     * @see org.apache.sling.commons.threads.ThreadPool#shutdown()
      */
     public void shutdown() {
         if ( this.executor != null ) {
