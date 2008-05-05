@@ -18,7 +18,7 @@
  */
 package org.slf4j.impl;
 
-import org.apache.sling.osgi.log.slf4j.SlingLoggerFactory;
+import org.apache.sling.commons.log.slf4j.SlingLoggerFactory;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.spi.LoggerFactoryBinder;
 

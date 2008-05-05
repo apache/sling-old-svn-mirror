@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.log;
+package org.apache.sling.commons.log;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.sling.osgi.log.slf4j.SlingLogFileWriter;
-import org.apache.sling.osgi.log.slf4j.SlingLogWriter;
-import org.apache.sling.osgi.log.slf4j.SlingLogger;
-import org.apache.sling.osgi.log.slf4j.SlingLoggerFactory;
-import org.apache.sling.osgi.log.slf4j.SlingLoggerLevel;
+import org.apache.sling.commons.log.slf4j.SlingLogFileWriter;
+import org.apache.sling.commons.log.slf4j.SlingLogWriter;
+import org.apache.sling.commons.log.slf4j.SlingLogger;
+import org.apache.sling.commons.log.slf4j.SlingLoggerFactory;
+import org.apache.sling.commons.log.slf4j.SlingLoggerLevel;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -44,24 +44,24 @@ public class LogManager implements ManagedService {
 
     /**
      * Initial configuration property specifying whether logging should be
-     * initialized here or not (value is "org.apache.sling.osgi.log.intialize").
+     * initialized here or not (value is "org.apache.sling.commons.log.intialize").
      * If this property is missing or set to <code>true</code>, this class
      * will reset and configure logging. Otherwise, logging is neither reset nor
      * configured by this class.
      */
-    public static final String LOG_INITIALIZE = "org.apache.sling.osgi.log.intialize";
+    public static final String LOG_INITIALIZE = "org.apache.sling.commons.log.intialize";
 
-    public static final String LOG_LEVEL = "org.apache.sling.osgi.log.level";
+    public static final String LOG_LEVEL = "org.apache.sling.commons.log.level";
 
-    public static final String LOG_FILE = "org.apache.sling.osgi.log.file";
+    public static final String LOG_FILE = "org.apache.sling.commons.log.file";
 
-    public static final String LOG_FILE_NUMBER = "org.apache.sling.osgi.log.file.number";
+    public static final String LOG_FILE_NUMBER = "org.apache.sling.commons.log.file.number";
 
-    public static final String LOG_FILE_SIZE = "org.apache.sling.osgi.log.file.size";
+    public static final String LOG_FILE_SIZE = "org.apache.sling.commons.log.file.size";
 
-    public static final String LOG_PATTERN = "org.apache.sling.osgi.log.pattern";
+    public static final String LOG_PATTERN = "org.apache.sling.commons.log.pattern";
 
-    public static final String LOG_CONFIG_URL = "org.apache.sling.osgi.log.url";
+    public static final String LOG_CONFIG_URL = "org.apache.sling.commons.log.url";
 
     public static final String LOG_PATTERN_DEFAULT = "{0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}";
 
@@ -121,7 +121,7 @@ public class LogManager implements ManagedService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
      */
     @SuppressWarnings("unchecked")
@@ -210,7 +210,7 @@ public class LogManager implements ManagedService {
      * initial configuration. <p/> Sets up the initial logging properties for
      * the logging support until the real logging configuration file can be read
      * from the ContentBus.
-     * 
+     *
      * @param properties The <code>Properties</code> containing the initial
      *            configuration.
      * @throws NullPointerException if <code>properties</code> is
