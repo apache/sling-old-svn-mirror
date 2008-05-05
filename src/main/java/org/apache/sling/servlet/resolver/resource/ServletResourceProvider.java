@@ -24,11 +24,8 @@ import static org.apache.sling.servlet.resolver.ServletResolverConstants.SLING_S
 import static org.apache.sling.servlet.resolver.ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES;
 import static org.apache.sling.servlet.resolver.ServletResolverConstants.SLING_SERVLET_SELECTORS;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.Servlet;
@@ -43,6 +40,8 @@ import org.osgi.framework.ServiceReference;
 
 public class ServletResourceProvider implements ResourceProvider {
 
+    public static final String SERVLET_PATH_EXTENSION = ".servlet";
+    
     private final Servlet servlet;
 
     private Set<String> resourcePaths;
@@ -53,13 +52,19 @@ public class ServletResourceProvider implements ResourceProvider {
         // check whether explicit paths are set
         String[] paths = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_PATHS));
         if (paths != null && paths.length > 0) {
-            for (int i = 0; i < paths.length; i++) {
-                if (!paths[i].startsWith("/")) {
-                    paths[i] = servletRoot + paths[i];
+          Set<String> pathSet = new HashSet<String>();
+          for (String path : paths) {
+                if (!path.startsWith("/")) {
+                    path = servletRoot.concat(path);
                 }
 
+                // add the unmodified path
+                pathSet.add(path);
+
+                // ensure we have another entry which has the .servlet ext.
+                pathSet.add(ensureServletNameExtension(path));
             }
-            return new ServletResourceProvider(paths, servlet);
+            return new ServletResourceProvider(pathSet, servlet);
         }
 
         // now, we fall back to resource types, extensions and methods
@@ -84,7 +89,7 @@ public class ServletResourceProvider implements ResourceProvider {
         // return null;
         // }
 
-        List<String> pathList = new ArrayList<String>();
+        Set<String> pathSet = new HashSet<String>();
         for (String type : types) {
 
             // ensure namespace prefixes are converted to slashes
@@ -105,7 +110,7 @@ public class ServletResourceProvider implements ResourceProvider {
 
                 String selPath = type;
                 if (selector != null && selector.length() > 0) {
-                    selPath += selector.replace('.', '/') + "/";
+                    selPath += selector.replace('.', '/') + ".";
                 }
 
                 boolean pathAdded = false;
@@ -113,7 +118,7 @@ public class ServletResourceProvider implements ResourceProvider {
                 // create paths with extensions
                 if (extensions != null) {
                     for (String ext : extensions) {
-                        pathList.add(selPath + ext);
+                        pathSet.add(selPath + ext + SERVLET_PATH_EXTENSION);
                         pathAdded = true;
                     }
                 }
@@ -121,25 +126,33 @@ public class ServletResourceProvider implements ResourceProvider {
                 // create paths with method names
                 if (methods != null) {
                     for (String method : methods) {
-                        pathList.add(selPath + method);
+                        pathSet.add(selPath + method + SERVLET_PATH_EXTENSION);
                         pathAdded = true;
                     }
                 }
 
                 // if neither methods nore extensions were added
                 if (!pathAdded) {
-                    pathList.add(selPath.substring(0, selPath.length() - 1));
+                    pathSet.add(selPath.substring(0, selPath.length() - 1)
+                        + SERVLET_PATH_EXTENSION);
                 }
             }
         }
 
-        paths = pathList.toArray(new String[pathList.size()]);
-        return new ServletResourceProvider(paths, servlet);
+        return new ServletResourceProvider(pathSet, servlet);
     }
 
-    private ServletResourceProvider(String[] paths, Servlet servlet) {
+    static String ensureServletNameExtension(String servletPath) {
+        if (servletPath.endsWith(SERVLET_PATH_EXTENSION)) {
+            return servletPath;
+        }
+        
+        return servletPath.concat(SERVLET_PATH_EXTENSION);
+    }
+    
+    private ServletResourceProvider(Set<String> resourcePaths, Servlet servlet) {
         this.servlet = servlet;
-        this.resourcePaths = new HashSet<String>(Arrays.asList(paths));
+        this.resourcePaths = resourcePaths;
     }
 
     public Resource getResource(ResourceResolver resourceResolver,
@@ -170,6 +183,5 @@ public class ServletResourceProvider implements ResourceProvider {
     public String[] getSerlvetPaths() {
         return resourcePaths.toArray(new String[resourcePaths.size()]);
     }
-
 
 }

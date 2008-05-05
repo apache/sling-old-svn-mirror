@@ -48,7 +48,7 @@ class MockRequestPathInfo implements RequestPathInfo {
 
     public String[] getSelectors() {
         return (getSelectorString() != null)
-                ? getSelectorString().split(".")
+                ? getSelectorString().split("\\.")
                 : new String[0];
     }
 

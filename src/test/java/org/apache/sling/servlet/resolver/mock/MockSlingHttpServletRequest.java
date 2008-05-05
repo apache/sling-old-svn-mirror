@@ -47,8 +47,10 @@ import org.apache.sling.api.resource.SyntheticResource;
  */
 public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
-    private final Resource resource;
+    private Resource resource;
 
+    private String method;
+    
     private final RequestPathInfo requestPathInfo;
 
     private final String queryString;
@@ -56,8 +58,6 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     private boolean secure = false;
 
     private MockResourceResolver mockResourceResolver;
-
-    private static final String METHOD = "GET";
 
     public static final String RESOURCE_TYPE = "foo/bar";
 
@@ -71,16 +71,26 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
         this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
             suffix);
         this.queryString = queryString;
+        
+        setMethod(null);
     }
 
     public void setResourceResolver(MockResourceResolver resolver) {
         this.mockResourceResolver = resolver;
     }
-
+    
+    public void setResource(Resource resource) {
+        this.resource = resource;
+    }
+    
     public void setSecure(boolean secure) {
         this.secure = secure;
     }
 
+    public void setMethod(String method) {
+        this.method = (method == null) ? "GET" : method.toUpperCase();
+    }
+    
     public Cookie getCookie(String name) {
         return null;
     }
@@ -176,7 +186,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public String getMethod() {
-        return METHOD;
+        return method;
     }
 
     public String getPathInfo() {
