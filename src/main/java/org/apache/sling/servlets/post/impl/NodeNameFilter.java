@@ -40,12 +40,15 @@ public class NodeNameFilter {
                     continue;
                 }
                 toAdd = REPLACEMENT_CHAR;
+                
+            } else if(i == 0 && Character.isDigit(c)) {
+                sb.append(REPLACEMENT_CHAR);
             }
-
+            
             sb.append(toAdd);
             lastAdded = toAdd;
         }
-
+        
         if (sb.length()==0) {
             sb.append(REPLACEMENT_CHAR);
         }
