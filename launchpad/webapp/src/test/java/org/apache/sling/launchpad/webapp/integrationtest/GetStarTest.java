@@ -46,7 +46,7 @@ public class GetStarTest extends HttpTestBase {
         {
             final String content = getContent(fakeNodePath, CONTENT_TYPE_HTML);
             assertTrue("Without script, default renderer marker must be present (" + content + ")",
-                    content.contains("Node dumped by DefaultHtmlRenderer"));
+                    content.contains("Node dumped by HtmlRendererServlet"));
         }
 
         final String urlToDelete = uploadTestScript(scriptPath, "rendering-test.esp", "html.esp");

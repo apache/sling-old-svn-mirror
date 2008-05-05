@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.helpers;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
 import static org.apache.sling.api.servlets.HttpConstants.HEADER_IF_MODIFIED_SINCE;
@@ -35,38 +35,14 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 
 /**
- * The <code>StreamRendererServlet</code> TODO
- *
- * @scr.service
- *  interface="javax.servlet.Servlet"
- *
- * @scr.component
- *  immediate="true"
- *  metatype="false"
- *
- * @scr.property
- *  name="service.description"
- *  value="Default Streaming Renderer Servlet"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
- *
- * @scr.property
- *  name="sling.servlet.resourceTypes"
- *  value="sling/servlet/default"
- *
- * Handler for .res requests
- * @scr.property
- *  name="sling.servlet.extensions"
- *  value="res"
- *
- * Generic handler for all get requests
- * @scr.property
- *  name="sling.servlet.methods"
- *  value="GET"
+ * The <code>StreamRendererServlet</code> streams the current resource to the
+ * client on behalf of the {@link org.apache.sling.servlets.DefaultGetServlet}.
+ * If the current resource cannot be streamed it is rendered using the
+ * {@link PlainTextRendererServlet}.
  */
 public class StreamRendererServlet extends PlainTextRendererServlet {
+
+    public static final String EXT_RES = "res";
 
     private static final long serialVersionUID = -1L;
 
@@ -77,7 +53,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
 
         // ensure no extension or "res"
         String ext = request.getRequestPathInfo().getExtension();
-        if (ext != null && !ext.equals("res")) {
+        if (ext != null && !ext.equals(EXT_RES)) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                 "No default renderer found for extension='" + ext + "'");
             return;

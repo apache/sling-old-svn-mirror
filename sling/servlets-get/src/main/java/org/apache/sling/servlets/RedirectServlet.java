@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,6 +31,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.servlets.helpers.JsonRendererServlet;
 
 /**
  * The <code>RedirectServlet</code> implements support for GET requests to
@@ -52,10 +54,12 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * target resource. Selectors, extension, suffix and query string are also
  * appended to the redirect URL.
  * 
- * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
+ * @scr.service interface="javax.servlet.Servlet"
+ * 
  * @scr.property name="service.description" value="Request Redirect Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * 
  * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"
  * @scr.property name="sling.servlet.methods" value="GET"
  */
@@ -64,10 +68,18 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
     /** The name of the target property */
     public static final String TARGET_PROP = "sling:target";
 
+    private Servlet jsonRendererServlet;
+
     @Override
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
+
+        // handle json export of the redirect node
+        if (JsonRendererServlet.EXT_JSON.equals(request.getRequestPathInfo().getExtension())) {
+            getJsonRendererServlet().service(request, response);
+            return;
+        }
 
         Resource targetResource = request.getResourceResolver().getResource(
             request.getResource(), TARGET_PROP);
@@ -194,5 +206,18 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             }
             pathBuffer.append(tParts[i]);
         }
+    }
+
+    private Servlet getJsonRendererServlet() {
+        if (jsonRendererServlet == null) {
+            Servlet jrs = new JsonRendererServlet();
+            try {
+                jrs.init(getServletConfig());
+            } catch (Exception e) {
+                // don't care too much here
+            }
+            jsonRendererServlet = jrs;
+        }
+        return jsonRendererServlet;
     }
 }

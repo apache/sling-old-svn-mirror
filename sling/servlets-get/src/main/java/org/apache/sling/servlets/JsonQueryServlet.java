@@ -39,18 +39,20 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.servlets.helpers.JsonRendererServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
  *
- * @scr.service interface="javax.servlet.Servlet"
  * @scr.component immediate="true" metatype="false"
+ * @scr.service interface="javax.servlet.Servlet"
+ * 
  * @scr.property name="service.description" value="Default Query Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *               Use this as the default query servlet for json get requests for
- *               Sling
+ * 
+ * Use this as the default query servlet for json get requests for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default"
  * @scr.property name="sling.servlet.extensions" value="json"
