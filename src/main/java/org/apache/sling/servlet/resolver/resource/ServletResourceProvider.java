@@ -40,6 +40,10 @@ import org.osgi.framework.ServiceReference;
 
 public class ServletResourceProvider implements ResourceProvider {
 
+    /**
+     * The extension appended to servlets to register into the resource tree
+     * to simplify handling in the resolution process (value is ".servlet").
+     */
     public static final String SERVLET_PATH_EXTENSION = ".servlet";
     
     private final Servlet servlet;
