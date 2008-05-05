@@ -59,7 +59,7 @@ class JsonReader implements NodeReader {
             return jsonReader;
         }
     };
-    
+
     public NodeDescription parse(InputStream ins) throws IOException {
         try {
             String jsonString = toString(ins).trim();
@@ -68,8 +68,7 @@ class JsonReader implements NodeReader {
             }
 
             JSONObject json = new JSONObject(jsonString);
-            String name = json.optString("name", null); // allow for no name !
-            return this.createNode(name, json);
+            return this.createNode(null, json);
 
         } catch (JSONException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
@@ -156,12 +155,12 @@ class JsonReader implements NodeReader {
         // fall back to default
         return PropertyType.TYPENAME_STRING;
     }
-    
+
     private String toString(InputStream ins) throws IOException {
         if (!ins.markSupported()) {
             ins = new BufferedInputStream(ins);
         }
-        
+
         String encoding;
         ins.mark(5);
         int c = ins.read();
@@ -184,7 +183,7 @@ class JsonReader implements NodeReader {
             bos.write(buf, 0, rd);
         }
         bos.close(); // just to comply with the contract
-        
+
         return new String(bos.toByteArray(), encoding);
     }
 }
