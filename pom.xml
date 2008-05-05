@@ -82,7 +82,6 @@
         <module>jcr/base</module>
         <module>jcr/classloader</module>
         <module>jcr/contentloader</module>
-        <module>jcr/default-rtp</module>
         <module>jcr/jackrabbit-api</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
@@ -126,6 +125,7 @@
 
         <!-- Samples -->
         <module>samples/simple-demo</module>
+        <module>samples/path-based-rtp</module>
         <module>samples/webloader/service</module>
         <module>samples/webloader/ui</module>
 

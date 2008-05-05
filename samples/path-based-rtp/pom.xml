@@ -27,25 +27,25 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.jcr.default.rtp</artifactId>
+    <artifactId>org.apache.sling.samples.path-based.rtp</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Default Resource Type Provider</name>
+    <name>Sling - Sample Path Based Resource Type Provider</name>
     <description>
-        Provides a configurable path-based default resource type
-        for Resources which do not have an explicit one.
+        Provides a configurable path-based sample resource type provider
+        for resources which do not have an explicit one.
     </description>
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/default-rtp
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/samples/path-based-rtp
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/default-rtp
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/samples/path-based-rtp
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/default-rtp
+            http://svn.apache.org/viewvc/incubator/sling/trunk/samples/path-based-rtp
         </url>
     </scm>
 
@@ -66,7 +66,7 @@
                         </Bundle-Category>
                         <!-- No Export-Package -->
                         <Private-Package>
-                            org.apache.sling.jcr.rtp
+                            org.apache.sling.samples.pathbasedrtp
                         </Private-Package>
                     </instructions>
                 </configuration>
