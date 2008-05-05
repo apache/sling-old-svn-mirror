@@ -196,7 +196,7 @@ public class SlingServletResolver implements ServletResolver,
             Resource resource = resourceResolver.getResource(scriptPath);
             if (resource != null) {
                 SlingScript script = resource.adaptTo(SlingScript.class);
-                if (script == null) {
+                if (script != null) {
                     log.debug("findScript: Using script {} for {}",
                         script.getScriptResource().getPath(), name);
                     return script;
