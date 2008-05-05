@@ -42,6 +42,7 @@ import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -114,7 +115,7 @@ public class SlingServlet extends GenericServlet {
      * The Sling configuration property name setting the initial log level
      * (corresponds to LogbackManager.LOG_LEVEL constant)
      */
-    private static final String PROP_LOG_LEVEL = "org.apache.sling.osgi.log.level";
+    private static final String PROP_LOG_LEVEL = "org.apache.sling.commons.log.level";
 
     /**
      * The name of the configuration property defining the obr repository.

@@ -22,11 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
+import org.apache.sling.commons.log.LogManager;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.osgi.framework.BundleException;
 
-import org.apache.sling.osgi.log.LogManager;
 
 /**
  * The <code>Main</code> class is a simple Java Application which interprests
