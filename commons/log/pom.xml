@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.osgi.log</artifactId>
+    <artifactId>org.apache.sling.commons.log</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -58,7 +58,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.sling.osgi.log.Activator
+                            org.apache.sling.commons.log.Activator
                         </Bundle-Activator>
                         <Export-Package>
                             org.apache.commons.logging;version=1.0.4,
@@ -68,7 +68,7 @@
                         </Export-Package>
                         <Private-Package>
                             org.apache.commons.logging.impl,
-                            org.apache.sling.osgi.log.*,
+                            org.apache.sling.commons.log.*,
                             org.slf4j.helpers, org.slf4j.impl,
                             org.slf4j.spi
                         </Private-Package>

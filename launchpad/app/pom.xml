@@ -64,7 +64,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.sling.osgi.log
+                                org.apache.sling.commons.log
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -79,7 +79,7 @@
                         </goals>
                         <configuration>
                             <excludeArtifactIds>
-                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,org.apache.sling.osgi.log,org.apache.sling.launchpad.base
+                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,org.apache.sling.commons.log,org.apache.sling.launchpad.base
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -185,7 +185,7 @@
         <!-- the most important bundle after the framework: logging -->
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.osgi.log</artifactId>
+            <artifactId>org.apache.sling.commons.log</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
             <optional>true</optional>
         </dependency>

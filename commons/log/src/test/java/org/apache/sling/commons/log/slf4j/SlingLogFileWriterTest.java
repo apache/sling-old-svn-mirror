@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.log.slf4j;
+package org.apache.sling.commons.log.slf4j;
 
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.sling.commons.log.slf4j.SlingLogFileWriter;
 
 import junit.framework.TestCase;
 
