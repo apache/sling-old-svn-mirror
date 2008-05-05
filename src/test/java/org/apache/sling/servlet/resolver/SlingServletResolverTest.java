@@ -18,16 +18,22 @@
  */
 package org.apache.sling.servlet.resolver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 
 import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.core.CoreConstants;
 import org.apache.sling.servlet.resolver.mock.MockBundle;
 import org.apache.sling.servlet.resolver.mock.MockComponentContext;
+import org.apache.sling.servlet.resolver.mock.MockResource;
 import org.apache.sling.servlet.resolver.mock.MockResourceResolver;
 import org.apache.sling.servlet.resolver.mock.MockServiceReference;
 import org.apache.sling.servlet.resolver.mock.MockSlingHttpServletRequest;
@@ -45,7 +51,7 @@ public class SlingServletResolverTest extends TestCase {
 
     private static final String ROOT = "/";
 
-    private static final String SERVLET_EXTENSION = ".";
+    private static final String SERVLET_EXTENSION = "html";
 
     private MockResourceResolver mockResourceResolver;
 
@@ -70,15 +76,29 @@ public class SlingServletResolverTest extends TestCase {
         servletResolver.bindServlet(serviceReference);
         servletResolver.activate(mockComponentContext);
         mockResourceResolver = new MockResourceResolver();
-        mockResourceResolver.setSearchPath(new String[] { "/" });
-        mockResourceResolver.addResource("/"
-            + MockSlingHttpServletRequest.RESOURCE_TYPE,
-            new MockServletResource(mockResourceResolver, servlet, ROOT));
+        mockResourceResolver.setSearchPath("/");
+
+        String path = "/"
+            + MockSlingHttpServletRequest.RESOURCE_TYPE
+            + "/"
+            + ResourceUtil.getName(MockSlingHttpServletRequest.RESOURCE_TYPE)
+            + ".servlet";
+        MockServletResource res = new MockServletResource(mockResourceResolver,
+            servlet, path);
+        mockResourceResolver.addResource(res);
+
+        MockResource parent = new MockResource(mockResourceResolver,
+            ResourceUtil.getParent(res.getPath()), "nt:folder");
+        mockResourceResolver.addResource(parent);
+
+        List<Resource> childRes = new ArrayList<Resource>();
+        childRes.add(res);
+        mockResourceResolver.addChildren(parent, childRes);
     }
 
     public void testAcceptsRequest() {
         MockSlingHttpServletRequest secureRequest = new MockSlingHttpServletRequest(
-            SERVLET_PATH, "", SERVLET_EXTENSION, "", "");
+            SERVLET_PATH, null, SERVLET_EXTENSION, null, null);
         secureRequest.setResourceResolver(mockResourceResolver);
         secureRequest.setSecure(true);
         Servlet result = servletResolver.resolveServlet(secureRequest);
@@ -87,7 +107,7 @@ public class SlingServletResolverTest extends TestCase {
 
     public void testIgnoreRequest() {
         MockSlingHttpServletRequest insecureRequest = new MockSlingHttpServletRequest(
-            SERVLET_PATH, "", SERVLET_EXTENSION, "", "");
+            SERVLET_PATH, null, SERVLET_EXTENSION, null, null);
         insecureRequest.setResourceResolver(mockResourceResolver);
         insecureRequest.setSecure(false);
         Servlet result = servletResolver.resolveServlet(insecureRequest);
