@@ -149,9 +149,7 @@ public class ScriptSelectionTest extends LocationTestBase {
         assertScript("POST", null, "html", scripts, null);
     }
     
-    /** CURRENTLY FAILS, SLING-387
     public void testHtmlPostSelectors() {
-        assertScript("POST", "print.a4", "html", SET_A, "/apps/foo/bar/print/POST.esp");
+        assertScript("POST", "print.a4", "html", SET_A, "/apps/foo/bar/POST.esp");
     }
-    */
 }
