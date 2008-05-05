@@ -108,6 +108,26 @@ public class LocationUtilGetServletsTest extends LocationTestBase {
         effectiveTest(names, baseIdxs, indices);
     }
     
+    public void testGetServlets4() {
+        String[] names = { ".servlet", // 0
+                "/" + label + ".esp", // 1
+                "/GET.esp", // 2
+                "/" + label + ".html.esp", // 3
+                "/html.esp", // 4
+                ".esp", // 5
+                "/image.esp", // 6
+                "/print/other.esp", // 7
+                "/print.other.esp", // 8
+                "/print.html.esp", // 9
+                "/print/a4.html.esp", // 10
+        };
+        
+        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
+        int[] indices = { 10, 9, 3, 4, 1, 2, 0 };
+        
+        effectiveTest(names, baseIdxs, indices);
+    }
+    
     protected void effectiveTest(String[] names, int[] baseIdxs, int[] indices) {
 
         String[] base = { "/apps/" + resourceTypePath,
