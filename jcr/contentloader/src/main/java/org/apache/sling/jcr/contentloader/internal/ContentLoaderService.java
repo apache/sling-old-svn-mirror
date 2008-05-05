@@ -85,6 +85,11 @@ public class ContentLoaderService implements SynchronousBundleListener {
      */
     private Loader initialContentLoader;
 
+    /**
+     * The id of the current instance
+     */
+    private String slingId;
+
     // ---------- BundleListener -----------------------------------------------
 
     /**
@@ -113,17 +118,6 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem loading initial content of bundle "
-                            + event.getBundle().getSymbolicName() + " ("
-                            + event.getBundle().getBundleId() + ")", t);
-                }
-                break;
-            case BundleEvent.UPDATED:
-                try {
-                    Session session = getAdminSession();
-                    initialContentLoader.registerBundle(session, event.getBundle(), true);
-                } catch (Throwable t) {
-                    log.error(
-                        "bundleChanged: Problem updating initial content of bundle "
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
                 }
@@ -181,6 +175,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
+        this.slingId = componentContext.getBundleContext().getProperty("sling.id");
         this.initialContentLoader = new Loader(this);
 
         componentContext.getBundleContext().addBundleListener(this);
@@ -300,7 +295,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
         if ( contentLoaded ) {
             bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, contentLoaded);
             bcNode.setProperty("content-load-time", Calendar.getInstance());
-            bcNode.setProperty("content-loaded-by", bundle.getBundleContext().getProperty("sling.id"));
+            bcNode.setProperty("content-loaded-by", this.slingId);
             bcNode.setProperty("content-unload-time", (String)null);
             bcNode.setProperty("content-unloaded-by", (String)null);
             bcNode.save();
@@ -317,7 +312,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 final Node bcNode = parentNode.getNode(nodeName);
                 bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
                 bcNode.setProperty("content-unload-time", Calendar.getInstance());
-                bcNode.setProperty("content-unloaded-by", bundle.getBundleContext().getProperty("sling.id"));
+                bcNode.setProperty("content-unloaded-by", this.slingId);
                 bcNode.save();
             }
         } catch (RepositoryException re) {
