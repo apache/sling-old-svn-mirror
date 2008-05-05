@@ -28,12 +28,14 @@ import org.apache.sling.servlet.resolver.mock.MockSlingHttpServletRequest;
  */
 public class ScriptSelectionTest extends LocationTestBase {
     
-    /** A set of available scripts */
+    /** Test set of available scripts */
     protected final String [] SET_A = {
             "/apps/foo/bar/html.esp",
             "/apps/foo/bar/POST.esp",
             "/apps/foo/bar/print.esp",
-            "/apps/foo/bar/print/POST.esp"
+            "/apps/foo/bar/print/POST.esp",
+            "/apps/foo/bar/xml.esp",
+            "/apps/foo/bar/print.xml.esp"
     };
     
     /** Given a list of available scripts and the request method, selectors 
@@ -54,10 +56,14 @@ public class ScriptSelectionTest extends LocationTestBase {
         final LocationUtil u = LocationUtil.create(req);
         final Collection<LocationResource> s = u.getScripts(req);
         
-        // Verify that the expected script is the first in the list of candidates
-        assertTrue("Script must be found", s.iterator().hasNext());
-        final String scriptPath = s.iterator().next().getResource().getPath();
-        assertEquals("First script is the expected one", expectedScript, scriptPath);
+        if(expectedScript == null) {
+            assertFalse("No script must be found", s.iterator().hasNext());
+        } else {
+            // Verify that the expected script is the first in the list of candidates
+            assertTrue("A script must be found", s.iterator().hasNext());
+            final String scriptPath = s.iterator().next().getResource().getPath();
+            assertEquals("First script is the expected one", expectedScript, scriptPath);
+        }
     }
     
     public void testHtmlGet() {
@@ -68,8 +74,79 @@ public class ScriptSelectionTest extends LocationTestBase {
         assertScript("GET", "print.a4", "html", SET_A, "/apps/foo/bar/print.esp");
     }
     
+    public void testHtmlGetSingleSelector() {
+        assertScript("GET", "print", "html", SET_A, "/apps/foo/bar/print.esp");
+    }
+    
+    public void testHtmlGetHtmlHasPriorityA() {
+        final String [] scripts = {
+            "/apps/foo/bar/html.esp",
+            "/apps/foo/bar/bar.esp"
+        };
+        assertScript("GET", null, "html", scripts, "/apps/foo/bar/html.esp");
+    }
+    
+    public void testHtmlGetHtmlHasPriorityB() {
+        final String [] scripts = {
+            "/apps/foo/bar/bar.esp",
+            "/apps/foo/bar/html.esp"
+        };
+        assertScript("GET", null, "html", scripts, "/apps/foo/bar/html.esp");
+    }
+    
+    public void testHtmlGetBarUsedIfFound() {
+        final String [] scripts = {
+                "/apps/foo/bar/bar.esp",
+                "/apps/foo/bar/pdf.esp"
+            };
+        assertScript("GET", null, "html", scripts, "/apps/foo/bar/bar.esp");
+    }
+    
+    public void testXmlGetSetC() {
+        assertScript("GET", null, "xml", SET_A, "/apps/foo/bar/xml.esp");
+    }
+    
+    public void testXmlGetSelectors() {
+        assertScript("GET", "print.a4", "xml", SET_A, "/apps/foo/bar/print.xml.esp");
+    }
+    
+    public void testXmlGetSingleSelector() {
+        assertScript("GET", "print", "xml", SET_A, "/apps/foo/bar/print.xml.esp");
+    }
+    
+    public void testHtmlGetAppsOverridesLibsA() {
+        final String [] scripts = {
+                "/apps/foo/bar/bar.esp",
+                "/libs/foo/bar/bar.esp"
+            };
+        assertScript("GET", null, "html", scripts, "/apps/foo/bar/bar.esp");
+    }
+    
+    public void testHtmlGetAppsOverridesLibsB() {
+        final String [] scripts = {
+                "/libs/foo/bar/bar.esp",
+                "/apps/foo/bar/bar.esp"
+            };
+        assertScript("GET", null, "html", scripts, "/apps/foo/bar/bar.esp");
+    }
+    
+    public void testHtmlGetLibUsedIfFound() {
+        final String [] scripts = {
+                "/libs/foo/bar/bar.esp"
+            };
+        assertScript("GET", null, "html", scripts, "/libs/foo/bar/bar.esp");
+    }
+    
     public void testHtmlPost() {
         assertScript("POST", null, "html", SET_A, "/apps/foo/bar/POST.esp");
+    }
+    
+    public void testHtmlPostBadCaseFindsNoScript() {
+        final String [] scripts = {
+                "/apps/foo/bar/html.esp",
+                "/apps/foo/bar/POst.esp"
+        };
+        assertScript("POST", null, "html", scripts, null);
     }
     
     /** CURRENTLY FAILS, SLING-387
