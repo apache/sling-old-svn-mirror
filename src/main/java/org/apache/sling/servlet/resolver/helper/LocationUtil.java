@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.servlet.resolver.resource.ServletResourceProvider;
 
 public class LocationUtil {
 
@@ -91,26 +92,17 @@ public class LocationUtil {
                 ordinal++;
             }
         }
-        
+
         // special treatment for servlets registered with neither a method
         // name nor extensions and selectors
-        String path = location.getPath();
-        String label = ResourceUtil.getName(path);
-        location = getResource(null, ResourceUtil.getParent(path));
-        children = getResolver().listChildren(location);
-        while (children.hasNext()) {
-            Resource child = children.next();
-
-            String name = ResourceUtil.getName(child.getPath());
-            String[] parts = name.split("\\.");
-
-            // require base name plus script extension
-            if (parts.length == 2 && label.equals(parts[0])) {
-                LocationResource lr = new LocationResource(ordinal, child, 0,
-                    LocationResource.WEIGHT_LAST_RESSORT);
-                resources.add(lr);
-                ordinal++;
-            }
+        String path = location.getPath()
+            + ServletResourceProvider.SERVLET_PATH_EXTENSION;
+        location = getResolver().getResource(path);
+        if (location != null) {
+            LocationResource lr = new LocationResource(ordinal, location, 0,
+                LocationResource.WEIGHT_LAST_RESSORT);
+            resources.add(lr);
+            ordinal++;
         }
 
         return ordinal;
