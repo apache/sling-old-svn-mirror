@@ -101,8 +101,6 @@
         <module>sling/httpauth</module>
         <module>sling/adapter</module>
         <module>sling/servlet-resolver</module>
-        <module>sling/event</module>
-        <module>sling/scheduler</module>
         <module>sling/servlets-get</module>
         <module>sling/servlets-post</module>
         <module>sling/bundleresource</module>
@@ -121,6 +119,8 @@
         <!-- Extensions -->
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
+        <module>extensions/event</module>
+        <module>extensions/scheduler</module>
         <module>extensions/dojo</module>
         <module>extensions/dojo-sling</module>
 
