@@ -20,7 +20,9 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.jcr.Node;
@@ -90,6 +92,11 @@ public class ContentLoaderService implements SynchronousBundleListener {
      */
     private String slingId;
 
+    /**
+     * List of currently updated bundles.
+     */
+    private final Set<String> updatedBundles = new HashSet<String>();
+
     // ---------- BundleListener -----------------------------------------------
 
     /**
@@ -114,13 +121,19 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 // we can safely add the content at this point.
                 try {
                     Session session = getAdminSession();
-                    initialContentLoader.registerBundle(session, event.getBundle(), false);
+                    final boolean isUpdate = this.updatedBundles.remove(event.getBundle().getSymbolicName());
+                    initialContentLoader.registerBundle(session, event.getBundle(), isUpdate);
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem loading initial content of bundle "
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
                 }
+                break;
+            case BundleEvent.UPDATED:
+                // we just add the symbolic name to the list of updated bundles
+                // we will use this info when the new start event is triggered
+                this.updatedBundles.add(event.getBundle().getSymbolicName());
                 break;
             case BundleEvent.STOPPED:
                 try {
