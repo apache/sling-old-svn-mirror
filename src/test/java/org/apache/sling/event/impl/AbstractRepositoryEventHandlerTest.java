@@ -32,10 +32,10 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolConfig;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.threads.ThreadPool;
-import org.apache.sling.threads.ThreadPoolConfig;
-import org.apache.sling.threads.ThreadPoolManager;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;

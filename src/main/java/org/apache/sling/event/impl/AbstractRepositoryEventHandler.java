@@ -35,11 +35,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
+import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolConfig;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.threads.ThreadPool;
-import org.apache.sling.threads.ThreadPoolConfig;
-import org.apache.sling.threads.ThreadPoolManager;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
