@@ -58,10 +58,16 @@ public abstract class LocationTestBase extends TestCase {
             resourceType);
         resourceResolver.addResource(resource);
 
-        request = new MockSlingHttpServletRequest(resourcePath, "print.a4",
-            "html", null, null);
-        request.setResourceResolver(resourceResolver);
-        request.setResource(resource);
+        request = makeRequest("GET", "print.a4", "html"); 
+    }
+    
+    protected MockSlingHttpServletRequest makeRequest(String method, String selectors, String extension) {
+        final MockSlingHttpServletRequest result = 
+            new MockSlingHttpServletRequest(resourcePath, selectors, extension, null, null);
+        result.setMethod(method);
+        result.setResourceResolver(resourceResolver);
+        result.setResource(resource);
+        return result;
     }
 
     @Override
