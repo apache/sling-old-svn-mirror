@@ -43,7 +43,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.javascript.io.EspReader;
-import org.apache.sling.servlets.helpers.DefaultHtmlRenderer;
+import org.apache.sling.servlets.helpers.HtmlRendererServlet;
 
 /** Experimental JST script engine: converts a JST template (using the
  *  same templating syntax as ESP) to client-side javascript code
@@ -54,7 +54,7 @@ import org.apache.sling.servlets.helpers.DefaultHtmlRenderer;
 public class JstScriptEngine extends AbstractSlingScriptEngine {
 
     private final List<String> libraryScripts = new LinkedList<String>();
-    private final DefaultHtmlRenderer htmlRenderer;
+    private final HtmlRendererServlet htmlRenderer;
     private final ScriptFilteredCopy copier = new ScriptFilteredCopy();
     
     // TODO should be configurable or synced with the actual location
@@ -64,7 +64,7 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
         super(scriptEngineFactory);
 
         libraryScripts.add(SLING_JS_PATH);
-        htmlRenderer = new DefaultHtmlRenderer();
+        htmlRenderer = new HtmlRendererServlet();
     }
 
     public Object eval(Reader script, ScriptContext context) throws ScriptException {
