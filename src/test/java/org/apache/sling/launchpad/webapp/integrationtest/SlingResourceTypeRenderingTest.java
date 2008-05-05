@@ -59,7 +59,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Node dumped by DefaultHtmlRenderer"));
+        assertTrue("Content contains default rendering",content.contains("Node dumped by HtmlRendererServlet"));
     }
 
     public void testEspHtml() throws IOException {
@@ -128,10 +128,10 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
     }
 
     public void testEspHtmlWithSelectors() throws IOException {
+        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath + "/a4");
         final String toDeleteA = uploadTestScript("rendering-test.esp","html.esp");
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath + "/a4/print");
-        final String toDeleteB = uploadTestScript(scriptPath + "/a4","rendering-test-2.esp","html.esp");
-        final String toDeleteC = uploadTestScript(scriptPath + "/a4/print","rendering-test-3.esp","html.esp");
+        final String toDeleteB = uploadTestScript("rendering-test-2.esp","a4.esp");
+        final String toDeleteC = uploadTestScript("rendering-test-3.esp","a4/print.esp");
         
         try {
             String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
