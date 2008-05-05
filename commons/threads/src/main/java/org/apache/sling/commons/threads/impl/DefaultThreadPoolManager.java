@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.threads.impl;
+package org.apache.sling.commons.threads.impl;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.threads.ThreadPool;
-import org.apache.sling.threads.ThreadPoolConfig;
-import org.apache.sling.threads.ThreadPoolManager;
+import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolConfig;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * and is responsible to manage {@link ThreadPool}s.
  *
  * @scr.component metatype="false"
- * @scr.service interface="org.apache.sling.threads.ThreadPoolManager"
+ * @scr.service interface="org.apache.sling.commons.threads.ThreadPoolManager"
  *
  * @version $Id$
  */
@@ -78,7 +78,7 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPoolManager#add(org.apache.sling.threads.ThreadPool)
+     * @see org.apache.sling.commons.threads.ThreadPoolManager#add(org.apache.sling.commons.threads.ThreadPool)
      */
     public boolean add(ThreadPool pool) {
         synchronized ( this.pools ) {
@@ -91,7 +91,7 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPoolManager#get(java.lang.String)
+     * @see org.apache.sling.commons.threads.ThreadPoolManager#get(java.lang.String)
      */
     public ThreadPool get(String name) {
         if ( name == null ) {
@@ -108,7 +108,7 @@ public class DefaultThreadPoolManager implements ThreadPoolManager {
     }
 
     /**
-     * @see org.apache.sling.threads.ThreadPoolManager#create(java.lang.String, org.apache.sling.threads.ThreadPoolConfig)
+     * @see org.apache.sling.commons.threads.ThreadPoolManager#create(java.lang.String, org.apache.sling.commons.threads.ThreadPoolConfig)
      */
     public ThreadPool create(String name,
                              ThreadPoolConfig config) {
