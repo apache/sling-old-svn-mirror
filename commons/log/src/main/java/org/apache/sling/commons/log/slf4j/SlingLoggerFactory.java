@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.log.slf4j;
+package org.apache.sling.commons.log.slf4j;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.osgi.log.LogManager;
+import org.apache.sling.commons.log.LogManager;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 

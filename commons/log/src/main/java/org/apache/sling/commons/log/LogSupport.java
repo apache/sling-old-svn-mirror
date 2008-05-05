@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.osgi.log;
+package org.apache.sling.commons.log;
 
 import java.util.Enumeration;
 import java.util.HashMap;
