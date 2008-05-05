@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.helpers;
 
 import java.io.IOException;
 
@@ -36,32 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A SlingSafeMethodsServlet that renders the current Resource as a JSON data
- * block
- *
- * @scr.service
- *  interface="javax.servlet.Servlet"
- *
- * @scr.component
- *  immediate="true"
- *  metatype="false"
- *
- * @scr.property
- *  name="service.description"
- *  value="Default JSON Renderer Servlet"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
- *
- * Use this as the default servlet for json get requests for Sling
- * @scr.property
- *  name="sling.servlet.resourceTypes"
- *  values.0="sling/servlet/default"
- *  values.1="sling:redirect"
- * @scr.property
- *  name="sling.servlet.extensions"
- *  value="json"
+ * The <code>JsonRendererServlet</code> renders the current resource in JSON
+ * on behalf of the {@link org.apache.sling.servlets.DefaultGetServlet}.
  */
 public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
@@ -69,7 +45,9 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 5577121546674133317L;
 
-    static final String responseContentType = "application/json";
+    public static final String EXT_JSON = "json";
+    
+    public static final String responseContentType = "application/json";
 
     private final JsonItemWriter itemWriter;
 

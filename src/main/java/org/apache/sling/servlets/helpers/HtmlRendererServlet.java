@@ -14,59 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.helpers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.servlets.helpers.DefaultHtmlRenderer;
 
 /**
- * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
- *
- * @scr.service
- *  interface="javax.servlet.Servlet"
- *
- * @scr.component
- *  immediate="true"
- *  metatype="false"
- *
- * @scr.property
- *  name="service.description"
- *  value="Default HTML Renderer Servlet"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
- *
- * Use this as the default servlet for html get requests for Sling
- * @scr.property
- *  name="sling.servlet.resourceTypes"
- *  value="sling/servlet/default"
- * @scr.property
- *  name="sling.servlet.extensions"
- *  value="html"
+ * The <code>HtmlRendererServlet</code> renders the current resource in HTML
+ * on behalf of the {@link org.apache.sling.servlets.DefaultGetServlet}.
  */
-public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
+public class HtmlRendererServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = -5815904221043005085L;
 
+    public static final String EXT_HTML = "html";
+
     private static final String responseContentType = "text/html";
-
-    private final DefaultHtmlRenderer renderer;
-
-    public DefaultHtmlRendererServlet() {
-        this.renderer = new DefaultHtmlRenderer();
-    }
 
     @Override
     protected void doGet(SlingHttpServletRequest req,
@@ -91,12 +66,12 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
              */
             if (node != null) {
                 pw.println("<html><body>");
-                renderer.render(pw, r, node);
+                render(pw, r, node);
                 pw.println("</body></html>");
-                
-            } else if(p != null) {
+
+            } else if (p != null) {
                 // for properties, we just output the String value
-                renderer.render(pw, r, p);
+                render(pw, r, p);
             }
 
         } catch (RepositoryException re) {
@@ -104,4 +79,56 @@ public class DefaultHtmlRendererServlet extends SlingSafeMethodsServlet {
                 + req.getResource().getPath(), re);
         }
     }
+
+    public void render(PrintWriter pw, Resource r, Node n)
+            throws RepositoryException {
+        pw.println("<h1>Node dumped by " + getClass().getSimpleName() + "</h1>");
+        pw.println("<p>Node path: <b>" + n.getPath() + "</b></p>");
+        pw.println("<p>Resource metadata: <b>" + r.getResourceMetadata()
+            + "</b></p>");
+
+        pw.println("<h2>Node properties</h2>");
+        for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
+            final Property p = pi.nextProperty();
+            printPropertyValue(pw, p);
+        }
+    }
+
+    public void render(PrintWriter pw, Resource r, Property p)
+            throws RepositoryException {
+        pw.print(p.getValue().getString());
+    }
+
+    protected void dump(PrintWriter pw, Resource r, Property p)
+            throws RepositoryException {
+        pw.println("<h2>Property dumped by " + getClass().getSimpleName()
+            + "</h1>");
+        pw.println("<p>Property path:" + p.getPath() + "</p>");
+        pw.println("<p>Resource metadata: " + r.getResourceMetadata() + "</p>");
+
+        printPropertyValue(pw, p);
+    }
+
+    protected void printPropertyValue(PrintWriter pw, Property p)
+            throws RepositoryException {
+
+        pw.print(p.getName() + ": <b>");
+
+        if (p.getDefinition().isMultiple()) {
+            Value[] values = p.getValues();
+            pw.print('[');
+            for (int i = 0; i < values.length; i++) {
+                if (i > 0) {
+                    pw.print(", ");
+                }
+                pw.print(values[i].getString());
+            }
+            pw.print(']');
+        } else {
+            pw.print(p.getValue().getString());
+        }
+
+        pw.print("</b><br/>");
+    }
+
 }
