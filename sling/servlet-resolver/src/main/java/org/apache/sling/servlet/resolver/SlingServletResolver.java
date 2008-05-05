@@ -22,7 +22,6 @@ import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
 import static org.apache.sling.core.CoreConstants.SLING_CURRENT_SERVLET_NAME;
-import static org.apache.sling.servlet.resolver.ServletResolverConstants.DEFAULT_SERVLET_NAME;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,14 +50,15 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.HttpConstants;
-import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.servlets.OptingServlet;
+import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.core.servlets.ErrorHandler;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.servlet.resolver.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlet.resolver.defaults.DefaultServlet;
+import org.apache.sling.servlet.resolver.helper.LocationResource;
+import org.apache.sling.servlet.resolver.helper.LocationUtil;
 import org.apache.sling.servlet.resolver.helper.PathIterator;
 import org.apache.sling.servlet.resolver.helper.SlingServletConfig;
 import org.apache.sling.servlet.resolver.resource.ServletResourceProvider;
@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingServletResolver</code> TODO
- *
+ * 
  * @scr.component label="%servletresolver.name"
  *                description="%servletresolver.description"
  * @scr.property name="service.description" value="Sling Servlet Resolver and
@@ -121,65 +121,38 @@ public class SlingServletResolver implements ServletResolver,
 
     // ---------- ServletResolver interface -----------------------------------
 
-    /**
-     * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.SlingHttpServletRequest)
-     */
     public Servlet resolveServlet(SlingHttpServletRequest request) {
 
         Servlet servlet = null;
 
-        ResourceResolver resolver = request.getResourceResolver();
-        String[] path = resolver.getSearchPath();
-        String baseName = getScriptBaseName(request);
-
-        // (1) default script name and according to resource type and selectors
-        PathIterator pathIterator = new PathIterator(
-            request.getResource().getResourceType(),
-            request.getRequestPathInfo().getSelectorString(), path);
-        servlet = getServlet(resolver, pathIterator, baseName, request);
-
-        // (2) GET/HEAD and according to resource type and selectors
-        if (servlet == null && !baseName.equals(request.getMethod())) {
-            pathIterator.reset();
-            servlet = getServlet(resolver, pathIterator, request.getMethod(), request);
+        // first check whether the type of a resource is the absolute
+        // path of a servlet (or script)
+        String type = request.getResource().getResourceType();
+        if (type.charAt(0) == '/') {
+            Resource res = request.getResourceResolver().getResource(type);
+            if (res != null) {
+                servlet = res.adaptTo(Servlet.class);
+            }
         }
-
-        // (3) Repeate steps (1) and (2) for the super type hierarchy
+        
         if (servlet == null) {
-            String resourceSuperType = request.getResource().getResourceSuperType();
-            while (resourceSuperType != null && servlet == null) {
-
-                // (3a) default script name and according to resource type and selectors
-                pathIterator.reset(resourceSuperType);
-                servlet = getServlet(resolver, pathIterator, baseName, request);
-
-                // (3b) GET/HEAD and according to resource type and selectors
-                if (servlet == null && !baseName.equals(request.getMethod())) {
-                    pathIterator.reset();
-                    servlet = getServlet(resolver, pathIterator, request.getMethod(), request);
-                }
-
-                // the next supertype or null
-                if (servlet == null) {
-                    resourceSuperType = JcrResourceUtil.getResourceSuperType(
-                        resolver, resourceSuperType);
+            LocationUtil lu = LocationUtil.create(request);
+            Collection<LocationResource> candidates = lu.getScripts(request);
+            Iterator<LocationResource> lri = candidates.iterator();
+            while (lri.hasNext() && servlet == null) {
+                Resource candidateResource = lri.next().getResource();
+                Servlet candidate = candidateResource.adaptTo(Servlet.class);
+                if (candidate != null) {
+                    boolean servletAcceptsRequest = !(candidate instanceof OptingServlet)
+                        || ((OptingServlet) candidate).accepts(request);
+                    if (servletAcceptsRequest) {
+                        servlet = candidate;
+                    }
                 }
             }
         }
 
-        // (4) default script name and default servlet name and selectors
-        if (servlet == null) {
-            pathIterator.reset(DEFAULT_SERVLET_NAME);
-            servlet = getServlet(resolver, pathIterator, baseName, request);
-
-            // (5) GET/HEAD and default servlet name and selectors
-            if (servlet == null && !baseName.equals(request.getMethod())) {
-                pathIterator.reset();
-                servlet = getServlet(resolver, pathIterator, request.getMethod(), request);
-            }
-        }
-
-        // (6) last resort, use the core bundle default servlet
+        // last resort, use the core bundle default servlet
         if (servlet == null) {
             servlet = getCoreDefaultServlet();
         }

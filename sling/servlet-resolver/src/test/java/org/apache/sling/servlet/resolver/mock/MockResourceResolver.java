@@ -18,9 +18,11 @@
  */
 package org.apache.sling.servlet.resolver.mock;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,10 +33,16 @@ public class MockResourceResolver implements ResourceResolver {
 
     private String[] searchPath;
 
-    private HashMap<String, Resource> resources = new HashMap<String, Resource>();
+    private Map<String, Resource> resources = new LinkedHashMap<String, Resource>();
 
-    public void addResource(String path, Resource resource) {
-        this.resources.put(path, resource);
+    private Map<String, Collection<Resource>> children = new LinkedHashMap<String, Collection<Resource>>();
+
+    public void addResource(Resource resource) {
+        this.resources.put(resource.getPath(), resource);
+    }
+
+    public void addChildren(Resource parent, Collection<Resource> children) {
+        this.children.put(parent.getPath(), children);
     }
 
     public Resource resolve(HttpServletRequest request) {
@@ -57,8 +65,10 @@ public class MockResourceResolver implements ResourceResolver {
     }
 
     public Resource getResource(Resource base, String path) {
-        throw new UnsupportedOperationException("Not implemented");
-
+        if (!path.startsWith("/")) {
+            path = base.getPath() + "/" + path;
+        }
+        return getResource(path);
     }
 
     public String[] getSearchPath() {
@@ -67,19 +77,47 @@ public class MockResourceResolver implements ResourceResolver {
 
     }
 
-    public Iterator<Resource> listChildren(Resource parent) {
+    public Iterator<Resource> listChildren(final Resource parent) {
+        Collection<Resource> childCollection = children.get(parent.getPath());
+        if (childCollection != null) {
+            return childCollection.iterator();
+        }
+
         return new Iterator<Resource>() {
+            final String parentPath = parent.getPath() + "/";
+
+            final Iterator<Resource> elements = resources.values().iterator();
+
+            Resource nextResource = seek();
 
             public boolean hasNext() {
-                return false;
-
+                return nextResource != null;
             }
 
             public Resource next() {
-                return null;
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                Resource result = nextResource;
+                nextResource = seek();
+                return result;
             }
 
             public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            private Resource seek() {
+                while (elements.hasNext()) {
+                    Resource next = elements.next();
+                    String path = next.getPath();
+                    if (path.startsWith(parentPath)
+                        && path.indexOf('/', parentPath.length()) < 0) {
+                        return next;
+                    }
+                }
+                return null;
             }
         };
     }
@@ -100,7 +138,7 @@ public class MockResourceResolver implements ResourceResolver {
 
     }
 
-    public void setSearchPath(String[] searchPath) {
+    public void setSearchPath(String... searchPath) {
         this.searchPath = searchPath;
     }
 }
