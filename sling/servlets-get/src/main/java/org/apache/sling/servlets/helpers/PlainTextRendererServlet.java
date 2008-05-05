@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.helpers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -32,34 +32,15 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
- * A SlingSafeMethodsServlet that renders the current Resource as plain text.
- *
- * @scr.service
- *  interface="javax.servlet.Servlet"
- *
- * @scr.component
- *  immediate="true"
- *  metatype="false"
- *
- * @scr.property
- *  name="service.description"
- *  value="Default Plain Text Renderer Servlet"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
- *
- * Use this as the default servlet for text get requests for Sling
- * @scr.property
- *  name="sling.servlet.resourceTypes"
- *  value="sling/servlet/default"
- * @scr.property
- *  name="sling.servlet.extensions"
- *  value="txt"
+ * The <code>PlainTextRendererServlet</code> renders the current resource in
+ * plain text on behalf of the
+ * {@link org.apache.sling.servlets.DefaultGetServlet}.
  */
 public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = -5815904221043005085L;
+
+    public static final String EXT_TXT = "txt";
 
     private static final String responseContentType = "text/plain";
 

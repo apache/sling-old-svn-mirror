@@ -40,7 +40,7 @@ public class PathBasedResourceTypeTest extends HttpTestBase {
         
         // without script -> default rendering
         String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Node dumped by DefaultHtmlRenderer"));
+        assertTrue("Content contains default rendering",content.contains("Node dumped by HtmlRendererServlet"));
         
         // check default resource type
         final String scriptPath = "/apps/" + testPath;
