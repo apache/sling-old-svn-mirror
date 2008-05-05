@@ -152,7 +152,7 @@ public class Loader {
                 if ( !isUpdate && contentAlreadyLoaded ) {
                     log.info("Content of bundle already loaded {}.", bundle.getSymbolicName());
                 } else {
-                    this.installContent(session, bundle, pathIter);
+                    this.installContent(session, bundle, pathIter, contentAlreadyLoaded);
                     if (isRetry) {
                         // log success of retry
                         log.info(
@@ -197,20 +197,23 @@ public class Loader {
 
     // ---------- internal -----------------------------------------------------
 
-    private void installContent(Session session, Bundle bundle, final Iterator<PathEntry> pathIter)
+    private void installContent(final Session session,
+                                final Bundle bundle,
+                                final Iterator<PathEntry> pathIter,
+                                final boolean contentAlreadyLoaded)
     throws RepositoryException {
-        try {
-            log.debug("Installing initial content from bundle {}",
+        log.debug("Installing initial content from bundle {}",
                 bundle.getSymbolicName());
+        try {
             while (pathIter.hasNext() ) {
                 final PathEntry entry = pathIter.next();
-                this.installFromPath(bundle, entry.getPath(), entry.isOverwrite(), session.getRootNode());
+                if ( !contentAlreadyLoaded || entry.isOverwrite() ) {
+                    this.installFromPath(bundle, entry.getPath(), entry.isOverwrite(), session.getRootNode());
+                }
             }
 
             // persist modifications now
             session.save();
-            log.debug("Done installing initial content from bundle {}",
-                bundle.getSymbolicName());
         } finally {
             try {
                 if (session.hasPendingChanges()) {
@@ -222,6 +225,8 @@ public class Loader {
                     bundle.getSymbolicName(), re);
             }
         }
+        log.debug("Done installing initial content from bundle {}",
+                bundle.getSymbolicName());
 
     }
 
