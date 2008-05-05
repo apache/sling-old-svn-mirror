@@ -35,8 +35,6 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
 
     private static final String SCRIPT_BASE = LOCATION + "/" + LOCATION_NAME;
 
-    private static final String SCRIPT_BASE_INVALID = LOCATION + "/invalid";
-
     public void testCreateLocationResourceGET() {
 
         final MockResource res0 = new MockResource(null, SCRIPT_BASE, "foo:bar");
