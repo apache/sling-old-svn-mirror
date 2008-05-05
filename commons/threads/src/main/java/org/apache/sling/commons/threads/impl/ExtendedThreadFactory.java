@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.threads.impl;
+package org.apache.sling.commons.threads.impl;
 
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.sling.threads.ThreadPoolConfig;
+import org.apache.sling.commons.threads.ThreadPoolConfig;
 
 
 /**
  * This class is responsible to create new Thread instances.
  * It's a very basic implementation.
  *
- * @version $Id: DefaultThreadFactory.java 628678 2008-02-18 10:40:12Z cziegeler $
+ * @version $Id$
  */
 public final class ExtendedThreadFactory implements ThreadFactory {
 

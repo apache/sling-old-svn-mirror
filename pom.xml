@@ -74,6 +74,7 @@
         <module>commons/mime</module>
         <module>commons/osgi</module>
         <module>commons/testing</module>
+        <module>commons/threads</module>
                 
         <!-- The JCR sub project -->
         <module>jcr/api</module>
@@ -104,7 +105,6 @@
         <module>sling/scheduler</module>
         <module>sling/servlets-get</module>
         <module>sling/servlets-post</module>
-        <module>sling/threads</module>
         <module>sling/bundleresource</module>
 
         <!-- Scripting Support -->

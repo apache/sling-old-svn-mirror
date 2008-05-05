@@ -25,10 +25,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.scheduler.Job;
 import org.apache.sling.scheduler.Scheduler;
-import org.apache.sling.threads.ThreadPool;
-import org.apache.sling.threads.ThreadPoolManager;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
