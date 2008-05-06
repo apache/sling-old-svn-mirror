@@ -20,8 +20,8 @@ package org.apache.sling.servlet.resolver.helper;
 
 import java.util.Collection;
 
-import org.apache.sling.servlet.resolver.mock.MockResource;
-import org.apache.sling.servlet.resolver.mock.MockSlingHttpServletRequest;
+import org.apache.sling.commons.testing.sling.MockResource;
+import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 
 /** Various tests that explain and demonstrate how scripts are 
  *  selected
@@ -151,5 +151,26 @@ public class ScriptSelectionTest extends LocationTestBase {
     
     public void testHtmlPostSelectors() {
         assertScript("POST", "print.a4", "html", SET_A, "/apps/foo/bar/POST.esp");
+    }
+    
+    public void testHtmlPostSelectorsAreIgnored() {
+        final String [] scripts = {
+                "/apps/foo/bar/print/POST.esp"
+        };
+        assertScript("POST", "print.a4", "html", scripts, null);
+    }
+    
+    public void testHtmlPostExtensionIsIgnored() {
+        final String [] scripts = {
+                "/apps/foo/bar/POST.html.esp"
+        };
+        assertScript("POST", "print.a4", "html", scripts, null);
+    }
+    
+    public void testHtmlPostCannotIncludeResourceType() {
+        final String [] scripts = {
+                "/apps/foo/bar/bar.POST.esp"
+        };
+        assertScript("POST", "print.a4", "html", scripts, null);
     }
 }
