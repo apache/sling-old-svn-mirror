@@ -19,8 +19,9 @@
 package org.apache.sling.servlet.resolver.helper;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceWrapper;
 
-public class LocationResource implements Comparable<LocationResource> {
+public class LocationResource extends ResourceWrapper implements Comparable<LocationResource> {
 
     static final int WEIGHT_NONE = 0;
 
@@ -32,26 +33,21 @@ public class LocationResource implements Comparable<LocationResource> {
 
     private final int ordinal;
 
-    private final Resource resource;
-
     private final int numSelectors;
 
     private int methodPrefixWeight;
 
     public LocationResource(int ordinal, Resource resource, int numSelectors,
             int methodPrefixWeight) {
+        super(resource);
+        
         this.ordinal = ordinal;
-        this.resource = resource;
         this.numSelectors = numSelectors;
         this.methodPrefixWeight = methodPrefixWeight;
     }
 
     public int getOrdinal() {
         return ordinal;
-    }
-
-    public Resource getResource() {
-        return resource;
     }
 
     public int getNumSelectors() {
