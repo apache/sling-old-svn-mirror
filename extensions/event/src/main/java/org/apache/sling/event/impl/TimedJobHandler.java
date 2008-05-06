@@ -39,6 +39,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.scheduler.Job;
 import org.apache.sling.scheduler.JobContext;
@@ -125,8 +126,8 @@ public class TimedJobHandler
     /**
      * Create a unique node name for this timed job.
      */
-    protected String getNodeName(String jobTopic, String jobId) {
-        return jobTopic.replace('/', '.') + " " + jobId.replace('/', '.');
+    protected String getNodeName(final ScheduleInfo info) {
+        return Text.escapeIllegalJcrChars(info.jobId);
     }
 
     /**
@@ -186,9 +187,7 @@ public class TimedJobHandler
         try {
             // get parent node
             final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
-            final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
-            final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
-            final String nodeName = this.getNodeName(jobTopic, jobId);
+            final String nodeName = this.getNodeName(scheduleInfo);
             // is there already a node?
             final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
             Lock lock = null;
@@ -460,7 +459,7 @@ public class TimedJobHandler
             try {
                 s = this.createSession();
                 final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                final String nodeName = this.getNodeName(topic, info.jobId);
+                final String nodeName = this.getNodeName(info);
                 final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
                 if ( eventNode != null ) {
                     try {
@@ -550,14 +549,14 @@ public class TimedJobHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#getContainerNodeType()
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getContainerNodeType()
      */
     protected String getContainerNodeType() {
         return EventHelper.TIMED_EVENTS_NODE_TYPE;
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#getEventNodeType()
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getEventNodeType()
      */
     protected String getEventNodeType() {
         return EventHelper.TIMED_EVENT_NODE_TYPE;
