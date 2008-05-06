@@ -30,13 +30,13 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.OptingServlet;
+import org.apache.sling.commons.testing.osgi.MockBundle;
+import org.apache.sling.commons.testing.osgi.MockComponentContext;
+import org.apache.sling.commons.testing.osgi.MockServiceReference;
+import org.apache.sling.commons.testing.sling.MockResource;
+import org.apache.sling.commons.testing.sling.MockResourceResolver;
+import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.core.CoreConstants;
-import org.apache.sling.servlet.resolver.mock.MockBundle;
-import org.apache.sling.servlet.resolver.mock.MockComponentContext;
-import org.apache.sling.servlet.resolver.mock.MockResource;
-import org.apache.sling.servlet.resolver.mock.MockResourceResolver;
-import org.apache.sling.servlet.resolver.mock.MockServiceReference;
-import org.apache.sling.servlet.resolver.mock.MockSlingHttpServletRequest;
 import org.apache.sling.servlet.resolver.resource.MockServletResource;
 import org.osgi.framework.Constants;
 
@@ -71,7 +71,7 @@ public class SlingServletResolverTest extends TestCase {
         serviceReference.setProperty(
             ServletResolverConstants.SLING_SERVLET_EXTENSIONS,
             SERVLET_EXTENSION);
-        mockComponentContext.locateService("MockService", serviceReference);
+        mockComponentContext.locateService(SERVLET_NAME, serviceReference);
 
         servletResolver.bindServlet(serviceReference);
         servletResolver.activate(mockComponentContext);

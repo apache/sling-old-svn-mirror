@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.mock;
+package org.apache.sling.commons.testing.osgi;
 
 import java.util.Dictionary;
 
