@@ -346,7 +346,13 @@ public class HtmlResponse {
         if (setStatus) {
             Object status = getProperty(PN_STATUS_CODE);
             if (status instanceof Number) {
-                response.setStatus(((Number) status).intValue());
+                int statusCode = ((Number) status).intValue();
+                response.setStatus(statusCode);
+                
+                // special treatment of 201/CREATED: Requires Location
+                if (statusCode == HttpServletResponse.SC_CREATED) {
+                    response.setHeader("Location", getLocation());
+                }
             }
         }
 
