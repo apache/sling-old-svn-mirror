@@ -79,7 +79,8 @@ public class ScriptSelectionTest extends LocationTestBase {
                 "/apps/foo/bar/bar.esp",
                 "/apps/foo/bar/bar.print.esp"
             };
-        // the bar.print.esp script is not used, it must be named bar.esp
+        // the bar.print.esp script is not used, it must be named print.esp
+        // to be selector-specific
         assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/bar.esp");
     }
     
