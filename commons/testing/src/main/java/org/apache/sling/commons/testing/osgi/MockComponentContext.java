@@ -23,7 +23,6 @@ import java.util.Properties;
 
 import javax.servlet.Servlet;
 
-import org.apache.sling.core.CoreConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -31,6 +30,7 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentInstance;
 
 public class MockComponentContext implements ComponentContext {
+
     private Dictionary properties = new Properties();
 
     private MockBundleContext mockBundleContext;
@@ -53,7 +53,8 @@ public class MockComponentContext implements ComponentContext {
     }
 
     public Object locateService(String name, ServiceReference reference) {
-        String referenceName = (String) reference.getProperty(CoreConstants.SLING_SERLVET_NAME);
+        // the constant is from Sling Core, but we don't want to have a dep just because of this
+        String referenceName = (String) reference.getProperty("sling.core.servletName");
         if (referenceName != null && referenceName.equals(name)) {
             return this.servlet;
         }
