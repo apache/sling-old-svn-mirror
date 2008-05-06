@@ -25,7 +25,6 @@ import javax.naming.NamingException;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /** Base class for tests which need a Repository. Uses static
