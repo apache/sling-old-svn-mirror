@@ -20,10 +20,10 @@ package org.apache.sling.servlet.resolver.helper;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.commons.testing.sling.MockResource;
+import org.apache.sling.commons.testing.sling.MockResourceResolver;
+import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.servlet.resolver.mock.MockResource;
-import org.apache.sling.servlet.resolver.mock.MockResourceResolver;
-import org.apache.sling.servlet.resolver.mock.MockSlingHttpServletRequest;
 
 public abstract class LocationTestBase extends TestCase {
 
