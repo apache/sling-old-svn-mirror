@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.servlet.resolver.mock.MockResource;
+import org.apache.sling.commons.testing.sling.MockResource;
 
 public class LocationUtilGetServletsTest extends LocationTestBase {
 

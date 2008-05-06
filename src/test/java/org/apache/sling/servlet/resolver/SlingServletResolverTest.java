@@ -49,8 +49,6 @@ public class SlingServletResolverTest extends TestCase {
 
     public static final String SERVLET_NAME = "TestServlet";
 
-    private static final String ROOT = "/";
-
     private static final String SERVLET_EXTENSION = "html";
 
     private MockResourceResolver mockResourceResolver;

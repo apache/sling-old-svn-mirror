@@ -22,8 +22,8 @@ import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.servlet.resolver.mock.MockResource;
-import org.apache.sling.servlet.resolver.mock.MockSlingHttpServletRequest;
+import org.apache.sling.commons.testing.sling.MockResource;
+import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 
 public class LocationUtilCreateLocationResourceTest extends TestCase {
 
