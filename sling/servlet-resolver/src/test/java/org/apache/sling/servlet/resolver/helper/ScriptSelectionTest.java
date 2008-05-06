@@ -74,6 +74,15 @@ public class ScriptSelectionTest extends LocationTestBase {
         assertScript("GET", "print.a4", "html", SET_A, "/apps/foo/bar/print.esp");
     }
     
+    public void testHtmlGetSelectorsAndResourceLabel() {
+        final String [] scripts = {
+                "/apps/foo/bar/bar.esp",
+                "/apps/foo/bar/bar.print.esp"
+            };
+        // the bar.print.esp script is not used, it must be named bar.esp
+        assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/bar.esp");
+    }
+    
     public void testHtmlGetSingleSelector() {
         assertScript("GET", "print", "html", SET_A, "/apps/foo/bar/print.esp");
     }
