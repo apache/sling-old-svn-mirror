@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.mock;
+package org.apache.sling.commons.testing.osgi;
 
 import java.util.Dictionary;
 import java.util.Properties;
@@ -24,7 +24,6 @@ import java.util.Properties;
 import javax.servlet.Servlet;
 
 import org.apache.sling.core.CoreConstants;
-import org.apache.sling.servlet.resolver.SlingServletResolverTest;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -55,11 +54,11 @@ public class MockComponentContext implements ComponentContext {
 
     public Object locateService(String name, ServiceReference reference) {
         String referenceName = (String) reference.getProperty(CoreConstants.SLING_SERLVET_NAME);
-        if (referenceName.equals(SlingServletResolverTest.SERVLET_NAME)) {
+        if (referenceName != null && referenceName.equals(name)) {
             return this.servlet;
-        } else {
-            return null;
         }
+
+        return null;
     }
 
     public BundleContext getBundleContext() {

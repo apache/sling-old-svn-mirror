@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.mock;
+package org.apache.sling.commons.testing.sling;
 
 import java.io.BufferedReader;
 import java.security.Principal;
@@ -50,7 +50,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     private Resource resource;
 
     private String method;
-    
+
     private final RequestPathInfo requestPathInfo;
 
     private final String queryString;
@@ -71,18 +71,24 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
         this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
             suffix);
         this.queryString = queryString;
-        
+
         setMethod(null);
     }
 
     public void setResourceResolver(MockResourceResolver resolver) {
         this.mockResourceResolver = resolver;
+
+        // recreate request resource with the new resolver
+        if (resource.getResourceResolver() == null) {
+            this.resource = new SyntheticResource(resolver, resource.getPath(),
+                resource.getResourceType());
+        }
     }
-    
+
     public void setResource(Resource resource) {
         this.resource = resource;
     }
-    
+
     public void setSecure(boolean secure) {
         this.secure = secure;
     }
@@ -90,7 +96,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     public void setMethod(String method) {
         this.method = (method == null) ? "GET" : method.toUpperCase();
     }
-    
+
     public Cookie getCookie(String name) {
         return null;
     }
@@ -136,7 +142,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     public ResourceBundle getResourceBundle(Locale locale) {
         return null;
     }
-    
+
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         return null;
     }
