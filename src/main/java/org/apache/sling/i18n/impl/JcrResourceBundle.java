@@ -203,16 +203,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private String[] getSearchPath() {
         if (searchPath == null) {
-            String[] path = resourceResolver.getSearchPath();
-
-            // ensure trailing slash
-            for (int i = 0; i < path.length; i++) {
-                if (!path[i].endsWith("/")) {
-                    path[i] = path[i].concat("/");
-                }
-            }
-
-            searchPath = path;
+            searchPath = resourceResolver.getSearchPath();
         }
 
         return searchPath;
