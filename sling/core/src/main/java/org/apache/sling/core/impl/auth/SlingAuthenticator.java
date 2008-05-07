@@ -82,17 +82,17 @@ public class SlingAuthenticator implements ManagedService {
     private static final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
 
     /**
-     * @scr.property value="cqsudo"
+     * @scr.property valueRef="DEFAULT_IMPERSONATION_COOKIE"
      */
     public static final String PAR_IMPERSONATION_COOKIE_NAME = "auth.sudo.cookie";
 
     /**
-     * @scr.property value="sudo"
+     * @scr.property valueRef="DEFAULT_IMPERSONATION_PARAMETER"
      */
     public static final String PAR_IMPERSONATION_PAR_NAME = "auth.sudo.parameter";
 
     /**
-     * @scr.property value="false" type="Boolean"
+     * @scr.property valueRef="DEFAULT_ANONYMOUS_ALLOWED" type="Boolean"
      */
     public static final String PAR_ANONYMOUS_ALLOWED = "auth.annonymous";
 
@@ -100,7 +100,7 @@ public class SlingAuthenticator implements ManagedService {
     private static final String DEFAULT_IMPERSONATION_PARAMETER = "sudo";
 
     /** The default impersonation cookie name */
-    private static final String DEFAULT_IMPERSONATION_COOKIE = "cqsudo";
+    private static final String DEFAULT_IMPERSONATION_COOKIE = "sling.sudo";
 
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
