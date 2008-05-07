@@ -156,6 +156,11 @@ public interface ResourceResolver extends Adaptable {
      * The returns array of Strings is a copy of the internal value, so
      * modifications to this array have no influence on the operation of the
      * ResourceResolver.
+     * <p>
+     * Each entry in the array is an absolute path terminated with a slash
+     * character. Thus to create an absolute path from a search path entry and
+     * a relative path, the search path entry and relative path may just be
+     * concatenated.
      */
     String[] getSearchPath();
 
