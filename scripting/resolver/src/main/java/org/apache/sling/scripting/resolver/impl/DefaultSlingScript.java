@@ -418,7 +418,12 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             bindings.put(RESPONSE, sling.getResponse());
             bindings.put(RESOURCE, sling.getRequest().getResource());
             bindings.put(OUT, sling.getResponse().getWriter());
-            bindings.put(NODE, sling.getRequest().getResource().adaptTo(Node.class));
+            
+            // set the current node if the resource is node based
+            Node node = sling.getRequest().getResource().adaptTo(Node.class);
+            if (node != null) {
+                bindings.put(NODE, node);
+            }
         }
 
         Object logObject = slingBindings.get(LOG);
