@@ -48,12 +48,13 @@ public interface ResourceResolver extends Adaptable {
      * {@link Resource#getPath() resource path} set to the request URI.
      * {@link Resource#adaptTo(Class) object} returns <code>null</code> for
      * all classes.
-     *
+     * 
      * @param request The http servlet request object used to resolve the
      *            resource for.
      * @return The {@link Resource} for the request.
-     * @throws org.apache.sling.api.SlingException A subclass of this exception is thrown if the
-     *             resource to which the request maps cannot be retrieved.
+     * @throws org.apache.sling.api.SlingException A subclass of this exception
+     *             is thrown if the resource to which the request maps cannot be
+     *             retrieved.
      */
     Resource resolve(HttpServletRequest request);
 
@@ -70,12 +71,13 @@ public interface ResourceResolver extends Adaptable {
      * <p>
      * If the <code>absPath</code> is a relative path, this method returns
      * <code>null</code>.
-     *
+     * 
      * @param absPath The absolute path to be mapped to a resource.
      * @return The {@link Resource} mapped from the path or <code>null</code>
      *         if no resource can be found for the path.
-     * @throws org.apache.sling.api.SlingException A subclass of this exception is thrown if the
-     *             resource to which the request maps cannot be retrieved.
+     * @throws org.apache.sling.api.SlingException A subclass of this exception
+     *             is thrown if the resource to which the request maps cannot be
+     *             retrieved.
      */
     Resource resolve(String absPath);
 
@@ -91,7 +93,7 @@ public interface ResourceResolver extends Adaptable {
      * an existing resource roundtripping may of course not work and calling
      * {@link #resolve(String)} with the path returned may return
      * <code>null</code>.
-     *
+     * 
      * @param resourcePath The path for which to return a mapped path.
      * @return The mapped path.
      */
@@ -105,7 +107,7 @@ public interface ResourceResolver extends Adaptable {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     *
+     * 
      * @param path The absolute path to the resource object to be loaded. The
      *            path may contain relative path specifiers like <code>.</code>
      *            (current location) and <code>..</code> (parent location),
@@ -115,8 +117,8 @@ public interface ResourceResolver extends Adaptable {
      *            relative path to a resource.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws org.apache.sling.api.SlingException If an error occurrs trying to load the resource
-     *             object from the path.
+     * @throws org.apache.sling.api.SlingException If an error occurrs trying to
+     *             load the resource object from the path.
      */
     Resource getResource(String path);
 
@@ -128,7 +130,7 @@ public interface ResourceResolver extends Adaptable {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     *
+     * 
      * @param base The base {@link Resource} against which a relative path
      *            argument given by <code>path</code> is resolved. This
      *            parameter may be <code>null</code> if the <code>path</code>
@@ -142,9 +144,10 @@ public interface ResourceResolver extends Adaptable {
      *            this method.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws org.apache.sling.api.SlingException If an error occurrs trying to load the resource
-     *             object from the path or if <code>base</code> is
-     *             <code>null</code> and <code>path</code> is relative.
+     * @throws org.apache.sling.api.SlingException If an error occurrs trying to
+     *             load the resource object from the path or if
+     *             <code>base</code> is <code>null</code> and
+     *             <code>path</code> is relative.
      */
     Resource getResource(Resource base, String path);
 
@@ -158,8 +161,8 @@ public interface ResourceResolver extends Adaptable {
      * ResourceResolver.
      * <p>
      * Each entry in the array is an absolute path terminated with a slash
-     * character. Thus to create an absolute path from a search path entry and
-     * a relative path, the search path entry and relative path may just be
+     * character. Thus to create an absolute path from a search path entry and a
+     * relative path, the search path entry and relative path may just be
      * concatenated.
      */
     String[] getSearchPath();
@@ -173,13 +176,13 @@ public interface ResourceResolver extends Adaptable {
      * reading content from a Java Content Repository, the children could be the
      * {@link Resource} objects loaded from child items of the <code>Item</code>
      * of the given <code>Resource</code>.
-     *
+     * 
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is
      *             <code>null</code>.
-     * @throws org.apache.sling.api.SlingException If any error occurs acquiring the child resource
-     *             iterator.
+     * @throws org.apache.sling.api.SlingException If any error occurs acquiring
+     *             the child resource iterator.
      */
     Iterator<Resource> listChildren(Resource parent);
 
@@ -193,7 +196,7 @@ public interface ResourceResolver extends Adaptable {
      * create a JCR <code>Query</code> through the <code>QueryManager</code>.
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
-     *
+     * 
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching
@@ -201,7 +204,8 @@ public interface ResourceResolver extends Adaptable {
      * @throws QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator of if the query
      *             language is not supported.
-     * @throws org.apache.sling.api.SlingException If an error occurrs querying for the resources.
+     * @throws org.apache.sling.api.SlingException If an error occurrs querying
+     *             for the resources.
      */
     Iterator<Resource> findResources(String query, String language);
 
@@ -218,7 +222,7 @@ public interface ResourceResolver extends Adaptable {
      * the column name and the column value is the JCR <code>Value</code>
      * object converted into the respective Java object, such as
      * <code>Boolean</code> for a value of property type <em>Boolean</em>.
-     *
+     * 
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances
@@ -226,7 +230,8 @@ public interface ResourceResolver extends Adaptable {
      * @throws QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator of if the query
      *             language is not supported.
-     * @throws org.apache.sling.api.SlingException If an error occurrs querying for the resources.
+     * @throws org.apache.sling.api.SlingException If an error occurrs querying
+     *             for the resources.
      */
     Iterator<Map<String, Object>> queryResources(String query, String language);
 
