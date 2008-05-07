@@ -71,6 +71,10 @@
                         <Private-Package>
                             org.apache.sling.jcr.jackrabbit.client
                         </Private-Package>
+                        <Import-Package>
+                             org.osgi.service.log,
+                             *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
