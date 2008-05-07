@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 
@@ -60,13 +59,6 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
         }
 
         Resource resource = request.getResource();
-
-        // cannot handle the request for missing resources
-        if (resource instanceof NonExistingResource) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                "Resource not found at path " + resource.getPath());
-            return;
-        }
 
         // check the last modification time and If-Modified-Since header
         ResourceMetadata meta = resource.getResourceMetadata();

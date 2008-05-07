@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.servlets.helpers.HtmlRendererServlet;
 import org.apache.sling.servlets.helpers.JsonRendererServlet;
@@ -79,6 +80,13 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
+
+        // cannot handle the request for missing resources
+        if (ResourceUtil.isNonExistingResource(request.getResource())) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                "Resource not found at path " + request.getResource().getPath());
+            return;
+        }
 
         Servlet rendererServlet;
         String ext = request.getRequestPathInfo().getExtension();
