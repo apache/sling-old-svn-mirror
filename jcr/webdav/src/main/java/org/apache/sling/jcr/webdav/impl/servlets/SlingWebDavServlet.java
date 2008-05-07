@@ -49,6 +49,9 @@ import org.apache.sling.jcr.webdav.impl.helper.SlingSessionProvider;
  * @scr.property
  *  name="sling.servlet.resourceTypes"
  *  value="sling/servlet/default"
+ * @scr.property
+ *  name="sling.servlet.methods"
+ *  value="*"
  */
 public class SlingWebDavServlet extends AbstractSlingWebDavServlet {
 
