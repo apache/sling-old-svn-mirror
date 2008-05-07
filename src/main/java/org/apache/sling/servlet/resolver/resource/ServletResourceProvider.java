@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.osgi.framework.ServiceReference;
@@ -45,6 +46,11 @@ public class ServletResourceProvider implements ResourceProvider {
      * to simplify handling in the resolution process (value is ".servlet").
      */
     public static final String SERVLET_PATH_EXTENSION = ".servlet";
+    
+    private static final String[] DEFAULT_SERVLET_METHODS = {
+        HttpConstants.METHOD_GET, HttpConstants.METHOD_HEAD };
+    
+    private static final String ALL_METHODS = "*";
     
     private final Servlet servlet;
 
@@ -86,12 +92,16 @@ public class ServletResourceProvider implements ResourceProvider {
 
         // we have types and expect extensions and/or methods
         String[] extensions = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_EXTENSIONS));
+        
+        // handle the methods property specially (SLING-430)
         String[] methods = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_METHODS));
-        // if ((extensions == null || extensions.length == 0)
-        // && (methods == null || methods.length == 0)) {
-        // // TODO: should log, why we ignore this servlet
-        // return null;
-        // }
+        if (methods == null || methods.length == 0) {
+            // TODO: should log
+            methods = DEFAULT_SERVLET_METHODS;
+        } else if (methods.length == 1 && ALL_METHODS.equals(methods[0])) {
+            // TODO: should log
+            methods = null;
+        }
 
         Set<String> pathSet = new HashSet<String>();
         for (String type : types) {
