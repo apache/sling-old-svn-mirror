@@ -20,13 +20,14 @@ package org.apache.sling.servlet.resolver.helper;
 
 import java.util.Collection;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 
 /** Various tests that explain and demonstrate how scripts are 
  *  selected
  */
-public class ScriptSelectionTest extends LocationTestBase {
+public class ScriptSelectionTest extends HelperTestBase {
     
     /** Test set of available scripts */
     protected final String [] SET_A = {
@@ -40,7 +41,7 @@ public class ScriptSelectionTest extends LocationTestBase {
     
     /** Given a list of available scripts and the request method, selectors 
      *  and extension, check that the expected script is selected.
-     *  The resource type is foo:bar, set by LocationTestBase
+     *  The resource type is foo:bar, set by HelperTestBase
      */ 
     protected void assertScript(String method, String selectors, String extension,
             String [] scripts, String expectedScript) 
@@ -51,17 +52,17 @@ public class ScriptSelectionTest extends LocationTestBase {
             resourceResolver.addResource(r);            
         }
         
-        // Create mock request and get scripts from LocationUtil
+        // Create mock request and get scripts from ResourceCollector
         final MockSlingHttpServletRequest req = makeRequest(method, selectors, extension);
-        final LocationUtil u = LocationUtil.create(req);
-        final Collection<LocationResource> s = u.getScripts(req);
+        final ResourceCollector u = ResourceCollector.create(req);
+        final Collection<Resource> s = u.getServlets(req.getResource());
         
         if(expectedScript == null) {
             assertFalse("No script must be found", s.iterator().hasNext());
         } else {
             // Verify that the expected script is the first in the list of candidates
             assertTrue("A script must be found", s.iterator().hasNext());
-            final String scriptPath = s.iterator().next().getResource().getPath();
+            final String scriptPath = s.iterator().next().getPath();
             assertEquals("First script is the expected one", expectedScript, scriptPath);
         }
     }

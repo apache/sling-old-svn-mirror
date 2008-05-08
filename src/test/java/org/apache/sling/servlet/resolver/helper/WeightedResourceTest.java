@@ -20,11 +20,11 @@ package org.apache.sling.servlet.resolver.helper;
 
 import junit.framework.TestCase;
 
-public class LocationResourceTest extends TestCase {
+public class WeightedResourceTest extends TestCase {
 
     public void testEquality() {
-        LocationResource lr1 = new LocationResource(0, null, 0, LocationResource.WEIGHT_NONE);
-        LocationResource lr2 = new LocationResource(0, null, 0, LocationResource.WEIGHT_NONE);
+        WeightedResource lr1 = new WeightedResource(0, null, 0, WeightedResource.WEIGHT_NONE);
+        WeightedResource lr2 = new WeightedResource(0, null, 0, WeightedResource.WEIGHT_NONE);
         
         // expect same objects to be equal
         assertTrue(lr1.equals(lr1));
@@ -37,8 +37,8 @@ public class LocationResourceTest extends TestCase {
     }
     
     public void testCompareToSelectors() {
-        LocationResource lr1 = new LocationResource(0, null, 1, LocationResource.WEIGHT_NONE);
-        LocationResource lr2 = new LocationResource(1, null, 0, LocationResource.WEIGHT_NONE);
+        WeightedResource lr1 = new WeightedResource(0, null, 1, WeightedResource.WEIGHT_NONE);
+        WeightedResource lr2 = new WeightedResource(1, null, 0, WeightedResource.WEIGHT_NONE);
         
         // expect the same objects to compare equal
         assertEquals(0, lr1.compareTo(lr1));
@@ -49,8 +49,8 @@ public class LocationResourceTest extends TestCase {
     }
     
     public void testCompareToPrefix() {
-        LocationResource lr1 = new LocationResource(0, null, 2, LocationResource.WEIGHT_PREFIX);
-        LocationResource lr2 = new LocationResource(1, null, 2, LocationResource.WEIGHT_NONE);
+        WeightedResource lr1 = new WeightedResource(0, null, 2, WeightedResource.WEIGHT_PREFIX);
+        WeightedResource lr2 = new WeightedResource(1, null, 2, WeightedResource.WEIGHT_NONE);
         
         // expect the same objects to compare equal
         assertEquals(0, lr1.compareTo(lr1));
@@ -61,8 +61,8 @@ public class LocationResourceTest extends TestCase {
     }
     
     public void testCompareToExtension() {
-        LocationResource lr1 = new LocationResource(0, null, 2, LocationResource.WEIGHT_EXTENSION);
-        LocationResource lr2 = new LocationResource(1, null, 2, LocationResource.WEIGHT_NONE);
+        WeightedResource lr1 = new WeightedResource(0, null, 2, WeightedResource.WEIGHT_EXTENSION);
+        WeightedResource lr2 = new WeightedResource(1, null, 2, WeightedResource.WEIGHT_NONE);
         
         // expect the same objects to compare equal
         assertEquals(0, lr1.compareTo(lr1));
@@ -73,8 +73,8 @@ public class LocationResourceTest extends TestCase {
     }
  
     public void testCompareToOrdinal() {
-        LocationResource lr1 = new LocationResource(0, null, 0, LocationResource.WEIGHT_NONE);
-        LocationResource lr2 = new LocationResource(1, null, 0, LocationResource.WEIGHT_NONE);
+        WeightedResource lr1 = new WeightedResource(0, null, 0, WeightedResource.WEIGHT_NONE);
+        WeightedResource lr2 = new WeightedResource(1, null, 0, WeightedResource.WEIGHT_NONE);
         
         // expect the same objects to compare equal
         assertEquals(0, lr1.compareTo(lr1));
