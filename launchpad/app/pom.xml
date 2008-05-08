@@ -382,14 +382,6 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>
-                org.apache.sling.jcr.jackrabbit-text-extractors
-            </artifactId>
-            <version>1.4.0-0003-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <optional>true</optional>

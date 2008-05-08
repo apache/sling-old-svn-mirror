@@ -75,7 +75,7 @@
                             javax.security.*,
                             org.apache.commons.collections.*,
                             org.apache.jackrabbit.api,
-                            org.apache.jackrabbit.extractor, org.osgi.*,
+                            org.osgi.*,
                             org.slf4j, org.xml.sax, org.xml.sax.helpers
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
@@ -83,10 +83,20 @@
                         <!-- Embedd some libraries -->
                         <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Dependency>
+                            <!-- core repository implementation -->
                             jackrabbit-jcr-rmi; jackrabbit-core;
                             jackrabbit-jcr-commons;
                             jackrabbit-spi-commons; jackrabbit-spi;
-                            lucene-core; derby; concurrent
+                            lucene-core; derby; concurrent,
+                            
+                            <!-- jackrabbit text extraction -->
+                            jackrabbit-text-extractors,
+                            tm-extractors,
+                            pdfbox;version=0.7.1,
+                            poi;version=3.0.1-FINAL,
+                            poi-scratchpad;version=3.0.1-FINAL,
+                            nekohtml,
+                            xercesImpl
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -107,11 +117,8 @@
             <version>2.0.0-incubator-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-rmi</artifactId>
-            <scope>compile</scope>
-        </dependency>
+        
+        <!-- The core repository implementation -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
@@ -123,11 +130,52 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- Export embedded repositories through RMI -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-rmi</artifactId>
+            <scope>compile</scope>
         </dependency>
 
+        <!-- Text Extractor support -->
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-text-extractors</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.0.1-FINAL</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <version>3.0.1-FINAL</version>
+        </dependency>
+        <dependency>
+            <groupId>pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>0.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.textmining</groupId>
+            <artifactId>tm-extractors</artifactId>
+            <version>0.4</version>
+        </dependency>
+        
+        <!-- Neko HTML Dependencies for bundle inclusion -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+            <version>0.9.4</version>
+        </dependency>
+        
         <!-- OSGi Libraries -->
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -138,15 +186,19 @@
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
 
+        <!-- Testing -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
 
     </dependencies>
