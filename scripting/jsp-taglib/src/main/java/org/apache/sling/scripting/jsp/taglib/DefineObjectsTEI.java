@@ -17,7 +17,6 @@
 package org.apache.sling.scripting.jsp.taglib;
 
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_LOG_NAME;
-import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_MAPPED_OBJECT_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
@@ -71,18 +70,6 @@ public class DefineObjectsTEI extends TagExtraInfo {
     public static final String ATTR_NODE_NAME = "nodeName";
 
     /**
-     * The name of the tag attribute used to define the name of the mapped
-     * object scripting variable (value is "mappedObjectName").
-     */
-    public static final String ATTR_MAPPED_OBJECT_NAME = "mappedObjectName";
-
-    /**
-     * The name of the tag attribute used to define the type of the scripting
-     * variable to take for the mapped object (value is "mappedObjectClass").
-     */
-    public static final String ATTR_MAPPED_OBJECT_CLASS = "mappedObjectClass";
-
-    /**
      * The name of the tag attribute used to define the name of the
      * SlingScriptHelper scripting variable (value is "slingName").
      */
@@ -132,11 +119,6 @@ public class DefineObjectsTEI extends TagExtraInfo {
         addVar(varInfos, data, ATTR_RESOURCE_NAME, DEFAULT_RESOURCE_NAME,
             RESOURCE_CLASS);
         addVar(varInfos, data, ATTR_NODE_NAME, DEFAULT_NODE_NAME, NODE_CLASS);
-
-        String mappedObjectClass = getValue(data, ATTR_MAPPED_OBJECT_CLASS,
-            null);
-        addVar(varInfos, data, ATTR_MAPPED_OBJECT_NAME,
-            DEFAULT_MAPPED_OBJECT_NAME, mappedObjectClass);
 
         addVar(varInfos, data, ATTR_RESOURCE_RESOLVER_NAME,
             DEFAULT_RESOURCE_RESOLVER_NAME, RESOURCE_RESOLVER_CLASS);

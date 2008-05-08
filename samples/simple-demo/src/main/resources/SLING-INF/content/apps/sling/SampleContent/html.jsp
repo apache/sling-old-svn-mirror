@@ -23,9 +23,11 @@
 <%@page import="java.util.Iterator"%>
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %>
 
-<%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects mappedObjectName="sampleContent" mappedObjectClass="SampleContent" />
-
+<%-- Ensure the presence of the Sling objects --%>
+<sling:defineObjects/>
+<%
+    final SampleContent sampleContent = resource.adaptTo(SampleContent.class);
+%>
 <h1><%= sampleContent.getTitle() %></h1>
 <p><%= sampleContent.getText() %></p>
 <table border="1" cellpadding="3" cellspacing="0">

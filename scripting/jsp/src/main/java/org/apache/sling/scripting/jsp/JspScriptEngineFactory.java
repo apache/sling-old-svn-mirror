@@ -31,6 +31,7 @@ import javax.servlet.ServletContext;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -128,7 +129,10 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
         try {
             JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
-            jsp.service(bindings);
+            // create a SlingBindings object
+            final SlingBindings slingBindings = new SlingBindings();
+            slingBindings.putAll(bindings);
+            jsp.service(slingBindings);
         } finally {
             ioProvider.resetRequestResourceResolver();
         }
