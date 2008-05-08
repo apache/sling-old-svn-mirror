@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.resolver;
+package org.apache.sling.scripting.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,8 +36,8 @@ import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.scripting.InvalidServiceFilterSyntaxException;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.scripting.resolver.impl.helper.OnDemandReaderRequest;
-import org.apache.sling.scripting.resolver.impl.helper.OnDemandWriterResponse;
+import org.apache.sling.scripting.core.impl.helper.OnDemandReaderRequest;
+import org.apache.sling.scripting.core.impl.helper.OnDemandWriterResponse;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;

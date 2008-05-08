@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.resolver.impl;
+package org.apache.sling.scripting.core.impl;
 
 import java.io.Writer;
 
