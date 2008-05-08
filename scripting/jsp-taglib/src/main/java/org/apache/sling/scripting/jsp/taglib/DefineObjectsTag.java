@@ -17,7 +17,6 @@
 package org.apache.sling.scripting.jsp.taglib;
 
 import javax.jcr.Node;
-import javax.script.Bindings;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.resource.Resource;
@@ -57,13 +56,6 @@ public class DefineObjectsTag extends TagSupport {
     public static final String DEFAULT_NODE_NAME = "currentNode";
 
     /**
-     * Default name for the scripting variable referencing the mapped object
-     * underlying the current <code>Resource</code> object (value is
-     * "mappedObject").
-     */
-    public static final String DEFAULT_MAPPED_OBJECT_NAME = "object";
-
-    /**
      * Default name for the scripting variable referencing the log
      * <code>org.slf4j.Logger</code> (value is "log").
      */
@@ -88,10 +80,6 @@ public class DefineObjectsTag extends TagSupport {
     private String resourceName = DEFAULT_RESOURCE_NAME;
 
     private String nodeName = DEFAULT_NODE_NAME;
-
-    private String mappedObjectName = DEFAULT_MAPPED_OBJECT_NAME;
-
-    private String mappedObjectClass = null;
 
     private String slingName = DEFAULT_SLING_NAME;
 
@@ -119,8 +107,8 @@ public class DefineObjectsTag extends TagSupport {
      * @return always {@link #EVAL_PAGE}.
      */
     public int doEndTag() {
-        final Bindings bindings = (Bindings)pageContext.getRequest().getAttribute(Bindings.class.getName());
-        final SlingScriptHelper scriptHelper = (SlingScriptHelper)bindings.get(SlingBindings.SLING);
+        final SlingBindings bindings = (SlingBindings)pageContext.getRequest().getAttribute(SlingBindings.class.getName());
+        final SlingScriptHelper scriptHelper = bindings.getSling();
 
         pageContext.setAttribute(requestName, scriptHelper.getRequest());
         pageContext.setAttribute(responseName, scriptHelper.getResponse());
@@ -128,18 +116,10 @@ public class DefineObjectsTag extends TagSupport {
         pageContext.setAttribute(resourceName, resource);
         pageContext.setAttribute(resourceResolverName, scriptHelper.getRequest().getResourceResolver());
         pageContext.setAttribute(slingName, scriptHelper);
-        pageContext.setAttribute(logName, bindings.get(SlingBindings.LOG));
+        pageContext.setAttribute(logName, bindings.getLog());
         final Node node = resource.adaptTo(Node.class);
         if (node != null) {
             pageContext.setAttribute(nodeName, node);
-        }
-
-        // only access the mappedObject if the class is set
-        if (mappedObjectClass != null) {
-            Object mappedObject = resource.adaptTo(Object.class);
-            if (mappedObject != null) {
-                pageContext.setAttribute(mappedObjectName, mappedObject);
-            }
         }
 
         return EVAL_PAGE;
@@ -161,14 +141,6 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setNodeName(String name) {
         this.nodeName = name;
-    }
-
-    public void setMappedObjectName(String name) {
-        this.mappedObjectName = name;
-    }
-
-    public void setMappedObjectClass(String name) {
-        this.mappedObjectClass = name;
     }
 
     public void setLogName(String name) {

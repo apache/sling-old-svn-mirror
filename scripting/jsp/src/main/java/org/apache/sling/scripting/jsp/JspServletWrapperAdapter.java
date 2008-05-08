@@ -18,14 +18,12 @@ package org.apache.sling.scripting.jsp;
 
 import java.io.IOException;
 
-import javax.script.Bindings;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingBindings;
@@ -53,12 +51,12 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
      * @throws IllegalArgumentException if the Jasper Precompile controller
      *             request parameter has an illegal value.
      */
-    public void service(Bindings bindings) {
-        final SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
-        final Object oldValue = request.getAttribute(Bindings.class.getName());
+    public void service(SlingBindings bindings) {
+        final SlingHttpServletRequest request = bindings.getRequest();
+        final Object oldValue = request.getAttribute(SlingBindings.class.getName());
         try {
-            request.setAttribute(Bindings.class.getName(), bindings);
-            service(request, (SlingHttpServletResponse)bindings.get(SlingBindings.RESPONSE), preCompile(request));
+            request.setAttribute(SlingBindings.class.getName(), bindings);
+            service(request, bindings.getResponse(), preCompile(request));
         } catch (SlingException se) {
             // rethrow as is
             throw se;
@@ -67,7 +65,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
         } catch (ServletException se) {
             throw new SlingServletException(se);
         } finally {
-            request.setAttribute(Bindings.class.getName(), oldValue);
+            request.setAttribute(SlingBindings.class.getName(), oldValue);
         }
     }
 
