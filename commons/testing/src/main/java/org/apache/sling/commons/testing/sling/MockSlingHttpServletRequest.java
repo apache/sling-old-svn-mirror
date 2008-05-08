@@ -19,8 +19,10 @@
 package org.apache.sling.commons.testing.sling;
 
 import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.security.Principal;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -58,6 +60,8 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     private boolean secure = false;
 
     private MockResourceResolver mockResourceResolver;
+    
+    private RequestProgressTracker mockRequestProgressTracker;
 
     public static final String RESOURCE_TYPE = "foo/bar";
 
@@ -132,7 +136,10 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public RequestProgressTracker getRequestProgressTracker() {
-        return null;
+        if (mockRequestProgressTracker == null) {
+            mockRequestProgressTracker = new MockRequestProgressTracker();
+        }
+        return mockRequestProgressTracker;
     }
 
     public Resource getResource() {
