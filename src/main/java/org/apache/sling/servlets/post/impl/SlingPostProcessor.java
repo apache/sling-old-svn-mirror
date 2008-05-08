@@ -577,8 +577,8 @@ public class SlingPostProcessor {
             if (paramName.endsWith(SlingPostServlet.DEFAULT_VALUE_SUFFIX)) {
                 continue;
             }
-            // SLING-298: skip FormEncoding parameter
-            if (paramName.equals("FormEncoding")) {
+            // SLING-298: skip form encoding parameter
+            if (paramName.equals("_charset_")) {
                 continue;
             }
             // skip parameters that do not start with the save prefix
