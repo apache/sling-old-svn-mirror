@@ -118,5 +118,10 @@ public interface RequestProgressTracker {
      * Dumps the process timer entries to the given writer, one entry per line.
      */
     public void dump(PrintWriter writer);
-
+    
+    /**
+     *  Call this when done processing the request - all calls except the first
+     *  one are ignored 
+     */
+    public void done();
 }

@@ -55,15 +55,19 @@ public class RequestProgressTrackerLogFilter implements Filter {
         
         chain.doFilter(request, response);
         
-        if(log.isDebugEnabled() && request instanceof SlingHttpServletRequest) {
-            int requestId = 0;
-            synchronized (getClass()) {
-                requestId = ++requestCounter;
-            }
+        if(request instanceof SlingHttpServletRequest) {
             final RequestProgressTracker t = ((SlingHttpServletRequest)request).getRequestProgressTracker();
-            final Iterator<String> it = t.getMessages();
-            while(it.hasNext()) {
-                log.debug("REQUEST_{} - " + it.next(), requestId);
+            t.done();
+            
+            if(log.isDebugEnabled()) {
+                int requestId = 0;
+                synchronized (getClass()) {
+                    requestId = ++requestCounter;
+                }
+                final Iterator<String> it = t.getMessages();
+                while(it.hasNext()) {
+                    log.debug("REQUEST_{} - " + it.next(), requestId);
+                }
             }
         }
     }
