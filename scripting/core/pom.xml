@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.scripting.resolver</artifactId>
+    <artifactId>org.apache.sling.scripting.core</artifactId>
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -38,13 +38,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/resolver
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/core
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/resolver
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/core
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/resolver
+            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/core
         </url>
     </scm>
 
@@ -61,11 +61,11 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.scripting.resolver;version=${pom.version}
+                            org.apache.sling.scripting.core;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scripting.resolver.impl,
-                            org.apache.sling.scripting.resolver.impl.helper
+                            org.apache.sling.scripting.core.impl,
+                            org.apache.sling.scripting.core.impl.helper
                         </Private-Package>
                     </instructions>
                 </configuration>
