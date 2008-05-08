@@ -23,9 +23,11 @@
 <%@page import="org.apache.sling.api.resource.SyntheticResource"%>
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0"%>
 
-<%-- Ensure the presence of the ComponentAPI objects --%>
-<sling:defineObjects mappedObjectName="samplePage"
-	mappedObjectClass="SamplePage" />
+<%-- Ensure the presence of the Sling objects --%>
+<sling:defineObjects/>
+<%
+    final SamplePage samplePage = resource.adaptTo(SamplePage.class);
+%>
 <%-- This is a top level component, so we have to draw the html and head tags --%>
 <html>
 <head>
