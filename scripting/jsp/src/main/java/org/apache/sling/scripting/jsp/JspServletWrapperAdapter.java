@@ -52,7 +52,8 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
      *             request parameter has an illegal value.
      */
     public void service(SlingScriptHelper scriptHelper) {
-        SlingHttpServletRequest request = scriptHelper.getRequest();
+        final SlingHttpServletRequest request = scriptHelper.getRequest();
+        final Object oldValue = request.getAttribute(SlingScriptHelper.class.getName());
         try {
             request.setAttribute(SlingScriptHelper.class.getName(), scriptHelper);
             service(request, scriptHelper.getResponse(), preCompile(request));
@@ -64,7 +65,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
         } catch (ServletException se) {
             throw new SlingServletException(se);
         } finally {
-            request.removeAttribute(SlingScriptHelper.class.getName());
+            request.setAttribute(SlingScriptHelper.class.getName(), oldValue);
         }
     }
 
