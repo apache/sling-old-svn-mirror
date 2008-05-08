@@ -108,7 +108,7 @@ public class ParameterSupport {
                 }
             }
 
-            // apply any FormEncoding in the parameter map
+            // apply any form encoding (from '_charset_') in the parameter map
             Util.fixEncoding(parameters);
 
             this.postParameterMap = parameters;
