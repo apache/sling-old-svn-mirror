@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.resolver.impl;
+package org.apache.sling.scripting.core.impl;
 
 import java.io.IOException;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.scripting.core.impl.LogWriter;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 
