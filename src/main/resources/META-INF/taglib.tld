@@ -124,16 +124,6 @@
             <rtexprvalue>false</rtexprvalue>
         </attribute>
         <attribute>
-            <name>mappedObjectName</name>
-            <required>false</required>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>mappedObjectClass</name>
-            <required>false</required>
-            <rtexprvalue>false</rtexprvalue>
-        </attribute>
-        <attribute>
             <name>resourceResolverName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
