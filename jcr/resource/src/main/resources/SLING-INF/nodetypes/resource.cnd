@@ -31,3 +31,9 @@
     mixin
   - sling:resourceSuperType (string)
 
+//-----------------------------------------------------------------------------
+// Node type to be used as a replacement for nt:folder: it can be used
+// as a child of nt:folder and allows to add unstructured content
+[sling:Folder] > nt:hierarchyNode, nt:unstructured
+  orderable
+  + * (nt:base) = sling:Folder version
