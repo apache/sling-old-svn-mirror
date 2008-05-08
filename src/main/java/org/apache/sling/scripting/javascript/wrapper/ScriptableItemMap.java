@@ -86,6 +86,11 @@ public class ScriptableItemMap extends ScriptableObject {
 
     @Override
     public Object get(String name, Scriptable start) {
+        // special provision for the "length" property to simulate an array
+        if ("length".equals(name)) {
+            return ScriptRuntime.toNumber(this.items.keySet().size()+"");
+        }
+
         Item item = items.get(name);
         Object result = Undefined.instance;
         if (item != null) {
