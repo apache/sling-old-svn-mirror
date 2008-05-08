@@ -107,6 +107,9 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             return;
         }
 
+        request.getRequestProgressTracker().log("Using " 
+                + rendererServlet.getClass().getName()
+                + " to render for extension=" + ext);
         rendererServlet.service(request, response);
     }
 
