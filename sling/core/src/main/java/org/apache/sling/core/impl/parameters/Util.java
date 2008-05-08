@@ -32,8 +32,8 @@ import org.apache.sling.api.request.RequestParameter;
  */
 class Util {
 
-    /** The name of the FormEncoding parameter */
-    public final static String PARAMETER_FORMENCODING = "FormEncoding";
+    /** The name of the form encoding parameter */
+    public final static String PARAMETER_FORMENCODING = "_charset_";
 
     // ISO-8859-1 mapps all characters 0..255 to \u0000..\u00ff directly
     public static final String ENCODING_DIRECT = "ISO-8859-1";
@@ -78,7 +78,7 @@ class Util {
         // default the encoding to ISO-8859-1 (aka direct, 1:1 encoding)
         String formEncoding = ENCODING_DIRECT;
 
-        // check whether a FormEncoding parameter overwrites this default
+        // check whether a form encoding parameter overwrites this default
         RequestParameter[] feParm = parameterMap.get(PARAMETER_FORMENCODING);
         if (feParm != null) {
             // get and check form encoding
