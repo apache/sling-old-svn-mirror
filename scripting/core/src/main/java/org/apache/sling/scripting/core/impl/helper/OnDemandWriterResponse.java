@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.resolver.impl.helper;
+package org.apache.sling.scripting.core.impl.helper;
 
 import java.io.PrintWriter;
 

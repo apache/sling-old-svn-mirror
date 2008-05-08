@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scripting.resolver.impl;
+package org.apache.sling.scripting.core.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
