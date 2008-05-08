@@ -21,61 +21,97 @@ package org.apache.sling.servlet.resolver.helper;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceWrapper;
 
-public class LocationResource extends ResourceWrapper implements Comparable<LocationResource> {
+/**
+ * The <code>WeightedResource</code> is a <code>Resource</code> which is
+ * attributed with weight values to make it a <code>Comparable</code> to be
+ * used to build the result collection returned by
+ * {@link ResourceCollector#getServlets(Resource)}.
+ * <p>
+ * The order amongst <code>WeightedResource</code> instances is defined as
+ * follows and implemented in the {@link #compareTo(WeightedResource)} method:
+ * <ol>
+ * <li>The instance with more matching selectors ({@link #getNumSelectors()})
+ * is ordered before the instance with less matching selectors.</li>
+ * <li>If the matching selectors are equal, the instance with the higher
+ * method/prefix weight ({@link #getMethodPrefixWeight()}) is order before the
+ * instance with a lower method/prefix weight.</li>
+ * <li>Finally, if also the method/prefix weights are equal, the instance with
+ * the lower ordinal number ({@link #getOrdinal()} is ordered before the
+ * instance with the higher ordinal number.</li>
+ * </ol>
+ */
+final class WeightedResource extends ResourceWrapper implements
+        Comparable<WeightedResource> {
 
+    /**
+     * Weight value assigned to an instance just bearing request method name.
+     */
     static final int WEIGHT_NONE = 0;
 
+    /**
+     * Weight value assigned to an instance if the the resource name neither
+     * contains the parent resource name as a prefix, nor the request method
+     * name nor the request extension.
+     */
     static final int WEIGHT_LAST_RESSORT = -1;
 
+    /**
+     * Weight value added to method/prefix weight if the resource name contains
+     * the the name of the parent resource as its prefix.
+     */
     static final int WEIGHT_PREFIX = 1;
 
+    /**
+     * Weight value added to method/prefix weight if the resource name contains
+     * the request extension.
+     */
     static final int WEIGHT_EXTENSION = 2;
 
     private final int ordinal;
 
     private final int numSelectors;
 
-    private int methodPrefixWeight;
+    private final int methodPrefixWeight;
 
-    public LocationResource(int ordinal, Resource resource, int numSelectors,
+    WeightedResource(int ordinal, Resource resource, int numSelectors,
             int methodPrefixWeight) {
         super(resource);
-        
+
         this.ordinal = ordinal;
         this.numSelectors = numSelectors;
         this.methodPrefixWeight = methodPrefixWeight;
     }
 
-    public int getOrdinal() {
+    final public int getOrdinal() {
         return ordinal;
     }
 
-    public int getNumSelectors() {
+    final public int getNumSelectors() {
         return numSelectors;
     }
 
-    public int getMethodPrefixWeight() {
+    final public int getMethodPrefixWeight() {
         return methodPrefixWeight;
     }
 
     @Override
-    public int hashCode() {
+    final public int hashCode() {
         return ordinal;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    final public boolean equals(Object obj) {
         return obj == this;
     }
 
     @Override
-    public String toString() {
+    final public String toString() {
         return getClass().getSimpleName() + "[" + getOrdinal() + "]: "
             + getResource() + ", #selectors=" + getNumSelectors()
             + ", methodPrefixWeight=" + getMethodPrefixWeight();
     }
 
-    public int compareTo(LocationResource o) {
+    final public int compareTo(WeightedResource o) {
         if (equals(o)) {
             return 0;
         }

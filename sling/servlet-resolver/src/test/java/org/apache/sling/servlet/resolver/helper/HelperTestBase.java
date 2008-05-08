@@ -25,7 +25,7 @@ import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 
-public abstract class LocationTestBase extends TestCase {
+public abstract class HelperTestBase extends TestCase {
 
     protected MockResourceResolver resourceResolver;
 

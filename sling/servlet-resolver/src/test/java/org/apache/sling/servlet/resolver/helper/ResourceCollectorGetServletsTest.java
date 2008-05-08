@@ -23,10 +23,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.sling.MockResource;
 
-public class LocationUtilGetServletsTest extends LocationTestBase {
+public class ResourceCollectorGetServletsTest extends HelperTestBase {
 
     private String label;
     
@@ -144,19 +145,19 @@ public class LocationUtilGetServletsTest extends LocationTestBase {
             pathMap.put(name, path);
         }
         
-        LocationUtil lu = LocationUtil.create(request);
-        Collection<LocationResource> res = lu.getScripts(request);
-        Iterator<LocationResource> rIter = res.iterator();
+        ResourceCollector lu = ResourceCollector.create(request);
+        Collection<Resource> res = lu.getServlets(request.getResource());
+        Iterator<Resource> rIter = res.iterator();
 
         for (int index : indices) {
             assertTrue(rIter.hasNext());
 
-            LocationResource lr = rIter.next();
+            Resource lr = rIter.next();
 
             String name = names[index];
             String path = pathMap.get(name);
 
-            assertEquals(path, lr.getResource().getPath());
+            assertEquals(path, lr.getPath());
         }
 
         assertFalse(rIter.hasNext());
