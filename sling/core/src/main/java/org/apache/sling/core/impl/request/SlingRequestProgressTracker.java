@@ -119,6 +119,8 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * start of the respective timer.
      */
     private final Map<String, Long> namedTimerEntries = new HashMap<String, Long>();
+    
+    private boolean done;
 
     /**
      * Creates a new request progress tracker.
@@ -132,6 +134,8 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
      * initial timer entry
      */
     public void reset() {
+        done = false;
+        
         // remove all entries
         entries.clear();
         namedTimerEntries.clear();
@@ -241,6 +245,13 @@ public class SlingRequestProgressTracker implements RequestProgressTracker {
                 + "ms");
         }
     }
+    
+    public void done() {
+        if(done) return;
+        logTimer(REQUEST_PROCESSING_TIMER, REQUEST_PROCESSING_TIMER + " ends");
+        done = true;
+    }
+
 
     /** Process tracker entry keeping timestamp, tag and message */
     private static class TrackingEntry {
