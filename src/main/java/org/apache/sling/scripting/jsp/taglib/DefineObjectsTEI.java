@@ -16,6 +16,7 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_LOG_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_MAPPED_OBJECT_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
@@ -37,6 +38,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.slf4j.Logger;
 
 /**
  * This class defines the scripting variables that are created by the
@@ -92,9 +94,15 @@ public class DefineObjectsTEI extends TagExtraInfo {
      */
     public static final String ATTR_RESOURCE_RESOLVER_NAME = "resourceResolverName";
 
-    private static final String RENDER_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
+    /**
+     * The name of the tag attribute used to define the name of the
+     * logger scripting variable (value is "logName").
+     */
+    public static final String ATTR_LOG_NAME = "logName";
 
-    private static final String RENDER_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
+    private static final String SLING_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
+
+    private static final String SLING_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
 
     private static final String RESOURCE_CLASS = Resource.class.getName();
 
@@ -103,6 +111,8 @@ public class DefineObjectsTEI extends TagExtraInfo {
     private static final String NODE_CLASS = Node.class.getName();
 
     private static final String SLING_CLASS = SlingScriptHelper.class.getName();
+
+    private static final String LOG_CLASS = Logger.class.getName();
 
     /**
      * Returns an Array of <code>VariableInfo</code> objects describing
@@ -115,9 +125,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
         List<VariableInfo> varInfos = new ArrayList<VariableInfo>();
 
         addVar(varInfos, data, ATTR_REQUEST_NAME, DEFAULT_REQUEST_NAME,
-            RENDER_REQUEST_CLASS);
+            SLING_REQUEST_CLASS);
         addVar(varInfos, data, ATTR_RESPONSE_NAME, DEFAULT_RESPONSE_NAME,
-            RENDER_RESPONSE_CLASS);
+            SLING_RESPONSE_CLASS);
 
         addVar(varInfos, data, ATTR_RESOURCE_NAME, DEFAULT_RESOURCE_NAME,
             RESOURCE_CLASS);
@@ -133,6 +143,9 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
         addVar(varInfos, data, ATTR_SLING_NAME,
             DEFAULT_SLING_NAME, SLING_CLASS);
+
+        addVar(varInfos, data, ATTR_LOG_NAME,
+                DEFAULT_LOG_NAME, LOG_CLASS);
 
         return varInfos.toArray(new VariableInfo[varInfos.size()]);
 

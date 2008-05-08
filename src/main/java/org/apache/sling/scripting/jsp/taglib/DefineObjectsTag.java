@@ -17,14 +17,12 @@
 package org.apache.sling.scripting.jsp.taglib;
 
 import javax.jcr.Node;
+import javax.script.Bindings;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 /**
  */
@@ -66,16 +64,22 @@ public class DefineObjectsTag extends TagSupport {
     public static final String DEFAULT_MAPPED_OBJECT_NAME = "object";
 
     /**
-     * Default name for the scripting variable referencing the current
-     * <code>ResourceResolver</code> (value is "resourceResolver").
+     * Default name for the scripting variable referencing the log
+     * <code>org.slf4j.Logger</code> (value is "log").
      */
-    public static final String DEFAULT_RESOURCE_RESOLVER_NAME = "resourceResolver";
+    public static final String DEFAULT_LOG_NAME = "log";
 
     /**
      * Default name for the scripting variable referencing the current
      * <code>SlingScriptHelper</code> (value is "sling").
      */
     public static final String DEFAULT_SLING_NAME = "sling";
+
+    /**
+     * Default name for the scripting variable referencing the current
+     * <code>ResourceResolver</code> (value is "resourceResolver").
+     */
+    public static final String DEFAULT_RESOURCE_RESOLVER_NAME = "resourceResolver";
 
     private String requestName = DEFAULT_REQUEST_NAME;
 
@@ -89,9 +93,11 @@ public class DefineObjectsTag extends TagSupport {
 
     private String mappedObjectClass = null;
 
-    private String resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
-
     private String slingName = DEFAULT_SLING_NAME;
+
+    private String logName = DEFAULT_LOG_NAME;
+
+    private String resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
 
     /**
      * Default constructor.
@@ -105,27 +111,25 @@ public class DefineObjectsTag extends TagSupport {
      * <li><code>SlingHttpServletRequest</code>
      * <li><code>SlingHttpServletResponse</code>
      * <li>current <code>Resource</code>
-     * <li>current <code>Node</code> (if resource is a NodeProvider)
-     * <li>current <code>ResourceResolver</code>
+     * <li>current <code>Node</code> (if resource is adaptable to a node)
+     * <li>current <code>Logger</code>
      * <li>current <code>SlingScriptHelper</code>
      * </ul>
      *
      * @return always {@link #EVAL_PAGE}.
      */
     public int doEndTag() {
+        final Bindings bindings = (Bindings)pageContext.getRequest().getAttribute(Bindings.class.getName());
+        final SlingScriptHelper scriptHelper = (SlingScriptHelper)bindings.get(SlingBindings.SLING);
 
-        SlingHttpServletRequest req = TagUtil.getRequest(pageContext);
-        SlingHttpServletResponse res = TagUtil.getResponse(pageContext);
-        Resource resource = req.getResource();
-        ResourceResolver resourceResolver = TagUtil.getResourceResolver(pageContext);
-
-        pageContext.setAttribute(requestName, req);
-        pageContext.setAttribute(responseName, res);
+        pageContext.setAttribute(requestName, scriptHelper.getRequest());
+        pageContext.setAttribute(responseName, scriptHelper.getResponse());
+        final Resource resource = scriptHelper.getRequest().getResource();
         pageContext.setAttribute(resourceName, resource);
-        pageContext.setAttribute(resourceResolverName, resourceResolver);
-        pageContext.setAttribute(slingName, req.getAttribute(SlingScriptHelper.class.getName()));
-
-        Node node = resource.adaptTo(Node.class);
+        pageContext.setAttribute(resourceResolverName, scriptHelper.getRequest().getResourceResolver());
+        pageContext.setAttribute(slingName, scriptHelper);
+        pageContext.setAttribute(logName, bindings.get(SlingBindings.LOG));
+        final Node node = resource.adaptTo(Node.class);
         if (node != null) {
             pageContext.setAttribute(nodeName, node);
         }
@@ -167,11 +171,15 @@ public class DefineObjectsTag extends TagSupport {
         this.mappedObjectClass = name;
     }
 
-    public void setResourceResolverName(String name) {
-        this.resourceResolverName = name;
+    public void setLogName(String name) {
+        this.logName = name;
     }
 
     public void setSlingName(String name) {
         this.slingName = name;
+    }
+
+    public void setResourceResolverName(String name) {
+        this.resourceResolverName = name;
     }
 }
