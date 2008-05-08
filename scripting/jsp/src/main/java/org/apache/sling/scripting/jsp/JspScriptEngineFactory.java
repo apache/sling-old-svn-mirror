@@ -123,12 +123,12 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * @throws SlingServletException
      * @throws SlingIOException
      */
-    private void callJsp(SlingScriptHelper scriptHelper) {
+    private void callJsp(Bindings bindings, SlingScriptHelper scriptHelper) {
 
         ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
         try {
             JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
-            jsp.service(scriptHelper);
+            jsp.service(bindings);
         } finally {
             ioProvider.resetRequestResourceResolver();
         }
@@ -271,7 +271,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             SlingScriptHelper scriptHelper = (SlingScriptHelper) props.get(SLING);
             if (scriptHelper != null) {
                 try {
-                    callJsp(scriptHelper);
+                    callJsp(props, scriptHelper);
                 } catch (Exception e) {
                     throw new ScriptException(e);
                 }

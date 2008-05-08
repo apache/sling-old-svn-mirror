@@ -22,14 +22,14 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
     version="2.0">
 
-    <description>A tab library for Sling support</description>
+    <description>A supporting tab library for Apache Sling</description>
     <tlib-version>1.0</tlib-version>
     <short-name>sling</short-name>
     <uri>http://sling.apache.org/taglibs/sling/1.0</uri>
 
     <tag>
         <description>
-            Includes a Content rendering into the current page
+            Includes a resource rendering into the current page
         </description>
         <name>include</name>
         <tag-class>
@@ -47,9 +47,9 @@
         </attribute>
         <attribute>
             <description>
-                The Resource object to include in the current request
+                The resource object to include in the current request
                 processing. Either resource or path must be specified. If
-                both are specified, the Resource takes precedences.
+                both are specified, the resource takes precedences.
             </description>
             <name>resource</name>
             <required>false</required>
@@ -58,12 +58,12 @@
         </attribute>
         <attribute>
             <description>
-                The path to the Resource object to include in the current
+                The path to the resource object to include in the current
                 request processing. If this path is relative it is
-                appended to the path of the current Resource whose
-                Component is including the given Resource. Either resource
+                appended to the path of the current resource whose
+                script is including the given resource. Either resource
                 or path must be specified. If both are specified, the
-                Resource takes precedences.
+                resource takes precedences.
             </description>
             <name>path</name>
             <required>false</required>
@@ -73,10 +73,10 @@
             <description>
                 The resource type of a resource to include. If the resource
                 to be included is specified with the path attribute,
-                which cannot be resolved to a Resource, the tag may
-                create a synthetic Resource object out of the path and
+                which cannot be resolved to a resource, the tag may
+                create a synthetic resource object out of the path and
                 this resource type. If the resource type is set the path
-                must be the exact path to a Resource object. That is,
+                must be the exact path to a resource object. That is,
                 adding parameters, selectors and extensions to the path
                 is not supported if the resource type is set.
             </description>
@@ -115,6 +115,11 @@
         </attribute>
         <attribute>
             <name>nodeName</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>logName</name>
             <required>false</required>
             <rtexprvalue>false</rtexprvalue>
         </attribute>

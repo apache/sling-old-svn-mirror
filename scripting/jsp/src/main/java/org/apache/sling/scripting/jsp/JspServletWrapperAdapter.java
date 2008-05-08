@@ -18,15 +18,17 @@ package org.apache.sling.scripting.jsp;
 
 import java.io.IOException;
 
+import javax.script.Bindings;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.SlingServletException;
-import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
@@ -45,18 +47,18 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
     }
 
     /**
-     * @param scriptHelper
+     * @param bindings
      * @throws SlingIOException
      * @throws SlingServletException
      * @throws IllegalArgumentException if the Jasper Precompile controller
      *             request parameter has an illegal value.
      */
-    public void service(SlingScriptHelper scriptHelper) {
-        final SlingHttpServletRequest request = scriptHelper.getRequest();
-        final Object oldValue = request.getAttribute(SlingScriptHelper.class.getName());
+    public void service(Bindings bindings) {
+        final SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+        final Object oldValue = request.getAttribute(Bindings.class.getName());
         try {
-            request.setAttribute(SlingScriptHelper.class.getName(), scriptHelper);
-            service(request, scriptHelper.getResponse(), preCompile(request));
+            request.setAttribute(Bindings.class.getName(), bindings);
+            service(request, (SlingHttpServletResponse)bindings.get(SlingBindings.RESPONSE), preCompile(request));
         } catch (SlingException se) {
             // rethrow as is
             throw se;
@@ -65,7 +67,7 @@ public class JspServletWrapperAdapter extends JspServletWrapper {
         } catch (ServletException se) {
             throw new SlingServletException(se);
         } finally {
-            request.setAttribute(SlingScriptHelper.class.getName(), oldValue);
+            request.setAttribute(Bindings.class.getName(), oldValue);
         }
     }
 
