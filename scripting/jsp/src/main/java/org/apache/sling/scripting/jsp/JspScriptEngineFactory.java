@@ -18,9 +18,7 @@ package org.apache.sling.scripting.jsp;
 
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
-import java.io.IOException;
 import java.io.Reader;
-import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.script.Bindings;
@@ -31,6 +29,8 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.SlingIOException;
+import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The JSP engine (a.k.a Jasper).
- * 
+ *
  * @scr.component scr="no" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
@@ -263,11 +263,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
         JspScriptEngine() {
             super(JspScriptEngineFactory.this);
-        }
-
-        public void eval(SlingScript script, Map<String, Object> props)
-                throws SlingException, IOException {
-            eval(script, props);
         }
 
         public Object eval(Reader script, ScriptContext context)
