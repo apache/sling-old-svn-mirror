@@ -85,7 +85,6 @@
         <module>jcr/jackrabbit-api</module>
         <module>jcr/jackrabbit-client</module>
         <module>jcr/jackrabbit-server</module>
-        <module>jcr/jackrabbit-text-extractors</module>
         <module>jcr/ocm</module>
         <module>jcr/resource</module>
         <module>jcr/webdav</module>
