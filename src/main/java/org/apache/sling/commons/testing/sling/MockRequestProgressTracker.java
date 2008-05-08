@@ -48,4 +48,6 @@ public class MockRequestProgressTracker implements RequestProgressTracker {
     public void startTimer(String timerName) {
     }
 
+    public void done() {
+    }
 }
