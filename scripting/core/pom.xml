@@ -31,9 +31,9 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - ScriptResolver implementation</name>
+    <name>Sling - Scripting Core implementation</name>
     <description>
-        This bundle implements the Sling API ScriptResolver interface
+        Sling Scripting core functionality
     </description>
 
     <scm>
