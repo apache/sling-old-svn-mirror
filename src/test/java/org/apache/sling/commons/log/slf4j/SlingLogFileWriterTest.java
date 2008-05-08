@@ -26,16 +26,18 @@ import org.apache.sling.commons.log.slf4j.SlingLogFileWriter;
 import junit.framework.TestCase;
 
 public class SlingLogFileWriterTest extends TestCase {
-
-    private String base;
+    private static int counter;
     
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
-        File baseFile = new File("target/" + System.currentTimeMillis() + "/" + getClass().getSimpleName());
+    }
+    
+    protected String getBase() {
+        final File baseFile = new File("target/" + getClass().getSimpleName() + "/"
+                + (counter++) + "-" + System.currentTimeMillis() + "/" + getClass().getSimpleName());
         baseFile.getParentFile().mkdirs();
-        base = baseFile.getAbsolutePath();
+        return baseFile.getAbsolutePath();
     }
     
     @Override
@@ -44,12 +46,13 @@ public class SlingLogFileWriterTest extends TestCase {
     }
     
     public void testNoRotateSize() throws IOException {
-        
+        final String base = getBase();
         SlingLogFileWriter slfw = new SlingLogFileWriter(base, -1, 10);
         
         // only base file should exist with size 0 (for now)
         File test = new File(base);
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
         
         File test0 = new File(base + ".0");
         assertFalse(test0.exists());
@@ -59,25 +62,28 @@ public class SlingLogFileWriterTest extends TestCase {
         // write some bytes and ensure size
         slfw.write("012345");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() > 0);
+        assertTrue(test.exists());
+        assertTrue(test.length() > 0);
         assertFalse(test0.exists());
         assertFalse(testn1.exists());
         
         // write some more, ensuring rotation does happen
         slfw.write("012345");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
         assertFalse(test0.exists());
         assertFalse(testn1.exists());
     }
 
     public void testRotate0Size() throws IOException {
-        
+        final String base = getBase();
         SlingLogFileWriter slfw = new SlingLogFileWriter(base, 0, 10);
         
         // only base file should exist with size 0 (for now)
         File test = new File(base);
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
         
         File test0 = new File(base + ".0");
         assertFalse(test0.exists());
@@ -89,26 +95,29 @@ public class SlingLogFileWriterTest extends TestCase {
         // write some bytes and ensure size
         slfw.write("012345");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() > 0);
+        assertTrue(test.exists());
+        assertTrue(test.length() > 0);
         assertFalse(test0.exists());
         assertFalse(testn1.exists());
         
         // write some more, ensuring rotation does happen
         slfw.write("012345");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
         assertTrue(test0.exists());
         assertFalse(test1.exists());
         assertFalse(testn1.exists());
     }
     
     public void testRotate1Size() throws IOException {
-
+        final String base = getBase();
         SlingLogFileWriter slfw = new SlingLogFileWriter(base, 1, 10);
         
         // only base file should exist with size 0 (for now)
         File test = new File(base);
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertTrue(test.length() == 0);
         
         File test0 = new File(base + ".0");
         assertFalse(test0.exists());
@@ -120,14 +129,16 @@ public class SlingLogFileWriterTest extends TestCase {
         // write some bytes and ensure size
         slfw.write("012345");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() > 0);
+        assertTrue(test.exists());
+        assertTrue(test.length() > 0);
         assertFalse(test0.exists());
         assertFalse(testn1.exists());
         
         // write some more, ensuring rotation does happen
         slfw.write("012345");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
         assertTrue(test0.exists());
         assertFalse(test1.exists());
         assertFalse(testn1.exists());
@@ -135,7 +146,8 @@ public class SlingLogFileWriterTest extends TestCase {
         // write bytes to rotate in onw fell swoop
         slfw.write("0123456789 - more");
         slfw.writeln();
-        assertTrue(test.exists() && test.length() == 0);
+        assertTrue(test.exists());
+        assertEquals(0, test.length());
         assertTrue(test0.exists());
         assertTrue(test1.exists());
         assertFalse(testn1.exists());
