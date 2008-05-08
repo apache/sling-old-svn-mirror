@@ -72,8 +72,7 @@ public class MockResourceResolver implements ResourceResolver {
     }
 
     public String[] getSearchPath() {
-        // noinspection ReturnOfCollectionOrArrayField
-        return searchPath;
+        return searchPath.clone();
 
     }
 
@@ -139,6 +138,13 @@ public class MockResourceResolver implements ResourceResolver {
     }
 
     public void setSearchPath(String... searchPath) {
-        this.searchPath = searchPath;
+        this.searchPath = new String[searchPath.length];
+        for (int i=0; i < searchPath.length; i++) {
+            String entry = searchPath[i];
+            if (!entry.endsWith("/")) {
+                entry = entry.concat("/");
+            }
+            this.searchPath[i] = entry; 
+        }
     }
 }
