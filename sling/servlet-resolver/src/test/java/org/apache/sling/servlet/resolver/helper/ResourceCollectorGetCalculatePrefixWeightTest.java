@@ -25,7 +25,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 
-public class LocationUtilCreateLocationResourceTest extends TestCase {
+public class ResourceCollectorGetCalculatePrefixWeightTest extends TestCase {
 
     private static final String LOCATION_NAME = "sample";
 
@@ -40,12 +40,12 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
         final MockResource res0 = new MockResource(null, SCRIPT_BASE, "foo:bar");
 
         // this resource has no extension, we require one
-        final LocationResource lr0 = createLocationResource(res0, "GET", null,
+        final WeightedResource lr0 = createLocationResource(res0, "GET", null,
             "html");
         assertNull(lr0);
 
         // this resource has no extension, we require one
-        final LocationResource lr1 = createLocationResource(res0, "GET", null,
+        final WeightedResource lr1 = createLocationResource(res0, "GET", null,
             "foo");
         assertNull(lr1);
     }
@@ -56,14 +56,14 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
             "foo:bar");
 
         // allow simple name for GET and html
-        final LocationResource lr10 = createLocationResource(res1, "GET", null,
+        final WeightedResource lr10 = createLocationResource(res1, "GET", null,
             "html");
         assertNotNull(lr10);
         assertEquals(0, lr10.getNumSelectors());
-        assertEquals(LocationResource.WEIGHT_PREFIX, lr10.getMethodPrefixWeight());
+        assertEquals(WeightedResource.WEIGHT_PREFIX, lr10.getMethodPrefixWeight());
 
         // this resource has no extension, we require one
-        final LocationResource lr11 = createLocationResource(res1, "GET", null,
+        final WeightedResource lr11 = createLocationResource(res1, "GET", null,
             "foo");
         assertNull(lr11);
     }
@@ -73,14 +73,14 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
             + ".html.esp", "foo:bar");
 
         // allow simple name for GET and html
-        final LocationResource lr20 = createLocationResource(res2, "GET", null,
+        final WeightedResource lr20 = createLocationResource(res2, "GET", null,
             "html");
         assertNotNull(lr20);
         assertEquals(0, lr20.getNumSelectors());
-        assertEquals(LocationResource.WEIGHT_PREFIX+LocationResource.WEIGHT_EXTENSION, lr20.getMethodPrefixWeight());
+        assertEquals(WeightedResource.WEIGHT_PREFIX+WeightedResource.WEIGHT_EXTENSION, lr20.getMethodPrefixWeight());
 
         // script does not match for .foo request
-        final LocationResource lr21 = createLocationResource(res2, "GET", null,
+        final WeightedResource lr21 = createLocationResource(res2, "GET", null,
             "foo");
         assertNull(lr21);
     }
@@ -90,16 +90,16 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
             + ".foo.esp", "foo:bar");
 
         // script does not match for .html request
-        final LocationResource lr30 = createLocationResource(res3, "GET", null,
+        final WeightedResource lr30 = createLocationResource(res3, "GET", null,
             "html");
         assertNull(lr30);
 
         // allow simple name for GET and foo
-        final LocationResource lr31 = createLocationResource(res3, "GET", null,
+        final WeightedResource lr31 = createLocationResource(res3, "GET", null,
             "foo");
         assertNotNull(lr31);
         assertEquals(0, lr31.getNumSelectors());
-        assertEquals(LocationResource.WEIGHT_PREFIX+LocationResource.WEIGHT_EXTENSION, lr31.getMethodPrefixWeight());
+        assertEquals(WeightedResource.WEIGHT_PREFIX+WeightedResource.WEIGHT_EXTENSION, lr31.getMethodPrefixWeight());
     }
 
     public void testCreateLocationResourceGETGET() {
@@ -108,13 +108,13 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
             "foo:bar");
 
         // side-effect: .GET is assumed to be the script extension
-        final LocationResource lr0 = createLocationResource(res0, "GET", null,
+        final WeightedResource lr0 = createLocationResource(res0, "GET", null,
             "html");
         assertNotNull(lr0);
-        assertEquals(LocationResource.WEIGHT_PREFIX, lr0.getMethodPrefixWeight());
+        assertEquals(WeightedResource.WEIGHT_PREFIX, lr0.getMethodPrefixWeight());
 
         // this resource has no extension, we require one
-        final LocationResource lr1 = createLocationResource(res0, "GET", null,
+        final WeightedResource lr1 = createLocationResource(res0, "GET", null,
             "foo");
         assertNull(lr1);
     }
@@ -124,17 +124,17 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
             + ".GET.esp", "foo:bar");
 
         // GET would be the extension and is not allowed like this
-        final LocationResource lr10 = createLocationResource(res1, "GET", null,
+        final WeightedResource lr10 = createLocationResource(res1, "GET", null,
             "html");
         assertNull(lr10);
 
         // GET would be the extension and is not allowed like this
-        final LocationResource lr11 = createLocationResource(res1, "GET", null,
+        final WeightedResource lr11 = createLocationResource(res1, "GET", null,
             "foo");
         assertNull(lr11);
     }
 
-    private LocationResource createLocationResource(
+    private WeightedResource createLocationResource(
             final Resource scriptResource, final String method,
             final String selectorString, final String extension) {
 
@@ -145,9 +145,12 @@ public class LocationUtilCreateLocationResourceTest extends TestCase {
                 return method;
             }
         };
-        final LocationUtilGet locationUtil = new LocationUtilGet(request);
-        return locationUtil.createLocationResource(0, LOCATION_PREFIX, true,
-            scriptResource, 0);
-
+        final ResourceCollectorGet locationUtil = new ResourceCollectorGet(request);
+        final int methodPrefixWeight = locationUtil.calculatePrefixMethodWeight(scriptResource, LOCATION_PREFIX, true);
+        if (methodPrefixWeight != ResourceCollectorGet.WEIGHT_NO_MATCH) {
+            return new WeightedResource(0, scriptResource, 0, methodPrefixWeight);
+        }
+        
+        return null;
     }
 }

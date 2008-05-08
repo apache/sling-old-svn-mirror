@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -47,9 +46,9 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
-import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -57,9 +56,7 @@ import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.core.servlets.ErrorHandler;
 import org.apache.sling.servlet.resolver.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlet.resolver.defaults.DefaultServlet;
-import org.apache.sling.servlet.resolver.helper.LocationResource;
-import org.apache.sling.servlet.resolver.helper.LocationUtil;
-import org.apache.sling.servlet.resolver.helper.PathIterator;
+import org.apache.sling.servlet.resolver.helper.ResourceCollector;
 import org.apache.sling.servlet.resolver.helper.SlingServletConfig;
 import org.apache.sling.servlet.resolver.resource.ServletResourceProvider;
 import org.osgi.framework.Constants;
@@ -115,8 +112,12 @@ public class SlingServletResolver implements ServletResolver,
 
     private String servletRoot;
 
-    private Servlet coreDefaultServlet;
+    // the default servlet if no other servlet applies for a request. This
+    // field is set on demand by getDefaultServlet()
+    private Servlet defaultServlet;
 
+    // the default error handler servlet if no other error servlet applies for
+    // a request. This field is set on demand by getDefaultErrorServlet()
     private Servlet defaultErrorServlet;
 
     // ---------- ServletResolver interface -----------------------------------
@@ -127,7 +128,8 @@ public class SlingServletResolver implements ServletResolver,
 
         // first check whether the type of a resource is the absolute
         // path of a servlet (or script)
-        String type = request.getResource().getResourceType();
+        Resource resource = request.getResource();
+        String type = resource.getResourceType();
         if (type.charAt(0) == '/') {
             Resource res = request.getResourceResolver().getResource(type);
             if (res != null) {
@@ -135,26 +137,15 @@ public class SlingServletResolver implements ServletResolver,
             }
         }
         
+        // the resource type is not absolute, so lets go for the deep search
         if (servlet == null) {
-            LocationUtil lu = LocationUtil.create(request);
-            Collection<LocationResource> candidates = lu.getScripts(request);
-            Iterator<LocationResource> lri = candidates.iterator();
-            while (lri.hasNext() && servlet == null) {
-                Resource candidateResource = lri.next().getResource();
-                Servlet candidate = candidateResource.adaptTo(Servlet.class);
-                if (candidate != null) {
-                    boolean servletAcceptsRequest = !(candidate instanceof OptingServlet)
-                        || ((OptingServlet) candidate).accepts(request);
-                    if (servletAcceptsRequest) {
-                        servlet = candidate;
-                    }
-                }
-            }
+            ResourceCollector locationUtil = ResourceCollector.create(request);
+            servlet = getServlet(locationUtil, request, resource);
         }
 
         // last resort, use the core bundle default servlet
         if (servlet == null) {
-            servlet = getCoreDefaultServlet();
+            servlet = getDefaultServlet();
         }
 
         if (log.isDebugEnabled()) {
@@ -226,13 +217,14 @@ public class SlingServletResolver implements ServletResolver,
         }
 
         // find the error handler component
-        ResourceResolver resolver = request.getResourceResolver();
-        String baseName = String.valueOf(status);
+        Resource resource = getErrorResource(request);
+        
+        // find a servlet for the status as the method name
+        ResourceCollector locationUtil = new ResourceCollector(
+            String.valueOf(status), ServletResolverConstants.ERROR_HANDLER_PATH);
+        Servlet servlet = getServlet(locationUtil, request, resource);
 
-        // search the servlet by absolute path
-        PathIterator pathIterator = new PathIterator(
-            ServletResolverConstants.ERROR_HANDLER_PATH, path);
-        Servlet servlet = getServlet(resolver, pathIterator, baseName, request);
+        // fall back to default servlet if none
         if (servlet == null) {
             servlet = getDefaultErrorServlet();
         }
@@ -265,17 +257,15 @@ public class SlingServletResolver implements ServletResolver,
 
         // find the error handler component
         Servlet servlet = null;
-        ResourceResolver resolver = request.getResourceResolver();
-
-        PathIterator pathIterator = new PathIterator(
-            ServletResolverConstants.ERROR_HANDLER_PATH, path);
+        Resource resource = getErrorResource(request);
 
         Class<?> tClass = throwable.getClass();
         while (servlet == null && tClass != Object.class) {
-            String baseName = tClass.getSimpleName();
-
-            pathIterator.reset();
-            servlet = getServlet(resolver, pathIterator, baseName, request);
+            // find a servlet for the simple class name as the method name
+            ResourceCollector locationUtil = new ResourceCollector(
+                tClass.getSimpleName(),
+                ServletResolverConstants.ERROR_HANDLER_PATH);
+            servlet = getServlet(locationUtil, request, resource);
 
             // go to the base class
             tClass = tClass.getSuperclass();
@@ -297,90 +287,92 @@ public class SlingServletResolver implements ServletResolver,
 
     // ---------- internal helper ---------------------------------------------
 
-    private Servlet getServlet(ResourceResolver resolver,
-            Iterator<String> paths, String baseName,
-            SlingHttpServletRequest request) {
-
-        while (paths.hasNext()) {
-            String location = paths.next();
-            try {
-                Servlet result = getServletAt(resolver, location, baseName);
-                if (result != null) {
-                    boolean servletAcceptsRequest = !(result instanceof OptingServlet)
-                        || ((OptingServlet) result).accepts(request);
-                    if (servletAcceptsRequest) {
-                        return result;
-                    }
+    /**
+     * Returns the resource of the given request to be used as the basis for
+     * error handling. If the resource has not yet been set in the request
+     * because the error occurred before the resource could be set (e.g. during
+     * resource resolution) a synthetic resource is returned whose type is
+     * {@link ServletResolverConstants#ERROR_HANDLER_PATH}.
+     * 
+     * @param request The request whose resource is to be returned.
+     */
+    private Resource getErrorResource(SlingHttpServletRequest request) {
+        Resource res = request.getResource();
+        if (res == null) {
+            res = new SyntheticResource(request.getResourceResolver(),
+                request.getPathInfo(),
+                ServletResolverConstants.ERROR_HANDLER_PATH);
+        }
+        return res;
+    }
+    
+    /**
+     * Returns a servlet suitable for handling a request. The
+     * <code>locationUtil</code> is used find any servlets or scripts usable
+     * for the request. Each servlet returned is in turn asked whether it is
+     * actually willing to handle the request in case the servlet is an
+     * <code>OptingServlet</code>. The first servlet willing to handle the
+     * request is used.
+     * 
+     * @param locationUtil The helper used to find appropriate servlets ordered
+     *            by matching priority.
+     * @param request The request used to give to any <code>OptingServlet</code>
+     *            for them to decide on whether they are willing to handle the
+     *            request
+     * @param resource The <code>Resource</code> for which to find a script.
+     *            This need not be the same as
+     *            <code>request.getResource()</code> in case of error handling
+     *            where the resource may not have been assigned to the request
+     *            yet.
+     * @return a servlet for handling the request or <code>null</code> if no
+     *         such servlet willing to handle the request could be found.
+     */
+    private Servlet getServlet(ResourceCollector locationUtil,
+            SlingHttpServletRequest request, Resource resource) {
+        Collection<Resource> candidates = locationUtil.getServlets(resource);
+        for (Resource candidateResource : candidates) {
+            Servlet candidate = candidateResource.adaptTo(Servlet.class);
+            if (candidate != null) {
+                boolean servletAcceptsRequest = !(candidate instanceof OptingServlet)
+                    || ((OptingServlet) candidate).accepts(request);
+                if (servletAcceptsRequest) {
+                    return candidate;
                 }
-            } catch (SlingException se) {
-                log.warn("getServlet: Problem resolving servlet at " + location
-                    + "/" + baseName, se);
             }
         }
-
-        // exhausted all
+        
+        // exhausted all candidates, we don't have a servlet
         return null;
     }
-
-    private Servlet getServletAt(ResourceResolver resolver, String location,
-            String baseName) throws SlingException {
-        Servlet result = null;
-
-        Resource scriptRoot = resolver.getResource(location);
-        if (scriptRoot != null) {
-
-            log.debug("Looking for servlet with filename={} under {}",
-                baseName, scriptRoot.getPath());
-
-            // get the item and ensure it is a node
-            Iterator<Resource> children = resolver.listChildren(scriptRoot);
-            while (result == null && children.hasNext()) {
-                Resource resource = children.next();
-
-                // extract the name of the resource
-                int lastSlash = resource.getPath().lastIndexOf('/');
-                String name = resource.getPath().substring(lastSlash + 1);
-
-                // only accept it if it is equal to the base name or
-                // if there is just a single extension after the base name
-                if (name.startsWith(baseName)
-                    && (name.length() == baseName.length() || name.lastIndexOf('.') == baseName.length())) {
-                    result = resource.adaptTo(Servlet.class);
-                }
-            }
-
-            // there is no child node with the basename, try without
-            if (result == null) {
-                result = scriptRoot.adaptTo(Servlet.class);
-            }
-
-        } else {
-            // check alternative variant using location/basename directly
-            Resource scriptResource = resolver.getResource(location + "/"
-                + baseName);
-            if (scriptResource != null) {
-                result = scriptResource.adaptTo(Servlet.class);
-            }
-        }
-
-        return result;
-    }
-
-    private Servlet getCoreDefaultServlet() {
-        if (coreDefaultServlet == null) {
+    
+    /**
+     * Returns the internal default servlet which is called in case no other
+     * servlet applies for handling a request. This servlet should really only
+     * be used if the default servlets have not been registered (yet).
+     */
+    private Servlet getDefaultServlet() {
+        if (defaultServlet == null) {
             try {
                 Servlet servlet = new DefaultServlet();
                 servlet.init(new SlingServletConfig(servletContext, null,
                     "Sling Core Default Servlet"));
-                coreDefaultServlet = servlet;
+                defaultServlet = servlet;
             } catch (ServletException se) {
                 log.error("Failed to initiliaze Servlet", se);
             }
         }
 
-        return coreDefaultServlet;
+        return defaultServlet;
     }
 
+
+    /**
+     * Returns the default error handler servlet, which is called in case there
+     * is no other - better matching - servlet registered to handle an error or
+     * exception. As it is expected, that most of the time, there will be no
+     * such more specific servlet, the default error handler servlet is quite
+     * complete.
+     */
     private Servlet getDefaultErrorServlet() {
         if (defaultErrorServlet == null) {
             try {
@@ -599,28 +591,6 @@ public class SlingServletResolver implements ServletResolver,
                             + name, t);
                 }
             }
-        }
-    }
-
-    private static String getScriptBaseName(SlingHttpServletRequest request) {
-        String methodName = request.getMethod();
-        String extension = request.getRequestPathInfo().getExtension();
-
-        if (methodName == null || methodName.length() == 0) {
-
-            throw new IllegalArgumentException(
-                "HTTP Method name must not be empty");
-
-        } else if ((HttpConstants.METHOD_GET.equalsIgnoreCase(methodName) || HttpConstants.METHOD_HEAD.equalsIgnoreCase(methodName))
-            && extension != null && extension.length() > 0) {
-
-            // for GET, we use the request extension
-            return extension;
-
-        } else {
-
-            // for other methods use the method name
-            return methodName;
         }
     }
 }
