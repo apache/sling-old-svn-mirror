@@ -129,7 +129,7 @@ public class UslingIntegrationTestClient {
 
         // force form encoding to UTF-8, which is what we use to convert the
         // string parts into stream data
-        nodeProperties.put("FormEncoding", "UTF-8");
+        nodeProperties.put("_charset_", "UTF-8");
 
         if( nodeProperties.size() > 0) {
             if(multiPart) {
