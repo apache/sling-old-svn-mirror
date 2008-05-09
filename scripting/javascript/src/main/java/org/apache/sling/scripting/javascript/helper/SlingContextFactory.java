@@ -57,6 +57,11 @@ public class SlingContextFactory extends ContextFactory {
     }
     
     @Override
+    protected Context makeContext() {
+        return new SlingContext();
+    }
+    
+    @Override
     protected boolean hasFeature(Context cx, int featureIndex) {
         if (featureIndex == Context.FEATURE_DYNAMIC_SCOPE) {
             return true;
