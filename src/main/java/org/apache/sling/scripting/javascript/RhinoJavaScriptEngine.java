@@ -30,10 +30,12 @@ import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
 import org.apache.sling.scripting.javascript.io.EspReader;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.JavaScriptException;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.slf4j.Logger;
 
 /**
  * A ScriptEngine that uses the Rhino interpreter to process Sling requests with
@@ -66,6 +68,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
         // create a rhino Context and execute the script
         try {
+            
             final Context rhinoContext = Context.enter();
             final ScriptableObject scope = new NativeObject();
 
@@ -93,13 +96,27 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
 
             return rhinoContext.evaluateReader(scope, scriptReader, scriptName,
                 lineNumber, securityDomain);
+
+        } catch (JavaScriptException t) {
+            
+            final ScriptException se = new ScriptException(t.details(),
+                t.sourceName(), t.lineNumber());
+
+            ((Logger) bindings.get(SlingBindings.LOG)).error(t.getScriptStackTrace());
+            se.setStackTrace(t.getStackTrace());
+            throw se;
+            
         } catch (Throwable t) {
+            
             final ScriptException se = new ScriptException("Failure running script " + scriptName
                 + ": " + t.getMessage());
             se.initCause(t);
             throw se;
+            
         } finally {
+            
             Context.exit();
+            
         }
     }
 
