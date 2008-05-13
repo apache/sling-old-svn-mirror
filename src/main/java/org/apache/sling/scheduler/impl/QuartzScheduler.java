@@ -419,7 +419,7 @@ public class QuartzScheduler implements Scheduler {
         private ThreadPool executor;
 
         /**
-         *
+         * Create a new wrapper implementation for Quartz.
          */
         public QuartzThreadPool(final ThreadPool executor) {
             this.executor = executor;
@@ -446,6 +446,13 @@ public class QuartzScheduler implements Scheduler {
             this.executor.execute(job);
 
             return true;
+        }
+
+        /**
+         * @see org.quartz.spi.ThreadPool#blockForAvailableThreads()
+         */
+        public int blockForAvailableThreads() {
+            return this.executor.getConfiguration().getMaxPoolSize() - this.executor.getConfiguration().getQueueSize();
         }
 
         /* (non-Javadoc)
