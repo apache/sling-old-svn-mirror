@@ -70,7 +70,6 @@
 
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/jcrlanguage.cnd,
-                            SLING-INF/nodetypes/slinglanguage.cnd,
                             SLING-INF/nodetypes/message.cnd
                         </Sling-Nodetypes>
 
