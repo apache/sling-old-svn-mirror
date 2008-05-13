@@ -75,18 +75,9 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            !org.apache.sling.core.impl,
-                            !org.apache.sling.core.impl.*,
                             org.apache.sling.core;
                             org.apache.sling.core.auth;
-                            org.apache.sling.core.servlets;
-                            org.apache.sling.core.servlets.extensions;
-                            org.apache.sling.core.objects;
-                            org.apache.sling.core.filter;
-                            org.apache.sling.core.locale;
-                            org.apache.sling.core.resolver;
-                            org.apache.sling.core.theme;
-                            org.apache.sling.core.util;version=${pom.version}
+                            org.apache.sling.core.servlets;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.core.impl,
@@ -99,9 +90,6 @@
                         <Embed-Dependency>
                             commons-fileupload
                         </Embed-Dependency>
-                        <Sling-Nodetypes>
-                            SLING-INF/nodetypes/selection.cnd,SLING-INF/nodetypes/references.cnd,SLING-INF/nodetypes/content.cnd
-                        </Sling-Nodetypes>
                     </instructions>
                 </configuration>
             </plugin>
