@@ -60,14 +60,21 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                          org.apache.commons.collections,*
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.scheduler
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scheduler.impl
+                            org.apache.sling.scheduler.impl,
+                            org.apache.commons.modeler,
+                            org.apache.commons.modeler.mbeans,
+                            org.apache.commons.modeler.modules,
+                            org.apache.commons.modeler.util
                         </Private-Package>
                         <DynamicImport-Package>
-                            javax.ejb,org.apache.commons.logging.impl
+                            javax.ejb,org.apache.commons.logging.impl,javax.jms
                         </DynamicImport-Package>
                         <Embed-Dependency>
                             quartz,commons-pool,commons-dbcp,commons-beanutils,commons-digester
@@ -91,30 +98,26 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.0-incubator-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.threads</artifactId>
             <version>2.0.0-incubator-SNAPSHOT</version>
         </dependency>
         <!-- The following dependencies will be replaced by using the quartz wrapper bundle -->
         <dependency>
-            <groupId>quartz</groupId>
+            <groupId>opensymphony</groupId>
             <artifactId>quartz</artifactId>
-            <version>1.5.2</version>
+            <version>1.6.0</version>
         </dependency>
 		<dependency>
 		    <groupId>commons-pool</groupId>
 		    <artifactId>commons-pool</artifactId>
 		    <version>1.3</version>
 		</dependency>
+        <dependency>
+            <groupId>commons-modeler</groupId>
+            <artifactId>commons-modeler</artifactId>
+            <version>2.0</version>
+        </dependency>
         <dependency>
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
