@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.servlets.resolver.helper;
 
 import java.util.Iterator;
 import java.util.Set;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver;
+package org.apache.sling.servlets.resolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,9 @@ import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.engine.EngineConstants;
-import org.apache.sling.servlet.resolver.resource.MockServletResource;
+import org.apache.sling.servlets.resolver.ServletResolverConstants;
+import org.apache.sling.servlets.resolver.SlingServletResolver;
+import org.apache.sling.servlets.resolver.resource.MockServletResource;
 import org.osgi.framework.Constants;
 
 public class SlingServletResolverTest extends TestCase {

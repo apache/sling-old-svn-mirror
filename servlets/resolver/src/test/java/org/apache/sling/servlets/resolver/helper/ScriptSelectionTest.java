@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.servlets.resolver.helper;
 
 import java.util.Collection;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
+import org.apache.sling.servlets.resolver.helper.ResourceCollector;
 
 /** Various tests that explain and demonstrate how scripts are 
  *  selected
