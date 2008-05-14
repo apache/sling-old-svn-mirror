@@ -19,7 +19,6 @@ package org.apache.sling.engine.impl.request;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.engine.impl.request.SlingRequestPathInfoTest;
 
 /**
  * microsling request URI parser that provides SlingRequestPathInfo for the
@@ -29,7 +28,7 @@ import org.apache.sling.engine.impl.request.SlingRequestPathInfoTest;
  * SLING-60 ). What we're after is the remainder of the path, the part that was
  * not used to locate the Resource, and we split that part in different
  * subparts: selectors, extension and suffix.
- * 
+ *
  * @see SlingRequestPathInfoTest for a number of examples.
  */
 public class SlingRequestPathInfo implements RequestPathInfo {
