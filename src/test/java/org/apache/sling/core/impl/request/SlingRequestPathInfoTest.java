@@ -22,6 +22,7 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.engine.impl.request.SlingRequestPathInfo;
 
 /** Test the SlingRequestPathInfo class */
 public class SlingRequestPathInfoTest extends TestCase {
