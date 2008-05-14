@@ -39,13 +39,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/httpauth
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/httpauth
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/httpauth
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/httpauth
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/httpauth
+            http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/httpauth
         </url>
     </scm>
 
