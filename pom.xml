@@ -97,10 +97,10 @@
         <module>osgi/console-web</module>
         <module>osgi/obr</module>
 
-        <!-- Sling -->
-        <module>sling/servlet-resolver</module>
-        <module>sling/servlets-get</module>
-        <module>sling/servlets-post</module>
+        <!-- Servlets -->
+        <module>servlets/resolver</module>
+        <module>servlets/get</module>
+        <module>servlets/post</module>
 
         <!-- Scripting Support -->
         <module>scripting/api</module>
