@@ -28,10 +28,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Generator for a HTML status response that displays the changes made in a
- * post request.
- *
- * see <a href="HtmlResponse.html">HtmlResponse.html</a> for the format.
+ * Generator for a HTML status response that displays the changes made in a post
+ * request. see <a href="HtmlResponse.html">HtmlResponse.html</a> for the
+ * format.
  */
 public class HtmlResponse {
 
@@ -61,9 +60,9 @@ public class HtmlResponse {
     public static final String PN_PARENT_LOCATION = "parentLocation";
 
     /**
-     * the path of the modified item. this is usually the addressed resource
-     * or in case of a creation request (eg: /foo/*) the path of the newly
-     * created node.
+     * the path of the modified item. this is usually the addressed resource or
+     * in case of a creation request (eg: /foo/*) the path of the newly created
+     * node.
      */
     public static final String PN_PATH = "path";
 
@@ -72,7 +71,11 @@ public class HtmlResponse {
      */
     public static final String PN_REFERER = "referer";
 
-    // TODO
+    /**
+     * Indicating whether request processing created new data. This property
+     * is initialized to <code>false</code> and may be changed by calling
+     * the {@link #setCreateRequest(boolean)} method.
+     */
     public static final String PN_IS_CREATED = "isCreate";
 
     /**
@@ -80,7 +83,10 @@ public class HtmlResponse {
      */
     public static final String PN_CHANGE_LOG = "changeLog";
 
-    // TODO
+    /**
+     * The Throwable caught while processing the request. This property is not
+     * set unless the {@link #setError(Throwable)} method is called.
+     */
     public static final String PN_ERROR = "error";
 
     /**
@@ -99,34 +105,60 @@ public class HtmlResponse {
     private final Map<String, Object> properties = new HashMap<String, Object>();
 
     /**
-     * Creates a new html response
+     * Creates a new html response with default settings, which is
+     * <code>null</code> for almost all properties except the
+     * {@link #isCreateRequest()} which defaults to <code>false</code>.
      */
     public HtmlResponse() {
+        setCreateRequest(false);
     }
 
-    //---------- Settings for the response ------------------------------------
+    // ---------- Settings for the response ------------------------------------
 
     /**
-     * Returns the path of the node that was the parent of the property
-     * modifications.
-     * @return the path of the 'current' node.
+     * Returns the referer as from the 'referer' request header.
+     */
+    public String getReferer() {
+        return getProperty(PN_REFERER, String.class);
+    }
+
+    /**
+     * Sets the referer property
+     */
+    public void setReferer(String referer) {
+        setProperty(PN_REFERER, referer);
+    }
+
+    /**
+     * Returns the absolute path of the item upon which the request operated.
+     * <p>
+     * If the {@link #setPath(String)} method has not been called yet, this
+     * method returns <code>null</code>.
      */
     public String getPath() {
         return getProperty(PN_PATH, String.class);
     }
 
+    /**
+     * Sets the absolute path of the item upon which the request operated.
+     */
     public void setPath(String path) {
         setProperty(PN_PATH, path);
     }
 
     /**
      * Returns <code>true</code> if this was a create request.
-     * @return <code>true</code> if this was a create request.
+     * <p>
+     * Before calling the {@link #setCreateRequest(boolean)} method, this method
+     * always returns <code>false</code>.
      */
     public boolean isCreateRequest() {
         return getProperty(PN_IS_CREATED, Boolean.class);
     }
 
+    /**
+     * Sets whether the request was a create request or not.
+     */
     public void setCreateRequest(boolean isCreateRequest) {
         setProperty(PN_IS_CREATED, isCreateRequest);
     }
@@ -134,6 +166,7 @@ public class HtmlResponse {
     /**
      * Returns the location of the modification. this is the externalized form
      * of the current path.
+     * 
      * @return the location of the modification.
      */
     public String getLocation() {
@@ -147,6 +180,7 @@ public class HtmlResponse {
     /**
      * Returns the parent location of the modification. this is the externalized
      * form of the parent node of the current path.
+     * 
      * @return the location of the modification.
      */
     public String getParentLocation() {
@@ -158,9 +192,44 @@ public class HtmlResponse {
     }
 
     /**
+     * Sets the title of the response message
+     * 
+     * @param title the title
+     */
+    public void setTitle(String title) {
+        setProperty(PN_TITLE, title);
+    }
+
+    /**
+     * sets the response status code properties
+     * 
+     * @param code the code
+     * @param message the message
+     */
+    public void setStatus(int code, String message) {
+        setProperty(PN_STATUS_CODE, code);
+        setProperty(PN_STATUS_MESSAGE, message);
+    }
+
+    /**
+     * Returns the status code of this instance. If the status code has never
+     * been set by calling the {@link #setStatus(int, String)} method, the
+     * response is assumed to be successful and 200 is returned.
+     */
+    public int getStatusCode() {
+        Integer status = getProperty(PN_STATUS_CODE, Integer.class);
+        return (status == null) ? HttpServletResponse.SC_OK : status;
+    }
+
+    public String getStatusMessage() {
+        return getProperty(PN_STATUS_MESSAGE, String.class);
+    }
+
+    /**
      * Returns any recorded error or <code>null</code>
-      * @return an error or <code>null</code>
-      */
+     * 
+     * @return an error or <code>null</code>
+     */
     public Throwable getError() {
         return getProperty(PN_ERROR, Throwable.class);
     }
@@ -170,21 +239,18 @@ public class HtmlResponse {
     }
 
     /**
-     * Returns the referer as from the 'referer' request header.
-     * @return the referer or <code>null</code> if the referer is empty.
+     * Returns <code>true</code> if no {@link #getError() error} is set and if
+     * the {@link #getStatusCode() status code} is one of the 2xx codes.
      */
-    public String getReferer() {
-        return getProperty(PN_REFERER, String.class);
+    public boolean isSuccessful() {
+        return getError() == null && (getStatusCode() / 100) == 2;
     }
 
-    public void setReferer(String referer) {
-        setProperty(PN_REFERER, referer);
-    }
-
-    //---------- ChangeLog ----------------------------------------------------
+    // ---------- ChangeLog ----------------------------------------------------
 
     /**
      * Records a 'modified' change
+     * 
      * @param path path of the item that was modified
      */
     public void onModified(String path) {
@@ -193,6 +259,7 @@ public class HtmlResponse {
 
     /**
      * Records a 'created' change
+     * 
      * @param path path of the item that was created
      */
     public void onCreated(String path) {
@@ -201,6 +268,7 @@ public class HtmlResponse {
 
     /**
      * Records a 'deleted' change
+     * 
      * @param path path of the item that was deleted
      */
     public void onDeleted(String path) {
@@ -210,11 +278,10 @@ public class HtmlResponse {
     }
 
     /**
-     * Records a 'moved' change.
-     * <p/>
-     * Note: the moved change only records the basic move command. the implied
-     * changes on the moved properties and sub nodes are not recorded.
-     *
+     * Records a 'moved' change. <p/> Note: the moved change only records the
+     * basic move command. the implied changes on the moved properties and sub
+     * nodes are not recorded.
+     * 
      * @param srcPath source path of the node that was moved
      * @param dstPath destination path of the node that was moved.
      */
@@ -223,11 +290,10 @@ public class HtmlResponse {
     }
 
     /**
-     * Records a 'copied' change.
-     * <p/>
-     * Note: the copy change only records the basic copy command. the implied
-     * changes on the copied properties and sub nodes are not recorded.
-     *
+     * Records a 'copied' change. <p/> Note: the copy change only records the
+     * basic copy command. the implied changes on the copied properties and sub
+     * nodes are not recorded.
+     * 
      * @param srcPath source path of the node that was copied
      * @param dstPath destination path of the node that was copied.
      */
@@ -238,7 +304,7 @@ public class HtmlResponse {
     private void onChange(String type, String... arguments) {
         changes.append(type);
         String delim = "(";
-        for (String a: arguments) {
+        for (String a : arguments) {
             changes.append(delim);
             changes.append('\"');
             changes.append(a);
@@ -248,7 +314,7 @@ public class HtmlResponse {
         changes.append(");<br/>");
     }
 
-    //---------- Response Generation ------------------------------------------
+    // ---------- Response Generation ------------------------------------------
 
     /**
      * prepares the response properties
@@ -283,25 +349,8 @@ public class HtmlResponse {
     }
 
     /**
-     * sets the response status code properties
-     * @param code the code
-     * @param message the message
-     */
-    public void setStatus(int code, String message) {
-        setProperty(PN_STATUS_CODE, code);
-        setProperty(PN_STATUS_MESSAGE, message);
-    }
-
-    /**
-     * Sets the title of the response message
-     * @param title the title
-     */
-    public void setTitle(String title) {
-        setProperty(PN_TITLE, title);
-    }
-
-    /**
      * Sets a generic response property with the given
+     * 
      * @param name name of the property
      * @param value value of the property
      */
@@ -311,8 +360,8 @@ public class HtmlResponse {
 
     /**
      * Returns the generic response property with the given name and type or
-     * <code>null</code> if no such property exists or the property is not
-     * of the requested type.
+     * <code>null</code> if no such property exists or the property is not of
+     * the requested type.
      */
     @SuppressWarnings("unchecked")
     public <Type> Type getProperty(String name, Class<Type> type) {
@@ -336,11 +385,13 @@ public class HtmlResponse {
      * Writes the response to the given writer and replaces all ${var} patterns
      * by the value of the respective property. if the property is not defined
      * the pattern is not modified.
+     * 
      * @param response to send to
      * @param setStatus whether to set the status code on the response
      * @throws IOException if an i/o exception occurs
      */
-    public void send(HttpServletResponse response, boolean setStatus) throws IOException {
+    public void send(HttpServletResponse response, boolean setStatus)
+            throws IOException {
         prepare();
 
         if (setStatus) {
@@ -348,7 +399,7 @@ public class HtmlResponse {
             if (status instanceof Number) {
                 int statusCode = ((Number) status).intValue();
                 response.setStatus(statusCode);
-                
+
                 // special treatment of 201/CREATED: Requires Location
                 if (statusCode == HttpServletResponse.SC_CREATED) {
                     response.setHeader("Location", getLocation());
@@ -370,7 +421,7 @@ public class HtmlResponse {
             switch (state) {
                 // initial
                 case 0:
-                    if (c=='$') {
+                    if (c == '$') {
                         state = 1;
                     } else {
                         out.write(c);
@@ -378,7 +429,7 @@ public class HtmlResponse {
                     break;
                 // $ read
                 case 1:
-                    if (c=='{') {
+                    if (c == '{') {
                         state = 2;
                     } else {
                         state = 0;
@@ -388,7 +439,7 @@ public class HtmlResponse {
                     break;
                 // { read
                 case 2:
-                    if (c=='}') {
+                    if (c == '}') {
                         state = 0;
                         Object prop = properties.get(varBuffer.toString());
                         if (prop == null) {
