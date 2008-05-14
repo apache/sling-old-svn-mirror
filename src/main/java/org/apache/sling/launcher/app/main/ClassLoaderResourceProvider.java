@@ -76,10 +76,8 @@ class ClassLoaderResourceProvider extends ResourceProvider {
         return children.iterator();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.launcher.ResourceProvider#getResource(java.lang.String)
+    /**
+     * @see org.apache.sling.launcher.app.ResourceProvider#getResource(java.lang.String)
      */
     public URL getResource(String path) {
         // ensure path
