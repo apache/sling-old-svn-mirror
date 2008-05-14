@@ -109,10 +109,8 @@ class FileRequestLog implements RequestLog {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.core.impl.log.RequestLogSink#log(java.lang.String)
+    /**
+     * @see org.apache.sling.engine.RequestLog#write(java.lang.String)
      */
     public void write(String message) {
         // use a local copy of the reference to not encounter NPE when this

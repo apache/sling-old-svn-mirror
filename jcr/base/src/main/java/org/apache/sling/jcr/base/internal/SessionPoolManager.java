@@ -77,11 +77,13 @@ public class SessionPoolManager {
         return this.repository;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.jcr.SlingRepository#login(javax.jcr.Credentials,
-     *      java.lang.String)
+    /**
+     * @param credentials
+     * @param workspace
+     * @return
+     * @throws LoginException
+     * @throws NoSuchWorkspaceException
+     * @throws RepositoryException
      */
     public Session login(Credentials credentials, String workspace)
             throws LoginException, NoSuchWorkspaceException,

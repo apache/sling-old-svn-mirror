@@ -19,7 +19,7 @@ package org.apache.sling.engine.impl.request;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.core.impl.request.SlingRequestPathInfoTest;
+import org.apache.sling.engine.impl.request.SlingRequestPathInfoTest;
 
 /**
  * microsling request URI parser that provides SlingRequestPathInfo for the

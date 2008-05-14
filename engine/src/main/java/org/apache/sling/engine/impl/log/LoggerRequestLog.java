@@ -34,10 +34,8 @@ class LoggerRequestLog implements RequestLog {
         this.logger = LoggerFactory.getLogger(loggerName);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.core.impl.log.RequestLog#log(java.lang.String)
+    /**
+     * @see org.apache.sling.engine.RequestLog#write(java.lang.String)
      */
     public void write(String message) {
         this.logger.info(message);
