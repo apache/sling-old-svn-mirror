@@ -24,8 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Holds various states and encapsulates methods that are needed to handle a
- * post request.
+ * The <code>MoveOperation</code> class implements the
+ * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_MOVE move}
+ * operation for the Sling default POST servlet.
  */
 public class MoveOperation extends AbstractCopyMoveOperation {
 
@@ -38,11 +39,11 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     protected String getOperationName() {
         return "move";
     }
-    
+
     @Override
     protected void execute(HtmlResponse response, Session session,
             String source, String dest) throws RepositoryException {
-        
+
         session.move(source, dest);
         response.onMoved(source, dest);
         log.debug("moved {} to {}", source, dest);

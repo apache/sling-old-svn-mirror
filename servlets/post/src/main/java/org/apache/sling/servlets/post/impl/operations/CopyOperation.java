@@ -30,8 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Holds various states and encapsulates methods that are needed to handle a
- * post request.
+ * The <code>CopyOperation</code> class implements the
+ * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_COPY copy}
+ * operation for the Sling default POST servlet.
  */
 public class CopyOperation extends AbstractCopyMoveOperation {
 
@@ -44,10 +45,10 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     protected String getOperationName() {
         return "copy";
     }
-    
+
     @Override
-    protected void execute(HtmlResponse response, Session session, String source, String dest)
-            throws RepositoryException {
+    protected void execute(HtmlResponse response, Session session,
+            String source, String dest) throws RepositoryException {
         copyNode((Node) session.getItem(source),
             (Node) session.getItem(ResourceUtil.getParent(dest)),
             ResourceUtil.getName(dest));
