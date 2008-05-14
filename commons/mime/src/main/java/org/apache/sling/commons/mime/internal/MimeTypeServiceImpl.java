@@ -61,10 +61,8 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     private List<MimeTypeProvider> typeProviderList = new ArrayList<MimeTypeProvider>();
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.mime.MimeTypeService#getMimeType(java.lang.String)
+    /**
+     * @see org.apache.sling.commons.mime.MimeTypeService#getMimeType(java.lang.String)
      */
     public String getMimeType(String name) {
         if (name == null) {
@@ -85,10 +83,8 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         return type;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.sling.core.mime.MimeTypeService#getExtension(java.lang.String)
+    /**
+     * @see org.apache.sling.commons.mime.MimeTypeService#getExtension(java.lang.String)
      */
     public String getExtension(String mimeType) {
         if (mimeType == null) {
