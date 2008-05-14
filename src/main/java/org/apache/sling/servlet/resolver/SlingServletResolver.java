@@ -21,7 +21,7 @@ package org.apache.sling.servlet.resolver;
 import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
-import static org.apache.sling.core.CoreConstants.SLING_CURRENT_SERVLET_NAME;
+import static org.apache.sling.engine.CoreConstants.SLING_CURRENT_SERVLET_NAME;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,9 +53,9 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.core.RequestUtil;
-import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
-import org.apache.sling.core.servlets.ErrorHandler;
+import org.apache.sling.engine.RequestUtil;
+import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
+import org.apache.sling.engine.servlets.ErrorHandler;
 import org.apache.sling.servlet.resolver.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlet.resolver.defaults.DefaultServlet;
 import org.apache.sling.servlet.resolver.helper.ResourceCollector;
@@ -221,7 +221,7 @@ public class SlingServletResolver implements ServletResolver,
     // ---------- ErrorHandler interface --------------------------------------
 
     /**
-     * @see org.apache.sling.core.servlets.ErrorHandler#handleError(int, String,
+     * @see org.apache.sling.engine.servlets.ErrorHandler#handleError(int, String,
      *      SlingHttpServletRequest, SlingHttpServletResponse)
      */
     public void handleError(int status, String message,

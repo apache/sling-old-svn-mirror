@@ -21,7 +21,7 @@ package org.apache.sling.servlet.resolver.helper;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 
-import org.apache.sling.core.servlets.AbstractServiceReferenceConfig;
+import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.osgi.framework.ServiceReference;
 
 public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
