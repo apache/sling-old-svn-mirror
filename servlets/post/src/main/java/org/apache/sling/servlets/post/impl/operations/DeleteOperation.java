@@ -26,13 +26,14 @@ import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 
 /**
- * Holds various states and encapsulates methods that are needed to handle a
- * post request.
+ * The <code>DeleteOperation</code> class implements the
+ * {@link org.apache.sling.servlets.post.SlingPostConstants#OPERATION_DELETE delete}
+ * operation for the Sling default POST servlet.
  */
 public class DeleteOperation extends AbstractSlingPostOperation {
 
     @Override
-    public void doRun(SlingHttpServletRequest request, HtmlResponse response)
+    protected void doRun(SlingHttpServletRequest request, HtmlResponse response)
             throws RepositoryException {
 
         Resource resource = request.getResource();

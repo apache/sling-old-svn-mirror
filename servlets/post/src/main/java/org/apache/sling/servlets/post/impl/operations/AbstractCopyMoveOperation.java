@@ -30,18 +30,19 @@ import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * Holds various states and encapsulates methods that are needed to handle a
- * post request.
+ * The <code>AbstractCopyMoveOperation</code> is the abstract base close for
+ * the {@link CopyOperation} and {@link MoveOperation} classes implementing
+ * commong behaviour.
  */
 abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
 
     @Override
-    public final void doRun(SlingHttpServletRequest request, HtmlResponse response)
-            throws RepositoryException {
+    protected final void doRun(SlingHttpServletRequest request,
+            HtmlResponse response) throws RepositoryException {
 
         Resource resource = request.getResource();
         String source = resource.getPath();
-        
+
         // ensure we have an item underlying the request's resource
         Item item = resource.adaptTo(Item.class);
         if (item == null) {
@@ -54,11 +55,12 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
         if (dest == null || dest.length() == 0) {
             throw new IllegalArgumentException("Unable to process "
                 + getOperationName() + ". Missing destination");
-        } if (!dest.startsWith("/")) {
+        }
+        if (!dest.startsWith("/")) {
             dest = ResourceUtil.getParent(source) + "/" + dest;
             dest = ResourceUtil.normalize(dest);
         }
-        
+
         Session session = item.getSession();
 
         // delete destination if already exists
@@ -92,8 +94,23 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
         orderNode(request, session.getItem(dest));
     }
 
+    /**
+     * Returns a short name to be used in log and status messages.
+     */
     protected abstract String getOperationName();
 
+    /**
+     * Actually executes the operation.
+     * 
+     * @param response The <code>HtmlResponse</code> used to record success of
+     *            the operation.
+     * @param session The JCR <code>Session</code> used to execute the
+     *            operation.
+     * @param source The absolute path of the source item act upon.
+     * @param dest The absolute path of the target item.
+     * @throws RepositoryException May be thrown if an error occurrs executing
+     *             the operation.
+     */
     protected abstract void execute(HtmlResponse response, Session session,
             String source, String dest) throws RepositoryException;
 
