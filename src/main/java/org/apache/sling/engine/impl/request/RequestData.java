@@ -20,7 +20,7 @@ package org.apache.sling.engine.impl.request;
 
 import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_CONTENT;
 import static org.apache.sling.api.SlingConstants.ATTR_REQUEST_SERVLET;
-import static org.apache.sling.engine.CoreConstants.SLING_CURRENT_SERVLET_NAME;
+import static org.apache.sling.engine.EngineConstants.SLING_CURRENT_SERVLET_NAME;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -419,7 +419,7 @@ public class RequestData implements BufferProvider {
      * sent and the method terminates.
      * <p>
      * If the the servlet exists, the
-     * {@link org.apache.sling.engine.CoreConstants#SLING_CURRENT_SERVLET_NAME} request attribute is set
+     * {@link org.apache.sling.engine.EngineConstants#SLING_CURRENT_SERVLET_NAME} request attribute is set
      * to the name of that servlet and that servlet name is also set as the
      * {@link #setActiveServletName(String) currently active servlet}. After
      * the termination of the servlet (normal or throwing a Throwable) the
