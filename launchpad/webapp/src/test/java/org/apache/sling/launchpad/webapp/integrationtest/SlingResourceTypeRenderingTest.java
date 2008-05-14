@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating a Node and rendering it using scripts in
  *  various supported languages, using slingResourceType-based
@@ -41,7 +41,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
         // create the test node, under a path that's specific to this class to allow collisions
         secondFolderOfContentPath = "" + System.currentTimeMillis();
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + secondFolderOfContentPath + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + secondFolderOfContentPath + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         props.put("sling:resourceType", slingResourceType);
         props.put("text", testText);

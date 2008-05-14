@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating Nodes and rendering them in JSON */
 public class RedirectTest extends HttpTestBase {
@@ -38,7 +38,7 @@ public class RedirectTest extends HttpTestBase {
         // allow collisions
         postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_"
             + System.currentTimeMillis()
-            + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
+            + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
     }
 
     /** test 302 response with existing sling:target */

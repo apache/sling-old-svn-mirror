@@ -25,9 +25,9 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 /** Test the generation of node names for POST requests to URLS
  *  ending in / *
  */
-public class GeneratedNodeNameTest extends HttpTestBase {
+public class GeneratedNodeNameTestStar extends HttpTestBase {
 
-    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
+    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.STAR_CREATE_SUFFIX;
 
     public void testTitle() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();

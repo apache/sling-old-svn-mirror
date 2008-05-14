@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.post.impl;
-
-import java.util.LinkedList;
-import java.util.List;
+package org.apache.sling.servlets.post.impl.helper;
 
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
  * Generates a node name based on a set of well-known request parameters
@@ -29,17 +27,7 @@ import org.apache.sling.api.request.RequestParameterMap;
  */
 public class NodeNameGenerator {
 
-    private static final List<String> DEFAULT_NAMES = new LinkedList<String>();
-    static {
-        DEFAULT_NAMES.add("title");
-        DEFAULT_NAMES.add("jcr:title");
-        DEFAULT_NAMES.add("name");
-        DEFAULT_NAMES.add("description");
-        DEFAULT_NAMES.add("jcr:description");
-        DEFAULT_NAMES.add("abstract");
-    }
-
-    private final List<String> parameterNames;
+    private final String[] parameterNames;
     private final NodeNameFilter filter = new NodeNameFilter();
 
     public static final int DEFAULT_MAX_NAME_LENGTH = 20;
@@ -47,17 +35,16 @@ public class NodeNameGenerator {
     private int maxLength = DEFAULT_MAX_NAME_LENGTH;
     private int counter;
 
-    public NodeNameGenerator() {
-        this(null);
-    }
-
-    public NodeNameGenerator(List<String> parameterNames) {
+    public NodeNameGenerator(String[] parameterNames, int maxNameLength) {
         if (parameterNames == null) {
-            this.parameterNames = DEFAULT_NAMES;
+            this.parameterNames = new String[0];
         } else {
             this.parameterNames = parameterNames;
         }
 
+        this.maxLength = (maxNameLength > 0)
+                ? maxNameLength
+                : DEFAULT_MAX_NAME_LENGTH;
     }
 
     /**
@@ -80,7 +67,7 @@ public class NodeNameGenerator {
         // our parameterNames, in order, and has a value
         if (parameters!=null) {
             // we first check for the special sling parameters
-            RequestParameter specialParam = parameters.getValue(SlingPostServlet.RP_NODE_NAME);
+            RequestParameter specialParam = parameters.getValue(SlingPostConstants.RP_NODE_NAME);
             if ( specialParam != null ) {
                 if ( specialParam.getString() != null && specialParam.getString().length() > 0 ) {
                     valueToUse = specialParam.getString();
@@ -88,7 +75,7 @@ public class NodeNameGenerator {
                 }
             }
             if ( valueToUse == null ) {
-                specialParam = parameters.getValue(SlingPostServlet.RP_NODE_NAME_HINT);
+                specialParam = parameters.getValue(SlingPostConstants.RP_NODE_NAME_HINT);
                 if ( specialParam != null ) {
                     if ( specialParam.getString() != null && specialParam.getString().length() > 0 ) {
                         valueToUse = specialParam.getString();
@@ -136,14 +123,6 @@ public class NodeNameGenerator {
         }
 
         return result;
-    }
-
-    public int getMaxLength() {
-        return maxLength;
-    }
-
-    public void setMaxLength(int maxLength) {
-        this.maxLength = maxLength;
     }
 
     public synchronized int nextCounter() {

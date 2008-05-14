@@ -20,7 +20,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node move via the MicrojaxPostServlet */
 public class PostServletMoveTest extends HttpTestBase {
@@ -39,11 +43,18 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":moveSrc", testPath + "/src");
-        props.put(":moveDest", testPath + "/dest");
-        testClient.createNode(HTTP_BASE_URL + testPath, props);
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+        
+        // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
+        
+        // assert no content at old location
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/src.json",
+            HttpServletResponse.SC_NOT_FOUND,
+            "Expected Not_Found for old content");
     }
 
     public void testMoveNodeRelative() throws IOException {
@@ -53,24 +64,10 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":moveSrc", "src");
-        props.put(":moveDest", "dest");
-        testClient.createNode(HTTP_BASE_URL + testPath, props);
-        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
-        assertJavascript("Hello", content, "out.println(data.text)");
-    }
-
-    public void testMoveNodeNew() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("text", "Hello");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, "dest");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-
-        props.clear();
-        props.put(":moveSrc", testPath + "/src");
-        props.put(":moveDest", "new");
-        String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
-        String content = getContent(newNode + "/new.json", CONTENT_TYPE_JSON);
+        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
@@ -85,14 +82,14 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put(":moveSrc", testPath + "/src");
-        props.put(":moveDest", testPath + "/dest");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath, props);
-        } catch (IOException ioe) {
-            // if we do not get the status code 200 message, fail
-            if (!ioe.getMessage().startsWith("Expected status code 302 for POST, got 200, URL=")) {
-                throw ioe;
+        } catch (HttpStatusCodeException hsce) {
+            // if we do not get the status code 302 message, fail
+            if (hsce.getActualStatus() == 302) {
+                throw hsce;
             }
         }
 
@@ -112,43 +109,53 @@ public class PostServletMoveTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put(":moveSrc", testPath + "/src");
-        props.put(":moveDest", testPath + "/dest");
-        props.put(":moveFlags", "replace");  // replace dest
-        testClient.createNode(HTTP_BASE_URL + testPath, props);
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
+        props.put(SlingPostConstants.RP_REPLACE, "true");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
-    public void testMoveNodeDeep() throws IOException {
+    public void testMoveNodeDeepRelative() throws IOException {
         final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":moveSrc", testPath + "/src");
-        props.put(":moveDest", "deep/new");
-        String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
-        String content = getContent(newNode + "/deep/new.json", CONTENT_TYPE_JSON);
-        assertJavascript("Hello", content, "out.println(data.text)");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, "deep/new");
+        
+        try {
+            testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+            fail("Moving node to non existing parent location should fail.");
+        } catch (HttpStatusCodeException hsce) {
+            // actually the status is not 200, but we get "browser" clear stati
+            if (hsce.getActualStatus() != 200) {
+                throw hsce;
+            }
+        }
     }
 
-    public void testMoveNodeDeepFail() throws IOException {
+    public void testMoveNodeDeepAbsolute() throws IOException {
         final String testPath = TEST_BASE_PATH + "/new_fail/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":moveSrc", testPath + "/src");
-        props.put(":moveDest", "/some/not/existing/structure");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_MOVE);
+        props.put(SlingPostConstants.RP_DEST, "/some/not/existing/structure");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
             // not quite correct. should check status response
-            fail("Moving node to a 'forgein' locaition should fail.");
-        } catch (IOException e) {
-            // ignore
+            fail("Moving node to non existing parent location should fail.");
+        } catch (HttpStatusCodeException hsce) {
+            // actually the status is not 200, but we get "browser" clear stati
+            if (hsce.getActualStatus() != 200) {
+                throw hsce;
+            }
         }
     }
 
