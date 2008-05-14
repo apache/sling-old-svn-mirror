@@ -43,14 +43,17 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * Creates a new post processor
+     * Prepares and finalizes the actual operation. Preparation encompasses
+     * getting the absolute path of the item to operate on by calling the
+     * {@link #getItemPath(SlingHttpServletRequest)} method and setting the
+     * location and parent location on the response. After the operation has
+     * been done in the {@link #doRun(SlingHttpServletRequest, HtmlResponse)}
+     * method the session is saved if there are unsaved modifications. In case
+     * of errorrs, the unsaved changes in the session are rolled back.
      * 
      * @param request the request to operate on
-     * @param session jcr session to operate on
-     * @param nodeNameGenerator the node name generator. use a servlet scoped
-     *            one, so that it can hold states.
-     * @param dateParser helper for parsing date strings
-     * @param servletContext The ServletContext to use for file upload
+     * @param response The <code>HtmlResponse</code> to record execution
+     *            progress.
      */
     public final void run(SlingHttpServletRequest request, HtmlResponse response) {
 
@@ -96,14 +99,14 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     /**
      * Returns the path of the resource of the request as the item path.
      * <p>
-     * This method may be overwritten by extension if the operation has different
-     * requirements on path processing.
+     * This method may be overwritten by extension if the operation has
+     * different requirements on path processing.
      */
     protected String getItemPath(SlingHttpServletRequest request) {
         return request.getResource().getPath();
     }
-    
-    public abstract void doRun(SlingHttpServletRequest request,
+
+    protected abstract void doRun(SlingHttpServletRequest request,
             HtmlResponse response) throws RepositoryException;
 
     /**
@@ -197,7 +200,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
         if (!item.isNode()) {
             return;
         }
-        
+
         Node parent = item.getParent();
 
         String next = null;
