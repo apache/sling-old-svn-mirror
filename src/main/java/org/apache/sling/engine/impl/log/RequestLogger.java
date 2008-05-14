@@ -37,9 +37,9 @@ import org.osgi.framework.BundleContext;
  *                description="%request.log.description"
  * @scr.property name="service.description" value="Request Logger"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.core.impl.log.RequestLogger"
+ * @scr.service interface="org.apache.sling.engine.impl.log.RequestLogger"
  * @scr.reference name="RequestLoggerService"
- *                interface="org.apache.sling.core.impl.log.RequestLoggerService"
+ *                interface="org.apache.sling.engine.impl.log.RequestLoggerService"
  *                cardinality="0..n" policy="dynamic"
  */
 public class RequestLogger {

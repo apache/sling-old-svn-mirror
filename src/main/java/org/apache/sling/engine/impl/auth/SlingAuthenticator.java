@@ -76,7 +76,7 @@ public class SlingAuthenticator implements ManagedService {
      * through a session, this is the handler, which iinitially authenticated
      * the user.
      */
-    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.core.impl.auth.authentication_handler";
+    public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.engine.impl.auth.authentication_handler";
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingAuthenticator.class);
@@ -364,7 +364,7 @@ public class SlingAuthenticator implements ManagedService {
                 return false;
             }
         }
-        
+
         // request authentication now, and fail if not possible
         log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
         requestAuthentication(req, res);
@@ -375,7 +375,7 @@ public class SlingAuthenticator implements ManagedService {
 
     private void handleLoginFailure(HttpServletRequest request,
             HttpServletResponse response, RepositoryException reason) {
-        
+
         if (reason instanceof TooManySessionsException) {
 
             // to many users, send a 503 Service Unavailable
@@ -410,9 +410,9 @@ public class SlingAuthenticator implements ManagedService {
                 log.error("authenticate: Cannot send status 500 to client", ioe);
             }
         }
-        
+
     }
-    
+
     // TODO
     private void sendFailure(HttpServletResponse res) {
         try {
