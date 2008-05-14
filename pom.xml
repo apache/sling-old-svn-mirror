@@ -38,13 +38,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/bundleresource
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/bundleresource
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/bundleresource
+            http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/bundleresource
         </url>
     </scm>
 
