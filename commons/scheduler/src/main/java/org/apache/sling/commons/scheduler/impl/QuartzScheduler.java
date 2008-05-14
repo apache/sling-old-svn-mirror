@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scheduler.impl;
+package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
 import java.text.ParseException;
@@ -25,10 +25,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.apache.sling.commons.scheduler.Job;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.scheduler.Job;
-import org.apache.sling.scheduler.Scheduler;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -247,7 +247,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
+     * @see org.apache.sling.commons.scheduler.Scheduler#addJob(java.lang.String, java.lang.Object, java.util.Map, java.lang.String, boolean)
      */
     public void addJob(String name,
                        Object job,
@@ -266,7 +266,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
+     * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
     public void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
     throws Exception {
@@ -282,7 +282,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
+     * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
     public void fireJob(Object job, Map<String, Serializable> config)
     throws Exception {
@@ -297,7 +297,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
+     * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
     public void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date) throws Exception {
         if ( name == null ) {
@@ -308,7 +308,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     /**
-     * @see org.apache.sling.scheduler.Scheduler#removeJob(java.lang.String)
+     * @see org.apache.sling.commons.scheduler.Scheduler#removeJob(java.lang.String)
      */
     public void removeJob(String name) throws NoSuchElementException {
         try {
