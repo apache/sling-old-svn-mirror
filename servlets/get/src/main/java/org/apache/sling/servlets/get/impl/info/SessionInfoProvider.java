@@ -16,14 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.impl.info;
+package org.apache.sling.servlets.get.impl.info;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import javax.jcr.Session;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
-public interface SlingInfoProvider {
+public class SessionInfoProvider implements SlingInfoProvider {
 
-    Map<String, String> getInfo(SlingHttpServletRequest request);
-    
+    static final String PROVIDER_LABEL = "sessionInfo";
+
+    public Map<String, String> getInfo(SlingHttpServletRequest request) {
+        final Map<String, String> result = new HashMap<String, String>();
+
+        final Session s = request.getResourceResolver().adaptTo(Session.class);
+
+        result.put("workspace",s.getWorkspace().getName());
+        result.put("userID",s.getUserID());
+
+        return result;
+    }
+
 }

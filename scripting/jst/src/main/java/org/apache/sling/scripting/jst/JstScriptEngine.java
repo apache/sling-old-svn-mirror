@@ -43,7 +43,7 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.javascript.io.EspReader;
-import org.apache.sling.servlets.helpers.HtmlRendererServlet;
+import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
 
 /** Experimental JST script engine: converts a JST template (using the
  *  same templating syntax as ESP) to client-side javascript code

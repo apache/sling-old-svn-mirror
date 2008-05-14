@@ -62,7 +62,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>
-                            org.apache.sling.servlets.*
+                            org.apache.sling.servlets.get.*
                         </Private-Package>
 
                         <Sling-Nodetypes>
