@@ -40,13 +40,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/adapter
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/adapter
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/adapter
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/adapter
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/adapter
+            http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/adapter
         </url>
     </scm>
 
