@@ -18,7 +18,7 @@
  */
 package org.apache.sling.engine.servlets;
 
-import static org.apache.sling.engine.CoreConstants.SLING_SERLVET_NAME;
+import static org.apache.sling.engine.EngineConstants.SLING_SERLVET_NAME;
 import static org.osgi.framework.Constants.SERVICE_ID;
 import static org.osgi.framework.Constants.SERVICE_PID;
 import static org.osgi.service.component.ComponentConstants.COMPONENT_NAME;
