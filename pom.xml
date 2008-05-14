@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.servlet.resolver</artifactId>
+    <artifactId>org.apache.sling.servlets.resolver</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -38,13 +38,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlet-resolver
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets/resolver
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlet-resolver
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets/resolver
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/servlet-resolver
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/servlets/resolver
         </url>
     </scm>
 
