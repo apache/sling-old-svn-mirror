@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.post.impl;
+package org.apache.sling.servlets.post.impl.helper;
 
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 import java.text.DateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.LinkedList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 import javax.jcr.Value;

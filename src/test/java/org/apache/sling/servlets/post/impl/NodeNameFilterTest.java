@@ -18,6 +18,8 @@ package org.apache.sling.servlets.post.impl;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.servlets.post.impl.helper.NodeNameFilter;
+
 public class NodeNameFilterTest extends TestCase {
     private final NodeNameFilter filter = new NodeNameFilter();
     
