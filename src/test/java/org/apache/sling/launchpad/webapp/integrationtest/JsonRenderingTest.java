@@ -22,7 +22,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating Nodes and rendering them in JSON */
 public class JsonRenderingTest extends HttpTestBase {
@@ -46,7 +46,7 @@ public class JsonRenderingTest extends HttpTestBase {
         // allow collisions
         postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_"
             + System.currentTimeMillis()
-            + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
+            + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         final Map<String, String> props = new HashMap<String, String>();
         props.put("text", testText);
         createdNodeUrl = testClient.createNode(postUrl, props);

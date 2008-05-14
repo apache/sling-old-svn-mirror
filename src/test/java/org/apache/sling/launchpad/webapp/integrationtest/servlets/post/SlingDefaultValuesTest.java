@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** {#link SlingPropertyValueSetter} sets the value of some properties
  *  with default values if they are empty. This is tested here with various cases.
@@ -42,7 +42,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         final Map<String, String> props = new HashMap<String, String>();
         props.put("a","");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         // default behaviour writes empty string
@@ -68,7 +68,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         props.put("a","");
         props.put("a@DefaultValue","123");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         assertJavascript("123", content, "out.println(data.a)");
@@ -79,7 +79,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         props.put("a","");
         props.put("a@DefaultValue",":ignore");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         assertJavascript("undefined", content, "out.println(typeof(data.a))");
@@ -89,7 +89,7 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         final Map <String, String> props = new HashMap <String, String> ();
         props.put("a","123");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         assertJavascript("123", content, "out.println(data.a)");

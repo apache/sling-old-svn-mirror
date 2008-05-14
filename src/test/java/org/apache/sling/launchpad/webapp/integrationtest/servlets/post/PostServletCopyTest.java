@@ -21,8 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
-/** Test node move via the SlingPostServlet */
+/** Test node copy via the MicrojaxPostServlet */
 public class PostServletCopyTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/sling-copy-tests";
@@ -39,10 +41,16 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", testPath + "/dest");
-        testClient.createNode(HTTP_BASE_URL + testPath, props);
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+        
+        // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
+        assertJavascript("Hello", content, "out.println(data.text)");
+        
+        // assert content at old location
+        content = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
@@ -53,38 +61,10 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":copySrc", "src");
-        props.put(":copyDest", "dest");
-        testClient.createNode(HTTP_BASE_URL + testPath, props);
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, "dest");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
-        assertJavascript("Hello", content, "out.println(data.text)");
-    }
-
-    public void testCopyNodeNew() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("text", "Hello");
-        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-
-        props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", "new");
-        String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
-        String content = getContent(newNode + "/new.json", CONTENT_TYPE_JSON);
-        assertJavascript("Hello", content, "out.println(data.text)");
-    }
-
-    public void testCopyNodeNew2() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("text", "Hello");
-        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-
-        props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", "*");
-        String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
-        String content = getContent(newNode + ".json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
@@ -99,14 +79,14 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", testPath + "/dest");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath, props);
-        } catch (IOException ioe) {
-            // if we do not get the status code 200 message, fail
-            if (!ioe.getMessage().startsWith("Expected status code 302 for POST, got 200, URL=")) {
-                throw ioe;
+        } catch (HttpStatusCodeException hsce) {
+            // if we do not get the status code 302 message, fail
+            if (hsce.getActualStatus() == 302) {
+                throw hsce;
             }
         }
 
@@ -126,43 +106,53 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", testPath + "/dest");
-        props.put(":copyFlags", "replace");  // replace dest
-        testClient.createNode(HTTP_BASE_URL + testPath, props);
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
+        props.put(SlingPostConstants.RP_REPLACE, "true");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
-    public void testCopyNodeDeep() throws IOException {
+    public void testCopyNodeDeepRelative() throws IOException {
         final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", "deep/new");
-        String newNode = testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
-        String content = getContent(newNode + "/deep/new.json", CONTENT_TYPE_JSON);
-        assertJavascript("Hello", content, "out.println(data.text)");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, "deep/new");
+        
+        try {
+            testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+            fail("Moving node to non existing parent location should fail.");
+        } catch (HttpStatusCodeException hsce) {
+            // actually the status is not 200, but we get "browser" clear stati
+            if (hsce.getActualStatus() != 200) {
+                throw hsce;
+            }
+        }
     }
 
-    public void testCopyNodeDeepFail() throws IOException {
+    public void testCopyNodeDeepAbsolute() throws IOException {
         final String testPath = TEST_BASE_PATH + "/new_fail/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(":copySrc", testPath + "/src");
-        props.put(":copyDest", "/some/not/existing/structure");
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, "/some/not/existing/structure");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
             // not quite correct. should check status response
-            fail("Moving node to a 'forgein' locaition should fail.");
-        } catch (IOException e) {
-            // ignore
+            fail("Moving node to non existing parent location should fail.");
+        } catch (HttpStatusCodeException hsce) {
+            // actually the status is not 200, but we get "browser" clear stati
+            if (hsce.getActualStatus() != 200) {
+                throw hsce;
+            }
         }
     }
 

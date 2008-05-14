@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** {#link MicrojaxPropertyValueSetter} sets the value of some properties
  *  automatically if they are empty. This is tested here with various cases.
@@ -54,7 +54,7 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
         props.put("lastModified","");
         props.put("lastModifiedBy","");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         assertJavascript("123", content, "out.println(data.a)");
@@ -91,7 +91,7 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
         props.put("lastModified","c");
         props.put("lastModifiedBy","d");
 
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         assertJavascript("123", content, "out.println(data.a)");

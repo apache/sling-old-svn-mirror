@@ -92,7 +92,7 @@ public class UslingIntegrationTestClient {
         final String url = baseUrl + path;
         final int status = httpClient.executeMethod(new GetMethod(url));
         if(status!=200) {
-            throw new IOException("Expected status 200, got " + status + " for URL=" + url);
+            throw new HttpStatusCodeException(200, status, "GET", url);
         }
     }
 
@@ -118,6 +118,7 @@ public class UslingIntegrationTestClient {
         // add sling specific properties
         nodeProperties.put(":redirect", url);
         nodeProperties.put(":displayExtension", "");
+        nodeProperties.put(":status", "browser");
 
         // take over any client provided properties
         if (clientNodeProperties != null) {
@@ -156,7 +157,7 @@ public class UslingIntegrationTestClient {
 
         final int status = httpClient.executeMethod(post);
         if(status!=302) {
-            throw new IOException("Expected status code 302 for POST, got " + status + ", URL=" + url);
+            throw new HttpStatusCodeException(302, status, "POST", url);
         }
         String location = post.getResponseHeader("Location").getValue();
         post.releaseConnection();
@@ -187,7 +188,7 @@ public class UslingIntegrationTestClient {
 
         final int status = httpClient.executeMethod(post);
         if(status!=200) { // fmeschbe: The default sling status is 200, not 302
-            throw new IOException("Expected status code 200 for POST, got " + status + ", URL=" + url);
+            throw new HttpStatusCodeException(200, status, "POST", url);
         }
     }
 }

@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the @ValueFrom field name suffix, SLING-130 */
 public class ValueFromTest extends HttpTestBase {
@@ -36,7 +36,7 @@ public class ValueFromTest extends HttpTestBase {
         testText = "This is a test " + System.currentTimeMillis();
         
         // create the test node, under a path that's specific to this class to allow collisions
-        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
+        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         props.put("text", testText);
     }

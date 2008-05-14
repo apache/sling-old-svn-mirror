@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test JSP scripting
  *  TODO this class can be generalized to be used for any scripting language,
@@ -33,7 +33,7 @@ public class JspScriptingTest extends HttpTestBase {
         super.setUp();
         
         final String testRootPath = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis();
-        testRootUrl = testClient.createNode(testRootPath + SlingPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        testRootUrl = testClient.createNode(testRootPath + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         rtNode = new TestNode(testRootPath + "/rt", null);
         unstructuredNode = new TestNode(testRootPath + "/unstructured", null);
     }
