@@ -21,7 +21,7 @@ package org.apache.sling.servlet.resolver;
 import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
 import static org.apache.sling.api.SlingConstants.ERROR_STATUS;
-import static org.apache.sling.engine.CoreConstants.SLING_CURRENT_SERVLET_NAME;
+import static org.apache.sling.engine.EngineConstants.SLING_CURRENT_SERVLET_NAME;
 
 import java.io.IOException;
 import java.util.ArrayList;
