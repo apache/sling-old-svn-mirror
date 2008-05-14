@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.get;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,10 +29,10 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.servlets.helpers.HtmlRendererServlet;
-import org.apache.sling.servlets.helpers.JsonRendererServlet;
-import org.apache.sling.servlets.helpers.PlainTextRendererServlet;
-import org.apache.sling.servlets.helpers.StreamRendererServlet;
+import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
+import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
+import org.apache.sling.servlets.get.helpers.PlainTextRendererServlet;
+import org.apache.sling.servlets.get.helpers.StreamRendererServlet;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
