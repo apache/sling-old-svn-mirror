@@ -38,13 +38,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/event
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/event
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/event
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/event
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/commons/event
+            http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/event
         </url>
     </scm>
 
