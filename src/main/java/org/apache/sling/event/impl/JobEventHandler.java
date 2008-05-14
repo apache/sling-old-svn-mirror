@@ -395,14 +395,14 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#getContainerNodeType()
+     * @see org.apache.sling.engine.event.impl.JobPersistenceHandler#getContainerNodeType()
      */
     protected String getContainerNodeType() {
         return EventHelper.JOBS_NODE_TYPE;
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#getEventNodeType()
+     * @see org.apache.sling.engine.event.impl.JobPersistenceHandler#getEventNodeType()
      */
     protected String getEventNodeType() {
         return EventHelper.JOB_NODE_TYPE;
@@ -571,7 +571,7 @@ public class JobEventHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
+     * @see org.apache.sling.engine.event.impl.JobPersistenceHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
      */
     protected void addNodeProperties(Node eventNode, Event event)
     throws RepositoryException {
