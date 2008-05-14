@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scheduler;
+package org.apache.sling.commons.scheduler;
 
 import java.io.Serializable;
 import java.util.Date;

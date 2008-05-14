@@ -14,25 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scheduler;
-
-import java.io.Serializable;
-import java.util.Map;
+package org.apache.sling.commons.scheduler;
 
 /**
- * The context for a {@link Job}.
+ * A job is executed by the {@link Scheduler} service.
+ * If the implementation of the job requires certain environment information
+ * it can implement this interface to get additional information
+ * through the provided {@link JobContext}.
+ * If no additional information is required, implementing {@link Runnable} is
+ * sufficient.
  */
-public interface JobContext {
+public interface Job {
 
     /**
-     * Get the name of the scheduled job.
-     * @return The name of the job.
+     * Execute this job.
+     * @param context The context of the job.
      */
-    String getName();
-
-    /**
-     * Get the configuration provided when the job was scheduled.
-     * @return A non-null map of values.
-     */
-    Map<String, Serializable> getConfiguration();
+    void execute(JobContext context);
 }
