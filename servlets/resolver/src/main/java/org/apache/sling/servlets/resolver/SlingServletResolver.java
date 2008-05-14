@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver;
+package org.apache.sling.servlets.resolver;
 
 import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
@@ -56,11 +56,11 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.RequestUtil;
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
-import org.apache.sling.servlet.resolver.defaults.DefaultErrorHandlerServlet;
-import org.apache.sling.servlet.resolver.defaults.DefaultServlet;
-import org.apache.sling.servlet.resolver.helper.ResourceCollector;
-import org.apache.sling.servlet.resolver.helper.SlingServletConfig;
-import org.apache.sling.servlet.resolver.resource.ServletResourceProvider;
+import org.apache.sling.servlets.resolver.defaults.DefaultErrorHandlerServlet;
+import org.apache.sling.servlets.resolver.defaults.DefaultServlet;
+import org.apache.sling.servlets.resolver.helper.ResourceCollector;
+import org.apache.sling.servlets.resolver.helper.SlingServletConfig;
+import org.apache.sling.servlets.resolver.resource.ServletResourceProvider;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
