@@ -16,22 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.engine.impl.helper;
 
-import javax.servlet.ServletConfig;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.osgi.framework.ServiceReference;
 
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
+public class SlingFilterConfig extends AbstractServiceReferenceConfig implements
+        FilterConfig {
 
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
+    public SlingFilterConfig(ServletContext servletContext,
+            ServiceReference reference, String filterName) {
+        super(servletContext, reference, filterName);
     }
 
-    public String getServletName() {
+    public String getFilterName() {
         return getName();
     }
 }
