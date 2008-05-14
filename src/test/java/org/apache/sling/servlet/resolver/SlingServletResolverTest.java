@@ -36,7 +36,7 @@ import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.core.CoreConstants;
+import org.apache.sling.engine.CoreConstants;
 import org.apache.sling.servlet.resolver.resource.MockServletResource;
 import org.osgi.framework.Constants;
 
