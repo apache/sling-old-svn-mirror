@@ -16,22 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.engine.impl.parameters;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import org.apache.sling.api.request.RequestParameter;
 
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
-import org.osgi.framework.ServiceReference;
+abstract class AbstractRequestParameter implements RequestParameter {
 
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
+    private String encoding;
 
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
+    protected AbstractRequestParameter(String encoding) {
+        this.encoding = encoding;
     }
 
-    public String getServletName() {
-        return getName();
+    void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
+
+    String getEncoding() {
+        return this.encoding;
+    }
+
 }

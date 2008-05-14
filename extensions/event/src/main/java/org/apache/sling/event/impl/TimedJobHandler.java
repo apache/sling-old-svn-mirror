@@ -527,7 +527,7 @@ public class TimedJobHandler
     }
 
     /**
-     * @see org.apache.sling.core.event.impl.JobPersistenceHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
+     * @see org.apache.sling.engine.event.impl.JobPersistenceHandler#addNodeProperties(javax.jcr.Node, org.osgi.service.event.Event)
      */
     protected void addNodeProperties(Node eventNode, Event event)
     throws RepositoryException {

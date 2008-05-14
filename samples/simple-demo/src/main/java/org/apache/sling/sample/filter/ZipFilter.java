@@ -41,7 +41,7 @@ import javax.servlet.ServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
-import org.apache.sling.core.RequestUtil;
+import org.apache.sling.engine.RequestUtil;
 
 /**
  * The <code>ZipFilter</code> is an optionally installable global filter,

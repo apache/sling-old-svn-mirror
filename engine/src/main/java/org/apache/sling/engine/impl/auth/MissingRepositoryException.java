@@ -16,22 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.engine.impl.auth;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import org.apache.sling.api.SlingException;
 
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
-import org.osgi.framework.ServiceReference;
-
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
-
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
+/**
+ * The <code>MissingRepositoryException</code> may be thrown by the
+ * {@link SlingAuthenticator#authenticate(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+ * method if no JCR repository is available to authenticate against.
+ */
+public class MissingRepositoryException extends SlingException {
+    
+    MissingRepositoryException(String reason) {
+        super(reason);
     }
-
-    public String getServletName() {
-        return getName();
-    }
+    
 }

@@ -27,43 +27,29 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.core</artifactId>
+    <artifactId>org.apache.sling.engine</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Core Implementation</name>
+    <name>Sling - Engine Implementation</name>
     <description>
-        Bundle implementing the core framework using the Component
-        Framework
+        Bundle implementing the core of Sling.
     </description>
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/core
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/engine
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/core
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/engine
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/core
+            http://svn.apache.org/viewvc/incubator/sling/trunk/sling/engine
         </url>
     </scm>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>maven-jcrocm-plugin</artifactId>
-                <version>2.0.0-incubator-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <id>generate-JCR-OCM-descriptor</id>
-                        <goals>
-                            <goal>ocm</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
@@ -75,13 +61,13 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.core;
-                            org.apache.sling.core.auth;
-                            org.apache.sling.core.servlets;version=${pom.version}
+                            org.apache.sling.engine;
+                            org.apache.sling.engine.auth;
+                            org.apache.sling.engine.servlets;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.core.impl,
-                            org.apache.sling.core.impl.*
+                            org.apache.sling.engine.impl,
+                            org.apache.sling.engine.impl.*
                         </Private-Package>
                         <Import-Package>
                             javax.portlet;resolution:=optional,

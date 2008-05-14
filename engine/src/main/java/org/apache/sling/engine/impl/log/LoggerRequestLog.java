@@ -16,22 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.engine.impl.log;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import org.apache.sling.engine.RequestLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
-import org.osgi.framework.ServiceReference;
+/**
+ * The <code>LoggerRequestLog</code> class implements the
+ * <code>RequestLog</code> interface writing log messages to an SLF4J logger.
+ */
+class LoggerRequestLog implements RequestLog {
 
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
+    private Logger logger;
 
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
+    LoggerRequestLog(String loggerName) {
+        this.logger = LoggerFactory.getLogger(loggerName);
     }
 
-    public String getServletName() {
-        return getName();
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.sling.core.core.impl.log.RequestLog#log(java.lang.String)
+     */
+    public void write(String message) {
+        this.logger.info(message);
+    }
+
+    public void close() {
+        // nothing to be done here
     }
 }

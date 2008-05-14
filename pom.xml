@@ -77,7 +77,10 @@
         <module>commons/scheduler</module>
         <module>commons/testing</module>
         <module>commons/threads</module>
-                
+        
+        <!-- The Sling Engine -->
+        <module>engine</module>
+        
         <!-- The JCR sub project -->
         <module>jcr/api</module>
         <module>jcr/base</module>
@@ -95,7 +98,6 @@
         <module>osgi/obr</module>
 
         <!-- Sling -->
-        <module>sling/core</module>
         <module>sling/servlet-resolver</module>
         <module>sling/servlets-get</module>
         <module>sling/servlets-post</module>

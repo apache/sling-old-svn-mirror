@@ -16,22 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.engine.impl.helper;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
-import org.osgi.framework.ServiceReference;
+public class NullResourceBundle extends ResourceBundle {
 
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
+    private final Locale locale;
 
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
+    public NullResourceBundle(Locale locale) {
+        this.locale = locale;
     }
 
-    public String getServletName() {
-        return getName();
+    @Override
+    public Locale getLocale() {
+        return locale;
     }
+
+    @Override
+    public Enumeration<String> getKeys() {
+        return Collections.enumeration(Collections.<String> emptyList());
+    }
+
+    @Override
+    protected Object handleGetObject(String key) {
+        return key;
+    }
+
 }

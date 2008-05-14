@@ -27,8 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.sling.core.auth.AuthenticationHandler;
-import org.apache.sling.core.auth.AuthenticationInfo;
+import org.apache.sling.engine.auth.AuthenticationHandler;
+import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

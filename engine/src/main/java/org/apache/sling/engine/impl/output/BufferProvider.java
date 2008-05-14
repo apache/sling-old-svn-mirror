@@ -16,22 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.engine.impl.output;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.io.PrintWriter;
 
-import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
-import org.osgi.framework.ServiceReference;
+import javax.servlet.ServletOutputStream;
 
-public class SlingServletConfig extends AbstractServiceReferenceConfig implements ServletConfig {
+/**
+ * The <code>BufferProvider</code> TODO
+ */
+public interface BufferProvider {
 
-    public SlingServletConfig(ServletContext servletContext,
-            ServiceReference reference, String servletName) {
-        super(servletContext, reference, servletName);
-    }
+    ServletOutputStream getOutputStream() throws IOException;
 
-    public String getServletName() {
-        return getName();
-    }
+    PrintWriter getWriter() throws IOException;
+
 }
