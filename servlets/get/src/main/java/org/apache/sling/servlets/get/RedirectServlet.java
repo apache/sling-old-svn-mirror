@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.get;
 
 import java.io.IOException;
 
@@ -31,7 +31,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.servlets.helpers.JsonRendererServlet;
+import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
 
 /**
  * The <code>RedirectServlet</code> implements support for GET requests to

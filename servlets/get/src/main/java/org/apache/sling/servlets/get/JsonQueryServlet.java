@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets;
+package org.apache.sling.servlets.get;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.servlets.helpers.JsonRendererServlet;
+import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
