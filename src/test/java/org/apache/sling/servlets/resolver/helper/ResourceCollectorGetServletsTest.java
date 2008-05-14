@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver.helper;
+package org.apache.sling.servlets.resolver.helper;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.sling.MockResource;
+import org.apache.sling.servlets.resolver.helper.ResourceCollector;
 
 public class ResourceCollectorGetServletsTest extends HelperTestBase {
 

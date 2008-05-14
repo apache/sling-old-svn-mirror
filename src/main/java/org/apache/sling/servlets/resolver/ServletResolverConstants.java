@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlet.resolver;
+package org.apache.sling.servlets.resolver;
 
 public class ServletResolverConstants {
 
@@ -84,7 +84,7 @@ public class ServletResolverConstants {
      * The resource type of a registered servlet used as the default servlet if
      * no other servlet or script could be selected (value is
      * "sling/servlet/default"). If no servlet is registered under this name,
-     * the {@link org.apache.sling.servlet.resolver.defaults.DefaultServlet} is
+     * the {@link org.apache.sling.servlets.resolver.defaults.DefaultServlet} is
      * used.
      */
     public static final String DEFAULT_SERVLET_NAME = "sling/servlet/default";
