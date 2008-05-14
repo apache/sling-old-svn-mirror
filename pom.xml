@@ -27,7 +27,7 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.scheduler</artifactId>
+    <artifactId>org.apache.sling.commons.scheduler</artifactId>
     <packaging>bundle</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
@@ -64,10 +64,10 @@
                           org.apache.commons.collections,*
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.scheduler
+                            org.apache.sling.commons.scheduler
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scheduler.impl,
+                            org.apache.sling.commons.scheduler.impl,
                             org.apache.commons.modeler,
                             org.apache.commons.modeler.mbeans,
                             org.apache.commons.modeler.modules,
