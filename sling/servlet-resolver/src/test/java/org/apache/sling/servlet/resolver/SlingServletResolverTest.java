@@ -36,7 +36,7 @@ import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.engine.CoreConstants;
+import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.servlet.resolver.resource.MockServletResource;
 import org.osgi.framework.Constants;
 
@@ -62,7 +62,7 @@ public class SlingServletResolverTest extends TestCase {
             bundle, SlingServletResolverTest.this.servlet);
         MockServiceReference serviceReference = new MockServiceReference(bundle);
         serviceReference.setProperty(Constants.SERVICE_ID, 1L);
-        serviceReference.setProperty(CoreConstants.SLING_SERLVET_NAME,
+        serviceReference.setProperty(EngineConstants.SLING_SERLVET_NAME,
             SERVLET_NAME);
         serviceReference.setProperty(
             ServletResolverConstants.SLING_SERVLET_PATHS, SERVLET_PATH);

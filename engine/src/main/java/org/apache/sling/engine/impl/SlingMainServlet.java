@@ -20,7 +20,7 @@ package org.apache.sling.engine.impl;
 
 import static org.apache.sling.api.SlingConstants.ERROR_REQUEST_URI;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
-import static org.apache.sling.engine.CoreConstants.SESSION;
+import static org.apache.sling.engine.EngineConstants.SESSION;
 
 import java.io.IOException;
 import java.io.PrintWriter;

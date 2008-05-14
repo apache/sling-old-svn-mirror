@@ -24,7 +24,7 @@ package org.apache.sling.engine;
  * never change, it is recommended that applications refer to the symbolic
  * constants instead of code the strings themselves.
  */
-public class CoreConstants {
+public class EngineConstants {
 
     /**
      * The name of the framework property defining the Sling home directory

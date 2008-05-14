@@ -32,7 +32,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.engine.CoreConstants;
+import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.apache.sling.jcr.api.TooManySessionsException;
@@ -180,7 +180,7 @@ public class SlingAuthenticator implements ManagedService {
         // 0. Nothing to do, if the session is also in the request
         // this might be the case if the request is handled as a result
         // of a servlet container include inside another Sling request
-        Object sessionAttr = req.getAttribute(CoreConstants.SESSION);
+        Object sessionAttr = req.getAttribute(EngineConstants.SESSION);
         if (sessionAttr instanceof Session) {
             log.debug("authenticate: Request already authenticated, nothing to do");
             return true;
@@ -189,7 +189,7 @@ public class SlingAuthenticator implements ManagedService {
             log.warn(
                 "authenticate: Overwriting existing Session attribute ({})",
                 sessionAttr);
-            req.removeAttribute(CoreConstants.SESSION);
+            req.removeAttribute(EngineConstants.SESSION);
         }
 
         // 1. Ask all authentication handlers to try to extract credentials
@@ -434,7 +434,7 @@ public class SlingAuthenticator implements ManagedService {
 
         request.setAttribute(HttpContext.REMOTE_USER, session.getUserID());
         request.setAttribute(HttpContext.AUTHENTICATION_TYPE, authType);
-        request.setAttribute(CoreConstants.SESSION, session);
+        request.setAttribute(EngineConstants.SESSION, session);
 
         log.debug("Session stored as request attribute: user={}, workspace={}",
                 session.getUserID(), session.getWorkspace().getName());
