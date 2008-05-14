@@ -42,6 +42,11 @@ import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The <code>ModifyOperation</code> class implements the default operation
+ * called by the Sling default POST servlet if no operation is requested by the
+ * client. This operation is able to create and/or modify content.
+ */
 public class ModifyOperation extends AbstractSlingPostOperation {
 
     /** default log */
@@ -67,7 +72,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     }
 
     @Override
-    public void doRun(SlingHttpServletRequest request, HtmlResponse response)
+    protected void doRun(SlingHttpServletRequest request, HtmlResponse response)
             throws RepositoryException {
 
         Map<String, RequestProperty> reqProperties = collectContent(request,
