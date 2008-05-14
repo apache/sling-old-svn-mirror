@@ -40,10 +40,10 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.util.Text;
+import org.apache.sling.commons.scheduler.Job;
+import org.apache.sling.commons.scheduler.JobContext;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.event.EventUtil;
-import org.apache.sling.scheduler.Job;
-import org.apache.sling.scheduler.JobContext;
-import org.apache.sling.scheduler.Scheduler;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -434,7 +434,7 @@ public class TimedJobHandler
     }
 
     /**
-     * @see org.apache.sling.scheduler.Job#execute(org.apache.sling.scheduler.JobContext)
+     * @see org.apache.sling.commons.scheduler.Job#execute(org.apache.sling.commons.scheduler.JobContext)
      */
     public void execute(JobContext context) {
         final String topic = (String) context.getConfiguration().get(JOB_TOPIC);

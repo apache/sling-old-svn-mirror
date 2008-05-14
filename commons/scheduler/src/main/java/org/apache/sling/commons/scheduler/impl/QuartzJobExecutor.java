@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.scheduler.impl;
+package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.sling.scheduler.JobContext;
+import org.apache.sling.commons.scheduler.JobContext;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -27,7 +27,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 
 /**
- * This component is resposible to launch a {@link org.apache.sling.scheduler.Job}
+ * This component is resposible to launch a {@link org.apache.sling.commons.scheduler.Job}
  * or {@link Runnable} in a Quartz Scheduler.
  *
  */
@@ -57,13 +57,13 @@ public class QuartzJobExecutor implements Job {
 
         try {
             logger.debug("Executing job {} with name {}", job, data.get(QuartzScheduler.DATA_MAP_NAME));
-            if (job instanceof org.apache.sling.scheduler.Job) {
+            if (job instanceof org.apache.sling.commons.scheduler.Job) {
                 @SuppressWarnings("unchecked")
                 final Map<String, Serializable> configuration = (Map<String, Serializable>) data.get(QuartzScheduler.DATA_MAP_CONFIGURATION);
                 final String name = (String) data.get(QuartzScheduler.DATA_MAP_NAME);
 
                 final JobContext jobCtx = new JobContextImpl(name, configuration);
-                ((org.apache.sling.scheduler.Job) job).execute(jobCtx);
+                ((org.apache.sling.commons.scheduler.Job) job).execute(jobCtx);
             } else if (job instanceof Runnable) {
                 ((Runnable) job).run();
             } else {
@@ -101,14 +101,14 @@ public class QuartzJobExecutor implements Job {
         }
 
         /**
-         * @see org.apache.sling.scheduler.JobContext#getConfiguration()
+         * @see org.apache.sling.commons.scheduler.JobContext#getConfiguration()
          */
         public Map<String, Serializable> getConfiguration() {
             return this.configuration;
         }
 
         /**
-         * @see org.apache.sling.scheduler.JobContext#getName()
+         * @see org.apache.sling.commons.scheduler.JobContext#getName()
          */
         public String getName() {
             return this.name;
