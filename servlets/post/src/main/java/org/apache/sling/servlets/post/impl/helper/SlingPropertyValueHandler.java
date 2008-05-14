@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.servlets.post.impl;
+package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -26,15 +26,16 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 
-import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.sling.api.servlets.HtmlResponse;
 
 /**
  * Sets a Property on the given Node, in some cases with a specific type and
  * value. For example, "lastModified" with an empty value is stored as the
  * current Date.
  */
-class SlingPropertyValueHandler {
+public class SlingPropertyValueHandler {
 
     /**
      * Defins a map of auto properties
@@ -54,7 +55,9 @@ class SlingPropertyValueHandler {
     /**
      * the post processor
      */
-    private final SlingPostProcessor ctx;
+    private final HtmlResponse response;
+    
+    private final DateParser dateParser;
 
     /**
      * current date for all properties in this request
@@ -65,8 +68,9 @@ class SlingPropertyValueHandler {
      * Constructs a propert value handler
      * @param ctx the post processor
      */
-    public SlingPropertyValueHandler(SlingPostProcessor ctx) {
-        this.ctx = ctx;
+    public SlingPropertyValueHandler(DateParser dateParser, HtmlResponse response) {
+        this.dateParser = dateParser;
+        this.response = response;
     }
 
 
@@ -86,7 +90,7 @@ class SlingPropertyValueHandler {
      * @param prop the request property
      * @throws RepositoryException if a repository error occurs
      */
-    void setProperty(Node parent, RequestProperty prop)
+    public void setProperty(Node parent, RequestProperty prop)
             throws RepositoryException {
 
         final String name = prop.getName();
@@ -129,7 +133,7 @@ class SlingPropertyValueHandler {
     private void setCurrentDate(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        ctx.getHtmlResponse().onModified(
+        response.onModified(
             parent.setProperty(name, now).getPath()
         );
     }
@@ -143,7 +147,7 @@ class SlingPropertyValueHandler {
     private void setCurrentUser(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        ctx.getHtmlResponse().onModified(
+        response.onModified(
             parent.setProperty(name, parent.getSession().getUserID()).getPath()
         );
     }
@@ -194,13 +198,13 @@ class SlingPropertyValueHandler {
         String[] values = prop.getStringValues();
         if (values == null) {
             // remove property
-            ctx.getHtmlResponse().onDeleted(
+            response.onDeleted(
                 removePropertyIfExists(parent, prop.getName())
             );
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
-                ctx.getHtmlResponse().onModified(
+                response.onModified(
                     parent.setProperty(prop.getName(), "").getPath()
                 );
             }
@@ -209,15 +213,15 @@ class SlingPropertyValueHandler {
             // if the provided value is the empty string, we don't have to do anything.
             if ( values[0].length() == 0 ) {
                 if ( removePath != null ) {
-                    ctx.getHtmlResponse().onDeleted(removePath);
+                    response.onDeleted(removePath);
                 }
             } else {
                 // modify property
                 if (type == PropertyType.DATE) {
                     // try conversion
-                    Calendar c = ctx.getDateParser().parse(values[0]);
+                    Calendar c = dateParser.parse(values[0]);
                     if (c != null) {
-                        ctx.getHtmlResponse().onModified(
+                        response.onModified(
                             parent.setProperty(prop.getName(), c).getPath()
                         );
                         return;
@@ -230,15 +234,16 @@ class SlingPropertyValueHandler {
                 } else {
                     p = parent.setProperty(prop.getName(), values[0], type);
                 }
-                ctx.getHtmlResponse().onModified(p.getPath());
+                response.onModified(p.getPath());
             }
         } else {
             removePropertyIfExists(parent, prop.getName());
             if (type == PropertyType.DATE) {
                 // try conversion
-                Value[] c = ctx.getDateParser().parse(values, ValueFactoryImpl.getInstance());
+                ValueFactory valFac = parent.getSession().getValueFactory();
+                Value[] c = dateParser.parse(values, valFac);
                 if (c != null) {
-                    ctx.getHtmlResponse().onModified(
+                    response.onModified(
                         parent.setProperty(prop.getName(), c).getPath()
                     );
                     return;
@@ -251,7 +256,7 @@ class SlingPropertyValueHandler {
             } else {
                 p = parent.setProperty(prop.getName(), values, type);
             }
-            ctx.getHtmlResponse().onModified(p.getPath());
+            response.onModified(p.getPath());
         }
     }
 

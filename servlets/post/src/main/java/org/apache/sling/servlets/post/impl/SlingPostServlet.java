@@ -17,44 +17,43 @@
 package org.apache.sling.servlets.post.impl;
 
 import java.io.IOException;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.jcr.Session;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.SlingPostOperation;
+import org.apache.sling.servlets.post.impl.helper.DateParser;
+import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
+import org.apache.sling.servlets.post.impl.operations.CopyOperation;
+import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
+import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
+import org.apache.sling.servlets.post.impl.operations.MoveOperation;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * POST servlet that implements the sling client library "protocol"
- *
- * @scr.service
- *  interface="javax.servlet.Servlet"
- *
- * @scr.component
- *  immediate="true"
- *  metatype="false"
- *
- * @scr.property
- *  name="service.description"
- *  value="Sling Post Servlet"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
- *
- * Use this as the default servlet for POST requests for Sling
- * @scr.property
- *  name="sling.servlet.resourceTypes"
- *  value="sling/servlet/default"
- * @scr.property
- *  name="sling.servlet.methods"
- *  value="POST"
+ * 
+ * @scr.component immediate="true"
+ * @scr.service interface="javax.servlet.Servlet"
+ * @scr.property name="service.description" value="Sling Post Servlet"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ *               Use this as the default servlet for POST requests for Sling
+ * @scr.property name="sling.servlet.resourceTypes"
+ *               value="sling/servlet/default" private="true"
+ * @scr.property name="sling.servlet.methods" value="POST" private="true"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -63,179 +62,125 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     /**
      * default log
      */
-    private static final Logger log = LoggerFactory.getLogger(SlingPostServlet.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * Prefix for parameter names which control this POST
-     * (RP_ stands for "request param")
+     * @scr.property values.0="EEE MMM dd yyyy HH:mm:ss 'GMT'Z"
+     *               values.1="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+     *               values.2="yyyy-MM-dd'T'HH:mm:ss" values.3="yyyy-MM-dd"
+     *               values.4="dd.MM.yyyy HH:mm:ss" values.5="dd.MM.yyyy"
      */
-    public static final String RP_PREFIX = ":";
+    private static final String PROP_DATE_FORMAT = "dateFormats";
 
     /**
-     * suffix that indicates node creation
+     * @scr.property values.0="title" values.1="jcr:title" values.2="name"
+     *               values.3="description" values.4="jcr:description"
+     *               values.5="abstract"
      */
-    public static final String DEFAULT_CREATE_SUFFIX = "/*";
+    private static final String PROP_NODE_NAME_HINT_PROPERTIES = "nodeNameHints";
 
     /**
-     * Optional request parameter: delete the specified content paths
+     * @scr.property value="20" type="Integer"
      */
-    public static final String RP_DELETE_PATH = RP_PREFIX + "delete";
-
-    /**
-     * Optional request parameter: move the specified content paths
-     */
-    public static final String RP_MOVE_SRC = RP_PREFIX + "moveSrc";
-
-    /**
-     * Optional request parameter: move the specified content paths to this
-     * destination
-     */
-    public static final String RP_MOVE_DEST = RP_PREFIX + "moveDest";
-
-    /**
-     * Optional request parameter: move flags
-     */
-    public static final String RP_MOVE_FLAGS = RP_PREFIX + "moveFlags";
-
-    /**
-     * Optional request parameter: copy the specified content paths
-     */
-    public static final String RP_COPY_SRC = RP_PREFIX + "copySrc";
-
-    /**
-     * Optional request parameter: copy the specified content paths to this
-     * destination
-     */
-    public static final String RP_COPY_DEST = RP_PREFIX + "copyDest";
-
-    /**
-     * Optional request parameter: copy flags
-     */
-    public static final String RP_COPY_FLAGS = RP_PREFIX + "copyFlags";
-
-    /**
-     * name of the 'replace' move/copy flag
-     */
-    public static final String FLAG_REPLACE = "replace";
-
-    /**
-     * Optional request paramter specifying a node name for a newly created node.
-     */
-    public static final String RP_NODE_NAME = RP_PREFIX + "name";
-
-    /**
-     * Optional request paramter specifying a node hint for a newly created node.
-     */
-    public static final String RP_NODE_NAME_HINT = RP_PREFIX + "nameHint";
-
-    /**
-     * Optional request parameter: only request parameters starting with this prefix are
-     * saved as Properties when creating a Node. Active only if at least one parameter
-     * starts with this prefix, and defaults to {@link #DEFAULT_SAVE_PARAM_PREFIX}.
-     */
-    public static final String RP_SAVE_PARAM_PREFIX = RP_PREFIX + "saveParamPrefix";
-
-    /**
-     * Default value for {@link #RP_SAVE_PARAM_PREFIX}
-     */
-    public static final String DEFAULT_SAVE_PARAM_PREFIX = "./";
-
-    /**
-     * Optional request parameter: if value is 0, created node is ordered so as
-     * to be the first child of its parent.
-     */
-    public static final String RP_ORDER = RP_PREFIX + "order";
-
-    /**
-     * Optional request parameter: redirect to the specified URL after POST
-     */
-    public static final String RP_REDIRECT_TO =  RP_PREFIX + "redirect";
-
-    /**
-     * Optional request parameter: if provided, added at the end of the computed
-     * (or supplied) redirect URL
-     */
-    public static final String RP_DISPLAY_EXTENSION = RP_PREFIX + "displayExtension";
-
-    /**
-     * SLING-130, suffix that maps form field names to different JCR property names
-     */
-    public static final String VALUE_FROM_SUFFIX = "@ValueFrom";
-
-    /**
-     * suffix that indicates a type hint parameter
-     */
-    public static final String TYPE_HINT_SUFFIX = "@TypeHint";
-
-    /**
-     * suffix that indicates a default value parameter
-     */
-    public static final String DEFAULT_VALUE_SUFFIX = "@DefaultValue";
+    private static final String PROP_NODE_NAME_MAX_LENGTH = "nodeNameMaxLength";
 
     /**
      * utility class for generating node names
      */
-    private final NodeNameGenerator nodeNameGenerator = new NodeNameGenerator();
+    private NodeNameGenerator nodeNameGenerator;
 
     /**
      * utility class for parsing date strings
      */
-    private final DateParser dateParser = new DateParser(); {
-        // TODO: maybe put initialization to OSGI activation ?
-        dateParser.register("EEE MMM dd yyyy HH:mm:ss 'GMT'Z");
-        dateParser.register("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-        dateParser.register("yyyy-MM-dd'T'HH:mm:ss");
-        dateParser.register("yyyy-MM-dd");
-        dateParser.register("dd.MM.yyyy HH:mm:ss");
-        dateParser.register("dd.MM.yyyy");
+    private DateParser dateParser;
+
+    private SlingPostOperation modifyOperation;
+
+    private final Map<String, SlingPostOperation> postOperations = new HashMap<String, SlingPostOperation>();
+
+    @Override
+    public void init() {
+        // default operation: create/modify
+        modifyOperation = new ModifyOperation(nodeNameGenerator, dateParser,
+            getServletContext());
+
+        // other predefined operations
+        postOperations.put(SlingPostConstants.OPERATION_COPY,
+            new CopyOperation());
+        postOperations.put(SlingPostConstants.OPERATION_MOVE,
+            new MoveOperation());
+        postOperations.put(SlingPostConstants.OPERATION_DELETE,
+            new DeleteOperation());
     }
 
+    @Override
+    public void destroy() {
+        modifyOperation = null;
+        postOperations.clear();
+    }
 
     @Override
     protected void doPost(SlingHttpServletRequest request,
-                          SlingHttpServletResponse response)
-            throws ServletException, IOException {
+            SlingHttpServletResponse response) throws IOException {
 
-        // create a post processor and process changes
-        SlingPostProcessor p = createPostProcessor(request);
-        p.run();
-        HtmlResponse resp = p.getHtmlResponse();
+        // prepare the response
+        HtmlResponse htmlResponse = new HtmlResponse();
+        htmlResponse.setReferer(request.getHeader("referer"));
 
-        // check for redirect url
-        String redirect = getRedirectUrl(request, resp);
-        if (redirect != null && resp.getError() == null) {
-            response.sendRedirect(redirect);
+        SlingPostOperation operation = getSlingPostOperation(request);
+        if (operation == null) {
+
+            htmlResponse.setStatus(
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                "Invalid operation specified for POST request");
+
         } else {
-            // create a html response and send
-            resp.send(response, false);
+
+            try {
+                operation.run(request, htmlResponse);
+            } catch (ResourceNotFoundException rnfe) {
+                htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                    rnfe.getMessage());
+            } catch (Throwable throwable) {
+                htmlResponse.setError(throwable);
+            }
+
         }
+
+        // check for redirect URL if processing succeeded
+        if (htmlResponse.isSuccessful()) {
+            String redirect = getRedirectUrl(request, htmlResponse);
+            if (redirect != null) {
+                response.sendRedirect(redirect);
+                return;
+            }
+        }
+        
+        // create a html response and send if unsuccessful or no redirect
+        htmlResponse.send(response, isSetStatus(request));
     }
 
-    /**
-     * Creats a post processor for the given request.
-     * @param request the request for the processor
-     * @return a post context
-     * @throws ServletException if no session can be aquired or if there is a
-     *         repository error.
-     */
-    private SlingPostProcessor createPostProcessor(SlingHttpServletRequest request)
-            throws ServletException {
-        Session s = request.getResourceResolver().adaptTo(Session.class);
-        if (s == null) {
-            throw new ServletException("No JCR Session available");
+    private SlingPostOperation getSlingPostOperation(
+            SlingHttpServletRequest request) {
+        String operation = request.getParameter(SlingPostConstants.RP_OPERATION);
+        if (operation == null || operation.length() == 0) {
+            // standard create/modify operation;
+            return modifyOperation;
         }
 
-        return new SlingPostProcessor(request, s, nodeNameGenerator, dateParser, this.getServletContext());
+        // named operation, retrieve from map
+        return postOperations.get(operation);
     }
 
     /**
      * compute redirect URL (SLING-126)
+     * 
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
     protected String getRedirectUrl(HttpServletRequest request, HtmlResponse ctx) {
         // redirect param has priority (but see below, magic star)
-        String result = request.getParameter(RP_REDIRECT_TO);
+        String result = request.getParameter(SlingPostConstants.RP_REDIRECT_TO);
         if (result != null && ctx.getPath() != null) {
 
             // redirect to created/modified Resource
@@ -258,6 +203,10 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
                 // use the created path as the redirect result
                 result = buf.toString();
+                
+            } else if (result.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX)) {
+                // if the redirect has a trailing slash, append modified node name
+                result = result.concat(ResourceUtil.getName(ctx.getPath()));
             }
 
             if (log.isDebugEnabled()) {
@@ -267,5 +216,54 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         return result;
     }
 
-}
+    protected boolean isSetStatus(SlingHttpServletRequest request) {
+        String statusParam = request.getParameter(SlingPostConstants.RP_STATUS);
+        if (statusParam == null) {
+            log.debug(
+                "getStatusMode: Parameter {} not set, assuming standard status code",
+                SlingPostConstants.RP_STATUS);
+            return true;
+        }
 
+        if (SlingPostConstants.STATUS_VALUE_BROWSER.equals(statusParam)) {
+            log.debug(
+                "getStatusMode: Parameter {} asks for user-friendly status code",
+                SlingPostConstants.RP_STATUS);
+            return false;
+        }
+
+        if (SlingPostConstants.STATUS_VALUE_STANDARD.equals(statusParam)) {
+            log.debug(
+                "getStatusMode: Parameter {} asks for standard status code",
+                SlingPostConstants.RP_STATUS);
+            return true;
+        }
+
+        log.debug(
+            "getStatusMode: Parameter {} set to unknown value {}, assuming standard status code",
+            SlingPostConstants.RP_STATUS);
+        return true;
+    }
+
+    // ---------- SCR Integration ----------------------------------------------
+
+    protected void activate(ComponentContext context) {
+        Dictionary<?, ?> props = context.getProperties();
+
+        String[] nameHints = OsgiUtil.toStringArray(props.get(PROP_NODE_NAME_HINT_PROPERTIES));
+        int nameMax = (int) OsgiUtil.toLong(
+            props.get(PROP_NODE_NAME_MAX_LENGTH), -1);
+        nodeNameGenerator = new NodeNameGenerator(nameHints, nameMax);
+
+        dateParser = new DateParser();
+        String[] dateFormats = OsgiUtil.toStringArray(props.get(PROP_DATE_FORMAT));
+        for (String dateFormat : dateFormats) {
+            dateParser.register(dateFormat);
+        }
+    }
+
+    protected void deactivate(ComponentContext context) {
+        nodeNameGenerator = null;
+        dateParser = null;
+    }
+}

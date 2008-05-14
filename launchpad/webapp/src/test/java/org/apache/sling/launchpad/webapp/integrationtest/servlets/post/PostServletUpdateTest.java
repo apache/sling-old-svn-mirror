@@ -23,7 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node updates via the MicrojaxPostServlet */
 public class PostServletUpdateTest extends HttpTestBase {
@@ -46,7 +46,7 @@ public class PostServletUpdateTest extends HttpTestBase {
         props.put("./a","123");
         props.put("./b","456");
 
-        final String location = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
 
@@ -64,7 +64,7 @@ public class PostServletUpdateTest extends HttpTestBase {
         props.put("./a","123");
         props.put("./b","456");
 
-        final String location = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
 
@@ -83,7 +83,7 @@ public class PostServletUpdateTest extends HttpTestBase {
         props.put("./b","456");
         props.put("C","not stored");
 
-        final String location = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, props);
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
 

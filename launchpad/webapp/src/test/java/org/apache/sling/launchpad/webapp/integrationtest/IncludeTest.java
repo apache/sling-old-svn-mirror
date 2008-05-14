@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the {link ScriptHelper#include) functionality */
  public class IncludeTest extends HttpTestBase {
@@ -47,7 +47,7 @@ import org.apache.sling.servlets.post.impl.SlingPostServlet;
         
         // Create the test nodes under a path that's specific to this class to
         // allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
+        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
         
         // Create two test nodes and store their paths

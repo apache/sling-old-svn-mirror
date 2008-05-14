@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node deletion via the MicrojaxPostServlet */
 public class PostServletDeleteTest extends HttpTestBase {
@@ -41,9 +41,9 @@ public class PostServletDeleteTest extends HttpTestBase {
     }
 
     public void testDelete() throws IOException {
-        final String urlA = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, null);
-        final String urlB = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, null);
-        final String urlC = testClient.createNode(postUrl + SlingPostServlet.DEFAULT_CREATE_SUFFIX, null);
+        final String urlA = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlB = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlC = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
 
         // initially all nodes must be found
@@ -54,20 +54,17 @@ public class PostServletDeleteTest extends HttpTestBase {
 
         // delete one and check
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
-        final String deleteCmd = ":delete";
-        params.add(new NameValuePair(deleteCmd,urlToNodePath(urlA)));
-        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
+        params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
+        assertPostStatus(urlA,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
         assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must still exist");
         assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
         assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must still exist");
 
-        // delete the others with one request and check
-        params.clear();
-        params.add(new NameValuePair(deleteCmd,urlToNodePath(urlB)));
-        params.add(new NameValuePair(deleteCmd,urlToNodePath(urlC)));
-        params.add(new NameValuePair(deleteCmd,urlToNodePath(urlD)));
-        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        // delete the others with successive requests
+        assertPostStatus(urlB,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        assertPostStatus(urlD,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
         assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
         assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
@@ -75,9 +72,5 @@ public class PostServletDeleteTest extends HttpTestBase {
 
         // attempting to delete non-existing nodes is ok
         assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
-    }
-
-    private String urlToNodePath(String url) {
-        return url.substring(HTTP_BASE_URL.length());
     }
 }

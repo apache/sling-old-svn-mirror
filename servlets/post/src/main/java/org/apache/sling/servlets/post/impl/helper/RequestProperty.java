@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.post.impl;
+package org.apache.sling.servlets.post.impl.helper;
 
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
  * Encapsulates all infos from the respective request parameters that are needed
@@ -26,9 +27,9 @@ public class RequestProperty {
 
     private static final RequestParameter[] EMPTY_PARAM_ARRAY = new RequestParameter[0];
 
-    public static final String DEFAULT_IGNORE = SlingPostServlet.RP_PREFIX + "ignore";
+    public static final String DEFAULT_IGNORE = SlingPostConstants.RP_PREFIX + "ignore";
 
-    public static final String DEFAULT_NULL = SlingPostServlet.RP_PREFIX + "null";
+    public static final String DEFAULT_NULL = SlingPostConstants.RP_PREFIX + "null";
 
     private final String path;
 

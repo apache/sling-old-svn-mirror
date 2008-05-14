@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the various redirect options for POST, SLING-126 */
 public class PostRedirectTest extends HttpTestBase {
@@ -28,11 +28,11 @@ public class PostRedirectTest extends HttpTestBase {
     private String postPath = "CreateNodeTest/" + System.currentTimeMillis();
 
     private String postUrl = HTTP_BASE_URL + "/" + postPath
-        + SlingPostServlet.DEFAULT_CREATE_SUFFIX;
+        + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
 
     public void testForcedRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
-        params.put(":redirect", "http://forced/");
+        params.put(":redirect", "http://forced");
         final Map<String, String> headers = new HashMap<String, String>();
         headers.put("Referer", "http://referer/");
 
@@ -40,7 +40,7 @@ public class PostRedirectTest extends HttpTestBase {
             false);
         assertEquals(
             "With forced redirect and Referer, redirect must be forced",
-            "http://forced/", location);
+            "http://forced", location);
     }
 
     public void testDefaultRedirect() throws IOException {

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.post.impl;
+package org.apache.sling.servlets.post.impl.helper;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -27,6 +27,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.servlets.HtmlResponse;
 
 /**
  * Handles file uploads.
@@ -65,15 +66,8 @@ import org.apache.sling.api.request.RequestParameter;
  * this will create a new node with the type my:file below admin. if the hinted
  * type extends from nt:file an intermediate file node is created otherwise
  * directly a resource node.
- *
- * @version $Rev$, $Date$
  */
 public class SlingFileUploadHandler {
-
-    /**
-     * The CVS/SVN id
-     */
-    static final String CVS_ID = "$URL$ $Rev$ $Date$";
 
     // nodetype name string constants
     public static final String NT_FOLDER = "nt:folder";
@@ -89,11 +83,6 @@ public class SlingFileUploadHandler {
     public static final String JCR_DATA = "jcr:data";
 
     /**
-     * the post processor
-     */
-    private final SlingPostProcessor ctx;
-
-    /**
      * The servlet context.
      */
     private final ServletContext servletContext;
@@ -102,8 +91,7 @@ public class SlingFileUploadHandler {
      * Constructs file upload handler
      * @param ctx the post processor
      */
-    public SlingFileUploadHandler(SlingPostProcessor ctx, ServletContext servletCtx) {
-        this.ctx = ctx;
+    public SlingFileUploadHandler(ServletContext servletCtx) {
         this.servletContext = servletCtx;
     }
 
@@ -117,7 +105,7 @@ public class SlingFileUploadHandler {
      * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    void setFile(Node parent, RequestProperty prop)
+    public void setFile(Node parent, RequestProperty prop, HtmlResponse response)
             throws RepositoryException {
         RequestParameter value = prop.getValues()[0];
         assert !value.isFormField();
@@ -174,14 +162,14 @@ public class SlingFileUploadHandler {
         if (createNtFile) {
             // create nt:file
             parent = parent.addNode(name, typeHint);
-            ctx.getHtmlResponse().onCreated(parent.getPath());
+            response.onCreated(parent.getPath());
             name = JCR_CONTENT;
             typeHint = NT_RESOURCE;
         }
 
         // create resource node
         Node res = parent.addNode(name, typeHint);
-        ctx.getHtmlResponse().onCreated(res.getPath());
+        response.onCreated(res.getPath());
 
         // get content type
         String contentType = value.getContentType();
@@ -200,14 +188,14 @@ public class SlingFileUploadHandler {
         }
 
         // set properties
-        ctx.getHtmlResponse().onModified(
+        response.onModified(
             res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance()).getPath()
         );
-        ctx.getHtmlResponse().onModified(
+        response.onModified(
             res.setProperty(JCR_MIMETYPE, contentType).getPath()
         );
         try {
-            ctx.getHtmlResponse().onModified(
+            response.onModified(
                 res.setProperty(JCR_DATA, value.getInputStream()).getPath()
             );
         } catch (IOException e) {

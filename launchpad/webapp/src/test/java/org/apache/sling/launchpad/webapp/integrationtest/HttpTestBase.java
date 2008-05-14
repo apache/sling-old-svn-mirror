@@ -32,15 +32,15 @@ import junit.framework.TestCase;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
+import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
-import org.apache.sling.servlets.post.impl.SlingPostServlet;
+import org.apache.sling.servlets.post.SlingPostConstants;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -85,7 +85,7 @@ public class HttpTestBase extends TestCase {
             }
             testText = "This is a test node " + System.currentTimeMillis();
             properties.put("text", testText);
-            nodeUrl = testClient.createNode(parentPath + SlingPostServlet.DEFAULT_CREATE_SUFFIX, properties);
+            nodeUrl = testClient.createNode(parentPath + SlingPostConstants.DEFAULT_CREATE_SUFFIX, properties);
             resourceType = properties.get(SLING_RESOURCE_TYPE);
             scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
             testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
@@ -198,7 +198,7 @@ public class HttpTestBase extends TestCase {
             final GetMethod get = new GetMethod(urlOfNewNode);
             final int status = httpClient.executeMethod(get);
             if(status!=200) {
-                throw new IOException("Expected status 200 but got " + status + " for URL=" + urlOfNewNode);
+                throw new HttpStatusCodeException(200, status, "GET", urlOfNewNode);
             }
 
             final Header h = get.getResponseHeader("Content-Type");
@@ -220,7 +220,7 @@ public class HttpTestBase extends TestCase {
             final HttpAnyMethod options = new HttpAnyMethod("OPTIONS",webDavUrl);
             final int status = httpClient.executeMethod(options);
             if(status!=200) {
-                throw new IOException("Expected status 200 but got " + status + " for OPTIONS at URL=" + webDavUrl);
+                throw new HttpStatusCodeException(200, status, "OPTIONS", webDavUrl);
             }
 
             // The Allow header tells us that we're talking to a WebDAV server

@@ -60,8 +60,11 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Export-Package>
+                            org.apache.sling.servlets.post
+                        </Export-Package>
                         <Private-Package>
-                            org.apache.sling.servlets.post.impl
+                            org.apache.sling.servlets.post.impl.*
                         </Private-Package>
                         <Sling-Bundle-Resources>
                             /system/sling.js
@@ -76,6 +79,10 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -108,6 +115,17 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.testing</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
