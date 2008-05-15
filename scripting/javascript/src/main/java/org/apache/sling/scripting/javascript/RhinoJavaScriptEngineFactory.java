@@ -24,6 +24,7 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.javascript.helper.SlingContextFactory;
 import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
 import org.apache.sling.scripting.javascript.helper.SlingWrapper;
+import org.apache.sling.scripting.javascript.wrapper.ScriptableCalendar;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableItemMap;
 import org.apache.sling.scripting.javascript.wrapper.ScriptableNode;
 import org.apache.sling.scripting.javascript.wrapper.ScriptablePrintWriter;
@@ -55,7 +56,8 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
         ScriptableItemMap.class,
         ScriptablePrintWriter.class,
         ScriptableVersionHistory.class,
-        ScriptableVersion.class
+        ScriptableVersion.class,
+        ScriptableCalendar.class
     };
 
     /** default log */

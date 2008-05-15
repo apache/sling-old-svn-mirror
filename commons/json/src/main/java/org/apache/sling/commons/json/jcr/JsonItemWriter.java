@@ -43,6 +43,13 @@ public class JsonItemWriter {
     private static DateFormat calendarFormat;
 
     private final Set<String> propertyNamesToIgnore;
+    
+    /** Used to format date values */
+    public static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
+    
+    /** Used to format date values */
+    public static final Locale DATE_FORMAT_LOCALE = Locale.US;
+
 
     /**
      * Create a JsonItemWriter
@@ -240,8 +247,7 @@ public class JsonItemWriter {
 
     public static synchronized String format(Calendar date) {
         if (calendarFormat == null) {
-            calendarFormat = new SimpleDateFormat(
-                "EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
+            calendarFormat = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
         }
         return calendarFormat.format(date.getTime());
     }
