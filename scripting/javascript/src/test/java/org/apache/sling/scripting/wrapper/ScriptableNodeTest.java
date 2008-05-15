@@ -18,6 +18,7 @@
  */
 package org.apache.sling.scripting.wrapper;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import javax.jcr.Node;
@@ -25,6 +26,7 @@ import javax.jcr.Property;
 
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.ScriptEngineHelper;
+import org.apache.sling.commons.json.jcr.JsonItemWriter;
 
 /** Test the ScriptableNode class "live", by retrieving
  *  Nodes from a Repository and executing javascript code
@@ -142,10 +144,26 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
         );
     }
     
-    public void testViaNodeDirectPropertyAccessCal() throws Exception {
+    public void testDateWrapperClass() throws Exception {
         assertEquals(
-                testCal,
-                script.eval("node.cal", data)
+                "org.apache.sling.scripting.javascript.wrapper.ScriptableCalendar", 
+                script.eval("node.cal.javascriptWrapperClass.getName()", data)
+        );
+    }
+    
+    public void testViaNodeDirectPropertyAccessCal() throws Exception {
+    	final SimpleDateFormat f = new SimpleDateFormat(JsonItemWriter.ECMA_DATE_FORMAT, JsonItemWriter.DATE_FORMAT_LOCALE);
+    	final String expected = f.format(testCal.getTime());
+        assertEquals(
+                expected,
+                script.evalToString("out.print(node.cal)", data)
+        );
+    }
+    
+    public void testCalDateClass() throws Exception {
+        assertEquals(
+                "number",
+                script.evalToString("out.print(typeof node.cal.date.time)", data)
         );
     }
     
