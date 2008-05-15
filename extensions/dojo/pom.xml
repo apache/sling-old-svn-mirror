@@ -51,6 +51,7 @@
 
     <!-- Dojo Toolkit version and name -->
     <properties>
+        <dojo.download.dir>./download-cache</dojo.download.dir>
         <dojo.target>target/dojo</dojo.target>
         <dojo.version>release-1.1.0</dojo.version>
         <dojo.name>dojo-${dojo.version}-src.tar.gz</dojo.name>
@@ -59,7 +60,8 @@
     <build>
         <plugins>
         
-            <!--  Dynamically download the Dojo Toolkit while building -->
+            <!-- Dynamically download the Dojo Toolkit while building -->
+            <!-- And store it in . so that it stays available after mvn clean -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -68,12 +70,13 @@
                         <phase>process-resources</phase>
                         <configuration>
                             <tasks>
+                                <mkdir dir="${dojo.download.dir}" />
                                 <mkdir dir="${dojo.target}" />
                                 <get
                                     src="http://download.dojotoolkit.org/${dojo.version}/${dojo.name}"
-                                    dest="${dojo.target}/${dojo.name}"
+                                    dest="${dojo.download.dir}/${dojo.name}"
                                     usetimestamp="true" />
-                                <untar src="target/dojo/${dojo.name}"
+                                <untar src="${dojo.download.dir}/${dojo.name}"
                                     dest="${dojo.target}"
                                     compression="gzip" />
                                 <copy todir="${dojo.target}/dojo-${dojo.version}-src/">
