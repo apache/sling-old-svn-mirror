@@ -47,7 +47,11 @@ public class ManifestHeader {
          * The directives for this entry.
          */
         NameValuePair[] getDirectives();
-    }
+
+        String getAttributeValue(String name);
+
+        String getDirectiveValue(String name);
+}
 
     /** The entries for this header. */
     private Entry[] entries = new Entry[0];
@@ -305,5 +309,28 @@ public class ManifestHeader {
             return this.value;
         }
 
+        public String getAttributeValue(String name) {
+            String v = null;
+            int index = 0;
+            while ( v == null && index < attributes.length ) {
+                if ( attributes[index].getName().equals(name) ) {
+                    v = attributes[index].getValue();
+                }
+                index++;
+            }
+            return v;
+        }
+
+        public String getDirectiveValue(String name) {
+            String v = null;
+            int index = 0;
+            while ( v == null && index < directives.length ) {
+                if ( directives[index].getName().equals(name) ) {
+                    v = directives[index].getValue();
+                }
+                index++;
+            }
+            return v;
+        }
     }
 }
