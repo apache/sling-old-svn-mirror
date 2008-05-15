@@ -21,8 +21,8 @@ package org.apache.sling.jcr.contentloader.internal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 
+import org.apache.sling.commons.osgi.ManifestHeader;
 import org.osgi.framework.Bundle;
 
 /**
@@ -53,10 +53,9 @@ public class PathEntry {
 
         final String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
         if (root != null) {
-            final StringTokenizer tokener = new StringTokenizer(root, ",");
-            while (tokener.hasMoreTokens()) {
-                final String path = tokener.nextToken().trim();
-                entries.add(new PathEntry(path));
+            final ManifestHeader header = ManifestHeader.parse(root);
+            for(final ManifestHeader.Entry entry : header.getEntries()) {
+                entries.add(new PathEntry(entry));
             }
         }
 
@@ -66,32 +65,18 @@ public class PathEntry {
         return entries.iterator();
     }
 
-    public PathEntry(String path) {
-        // check for overwrite flag
+    public PathEntry(ManifestHeader.Entry entry) {
+        // check for overwrite and uninstall flag
+        final String overwriteValue = entry.getDirectiveValue(OVERWRITE_FLAG);
+        final String uninstallValue = entry.getDirectiveValue(UNINSTALL_FLAG);
         boolean overwriteFlag = false;
-        Boolean uninstallFlag = null;
-        int flagPos = path.indexOf(";");
-        if ( flagPos != -1 ) {
-            final StringTokenizer flagTokenizer = new StringTokenizer(path.substring(flagPos+1), ";");
-            while ( flagTokenizer.hasMoreTokens() ) {
-                final String token = flagTokenizer.nextToken();
-                int pos = token.indexOf(":=");
-                if ( pos != -1 ) {
-                    final String name = token.substring(0, pos);
-                    final String value = token.substring(pos+2);
-                    if ( name.equals(OVERWRITE_FLAG) ) {
-                        overwriteFlag = Boolean.valueOf(value).booleanValue();
-                    } else if (name.equals(UNINSTALL_FLAG) ) {
-                        uninstallFlag = Boolean.valueOf(value);
-                    }
-                }
-            }
-            path = path.substring(0, flagPos);
+        if ( overwriteValue != null ) {
+            overwriteFlag = Boolean.valueOf(overwriteValue).booleanValue();
         }
-        this.path = path;
+        this.path =  entry.getValue();
         this.overwrite = overwriteFlag;
-        if ( uninstallFlag != null ) {
-            this.uninstall = uninstallFlag;
+        if ( uninstallValue != null ) {
+            this.uninstall = Boolean.valueOf(uninstallValue);
         } else {
             this.uninstall = this.overwrite;
         }
