@@ -74,7 +74,7 @@
                             *
                         </Import-Package>
                         <Bundle-Activator>
-                            org.apache.sling.engine.impl.SlingSettingsServiceImpl
+                            org.apache.sling.engine.impl.EngineBundleActivator
                         </Bundle-Activator>
                         <Embed-Dependency>
                             commons-fileupload
