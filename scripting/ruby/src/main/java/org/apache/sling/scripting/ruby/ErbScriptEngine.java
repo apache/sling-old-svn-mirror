@@ -37,17 +37,17 @@ import org.jruby.runtime.builtin.IRubyObject;
  */
 public class ErbScriptEngine extends AbstractSlingScriptEngine {
 
-    private Ruby runtime = null;
+    private Ruby runtime;
 
-    private RubySymbol bindingSym = null;
+    private RubySymbol bindingSym;
 
-    private RubyModule erbModule = null;
+    private RubyModule erbModule;
 
     public ErbScriptEngine(ErbScriptEngineFactory factory) {
         super(factory);
 
-        runtime = Ruby.getDefaultInstance();
-        runtime.evalScript("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
+        runtime = Ruby.newInstance();
+        runtime.evalScriptlet("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
             + "for name,v in @props;instance_eval \"def #{name}; @props['#{name}'];end\";end;end;end;");
 
         erbModule = runtime.getClassFromPath("ERB");
