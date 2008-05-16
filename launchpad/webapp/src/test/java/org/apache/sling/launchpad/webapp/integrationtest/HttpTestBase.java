@@ -74,12 +74,12 @@ public class HttpTestBase extends TestCase {
      *  older test classes do not use it, but it might simplify them.
      */
     protected class TestNode {
-        final String testText;
-        final String nodeUrl;
-        final String resourceType;
-        final String scriptPath;
+        public final String testText;
+        public final String nodeUrl;
+        public final String resourceType;
+        public final String scriptPath;
 
-        TestNode(String parentPath, Map<String, String> properties) throws IOException {
+        public TestNode(String parentPath, Map<String, String> properties) throws IOException {
             if(properties == null) {
                 properties = new HashMap<String, String>();
             }
@@ -91,7 +91,7 @@ public class HttpTestBase extends TestCase {
             testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
         }
 
-        void delete() throws IOException {
+        public void delete() throws IOException {
             testClient.delete(nodeUrl);
         }
     };
