@@ -55,17 +55,6 @@ public class EngineConstants {
     public static final String SLING_HOME_URL = "sling.home.url";
 
     /**
-     * The name of the framework property containing the identifier of the
-     * running Sling instance (value is "sling.id"). This value of this property
-     * is managed by this class and cannot be overwritten by the configuration
-     * file(s).
-     * <p>
-     * This property is available calling the
-     * <code>BundleContext.getProperty(String)</code> method.
-     */
-    public static final String SLING_ID = "sling.id";
-
-    /**
      * The name of the request attribute providing the name of the currently
      * executing servlet (value is "sling.core.current.servletName"). This
      * attribute is set immediately before calling the
