@@ -19,9 +19,9 @@
 package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * This is a helper class to parse manifest header entries.
@@ -106,6 +106,7 @@ public class ManifestHeader {
      * Parse headers
      * Like this: path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2,
      *            path; path; dir1:=dirval1; dir2:=dirval2; attr1=attrval1; attr2=attrval2
+     * The returned object maintains the order of entries (paths), directives and attributes.
      */
     public static ManifestHeader parse(String header) {
         final ManifestHeader entry = new ManifestHeader();
@@ -159,9 +160,14 @@ public class ManifestHeader {
             paths[i] = new PathImpl(pieces[i]);
         }
 
-        // Parse the directives/attributes.
-        final Map<String, ManifestHeader.NameValuePair> dirsMap = new HashMap<String, ManifestHeader.NameValuePair>();
-        final Map<String, ManifestHeader.NameValuePair> attrsMap = new HashMap<String, ManifestHeader.NameValuePair>();
+        // Parse the directives/attributes
+        // and keep the order
+        // for simpliefied checking if a directive/attribute is used twice, we keep
+        // two collections: one for the values and one for the names
+        final List<ManifestHeader.NameValuePair> dirsList = new ArrayList<ManifestHeader.NameValuePair>();
+        final Set<String> dirsNames = new HashSet<String>();
+        final List<ManifestHeader.NameValuePair> attrsList = new ArrayList<ManifestHeader.NameValuePair>();
+        final Set<String> attrsNames = new HashSet<String>();
 
         int idx = -1;
         String sep = null;
@@ -186,25 +192,27 @@ public class ManifestHeader {
             // Save the directive/attribute in the appropriate array.
             if (sep.equals(DIRECTIVE_SEPARATOR)) {
                 // Check for duplicates.
-                if (dirsMap.get(key) != null) {
+                if (dirsNames.contains(key)) {
                     throw new IllegalArgumentException("Duplicate directive: " + key);
                 }
-                dirsMap.put(key, new ManifestHeader.NameValuePair(key, value));
+                dirsList.add(new ManifestHeader.NameValuePair(key, value));
+                dirsNames.add(key);
             } else {
                 // Check for duplicates.
-                if (attrsMap.get(key) != null) {
+                if (attrsNames.contains(key)) {
                     throw new IllegalArgumentException("Duplicate attribute: " + key);
                 }
-                attrsMap.put(key, new ManifestHeader.NameValuePair(key, value));
+                attrsList.add(new ManifestHeader.NameValuePair(key, value));
+                attrsNames.add(key);
             }
         }
         // Create directive array.
         ManifestHeader.NameValuePair[] dirs =
-            dirsMap.values().toArray(new ManifestHeader.NameValuePair[dirsMap.size()]);
+            dirsList.toArray(new ManifestHeader.NameValuePair[dirsList.size()]);
 
         // Create attribute array.
         ManifestHeader.NameValuePair[] attrs =
-            attrsMap.values().toArray(new ManifestHeader.NameValuePair[attrsMap.size()]);
+            attrsList.toArray(new ManifestHeader.NameValuePair[attrsList.size()]);
 
         // now set attributes and directives for each path
         for(int i=0;i<pathCount;i++) {
