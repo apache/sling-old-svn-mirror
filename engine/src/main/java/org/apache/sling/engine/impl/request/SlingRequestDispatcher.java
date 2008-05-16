@@ -18,6 +18,8 @@
  */
 package org.apache.sling.engine.impl.request;
 
+import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY;
+
 import java.io.IOException;
 
 import javax.servlet.RequestDispatcher;
@@ -30,6 +32,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceWrapper;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,16 +151,56 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
     private static class TypeOverwritingResourceWrapper extends ResourceWrapper {
 
+        /** marker value for the resourceSupertType before trying to evaluate */
+        private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
+
         private final String resourceType;
+        
+        private String resourceSuperType;
 
         TypeOverwritingResourceWrapper(Resource delegatee, String resourceType) {
             super(delegatee);
             this.resourceType = resourceType;
+            this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
         }
 
         public String getResourceType() {
             return resourceType;
         }
 
+        /**
+         * Overwrite this here because the wrapped resource will return a
+         * super type based on the resource type of the wrapped resource
+         * instead of the resource type overwritten here
+         */
+        @Override
+        public String getResourceSuperType() {
+            if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
+
+                String rst = null;
+
+                // try local resourceSuperType "property"
+                Resource typeResource = getResourceResolver().getResource(this,
+                    SLING_RESOURCE_SUPER_TYPE_PROPERTY);
+                if (typeResource != null) {
+                    rst = typeResource.adaptTo(String.class);
+                }
+
+                // try explicit resourceSuperType resource
+                if (rst == null) {
+                    String typePath = JcrResourceUtil.resourceTypeToPath(getResourceType());
+                    typePath += "/" + SLING_RESOURCE_SUPER_TYPE_PROPERTY;
+                    typeResource = getResourceResolver().getResource(typePath);
+                    if (typeResource != null) {
+                        rst = typeResource.adaptTo(String.class);
+                    }
+                }
+
+                // now set the field to whatever we have, even null
+                resourceSuperType = rst;
+
+            }
+            return resourceSuperType;
+        }
     }
 }
