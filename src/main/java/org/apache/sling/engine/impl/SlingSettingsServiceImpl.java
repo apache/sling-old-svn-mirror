@@ -25,15 +25,13 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.sling.engine.SlingSettingsService;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 import org.slf4j.LoggerFactory;
 
 /**
  * This is the basic implementation of the sling settings service.
  */
-public class SlingSettingsServiceImpl implements SlingSettingsService, BundleActivator {
+public class SlingSettingsServiceImpl implements SlingSettingsService {
 
     /** The logger */
     private org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -41,21 +39,7 @@ public class SlingSettingsServiceImpl implements SlingSettingsService, BundleAct
     /** The sling instance id. */
     private String slingId;
 
-    /** The service registration */
-    private ServiceRegistration serviceRegistration;
-
-    /**
-     * @see org.apache.sling.engine.SlingSettingsService#getSlingId()
-     */
-    public String getSlingId() {
-        return this.slingId;
-    }
-
-    /**
-     * Read/Create the sling instance id.
-     * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
-     */
-    public void start(BundleContext context) throws Exception {
+    public SlingSettingsServiceImpl(final BundleContext context) {
         // try to read the id from the id file first
         File idFile = context.getDataFile("sling.id.file");
         if ( idFile == null ) {
@@ -108,16 +92,12 @@ public class SlingSettingsServiceImpl implements SlingSettingsService, BundleAct
                 }
             }
         }
-        serviceRegistration = context.registerService(SlingSettingsService.class.getName(), this, null);
     }
 
     /**
-     * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+     * @see org.apache.sling.engine.SlingSettingsService#getSlingId()
      */
-    public void stop(BundleContext context) throws Exception {
-        if ( serviceRegistration != null ) {
-            serviceRegistration.unregister();
-            serviceRegistration = null;
-        }
+    public String getSlingId() {
+        return this.slingId;
     }
 }
