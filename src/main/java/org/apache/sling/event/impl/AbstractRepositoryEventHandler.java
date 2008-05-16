@@ -38,6 +38,7 @@ import javax.jcr.observation.EventListener;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -55,12 +56,6 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractRepositoryEventHandler
     implements EventHandler, EventListener {
-
-    /** FIXME - This is a copy from the sling core constants to avoid
-     * a dependency just for the constant. We will move this into an
-     * OSGi helper bundle
-     */
-    public static final String SLING_ID = "sling.id";
 
     /** Default log. */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -98,6 +93,10 @@ public abstract class AbstractRepositoryEventHandler
     /** Our thread pool. */
     protected ThreadPool threadPool;
 
+    /** @scr.reference
+     *  Sling settings service. */
+    protected SlingSettingsService settingsService;
+
     /**
      * Activate this component.
      * @param context
@@ -105,7 +104,7 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected void activate(final ComponentContext context)
     throws Exception {
-        this.applicationId = context.getBundleContext().getProperty(SLING_ID);
+        this.applicationId = this.settingsService.getSlingId();
         this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
 
         // start background threads

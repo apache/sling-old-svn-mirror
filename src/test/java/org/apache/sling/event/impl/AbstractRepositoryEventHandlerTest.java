@@ -35,6 +35,7 @@ import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -86,6 +87,13 @@ public abstract class AbstractRepositoryEventHandlerTest {
             allowing(eventAdmin).sendEvent(with(any(Event.class)));
         }});
 
+        // sling settings service
+        this.handler.settingsService = new SlingSettingsService() {
+            public String getSlingId() {
+                return SLING_ID;
+            }
+        };
+
         // we need a thread pool manager
         this.handler.threadPoolManager = this.getMockery().mock(ThreadPoolManager.class);
         final ThreadPool pool = new ThreadPoolImpl();
@@ -96,12 +104,8 @@ public abstract class AbstractRepositoryEventHandlerTest {
             will(returnValue(null));
         }});
 
-        // lets set up the bundle context with the sling id
+        // lets set up the bundle context
         final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
-        this.getMockery().checking(new Expectations() {{
-            allowing(bundleContext).getProperty(AbstractRepositoryEventHandler.SLING_ID);
-            will(returnValue(SLING_ID));
-        }});
 
         // lets set up the component configuration
         final Dictionary<String, Object> componentConfig = this.getComponentConfig();
