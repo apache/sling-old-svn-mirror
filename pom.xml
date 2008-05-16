@@ -94,7 +94,6 @@
         <module>jcr/webdav</module>
         
         <!-- OSGi -->
-        <module>osgi/console-web</module>
         <module>osgi/obr</module>
 
         <!-- Servlets -->
