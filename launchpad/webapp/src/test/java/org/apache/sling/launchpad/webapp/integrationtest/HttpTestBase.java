@@ -186,7 +186,7 @@ public class HttpTestBase extends TestCase {
     protected boolean slingServerReady() throws Exception {
         // create a node on the server
         final String time = String.valueOf(System.currentTimeMillis());
-        final String url = HTTP_BASE_URL + "/WaitForSlingStartup_" + time;
+        final String url = HTTP_BASE_URL + "/WaitForSlingStartup/" + time;
 
         // add some properties to the node
         final Map<String,String> props = new HashMap<String,String>();
