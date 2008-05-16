@@ -31,6 +31,7 @@ import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -96,6 +97,10 @@ public class ContentLoaderService implements SynchronousBundleListener {
      * List of currently updated bundles.
      */
     private final Set<String> updatedBundles = new HashSet<String>();
+
+    /** @scr.reference
+     *  Sling settings service. */
+    protected SlingSettingsService settingsService;
 
     // ---------- BundleListener -----------------------------------------------
 
@@ -188,7 +193,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
-        this.slingId = componentContext.getBundleContext().getProperty("sling.id");
+        this.slingId = this.settingsService.getSlingId();
         this.initialContentLoader = new Loader(this);
 
         componentContext.getBundleContext().addBundleListener(this);

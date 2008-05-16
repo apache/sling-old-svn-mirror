@@ -36,7 +36,6 @@ import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.UUID;
 import java.util.Map.Entry;
 
 import org.apache.felix.framework.Felix;
@@ -110,20 +109,6 @@ public class Sling implements BundleActivator {
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
-
-    /**
-     * The name of the framework property containing the identifier of the
-     * running Sling instance (value is "sling.id"). This value of this property
-     * is managed by this class and cannot be overwritten by the configuration
-     * file(s).
-     */
-    public static final String SLING_ID = "sling.id";
-
-    /**
-     * The name of the file used to persist the value of the
-     * {@link #SLING_ID Sling instance identifier} (value is "sling.id").
-     */
-    public static final String SLING_ID_FILE = SLING_ID;
 
     /**
      * The name of the configuration property defining a properties file
@@ -202,9 +187,6 @@ public class Sling implements BundleActivator {
         // ensure execution environment
         this.setExecutionEnvironment(props);
 
-        // ensure the instance ID
-        props.put(SLING_ID, getInstanceId(props));
-
         // make sure Felix does not exit the VM when terminating ...
         props.put(EMBEDDED_EXECUTION_PROP, "true");
 
@@ -221,8 +203,7 @@ public class Sling implements BundleActivator {
         this.felix = tmpFelix;
 
         // log sucess message
-        this.logger.log(Logger.LOG_INFO, "Sling Instance "
-            + props.get(SLING_ID) + " started");
+        this.logger.log(Logger.LOG_INFO, "Sling started");
     }
 
     /**
@@ -232,11 +213,9 @@ public class Sling implements BundleActivator {
     public final void destroy() {
         // shutdown the Felix container
         if (felix != null) {
-            String label = "Sling Instance "
-                + felix.getBundleContext().getProperty(SLING_ID);
-            logger.log(Logger.LOG_INFO, "Shutting down " + label);
+            logger.log(Logger.LOG_INFO, "Shutting down Sling");
             felix.stopAndWait();
-            logger.log(Logger.LOG_INFO, label + " stopped");
+            logger.log(Logger.LOG_INFO, "Sling stopped");
             felix = null;
         }
     }
@@ -593,71 +572,6 @@ public class Sling implements BundleActivator {
             this.logger.log(Logger.LOG_INFO,
                 "Not using Execution Environment setting");
         }
-    }
-
-    /**
-     * Returns the Sling Instance Identifier. The value is read from the
-     * <code>${sling.home}/sling.id</code> file if existing and valid.
-     * Otherwise a new id is created as a random UUID and then stored in the
-     * file.
-     *
-     * @return the Sling Instance Identifier
-     */
-    private String getInstanceId(Map<String, String> props) {
-        String slingId = null;
-
-        // try to read the id from the id file first
-        File idFile = new File(props.get(SLING_HOME), SLING_ID_FILE);
-        if (idFile.exists() && idFile.length() >= 36) {
-            FileInputStream fin = null;
-            try {
-                fin = new FileInputStream(idFile);
-                byte[] rawBytes = new byte[36];
-                if (fin.read(rawBytes) == 36) {
-                    String rawString = new String(rawBytes, "ISO-8859-1");
-
-                    // roundtrip to ensure correct format of UUID value
-                    slingId = UUID.fromString(rawString).toString();
-                }
-            } catch (Throwable t) {
-                logger.log(Logger.LOG_ERROR,
-                    "Failed reading UUID from id file " + idFile
-                        + ", creating new id", t);
-            } finally {
-                if (fin != null) {
-                    try {
-                        fin.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
-        }
-
-        // no sling id yet or failure to read file: create an id and store
-        if (slingId == null) {
-            slingId = UUID.randomUUID().toString();
-
-            idFile.delete();
-            idFile.getParentFile().mkdirs();
-            FileOutputStream fout = null;
-            try {
-                fout = new FileOutputStream(idFile);
-                fout.write(slingId.getBytes("ISO-8859-1"));
-                fout.flush();
-            } catch (Throwable t) {
-                logger.log(Logger.LOG_ERROR, "Failed writing UUID to id file "
-                    + idFile, t);
-            } finally {
-                if (fout != null) {
-                    try {
-                        fout.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
-        }
-
-        return slingId;
     }
 
     // ---------- Extension support --------------------------------------------
