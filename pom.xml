@@ -73,6 +73,9 @@
                             javax.portlet;resolution:=optional,
                             *
                         </Import-Package>
+                        <Bundle-Activator>
+                            org.apache.sling.engine.impl.SlingSettingsServiceImpl
+                        </Bundle-Activator>
                         <Embed-Dependency>
                             commons-fileupload
                         </Embed-Dependency>
