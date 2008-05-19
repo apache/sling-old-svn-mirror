@@ -38,7 +38,7 @@ public class RequestProperty {
 
     private final String parentPath;
 
-    private final RequestParameter[] values;
+    private RequestParameter[] values;
 
     private String[] stringValues;
 
@@ -46,10 +46,11 @@ public class RequestProperty {
 
     private RequestParameter[] defaultValues = EMPTY_PARAM_ARRAY;
 
-    public RequestProperty(String path, RequestParameter[] values) {
+    private boolean isDelete;
+    
+    public RequestProperty(String path) {
         assert path.startsWith("/");
         this.path = ResourceUtil.normalize(path);
-        this.values = values;
         this.parentPath = ResourceUtil.getParent(path);
         this.name = ResourceUtil.getName(path);
     }
@@ -75,10 +76,18 @@ public class RequestProperty {
         return parentPath;
     }
 
+    public boolean hasValues() {
+        return values != null;
+    }
+    
     public RequestParameter[] getValues() {
         return values;
     }
 
+    public void setValues(RequestParameter[] values) {
+        this.values = values;
+    }
+    
     public RequestParameter[] getDefaultValues() {
         return defaultValues;
     }
@@ -150,5 +159,13 @@ public class RequestProperty {
             }
         }
         return stringValues;
+    }
+
+    public void setDelete(boolean isDelete) {
+        this.isDelete = isDelete;
+    }
+
+    public boolean isDelete() {
+        return isDelete;
     }
 }

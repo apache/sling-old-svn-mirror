@@ -82,6 +82,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
         processCreate(session, reqProperties, response);
+        processDeletes(session, reqProperties, response);
         writeContent(session, reqProperties, response);
 
         String path = response.getPath();
@@ -189,7 +190,6 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * Create node(s) according to current request
      * 
      * @throws RepositoryException if a repository error occurs
-     * @throws ServletException if an internal error occurs
      */
     private void processCreate(Session session,
             Map<String, RequestProperty> reqProperties, HtmlResponse response)
@@ -199,6 +199,35 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         if (!session.itemExists(path)) {
             deepGetOrCreateNode(session, path, reqProperties, response);
             response.setCreateRequest(true);
+        }
+
+    }
+
+    /**
+     * Removes all properties listed as {@link RequestProperty#isDelete()} from
+     * the repository.
+     * 
+     * @param session The <code>javax.jcr.Session</code> used to access the
+     *            repository to delete the properties.
+     * @param reqProperties The map of request properties to check for
+     *            properties to be removed.
+     * @param response The <code>HtmlResponse</code> to be updated with
+     *            information on deleted properties.
+     * @throws RepositoryException Is thrown if an error occurrs checking or
+     *             removing properties.
+     */
+    private void processDeletes(Session session,
+            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            throws RepositoryException {
+
+        for (RequestProperty property : reqProperties.values()) {
+            if (property.isDelete()) {
+                String propPath = property.getPath();
+                if (session.itemExists(propPath)) {
+                    session.getItem(propPath).remove();
+                    response.onDeleted(propPath);
+                }
+            }
         }
 
     }
@@ -217,17 +246,19 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             dateParser, response);
 
         for (RequestProperty prop : reqProperties.values()) {
-            Node parent = deepGetOrCreateNode(session, prop.getParentPath(),
-                reqProperties, response);
-            // skip jcr special properties
-            if (prop.getName().equals("jcr:primaryType")
-                || prop.getName().equals("jcr:mixinTypes")) {
-                continue;
-            }
-            if (prop.isFileUpload()) {
-                uploadHandler.setFile(parent, prop, response);
-            } else {
-                propHandler.setProperty(parent, prop);
+            if (prop.hasValues()) {
+                Node parent = deepGetOrCreateNode(session,
+                    prop.getParentPath(), reqProperties, response);
+                // skip jcr special properties
+                if (prop.getName().equals("jcr:primaryType")
+                    || prop.getName().equals("jcr:mixinTypes")) {
+                    continue;
+                }
+                if (prop.isFileUpload()) {
+                    uploadHandler.setFile(parent, prop, response);
+                } else {
+                    propHandler.setProperty(parent, prop);
+                }
             }
         }
     }
@@ -253,15 +284,6 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             if (paramName.startsWith(SlingPostConstants.RP_PREFIX)) {
                 continue;
             }
-            // ignore field with a '@TypeHint' suffix. this is dealt with later
-            if (paramName.endsWith(SlingPostConstants.TYPE_HINT_SUFFIX)) {
-                continue;
-            }
-            // ignore field with a '@DefaultValue' suffix. this is dealt with
-            // later
-            if (paramName.endsWith(SlingPostConstants.DEFAULT_VALUE_SUFFIX)) {
-                continue;
-            }
             // SLING-298: skip form encoding parameter
             if (paramName.equals("_charset_")) {
                 continue;
@@ -270,59 +292,123 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             if (requireItemPrefix && !hasItemPathPrefix(paramName)) {
                 continue;
             }
-            String propertyName = paramName;
-            // SLING-130: VALUE_FROM_SUFFIX means take the value of this
-            // property from a different field
-            RequestParameter[] values = e.getValue();
-            final int vfIndex = propertyName.indexOf(SlingPostConstants.VALUE_FROM_SUFFIX);
-            if (vfIndex >= 0) {
-                // @ValueFrom example:
-                // <input name="./Text@ValueFrom" type="hidden" value="fulltext"
-                // />
-                // causes the JCR Text property to be set to the value of the
-                // fulltext form field.
-                propertyName = propertyName.substring(0, vfIndex);
-                final RequestParameter[] rp = request.getRequestParameterMap().get(
-                    paramName);
-                if (rp == null || rp.length > 1) {
-                    // @ValueFrom params must have exactly one value, else
-                    // ignored
-                    continue;
-                }
-                String mappedName = rp[0].getString();
-                values = request.getRequestParameterMap().get(mappedName);
-                if (values == null) {
-                    // no value for "fulltext" in our example, ignore parameter
-                    continue;
-                }
-            }
-            // create property helper and add it to the list
-            String propPath = propertyName;
-            if (!propPath.startsWith("/")) {
-                propPath = response.getPath() + "/" + propertyName;
-            }
-            RequestProperty prop = new RequestProperty(propPath, values);
+
+            // ensure the paramName is an absolute property name
+            String propPath = toPropertyPath(paramName, response);
 
             // @TypeHint example
             // <input type="text" name="./age" />
             // <input type="hidden" name="./age@TypeHint" value="long" />
             // causes the setProperty using the 'long' property type
-            final String thName = propertyName
-                + SlingPostConstants.TYPE_HINT_SUFFIX;
-            final RequestParameter rp = request.getRequestParameter(thName);
-            if (rp != null) {
-                prop.setTypeHint(rp.getString());
+            if (propPath.endsWith(SlingPostConstants.TYPE_HINT_SUFFIX)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.TYPE_HINT_SUFFIX);
+
+                final RequestParameter[] rp = e.getValue();
+                if (rp.length > 0) {
+                    prop.setTypeHint(rp[0].getString());
+                }
+
+                continue;
             }
 
             // @DefaultValue
-            final String dvName = propertyName
-                + SlingPostConstants.DEFAULT_VALUE_SUFFIX;
-            prop.setDefaultValues(request.getRequestParameters(dvName));
+            if (propPath.endsWith(SlingPostConstants.DEFAULT_VALUE_SUFFIX)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.DEFAULT_VALUE_SUFFIX);
 
-            reqProperties.put(propPath, prop);
+                prop.setDefaultValues(e.getValue());
+
+                continue;
+            }
+
+            // SLING-130: VALUE_FROM_SUFFIX means take the value of this
+            // property from a different field
+            // @ValueFrom example:
+            // <input name="./Text@ValueFrom" type="hidden" value="fulltext" />
+            // causes the JCR Text property to be set to the value of the
+            // fulltext form field.
+            if (propPath.endsWith(SlingPostConstants.VALUE_FROM_SUFFIX)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.VALUE_FROM_SUFFIX);
+
+                // @ValueFrom params must have exactly one value, else
+                // ignored
+                if (e.getValue().length == 1) {
+                    String refName = e.getValue()[0].getString();
+                    RequestParameter[] refValues = request.getRequestParameters(refName);
+                    if (refValues != null) {
+                        prop.setValues(refValues);
+                    }
+                }
+
+                continue;
+            }
+
+            // SLING-458: Allow Removal of properties prior to update
+            // @Delete example:
+            // <input name="./Text@Delete" type="hidden" />
+            // causes the JCR Text property to be deleted before update
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_DELETE)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath, SlingPostConstants.SUFFIX_DELETE);
+
+                prop.setDelete(true);
+
+                continue;
+            }
+
+            // plain property, create from values
+            RequestProperty prop = getOrCreateRequestProperty(reqProperties,
+                propPath, null);
+            prop.setValues(e.getValue());
         }
 
         return reqProperties;
+    }
+
+    /**
+     * Returns the <code>paramName</code> as an absolute (unnormalized)
+     * property path by prepending the response path (<code>response.getPath</code>)
+     * to the parameter name if not already absolute.
+     */
+    private String toPropertyPath(String paramName, HtmlResponse response) {
+        if (!paramName.startsWith("/")) {
+            paramName = response.getPath() + "/" + paramName;
+        }
+
+        return paramName;
+    }
+
+    /**
+     * Returns the request property for the given property path. If such a
+     * request property does not exist yet it is created and stored in the
+     * <code>props</code>.
+     * 
+     * @param props The map of already seen request properties.
+     * @param paramName The absolute path of the property including the
+     *            <code>suffix</code> to be looked up.
+     * @param suffix The (optional) suffix to remove from the
+     *            <code>paramName</code> before looking it up.
+     * @return The {@link RequestProperty} for the <code>paramName</code>.
+     */
+    private RequestProperty getOrCreateRequestProperty(
+            Map<String, RequestProperty> props, String paramName, String suffix) {
+        if (suffix != null && paramName.endsWith(suffix)) {
+            paramName = paramName.substring(0, paramName.length()
+                - suffix.length());
+        }
+
+        RequestProperty prop = props.get(paramName);
+        if (prop == null) {
+            prop = new RequestProperty(paramName);
+            props.put(paramName, prop);
+        }
+
+        return prop;
     }
 
     /**
