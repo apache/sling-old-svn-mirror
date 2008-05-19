@@ -157,7 +157,8 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         // If the path ends with a *, create a node under its parent, with
         // a generated node name
         basePath += "/"
-            + nodeNameGenerator.getNodeName(request.getRequestParameterMap());
+            + nodeNameGenerator.getNodeName(request.getRequestParameterMap(),
+                requireItemPathPrefix(request));
 
         // if resulting path exists, add a suffix until it's not the case
         // anymore

@@ -182,8 +182,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      */
     protected boolean hasItemPathPrefix(String name) {
         return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
-            || name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
-            || name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE);
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_PARENT);
     }
 
     /**
