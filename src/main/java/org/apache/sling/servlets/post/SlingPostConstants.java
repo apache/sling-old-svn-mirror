@@ -144,30 +144,49 @@ public interface SlingPostConstants {
     public static final String ORDER_LAST = "last";
 
     /**
-     * Optional request paramter specifying a node name for a newly created
-     * node.
+     * Optional request paramter specifying a node name for a newly created node
+     * (value is ":name").
      */
     public static final String RP_NODE_NAME = RP_PREFIX + "name";
 
     /**
      * Optional request paramter specifying a node name hint for a newly created
-     * node.
+     * node (value is ":nameHint").
      */
     public static final String RP_NODE_NAME_HINT = RP_PREFIX + "nameHint";
 
     /**
-     * Optional request parameter: only request parameters starting with this
-     * prefix are saved as Properties when creating a Node. Active only if at
-     * least one parameter starts with this prefix, and defaults to
-     * {@link #DEFAULT_SAVE_PARAM_PREFIX}.
+     * Prefix for properties addressing repository items with an absolute path
+     * (value is "/").
+     * 
+     * @see #ITEM_PREFIX_RELATIVE_CURRENT
      */
-    public static final String RP_SAVE_PARAM_PREFIX = RP_PREFIX
-        + "saveParamPrefix";
+    public static final String ITEM_PREFIX_ABSOLUTE = "/";
 
     /**
-     * Default value for {@link #RP_SAVE_PARAM_PREFIX}
+     * Prefix for properties addressing repository items with a path relative to
+     * the current request item (value is "./").
+     * <p>
+     * When collecting parameters addressing repository items for modification,
+     * the parameters are first scanned to see whether there is a parameter with
+     * this relative path prefix. If such a parameter exists, the modification
+     * operations only assumes parameters whose name is prefixes with this
+     * prefix or the {@link #ITEM_PREFIX_ABSOLUTE} or the
+     * {@link #ITEM_PREFIX_RELATIVE_PARENT} to be parameters addressing
+     * properties to modify. Otherwise, that is if no parameter starts with this
+     * prefix, all parameters not starting with the
+     * {@link #RP_PREFIX command prefix} are considered addressing properties to
+     * modify.
      */
-    public static final String DEFAULT_SAVE_PARAM_PREFIX = "./";
+    public static final String ITEM_PREFIX_RELATIVE_CURRENT = "./";
+
+    /**
+     * Prefix for properties addressing repository items with a path relative to
+     * the parent of the request item (value is "../").
+     * 
+     * @see #ITEM_PREFIX_RELATIVE_CURRENT
+     */
+    public static final String ITEM_PREFIX_RELATIVE_PARENT = "../";
 
     /**
      * Optional request parameter: redirect to the specified URL after POST

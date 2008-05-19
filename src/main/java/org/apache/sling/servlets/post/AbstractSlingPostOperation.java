@@ -149,33 +149,41 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     }
 
     /**
-     * Return the "save prefix" to use. the names of request properties must
-     * start with that prefix in order to be regarded as input values.
-     * 
-     * @return the save prefix
+     * Returns true if any of the request parameters starts with
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
+     * In this case only parameters starting with either of the prefixes
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>} are
+     * considered as providing content to be stored. Otherwise all parameters
+     * not starting with the command prefix <code>:</code> are considered as
+     * parameters to be stored.
      */
-    protected final String getSavePrefix(SlingHttpServletRequest request) {
-        String savePrefix = request.getParameter(SlingPostConstants.RP_SAVE_PARAM_PREFIX);
+    protected final boolean requireItemPathPrefix(
+            SlingHttpServletRequest request) {
 
-        if (savePrefix == null) {
-            savePrefix = SlingPostConstants.DEFAULT_SAVE_PARAM_PREFIX;
+        boolean requirePrefix = false;
+
+        Enumeration<?> names = request.getParameterNames();
+        while (names.hasMoreElements() && !requirePrefix) {
+            String name = (String) names.nextElement();
+            requirePrefix = name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT);
         }
 
-        if (savePrefix.length() > 0) {
-            String prefix = "";
-            // if no parameters start with this prefix, it is not used
-            Enumeration<?> names = request.getParameterNames();
-            while (names.hasMoreElements()) {
-                String name = (String) names.nextElement();
-                if (name.startsWith(savePrefix)) {
-                    prefix = savePrefix;
-                    break;
-                }
-            }
-            savePrefix = prefix;
-        }
+        return requirePrefix;
+    }
 
-        return savePrefix;
+    /**
+     * Returns <code>true</code> if the <code>name</code> starts with either
+     * of the prefixes
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>}.
+     */
+    protected boolean hasItemPathPrefix(String name) {
+        return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE);
     }
 
     /**
