@@ -119,8 +119,8 @@ public class PostServletCreateTest extends HttpTestBase {
         assertJavascript("undefined", content, "out.println(typeof data.c)");
     }
 
-    /** Use a custom "save prefix" on some parameters, and check that only those
-     *  who have the prefix are saved.
+    /** SLING-394 removed :saveParamPrefix support. We check whether this is
+     * really ignored
      */
     public void testCustomSavePrefix() throws IOException {
         final Map <String, String> props = new HashMap <String, String> ();
@@ -130,21 +130,10 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put(":saveParamPrefix","STUFF_");
         final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
-        assertJavascript("123456", content, "out.println(data.a + data.b)");
-        assertJavascript("undefined", content, "out.println(typeof data.c)");
+        assertJavascript("undefined", content, "out.println(typeof data.a)");
+        assertJavascript("undefined", content, "out.println(typeof data.b)");
+        assertJavascript("123456", content, "out.println(data.STUFF_a + data.STUFF_b)");
+        assertJavascript("string", content, "out.println(typeof data.c)");
     }
 
-    public void TODO_FAILS_testCustomSavePrefixPlusPlus() throws IOException {
-        // for some reason, ++ as a custom save prefix fails
-        // might indicate a weirdness in parameters processing
-        final Map <String, String> props = new HashMap <String, String> ();
-        props.put("++a","123");
-        props.put("++b","456");
-        props.put("c","not saved");
-        props.put(":saveParamPrefix","++");
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props,null,false);
-        final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
-        assertJavascript("123456", content, "out.println(data.a + data.b)");
-        assertJavascript("undefined", content, "out.println(typeof data.c)");
-    }
  }
