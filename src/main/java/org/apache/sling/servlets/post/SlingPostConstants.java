@@ -239,13 +239,19 @@ public interface SlingPostConstants {
     public static final String VALUE_FROM_SUFFIX = "@ValueFrom";
 
     /**
-     * suffix that indicates a type hint parameter
+     * Suffix indicating a type hint for the property (value is "@TypeHint").
      */
     public static final String TYPE_HINT_SUFFIX = "@TypeHint";
 
     /**
-     * suffix that indicates a default value parameter
+     * Suffix indicating a default value for a property (value is
+     * "@DefaultValue").
      */
     public static final String DEFAULT_VALUE_SUFFIX = "@DefaultValue";
 
+    /**
+     * Suffix indicating that the named property is to be removed before
+     * applying any new content (value is "@Delete").
+     */
+    public static final String SUFFIX_DELETE = "@Delete";
 }
