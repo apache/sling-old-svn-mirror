@@ -17,6 +17,7 @@
 package org.apache.sling.servlets.post.impl.helper;
 
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
@@ -47,10 +48,10 @@ public class RequestProperty {
 
     public RequestProperty(String path, RequestParameter[] values) {
         assert path.startsWith("/");
-        this.path = path;
+        this.path = ResourceUtil.normalize(path);
         this.values = values;
-        this.parentPath = path.substring(0, path.lastIndexOf("/"));
-        this.name = path.substring(path.lastIndexOf("/") + 1);
+        this.parentPath = ResourceUtil.getParent(path);
+        this.name = ResourceUtil.getName(path);
     }
 
     public String getTypeHint() {
