@@ -51,9 +51,12 @@ public class NodeNameGenerator {
      * Get a "nice" node name, if possible, based on given request
      *
      * @param parameters the request parameters
+     * @param requirePrefix <code>true</code> if the parameter names for
+     *      properties requires a prefix
      * @return a nice node name
      */
-    public String getNodeName(RequestParameterMap parameters) {
+    public String getNodeName(RequestParameterMap parameters,
+            boolean requirePrefix) {
         String valueToUse = null;
         boolean doFilter = true;
 
@@ -77,19 +80,19 @@ public class NodeNameGenerator {
                 }
             }
 
-            if ( valueToUse == null ) {
-                for(String param : parameterNames) {
-                    if(valueToUse != null) {
+            if (valueToUse == null) {
+                for (String param : parameterNames) {
+                    if (valueToUse != null) {
                         break;
                     }
-                    RequestParameter[] pp = parameters.get(param);
-                    if (pp == null) {
-                        pp = parameters.get(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT + param);
+                    if (requirePrefix) {
+                        param = SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT.concat(param);
                     }
-                    if (pp!=null) {
-                        for(RequestParameter p : pp) {
+                    final RequestParameter[] pp = parameters.get(param);
+                    if (pp != null) {
+                        for (RequestParameter p : pp) {
                             valueToUse = p.getString();
-                            if(valueToUse != null && valueToUse.length() > 0) {
+                            if (valueToUse != null && valueToUse.length() > 0) {
                                 break;
                             }
                             valueToUse = null;
