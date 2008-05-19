@@ -157,8 +157,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         // If the path ends with a *, create a node under its parent, with
         // a generated node name
         basePath += "/"
-            + nodeNameGenerator.getNodeName(request.getRequestParameterMap(),
-                getSavePrefix(request));
+            + nodeNameGenerator.getNodeName(request.getRequestParameterMap());
 
         // if resulting path exists, add a suffix until it's not the case
         // anymore
@@ -242,7 +241,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     private Map<String, RequestProperty> collectContent(
             SlingHttpServletRequest request, HtmlResponse response) {
 
-        String savePrefix = getSavePrefix(request);
+        boolean requireItemPrefix = requireItemPathPrefix(request);
 
         // walk the request parameters and collect the properties
         Map<String, RequestProperty> reqProperties = new HashMap<String, RequestProperty>();
@@ -267,13 +266,10 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                 continue;
             }
             // skip parameters that do not start with the save prefix
-            if (!paramName.startsWith(savePrefix)) {
+            if (requireItemPrefix && !hasItemPathPrefix(paramName)) {
                 continue;
             }
-            String propertyName = paramName.substring(savePrefix.length());
-            if (propertyName.length() == 0) {
-                continue;
-            }
+            String propertyName = paramName;
             // SLING-130: VALUE_FROM_SUFFIX means take the value of this
             // property from a different field
             RequestParameter[] values = e.getValue();
@@ -310,7 +306,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             // <input type="text" name="./age" />
             // <input type="hidden" name="./age@TypeHint" value="long" />
             // causes the setProperty using the 'long' property type
-            final String thName = savePrefix + propertyName
+            final String thName = propertyName
                 + SlingPostConstants.TYPE_HINT_SUFFIX;
             final RequestParameter rp = request.getRequestParameter(thName);
             if (rp != null) {
@@ -318,7 +314,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             }
 
             // @DefaultValue
-            final String dvName = savePrefix + propertyName
+            final String dvName = propertyName
                 + SlingPostConstants.DEFAULT_VALUE_SUFFIX;
             prop.setDefaultValues(request.getRequestParameters(dvName));
 
