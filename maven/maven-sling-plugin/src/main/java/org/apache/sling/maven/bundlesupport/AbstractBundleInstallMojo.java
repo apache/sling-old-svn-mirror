@@ -39,50 +39,59 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
     /**
      * The URL of the running Sling instance.
-     *
-     * @parameter expression="${sling.url}" default-value="http://localhost:8080/sling"
+     * 
+     * @parameter expression="${sling.url}"
+     *            default-value="http://localhost:8080/sling"
      * @required
      */
     private String slingUrl;
-    
+
     /**
      * The user name to authenticate at the running Sling instance.
-     *
+     * 
      * @parameter expression="${sling.user}" default-value="admin"
      * @required
      */
     private String user;
-    
+
     /**
      * The password to authenticate at the running Sling instance.
-     *
+     * 
      * @parameter expression="${sling.password}" default-value="admin"
      * @required
      */
     private String password;
-    
+
     /**
      * The startlevel for the uploaded bundle
-     *
+     * 
      * @parameter expression="${sling.bundle.startlevel}" default-value="20"
      * @required
      */
     private String bundleStartLevel;
-    
+
     /**
      * Whether to start the uploaded bundle or not
-     *
+     * 
      * @parameter expression="${sling.bundle.start}" default-value="true"
      * @required
      */
     private boolean bundleStart;
+
+    /**
+     * Whether to refresh the packages after installing the uploaded bundle
+     *
+     * @parameter expression="${sling.refreshPackages}" default-value="true"
+     * @required
+     */
+    private boolean refreshPackages;
 
     public AbstractBundleInstallMojo() {
         super();
     }
 
     protected abstract String getBundleFileName() throws MojoExecutionException;
-    
+
     public void execute() throws MojoExecutionException {
 
         // get the file to upload
@@ -96,52 +105,62 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             return;
         }
 
-        getLog().info("Installing Bundle " + bundleName + "(" + bundleFile + ") to " + slingUrl);
+        getLog().info(
+            "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
+                + slingUrl);
         post(slingUrl, bundleFile);
     }
 
-    protected void post(String targetURL, File file) throws MojoExecutionException {
-    
+    protected void post(String targetURL, File file)
+            throws MojoExecutionException {
+
         // append pseudo path after root URL to not get redirected for nothing
         PostMethod filePost = new PostMethod(targetURL + "/install");
-    
+
         try {
-    
+
             List<Part> partList = new ArrayList<Part>();
             partList.add(new StringPart("action", "install"));
             partList.add(new StringPart("_noredir_", "_noredir_"));
-            partList.add(new FilePart("bundlefile", new FilePartSource(file.getName(), file)));
+            partList.add(new FilePart("bundlefile", new FilePartSource(
+                file.getName(), file)));
             partList.add(new StringPart("bundlestartlevel", bundleStartLevel));
-            
+
             if (bundleStart) {
                 partList.add(new StringPart("bundlestart", "start"));
             }
-    
+            
+            if (refreshPackages) {
+                partList.add(new StringPart("refreshPackages", "true"));
+            }
+
             Part[] parts = partList.toArray(new Part[partList.size()]);
-    
+
             filePost.setRequestEntity(new MultipartRequestEntity(parts,
                 filePost.getParams()));
             HttpClient client = new HttpClient();
             client.getHttpConnectionManager().getParams().setConnectionTimeout(
                 5000);
-            
+
             // authentication stuff
             client.getParams().setAuthenticationPreemptive(true);
-            Credentials defaultcreds = new UsernamePasswordCredentials(user, password);
+            Credentials defaultcreds = new UsernamePasswordCredentials(user,
+                password);
             client.getState().setCredentials(AuthScope.ANY, defaultcreds);
-            
+
             int status = client.executeMethod(filePost);
             if (status == HttpStatus.SC_OK) {
                 getLog().info("Bundle installed");
             } else {
                 getLog().error(
-                    "Installation failed, cause: " + HttpStatus.getStatusText(status));
+                    "Installation failed, cause: "
+                        + HttpStatus.getStatusText(status));
             }
         } catch (Exception ex) {
-            throw new MojoExecutionException("Installation on " + targetURL + " failed, cause: " + ex.getMessage(), ex);
+            throw new MojoExecutionException("Installation on " + targetURL
+                + " failed, cause: " + ex.getMessage(), ex);
         } finally {
             filePost.releaseConnection();
         }
     }
-
 }
