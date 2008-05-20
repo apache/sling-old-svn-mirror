@@ -18,6 +18,8 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 /** A GET to *.html and *.json must work even if there is no Node
  *  at the specified path (SLING-344)
  */

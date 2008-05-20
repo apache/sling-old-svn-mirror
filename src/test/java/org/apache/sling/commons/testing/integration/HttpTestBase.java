@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launchpad.webapp.integrationtest;
+package org.apache.sling.commons.testing.integration;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +38,6 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
-import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
-import org.apache.sling.launchpad.webapp.integrationtest.helpers.UslingIntegrationTestClient;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
@@ -61,7 +59,7 @@ public class HttpTestBase extends TestCase {
 
     public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
-    protected UslingIntegrationTestClient testClient;
+    protected SlingIntegrationTestClient testClient;
     protected HttpClient httpClient;
 
     private static Boolean slingStartupOk;
@@ -122,7 +120,7 @@ public class HttpTestBase extends TestCase {
         Credentials defaultcreds = new UsernamePasswordCredentials("admin", "admin");
         httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
 
-        testClient = new UslingIntegrationTestClient(httpClient);
+        testClient = new SlingIntegrationTestClient(httpClient);
 
         waitForSlingStartup();
     }

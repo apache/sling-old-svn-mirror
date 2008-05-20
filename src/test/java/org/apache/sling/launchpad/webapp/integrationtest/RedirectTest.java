@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating Nodes and rendering them in JSON */

@@ -16,10 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.launchpad.webapp.integrationtest.helpers;
+package org.apache.sling.commons.testing.integration;
 
 import java.io.IOException;
 
+@SuppressWarnings("serial")
 public class HttpStatusCodeException extends IOException {
 
     private final int expectedStatus;

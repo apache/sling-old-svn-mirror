@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 
 /** Test the {link JsonQueryServlet) functionality. 

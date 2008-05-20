@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the {link ScriptHelper#include) functionality */

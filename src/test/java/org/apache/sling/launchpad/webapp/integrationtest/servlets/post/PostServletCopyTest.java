@@ -26,8 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
+import org.apache.sling.commons.testing.integration.HttpStatusCodeException;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node copy via the MicrojaxPostServlet */

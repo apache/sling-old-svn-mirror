@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test support of @Delete suffix of SLING-458 */

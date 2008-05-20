@@ -18,6 +18,7 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 
 /** Ping the Sling server to verify that our integration test

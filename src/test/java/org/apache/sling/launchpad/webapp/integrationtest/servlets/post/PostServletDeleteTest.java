@@ -23,7 +23,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test node deletion via the MicrojaxPostServlet */

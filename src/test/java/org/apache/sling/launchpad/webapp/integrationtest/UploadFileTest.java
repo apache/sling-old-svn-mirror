@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /**
  * Test uploading files using the Sling post servlet (SLING-168)
