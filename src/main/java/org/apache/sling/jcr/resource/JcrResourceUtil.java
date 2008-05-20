@@ -96,7 +96,7 @@ public class JcrResourceUtil {
      * Helper method, which returns the given resource type as returned from the
      * {@link org.apache.sling.api.resource.Resource#getResourceType()} as a
      * relative path.
-     *
+     * 
      * @param type The resource type to be converted into a path
      * @return The resource type as a path.
      */
@@ -106,12 +106,12 @@ public class JcrResourceUtil {
 
     /**
      * Returns the super type of the given resource type. This is the result of
-     * calling the <code>getResourceSuperType()</code> method on the
-     * <code>Resource</code> addressed by the <code>resourceType</code>. If
-     * the resource type does not address a resource or if the addressed
-     * resource has no resource super type, this method returns
-     * <code>null</code>.
-     *
+     * adapting the child resource
+     * {@link JcrResourceConstants#SLING_RESOURCE_SUPER_TYPE_PROPERTY} of the
+     * <code>Resource</code> addressed by the <code>resourceType</code> to a
+     * string. If no such child resource exists or if the resource does not
+     * adapt to a string, this method returns <code>null</code>.
+     * 
      * @param resourceResolver The <code>ResourceResolver</code> used to
      *            access the resource whose path (relative or absolute) is given
      *            by the <code>resourceType</code> parameter.
@@ -120,18 +120,60 @@ public class JcrResourceUtil {
      *            {@link #resourceTypeToPath(String)} method before trying to
      *            get the resource through the <code>resourceResolver</code>.
      * @return the super type of the <code>resourceType</code> or
-     *         <code>null</code> if the resource type does not address a
-     *         resource or if the addressed resource has no resource super type.
+     *         <code>null</code> if the resource type does not have a child
+     *         resource
+     *         {@link JcrResourceConstants#SLING_RESOURCE_SUPER_TYPE_PROPERTY}
+     *         adapting to a string.
      */
     public static String getResourceSuperType(
             ResourceResolver resourceResolver, String resourceType) {
         // normalize resource type to a path string
         String rtPath = resourceTypeToPath(resourceType);
 
-        // get a resource for the resource type
+        // create the path to the resource containing the super type
+        rtPath += "/" + JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY;
+
+        // get a resource for the resource supert type
         Resource rtResource = resourceResolver.getResource(rtPath);
 
         // get the resource super type from the resource
-        return (rtResource != null) ? rtResource.getResourceSuperType() : null;
+        return (rtResource != null) ? rtResource.adaptTo(String.class) : null;
+    }
+
+    /**
+     * Returns the resource super type of the given resource. This is either the
+     * child resource
+     * {@link JcrResourceConstants#SLING_RESOURCE_SUPER_TYPE_PROPERTY} if the
+     * given <code>resource</code> adapted to a string or the result of
+     * calling the {@link #getResourceSuperType(ResourceResolver, String)}
+     * method on the resource type of the <code>resource</code>.
+     * <p>
+     * This mechanism allows to specifically set the resource super type on a
+     * per-resource level overwriting any resource super type hierarchy
+     * pre-defined by the actual resource type of the resource.
+     * 
+     * @param resource The <code>Resource</code> whose resource super type is
+     *            requested.
+     * @return The resource super type or <code>null</code> if the algorithm
+     *         described above does not yield a resource super type.
+     */
+    public static String getResourceSuperType(Resource resource) {
+        ResourceResolver resolver = resource.getResourceResolver();
+
+        // try local resourceSuperType "property"
+        String resourceSuperType = null;
+        Resource typeResource = resolver.getResource(resource,
+            JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY);
+        if (typeResource != null) {
+            resourceSuperType = typeResource.adaptTo(String.class);
+        }
+
+        // try explicit resourceSuperType resource
+        if (resourceSuperType == null) {
+            String resourceType = resource.getResourceType();
+            resourceSuperType = getResourceSuperType(resolver, resourceType);
+        }
+
+        return resourceSuperType;
     }
 }
