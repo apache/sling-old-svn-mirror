@@ -72,29 +72,7 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
     public String getResourceSuperType() {
         if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-
-            String rst = null;
-
-            // try local resourceSuperType "property"
-            Resource typeResource = getResourceResolver().getResource(this,
-                SLING_RESOURCE_SUPER_TYPE_PROPERTY);
-            if (typeResource != null) {
-                rst = typeResource.adaptTo(String.class);
-            }
-
-            // try explicit resourceSuperType resource
-            if (rst == null) {
-                String typePath = JcrResourceUtil.resourceTypeToPath(getResourceType());
-                typePath += "/" + SLING_RESOURCE_SUPER_TYPE_PROPERTY;
-                typeResource = getResourceResolver().getResource(typePath);
-                if (typeResource != null) {
-                    rst = typeResource.adaptTo(String.class);
-                }
-            }
-
-            // now set the field to whatever we have, even null
-            resourceSuperType = rst;
-
+            resourceSuperType = JcrResourceUtil.getResourceSuperType(this);
         }
         return resourceSuperType;
     }
