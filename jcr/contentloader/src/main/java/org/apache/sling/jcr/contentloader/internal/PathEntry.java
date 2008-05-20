@@ -33,11 +33,14 @@ public class PathEntry {
     /** The manifest header to specify initial content to be loaded. */
     public static final String CONTENT_HEADER = "Sling-Initial-Content";
 
-    /** The overwrite flag specifying if content should be overwritten or just initially added. */
-    public static final String OVERWRITE_FLAG = "overwrite";
+    /** The overwrite directive specifying if content should be overwritten or just initially added. */
+    public static final String OVERWRITE_DIRECTIVE = "overwrite";
 
-    /** The uninstall flag specifying if content should be uninstalled. */
-    public static final String UNINSTALL_FLAG = "uninstall";
+    /** The uninstall directive specifying if content should be uninstalled. */
+    public static final String UNINSTALL_DIRECTIVE = "uninstall";
+    
+    /** The path directive specifying the target node where initial content will be loaded. */
+    public static final String PATH_DIRECTIVE = "path";
 
     /** The path for the initial content. */
     private final String path;
@@ -47,6 +50,9 @@ public class PathEntry {
 
     /** Should existing content be uninstalled? */
     private final boolean uninstall;
+    
+    /** Target path where initial content will be loaded. If it´s null then target node is the root node */
+    private final String target;
 
     public static Iterator<PathEntry> getContentPaths(final Bundle bundle) {
         final List<PathEntry> entries = new ArrayList<PathEntry>();
@@ -66,9 +72,10 @@ public class PathEntry {
     }
 
     public PathEntry(ManifestHeader.Entry entry) {
-        // check for overwrite and uninstall flag
-        final String overwriteValue = entry.getDirectiveValue(OVERWRITE_FLAG);
-        final String uninstallValue = entry.getDirectiveValue(UNINSTALL_FLAG);
+        // check for directives
+        final String overwriteValue = entry.getDirectiveValue(OVERWRITE_DIRECTIVE);
+        final String uninstallValue = entry.getDirectiveValue(UNINSTALL_DIRECTIVE);
+        final String pathValue = entry.getDirectiveValue(PATH_DIRECTIVE);
         boolean overwriteFlag = false;
         if ( overwriteValue != null ) {
             overwriteFlag = Boolean.valueOf(overwriteValue).booleanValue();
@@ -79,6 +86,11 @@ public class PathEntry {
             this.uninstall = Boolean.valueOf(uninstallValue);
         } else {
             this.uninstall = this.overwrite;
+        }
+        if ( pathValue != null ) {
+        	this.target = pathValue;
+        } else {
+        	this.target = null;
         }
     }
 
@@ -93,4 +105,8 @@ public class PathEntry {
     public boolean isUninstall() {
         return this.uninstall;
     }
+
+	public String getTarget() {
+		return target;
+	}
 }
