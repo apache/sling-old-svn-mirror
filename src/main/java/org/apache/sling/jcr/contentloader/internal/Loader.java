@@ -208,7 +208,9 @@ public class Loader {
             while (pathIter.hasNext() ) {
                 final PathEntry entry = pathIter.next();
                 if ( !contentAlreadyLoaded || entry.isOverwrite() ) {
-                    this.installFromPath(bundle, entry.getPath(), entry.isOverwrite(), session.getRootNode());
+                	Node targetNode = this.getTargetNode(session, entry.getTarget());
+                	if (targetNode != null)
+                		this.installFromPath(bundle, entry.getPath(), entry.isOverwrite(), targetNode);
                 }
             }
 
@@ -656,6 +658,23 @@ public class Loader {
         Item item = session.getItem(path);
         return (item.isNode()) ? (Node) item : null;
     }
+    
+    private Node getTargetNode(Session session, String path)
+    		throws RepositoryException {
+    	
+    	// not specyfied path directive
+    	if (path == null)
+    		return session.getRootNode();
+    	
+    	int firstSlash = path.indexOf("/");
+    	
+    	// it´s a relative path
+    	if (firstSlash != 0)
+    		path = "/" + path;
+    	
+    	Item item = session.getItem(path);
+    	return (item.isNode()) ? (Node) item : null;
+    }
 
     private void uninstallContent(final Session session, final Bundle bundle, final Iterator<PathEntry> pathIter) {
         try {
@@ -664,9 +683,11 @@ public class Loader {
             while (pathIter.hasNext() ) {
                 final PathEntry entry = pathIter.next();
                 if ( entry.isUninstall() ) {
-                    this.uninstallFromPath(bundle, entry.getPath(), session.getRootNode());
+                	Node targetNode = this.getTargetNode(session, entry.getTarget());
+                	if (targetNode != null)
+                		this.uninstallFromPath(bundle, entry.getPath(), targetNode);
                 } else {
-                    log.debug("Ignoring to uninstall content at {}, overwrite flag is not set.", entry.getPath());
+                    log.debug("Ignoring to uninstall content at {}, uninstall directive is not set.", entry.getPath());
                 }
             }
 
