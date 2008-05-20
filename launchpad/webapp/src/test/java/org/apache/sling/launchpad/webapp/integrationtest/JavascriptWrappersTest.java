@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 /** Test Scriptable objects */
 public class JavascriptWrappersTest extends HttpTestBase {
 

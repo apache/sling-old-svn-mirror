@@ -18,6 +18,8 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 /** Test the MicroslingIntegrationTestClient's mkdir functions */ 
 public class MkdirTest extends HttpTestBase {
     

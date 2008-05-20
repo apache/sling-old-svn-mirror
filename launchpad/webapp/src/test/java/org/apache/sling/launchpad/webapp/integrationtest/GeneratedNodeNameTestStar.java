@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the generation of node names for POST requests to URLS

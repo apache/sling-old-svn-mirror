@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launchpad.webapp.integrationtest.helpers;
+package org.apache.sling.commons.testing.integration;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,13 +34,13 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 
-/** Client functions to interact with microsling in integration tests */
-public class UslingIntegrationTestClient {
+/** Client functions to interact with Sling in integration tests */
+public class SlingIntegrationTestClient {
     private final HttpClient httpClient;
 
-    public UslingIntegrationTestClient(HttpClient client) {
+    public SlingIntegrationTestClient(HttpClient client) {
         this.httpClient = client;
     }
 

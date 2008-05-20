@@ -20,6 +20,8 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 
 /** Test the SLING-129 {@link org.apache.sling.api.resource.SyntheticResource}, by requesting
  *  non-existent Nodes..

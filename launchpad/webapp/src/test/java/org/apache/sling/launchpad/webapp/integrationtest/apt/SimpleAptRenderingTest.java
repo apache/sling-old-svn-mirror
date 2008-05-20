@@ -16,7 +16,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.apt;
 
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 public class SimpleAptRenderingTest extends HttpTestBase {
     

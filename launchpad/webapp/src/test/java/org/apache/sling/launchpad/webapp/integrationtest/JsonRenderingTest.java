@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating Nodes and rendering them in JSON */
