@@ -32,13 +32,12 @@ import junit.framework.TestCase;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
-import org.apache.sling.servlets.post.SlingPostConstants;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -58,6 +57,8 @@ public class HttpTestBase extends TestCase {
     public static final String CONTENT_TYPE_CSS = "text/css";
 
     public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
+    
+    public static final String SLING_POST_SERVLET_CREATE_SUFFIX = "/";
 
     protected SlingIntegrationTestClient testClient;
     protected HttpClient httpClient;
@@ -83,7 +84,7 @@ public class HttpTestBase extends TestCase {
             }
             testText = "This is a test node " + System.currentTimeMillis();
             properties.put("text", testText);
-            nodeUrl = testClient.createNode(parentPath + SlingPostConstants.DEFAULT_CREATE_SUFFIX, properties);
+            nodeUrl = testClient.createNode(parentPath + SLING_POST_SERVLET_CREATE_SUFFIX, properties);
             resourceType = properties.get(SLING_RESOURCE_TYPE);
             scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
             testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
