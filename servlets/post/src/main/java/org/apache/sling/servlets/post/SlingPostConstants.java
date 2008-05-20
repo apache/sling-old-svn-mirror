@@ -62,6 +62,9 @@ public interface SlingPostConstants {
      * <p>
      * The delete operation requires no further request parameters and just
      * deletes the content addressed by the request.
+     * <p>
+     * If the {@link #RP_APPLY_TO} parameter is set the resources listed in that
+     * parameter are deleted instead of the request resource.
      */
     public static final String OPERATION_DELETE = "delete";
 
@@ -74,6 +77,9 @@ public interface SlingPostConstants {
      * order of the destination node. Finally the {@link #RP_REPLACE} parameter
      * may be set to indicate whether an existing item at the destination should
      * be replaced or not.
+     * <p>
+     * If the {@link #RP_APPLY_TO} parameter is set the resources listed in that
+     * parameter are copied instead of the request resource.
      */
     public static final String OPERATION_COPY = "copy";
 
@@ -86,12 +92,26 @@ public interface SlingPostConstants {
      * order of the destination node. Finally the {@link #RP_REPLACE} parameter
      * may be set to indicate whether an existing item at the destination should
      * be replaced or not.
+     * <p>
+     * If the {@link #RP_APPLY_TO} parameter is set the resources listed in that
+     * parameter are moved instead of the request resource.
      */
     public static final String OPERATION_MOVE = "move";
 
     /**
+     * Name of the request parameter used to indicate the resource to apply the
+     * operation to (value is ":applyTo").
+     * <p>
+     * This property is used by certain opertaions - namely
+     * {@link #OPERATION_COPY}, {@link #OPERATION_DELETE} and
+     * {@link #OPERATION_MOVE} - to apply the operation to multiple resources
+     * instead of the request resource.
+     */
+    public static final String RP_APPLY_TO = RP_PREFIX + "applyTo";
+
+    /**
      * Name of the request parameter used to indicate the destination for the
-     * copy and move operations (value is "dest"). This request parameter is
+     * copy and move operations (value is ":dest"). This request parameter is
      * required by the copy and move operations.
      */
     public static final String RP_DEST = RP_PREFIX + "dest";
@@ -99,7 +119,7 @@ public interface SlingPostConstants {
     /**
      * Name of the request parameter indicating whether the destination for a
      * copy or move operation is to be replaced if existing (value is
-     * "replace"). Copy or move is only possible if the destination exists if
+     * ":replace"). Copy or move is only possible if the destination exists if
      * the replace parameter is set to the case-insignificant value true.
      */
     public static final String RP_REPLACE = RP_PREFIX + "replace";
@@ -254,7 +274,7 @@ public interface SlingPostConstants {
      * applying any new content (value is "@Delete").
      */
     public static final String SUFFIX_DELETE = "@Delete";
-    
+
     /**
      * Suffix indicating that the named item is to be set from an item whose
      * absolute or relative path is given in the parameter's value (value is

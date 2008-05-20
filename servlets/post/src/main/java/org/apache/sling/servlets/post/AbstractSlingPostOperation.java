@@ -17,6 +17,8 @@
 package org.apache.sling.servlets.post;
 
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -25,6 +27,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
@@ -108,6 +112,30 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
 
     protected abstract void doRun(SlingHttpServletRequest request,
             HtmlResponse response) throws RepositoryException;
+
+    /**
+     * Returns an iterator on <code>Resource</code> instances addressed in the
+     * {@link SlingPostConstants#RP_APPLY_TO} request parameter. If the request
+     * parameter is not set, <code>null</code> is returned. If the parameter
+     * is set with valid resources an empty iterator is returned. Any resources
+     * addressed in the {@link SlingPostConstants#RP_APPLY_TO} parameter is
+     * ignored.
+     * 
+     * @param request The <code>SlingHttpServletRequest</code> object used to
+     *            get the {@link SlingPostConstants#RP_APPLY_TO} parameter.
+     * @return The iterator of resources listed in the parameter or
+     *         <code>null</code> if the parameter is not set in the request.
+     */
+    protected Iterator<Resource> getApplyToResources(
+            SlingHttpServletRequest request) {
+        
+        String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
+        if (applyTo == null) {
+            return null;
+        }
+        
+        return new ApplyToIterator(request, applyTo);
+    }
 
     /**
      * Returns an external form of the given path prepending the context path
@@ -282,4 +310,57 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
         }
     }
 
+    private static class ApplyToIterator implements Iterator<Resource> {
+
+        private final ResourceResolver resolver;
+        private final Resource baseResource;
+        private final String[] paths;
+        
+        private int pathIndex;
+        
+        private Resource nextResource;
+        
+        ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
+            this.resolver = request.getResourceResolver();
+            this.baseResource = request.getResource();
+            this.paths = paths;
+            this.pathIndex = 0;
+            
+            nextResource = seek();
+        }
+        
+        public boolean hasNext() {
+            return nextResource != null;
+        }
+
+        public Resource next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            
+            Resource result = nextResource;
+            nextResource = seek();
+            
+            return result;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+        
+        private Resource seek() {
+            while (pathIndex < paths.length) {
+                String path = paths[pathIndex];
+                pathIndex++;
+
+                Resource res = resolver.getResource(baseResource, path);
+                if (res != null) {
+                    return res;
+                }
+            }
+            
+            // no more elements in the array
+            return null;
+        }
+    }
 }

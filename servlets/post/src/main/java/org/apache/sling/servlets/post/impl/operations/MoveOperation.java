@@ -16,6 +16,7 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -30,22 +31,29 @@ import org.slf4j.LoggerFactory;
  */
 public class MoveOperation extends AbstractCopyMoveOperation {
 
-    /**
-     * default log
-     */
-    private static final Logger log = LoggerFactory.getLogger(MoveOperation.class);
-
     @Override
     protected String getOperationName() {
         return "move";
     }
 
     @Override
-    protected void execute(HtmlResponse response, Session session,
-            String source, String dest) throws RepositoryException {
+    protected void execute(HtmlResponse response, Item source,
+            String destParent, String destName) throws RepositoryException {
 
-        session.move(source, dest);
-        response.onMoved(source, dest);
-        log.debug("moved {} to {}", source, dest);
+        if (destName == null) {
+            destName = source.getName();
+        }
+
+        String sourcePath = source.getPath();
+        String destPath = destParent + "/" + destName;
+        Session session = source.getSession();
+        
+        if (session.itemExists(destPath)) {
+            session.getItem(destPath).remove();
+        }
+
+        session.move(sourcePath, destPath);
+        response.onMoved(sourcePath, destPath);
     }
+
 }

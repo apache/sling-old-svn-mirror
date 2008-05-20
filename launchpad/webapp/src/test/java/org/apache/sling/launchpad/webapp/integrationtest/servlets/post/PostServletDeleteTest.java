@@ -45,6 +45,40 @@ public class PostServletDeleteTest extends HttpTestBase {
         final String urlB = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         final String urlC = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
+        
+        // initially all nodes must be found
+        assertHttpStatus(urlA, HttpServletResponse.SC_OK, "A must initially exist");
+        assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must initially exist");
+        assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must initially exist");
+        assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must initially exist");
+        
+        // delete one and check
+        final List <NameValuePair> params = new LinkedList<NameValuePair> ();
+        params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
+        assertPostStatus(urlA,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
+        assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
+        assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must still exist");
+        assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
+        assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must still exist");
+        
+        // delete the others with successive requests
+        assertPostStatus(urlB,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        assertPostStatus(urlD,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
+        assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
+        assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
+        assertHttpStatus(urlD, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
+        
+        // attempting to delete non-existing nodes is ok
+        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+    }
+
+    public void testDeleteMultiple() throws IOException {
+        final String urlA = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlB = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlC = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
 
         // initially all nodes must be found
         assertHttpStatus(urlA, HttpServletResponse.SC_OK, "A must initially exist");
@@ -55,22 +89,25 @@ public class PostServletDeleteTest extends HttpTestBase {
         // delete one and check
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
         params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
-        assertPostStatus(urlA,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlA.substring(HTTP_BASE_URL.length())));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlB.substring(HTTP_BASE_URL.length())));
+        assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
-        assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must still exist");
+        assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (1)");
         assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
         assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must still exist");
 
         // delete the others with successive requests
-        assertPostStatus(urlB,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
-        assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
-        assertPostStatus(urlD,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
+        params.clear();
+        params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlA.substring(HTTP_BASE_URL.length())));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlB.substring(HTTP_BASE_URL.length())));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlC.substring(HTTP_BASE_URL.length())));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlD.substring(HTTP_BASE_URL.length())));
+        assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
         assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
         assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
         assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
         assertHttpStatus(urlD, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
-
-        // attempting to delete non-existing nodes is ok
-        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
     }
 }
