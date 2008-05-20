@@ -22,8 +22,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
-import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
+import org.apache.sling.commons.testing.integration.HttpStatusCodeException;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test item copy support by @CopyFrom suffix (SLING-455) */

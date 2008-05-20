@@ -19,6 +19,8 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 /** Test uploading files to the Sling repository
  *  via WebDAV, as a first step towards testing the
  *  complete content creation and rendering scenario. 

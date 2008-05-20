@@ -17,6 +17,8 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 public class InitialContentTest extends HttpTestBase {
 
     public void testIndex() throws IOException {

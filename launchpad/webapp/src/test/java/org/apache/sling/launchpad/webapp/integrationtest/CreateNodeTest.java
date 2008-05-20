@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /** Test creating a Node using the MicroslingIntegrationTestClient */
 public class CreateNodeTest extends HttpTestBase {

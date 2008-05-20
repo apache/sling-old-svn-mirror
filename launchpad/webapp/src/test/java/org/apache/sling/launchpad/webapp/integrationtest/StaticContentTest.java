@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 /** Some tests about static content */
 public class StaticContentTest extends HttpTestBase {
     

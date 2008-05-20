@@ -19,7 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 import java.io.IOException;
 
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test the various status options for POST, SLING-422 */

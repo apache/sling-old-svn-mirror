@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /** Test the order option for node creation via the MicrojaxPostServlet */
 public class PostServletOrderTest extends HttpTestBase {
