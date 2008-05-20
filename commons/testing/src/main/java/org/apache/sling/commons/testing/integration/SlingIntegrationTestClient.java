@@ -34,7 +34,6 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpAnyMethod;
 
 /** Client functions to interact with Sling in integration tests */
 public class SlingIntegrationTestClient {
@@ -44,7 +43,7 @@ public class SlingIntegrationTestClient {
         this.httpClient = client;
     }
 
-    /** Upload a file to the microsling repository
+    /** Upload a file to the Sling repository
      *  @return the HTTP status code
      */
     public int upload(String toUrl, InputStream is) throws IOException {
@@ -53,7 +52,7 @@ public class SlingIntegrationTestClient {
         return httpClient.executeMethod(put);
     }
 
-    /** Delete a file from the microsling repository
+    /** Delete a file from the Sling repository
      *  @return the HTTP status code
      */
     public int delete(String url) throws IOException {
@@ -101,10 +100,10 @@ public class SlingIntegrationTestClient {
         return createNode(url, nodeProperties, null, false);
     }
 
-    /** Create a node under given path, using a POST to microsling
+    /** Create a node under given path, using a POST to Sling
      *  @param url under which node is created
      *  @param multiPart if true, does a multipart POST
-     *  @return the URL that microsling provides to display the node
+     *  @return the URL that Sling provides to display the node
      */
     public String createNode(String url, Map<String,String> clientNodeProperties, Map<String,String> requestHeaders,boolean multiPart)
     throws IOException {
