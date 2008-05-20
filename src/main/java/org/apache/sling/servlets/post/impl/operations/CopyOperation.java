@@ -49,36 +49,83 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     @Override
     protected void execute(HtmlResponse response, Session session,
             String source, String dest) throws RepositoryException {
-        copyNode((Node) session.getItem(source),
+        copy((Node) session.getItem(source),
             (Node) session.getItem(ResourceUtil.getParent(dest)),
             ResourceUtil.getName(dest));
         response.onCopied(source, dest);
         log.debug("copy {} to {}", source, dest);
     }
 
-    private void copyNode(Node src, Node dstParent, String name)
+    /**
+     * Copy the <code>src</code> node into the <code>dstParent</code> node.
+     * The name of the newly created node is set to <code>name</code>.
+     * <p>
+     * This method does a recursive (deep) copy of the subtree rooted at the
+     * source node to the destination. Any protected child nodes and and
+     * properties are not copied.
+     * 
+     * @param src The node to copy to the new location
+     * @param dstParent The node into which the <code>src</code> node is to be
+     *            copied
+     * @param name The name of the newly created node. If this is
+     *            <code>null</code> the new node gets the same name as the
+     *            <code>src</code> node.
+     * @throws RepositoryException May be thrown in case of any problem copying
+     *             the content.
+     */
+    static void copy(Node src, Node dstParent, String name)
             throws RepositoryException {
+
+        if (name == null) {
+            name = src.getName();
+        }
+
         // create new node
         Node dst = dstParent.addNode(name, src.getPrimaryNodeType().getName());
         for (NodeType mix : src.getMixinNodeTypes()) {
             dst.addMixin(mix.getName());
         }
+
         // copy the properties
         for (PropertyIterator iter = src.getProperties(); iter.hasNext();) {
-            Property p = iter.nextProperty();
-            if (p.getDefinition().isProtected()) {
-                // skip
-            } else if (p.getDefinition().isMultiple()) {
-                dst.setProperty(p.getName(), p.getValues());
-            } else {
-                dst.setProperty(p.getName(), p.getValue());
-            }
+            copy(iter.nextProperty(), dst, null);
         }
+
         // copy the child nodes
         for (NodeIterator iter = src.getNodes(); iter.hasNext();) {
             Node n = iter.nextNode();
             if (!n.getDefinition().isProtected()) {
-                copyNode(n, dst, n.getName());
+                copy(n, dst, null);
+            }
+        }
+    }
+
+    /**
+     * Copy the <code>src</code> property into the <code>dstParent</code>
+     * node. The name of the newly created property is set to <code>name</code>.
+     * <p>
+     * If the source property is protected, this method does nothing.
+     * 
+     * @param src The property to copy to the new location
+     * @param dstParent The node into which the <code>src</code> property is
+     *            to be copied
+     * @param name The name of the newly created property. If this is
+     *            <code>null</code> the new property gets the same name as the
+     *            <code>src</code> property.
+     * @throws RepositoryException May be thrown in case of any problem copying
+     *             the content.
+     */
+    static void copy(Property src, Node dstParent, String name)
+            throws RepositoryException {
+        if (!src.getDefinition().isProtected()) {
+            if (name == null) {
+                name = src.getName();
+            }
+
+            if (src.getDefinition().isMultiple()) {
+                dstParent.setProperty(name, src.getValues());
+            } else {
+                dstParent.setProperty(name, src.getValue());
             }
         }
     }
