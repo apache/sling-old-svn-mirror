@@ -557,6 +557,12 @@
             </dependency>
 
             <dependency>
+              <groupId>rhino</groupId>
+              <artifactId>js</artifactId>
+              <version>1.6R6</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>1.5.0</version>
