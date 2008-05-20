@@ -17,9 +17,15 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.launchpad.webapp.integrationtest.HttpTestBase;
 import org.apache.sling.launchpad.webapp.integrationtest.helpers.HttpStatusCodeException;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -35,41 +41,84 @@ public class PostServletCopyTest extends HttpTestBase {
     }
 
     public void testCopyNodeAbsolute() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/abs/" + System.currentTimeMillis();
+        final String testPath = TEST_BASE_PATH + "/abs/"
+            + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY);
         props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at new location
-        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
+        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json",
+            CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
-        
+
         // assert content at old location
-        content = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
+        content = getContent(HTTP_BASE_URL + testPath + "/src.json",
+            CONTENT_TYPE_JSON);
+        assertJavascript("Hello", content, "out.println(data.text)");
+    }
+
+    public void testCopyNodeAbsoluteBelowDest() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/abs/"
+            + System.currentTimeMillis();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
+
+        // first test: failure because dest (parent) does not exist
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        assertPostStatus(HTTP_BASE_URL + testPath + "/src",
+            HttpServletResponse.SC_PRECONDITION_FAILED, nvPairs,
+            "Expecting Copy Failure (dest must exist)");
+
+        // create dest as parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", null);
+
+        // copy now succeeds to below dest
+        assertPostStatus(HTTP_BASE_URL + testPath + "/src",
+            HttpServletResponse.SC_CREATED, nvPairs, "Expecting Copy Success");
+
+        // assert content at new location
+        String content = getContent(HTTP_BASE_URL + testPath + "/dest.-1.json",
+            CONTENT_TYPE_JSON);
+        assertJavascript("Hello", content, "out.println(data.src.text)");
+
+        // assert content at old location
+        content = getContent(HTTP_BASE_URL + testPath + "/src.json",
+            CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
     public void testCopyNodeRelative() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/rel/" + System.currentTimeMillis();
+        final String testPath = TEST_BASE_PATH + "/rel/"
+            + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY);
         props.put(SlingPostConstants.RP_DEST, "dest");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
+        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json",
+            CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
     public void testCopyNodeExistingFail() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/exist/" + System.currentTimeMillis();
+        final String testPath = TEST_BASE_PATH + "/exist/"
+            + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
@@ -79,7 +128,8 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY);
         props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -91,12 +141,14 @@ public class PostServletCopyTest extends HttpTestBase {
         }
 
         // expect unmodified dest
-        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
+        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json",
+            CONTENT_TYPE_JSON);
         assertJavascript("Hello Destination", content, "out.println(data.text)");
     }
 
     public void testCopyNodeExistingReplace() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/replace/" + System.currentTimeMillis();
+        final String testPath = TEST_BASE_PATH + "/replace/"
+            + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
@@ -106,24 +158,28 @@ public class PostServletCopyTest extends HttpTestBase {
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
 
         props.clear();
-        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY);
         props.put(SlingPostConstants.RP_DEST, testPath + "/dest");
         props.put(SlingPostConstants.RP_REPLACE, "true");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
+        String content = getContent(HTTP_BASE_URL + testPath + "/dest.json",
+            CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
 
     public void testCopyNodeDeepRelative() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/new/" + System.currentTimeMillis();
+        final String testPath = TEST_BASE_PATH + "/new/"
+            + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY);
         props.put(SlingPostConstants.RP_DEST, "deep/new");
-        
+
         try {
             testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
             fail("Moving node to non existing parent location should fail.");
@@ -136,13 +192,15 @@ public class PostServletCopyTest extends HttpTestBase {
     }
 
     public void testCopyNodeDeepAbsolute() throws IOException {
-        final String testPath = TEST_BASE_PATH + "/new_fail/" + System.currentTimeMillis();
+        final String testPath = TEST_BASE_PATH + "/new_fail/"
+            + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
 
         props.clear();
-        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY);
         props.put(SlingPostConstants.RP_DEST, "/some/not/existing/structure");
         try {
             testClient.createNode(HTTP_BASE_URL + testPath + "/*", props);
@@ -156,4 +214,232 @@ public class PostServletCopyTest extends HttpTestBase {
         }
     }
 
- }
+    public void testCopyNodeMultipleSourceValid() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/cpmult/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src2", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src3", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src4", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src1"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src2"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src3"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src4"));
+        assertPostStatus(testRoot, HttpServletResponse.SC_PRECONDITION_FAILED,
+            nvPairs, "Expecting Copy Failure: dest parent does not exist");
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
+
+        // now dest exists, so we expect success
+        assertPostStatus(testRoot, HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_OK);
+
+        testClient.delete(testRoot);
+    }
+
+    public void testCopyNodeMultipleSourceInValid() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/cpmult/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src2", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src3", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src4", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src1"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src2"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src3"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src4"));
+        assertPostStatus(testRoot,
+            HttpServletResponse.SC_INTERNAL_SERVER_ERROR, nvPairs,
+            "Expecting Copy Failure (dest must have trailing slash)");
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
+
+        // retest after creating test
+        assertPostStatus(testRoot, HttpServletResponse.SC_PRECONDITION_FAILED,
+            nvPairs, "Expecting Copy Failure (dest already exists)");
+
+        // assert non-existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_NOT_FOUND);
+
+        testClient.delete(testRoot);
+    }
+
+    public void testCopyNodeMultipleSourcePartial() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/cpmult/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src3", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src1"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src2"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src3"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src4"));
+        assertPostStatus(testRoot, HttpServletResponse.SC_PRECONDITION_FAILED,
+            nvPairs, "Expecting Copy Failure: dest parent does not exist");
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
+
+        // now dest exists, so we expect success
+        assertPostStatus(testRoot, HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert partial existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_NOT_FOUND);
+
+        testClient.delete(testRoot);
+    }
+
+    public void testCopyNodeMultipleSourceReplace() throws Exception {
+        final String testPath = TEST_BASE_PATH + "/cpmult/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/src2", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src1"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src2"));
+        assertPostStatus(testRoot, HttpServletResponse.SC_PRECONDITION_FAILED,
+            nvPairs, "Expecting Copy Failure: dest parent does not exist");
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", null);
+
+        // now dest exists, so we expect success
+        assertPostStatus(testRoot, HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert partial existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_NOT_FOUND);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_NOT_FOUND);
+
+        // assert content test
+        String content = getContent(HTTP_BASE_URL + testPath
+            + "/dest/src1.json", CONTENT_TYPE_JSON);
+        JSONObject json = new JSONObject(content);
+        assertEquals("Hello", json.get("text"));
+
+        // modify src1 content
+        nvPairs.clear();
+        nvPairs.add(new NameValuePair("text", "Modified Hello"));
+        assertPostStatus(HTTP_BASE_URL + testPath + "/src1",
+            HttpServletResponse.SC_OK, nvPairs, "Expect Content Update Success");
+
+        // copy the src? nodes
+        nvPairs.clear();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src1"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, testPath
+            + "/src2"));
+        assertPostStatus(testRoot, HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert content test
+        String content2 = getContent(HTTP_BASE_URL + testPath
+            + "/dest/src1.json", CONTENT_TYPE_JSON);
+        JSONObject json2 = new JSONObject(content2);
+        assertEquals("Modified Hello", json2.get("text"));
+
+        // clean up
+        testClient.delete(testRoot);
+    }
+}

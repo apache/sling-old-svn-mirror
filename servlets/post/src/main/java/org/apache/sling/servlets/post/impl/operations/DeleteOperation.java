@@ -16,6 +16,8 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.util.Iterator;
+
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 
@@ -36,14 +38,31 @@ public class DeleteOperation extends AbstractSlingPostOperation {
     protected void doRun(SlingHttpServletRequest request, HtmlResponse response)
             throws RepositoryException {
 
-        Resource resource = request.getResource();
-        Item item = resource.adaptTo(Item.class);
-        if (item == null) {
-            throw new ResourceNotFoundException("Missing source " + resource
-                + " for delete");
+        Iterator<Resource> res = getApplyToResources(request);
+        if (res == null) {
+            
+            Resource resource = request.getResource();
+            Item item = resource.adaptTo(Item.class);
+            if (item == null) {
+                throw new ResourceNotFoundException("Missing source "
+                    + resource + " for delete");
+            }
+
+            item.remove();
+            response.onDeleted(resource.getPath());
+            
+        } else {
+            
+            while (res.hasNext()) {
+                Resource resource = res.next();
+                Item item = resource.adaptTo(Item.class);
+                if (item != null) {
+                    item.remove();
+                    response.onDeleted(resource.getPath());
+                }
+            }
+            
         }
 
-        item.remove();
-        response.onDeleted(resource.getPath());
     }
 }

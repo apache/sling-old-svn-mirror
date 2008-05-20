@@ -16,6 +16,8 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.util.Iterator;
+
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -43,40 +45,40 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
         Resource resource = request.getResource();
         String source = resource.getPath();
 
-        // ensure we have an item underlying the request's resource
-        Item item = resource.adaptTo(Item.class);
-        if (item == null) {
-            throw new ResourceNotFoundException("Missing source " + resource
-                + " for " + getOperationName());
-        }
-
         // ensure dest is not empty/null and is absolute
         String dest = request.getParameter(SlingPostConstants.RP_DEST);
         if (dest == null || dest.length() == 0) {
             throw new IllegalArgumentException("Unable to process "
                 + getOperationName() + ". Missing destination");
         }
+
+        // register whether the path ends with a trailing slash
+        boolean trailingSlash = dest.endsWith("/");
+
+        // ensure destination is an absolute and normalized path
         if (!dest.startsWith("/")) {
             dest = ResourceUtil.getParent(source) + "/" + dest;
-            dest = ResourceUtil.normalize(dest);
         }
+        dest = ResourceUtil.normalize(dest);
 
-        Session session = item.getSession();
+        // destination parent and name
+        String dstParent = trailingSlash ? dest : ResourceUtil.getParent(dest);
 
         // delete destination if already exists
-        String dstParent = ResourceUtil.getParent(dest);
-        if (session.itemExists(dest)) {
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        if (!trailingSlash && session.itemExists(dest)) {
+
             final String replaceString = request.getParameter(SlingPostConstants.RP_REPLACE);
             final boolean isReplace = "true".equalsIgnoreCase(replaceString);
-            if (isReplace) {
-                session.getItem(dest).remove();
-            } else {
+            if (!isReplace) {
                 response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED,
                     "Cannot " + getOperationName() + " " + resource + " to "
                         + dest + ": destination exists");
                 return;
             }
+
         } else {
+
             // check if path to destination exists and create it, but only
             // if it's a descendant of the current node
             if (!dstParent.equals("") && !session.itemExists(dstParent)) {
@@ -90,7 +92,43 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             response.setCreateRequest(true);
         }
 
-        execute(response, session, source, dest);
+        Iterator<Resource> resources = getApplyToResources(request);
+        if (resources == null) {
+
+            // ensure we have an item underlying the request's resource
+            Item item = resource.adaptTo(Item.class);
+            if (item == null) {
+                throw new ResourceNotFoundException("Missing source "
+                    + resource + " for " + getOperationName());
+            }
+
+            String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
+            execute(response, item, dstParent, dstName);
+
+        } else {
+
+            // multiple applyTo requires trailing slash on destination
+            if (!trailingSlash) {
+                throw new IllegalArgumentException(
+                    "Applying "
+                        + getOperationName()
+                        + " to multiple resources requires a trailing slash on the destination");
+            }
+
+            // multiple copy will never return 201/CREATED
+            response.setCreateRequest(false);
+
+            while (resources.hasNext()) {
+                Resource applyTo = resources.next();
+                Item item = applyTo.adaptTo(Item.class);
+                if (item != null) {
+                    execute(response, item, dstParent, null);
+                }
+            }
+
+        }
+
+        // finally apply the ordering parameter
         orderNode(request, session.getItem(dest));
     }
 
@@ -104,14 +142,15 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
      * 
      * @param response The <code>HtmlResponse</code> used to record success of
      *            the operation.
-     * @param session The JCR <code>Session</code> used to execute the
-     *            operation.
-     * @param source The absolute path of the source item act upon.
-     * @param dest The absolute path of the target item.
+     * @param source The source item to act upon.
+     * @param destParent The absolute path of the parent of the target item.
+     * @param destName The name of the target item inside the
+     *            <code>destParent</code>. If <code>null</code> the name of
+     *            the <code>source</code> is used as the target item name.
      * @throws RepositoryException May be thrown if an error occurrs executing
      *             the operation.
      */
-    protected abstract void execute(HtmlResponse response, Session session,
-            String source, String dest) throws RepositoryException;
+    protected abstract void execute(HtmlResponse response, Item source,
+            String destParent, String destName) throws RepositoryException;
 
 }

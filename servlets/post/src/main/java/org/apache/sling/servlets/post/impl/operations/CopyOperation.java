@@ -16,6 +16,7 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -47,13 +48,38 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected void execute(HtmlResponse response, Session session,
-            String source, String dest) throws RepositoryException {
-        copy((Node) session.getItem(source),
-            (Node) session.getItem(ResourceUtil.getParent(dest)),
-            ResourceUtil.getName(dest));
-        response.onCopied(source, dest);
+    protected void execute(HtmlResponse response, Item source,
+            String destParent, String destName) throws RepositoryException {
+
+        copy(source, (Node) source.getSession().getItem(destParent), destName);
+
+        String dest = destParent + "/" + destName;
+        response.onCopied(source.getPath(), dest);
         log.debug("copy {} to {}", source, dest);
+    }
+
+    /**
+     * Copy the <code>src</code> item into the <code>dstParent</code> node.
+     * The name of the newly created item is set to <code>name</code>.
+     * 
+     * @param src The item to copy to the new location
+     * @param dstParent The node into which the <code>src</code> node is to be
+     *            copied
+     * @param name The name of the newly created item. If this is
+     *            <code>null</code> the new item gets the same name as the
+     *            <code>src</code> item.
+     * @throws RepositoryException May be thrown in case of any problem copying
+     *             the content.
+     * @see #copy(Node, Node, String)
+     * @see #copy(Property, Node, String)
+     */
+    static void copy(Item src, Node dstParent, String name)
+            throws RepositoryException {
+        if (src.isNode()) {
+            copy((Node) src, dstParent, name);
+        } else {
+            copy((Property) src, dstParent, name);
+        }
     }
 
     /**
@@ -76,8 +102,14 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     static void copy(Node src, Node dstParent, String name)
             throws RepositoryException {
 
+        // ensure destination name
         if (name == null) {
             name = src.getName();
+        }
+
+        // ensure new node creation
+        if (dstParent.hasNode(name)) {
+            dstParent.getNode(name).remove();
         }
 
         // create new node
@@ -120,6 +152,11 @@ public class CopyOperation extends AbstractCopyMoveOperation {
         if (!src.getDefinition().isProtected()) {
             if (name == null) {
                 name = src.getName();
+            }
+
+            // ensure new property creation
+            if (dstParent.hasProperty(name)) {
+                dstParent.getProperty(name).remove();
             }
 
             if (src.getDefinition().isMultiple()) {
