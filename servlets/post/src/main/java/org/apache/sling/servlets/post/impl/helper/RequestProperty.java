@@ -28,9 +28,11 @@ public class RequestProperty {
 
     private static final RequestParameter[] EMPTY_PARAM_ARRAY = new RequestParameter[0];
 
-    public static final String DEFAULT_IGNORE = SlingPostConstants.RP_PREFIX + "ignore";
+    public static final String DEFAULT_IGNORE = SlingPostConstants.RP_PREFIX
+        + "ignore";
 
-    public static final String DEFAULT_NULL = SlingPostConstants.RP_PREFIX + "null";
+    public static final String DEFAULT_NULL = SlingPostConstants.RP_PREFIX
+        + "null";
 
     private final String path;
 
@@ -47,7 +49,11 @@ public class RequestProperty {
     private RequestParameter[] defaultValues = EMPTY_PARAM_ARRAY;
 
     private boolean isDelete;
-    
+
+    private String repositoryResourcePath;
+
+    private boolean isRepositoryResourceMove;
+
     public RequestProperty(String path) {
         assert path.startsWith("/");
         this.path = ResourceUtil.normalize(path);
@@ -58,7 +64,6 @@ public class RequestProperty {
     public String getTypeHint() {
         return typeHint;
     }
-
 
     public void setTypeHint(String typeHint) {
         this.typeHint = typeHint;
@@ -79,7 +84,7 @@ public class RequestProperty {
     public boolean hasValues() {
         return values != null;
     }
-    
+
     public RequestParameter[] getValues() {
         return values;
     }
@@ -87,7 +92,7 @@ public class RequestProperty {
     public void setValues(RequestParameter[] values) {
         this.values = values;
     }
-    
+
     public RequestParameter[] getDefaultValues() {
         return defaultValues;
     }
@@ -105,9 +110,9 @@ public class RequestProperty {
     }
 
     /**
-     * Checks if this property provides any values. this is the case if
-     * one of the values is not empty or if the default handling is not
-     * 'ignore'
+     * Checks if this property provides any values. this is the case if one of
+     * the values is not empty or if the default handling is not 'ignore'
+     * 
      * @return <code>true</code> if this property provides values
      */
     public boolean providesValue() {
@@ -118,7 +123,7 @@ public class RequestProperty {
             // get auto-create values
             return true;
         }
-        for (String s: sv) {
+        for (String s : sv) {
             if (!s.equals("")) {
                 return true;
             }
@@ -127,17 +132,19 @@ public class RequestProperty {
     }
 
     /**
-     * Returns the assembled string array out of the provided request values
-     * and default values.
+     * Returns the assembled string array out of the provided request values and
+     * default values.
+     * 
      * @return a String array or <code>null</code> if the property needs to be
      *         removed.
      */
     public String[] getStringValues() {
         if (stringValues == null) {
             if (values.length > 1) {
-                // TODO: how the default values work for MV props is not very clear
+                // TODO: how the default values work for MV props is not very
+                // clear
                 stringValues = new String[values.length];
-                for (int i=0; i<stringValues.length; i++) {
+                for (int i = 0; i < stringValues.length; i++) {
                     stringValues[i] = values[i].getString();
                 }
             } else {
@@ -155,17 +162,82 @@ public class RequestProperty {
                         value = defValue;
                     }
                 }
-                stringValues = new String[]{value};
+                stringValues = new String[] { value };
             }
         }
         return stringValues;
     }
 
+    /**
+     * Specifies whether this property should be deleted before any new content
+     * is to be set according to the values stored.
+     * 
+     * @param isDelete <code>true</code> if the repository item described by
+     *            this is to be deleted before any other operation.
+     */
     public void setDelete(boolean isDelete) {
         this.isDelete = isDelete;
     }
 
+    /**
+     * Returns <code>true</code> if the repository item described by this is
+     * to be deleted before setting new content to it.
+     */
     public boolean isDelete() {
         return isDelete;
+    }
+
+    /**
+     * Sets the path of the repository item from which the content for this
+     * property is to be copied or moved. The path may be relative in which case
+     * it will be resolved relative to the absolute path of this property.
+     * 
+     * @param path The path of the repository item to get the content from
+     * @param isMove <code>true</code> if the source content is to be moved,
+     *            otherwise the source content is copied from the repository
+     *            item.
+     */
+    public void setRepositorySource(String sourcePath, boolean isMove) {
+
+        // make source path absolute
+        if (!sourcePath.startsWith("/")) {
+            sourcePath = getParentPath() + "/" + sourcePath;
+            sourcePath = ResourceUtil.normalize(sourcePath);
+        }
+
+        this.repositoryResourcePath = sourcePath;
+        this.isRepositoryResourceMove = isMove;
+    }
+
+    /**
+     * Returns <code>true</code> if the content of this property is to be set
+     * by moving content from another repository item.
+     * 
+     * @see #getRepositorySource()
+     */
+    public boolean hasRepositoryMoveSource() {
+        return isRepositoryResourceMove;
+    }
+
+    /**
+     * Returns <code>true</code> if the content of this property is to be set
+     * by copying content from another repository item.
+     * 
+     * @see #getRepositorySource()
+     */
+    public boolean hasRepositoryCopySource() {
+        return getRepositorySource() != null && !hasRepositoryMoveSource();
+    }
+
+    /**
+     * Returns the absolute path of the repository item from which the content
+     * for this property is to be copied or moved.
+     * 
+     * @see #hasRepositoryCopySource()
+     * @see #hasRepositoryMoveSource()
+     * @see #setRepositorySource(String, boolean)
+     */
+    public String getRepositorySource() {
+        return repositoryResourcePath;
     }
 }

@@ -21,7 +21,9 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletContext;
@@ -81,10 +83,20 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         // do not change order unless you have a very good reason.
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
+        // ensure root of new content
         processCreate(session, reqProperties, response);
+
+        // cleanup any old content (@Delete parameters)
         processDeletes(session, reqProperties, response);
+
+        // write content from existing content (@Move/CopyFrom parameters)
+        processMoves(session, reqProperties, response);
+        processCopies(session, reqProperties, response);
+
+        // write content from form
         writeContent(session, reqProperties, response);
 
+        // order content
         String path = response.getPath();
         orderNode(request, session.getItem(path));
     }
@@ -201,6 +213,119 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             response.setCreateRequest(true);
         }
 
+    }
+
+    /**
+     * Moves all repository content listed as repository move source in the
+     * request properties to the locations indicated by the resource properties.
+     */
+    private void processMoves(Session session,
+            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            throws RepositoryException {
+
+        for (RequestProperty property : reqProperties.values()) {
+            if (property.hasRepositoryMoveSource()) {
+                processMovesCopiesInternal(property, true, session,
+                    reqProperties, response);
+            }
+        }
+    }
+
+    /**
+     * Copies all repository content listed as repository copy source in the
+     * request properties to the locations indicated by the resource properties.
+     */
+    private void processCopies(Session session,
+            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            throws RepositoryException {
+
+        for (RequestProperty property : reqProperties.values()) {
+            if (property.hasRepositoryCopySource()) {
+                processMovesCopiesInternal(property, false, session,
+                    reqProperties, response);
+            }
+        }
+    }
+
+    /**
+     * Internal implementation of the
+     * {@link #processCopies(Session, Map, HtmlResponse)} and
+     * {@link #processMoves(Session, Map, HtmlResponse)} methods taking into
+     * account whether the source is actually a property or a node.
+     * <p>
+     * Any intermediary nodes to the destination as indicated by the
+     * <code>property</code> path are created using the
+     * <code>reqProperties</code> as indications for required node types.
+     * 
+     * @param property The {@link RequestProperty} identifying the source
+     *            content of the operation.
+     * @param isMove <code>true</code> if the source item is to be moved.
+     *            Otherwise the source item is just copied.
+     * @param session The repository session to use to access the content
+     * @param reqProperties All accepted request properties. This is used to
+     *            create intermediary nodes along the property path.
+     * @param response The <code>HtmlResponse</code> into which successfull
+     *            copies and moves as well as intermediary node creations are
+     *            recorded.
+     * @throws RepositoryException May be thrown if an error occurrs.
+     */
+    private void processMovesCopiesInternal(RequestProperty property,
+            boolean isMove, Session session,
+            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            throws RepositoryException {
+
+        String propPath = property.getPath();
+        String source = property.getRepositorySource();
+
+        // only continue here, if the source really exists
+        if (session.itemExists(source)) {
+
+            // if the destination item already exists, remove it
+            // first, otherwise ensure the parent location
+            if (session.itemExists(propPath)) {
+                session.getItem(propPath).remove();
+                response.onDeleted(propPath);
+            } else {
+                deepGetOrCreateNode(session, property.getParentPath(),
+                    reqProperties, response);
+            }
+
+            // move through the session and record operation
+            Item sourceItem = session.getItem(source);
+            if (sourceItem.isNode()) {
+
+                // node move/copy through session
+                if (isMove) {
+                    session.move(source, propPath);
+                } else {
+                    Node sourceNode = (Node) sourceItem;
+                    Node destParent = (Node) session.getItem(property.getParentPath());
+                    CopyOperation.copy(sourceNode, destParent,
+                        property.getName());
+                }
+
+            } else {
+
+                // property move manually
+                Property sourceProperty = (Property) sourceItem;
+
+                // create destination property
+                Node destParent = (Node) session.getItem(property.getParentPath());
+                CopyOperation.copy(sourceProperty, destParent, null);
+
+                // remove source property (if not just copying)
+                if (isMove) {
+                    sourceProperty.remove();
+                }
+            }
+
+            // record successful move
+            if (isMove) {
+                response.onMoved(source, propPath);
+            } else {
+                response.onCopied(source, propPath);
+            }
+        }
     }
 
     /**
@@ -335,8 +460,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                     reqProperties, propPath,
                     SlingPostConstants.VALUE_FROM_SUFFIX);
 
-                // @ValueFrom params must have exactly one value, else
-                // ignored
+                // @ValueFrom params must have exactly one value, else ignored
                 if (e.getValue().length == 1) {
                     String refName = e.getValue()[0].getString();
                     RequestParameter[] refValues = request.getRequestParameters(refName);
@@ -357,6 +481,44 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                     reqProperties, propPath, SlingPostConstants.SUFFIX_DELETE);
 
                 prop.setDelete(true);
+
+                continue;
+            }
+
+            // SLING-455: @MoveFrom means moving content to another location
+            // @MoveFrom example:
+            // <input name="./Text@MoveFrom" type="hidden" value="/tmp/path" />
+            // causes the JCR Text property to be set by moving the /tmp/path
+            // property to Text.
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_MOVE_FROM)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.SUFFIX_MOVE_FROM);
+
+                // @MoveFrom params must have exactly one value, else ignored
+                if (e.getValue().length == 1) {
+                    String sourcePath = e.getValue()[0].getString();
+                    prop.setRepositorySource(sourcePath, true);
+                }
+
+                continue;
+            }
+
+            // SLING-455: @CopyFrom means moving content to another location
+            // @CopyFrom example:
+            // <input name="./Text@CopyFrom" type="hidden" value="/tmp/path" />
+            // causes the JCR Text property to be set by copying the /tmp/path
+            // property to Text.
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_COPY_FROM)) {
+                RequestProperty prop = getOrCreateRequestProperty(
+                    reqProperties, propPath,
+                    SlingPostConstants.SUFFIX_COPY_FROM);
+
+                // @MoveFrom params must have exactly one value, else ignored
+                if (e.getValue().length == 1) {
+                    String sourcePath = e.getValue()[0].getString();
+                    prop.setRepositorySource(sourcePath, false);
+                }
 
                 continue;
             }

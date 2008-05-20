@@ -254,4 +254,30 @@ public interface SlingPostConstants {
      * applying any new content (value is "@Delete").
      */
     public static final String SUFFIX_DELETE = "@Delete";
+    
+    /**
+     * Suffix indicating that the named item is to be set from an item whose
+     * absolute or relative path is given in the parameter's value (value is
+     * "@MoveFrom").
+     * <p>
+     * This suffix is similar to the {@link #VALUE_FROM_SUFFIX} in that the
+     * value for the item is not taken from the request parameter itself but
+     * from somewhere else. In this case the value is set by moving another
+     * repository item (in the same workspace) to the location addressed by the
+     * parameter.
+     */
+    public static final String SUFFIX_MOVE_FROM = "@MoveFrom";
+
+    /**
+     * Suffix indicating that the named item is to be set from an item whose
+     * absolute or relative path is given in the parameter's value (value is
+     * "@CopyFrom").
+     * <p>
+     * This suffix is similar to the {@link #VALUE_FROM_SUFFIX} in that the
+     * value for the item is not taken from the request parameter itself but
+     * from somewhere else. In this case the value is set by copying another
+     * repository item (in the same workspace) to the location addressed by the
+     * parameter.
+     */
+    public static final String SUFFIX_COPY_FROM = "@CopyFrom";
 }
