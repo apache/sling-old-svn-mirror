@@ -33,14 +33,26 @@ public class PathEntry {
     /** The manifest header to specify initial content to be loaded. */
     public static final String CONTENT_HEADER = "Sling-Initial-Content";
 
-    /** The overwrite directive specifying if content should be overwritten or just initially added. */
+    /**
+     * The overwrite directive specifying if content should be overwritten or
+     * just initially added.
+     */
     public static final String OVERWRITE_DIRECTIVE = "overwrite";
 
     /** The uninstall directive specifying if content should be uninstalled. */
     public static final String UNINSTALL_DIRECTIVE = "uninstall";
-    
-    /** The path directive specifying the target node where initial content will be loaded. */
+
+    /**
+     * The path directive specifying the target node where initial content will
+     * be loaded.
+     */
     public static final String PATH_DIRECTIVE = "path";
+
+    /**
+     * The checkin directive specifying whether versionable nodes should be
+     * checked in
+     */
+    public static final String CHECKIN_DIRECTIVE = "checkin";
 
     /** The path for the initial content. */
     private final String path;
@@ -51,7 +63,13 @@ public class PathEntry {
     /** Should existing content be uninstalled? */
     private final boolean uninstall;
     
-    /** Target path where initial content will be loaded. If it´s null then target node is the root node */
+    /** Should versionable nodes be checked in? */
+    private final boolean checkin;
+
+    /**
+     * Target path where initial content will be loaded. If it´s null then
+     * target node is the root node
+     */
     private final String target;
 
     public static Iterator<PathEntry> getContentPaths(final Bundle bundle) {
@@ -60,12 +78,12 @@ public class PathEntry {
         final String root = (String) bundle.getHeaders().get(CONTENT_HEADER);
         if (root != null) {
             final ManifestHeader header = ManifestHeader.parse(root);
-            for(final ManifestHeader.Entry entry : header.getEntries()) {
+            for (final ManifestHeader.Entry entry : header.getEntries()) {
                 entries.add(new PathEntry(entry));
             }
         }
 
-        if ( entries.size() == 0 ) {
+        if (entries.size() == 0) {
             return null;
         }
         return entries.iterator();
@@ -76,21 +94,27 @@ public class PathEntry {
         final String overwriteValue = entry.getDirectiveValue(OVERWRITE_DIRECTIVE);
         final String uninstallValue = entry.getDirectiveValue(UNINSTALL_DIRECTIVE);
         final String pathValue = entry.getDirectiveValue(PATH_DIRECTIVE);
+        final String checkinValue = entry.getDirectiveValue(CHECKIN_DIRECTIVE);
         boolean overwriteFlag = false;
-        if ( overwriteValue != null ) {
-            overwriteFlag = Boolean.valueOf(overwriteValue).booleanValue();
+        if (overwriteValue != null) {
+            overwriteFlag = Boolean.valueOf(overwriteValue);
         }
-        this.path =  entry.getValue();
+        this.path = entry.getValue();
         this.overwrite = overwriteFlag;
-        if ( uninstallValue != null ) {
+        if (uninstallValue != null) {
             this.uninstall = Boolean.valueOf(uninstallValue);
         } else {
             this.uninstall = this.overwrite;
         }
-        if ( pathValue != null ) {
-        	this.target = pathValue;
+        if (pathValue != null) {
+            this.target = pathValue;
         } else {
-        	this.target = null;
+            this.target = null;
+        }
+        if (checkinValue != null) {
+            this.checkin = Boolean.valueOf(checkinValue);
+        } else {
+            this.checkin = false;
         }
     }
 
@@ -106,7 +130,11 @@ public class PathEntry {
         return this.uninstall;
     }
 
-	public String getTarget() {
-		return target;
-	}
+    public boolean isCheckin() {
+        return this.checkin;
+    }
+    
+    public String getTarget() {
+        return target;
+    }
 }
