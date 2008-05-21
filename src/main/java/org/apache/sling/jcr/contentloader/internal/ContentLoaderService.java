@@ -303,7 +303,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
         return info;
     }
 
-    public void unlockBundleContentInto(final Session session,
+    public void unlockBundleContentInfo(final Session session,
                                         final Bundle  bundle,
                                         final boolean contentLoaded)
     throws RepositoryException {
