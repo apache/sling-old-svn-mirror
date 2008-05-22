@@ -58,7 +58,7 @@ public class SlingLogWriter extends Writer {
         synchronized (lock) {
             if (delegatee != null) {
                 flush();
-                
+
                 delegatee.close();
                 delegatee = null;
             }
