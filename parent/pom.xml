@@ -131,6 +131,33 @@
                     </execution>
                 </executions>
             </plugin>
+            
+            <!-- warn for SLING-443 -->
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-antrun-plugin</artifactId>
+              <executions>
+                <execution>
+                  <phase>process-resources</phase>
+                  <configuration>
+                    <tasks>
+                      <echo>
+********************** WARNING (SLING-443) **********************************
+On most platforms, building Sling currently requires setting 
+MAVEN_OPTS="-Xmx256M", see https://issues.apache.org/jira/browse/SLING-443
+You might get a "java.lang.OutOfMemoryError: Java heap space" if that
+setting is not correct.
+*****************************************************************************
+                      </echo>
+                    </tasks>
+                  </configuration>
+                  <goals>
+                    <goal>run</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            
         </plugins>
 
         <pluginManagement>
