@@ -68,7 +68,8 @@ public class LogReaderServiceFactory implements ServiceFactory {
         // -----------------------------------
 
         public void addLogListener(LogListener listener) {
-            LogReaderServiceFactory.this.logSupport.addLogListener(this.bundle, listener);
+            LogReaderServiceFactory.this.logSupport.addLogListener(this.bundle,
+                listener);
         }
 
         public void removeLogListener(LogListener listener) {
