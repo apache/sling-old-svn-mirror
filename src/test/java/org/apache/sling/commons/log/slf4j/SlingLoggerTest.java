@@ -22,10 +22,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.MessageFormat;
 
-import org.apache.sling.commons.log.slf4j.SlingLogWriter;
-import org.apache.sling.commons.log.slf4j.SlingLogger;
-import org.apache.sling.commons.log.slf4j.SlingLoggerLevel;
-
 import junit.framework.TestCase;
 
 public class SlingLoggerTest extends TestCase {

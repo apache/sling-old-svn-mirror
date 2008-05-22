@@ -28,8 +28,8 @@ import org.osgi.service.log.LogService;
 /**
  * The <code>Activator</code> class is the <code>BundleActivator</code> for
  * the log service bundle. This activator sets up logging in NLog4J and
- * registers the <code>LogService</code> and <code>LogReaderService</code>. When
- * the bundle is stopped, the NLog4J subsystem is simply shutdown.
+ * registers the <code>LogService</code> and <code>LogReaderService</code>.
+ * When the bundle is stopped, the NLog4J subsystem is simply shutdown.
  */
 public class Activator implements BundleActivator {
 
@@ -67,7 +67,7 @@ public class Activator implements BundleActivator {
             logSupport.shutdown();
             logSupport = null;
         }
-        
+
         if (logManager != null) {
             logManager.shutdown();
             logManager = null;

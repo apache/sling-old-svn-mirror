@@ -35,7 +35,7 @@ public class LogServiceFactory implements ServiceFactory {
     /**
      * Initializes the logging system with settings from some startup properties
      * before the real configuration is read after ContentBus bootstrap.
-     *
+     * 
      * @param properties The startup properties to initialize the logging system
      *            with.
      */
@@ -63,7 +63,7 @@ public class LogServiceFactory implements ServiceFactory {
          * Initializes the logging system with settings from some startup
          * properties before the real configuration is read after ContentBus
          * bootstrap.
-         *
+         * 
          * @param properties The startup properties to initialize the logging
          *            system with.
          */

@@ -63,9 +63,9 @@ public final class SlingLoggerFactory implements ILoggerFactory {
     }
 
     /**
-     * Logs a message an optional stack trace to error output. This method
-     * is used by the logging system in case of errors writing to the
-     * correct logging output.
+     * Logs a message an optional stack trace to error output. This method is
+     * used by the logging system in case of errors writing to the correct
+     * logging output.
      */
     public static void internalFailure(String message, Throwable t) {
         System.err.println(message);
@@ -84,7 +84,7 @@ public final class SlingLoggerFactory implements ILoggerFactory {
      * Returns a logger for the given name. If such a logger already exists the
      * same logger is returned. Otherwise a new instance is created and
      * configured with the current logging level, output and message format.
-     *
+     * 
      * @param name The name of the logger to return
      */
     public Logger getLogger(String name) {
@@ -103,7 +103,7 @@ public final class SlingLoggerFactory implements ILoggerFactory {
     /**
      * Configures this factory and all existing loggers with the new log level,
      * output and message format.
-     *
+     * 
      * @param logLevel The log level to be set. If this is not a valid
      *            {@link SlingLoggerLevel} value, the default <code>INFO</code>
      *            is assumed.

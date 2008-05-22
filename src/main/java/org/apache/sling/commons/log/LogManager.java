@@ -37,17 +37,17 @@ import org.osgi.service.cm.ManagedService;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>LogManager</code> manages the loggers used by the LogService
- * and the rest of the system.
+ * The <code>LogManager</code> manages the loggers used by the LogService and
+ * the rest of the system.
  */
 public class LogManager implements ManagedService {
 
     /**
      * Initial configuration property specifying whether logging should be
-     * initialized here or not (value is "org.apache.sling.commons.log.intialize").
-     * If this property is missing or set to <code>true</code>, this class
-     * will reset and configure logging. Otherwise, logging is neither reset nor
-     * configured by this class.
+     * initialized here or not (value is
+     * "org.apache.sling.commons.log.intialize"). If this property is missing or
+     * set to <code>true</code>, this class will reset and configure logging.
+     * Otherwise, logging is neither reset nor configured by this class.
      */
     public static final String LOG_INITIALIZE = "org.apache.sling.commons.log.intialize";
 
@@ -121,7 +121,7 @@ public class LogManager implements ManagedService {
 
     /*
      * (non-Javadoc)
-     *
+     * 
      * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
      */
     @SuppressWarnings("unchecked")
@@ -210,7 +210,7 @@ public class LogManager implements ManagedService {
      * initial configuration. <p/> Sets up the initial logging properties for
      * the logging support until the real logging configuration file can be read
      * from the ContentBus.
-     *
+     * 
      * @param properties The <code>Properties</code> containing the initial
      *            configuration.
      * @throws NullPointerException if <code>properties</code> is

@@ -27,7 +27,9 @@ import java.io.Writer;
 public class SlingLogFileWriter extends SlingLogWriter {
 
     private static final long FACTOR_KB = 1024;
+
     private static final long FACTOR_MB = 1024 * FACTOR_KB;
+
     private static final long FACTOR_GB = 1024 * FACTOR_MB;
 
     private final File file;
@@ -38,11 +40,13 @@ public class SlingLogFileWriter extends SlingLogWriter {
 
     private final int maxNum;
 
-    public SlingLogFileWriter(String logFileName, int fileNum, String fileSize) throws IOException {
+    public SlingLogFileWriter(String logFileName, int fileNum, String fileSize)
+            throws IOException {
         this(logFileName, fileNum, convertMaxSizeSpec(fileSize));
     }
 
-    public SlingLogFileWriter(String logFileName, int fileNum, long fileSize) throws IOException {
+    public SlingLogFileWriter(String logFileName, int fileNum, long fileSize)
+            throws IOException {
 
         // make sure the file is absolute and derive the path from there
         File file = new File(logFileName);
