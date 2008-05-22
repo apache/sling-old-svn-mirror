@@ -18,12 +18,38 @@
  */
 package org.apache.sling.commons.log.slf4j;
 
+import org.slf4j.spi.LocationAwareLogger;
+
 public enum SlingLoggerLevel {
 
     TRACE,
     DEBUG,
     INFO,
     WARN,
-    ERROR
-    
+    ERROR;
+
+    /**
+     * Translates SLF4J logging levels into {@link SlingLoggerLevel}
+     * 
+     * @param level The SLF4J logging level
+     * @return The matching {@link SlingLoggerLevel}
+     */
+    public static SlingLoggerLevel fromSlf4jLevel(int level) {
+        SlingLoggerLevel slingLevel;
+
+        if (level < LocationAwareLogger.DEBUG_INT) {
+            slingLevel = SlingLoggerLevel.TRACE;
+        } else if (level < LocationAwareLogger.INFO_INT) {
+            slingLevel = SlingLoggerLevel.DEBUG;
+        } else if (level < LocationAwareLogger.WARN_INT) {
+            slingLevel = SlingLoggerLevel.INFO;
+        } else if (level < LocationAwareLogger.ERROR_INT) {
+            slingLevel = SlingLoggerLevel.WARN;
+        } else {
+            slingLevel = SlingLoggerLevel.ERROR;
+        }
+
+        return slingLevel;
+    }
+
 }

@@ -25,11 +25,11 @@ import java.text.FieldPosition;
 import java.text.MessageFormat;
 import java.util.Date;
 
-import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.slf4j.helpers.MessageFormatter;
+import org.slf4j.spi.LocationAwareLogger;
 
-public class SlingLogger implements Logger {
+public class SlingLogger implements LocationAwareLogger {
 
     private final String name;
 
@@ -58,6 +58,11 @@ public class SlingLogger implements Logger {
 
     private void log(Marker marker, SlingLoggerLevel level, String msg,
             Throwable t) {
+        log(marker, null, level, msg, t);
+    }
+
+    private void log(Marker marker, String fqcn, SlingLoggerLevel level,
+            String msg, Throwable t) {
         StringWriter writer = new StringWriter();
 
         // create the formatted log line; use a local copy because the field
@@ -66,7 +71,7 @@ public class SlingLogger implements Logger {
         synchronized (myFormat) {
             myFormat.format(new Object[] { new Date(), marker,
                 Thread.currentThread().getName(), getName(), level.toString(),
-                msg }, writer.getBuffer(), new FieldPosition(0));
+                msg, fqcn }, writer.getBuffer(), new FieldPosition(0));
         }
 
         // marker indicating whether a line terminator is to be written after
@@ -102,22 +107,23 @@ public class SlingLogger implements Logger {
                 }
 
             } catch (IOException ioe) {
-                SlingLoggerFactory.internalFailure("Failed logging message: " + message, ioe);
+                SlingLoggerFactory.internalFailure("Failed logging message: "
+                    + message, ioe);
             }
         }
     }
 
     // ---------- Log Level support --------------------------------------------
 
-    public void setLogLevel(String levelString ) {
+    public void setLogLevel(String levelString) {
         try {
             // ensure upper case level name
             levelString = levelString.toUpperCase();
-            
+
             // try to convert to a SlingLoggerLevel instance,
             // throws if the string is invalid
             SlingLoggerLevel level = SlingLoggerLevel.valueOf(levelString);
-            
+
             // finally set the level
             this.setLogLevel(level);
         } catch (Exception e) {
@@ -511,5 +517,12 @@ public class SlingLogger implements Logger {
 
     public boolean isErrorEnabled(Marker marker) {
         return isLevel(SlingLoggerLevel.ERROR);
+    }
+
+    public void log(Marker marker, String fqcn, int level, String message,
+            Throwable t) {
+        SlingLoggerLevel slingLevel = SlingLoggerLevel.fromSlf4jLevel(level);
+
+        log(marker, fqcn, slingLevel, message, t);
     }
 }
