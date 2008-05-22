@@ -49,7 +49,7 @@ class ClassLoaderResourceProvider extends ResourceProvider {
     public Iterator<String> getChildren(String path) {
         List<String> children;
 
-        URL url = this.classLoader.getResource(Sling.CONFIG_PROPERTIES);
+        URL url = this.classLoader.getResource(path);
         if (url != null) {
             Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+$");
 
