@@ -59,6 +59,15 @@ public class IncludeTagHandler extends TagSupport {
     /** resource type argument */
     private String resourceType;
 
+    /** replace selectors argument */
+    private String replaceSelectors;
+
+    /** additional selectors argument */
+    private String addSelectors;
+
+    /** replace suffix argument */
+    private String replaceSuffix;
+
     /**
      * Called after the body has been processed.
      *
@@ -69,12 +78,14 @@ public class IncludeTagHandler extends TagSupport {
 
         final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
 
-        // check for resource otherwise resolve from path
-        RequestDispatcherOptions opts = null;
-        if (resourceType != null) {
-            opts = new RequestDispatcherOptions();
-            opts.setForceResourceType(resourceType);
-        }
+        // set request dispatcher options according to tag attributes. This
+        // depends on the implementation, that using a "null" argument
+        // has no effect
+        final RequestDispatcherOptions opts = new RequestDispatcherOptions();
+        opts.setForceResourceType(resourceType);
+        opts.setReplaceSelectors(replaceSelectors);
+        opts.setAddSelectors(addSelectors);
+        opts.setReplaceSuffix(replaceSuffix);
 
         // ensure the path (if set) is absolute and normalized
         if (path != null) {
@@ -93,9 +104,12 @@ public class IncludeTagHandler extends TagSupport {
                 // check whether the path (would) resolve, else SyntheticRes.
                 Resource tmp = request.getResourceResolver().resolve(path);
                 if (tmp == null && resourceType != null) {
-                    opts = null; // not needed
                     resource = new SyntheticResource(
                         request.getResourceResolver(), path, resourceType);
+
+                    // remove resource type overwrite as synthetic resource
+                    // is correctly typed as requested
+                    opts.remove(RequestDispatcherOptions.OPT_FORCE_RESOURCE_TYPE);
                 }
             }
         }
@@ -140,6 +154,9 @@ public class IncludeTagHandler extends TagSupport {
         flush = false;
         resource = null;
         resourceType = null;
+        replaceSelectors = null;
+        addSelectors = null;
+        replaceSuffix = null;
         path = null;
     }
 
@@ -157,5 +174,17 @@ public class IncludeTagHandler extends TagSupport {
 
     public void setResourceType(String rsrcType) {
         this.resourceType = rsrcType;
+    }
+
+    public void setReplaceSelectors(String selectors) {
+        this.replaceSelectors = selectors;
+    }
+
+    public void setAddSelectors(String selectors) {
+        this.addSelectors = selectors;
+    }
+
+    public void setReplaceSuffix(String suffix) {
+        this.replaceSuffix = suffix;
     }
 }
