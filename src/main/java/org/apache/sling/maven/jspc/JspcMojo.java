@@ -367,10 +367,6 @@ public class JspcMojo extends AbstractMojo implements Options {
                 getLog().info("File up to date: " + file);
             }
 
-            // remove the java source and smap file
-            new File(clctxt.getClassFileName() + ".smap").delete();
-            new File(clctxt.getServletJavaFileName()).delete();
-
         } catch (JasperException je) {
             Throwable rootCause = je;
             while (rootCause instanceof JasperException
