@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -81,6 +81,32 @@
                 is not supported if the resource type is set.
             </description>
             <name>resourceType</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                When dispatching, replace selectors by the value
+                provided by this option.
+            </description>
+            <name>replaceSelectors</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                When dispatching, add the value provided by this option to the selectors.
+            </description>
+            <name>addSelectors</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                When dispatching, replace the suffix by the value
+                provided by this option.
+            </description>
+            <name>replaceSuffix</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
