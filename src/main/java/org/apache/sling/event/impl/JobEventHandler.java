@@ -79,8 +79,17 @@ public class JobEventHandler
     /** @scr.property valueRef="DEFAULT_SLEEP_TIME" */
     protected static final String CONFIG_PROPERTY_SLEEP_TIME = "sleep.time";
 
+    /** Default number of job retries. */
+    protected static final long DEFAULT_MAX_JOB_RETRIES = 10;
+
+    /** @scr.property valueRef="DEFAULT_MAX_JOB_RETRIES" */
+    protected static final String CONFIG_PROPERTY_MAX_JOB_RETRIES = "max.job.retries";
+
     /** We check every 20 secs by default. */
     protected long sleepTime;
+
+    /** How often should a job be retried by default. */
+    protected long maxJobRetries;
 
     /** Background session. */
     protected Session backgroundSession;
@@ -113,11 +122,8 @@ public class JobEventHandler
         } else {
             this.cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
         }
-        if ( context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) != null ) {
-            this.sleepTime = (Long)context.getProperties().get(CONFIG_PROPERTY_SLEEP_TIME) * 1000;
-        } else {
-            this.sleepTime = DEFAULT_SLEEP_TIME * 1000;
-        }
+        this.sleepTime = this.getLongProperty(context, CONFIG_PROPERTY_SLEEP_TIME, DEFAULT_SLEEP_TIME) * 1000;
+        this.maxJobRetries = this.getLongProperty(context, CONFIG_PROPERTY_MAX_JOB_RETRIES, DEFAULT_MAX_JOB_RETRIES);
         super.activate(context);
     }
 
@@ -696,27 +702,28 @@ public class JobEventHandler
         boolean reschedule = shouldReschedule;
         if ( shouldReschedule ) {
             // check if we exceeded the number of retries
+            long retries = this.maxJobRetries;
             if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRIES) != null ) {
-                int retries = (Integer) job.getProperty(EventUtil.PROPERTY_JOB_RETRIES);
-                int retryCount = 0;
-                if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
-                    retryCount = (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
-                }
-                retryCount++;
-                if ( retryCount > retries ) {
-                    reschedule = false;
-                }
-                // update event with retry count
-                final Dictionary<String, Object> newProperties;
-                // create a new dictionary
-                newProperties = new Hashtable<String, Object>();
-                final String[] names = job.getPropertyNames();
-                for(int i=0; i<names.length; i++ ) {
-                    newProperties.put(names[i], job.getProperty(names[i]));
-                }
-                newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
-                job = new Event(job.getTopic(), newProperties);
+                retries = (Integer) job.getProperty(EventUtil.PROPERTY_JOB_RETRIES);
             }
+            int retryCount = 0;
+            if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
+                retryCount = (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
+            }
+            retryCount++;
+            if ( retryCount > retries ) {
+                reschedule = false;
+            }
+            // update event with retry count
+            final Dictionary<String, Object> newProperties;
+            // create a new dictionary
+            newProperties = new Hashtable<String, Object>();
+            final String[] names = job.getPropertyNames();
+            for(int i=0; i<names.length; i++ ) {
+                newProperties.put(names[i], job.getProperty(names[i]));
+            }
+            newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
+            job = new Event(job.getTopic(), newProperties);
         }
         final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
         // we have to use the same session for unlocking that we used for locking!

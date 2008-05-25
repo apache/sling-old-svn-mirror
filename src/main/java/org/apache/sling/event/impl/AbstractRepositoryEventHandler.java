@@ -154,6 +154,16 @@ public abstract class AbstractRepositoryEventHandler
         });
     }
 
+    protected long getLongProperty(final ComponentContext context,
+            final String           propertyName,
+            final long             defaultValue) {
+        final Object value = context.getProperties().get(propertyName);
+        if ( value != null && value instanceof Long ) {
+            return (Long)value;
+        }
+        return defaultValue;
+    }
+
     protected abstract void runInBackground() throws RepositoryException;
 
     protected abstract void processWriteQueue();
