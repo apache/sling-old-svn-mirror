@@ -57,7 +57,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.scripting.jsp.taglib.*
+                            org.apache.sling.scripting.jsp.taglib.*;version=${pom.version}
                         </Export-Package>
                     </instructions>
                 </configuration>

@@ -61,7 +61,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.servlets.post
+                            org.apache.sling.servlets.post;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.servlets.post.impl.*
