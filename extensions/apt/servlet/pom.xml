@@ -52,7 +52,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>org.apache.sling.apt.servlet.*</Export-Package>
+            <Export-Package>org.apache.sling.apt.servlet.*;version=${pom.version}</Export-Package>
           </instructions>
         </configuration>
       </plugin>
@@ -75,7 +75,6 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

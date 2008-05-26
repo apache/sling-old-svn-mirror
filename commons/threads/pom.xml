@@ -61,7 +61,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.commons.threads
+                            org.apache.sling.commons.threads;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.threads.impl
