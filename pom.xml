@@ -64,7 +64,7 @@
                           org.apache.commons.collections,*
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.commons.scheduler
+                            org.apache.sling.commons.scheduler;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.scheduler.impl,
