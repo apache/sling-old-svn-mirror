@@ -61,12 +61,13 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.event
+                            org.apache.sling.event;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.event.impl,
                             org.apache.jackrabbit.util
                         </Private-Package>
+                        <!-- We need the dynamic import as events can contain any classes -->
                         <DynamicImport-Package>*</DynamicImport-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/event.cnd
