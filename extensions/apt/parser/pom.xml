@@ -62,8 +62,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            !org.apache.sling.apt.parser.internal,
-                            org.apache.sling.apt.parser.*
+                            org.apache.sling.apt.parser;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.apt.parser.internal,
