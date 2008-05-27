@@ -187,6 +187,8 @@ public abstract class EventUtil {
                     result = processor.process(job);
                 } catch (Throwable t) {
                     logger.error("Unhandled error occured in job processor " + t.getMessage(), t);
+                    // we don't reschedule if an exception occurs
+                    result = true;
                 } finally {
                     if ( result ) {
                         EventUtil.finishedJob(job);
