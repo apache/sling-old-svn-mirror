@@ -86,12 +86,12 @@ public class ModifyOperation extends AbstractSlingPostOperation {
         // ensure root of new content
         processCreate(session, reqProperties, response);
 
-        // cleanup any old content (@Delete parameters)
-        processDeletes(session, reqProperties, response);
-
         // write content from existing content (@Move/CopyFrom parameters)
         processMoves(session, reqProperties, response);
         processCopies(session, reqProperties, response);
+
+        // cleanup any old content (@Delete parameters)
+        processDeletes(session, reqProperties, response);
 
         // write content from form
         writeContent(session, reqProperties, response);
@@ -319,6 +319,10 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                 }
             }
 
+            // make sure the property is not deleted even in case for a given
+            // property both @MoveFrom and @Delete is set
+            property.setDelete(false);
+            
             // record successful move
             if (isMove) {
                 response.onMoved(source, propPath);
