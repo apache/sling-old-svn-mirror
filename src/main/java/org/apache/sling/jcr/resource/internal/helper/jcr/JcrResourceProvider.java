@@ -159,7 +159,7 @@ public class JcrResourceProvider implements ResourceProvider {
         try {
             return getSession().itemExists(path);
         } catch (RepositoryException re) {
-            log.info("itemExists: Error checking for existence of {}: {}",
+            log.debug("itemExists: Error checking for existence of {}: {}",
                 path, re.toString());
             return false;
         }
