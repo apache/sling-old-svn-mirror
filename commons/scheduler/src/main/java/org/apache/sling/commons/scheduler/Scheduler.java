@@ -29,6 +29,19 @@ import java.util.NoSuchElementException;
  */
 public interface Scheduler {
 
+    /** Name of the configuration property to define the period for a job. */
+    String PROPERTY_SCHEDULER_PERIOD = "scheduler.period";
+
+    /** Name of the configuration property to define the cron expression for a job. */
+    String PROPERTY_SCHEDULER_EXPRESSION = "scheduler.expression";
+
+    /** Name of the configuration property to define if the job can be run concurrently. */
+    String PROPERTY_SCHEDULER_CONCURRENT = "scheduler.concurrent";
+
+    /** Name of the configuration property to define the job name. */
+    String PROPERTY_SCHEDULER_NAME = "scheduler.name";
+
+
     /**
      * Schedule a time based job.
      * Note that if a job with the same name has already beed added, the old job is cancelled and this new job replaces
