@@ -31,7 +31,7 @@ import org.apache.sling.apt.parser.SlingAptParser;
 
 /** SlingAptParser implementation, provided as an SCR service
  * 
-*   @scr.component label="Sling APT parser" 
+*   @scr.component metatype="no" 
 *       description="Converts APT documents to HTML format"
 *   @scr.property name="service.vendor" value="The Apache Software Foundation"
 *   @scr.property name="service.description"
