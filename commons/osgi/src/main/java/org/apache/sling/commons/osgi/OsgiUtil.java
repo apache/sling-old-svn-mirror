@@ -64,10 +64,10 @@ public class OsgiUtil {
     }
 
     /**
-     * Returns the named service reference property as an integer or the
+     * Returns the named service reference property as a long or the
      * <code>defaultValue</code> if no such reference property exists or if
      * the property is not an <code>Integer</code> and cannot be converted to
-     * an <code>Integer</code> from the property's string value.
+     * a <code>Long</code> from the property's string value.
      */
     public static long toLong(Object propValue, long defaultValue) {
         propValue = toObject(propValue);
@@ -76,6 +76,27 @@ public class OsgiUtil {
         } else if (propValue != null) {
             try {
                 return Long.valueOf(String.valueOf(propValue));
+            } catch (NumberFormatException nfe) {
+                // don't care, fall through to default value
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Returns the named service reference property as an integer or the
+     * <code>defaultValue</code> if no such reference property exists or if
+     * the property is not an <code>Integer</code> and cannot be converted to
+     * an <code>Integer</code> from the property's string value.
+     */
+    public static long toInteger(Object propValue, int defaultValue) {
+        propValue = toObject(propValue);
+        if (propValue instanceof Integer) {
+            return (Integer) propValue;
+        } else if (propValue != null) {
+            try {
+                return Integer.valueOf(String.valueOf(propValue));
             } catch (NumberFormatException nfe) {
                 // don't care, fall through to default value
             }
@@ -140,7 +161,7 @@ public class OsgiUtil {
         if (propValue == null) {
             // no value at all
             return null;
-            
+
         } else if (propValue instanceof String) {
             // single string
             return new String[] { (String) propValue };
