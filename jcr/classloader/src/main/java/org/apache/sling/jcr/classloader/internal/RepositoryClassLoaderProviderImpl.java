@@ -51,7 +51,7 @@ public class RepositoryClassLoaderProviderImpl
     public static final String CLASS_PATH_PROP = "classpath";
 
     /**
-     * @scr.property value="admin"
+     * @scr.property valueRef="OWNER_DEFAULT"
      */
     public static final String OWNER_PROP = "owner";
 

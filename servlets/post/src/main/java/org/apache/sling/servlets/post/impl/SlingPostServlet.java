@@ -46,11 +46,13 @@ import org.slf4j.LoggerFactory;
 /**
  * POST servlet that implements the sling client library "protocol"
  * 
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%servlet.post.name"
+ *                description="%servlet.post.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="Sling Post Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *               Use this as the default servlet for POST requests for Sling
+ * 
+ * Use this as the default servlet for POST requests for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default" private="true"
  * @scr.property name="sling.servlet.methods" value="POST" private="true"
@@ -70,19 +72,19 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      *               values.2="yyyy-MM-dd'T'HH:mm:ss" values.3="yyyy-MM-dd"
      *               values.4="dd.MM.yyyy HH:mm:ss" values.5="dd.MM.yyyy"
      */
-    private static final String PROP_DATE_FORMAT = "dateFormats";
+    private static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
 
     /**
      * @scr.property values.0="title" values.1="jcr:title" values.2="name"
      *               values.3="description" values.4="jcr:description"
      *               values.5="abstract"
      */
-    private static final String PROP_NODE_NAME_HINT_PROPERTIES = "nodeNameHints";
+    private static final String PROP_NODE_NAME_HINT_PROPERTIES = "servlet.post.nodeNameHints";
 
     /**
      * @scr.property value="20" type="Integer"
      */
-    private static final String PROP_NODE_NAME_MAX_LENGTH = "nodeNameMaxLength";
+    private static final String PROP_NODE_NAME_MAX_LENGTH = "servlet.post.nodeNameMaxLength";
 
     /**
      * utility class for generating node names
@@ -155,7 +157,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 return;
             }
         }
-        
+
         // create a html response and send if unsuccessful or no redirect
         htmlResponse.send(response, isSetStatus(request));
     }
@@ -203,9 +205,10 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
                 // use the created path as the redirect result
                 result = buf.toString();
-                
+
             } else if (result.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX)) {
-                // if the redirect has a trailing slash, append modified node name
+                // if the redirect has a trailing slash, append modified node
+                // name
                 result = result.concat(ResourceUtil.getName(ctx.getPath()));
             }
 

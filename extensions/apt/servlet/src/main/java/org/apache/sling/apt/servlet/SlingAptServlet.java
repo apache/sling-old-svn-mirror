@@ -22,7 +22,7 @@ import org.apache.sling.apt.parser.SlingAptParser;
 *
 * @scr.component
 *  immediate="true"
-*  metatype="false"
+*  metatype="no"
 *
 * @scr.property
 *  name="service.description"

@@ -34,18 +34,23 @@ import org.osgi.service.http.NamespaceException;
 /**
  * The <code>SimpleWebDavServlet</code>
  * 
- * @scr.component
+ * @scr.component label="%dav.name" description="%dav.description"
+ * @scr.property name="service.description"
+ *                value="Sling JcrResourceResolverFactory Implementation"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
 public class SimpleWebDavServlet extends AbstractSlingWebDavServlet {
 
-    /** @scr.property value="/dav" */
+    /** @scr.property valueRef="DEFAULT_CONTEXT" */
     private static final String PROP_CONTEXT = "dav.root";
 
-    /** @scr.property value="Sling WebDAV" */
+    /** @scr.property valueRef="DEFAULT_REALM" */
     private static final String PROP_REALM = "dav.realm";
 
     private static final String DEFAULT_CONTEXT = "/dav";
 
+    private static final String DEFAULT_REALM = "Sling WebDAV";
+    
     /** @scr.reference */
     private HttpService httpService;
 
@@ -98,11 +103,9 @@ public class SimpleWebDavServlet extends AbstractSlingWebDavServlet {
 
         initparams.put(INIT_PARAM_RESOURCE_PATH_PREFIX, context);
 
-        String value = getString(props, PROP_REALM, null);
-        if (value != null) {
-            initparams.put(INIT_PARAM_AUTHENTICATE_HEADER, "Basic Realm=\""
-                + value + "\"");
-        }
+        String value = getString(props, PROP_REALM, DEFAULT_REALM);
+        initparams.put(INIT_PARAM_AUTHENTICATE_HEADER, "Basic Realm=\"" + value
+            + "\"");
 
         // Register servlet, and set the contextPath field to signal successful
         // registration

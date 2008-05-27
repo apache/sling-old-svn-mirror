@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The quartz based implementation of the scheduler.
  *
- * @scr.component
+ * @scr.component metatype="no"
  * @scr.service interface="org.apache.sling.commons.scheduler.Scheduler"
  * @scr.reference name="job" interface="org.apache.sling.commons.scheduler.Job" cardinality="0..n" policy="dynamic"
  * @scr.reference name="task" interface="java.lang.Runnable" cardinality="0..n" policy="dynamic"

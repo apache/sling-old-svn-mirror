@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
  *
- * @scr.component metatype="false"
+ * @scr.component metatype="no"
  * @scr.property name="service.description" value="Sling
  *               Content Loader Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"

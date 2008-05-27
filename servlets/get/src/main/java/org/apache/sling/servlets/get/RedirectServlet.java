@@ -54,7 +54,7 @@ import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
  * target resource. Selectors, extension, suffix and query string are also
  * appended to the redirect URL.
  * 
- * @scr.component immediate="true" metatype="false"
+ * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
  * 
  * @scr.property name="service.description" value="Request Redirect Servlet"

@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
  *
- * @scr.component immediate="true" metatype="false"
+ * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
  * 
  * @scr.property name="service.description" value="Default Query Servlet"

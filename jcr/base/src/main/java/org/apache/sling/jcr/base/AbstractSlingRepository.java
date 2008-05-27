@@ -53,7 +53,7 @@ import org.osgi.service.log.LogService;
  * <code>scr.property</code> tags to have them declared automatically in the
  * respective component and metatype definitions by the maven-sling-plugin:
  * 
- * @scr.component
+ * @scr.component metatype="no"
  */
 public abstract class AbstractSlingRepository implements SlingRepository,
         SynchronousBundleListener, Runnable {

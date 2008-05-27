@@ -49,7 +49,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
         AuthenticationHandler {
 
     /**
-     * @scr.property value="Sling (Development)"
+     * @scr.property valueRef="DEFAULT_REALM"
      */
     public static final String PAR_REALM_NAME = "auth.http.realm";
 

@@ -64,8 +64,8 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
- * @scr.property name="service.description" value="Sling
- *               JcrResourceResolverFactory Implementation"
+ * @scr.property name="service.description"
+ *                value="Sling JcrResourceResolverFactory Implementation"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceResolverFactory"
  * @scr.reference name="ResourceProvider"
@@ -104,8 +104,6 @@ public class JcrResourceResolverFactoryImpl implements
 
     /**
      * @scr.property values.1="/apps" values.2="/libs"
-     *               label="%resolver.path.name"
-     *               description="%resolver.path.description"
      */
     public static final String PROP_PATH = "resource.resolver.searchpath";
 

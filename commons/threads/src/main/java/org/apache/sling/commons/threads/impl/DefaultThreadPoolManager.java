@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * The DefaultThreadPoolManager implements the {@link ThreadPoolManager} interface
  * and is responsible to manage {@link ThreadPool}s.
  *
- * @scr.component metatype="false"
+ * @scr.component metatype="no"
  * @scr.service interface="org.apache.sling.commons.threads.ThreadPoolManager"
  *
  * @version $Id$
