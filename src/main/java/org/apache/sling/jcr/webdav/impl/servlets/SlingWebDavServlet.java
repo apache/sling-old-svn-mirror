@@ -32,7 +32,7 @@ import org.apache.sling.jcr.webdav.impl.helper.SlingSessionProvider;
  * 
  * @scr.component
  *  immediate="true"
- *  metatype="false"
+ *  metatype="no"
  *
  * @scr.service
  *  interface="javax.servlet.Servlet"
