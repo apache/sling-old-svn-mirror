@@ -29,6 +29,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.event.EventUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -65,12 +66,9 @@ public class DistributingEventHandler
      */
     protected void activate(ComponentContext context)
     throws Exception {
-        final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
-        if ( i != null ) {
-            this.cleanupPeriod = i;
-        } else {
-            this.cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
-        }
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> props = context.getProperties();
+        this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
         super.activate(context);
     }
 
