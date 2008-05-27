@@ -45,9 +45,8 @@ import org.slf4j.LoggerFactory;
  * The <code>I18NFilter</code> class is a request level filter, which provides
  * the resource bundle for the current request.
  * 
- * @scr.component immediate="true" metatype="false"
- * @scr.property name="service.description" value="Internationalization Support
- *               Filter"
+ * @scr.component immediate="true" metatype="no"
+ * @scr.property name="service.description" value="Internationalization Support Filter"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="filter.scope" value="request" private="true"
  * @scr.property name="filter.order" value="-700" type="Integer" private="true"
