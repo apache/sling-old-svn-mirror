@@ -38,7 +38,7 @@ import org.osgi.service.log.LogService;
 /**
  * The <code>MimeTypeServiceImpl</code> TODO
  *
- * @scr.component immediate="false" metatype="false"
+ * @scr.component immediate="false" metatype="no"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="MimeTypeProvider"
