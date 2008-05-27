@@ -100,7 +100,8 @@ public class ContainerRequestParameter extends AbstractRequestParameter {
      */
     public String getString(String encoding)
             throws UnsupportedEncodingException {
-        return new String(this.get(), encoding);
+        // we ignore the provided encoding as we're using the correct encoding anyway :)
+        return value;
     }
 
     /**
