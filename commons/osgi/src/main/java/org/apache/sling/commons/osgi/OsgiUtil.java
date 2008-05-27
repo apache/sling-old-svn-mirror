@@ -90,7 +90,7 @@ public class OsgiUtil {
      * the property is not an <code>Integer</code> and cannot be converted to
      * an <code>Integer</code> from the property's string value.
      */
-    public static long toInteger(Object propValue, int defaultValue) {
+    public static int toInteger(Object propValue, int defaultValue) {
         propValue = toObject(propValue);
         if (propValue instanceof Integer) {
             return (Integer) propValue;
