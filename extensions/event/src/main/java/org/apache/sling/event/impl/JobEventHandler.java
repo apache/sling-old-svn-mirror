@@ -51,17 +51,18 @@ import org.osgi.service.event.EventAdmin;
 /**
  * An event handler handling special job events.
  *
- * @scr.component
+ * @scr.component label="%job.events.name" description="%job.events.description"
  * @scr.service interface="org.apache.sling.event.JobStatusProvider"
  * @scr.property name="event.topics" refValues="EventUtil.TOPIC_JOB"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
- * @scr.property name="repository.path" value="/var/eventing/jobs"
+ *               private="true"
+ * @scr.property name="repository.path" value="/var/eventing/jobs" private="true"
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
  * @scr.service interface="java.lang.Runnable"
  * @scr.property name="scheduler.period" value="600" type="Long"
- * @scr.property name="scheduler.concurrent" value="false" type="Boolean"
+ * @scr.property name="scheduler.concurrent" value="false" type="Boolean" private="true"
  */
 public class JobEventHandler
     extends AbstractRepositoryEventHandler

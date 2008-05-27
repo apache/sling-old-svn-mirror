@@ -35,6 +35,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -51,7 +52,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract base class for all event handlers in this package.
  *
- * @scr.component abstract="true"
+ * @scr.component abstract="true" metatype="no"
  * @scr.service interface="org.osgi.service.event.EventHandler"
  */
 public abstract class AbstractRepositoryEventHandler
@@ -60,9 +61,12 @@ public abstract class AbstractRepositoryEventHandler
     /** Default log. */
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** @scr.property value="/sling/events" */
+    /** @scr.property valueRef="DEFAULT_PROPERTY_REPO_PATH" */
     protected static final String CONFIG_PROPERTY_REPO_PATH = "repository.path";
 
+    /** Default path for the {@link #CONFIG_PROPERTY_REPO_PATH} */
+    private static final String DEFAULT_PROPERTY_REPO_PATH = "/sling/events";
+    
     /** @scr.reference */
     protected SlingRepository repository;
 
@@ -105,7 +109,8 @@ public abstract class AbstractRepositoryEventHandler
     protected void activate(final ComponentContext context)
     throws Exception {
         this.applicationId = this.settingsService.getSlingId();
-        this.repositoryPath = (String)context.getProperties().get(CONFIG_PROPERTY_REPO_PATH);
+        this.repositoryPath = OsgiUtil.toString(context.getProperties().get(
+            CONFIG_PROPERTY_REPO_PATH), DEFAULT_PROPERTY_REPO_PATH);
 
         // start background threads
         if ( this.threadPoolManager == null ) {
@@ -117,7 +122,7 @@ public abstract class AbstractRepositoryEventHandler
         config.setQueueSize(-1);
         config.setShutdownGraceful(true);
         threadPoolManager.create(EventHelper.THREAD_POOL_NAME, config);
-                                 ;
+
         this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
         if ( this.threadPool == null ) {
             throw new Exception("No thread pool found.");

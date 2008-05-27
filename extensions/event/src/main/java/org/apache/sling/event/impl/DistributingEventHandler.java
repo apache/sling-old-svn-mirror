@@ -36,16 +36,16 @@ import org.osgi.service.event.EventAdmin;
 
 /**
  * This event handler distributes events across an application cluster.
- * @scr.component inherit="true"
- * @scr.property name="event.topics" value="*"
- * @scr.property name="event.filter" value="(event.distribute=*)"
- * @scr.property name="repository.path" value="/var/eventing/distribution"
+ * @scr.component inherit="true" label="%dist.events.name" description="%dist.events.description"
+ * @scr.property name="event.topics" value="*" private="true"
+ * @scr.property name="event.filter" value="(event.distribute=*)" private="true"
+ * @scr.property name="repository.path" value="/var/eventing/distribution" private="true"
  *
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
  * @scr.service interface="java.lang.Runnable"
  * @scr.property name="scheduler.period" value="1800" type="Long"
- * @scr.property name="scheduler.concurrent" value="false" type="Boolean"
+ * @scr.property name="scheduler.concurrent" value="false" type="Boolean" private="true"
  */
 public class DistributingEventHandler
     extends AbstractRepositoryEventHandler
