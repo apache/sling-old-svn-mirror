@@ -182,7 +182,7 @@ public class LoginServlet extends SlingSafeMethodsServlet {
         pw.println("             xmlhttp.abort();");
         pw.println("         }");
 
-        pw.println("         xmlhttp.open('GET', '" + contextPath + "?"
+        pw.println("         xmlhttp.open('POST', '" + contextPath + "?"
             + AuthorizationHeaderAuthenticationHandler.REQUEST_LOGIN_PARAMETER
             + "=1', false, user, pass);");
 
