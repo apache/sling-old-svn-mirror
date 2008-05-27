@@ -323,17 +323,17 @@ public class QuartzScheduler implements Scheduler {
         final Object job = this.context.locateService(type, ref);
         if ( ref != null ) {
             this.checkJob(job);
-            String name = (String)ref.getProperty("scheduler.name");
+            String name = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_NAME);
             if ( name == null ) {
                 name = (String)ref.getProperty(Constants.SERVICE_PID);
             }
             if ( name != null ) {
-                final Boolean concurrent = (Boolean)ref.getProperty("scheduler.concurrent");
-                final String expression = (String)ref.getProperty("scheduler.expression");
+                final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
+                final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
                 if ( expression != null ) {
                     this.addJob(name, job, null, expression, (concurrent != null ? concurrent : true));
                 } else {
-                    final Long period = (Long)ref.getProperty("scheduler.period");
+                    final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
                     if ( period != null ) {
                         this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
                     }
@@ -345,7 +345,7 @@ public class QuartzScheduler implements Scheduler {
     }
 
     protected void unregister(ServiceReference ref) {
-        String name = (String)ref.getProperty("scheduler.name");
+        String name = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_NAME);
         if ( name == null ) {
             name = (String)ref.getProperty(Constants.SERVICE_PID);
         }
