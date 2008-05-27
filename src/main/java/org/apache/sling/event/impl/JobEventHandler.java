@@ -40,6 +40,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.osgi.framework.BundleEvent;
@@ -81,7 +82,7 @@ public class JobEventHandler
     protected static final String CONFIG_PROPERTY_SLEEP_TIME = "sleep.time";
 
     /** Default number of job retries. */
-    protected static final long DEFAULT_MAX_JOB_RETRIES = 10;
+    protected static final int DEFAULT_MAX_JOB_RETRIES = 10;
 
     /** @scr.property valueRef="DEFAULT_MAX_JOB_RETRIES" */
     protected static final String CONFIG_PROPERTY_MAX_JOB_RETRIES = "max.job.retries";
@@ -90,7 +91,7 @@ public class JobEventHandler
     protected long sleepTime;
 
     /** How often should a job be retried by default. */
-    protected long maxJobRetries;
+    protected int maxJobRetries;
 
     /** Background session. */
     protected Session backgroundSession;
@@ -117,14 +118,11 @@ public class JobEventHandler
      */
     protected void activate(final ComponentContext context)
     throws Exception {
-        final Integer i = (Integer)context.getProperties().get(CONFIG_PROPERTY_CLEANUP_PERIOD);
-        if ( i != null ) {
-            this.cleanupPeriod = i;
-        } else {
-            this.cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
-        }
-        this.sleepTime = this.getLongProperty(context, CONFIG_PROPERTY_SLEEP_TIME, DEFAULT_SLEEP_TIME) * 1000;
-        this.maxJobRetries = this.getLongProperty(context, CONFIG_PROPERTY_MAX_JOB_RETRIES, DEFAULT_MAX_JOB_RETRIES);
+        @SuppressWarnings("unchecked")
+        final Dictionary<String, Object> props = context.getProperties();
+        this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
+        this.sleepTime = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_SLEEP_TIME), DEFAULT_SLEEP_TIME);
+        this.maxJobRetries = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_MAX_JOB_RETRIES), DEFAULT_MAX_JOB_RETRIES);
         super.activate(context);
     }
 
@@ -703,7 +701,7 @@ public class JobEventHandler
         boolean reschedule = shouldReschedule;
         if ( shouldReschedule ) {
             // check if we exceeded the number of retries
-            long retries = this.maxJobRetries;
+            int retries = this.maxJobRetries;
             if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRIES) != null ) {
                 retries = (Integer) job.getProperty(EventUtil.PROPERTY_JOB_RETRIES);
             }

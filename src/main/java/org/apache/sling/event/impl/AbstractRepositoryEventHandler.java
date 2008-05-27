@@ -66,7 +66,7 @@ public abstract class AbstractRepositoryEventHandler
 
     /** Default path for the {@link #CONFIG_PROPERTY_REPO_PATH} */
     private static final String DEFAULT_PROPERTY_REPO_PATH = "/sling/events";
-    
+
     /** @scr.reference */
     protected SlingRepository repository;
 
@@ -157,16 +157,6 @@ public abstract class AbstractRepositoryEventHandler
                 }
             }
         });
-    }
-
-    protected long getLongProperty(final ComponentContext context,
-            final String           propertyName,
-            final long             defaultValue) {
-        final Object value = context.getProperties().get(propertyName);
-        if ( value != null && value instanceof Long ) {
-            return (Long)value;
-        }
-        return defaultValue;
     }
 
     protected abstract void runInBackground() throws RepositoryException;
