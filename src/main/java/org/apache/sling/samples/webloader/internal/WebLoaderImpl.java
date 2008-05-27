@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  *
  * @scr.component
  *  immediate="true"
- *  metatype="false"
+ *  metatype="no"
  *
  * @scr.property
  *  name="service.description"
