@@ -37,7 +37,7 @@ import org.osgi.service.component.ComponentContext;
  * The <code>SlingInfoServlet</code> TODO
  *
  * @scr.service interface="javax.servlet.Servlet"
- * @scr.component immediate="true" metatype="false"
+ * @scr.component immediate="true" metatype="no"
  * @scr.property name="service.description" value="Sling Info Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.paths" value="/system/sling/info"

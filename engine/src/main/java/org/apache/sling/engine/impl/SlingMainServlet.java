@@ -81,8 +81,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>SlingMainServlet</code> TODO
  *
- * @scr.component immediate="true" label="%sling.name"
- *                description="%sling.description"
+ * @scr.component immediate="true" metatype="no"
  * @scr.property name="sling.root" value="/" private="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"

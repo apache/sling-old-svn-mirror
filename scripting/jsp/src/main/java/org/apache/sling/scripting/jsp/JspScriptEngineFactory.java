@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The JSP engine (a.k.a Jasper).
  *
- * @scr.component scr="no" label="%jsphandler.name"
+ * @scr.component ds="no" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
@@ -241,7 +241,11 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         // a ClassCastException may be caused after this component is recreated
         // because the class loader of the JspApplicationContextImpl class
         // object is different from the one stored in the servlet context
-        slingServletContext.removeAttribute(JspApplicationContextImpl.class.getName());
+        try {
+            slingServletContext.removeAttribute(JspApplicationContextImpl.class.getName());
+        } catch (NullPointerException npe) {
+            log.error("deactivate: Caught NullPointerException ! Just logging", npe);
+        }
     }
 
     protected void bindRepositoryClassLoaderProvider(

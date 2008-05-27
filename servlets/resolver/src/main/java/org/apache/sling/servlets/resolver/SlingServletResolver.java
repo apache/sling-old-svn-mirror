@@ -73,8 +73,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @scr.component label="%servletresolver.name"
  *                description="%servletresolver.description"
- * @scr.property name="service.description" value="Sling Servlet Resolver and
- *               Error Handler"
+ * @scr.property name="service.description"
+ *                value="Sling Servlet Resolver and Error Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
@@ -87,17 +87,11 @@ public class SlingServletResolver implements ServletResolver,
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * @scr.property values.1="/apps" values.2="/libs"
-     *               label="%resolver.path.name"
-     *               description="%resolver.path.description"
+     * @scr.property valueRef="DEFAULT_SERVLET_ROOT"
      */
-    public static final String PROP_PATH = "path";
+    public static final String PROP_SERVLET_ROOT = "servletresolver.servletRoot";
 
-    /**
-     * @scr.property value="/apps" label="%resolver.servletRoot.name"
-     *               description="%resolver.servletRoot.description"
-     */
-    public static final String PROP_SERVLET_ROOT = "servletRoot";
+    public static final String DEFAULT_SERVLET_ROOT = "/apps";
 
     private static final String REF_SERVLET = "Servlet";
 
@@ -109,8 +103,6 @@ public class SlingServletResolver implements ServletResolver,
     private List<ServiceReference> pendingServlets = new ArrayList<ServiceReference>();
 
     private ComponentContext context;
-
-    private String[] path;
 
     private String servletRoot;
 
@@ -127,12 +119,12 @@ public class SlingServletResolver implements ServletResolver,
     public Servlet resolveServlet(SlingHttpServletRequest request) {
 
         Resource resource = request.getResource();
-        
+
         // start tracking servlet resolution
         RequestProgressTracker tracker = request.getRequestProgressTracker();
-        String timerName = "resolverServlet(" + resource +")";
+        String timerName = "resolverServlet(" + resource + ")";
         tracker.startTimer(timerName);
-        
+
         Servlet servlet = null;
 
         // first check whether the type of a resource is the absolute
@@ -144,7 +136,7 @@ public class SlingServletResolver implements ServletResolver,
                 servlet = res.adaptTo(Servlet.class);
             }
         }
-        
+
         // the resource type is not absolute, so lets go for the deep search
         if (servlet == null) {
             ResourceCollector locationUtil = ResourceCollector.create(request);
@@ -164,7 +156,7 @@ public class SlingServletResolver implements ServletResolver,
             tracker.logTimer(timerName, "Using Servlet {0}",
                 RequestUtil.getServletName(servlet));
         }
-        
+
         // log the servlet found
         if (log.isDebugEnabled()) {
             if (servlet != null) {
@@ -196,6 +188,7 @@ public class SlingServletResolver implements ServletResolver,
         } else {
 
             // relative script resolution against search path
+            String[] path = resourceResolver.getSearchPath();
             for (int i = 0; script == null && i < path.length; i++) {
                 String scriptPath = path[i] + name;
                 Resource resource = resourceResolver.getResource(scriptPath);
@@ -221,8 +214,8 @@ public class SlingServletResolver implements ServletResolver,
     // ---------- ErrorHandler interface --------------------------------------
 
     /**
-     * @see org.apache.sling.engine.servlets.ErrorHandler#handleError(int, String,
-     *      SlingHttpServletRequest, SlingHttpServletResponse)
+     * @see org.apache.sling.engine.servlets.ErrorHandler#handleError(int,
+     *      String, SlingHttpServletRequest, SlingHttpServletResponse)
      */
     public void handleError(int status, String message,
             SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -239,9 +232,9 @@ public class SlingServletResolver implements ServletResolver,
         RequestProgressTracker tracker = request.getRequestProgressTracker();
         String timerName = "handleError:status=" + status;
         tracker.startTimer(timerName);
-        
+
         try {
-            
+
             // find the error handler component
             Resource resource = getErrorResource(request);
 
@@ -272,11 +265,11 @@ public class SlingServletResolver implements ServletResolver,
                 RequestUtil.getServletName(servlet));
 
             handleError(servlet, request, response);
-            
+
         } finally {
-            
+
             tracker.logTimer(timerName, "Error handler finished");
-            
+
         }
     }
 
@@ -297,9 +290,9 @@ public class SlingServletResolver implements ServletResolver,
         String timerName = "handleError:throwable="
             + throwable.getClass().getName();
         tracker.startTimer(timerName);
-        
+
         try {
-            
+
             // find the error handler component
             Servlet servlet = null;
             Resource resource = getErrorResource(request);
@@ -330,13 +323,13 @@ public class SlingServletResolver implements ServletResolver,
             // log a track entry after resolution before calling the handler
             tracker.logTimer(timerName, "Using handler {0}",
                 RequestUtil.getServletName(servlet));
-            
+
             handleError(servlet, request, response);
-            
+
         } finally {
-            
+
             tracker.logTimer(timerName, "Error handler finished");
-            
+
         }
     }
 
@@ -360,7 +353,7 @@ public class SlingServletResolver implements ServletResolver,
         }
         return res;
     }
-    
+
     /**
      * Returns a servlet suitable for handling a request. The
      * <code>locationUtil</code> is used find any servlets or scripts usable
@@ -395,11 +388,11 @@ public class SlingServletResolver implements ServletResolver,
                 }
             }
         }
-        
+
         // exhausted all candidates, we don't have a servlet
         return null;
     }
-    
+
     /**
      * Returns the internal default servlet which is called in case no other
      * servlet applies for handling a request. This servlet should really only
@@ -419,7 +412,6 @@ public class SlingServletResolver implements ServletResolver,
 
         return defaultServlet;
     }
-
 
     /**
      * Returns the default error handler servlet, which is called in case there
@@ -466,7 +458,7 @@ public class SlingServletResolver implements ServletResolver,
             log.error(
                 "Original error "
                     + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
-                (Exception) request.getAttribute(SlingConstants.ERROR_EXCEPTION));
+                (Throwable) request.getAttribute(SlingConstants.ERROR_EXCEPTION));
         }
     }
 
@@ -474,43 +466,15 @@ public class SlingServletResolver implements ServletResolver,
 
     protected void activate(ComponentContext context) {
 
-        // empty path to begin with
-        path = null;
-
         // from configuration if available
         Dictionary<?, ?> properties = context.getProperties();
-        if (properties != null) {
-            String[] tmpPath = OsgiUtil.toStringArray(properties.get(PROP_PATH));
-            if (tmpPath != null && tmpPath.length > 0) {
-                for (int i = 0; i < tmpPath.length; i++) {
-                    // ensure leading slash
-                    if (!tmpPath[i].startsWith("/")) {
-                        tmpPath[i] = "/" + tmpPath;
-                    }
-                    // ensure trailing slash
-                    if (!tmpPath[i].endsWith("/")) {
-                        tmpPath[i] += "/";
-                    }
-                }
-            }
-            path = tmpPath;
-        }
-
-        if (path == null) {
-            path = new String[] { "/" };
-        }
-
         String tmpRoot = OsgiUtil.toString(properties.get(PROP_SERVLET_ROOT),
-            null);
-        if (tmpRoot == null) {
-            tmpRoot = path[0];
-        } else {
-            if (!tmpRoot.startsWith("/")) {
-                tmpRoot = "/" + tmpRoot;
-            }
-            if (!tmpRoot.endsWith("/")) {
-                tmpRoot += "/";
-            }
+            DEFAULT_SERVLET_ROOT);
+        if (!tmpRoot.startsWith("/")) {
+            tmpRoot = "/" + tmpRoot;
+        }
+        if (!tmpRoot.endsWith("/")) {
+            tmpRoot += "/";
         }
         servletRoot = tmpRoot;
 

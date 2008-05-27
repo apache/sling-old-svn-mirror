@@ -33,7 +33,7 @@ import org.apache.sling.jcr.api.SlingRepository;
  * 
  * @scr.component
  *  immediate="true"
- *  metatype="false"
+ *  metatype="no"
  */
 abstract class AbstractSlingWebDavServlet extends SimpleWebdavServlet {
 

@@ -33,39 +33,42 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Filter that dumps the output of the RequestProgressTracker to the log
- *  after processing the request.
- *  
- *  @scr.component immediate="true" metatype="false"
- *  @scr.property name="service.description" value="RequestProgressTracker dump filter"
- *  @scr.property name="service.vendor" value="The Apache Software Foundation"
- *  @scr.property name="filter.scope" value="request" private="true"
- *  @scr.service
+/**
+ * Filter that dumps the output of the RequestProgressTracker to the log after
+ * processing the request.
+ * 
+ * @scr.component immediate="true" metatype="no"
+ * @scr.property name="service.description" value="RequestProgressTracker dump
+ *               filter"
+ * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property name="filter.scope" value="request" private="true"
+ * @scr.service
  */
 public class RequestProgressTrackerLogFilter implements Filter {
-        
+
     private static final Logger log = LoggerFactory.getLogger(RequestProgressTrackerLogFilter.class);
+
     private int requestCounter;
-    
+
     public void init(FilterConfig filterConfig) throws ServletException {
     }
-    
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
-    throws IOException, ServletException {
-        
+
+    public void doFilter(ServletRequest request, ServletResponse response,
+            FilterChain chain) throws IOException, ServletException {
+
         chain.doFilter(request, response);
-        
-        if(request instanceof SlingHttpServletRequest) {
-            final RequestProgressTracker t = ((SlingHttpServletRequest)request).getRequestProgressTracker();
+
+        if (request instanceof SlingHttpServletRequest) {
+            final RequestProgressTracker t = ((SlingHttpServletRequest) request).getRequestProgressTracker();
             t.done();
-            
-            if(log.isDebugEnabled()) {
+
+            if (log.isDebugEnabled()) {
                 int requestId = 0;
                 synchronized (getClass()) {
                     requestId = ++requestCounter;
                 }
                 final Iterator<String> it = t.getMessages();
-                while(it.hasNext()) {
+                while (it.hasNext()) {
                     log.debug("REQUEST_{} - " + it.next(), requestId);
                 }
             }
