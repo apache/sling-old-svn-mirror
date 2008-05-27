@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The JSP engine (a.k.a Jasper).
  *
- * @scr.component ds="no" label="%jsphandler.name"
+ * @scr.component scr="no" label="%jsphandler.name"
  *                description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
