@@ -36,7 +36,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * considered a "page" if the Content object is an instance of the
  * {@link SamplePage} class.
  *
- * @scr.component immediate="true" metatype="false"
+ * @scr.component immediate="true" metatype="no"
  * @scr.property name="service.description" value="Sample Navigation Component"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/sample.navigation"
