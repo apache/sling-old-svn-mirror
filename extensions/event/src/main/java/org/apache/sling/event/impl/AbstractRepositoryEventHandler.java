@@ -239,8 +239,13 @@ public abstract class AbstractRepositoryEventHandler
                 while ( st.hasMoreTokens() ) {
                     final String token = st.nextToken();
                     if ( !node.hasNode(token) ) {
-                        node.addNode(token, "nt:folder");
-                        node.save();
+                        try {
+                            node.addNode(token, "nt:folder");
+                            node.save();
+                        } catch (RepositoryException re) {
+                            // we ignore this as this folder might be created from a different task
+                            node.refresh(false);
+                        }
                     }
                     node = node.getNode(token);
                 }
