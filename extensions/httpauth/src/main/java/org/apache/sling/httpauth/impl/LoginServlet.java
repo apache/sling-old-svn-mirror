@@ -23,18 +23,19 @@ import java.io.PrintWriter;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
  * The <code>LoginServlet</code> TODO
- *
+ * 
  * @scr.component metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="HTTP Header Login Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="sling.servlet.paths" value="/system/sling/login"
+ * @scr.property name="sling.servlet.methods" values.0="GET" values.1="POST"
  */
-public class LoginServlet extends SlingSafeMethodsServlet {
+public class LoginServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -58,6 +59,12 @@ public class LoginServlet extends SlingSafeMethodsServlet {
         }
 
         epilog(pw);
+    }
+
+    @Override
+    protected void doPost(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws IOException {
+        response.sendRedirect(request.getRequestURI());
     }
 
     private void login(PrintWriter pw, String contextPath) {
