@@ -93,6 +93,13 @@ public class SlingServerRepository extends AbstractSlingRepository
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
         String home = (String) environment.get(REPOSITORY_HOME_DIR);
 
+        // somewhat dirty hack to have the derby.log file in a sensible
+        // location, but don't overwrite anything already set
+        if (System.getProperty("derby.stream.error.file") == null) {
+            String derbyLog = home + "/derby.log";
+            System.setProperty("derby.stream.error.file", derbyLog);
+        }
+        
         InputStream ins = null;
         try {
 
