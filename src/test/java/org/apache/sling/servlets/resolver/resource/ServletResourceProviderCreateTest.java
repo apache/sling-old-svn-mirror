@@ -32,7 +32,6 @@ import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.servlets.resolver.ServletResolverConstants;
-import org.apache.sling.servlets.resolver.resource.ServletResourceProvider;
 
 public class ServletResourceProviderCreateTest extends TestCase {
 
@@ -48,6 +47,9 @@ public class ServletResourceProviderCreateTest extends TestCase {
 
     private static final String RES_TYPE_PATH = JcrResourceUtil.resourceTypeToPath(RES_TYPE);
 
+    private ServletResourceProviderFactory factory = new ServletResourceProviderFactory(
+        ROOT);
+
     public void testCreateMethodsDefault() {
         MockServiceReference msr = new MockServiceReference(null);
 
@@ -55,8 +57,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
             RES_TYPE);
         // msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "*");
 
-        ServletResourceProvider srp = ServletResourceProvider.create(msr,
-            TEST_SERVLET, ROOT);
+        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
         assertNotNull(srp);
 
         String[] paths = srp.getSerlvetPaths();
@@ -65,9 +66,9 @@ public class ServletResourceProviderCreateTest extends TestCase {
 
         Set<String> checkerSet = new HashSet<String>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_GET
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_HEAD
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
 
         for (String path : paths) {
             assertTrue(path + " not expected", checkerSet.remove(path));
@@ -83,8 +84,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
             RES_TYPE);
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "GET");
 
-        ServletResourceProvider srp = ServletResourceProvider.create(msr,
-            TEST_SERVLET, ROOT);
+        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
         assertNotNull(srp);
 
         String[] paths = srp.getSerlvetPaths();
@@ -93,7 +93,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
 
         Set<String> checkerSet = new HashSet<String>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_GET
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
 
         for (String path : paths) {
             assertTrue(path + " not expected", checkerSet.remove(path));
@@ -110,8 +110,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS,
             new String[] { "GET", "POST", "PUT" });
 
-        ServletResourceProvider srp = ServletResourceProvider.create(msr,
-            TEST_SERVLET, ROOT);
+        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
         assertNotNull(srp);
 
         String[] paths = srp.getSerlvetPaths();
@@ -120,11 +119,11 @@ public class ServletResourceProviderCreateTest extends TestCase {
 
         Set<String> checkerSet = new HashSet<String>();
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_GET
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_POST
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
         checkerSet.add(ROOT + RES_TYPE_PATH + "/" + HttpConstants.METHOD_PUT
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
 
         for (String path : paths) {
             assertTrue(path + " not expected", checkerSet.remove(path));
@@ -140,8 +139,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
             RES_TYPE);
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "*");
 
-        ServletResourceProvider srp = ServletResourceProvider.create(msr,
-            TEST_SERVLET, ROOT);
+        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
         assertNotNull(srp);
 
         String[] paths = srp.getSerlvetPaths();
@@ -150,7 +148,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
 
         Set<String> checkerSet = new HashSet<String>();
         checkerSet.add(ROOT + RES_TYPE_PATH
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION);
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION);
 
         for (String path : paths) {
             assertTrue(path + " not expected", checkerSet.remove(path));

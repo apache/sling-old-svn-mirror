@@ -32,7 +32,7 @@ class ServletResource extends SlingAdaptable implements Resource {
     private final Servlet servlet;
 
     private final String path;
-    
+
     private final String resourceType;
 
     private final ResourceMetadata metadata;
@@ -42,8 +42,8 @@ class ServletResource extends SlingAdaptable implements Resource {
         this.resourceResolver = resourceResolver;
         this.servlet = servlet;
         this.path = path;
-        this.resourceType = ServletResourceProvider.ensureServletNameExtension(path);
-        
+        this.resourceType = ServletResourceProviderFactory.ensureServletNameExtension(path);
+
         this.metadata = new ResourceMetadata();
         metadata.setResolutionPath(path);
     }
@@ -64,7 +64,7 @@ class ServletResource extends SlingAdaptable implements Resource {
     public String getResourceSuperType() {
         return null;
     }
-    
+
     public String getPath() {
         return path;
     }

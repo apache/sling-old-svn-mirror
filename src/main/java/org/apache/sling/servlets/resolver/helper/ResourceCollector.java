@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.servlets.HttpConstants;
-import org.apache.sling.servlets.resolver.resource.ServletResourceProvider;
+import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactory;
 
 /**
  * The <code>ResourceCollector</code> class provides a single public method -
@@ -139,7 +139,7 @@ public class ResourceCollector {
         // special treatment for servlets registered with neither a method
         // name nor extensions and selectors
         String path = location.getPath()
-            + ServletResourceProvider.SERVLET_PATH_EXTENSION;
+            + ServletResourceProviderFactory.SERVLET_PATH_EXTENSION;
         location = location.getResourceResolver().getResource(path);
         if (location != null) {
             addWeightedResource(resources, location, 0,
