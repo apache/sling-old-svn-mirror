@@ -61,6 +61,7 @@ import org.apache.sling.servlets.resolver.defaults.DefaultServlet;
 import org.apache.sling.servlets.resolver.helper.ResourceCollector;
 import org.apache.sling.servlets.resolver.helper.SlingServletConfig;
 import org.apache.sling.servlets.resolver.resource.ServletResourceProvider;
+import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactory;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -73,8 +74,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @scr.component label="%servletresolver.name"
  *                description="%servletresolver.description"
- * @scr.property name="service.description"
- *                value="Sling Servlet Resolver and Error Handler"
+ * @scr.property name="service.description" value="Sling Servlet Resolver and
+ *               Error Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
  * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
@@ -104,7 +105,7 @@ public class SlingServletResolver implements ServletResolver,
 
     private ComponentContext context;
 
-    private String servletRoot;
+    private ServletResourceProviderFactory servletResourceProviderFactory;
 
     // the default servlet if no other servlet applies for a request. This
     // field is set on demand by getDefaultServlet()
@@ -468,21 +469,17 @@ public class SlingServletResolver implements ServletResolver,
 
         // from configuration if available
         Dictionary<?, ?> properties = context.getProperties();
-        String tmpRoot = OsgiUtil.toString(properties.get(PROP_SERVLET_ROOT),
-            DEFAULT_SERVLET_ROOT);
-        if (!tmpRoot.startsWith("/")) {
-            tmpRoot = "/" + tmpRoot;
-        }
-        if (!tmpRoot.endsWith("/")) {
-            tmpRoot += "/";
-        }
-        servletRoot = tmpRoot;
+        String servletRoot = OsgiUtil.toString(
+            properties.get(PROP_SERVLET_ROOT), DEFAULT_SERVLET_ROOT);
 
         Collection<ServiceReference> refs;
         synchronized (this) {
 
             refs = pendingServlets;
             pendingServlets = new ArrayList<ServiceReference>();
+
+            servletResourceProviderFactory = new ServletResourceProviderFactory(
+                servletRoot);
 
             // register servlets immediately from now on
             this.context = context;
@@ -501,6 +498,7 @@ public class SlingServletResolver implements ServletResolver,
             // destroy all servlets
             destroyAllServlets(refs);
             this.context = null;
+            this.servletResourceProviderFactory = null;
         }
     }
 
@@ -545,8 +543,8 @@ public class SlingServletResolver implements ServletResolver,
             return false;
         }
 
-        ServletResourceProvider provider = ServletResourceProvider.create(
-            reference, servlet, servletRoot);
+        ServletResourceProvider provider = servletResourceProviderFactory.create(
+            reference, servlet);
         if (provider == null) {
             log.error(
                 "createServlet: Cannot register servlet {} without path or resource type configuration",
