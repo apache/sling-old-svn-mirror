@@ -52,7 +52,7 @@ import org.osgi.service.log.LogService;
  * Extensions of this class will have to declare the following
  * <code>scr.property</code> tags to have them declared automatically in the
  * respective component and metatype definitions by the maven-sling-plugin:
- * 
+ *
  * @scr.component metatype="no"
  */
 public abstract class AbstractSlingRepository implements SlingRepository,
@@ -83,7 +83,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * The name of the configuration parameter containing the maximum number of
      * seconds to wait for the number of currently active sessions to drop be
      * low the upper limit before giving up (value is "pool.maxActiveWait").
-     * 
+     *
      * @scr.property value="1" type="Integer"
      */
     public static final String PROPERTY_MAX_ACTIVE_SESSIONS_WAIT = "pool.maxActiveWait";
@@ -91,7 +91,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     /**
      * The name of the configuration parameter containing the upper limit of the
      * simultaneously active sessions (value is "pool.maxActive").
-     * 
+     *
      * @scr.property value="-1" type="Integer"
      */
     public static final String PROPERTY_MAX_ACTIVE_SESSIONS = "pool.maxActive";
@@ -99,7 +99,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     /**
      * The name of the configuration parameter containing the upper limit of the
      * currently idle sessions to keep in the pool (value is "pool.maxIdle").
-     * 
+     *
      * @scr.property value="10" type="Integer"
      */
     public static final String PROPERTY_MAX_IDLE_SESSIONS = "pool.maxIdle";
@@ -267,7 +267,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#getDescriptor(java.lang.String)
      */
     public String getDescriptor(String name) {
@@ -282,7 +282,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see javax.jcr.Repository#getDescriptorKeys()
      */
     public String[] getDescriptorKeys() {
@@ -386,7 +386,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * returns <code>null</code> if not repository is available. Any problems
      * trying to acquire the repository must be caught and logged as
      * appropriate.
-     * 
+     *
      * @return The acquired JCR <code>Repository</code> or <code>null</code>
      *         if not repository can be acquired.
      */
@@ -420,7 +420,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * <p>
      * Implementations may overwrite this method but MUST call this base class
      * implementation first.
-     * 
+     *
      * @param repository The JCR <code>Repository</code> to setup.
      */
     protected void setupRepository(Repository repository) {
@@ -436,7 +436,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * <p>
      * This method may be overwritten to register the component with different
      * types.
-     * 
+     *
      * @return The OSGi <code>ServiceRegistration</code> object representing
      *         the registered service.
      */
@@ -468,7 +468,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * access checks. The contract of this method must be obeyed, though in a
      * sense, the <code>true</code> must only be returned if
      * <code>repository</code> is actually usable.
-     * 
+     *
      * @param repository The JCR <code>Repository</code> to check for
      *            availability.
      * @return <code>true</code> if <code>repository</code> is not
@@ -487,15 +487,15 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // fall back to unavailable
         return false;
     }
-    
-    /** Ping our current repository and check that admin login (required by Sling) works. */ 
+
+    /** Ping our current repository and check that admin login (required by Sling) works. */
     protected boolean pingAndCheck() {
         if(repository == null) {
             throw new IllegalStateException("Repository is null");
         }
-        
+
         boolean result = false;
-        
+
         if(pingRepository(repository)) {
             try {
                 final Session s = loginAdministrative(getDefaultWorkspace());
@@ -505,7 +505,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 log.log(LogService.LOG_INFO, "pingAndCheck; loginAdministrative failed", re);
             }
         }
-        
+
         return result;
     }
 
@@ -527,7 +527,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * This method is meant for cleanup tasks before the repository is actually
      * disposed off. Extensions of this class may overwrite but must call this
      * base class implementation.
-     * 
+     *
      * @param repository
      */
     protected void tearDown(Repository repository) {
@@ -547,7 +547,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * Disposes off the given <code>repository</code>. This base class
      * implementation does nothing. Extensions should overwrite if any special
      * disposal operation is required.
-     * 
+     *
      * @param repository
      */
     protected void disposeRepository(Repository repository) {
@@ -560,7 +560,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     * 
+     *
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -592,7 +592,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /**
      * This method must be called if overwritten by implementations !!
-     * 
+     *
      * @throws nothing, but allow derived classes to throw any Exception
      */
     protected void activate(ComponentContext componentContext) throws Exception {
@@ -633,7 +633,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     /**
      * This method must be called if overwritten by implementations !!
-     * 
+     *
      * @param componentContext
      */
     protected void deactivate(ComponentContext componentContext) {
@@ -800,25 +800,25 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     "startRepository: got a Repository, calling pingRepository()");
                 if (pingRepository(newRepo)) {
                     repository = newRepo;
-                    
+
                     if(!pingAndCheck()) {
                         repository = null;
                         log(LogService.LOG_DEBUG, "pingRepository() successful but pingAndCheck() fails, will try again");
                         return false;
-                        
+
                     } else {
                         log(LogService.LOG_DEBUG,
                             "startRepository: pingRepository() and pingAndCheck() successful, calling setupRepository()");
                         setupRepository(newRepo);
-    
+
                         log(LogService.LOG_DEBUG,
                             "startRepository: calling registerService()");
                         repositoryService = registerService();
-    
+
                         log(LogService.LOG_DEBUG,
                             "registerService() successful, registration="
                                 + repositoryService);
-    
+
                         return true;
                     }
                 }
@@ -924,7 +924,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
                         log(LogService.LOG_DEBUG,
                             "run: Repository available, checking again in "
-                                + pollTime + "ms");
+                                + pollTime + " seconds");
                     }
                 }
             }
