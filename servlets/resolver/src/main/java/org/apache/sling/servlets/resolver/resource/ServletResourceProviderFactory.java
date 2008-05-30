@@ -148,7 +148,7 @@ public class ServletResourceProviderFactory {
         if (methods == null || methods.length == 0) {
             if (log.isInfoEnabled()) {
                 log.info(
-                    "addByType({}): No methos declared, assuming GET/HEAD",
+                    "addByType({}): No methods declared, assuming GET/HEAD",
                     getServiceIdentifier(ref));
             }
             methods = DEFAULT_SERVLET_METHODS;
