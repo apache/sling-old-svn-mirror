@@ -54,7 +54,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      * been done in the {@link #doRun(SlingHttpServletRequest, HtmlResponse)}
      * method the session is saved if there are unsaved modifications. In case
      * of errorrs, the unsaved changes in the session are rolled back.
-     * 
+     *
      * @param request the request to operate on
      * @param response The <code>HtmlResponse</code> to record execution
      *            progress.
@@ -120,7 +120,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      * is set with valid resources an empty iterator is returned. Any resources
      * addressed in the {@link SlingPostConstants#RP_APPLY_TO} parameter is
      * ignored.
-     * 
+     *
      * @param request The <code>SlingHttpServletRequest</code> object used to
      *            get the {@link SlingPostConstants#RP_APPLY_TO} parameter.
      * @return The iterator of resources listed in the parameter or
@@ -128,19 +128,19 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      */
     protected Iterator<Resource> getApplyToResources(
             SlingHttpServletRequest request) {
-        
+
         String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
         if (applyTo == null) {
             return null;
         }
-        
+
         return new ApplyToIterator(request, applyTo);
     }
 
     /**
      * Returns an external form of the given path prepending the context path
      * and appending a display extension.
-     * 
+     *
      * @param path the path to externalize
      * @return the url
      */
@@ -164,7 +164,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
 
     /**
      * Resolves the given path with respect to the current root path.
-     * 
+     *
      * @param relPath the path to resolve
      * @return the given path if it starts with a '/'; a resolved path
      *         otherwise.
@@ -219,9 +219,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      * syntax is supported: <xmp> | first | before all child nodes | before A |
      * before child node A | after A | after child node A | last | after all
      * nodes | N | at a specific position, N being an integer </xmp>
-     * 
-     * @param node node to order
-     * @param command specifies the ordering type
+     *
+     * @param item node to order
      * @throws RepositoryException if an error occurs
      */
     protected void orderNode(SlingHttpServletRequest request, Item item)
@@ -315,20 +314,20 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
         private final ResourceResolver resolver;
         private final Resource baseResource;
         private final String[] paths;
-        
+
         private int pathIndex;
-        
+
         private Resource nextResource;
-        
+
         ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
             this.resolver = request.getResourceResolver();
             this.baseResource = request.getResource();
             this.paths = paths;
             this.pathIndex = 0;
-            
+
             nextResource = seek();
         }
-        
+
         public boolean hasNext() {
             return nextResource != null;
         }
@@ -337,17 +336,17 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            
+
             Resource result = nextResource;
             nextResource = seek();
-            
+
             return result;
         }
 
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
         private Resource seek() {
             while (pathIndex < paths.length) {
                 String path = paths[pathIndex];
@@ -358,7 +357,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                     return res;
                 }
             }
-            
+
             // no more elements in the array
             return null;
         }
