@@ -23,10 +23,13 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 public class MockServiceReference implements ServiceReference {
 
+    private static long serviceIdCounter = 0;
+    
     private Bundle bundle;
 
     private Dictionary<String, Object> props;
@@ -34,6 +37,9 @@ public class MockServiceReference implements ServiceReference {
     public MockServiceReference(Bundle bundle) {
         this.bundle = bundle;
         this.props = new Hashtable<String, Object>();
+        
+        // mockup a service id
+        props.put(Constants.SERVICE_ID, serviceIdCounter++);
     }
 
     public Bundle getBundle() {
