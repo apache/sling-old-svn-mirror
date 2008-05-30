@@ -93,9 +93,6 @@
         <module>jcr/resource</module>
         <module>jcr/webdav</module>
         
-        <!-- OSGi -->
-        <module>osgi/obr</module>
-
         <!-- Servlets -->
         <module>servlets/resolver</module>
         <module>servlets/get</module>
