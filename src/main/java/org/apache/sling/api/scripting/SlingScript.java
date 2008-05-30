@@ -61,7 +61,7 @@ public interface SlingScript {
      *            evaluating the script. Any bound variables must conform to the
      *            requirements of the {@link SlingBindings} predefined variables
      *            set.
-     * @param name The name of the method to call.
+     * @param method The name of the method to call.
      * @param args The arguments for the method call.
      * @return The value returned by the method from the script.
      * @throws ScriptEvaluationException If an error occurrs executing the

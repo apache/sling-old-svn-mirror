@@ -34,7 +34,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
  * exceptions according to the intentions of the Servlet API rather than
  * throwing their Sling RuntimeException counter parts. This is done to easy the
  * integration with traditional servlets.
- * 
+ *
  * @see SlingSafeMethodsServlet for more information on supporting more HTTP
  *      methods
  */
@@ -42,7 +42,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
 
     /**
      * Called by the
-     * {@link #mayService(HttpServletRequest, HttpServletResponse)} method to
+     * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to
      * handle an HTTP <em>POST</em> request.
      * <p>
      * This default implementation reports back to the client that the method is
@@ -50,7 +50,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * <p>
      * Implementations of this class should overwrite this method with their
      * implementation for the HTTP <em>POST</em> method support.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
@@ -65,7 +65,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
 
     /**
      * Called by the
-     * {@link #mayService(HttpServletRequest, HttpServletResponse)} method to
+     * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to
      * handle an HTTP <em>PUT</em> request.
      * <p>
      * This default implementation reports back to the client that the method is
@@ -73,7 +73,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * <p>
      * Implementations of this class should overwrite this method with their
      * implementation for the HTTP <em>PUT</em> method support.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
@@ -88,7 +88,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
 
     /**
      * Called by the
-     * {@link #mayService(HttpServletRequest, HttpServletResponse)} method to
+     * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to
      * handle an HTTP <em>DELETE</em> request.
      * <p>
      * This default implementation reports back to the client that the method is
@@ -96,7 +96,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * <p>
      * Implementations of this class should overwrite this method with their
      * implementation for the HTTP <em>DELETE</em> method support.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
@@ -118,7 +118,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * <em>POST</em>, <em>PUT</em> and <em>DELETE</em> and returns
      * <code>true</code> if any of these methods is requested. Otherwise
      * <code>false</code> is just returned.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @return <code>true</code> if the requested method (<code>request.getMethod()</code>)
@@ -156,7 +156,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
 
     /**
      * Helper method called by
-     * {@link #doOptions(HttpServletRequest, HttpServletResponse)} to calculate
+     * {@link #doOptions(SlingHttpServletRequest, SlingHttpServletResponse)} to calculate
      * the value of the <em>Allow</em> header sent as the response to the HTTP
      * <em>OPTIONS</em> request.
      * <p>
@@ -164,7 +164,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * support for the <em>POST</em>, <em>PUT</em> and <em>DELETE</em>
      * methods in addition to the methods returned by the base class
      * implementation.
-     * 
+     *
      * @param declaredMethods The public and protected methods declared in the
      *            extension of this class.
      * @return A <code>StringBuffer</code> containing the list of HTTP methods
@@ -196,7 +196,7 @@ public class SlingAllMethodsServlet extends SlingSafeMethodsServlet {
      * <p>
      * This method may be used to make sure a method is actually overwritten and
      * not just the default implementation.
-     * 
+     *
      * @param method The Method to check
      * @param className The name of class assumed to contained the initial
      *            declaration of the method.

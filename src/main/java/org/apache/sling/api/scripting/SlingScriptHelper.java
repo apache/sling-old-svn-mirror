@@ -120,15 +120,15 @@ public interface SlingScriptHelper {
     /**
      * Lookup a single service
      *
-     * @param serviceName The name (interface) of the service.
+     * @param serviceType The type (interface) of the service.
      * @return The service instance, or null if the service is not available.
      */
-    <ServiceType> ServiceType getService(Class<ServiceType> type);
+    <ServiceType> ServiceType getService(Class<ServiceType> serviceType);
 
     /**
      * Lookup one or several services
      *
-     * @param serviceName The name (interface) of the service.
+     * @param serviceType The type (interface) of the service.
      * @param filter An optional filter (LDAP-like, see OSGi spec)
      * @return The services object or null.
      * @throws InvalidServiceFilterSyntaxException If the <code>filter</code>
