@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.felix.framework.Logger;
 import org.apache.sling.commons.log.LogManager;
+import org.apache.sling.launcher.app.ClassLoaderResourceProvider;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.osgi.framework.BundleException;
