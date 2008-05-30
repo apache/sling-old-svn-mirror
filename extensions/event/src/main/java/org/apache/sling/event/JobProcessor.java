@@ -30,7 +30,7 @@ public interface JobProcessor {
      * Execute the job.
      * If the job fails with a thrown exception/throwable, the process will not be rescheduled.
      *
-     * @param jbo The event containing the job description.
+     * @param job The event containing the job description.
      * @return True if the job could be finished (either successful or by an error).
      *         Return false if the job should be rescheduled.
      */
