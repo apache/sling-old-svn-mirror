@@ -234,7 +234,6 @@ public abstract class EventUtil {
          * exceeded, <code>false</code> will be returned.
          * @param job The job.
          * @param eventNodePath The storage node in the repository.
-         * @param lockToken The lock token locking the node.
          * @param reschedule Should the event be rescheduled?
          * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
          */
