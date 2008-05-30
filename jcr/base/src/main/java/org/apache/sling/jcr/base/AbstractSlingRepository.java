@@ -172,11 +172,23 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * sure the SLING-256 rule is enforced.
      */
     public final String getDefaultWorkspace() {
-        if (defaultWorkspace == null || defaultWorkspace.trim().length() == 0) {
-            // SLING-256
-            return null;
+        return defaultWorkspace;
+    }
+
+    private void setDefaultWorkspace(String defaultWorkspace) {
+        // normalize the default workspace name: trim leading and trailing
+        // blanks and set to null in case the trimmed name is empty
+        if (defaultWorkspace != null) {
+            defaultWorkspace = defaultWorkspace.trim();
+            if (defaultWorkspace.length() == 0) {
+                defaultWorkspace = null;
+            }
         }
-        return this.defaultWorkspace;
+
+        log(LogService.LOG_DEBUG,
+            "setDefaultWorkspace: Setting the default workspace to "
+                + defaultWorkspace);
+        this.defaultWorkspace = defaultWorkspace;
     }
 
     /**
@@ -225,7 +237,19 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         try {
             log(LogService.LOG_DEBUG, "login: Logging in to workspace '"
                 + workspace + "'");
-            return this.getPoolManager().login(credentials, workspace);
+            Session session = getPoolManager().login(credentials, workspace);
+
+            // if the defualt workspace is null, acquire a session from the pool
+            // and use the workspace used as the new default workspace
+            if (workspace == null) {
+                String defaultWorkspace = session.getWorkspace().getName();
+                log(LogService.LOG_DEBUG, "login: Using " + defaultWorkspace
+                    + " as the default workspace instead of 'null'");
+                setDefaultWorkspace(defaultWorkspace);
+            }
+
+            return session;
+
         } catch (NoSuchWorkspaceException nswe) {
             // if the desired workspace is the default workspace, try to create
             // (but not if using the repository-supplied default workspace)
@@ -577,14 +601,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> properties = componentContext.getProperties();
 
-        // ensure the default workspace is not null and not empty
-        this.defaultWorkspace = this.getProperty(properties,
-            PROPERTY_DEFAULT_WORKSPACE, null);
-        if (this.defaultWorkspace != null
-            && this.defaultWorkspace.length() == 0) {
-            this.defaultWorkspace = null;
-        }
-
+        setDefaultWorkspace(this.getProperty(properties,
+            PROPERTY_DEFAULT_WORKSPACE, null));
         this.anonUser = this.getProperty(properties, PROPERTY_ANONYMOUS_USER,
             DEFAULT_ANONYMOUS_USER);
         this.anonPass = this.getProperty(properties, PROPERTY_ANONYMOUS_PASS,
