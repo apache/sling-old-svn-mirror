@@ -78,6 +78,22 @@
         </plugins>
     </build>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                  <!-- No javadocs at all -->
+                    <excludePackageNames>
+                        org.apache.sling.commons.log,
+                        org/slf4j/impl
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
     <dependencies>
         <!-- Redirection of commons logging and log4j to SLF4J -->
         <dependency>
