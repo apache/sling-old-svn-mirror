@@ -152,7 +152,7 @@ public class SlingBindings extends HashMap<String, Object> {
     }
 
     /**
-     * Helper method which invokes {@link #put(String, Object)} only if the value is not null.
+     * Helper method which invokes {@link #put(Object, Object)} only if the value is not null.
      */
     protected void safePut(final String key, final Object value) {
         if ( value != null ) {

@@ -64,7 +64,7 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * exceptions according to the intentions of the Servlet API rather than
  * throwing their Sling RuntimeException counter parts. This is done to easy the
  * integration with traditional servlets.
- * 
+ *
  * @see SlingAllMethodsServlet
  */
 public class SlingSafeMethodsServlet extends GenericServlet {
@@ -73,18 +73,18 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * Handles the <em>HEAD</em> method.
      * <p>
      * This base implementation just calls the
-     * {@link #doGet(HttpServletRequest, HttpServletResponse)} method dropping
+     * {@link #doGet(SlingHttpServletRequest, SlingHttpServletResponse)} method dropping
      * the output. Implementations of this class may overwrite this method if
      * they have a more performing implementation. Otherwise, they may just keep
      * this base implementation.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response which only gets the headers set
      * @throws ServletException Forwarded from the
-     *             {@link #doGet(HttpServletRequest, HttpServletResponse)}
+     *             {@link #doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             method called by this implementation.
      * @throws IOException Forwarded from the
-     *             {@link #doGet(HttpServletRequest, HttpServletResponse)}
+     *             {@link #doGet(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             method called by this implementation.
      */
     protected void doHead(SlingHttpServletRequest request,
@@ -103,7 +103,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
 
     /**
      * Called by the
-     * {@link #mayService(HttpServletRequest, HttpServletResponse)} method to
+     * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method to
      * handle an HTTP <em>GET</em> request.
      * <p>
      * This default implementation reports back to the client that the method is
@@ -111,7 +111,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * <p>
      * Implementations of this class should overwrite this method with their
      * implementation for the HTTP <em>GET</em> method support.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
@@ -136,7 +136,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * {@link #getAllowedRequestMethods(Map)} method with the methods gathered.
      * The returned value is then used as the value of the <code>Allow</code>
      * header set.
-     * 
+     *
      * @param request The HTTP request object. Not used.
      * @param response The HTTP response object on which the header is set.
      * @throws ServletException Not thrown by this implementation.
@@ -156,7 +156,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * <p>
      * Extensions of this class do not generally need to overwrite this method
      * as it contains all there is to be done to the <em>TRACE</em> method.
-     * 
+     *
      * @param request The HTTP request whose headers are returned.
      * @param response The HTTP response into which the request headers are
      *            written.
@@ -201,7 +201,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
     }
 
     /**
-     * Called by the {@link #service(HttpServletRequest, HttpServletResponse)}
+     * Called by the {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
      * method to handle a request for an HTTP method, which is not known and
      * handled by this class or its extension.
      * <p>
@@ -210,10 +210,10 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * <p>
      * This method should be overwritten with great care. It is better to
      * overwrite the
-     * {@link #mayService(HttpServletRequest, HttpServletResponse)} method and
+     * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method and
      * add support for any extension HTTP methods through an additional doXXX
      * method.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Not thrown by this implementation.
@@ -240,7 +240,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * call this base implementation and in case <code>false</code> is
      * returned add handling for any other method and of course return whether
      * the requested method was known or not.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @return <code>true</code> if the requested method (<code>request.getMethod()</code>)
@@ -278,7 +278,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * unhandled HTTP request method. In case of HTTP/1.1 a 405 status code
      * (Method Not Allowed) is returned, otherwise a 400 status (Bad Request) is
      * returned.
-     * 
+     *
      * @param request The HTTP request from which the method and protocol values
      *            are extracted to build the appropriate message.
      * @param response The HTTP response to which the error status is sent.
@@ -305,29 +305,29 @@ public class SlingSafeMethodsServlet extends GenericServlet {
     /**
      * Called by the {@link #service(ServletRequest, ServletResponse)} method to
      * handle the HTTP request. This implementation calls the
-     * {@link #mayService(HttpServletRequest, HttpServletResponse)} method and
+     * {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method and
      * depedending on its return value call the
-     * {@link #doGeneric(HttpServletRequest, HttpServletResponse)} method. If
-     * the {@link #mayService(HttpServletRequest, HttpServletResponse)} method
+     * {@link #doGeneric(SlingHttpServletRequest, SlingHttpServletResponse)} method. If
+     * the {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method
      * can handle the request, the
-     * {@link #doGeneric(HttpServletRequest, HttpServletResponse)} method is not
+     * {@link #doGeneric(SlingHttpServletRequest, SlingHttpServletResponse)} method is not
      * called otherwise it is called.
      * <p>
      * Implementations of this class should not generally overwrite this method.
-     * Rather the {@link #mayService(HttpServletRequest, HttpServletResponse)}
+     * Rather the {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)}
      * method should be overwritten to add support for more HTTP methods.
-     * 
+     *
      * @param request The HTTP request
      * @param response The HTTP response
      * @throws ServletException Forwarded from the
-     *             {@link #mayService(HttpServletRequest, HttpServletResponse)}
+     *             {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             or
-     *             {@link #doGeneric(HttpServletRequest, HttpServletResponse)}
+     *             {@link #doGeneric(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             methods.
      * @throws IOException Forwarded from the
-     *             {@link #mayService(HttpServletRequest, HttpServletResponse)}
+     *             {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             or
-     *             {@link #doGeneric(HttpServletRequest, HttpServletResponse)}
+     *             {@link #doGeneric(SlingHttpServletRequest, SlingHttpServletResponse)}
      *             methods.
      */
     protected void service(SlingHttpServletRequest request,
@@ -349,7 +349,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * method if the request is a HTTP request.
      * <p>
      * Implementations of this class will not generally overwrite this method.
-     * 
+     *
      * @param req The Servlet request
      * @param res The Servlet response
      * @throws ServletException If the request is not a HTTP request or
@@ -385,7 +385,7 @@ public class SlingSafeMethodsServlet extends GenericServlet {
 
     /**
      * Helper method called by
-     * {@link #doOptions(HttpServletRequest, HttpServletResponse)} to calculate
+     * {@link #doOptions(SlingHttpServletRequest, SlingHttpServletResponse)} to calculate
      * the value of the <em>Allow</em> header sent as the response to the HTTP
      * <em>OPTIONS</em> request.
      * <p>
@@ -396,10 +396,10 @@ public class SlingSafeMethodsServlet extends GenericServlet {
      * <p>
      * Implementations of this class may overwrite this method check for more
      * methods supported by the extension (generally the same list as used in
-     * the {@link #mayService(HttpServletRequest, HttpServletResponse)} method).
+     * the {@link #mayService(SlingHttpServletRequest, SlingHttpServletResponse)} method).
      * This base class implementation should always be called to make sure the
      * default HTTP methods are included in the list.
-     * 
+     *
      * @param declaredMethods The public and protected methods declared in the
      *            extension of this class.
      * @return A <code>StringBuffer</code> containing the list of HTTP methods
@@ -430,12 +430,12 @@ public class SlingSafeMethodsServlet extends GenericServlet {
     /**
      * Returns a map of methods declared by the class indexed by method name.
      * This method is called by the
-     * {@link #doOptions(HttpServletRequest, HttpServletResponse)} method to
+     * {@link #doOptions(SlingHttpServletRequest, SlingHttpServletResponse)} method to
      * find the methods to be checked by the
      * {@link #getAllowedRequestMethods(Map)} method. Note, that only extension
      * classes of this class are considered to be sure to not account for the
      * default implementations of the doXXX methods in this class.
-     * 
+     *
      * @param c The <code>Class</code> to get the declared methods from
      * @return The Map of methods considered for support checking.
      */
