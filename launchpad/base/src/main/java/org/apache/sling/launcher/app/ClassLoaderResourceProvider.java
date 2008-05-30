@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.app.main;
+package org.apache.sling.launcher.app;
 
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -29,13 +29,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
-import org.apache.sling.launcher.app.ResourceProvider;
-import org.apache.sling.launcher.app.Sling;
 
 /**
  * The <code>ClassLoaderResourceProvider</code> TODO
  */
-class ClassLoaderResourceProvider extends ResourceProvider {
+public class ClassLoaderResourceProvider extends ResourceProvider {
 
     private final ClassLoader classLoader;
 

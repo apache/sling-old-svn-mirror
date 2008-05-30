@@ -38,6 +38,7 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.framework.Logger;
+import org.apache.sling.launcher.app.ClassLoaderResourceProvider;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
@@ -358,7 +359,7 @@ public class SlingServlet extends GenericServlet {
     }
 
     private static class ServletContextResourceProvider extends
-            ResourceProvider {
+            ClassLoaderResourceProvider {
 
         /**
          * The root folder for internal web application files (value is
@@ -367,8 +368,9 @@ public class SlingServlet extends GenericServlet {
         private static final String WEB_INF = "/WEB-INF";
 
         private ServletContext servletContext;
-
+        
         private ServletContextResourceProvider(ServletContext servletContext) {
+            super(SlingServlet.class.getClassLoader());
             this.servletContext = servletContext;
         }
 
@@ -385,6 +387,23 @@ public class SlingServlet extends GenericServlet {
                 resources = servletContext.getResourcePaths(WEB_INF + path); // unchecked
             }
 
+            Iterator resourceIterator;
+            if ( resources == null || resources.isEmpty() ) {
+                // fall back to the class path
+                resourceIterator = super.getChildren(path);
+                
+                if(resourceIterator.hasNext()) {
+                    return resourceIterator;
+                }
+
+                // fall back to WEB-INF within the class path
+                resourceIterator = super.getChildren(WEB_INF + path);
+
+                if(resourceIterator.hasNext()) {
+                    return resourceIterator;
+                }
+            }
+            
             if ( resources == null ) {
                 return Collections.EMPTY_LIST.iterator();
             }
@@ -410,7 +429,22 @@ public class SlingServlet extends GenericServlet {
                 }
 
                 // otherwise try WEB-INF location
-                return servletContext.getResource(WEB_INF + path);
+                resource = servletContext.getResource(WEB_INF + path);
+                if(resource != null) {
+                    return resource;
+                }
+                
+                // try classpath
+                resource = super.getResource(path);
+                if(resource != null) {
+                    return resource;
+                }
+
+                // try WEB-INF within the classpath
+                resource = super.getResource(WEB_INF + path);
+                if(resource != null) {
+                    return resource;
+                }
 
             } catch (MalformedURLException mue) {
                 servletContext.log("Failure to get resource " + path, mue);
