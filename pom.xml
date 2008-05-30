@@ -48,6 +48,20 @@
             http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/base
         </url>
     </scm>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                  <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <dependencies>
         <dependency>
