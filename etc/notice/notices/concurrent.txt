@@ -1,0 +1,9 @@
+------------------------------------------------------------------------------
+Concurrent library notice
+------------------------------------------------------------------------------
+This product includes concurrent library software developed by Doug Lea, 
+http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html
+
+That code is public domain and includes classes adapted from Sun JDK source
+code, used with permission see
+http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/sun-u.c.license.pdf

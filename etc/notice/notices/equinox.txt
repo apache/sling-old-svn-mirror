@@ -1,0 +1,9 @@
+------------------------------------------------------------------------------
+Equinox notice
+------------------------------------------------------------------------------
+This product includes Equinox software developed by the Eclipse foundation, 
+distributed under EPL license.
+
+EPL (http://www.eclipse.org/legal/epl-v10.html) is a reciprocal license, but 
+this product uses that software in binary form only, without modifications.
+

@@ -1,0 +1,5 @@
+------------------------------------------------------------------------------
+JSON notice
+------------------------------------------------------------------------------
+This product includes software developed at json.org, under BSD-like json.org
+license, see http://www.json.org/license.html .
