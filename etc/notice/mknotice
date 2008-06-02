@@ -7,6 +7,18 @@
 # names in this list to concatenate a series of notice
 # files found under this directory.
 #
+# To generate a NOTICE file, run this script from the
+#Êdirectory that contains the module's pom.xml file.
+#
+# This script must be in the same directory as the
+#Ênoticemap.txt, which maps dependency names to the
+#Ênames of NOTICE fragment files.
+#
+# Those NOTICE fragment files are found under the
+#Ê"notices" directory that must be found in hte
+# directory that contains this script.
+# 
+
 ME=$(basename $0)
 MYDIR=$(dirname $0)
 NOTICES=$MYDIR/notices
