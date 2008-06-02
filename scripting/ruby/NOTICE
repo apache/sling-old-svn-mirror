@@ -1,9 +1,26 @@
-Apache Sling JRuby Scripting Support
+------------------------------------------------------------------------------
+Apache Sling - Scripting - Ruby Support
 Copyright 2007-2008 The Apache Software Foundation
+------------------------------------------------------------------------------
+Do not edit this NOTICE file directly, it is generated from the scripts
+found under etc/notice - see the scripts there for more info.
+------------------------------------------------------------------------------
+
+Based on source code originally developed by
+Day Software (http://www.day.com/).
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 Licensed under the Apache License 2.0.
 
-This product includes software developed at
-JRuby project in The Codehaus (http://jruby.codehaus.org/).
+See http://www.apache.org/legal/3party.html for the ASF policy on 
+third-party licenses.
+
+------------------------------------------------------------------------------
+Codehaus JRuby notice
+------------------------------------------------------------------------------
+This product includes software developed at jruby.codehaus.org, distributed 
+under a tri-license (CPL/GPL/LGPL).
+
+CPL is a reciprocal license, but this product uses it in binary form only,
+with no modifications.
