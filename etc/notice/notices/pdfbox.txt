@@ -1,0 +1,5 @@
+------------------------------------------------------------------------------
+PDFBox notice
+------------------------------------------------------------------------------
+This product includes software developed at pdfbox.org, www.pdfbox.org, under 
+Apache License.

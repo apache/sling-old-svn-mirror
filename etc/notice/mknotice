@@ -1,0 +1,90 @@
+#!/bin/bash
+# Generate NOTICE files for ASF projects based on Maven
+# dependencies.
+#
+# Runs mvn dependency:resolve, filters the output to
+# get the list of non-ASF dependencies, and uses the
+# names in this list to concatenate a series of notice
+# files found under this directory.
+#
+ME=$(basename $0)
+MYDIR=$(dirname $0)
+NOTICES=$MYDIR/notices
+NOTICEMAP=$MYDIR/noticemap.txt
+GLOBAL_PREFIX=$NOTICES/prefix.txt
+PROJECT_NAME=""
+
+fatal() {
+  echo ""
+  echo "$0: FATAL ERROR:" $* >&2
+  exit 1
+}
+
+set_project_name() {
+  PROJECT_NAME=$( \
+	  mvn -o validate \
+	  | grep "INFO.*Building" | head -1 \
+	  | sed 's/.*INFO.*Building//' \
+	  | sed 's/Sling/Apache Sling/g'
+	)	  
+}
+
+add_notice() {
+  NFILE=$NOTICES/$1.notice.txt
+  [[ -f $NFILE ]] || fatal "$NFILE not found"
+}
+
+# Collect dependencies of current module, and filter their names
+# so that they can be used as input to map_deps
+collect_deps() {
+  NO_NOTICE_FILTER="org.apache|commons-|javax."
+  
+  mvn -o dependency:resolve \
+  | grep '\[INFO\].*:.*:.*:.*' \
+  | grep -v 'Finished at:' \
+  | egrep -v "$NO_NOTICE_FILTER" | awk -F' ' '{ print $2 }' \
+  | cut -d':' -f1-2
+}
+
+# Map a list of dependencies to their notice files
+# Input is like
+#	org.eclipse.equinox.http:servlet
+#	org.slf4j:jcl104-over-slf4j
+#	org.slf4j:slf4j-api
+#	org.slf4j:slf4j-log4j12
+#
+# and output is built from the NOTICEMAP:
+#	equinox.txt
+#	slf4j.txt
+map_deps() {
+    [[ -f $NOTICEMAP ]] || fatal "$NOTICEMAP not found"
+	while read dep
+	do
+		mapped=$(grep "^${dep}=" $NOTICEMAP)
+		[[ -n "$mapped" ]] || fatal "No mapping found for '$dep' in $NOTICEMAP"
+		echo "$mapped"
+	done | cut -d= -f2
+}
+
+#Êcollect dependencies, map them to their notice
+# files and concatenate those
+generate_notice() {
+	set_project_name
+	[[ -n "$PROJECT_NAME" ]] || fatal "Project name not found"
+	echo "------------------------------------------------------------------------------"
+	echo $PROJECT_NAME  
+	cat $GLOBAL_PREFIX || fatal "prefix output failed"
+	collect_deps | map_deps | sort -u | while read notice
+	do
+	  if [[ "$notice" = NO_NOTICE ]]
+	  then
+	  	continue
+	  fi
+	  notice=$NOTICES/$notice
+	  [[ -f $notice ]] || fatal "Notice file $notice not found"
+	  cat $notice
+	  echo ""
+	done
+}
+
+generate_notice
