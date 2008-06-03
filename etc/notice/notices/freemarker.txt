@@ -1,2 +1,2 @@
-This product includes FreeMarker software developed by the Visigoth Software 
-Society (http://www.visigoths.org/), under a BSD-like license.
+This product includes FreeMarker software developed by the
+Visigoth Software Society (http://www.visigoths.org/).

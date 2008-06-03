@@ -1,2 +1,3 @@
-This product includes Pax software developed at ops4j.org, under Apache
-License (http://wiki.ops4j.org/confluence/display/ops4j/Licensing).
+# This product includes Pax software developed at ops4j.org, under Apache
+# License (http://wiki.ops4j.org/confluence/display/ops4j/Licensing).
+# No required notices.

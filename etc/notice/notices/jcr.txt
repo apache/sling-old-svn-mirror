@@ -1,2 +1,3 @@
-This product includes software developed under the JCP from 
-http://www.jcp.org. Copyright 2005 Day Management AG.
+# This product includes software developed under the JCP from 
+# http://www.jcp.org. Copyright 2005 Day Management AG.
+# No required notices.

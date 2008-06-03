@@ -1,2 +1,4 @@
-This product includes software developed at codehaus.org, under BSD-like 
-license.
+# This product includes software developed at codehaus.org, under BSD-like 
+# license.
+# What code?
+# No required notices.

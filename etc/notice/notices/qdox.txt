@@ -1,2 +1,3 @@
-This product includes software developed at qdox.codehaus.org, under 
-Apache License.
+# This product includes software developed at qdox.codehaus.org, under 
+# Apache License.
+# No required notices.
