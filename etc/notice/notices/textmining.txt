@@ -1,2 +1,4 @@
-This software contains code written by Ryan Ackley.
-Please go to http://www.textmining.org for the latest version. 
+# This software contains tm-extractors-0.4.jar written by Ryan Ackley,
+# originally pulished under the BSD license.
+# Please go to http://www.textmining.org for later versions. 
+# No required notices.

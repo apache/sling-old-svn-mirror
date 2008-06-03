@@ -1,3 +1,3 @@
-This product includes software developed at junit.org, distributed under CPL 
-license (http://sourceforge.net/projects/junit/).
-
+# This product includes software developed at junit.org, distributed under CPL 
+# license (http://sourceforge.net/projects/junit/).
+# No required notices.

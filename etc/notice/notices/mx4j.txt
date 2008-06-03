@@ -1,2 +1,2 @@
-This product includes software developed at http://mx4j.sourceforge.net/, 
-http://kxml.sourceforge.net/, under Apache License.
+This product includes software developed by the
+MX4J project (http://mx4j.sourceforge.net).
