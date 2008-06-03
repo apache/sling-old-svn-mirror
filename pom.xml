@@ -101,21 +101,13 @@
         <!-- Scripting Support -->
         <module>scripting/api</module>
         <module>scripting/core</module>
-        <module>scripting/freemarker</module>
         <module>scripting/javascript</module>
         <module>scripting/jsp</module>
         <module>scripting/jsp-taglib</module>
-        <module>scripting/jst</module>
-        <module>scripting/ruby</module>
-        <module>scripting/velocity</module>
         
         <!-- Extensions -->
         <module>extensions/adapter</module>
-        <module>extensions/apt/parser</module>
-        <module>extensions/apt/servlet</module>
         <module>extensions/bundleresource</module>
-        <module>extensions/dojo</module>
-        <module>extensions/dojo-sling</module>
         <module>extensions/event</module>
         <module>extensions/httpauth</module>
         <module>extensions/i18n</module>
@@ -130,7 +122,6 @@
         <module>launchpad/base</module>
         <module>launchpad/content</module>
         <module>launchpad/app</module>
-        <module>launchpad/jcrapp</module>
 
     </modules>
     <distributionManagement>
@@ -153,19 +144,33 @@
     </distributionManagement>
 
     <profiles>
-      <profile>
-        <!--
-          Launchpad build is relatively slow when integration tests
-          run - having it here makes it possible to disable it.
-        -->
-        <id>launchpadBuild</id>
-        <activation>
-          <activeByDefault>true</activeByDefault>
-        </activation>
-        <modules>
-          <module>launchpad/webapp</module>
-        </modules>
-      </profile>
+        <profile>
+	        <!--
+	          Launchpad build is relatively slow when integration tests
+	          run - having it here makes it possible to disable it.
+	        -->
+            <id>launchpadBuild</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>launchpad/webapp</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>allModules</id>
+            <modules>
+                <module>scripting/freemarker</module>
+                <module>scripting/jst</module>
+                <module>scripting/ruby</module>
+                <module>scripting/velocity</module>
+                <module>extensions/apt/parser</module>
+                <module>extensions/apt/servlet</module>
+                <module>extensions/dojo</module>
+                <module>extensions/dojo-sling</module>
+                <module>launchpad/jcrapp</module>
+            </modules>
+        </profile>
     </profiles>
 
 </project>
