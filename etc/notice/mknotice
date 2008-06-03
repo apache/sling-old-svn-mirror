@@ -26,6 +26,7 @@ NOTICEMAP=$MYDIR/noticemap.txt
 GLOBAL_PREFIX=$NOTICES/prefix.txt
 PROJECT_NAME=""
 MVN_OPT="-o"
+LOCAL_NOTICE="module.notice.txt"
 
 fatal() {
   echo ""
@@ -88,22 +89,25 @@ generate_notice() {
 	[[ -n "$PROJECT_NAME" ]] || fatal "Project name not found"
 	echo $PROJECT_NAME  
 	cat $GLOBAL_PREFIX || fatal "prefix output failed"
-	collect_deps | map_deps | sort -u | while read notice
-	do
-	  if [[ "$notice" = NO_NOTICE ]]
-	  then
-	  	continue
-	  fi
-	  notice=$NOTICES/$notice
-	  [[ -f $notice ]] || fatal "Notice file $notice not found"
-	  if [[ "$MKNOTICE_DEBUG" -eq 1 ]]
-	  then
-	    echo "[DEBUG] $ME: including notice file $notice"
-	  fi
-	  cat $notice
-	  echo ""
-	  echo ""
-	done | cat -s
+	( 
+		collect_deps | map_deps | sort -u | while read notice
+		do
+		  if [[ "$notice" = NO_NOTICE ]]
+		  then
+		  	continue
+		  fi
+		  notice=$NOTICES/$notice
+		  [[ -f $notice ]] || fatal "Notice file $notice not found"
+		  if [[ "$MKNOTICE_DEBUG" -eq 1 ]]
+		  then
+		    echo "[DEBUG] $ME: including notice file $notice"
+		  fi
+		  cat $notice
+		  echo ""
+		  echo ""
+		done
+		[[ -f $LOCAL_NOTICE ]] && cat $LOCAL_NOTICE
+	) | cat -s
 }
 
 generate_notice
