@@ -25,13 +25,14 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.engine.RequestLog;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>RequestLoggerService</code> is a factory component which gets
  * configuration to register loggers for the {@link RequestLogger}.
  *
- * @scr.component label="%request.log.service.name"
+ * @ scr.component label="%request.log.service.name"
  *                description="%request.log.service.description"
  *                factory="org.apache.sling.engine.impl.log.RequestLoggerService"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -123,12 +124,26 @@ public class RequestLoggerService {
 
     // ---------- SCR integration ----------------------------------------------
 
+    // manual service registration due to component factory bug in Felix SCR 1.0.0
+    private ServiceRegistration serviceRegistration;
+    
     @SuppressWarnings("unchecked")
     protected void activate(ComponentContext context) {
         this.setup(context.getBundleContext(), context.getProperties());
+        
+        // SLING-502: do manually due to component factory bug in Felix SCR 1.0.0
+        serviceRegistration = context.getBundleContext().registerService(
+            "org.apache.sling.engine.impl.log.RequestLoggerService", this,
+            context.getProperties());
     }
 
     protected void deactivate(ComponentContext context) {
+        // SLING-502: do manually due to component factory bug in Felix SCR 1.0.0
+        if (serviceRegistration != null) {
+            serviceRegistration.unregister();
+            serviceRegistration = null;
+        }
+        
         this.shutdown();
     }
 
