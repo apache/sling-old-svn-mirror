@@ -17,7 +17,7 @@
 # Those NOTICE fragment files are found under the
 #Ê"notices" directory that must be found in hte
 # directory that contains this script.
-# 
+#
 
 ME=$(basename $0)
 MYDIR=$(dirname $0)
@@ -30,7 +30,7 @@ LOCAL_NOTICE="module.notice.txt"
 
 fatal() {
   echo ""
-  echo "$0: FATAL ERROR:" $* >&2
+  echo "$0 ($PWD): FATAL ERROR:" $* >&2
   exit 1
 }
 
@@ -51,12 +51,12 @@ add_notice() {
 # Collect dependencies of current module, and filter their names
 # so that they can be used as input to map_deps
 collect_deps() {
-  NO_NOTICE_FILTER="org.apache|commons-|javax."
+  NO_NOTICE_FILTER="org.apache|commons-"
   GOAL="dependency:resolve"
   
   ( mvn $MVN_OPT $GOAL || fatal "mvn $MVN_OPT $GOAL failed" ) \
   | grep '\[INFO\].*:.*:.*:.*' \
-  | grep -v "(scope[ ]*=[ ]*test" \
+  | grep -v ":test$" \
   | grep -v 'Finished at:' \
   | egrep -v "$NO_NOTICE_FILTER" | awk -F' ' '{ print $2 }' \
   | cut -d':' -f1-2
