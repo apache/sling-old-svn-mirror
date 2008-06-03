@@ -17,7 +17,7 @@
 if(!dojo._hasResource["dojox.data.SlingPropertyStore"]){ //_hasResource checks added by build. Do not use _hasResource directly in your code.
 dojo._hasResource["dojox.data.SlingPropertyStore"] = true;
 
-
+dojo.require("dojo.data.util.simpleFetch");
 dojo.provide("dojox.data.SlingPropertyStore");
 
 dojo.declare("dojox.data.SlingPropertyStore", null, {
