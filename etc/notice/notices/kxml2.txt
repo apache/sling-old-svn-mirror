@@ -1,2 +1,3 @@
 This product includes kXML2 software developed at 
-http://kxml.sourceforge.net/, under BSD license.
+http://kxml.sourceforge.net/, under BSD license. 
+Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany.
