@@ -503,17 +503,52 @@ public class JobEventHandler
         }
     }
 
+    public static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
+    public static final char REPLACEMENT_CHAR = '_';
+
+    public static String filter(final String nodeName) {
+        final StringBuffer sb  = new StringBuffer();
+        char lastAdded = 0;
+
+        for(int i=0; i < nodeName.length(); i++) {
+            final char c = nodeName.charAt(i);
+            char toAdd = c;
+
+            if (ALLOWED_CHARS.indexOf(c) < 0) {
+                if (lastAdded == REPLACEMENT_CHAR) {
+                    // do not add several _ in a row
+                    continue;
+                }
+                toAdd = REPLACEMENT_CHAR;
+
+            } else if(i == 0 && Character.isDigit(c)) {
+                sb.append(REPLACEMENT_CHAR);
+            }
+
+            sb.append(toAdd);
+            lastAdded = toAdd;
+        }
+
+        if (sb.length()==0) {
+            sb.append(REPLACEMENT_CHAR);
+        }
+
+        return sb.toString();
+    }
+
     /**
      * Create a unique node name for the job.
      */
     protected String getNodeName(Event event) {
         final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
+        final String name;
         if ( jobId != null ) {
-            final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC)).replace('/', '.');
-            return jobTopic + " " + jobId.replace('/', '.');
+            final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
+            name = jobTopic + " " + jobId;
+        } else {
+            name = "Job " + UUID.randomUUID().toString();
         }
-
-        return "Job " + UUID.randomUUID().toString();
+        return filter(name);
     }
 
     /**
