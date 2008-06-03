@@ -174,6 +174,10 @@
         <dependency>
             <groupId>org.textmining</groupId>
             <artifactId>tm-extractors</artifactId>
+            <!-- 
+              NOTE: tm-extractors V0.4 is under Apache License,
+              but later versions are not (SLING-494).
+            -->
             <version>0.4</version>
         </dependency>
         
