@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.0.0">
+    <scr:component enabled="true" immediate="true"
+        name="org.apache.sling.jcr.jackrabbit.server.JndiRegistrationSupport">
+        <scr:implementation
+            class="org.apache.sling.jcr.jackrabbit.server.JndiRegistrationSupport" />
+        <scr:property name="service.description"
+            value="JNDI Repository Registration" />
+        <scr:property name="java.naming.factory.initial"
+            value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory" />
+        <scr:property name="java.naming.provider.url"
+            value="http://incubator.apache.org/sling" />
+        <scr:property name="service.vendor"
+            value="The Apache Software Foundation" />
+        <scr:property name="service.pid"
+            value="org.apache.sling.jcr.jackrabbit.server.JndiRegistrationSupport" />
+        <scr:reference name="Log"
+            interface="org.osgi.service.log.LogService"
+            cardinality="0..1" policy="dynamic" bind="bindLog"
+            unbind="unbindLog" />
+        <scr:reference name="Repository"
+            interface="javax.jcr.Repository" cardinality="0..n"
+            policy="dynamic" bind="bindRepository"
+            unbind="unbindRepository" />
+    </scr:component>
+    <scr:component enabled="true" immediate="true"
+        name="org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport">
+        <scr:implementation
+            class="org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport" />
+        <scr:property name="port" type="Integer" value="1099" />
+        <scr:property name="service.description"
+            value="RMI based Repository Registration" />
+        <scr:property name="service.vendor"
+            value="The Apache Software Foundation" />
+        <scr:property name="service.pid"
+            value="org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport" />
+        <scr:reference name="Log"
+            interface="org.osgi.service.log.LogService"
+            cardinality="0..1" policy="dynamic" bind="bindLog"
+            unbind="unbindLog" />
+        <scr:reference name="Repository"
+            interface="javax.jcr.Repository" cardinality="0..n"
+            policy="dynamic" bind="bindRepository"
+            unbind="unbindRepository" />
+    </scr:component>
+    <scr:component enabled="true"
+        name="org.apache.sling.jcr.jackrabbit.server.SlingServerRepository"
+        factory="org.apache.sling.jcr.jackrabbit.server.SlingServerRepositoryFactory">
+        <scr:implementation
+            class="org.apache.sling.jcr.jackrabbit.server.SlingServerRepository" />
+        <scr:property name="service.description"
+            value="Factory for embedded Jackrabbit Repository Instances" />
+        <scr:property name="home" value="" />
+        <scr:property name="pool.maxActiveWait" type="Integer"
+            value="1" />
+        <scr:property name="admin.name" type="String" value="admin" />
+        <scr:property name="defaultWorkspace" value="" />
+        <scr:property name="poll.inactive" type="Integer" value="10" />
+        <scr:property name="admin.password" type="String" value="admin" />
+        <scr:property name="service.pid"
+            value="org.apache.sling.jcr.base.AbstractSlingRepository" />
+        <scr:property name="anonymous.password" type="String"
+            value="anonymous" />
+        <scr:property name="poll.active" type="Integer" value="10" />
+        <scr:property name="pool.maxActive" type="Integer" value="-1" />
+        <scr:property name="anonymous.name" type="String"
+            value="anonymous" />
+        <scr:property name="name" value="" />
+        <scr:property name="config" value="" />
+        <scr:property name="pool.maxIdle" type="Integer" value="10" />
+        <scr:property name="service.vendor"
+            value="The Apache Software Foundation" />
+        <scr:reference name="log"
+            interface="org.osgi.service.log.LogService"
+            cardinality="1..1" policy="static" bind="bindLog"
+            unbind="unbindLog" />
+    </scr:component>
+</components>
