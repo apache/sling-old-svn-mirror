@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.0.0">
+    <scr:component enabled="true"
+        name="org.apache.sling.engine.impl.log.RequestLoggerService"
+        factory="org.apache.sling.engine.impl.log.RequestLoggerService">
+        <scr:implementation
+            class="org.apache.sling.engine.impl.log.RequestLoggerService" />
+        <scr:property name="service.description"
+            value="Factory for configuration" />
+        <scr:property name="request.log.service.output"
+            value="request.log" />
+        <scr:property name="request.log.service.format" />
+        <scr:property name="service.vendor"
+            value="The Apache Software Foundation" />
+        <scr:property name="request.log.service.onentry" type="Boolean"
+            value="false" />
+        <scr:property name="request.log.service.outputtype"
+            type="Integer" value="0" />
+        <scr:property name="service.pid"
+            value="org.apache.sling.engine.impl.log.RequestLoggerService" />
+    </scr:component>
+</components>

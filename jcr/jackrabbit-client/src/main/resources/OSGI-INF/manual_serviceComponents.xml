@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.0.0">
+    <scr:component enabled="true"
+        name="org.apache.sling.jcr.jackrabbit.client.SlingClientRepository"
+        factory="org.apache.sling.jcr.client.SlingClientRepositoryFactory">
+        <scr:implementation
+            class="org.apache.sling.jcr.jackrabbit.client.SlingClientRepository" />
+        <scr:property name="service.description"
+            value="Factory for non-embedded JCR Repository Instances" />
+        <scr:property name="pool.maxActiveWait" type="Integer"
+            value="1" />
+        <scr:property name="admin.name" type="String" value="admin" />
+        <scr:property name="defaultWorkspace" value="" />
+        <scr:property name="poll.inactive" type="Integer" value="10" />
+        <scr:property name="admin.password" type="String" value="admin" />
+        <scr:property name="service.pid"
+            value="org.apache.sling.jcr.base.AbstractSlingRepository" />
+        <scr:property name="java.naming.factory.initial"
+            value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory" />
+        <scr:property name="anonymous.password" type="String"
+            value="anonymous" />
+        <scr:property name="poll.active" type="Integer" value="10" />
+        <scr:property name="pool.maxActive" type="Integer" value="-1" />
+        <scr:property name="java.naming.provider.url"
+            value="http://incubator.apache.org/sling" />
+        <scr:property name="anonymous.name" type="String"
+            value="anonymous" />
+        <scr:property name="name" value="jackrabbit" />
+        <scr:property name="pool.maxIdle" type="Integer" value="10" />
+        <scr:property name="service.vendor"
+            value="The Apache Software Foundation" />
+        <scr:reference name="log"
+            interface="org.osgi.service.log.LogService"
+            cardinality="1..1" policy="static" bind="bindLog"
+            unbind="unbindLog" />
+    </scr:component>
+</components>

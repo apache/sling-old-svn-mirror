@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metatype:MetaData
+    xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0"
+    localization="metatype">
+    <metatype:OCD
+        id="org.apache.sling.engine.impl.auth.SlingAuthenticator"
+        name="%auth.name" description="%auth.description">
+        <metatype:AD id="auth.sudo.cookie" type="String"
+            default="sling.sudo" name="%auth.sudo.cookie.name"
+            description="%auth.sudo.cookie.description" />
+        <metatype:AD id="auth.sudo.parameter" type="String"
+            default="sudo" name="%auth.sudo.parameter.name"
+            description="%auth.sudo.parameter.description" />
+        <metatype:AD id="auth.annonymous" type="Boolean" default="true"
+            name="%auth.annonymous.name"
+            description="%auth.annonymous.description" />
+    </metatype:OCD>
+    <metatype:Designate
+        pid="org.apache.sling.engine.impl.auth.SlingAuthenticator">
+        <metatype:Object
+            ocdref="org.apache.sling.engine.impl.auth.SlingAuthenticator" />
+    </metatype:Designate>
+    <metatype:OCD id="org.apache.sling.engine.impl.log.RequestLogger"
+        name="%request.log.name"
+        description="%request.log.description">
+        <metatype:AD id="request.log.enabled" type="Boolean"
+            default="true" name="%request.log.enabled.name"
+            description="%request.log.enabled.description" />
+        <metatype:AD id="request.log.output" type="String"
+            default="logs/request.log" name="%request.log.output.name"
+            description="%request.log.output.description" />
+        <metatype:AD id="request.log.outputtype" type="Integer"
+            default="0" name="%request.log.outputtype.name"
+            description="%request.log.outputtype.description">
+            <metatype:Option value="0" label="Logger Name" />
+            <metatype:Option value="1" label="File" />
+            <metatype:Option value="Name" label="RequestLog" />
+        </metatype:AD>
+        <metatype:AD id="access.log.enabled" type="Boolean"
+            default="true" name="%access.log.enabled.name"
+            description="%access.log.enabled.description" />
+        <metatype:AD id="access.log.output" type="String"
+            default="logs/access.log" name="%access.log.output.name"
+            description="%access.log.output.description" />
+        <metatype:AD id="access.log.outputtype" type="Integer"
+            default="0" name="%access.log.outputtype.name"
+            description="%access.log.outputtype.description">
+            <metatype:Option value="0" label="Logger Name" />
+            <metatype:Option value="1" label="File" />
+            <metatype:Option value="Name" label="RequestLog" />
+        </metatype:AD>
+    </metatype:OCD>
+    <metatype:Designate
+        pid="org.apache.sling.engine.impl.log.RequestLogger">
+        <metatype:Object
+            ocdref="org.apache.sling.engine.impl.log.RequestLogger" />
+    </metatype:Designate>
+    <metatype:OCD
+        id="org.apache.sling.engine.impl.log.RequestLoggerService"
+        name="%request.log.service.name"
+        description="%request.log.service.description">
+        <metatype:AD id="request.log.service.output" type="String"
+            default="request.log"
+            name="%request.log.service.output.name"
+            description="%request.log.service.output.description" />
+        <metatype:AD id="request.log.service.format" type="String"
+            name="%request.log.service.format.name"
+            description="%request.log.service.format.description" />
+        <metatype:AD id="request.log.service.onentry" type="Boolean"
+            default="false" name="%request.log.service.onentry.name"
+            description="%request.log.service.onentry.description" />
+        <metatype:AD id="request.log.service.outputtype" type="Integer"
+            default="0" name="%request.log.service.outputtype.name"
+            description="%request.log.service.outputtype.description">
+            <metatype:Option value="0" label="Logger Name" />
+            <metatype:Option value="1" label="File" />
+            <metatype:Option value="Name" label="RequestLog" />
+        </metatype:AD>
+    </metatype:OCD>
+    <metatype:Designate
+        pid="org.apache.sling.engine.impl.log.RequestLoggerService">
+        <metatype:Object
+            ocdref="org.apache.sling.engine.impl.log.RequestLoggerService" />
+    </metatype:Designate>
+</metatype:MetaData>
