@@ -1,6 +1,3 @@
-------------------------------------------------------------------------------
-CGLIB notice
-------------------------------------------------------------------------------
 This product includes CGLIB software developed at cglib.sourceforge.net,
 distributed under the Apache Software License 
 (http://sourceforge.net/projects/cglib).

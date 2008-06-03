@@ -1,5 +1,2 @@
-------------------------------------------------------------------------------
-Jetty notice
-------------------------------------------------------------------------------
 This product includes Jetty software developed at mortbay.org, under Apache
 License.

@@ -1,6 +1,3 @@
-------------------------------------------------------------------------------
-Textmining notice
-------------------------------------------------------------------------------
 Although the latest tm-extractors software is under LGPL license, it 
 seems like the version 0.4 that we're using is under the BSD-like license
 found at http://www.searchblox.com/TEXT_MINING_license.html.

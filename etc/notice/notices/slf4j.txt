@@ -1,6 +1,3 @@
-------------------------------------------------------------------------------
-slf4j notice
-------------------------------------------------------------------------------
 This product includes software developed at http://slf4j.org, distributed
 under the slf4j MIT-like license (http://slf4j.org/license.html). 
 

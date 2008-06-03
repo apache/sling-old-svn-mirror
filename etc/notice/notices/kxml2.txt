@@ -1,5 +1,2 @@
-------------------------------------------------------------------------------
-kXML2 notice
-------------------------------------------------------------------------------
-This product includes kXML2 software developed at http://kxml.sourceforge.net/, 
-under BSD license.
+This product includes kXML2 software developed at 
+http://kxml.sourceforge.net/, under BSD license.

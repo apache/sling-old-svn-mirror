@@ -25,6 +25,7 @@ NOTICES=$MYDIR/notices
 NOTICEMAP=$MYDIR/noticemap.txt
 GLOBAL_PREFIX=$NOTICES/prefix.txt
 PROJECT_NAME=""
+MVN_OPT="-o"
 
 fatal() {
   echo ""
@@ -34,7 +35,7 @@ fatal() {
 
 set_project_name() {
   PROJECT_NAME=$( \
-	  mvn -o validate \
+	  mvn $MVN_OPT validate \
 	  | grep "INFO.*Building" | head -1 \
 	  | sed 's/.*INFO.*Building//' \
 	  | sed 's/Sling/Apache Sling/g'
@@ -50,8 +51,9 @@ add_notice() {
 # so that they can be used as input to map_deps
 collect_deps() {
   NO_NOTICE_FILTER="org.apache|commons-|javax."
+  GOAL="dependency:resolve"
   
-  mvn -o dependency:resolve \
+  ( mvn $MVN_OPT $GOAL || fatal "mvn $MVN_OPT $GOAL failed" ) \
   | grep '\[INFO\].*:.*:.*:.*' \
   | grep -v 'Finished at:' \
   | egrep -v "$NO_NOTICE_FILTER" | awk -F' ' '{ print $2 }' \
@@ -94,9 +96,14 @@ generate_notice() {
 	  fi
 	  notice=$NOTICES/$notice
 	  [[ -f $notice ]] || fatal "Notice file $notice not found"
+	  if [[ "$MKNOTICE_DEBUG" -eq 1 ]]
+	  then
+	    echo "[DEBUG] $ME: including notice file $notice"
+	  fi
 	  cat $notice
 	  echo ""
-	done
+	  echo ""
+	done | cat -s
 }
 
 generate_notice
