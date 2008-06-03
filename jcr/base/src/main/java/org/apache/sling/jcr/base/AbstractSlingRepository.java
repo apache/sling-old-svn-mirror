@@ -896,7 +896,8 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 // wait first before starting to check
                 synchronized (waitLock) {
                     try {
-                        log(LogService.LOG_DEBUG, "Waiting " + pollTime + " seconds before checking repository");
+                        // no debug logging, see SLING-505
+                        // log(LogService.LOG_DEBUG, "Waiting " + pollTime + " seconds before checking repository");
                         waitLock.wait(pollTime * 1000L);
                     } catch (InterruptedException ie) {
                         // don't care, go ahead
@@ -922,9 +923,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
                     } else {
 
-                        log(LogService.LOG_DEBUG,
-                            "run: Repository available, checking again in "
-                                + pollTime + " seconds");
+                        // no debug logging, see SLING-505
+                        // log(LogService.LOG_DEBUG,
+                        //    "run: Repository available, checking again in "
+                        //        + pollTime + " seconds");
                     }
                 }
             }
