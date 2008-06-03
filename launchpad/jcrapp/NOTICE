@@ -1,10 +1,5 @@
-------------------------------------------------------------------------------
 Apache Sling - Launchpad Application
 Copyright 2007-2008 The Apache Software Foundation
-------------------------------------------------------------------------------
-Do not edit this NOTICE file directly, it is generated from the scripts
-found under etc/notice - see the scripts there for more info.
-------------------------------------------------------------------------------
 
 Based on source code originally developed by
 Day Software (http://www.day.com/).
@@ -16,69 +11,37 @@ Licensed under the Apache License 2.0.
 See http://www.apache.org/legal/3party.html for the ASF policy on 
 third-party licenses.
 
-------------------------------------------------------------------------------
-Concurrent library notice
-------------------------------------------------------------------------------
 This product includes concurrent library software developed by Doug Lea, 
 http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html
-
 That code is public domain and includes classes adapted from Sun JDK source
-code, used with permission see
+code which is used with permission, see
 http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/sun-u.c.license.pdf
 
-------------------------------------------------------------------------------
-Jetty notice
-------------------------------------------------------------------------------
+This product includes software developed under the JCP from 
+http://www.jcp.org. Copyright 2005 Day Management AG.
+
 This product includes Jetty software developed at mortbay.org, under Apache
 License.
-------------------------------------------------------------------------------
-JSON notice
-------------------------------------------------------------------------------
+
 This product includes software developed at json.org, under BSD-like json.org
 license, see http://www.json.org/license.html .
-------------------------------------------------------------------------------
-JUnit notice
-------------------------------------------------------------------------------
-This product includes software developed at junit.org, distributed under CPL 
-license (http://sourceforge.net/projects/junit/).
 
-CPL is a reciprocal license, but this product uses that software in binary 
-form only, without modifications.
+This product includes kXML2 software developed at 
+http://kxml.sourceforge.net/, under BSD license. 
+Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany.
 
-
-------------------------------------------------------------------------------
-kXML2 notice
-------------------------------------------------------------------------------
-This product includes kXML2 software developed at http://kxml.sourceforge.net/, 
-under BSD license.
-------------------------------------------------------------------------------
-CyberNeko notice
-------------------------------------------------------------------------------
 This product includes CyberNeko software developed at
 http://sourceforge.net/projects/nekohtml, under Apache License. 
-------------------------------------------------------------------------------
-Pax notice
-------------------------------------------------------------------------------
+
 This product includes Pax software developed at ops4j.org, under Apache
 License (http://wiki.ops4j.org/confluence/display/ops4j/Licensing).
-------------------------------------------------------------------------------
-PDFBox notice
-------------------------------------------------------------------------------
+
 This product includes software developed at pdfbox.org, www.pdfbox.org, under 
 Apache License.
-------------------------------------------------------------------------------
-slf4j notice
-------------------------------------------------------------------------------
+
 This product includes software developed at http://slf4j.org, distributed
 under the slf4j MIT-like license (http://slf4j.org/license.html). 
 
-
-------------------------------------------------------------------------------
-Textmining notice
-------------------------------------------------------------------------------
-Although the latest tm-extractors software is under LGPL license, it 
-seems like the version 0.4 that we're using is under the BSD-like license
-found at http://www.searchblox.com/TEXT_MINING_license.html.
-
-TODO: verify this, and find a workaround if needed (SLING-494).
+This software contains code written by Ryan Ackley.
+Please go to http://www.textmining.org for the latest version. 
 

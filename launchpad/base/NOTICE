@@ -1,10 +1,5 @@
-------------------------------------------------------------------------------
 Apache Sling - Launchpad Base
 Copyright 2007-2008 The Apache Software Foundation
-------------------------------------------------------------------------------
-Do not edit this NOTICE file directly, it is generated from the scripts
-found under etc/notice - see the scripts there for more info.
-------------------------------------------------------------------------------
 
 Based on source code originally developed by
 Day Software (http://www.day.com/).
@@ -16,13 +11,6 @@ Licensed under the Apache License 2.0.
 See http://www.apache.org/legal/3party.html for the ASF policy on 
 third-party licenses.
 
-------------------------------------------------------------------------------
-Equinox notice
-------------------------------------------------------------------------------
 This product includes Equinox software developed by the Eclipse foundation, 
-distributed under EPL license.
-
-EPL (http://www.eclipse.org/legal/epl-v10.html) is a reciprocal license, but 
-this product uses that software in binary form only, without modifications.
-
+distributed under EPL license (http://www.eclipse.org/legal/epl-v10.html).
 
