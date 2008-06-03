@@ -1,6 +1,3 @@
 This product includes Rhino software developed at mozilla.org 
 (http://www.mozilla.org/), dual-licensed under both an MPL and a GPL license, 
-see http://developer.mozilla.org/en/docs/Rhino_License . MPL 
-(http://www.mozilla.org/MPL/) is a reciprocal license, but this product 
-uses that software in binary form only, without modifications.
-
+see http://developer.mozilla.org/en/docs/Rhino_License . 
