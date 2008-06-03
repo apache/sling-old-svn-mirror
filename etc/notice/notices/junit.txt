@@ -1,9 +1,3 @@
-------------------------------------------------------------------------------
-JUnit notice
-------------------------------------------------------------------------------
 This product includes software developed at junit.org, distributed under CPL 
 license (http://sourceforge.net/projects/junit/).
-
-CPL is a reciprocal license, but this product uses that software in binary 
-form only, without modifications.
 
