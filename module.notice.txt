@@ -1,25 +1,3 @@
-Apache Sling - Launchpad Web Application
-Copyright 2007-2008 The Apache Software Foundation
-
-Based on source code originally developed by
-Day Software (http://www.day.com/).
-
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
-Licensed under the Apache License 2.0.
-
-See http://www.apache.org/legal/3party.html for the ASF policy on 
-third-party licenses.
-
-This product includes Equinox software developed by the Eclipse foundation, 
-distributed under EPL license (http://www.eclipse.org/legal/epl-v10.html).
-
-This product includes software developed under the JCP from 
-http://www.jcp.org. Copyright 2005 Day Management AG.
-
-This product includes software developed at http://slf4j.org, distributed
-under the slf4j MIT-like license (http://slf4j.org/license.html). 
-
 This product includes ASM software developed at asm.objectweb.org, distributed
 under ObjectWeb Apache-like license (http://asm.objectweb.org/license.html). 
 
