@@ -1,4 +1,4 @@
-Apache Sling Default Post Servlets
+Apache Sling - Default POST Servlets
 Copyright 2007-2008 The Apache Software Foundation
 
 Based on source code originally developed by
@@ -7,3 +7,13 @@ Day Software (http://www.day.com/).
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 Licensed under the Apache License 2.0.
+
+See http://www.apache.org/legal/3party.html for the ASF policy on 
+third-party licenses.
+
+This product includes software developed under the JCP from 
+http://www.jcp.org. Copyright 2005 Day Management AG.
+
+This product includes software developed at http://slf4j.org, distributed
+under the slf4j MIT-like license (http://slf4j.org/license.html). 
+
