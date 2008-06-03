@@ -55,6 +55,7 @@ collect_deps() {
   
   ( mvn $MVN_OPT $GOAL || fatal "mvn $MVN_OPT $GOAL failed" ) \
   | grep '\[INFO\].*:.*:.*:.*' \
+  | grep -v "(scope[ ]*=[ ]*test" \
   | grep -v 'Finished at:' \
   | egrep -v "$NO_NOTICE_FILTER" | awk -F' ' '{ print $2 }' \
   | cut -d':' -f1-2
@@ -85,7 +86,6 @@ map_deps() {
 generate_notice() {
 	set_project_name
 	[[ -n "$PROJECT_NAME" ]] || fatal "Project name not found"
-	echo "------------------------------------------------------------------------------"
 	echo $PROJECT_NAME  
 	cat $GLOBAL_PREFIX || fatal "prefix output failed"
 	collect_deps | map_deps | sort -u | while read notice
