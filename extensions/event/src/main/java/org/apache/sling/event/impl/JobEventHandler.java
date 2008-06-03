@@ -700,7 +700,7 @@ public class JobEventHandler
             final NodeIterator result = q.execute().getNodes();
             while ( result.hasNext() ) {
                 final Node eventNode = result.nextNode();
-                if ( !eventNode.isLocked() ) {
+                if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
                     final String nodePath = eventNode.getPath();
                     try {
                         final Event event = this.readEvent(eventNode);
