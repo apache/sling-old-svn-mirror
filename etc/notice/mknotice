@@ -1,22 +1,47 @@
 #!/bin/bash
+# ---------------------------------------------------------------------------
 # Generate NOTICE files for ASF projects based on Maven
 # dependencies.
+# ---------------------------------------------------------------------------
+# Runs mvn dependency:resolve, filters the output to get the list of non-ASF 
+# dependencies, and uses the names in this list to concatenate a series of 
+# notice fragment files found under this directory.
 #
-# Runs mvn dependency:resolve, filters the output to
-# get the list of non-ASF dependencies, and uses the
-# names in this list to concatenate a series of notice
-# files found under this directory.
+# To generate a NOTICE file, run this script from the directory that contains 
+# the module's pom.xml file. Or use something like this to run it on a whole
+# project tree:
 #
-# To generate a NOTICE file, run this script from the
-#Êdirectory that contains the module's pom.xml file.
+#	export SCRIPT=/fullpath/of/mknotice
+#  	find . -name pom.xml | grep -v target | while read pom 
+#	do 
+#		cd $(dirname $pom) 
+#		$SCRIPT > NOTICE
+#		cd -
+#	done
 #
-# This script must be in the same directory as the
-#Ênoticemap.txt, which maps dependency names to the
-#Ênames of NOTICE fragment files.
+# This script must be in the same directory as the noticemap.txt, which maps 
+# dependency names to the names of NOTICE fragment files.
 #
-# Those NOTICE fragment files are found under the
-#Ê"notices" directory that must be found in hte
-# directory that contains this script.
+# Those NOTICE fragment files are found under the "notices" directory that 
+# must also be found in the directory that contains this script.
+# ---------------------------------------------------------------------------
+# Dependencies are mapped to NOTICE fragments as follows (example):
+#
+#	1) mvn dependency:resolve output contains 
+#		[INFO]    org.mortbay.jetty:jetty:jar:6.1.6 (scope = compile)
+#
+#	2) Reduce this to "org.mortbay.jetty:jetty"
+#
+#	3) Look for that string in noticemap.txt:
+#		org.mortbay.jetty:jetty=jetty.txt
+#	
+#	4) If not found, fatal error. If ends with =NO_NOTICE, ignore this 
+#		dependency.
+#
+#	5) In this case, =jetty.txt means "use the notices/jetty.txt fragment
+#		for this dependency.
+# 
+# ---------------------------------------------------------------------------
 #
 
 ME=$(basename $0)
