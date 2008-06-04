@@ -111,6 +111,8 @@
         <module>extensions/event</module>
         <module>extensions/httpauth</module>
         <module>extensions/i18n</module>
+        <module>extensions/apt/parser</module>
+        <module>extensions/apt/servlet</module>
 
         <!-- Samples -->
         <module>samples/simple-demo</module>
@@ -164,8 +166,6 @@
                 <module>scripting/jst</module>
                 <module>scripting/ruby</module>
                 <module>scripting/velocity</module>
-                <module>extensions/apt/parser</module>
-                <module>extensions/apt/servlet</module>
                 <module>extensions/dojo</module>
                 <module>extensions/dojo-sling</module>
                 <module>launchpad/jcrapp</module>
