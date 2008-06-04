@@ -1,2 +1,3 @@
-This product includes software developed at
-The Dojo Foundation (http://www.dojotoolkit.org/).
+# This file lists additional dependencies that must
+# be used to generate the NOTICE file
+dojo:dojo-release
