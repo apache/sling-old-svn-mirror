@@ -31,10 +31,13 @@
     <packaging>jar</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Launchpad Application</name>
+    <name>Sling - Launchpad Jackrabbit Server</name>
     <description>
-        Standalone Launchpad Java Application. Everything needed to run
-        the Launchpad is included in a single JAR file.
+        Standalone Sling JCR Server launching the embedded Jackrabbit Repository.
+        Note, that this is not the full Sling Application but just the bundles
+        needed to start the Jackrabbit Repository. For the full Sling
+        Application look at the Launchpad Application or Launpad Web
+        Application.
     </description>
 
     <scm>
