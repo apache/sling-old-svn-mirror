@@ -57,6 +57,7 @@ org.hamcrest:hamcrest-core=hamcrest.txt
 org.hamcrest:hamcrest-library=hamcrest.txt
 biz.aQute:bndlib=bnd.txt
 org.jmock:jmock=jmock.txt
+org.apache.felix:org.osgi.compendium=osgi.txt
 
 # dojo license is BSD: http://dojotoolkit.org/foundation/#license
 dojo:dojo-release=NO_NOTICE
