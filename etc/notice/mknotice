@@ -27,6 +27,10 @@
 # ---------------------------------------------------------------------------
 # Dependencies are mapped to NOTICE fragments as follows (example):
 #
+#	0) Use the mvn dependency:resolve as input to define the list of
+#		dependencies, augmented by the contents of the module.notice.txt 
+#		file, if that's found alongside the project's pom.xml. 
+#
 #	1) mvn dependency:resolve output contains 
 #		[INFO]    org.mortbay.jetty:jetty:jar:6.1.6 (scope = compile)
 #
@@ -38,9 +42,8 @@
 #	4) If not found, fatal error. If ends with =NO_NOTICE, ignore this 
 #		dependency.
 #
-#	5) In this case, =jetty.txt means "use the notices/jetty.txt fragment
-#		for this dependency.
-# 
+#	5) In our example, =jetty.txt means "use the notices/jetty.txt fragment
+#		for this dependency. Fatal error if that file is not found.
 # ---------------------------------------------------------------------------
 #
 
