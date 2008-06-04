@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.commons.log</artifactId>
-    <version>2.0.0-incubator</version>
+    <version>2.0.1-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Sling - OSGi LogService Implementation</name>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.log-2.0.0-incubator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.commons.log-2.0.0-incubator</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.commons.log-2.0.0-incubator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/log</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/log</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/commons/log</url>
     </scm>
 
     <build>
