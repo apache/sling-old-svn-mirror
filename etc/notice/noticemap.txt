@@ -21,7 +21,7 @@ javax.servlet:servlet-api=NO_NOTICE
 javax.servlet.jsp:jsp-api=NO_NOTICE
 javax.servlet:jsp-api=NO_NOTICE
 
-# third-party
+# third-party 
 junit:junit=junit.txt
 org.eclipse.equinox.http:servlet=equinox.txt
 org.slf4j:jcl104-over-slf4j=slf4j.txt
@@ -57,3 +57,6 @@ org.hamcrest:hamcrest-core=hamcrest.txt
 org.hamcrest:hamcrest-library=hamcrest.txt
 biz.aQute:bndlib=bnd.txt
 org.jmock:jmock=jmock.txt
+
+# dojo license is BSD: http://dojotoolkit.org/foundation/#license
+dojo:dojo-release=NO_NOTICE
