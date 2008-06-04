@@ -87,7 +87,8 @@ map_deps() {
 generate_notice() {
 	set_project_name
 	[[ -n "$PROJECT_NAME" ]] || fatal "Project name not found"
-	echo $PROJECT_NAME  
+	echo $PROJECT_NAME 
+	echo "" 
 	cat $GLOBAL_PREFIX || fatal "prefix output failed"
 	( 
 		collect_deps | map_deps | sort -u | while read notice
@@ -106,8 +107,8 @@ generate_notice() {
 		  echo ""
 		  echo ""
 		done
-		[[ -f $LOCAL_NOTICE ]] && egrep '^($|[^#])' $LOCAL_NOTICE
-	) | cat -s
+		[[ -f $LOCAL_NOTICE ]] && cat $LOCAL_NOTICE
+	) | egrep '^($|[^#])' | cat -s
 }
 
 generate_notice
