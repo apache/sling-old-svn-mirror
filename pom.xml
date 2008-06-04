@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.app</artifactId>
     <packaging>jar</packaging>
-    <version>2.0.0-incubator</version>
+    <version>2.0.1-incubator-SNAPSHOT</version>
 
     <name>Sling - Launchpad Application</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.app-2.0.0-incubator</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.app-2.0.0-incubator</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.launchpad.app-2.0.0-incubator</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/app</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/app</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/app</url>
     </scm>
 
     <build>
