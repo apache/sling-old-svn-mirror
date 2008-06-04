@@ -509,6 +509,23 @@ setting is not correct.
                 <version>3.2.1</version>
                 <scope>provided</scope>
             </dependency>
+	        <dependency>
+	            <groupId>commons-httpclient</groupId>
+	            <artifactId>commons-httpclient</artifactId>
+	            <version>3.1</version>
+	            <scope>provided</scope>
+	            <exclusions>
+	                <!-- 
+	                    Same problem as JCR-683: commons-httpclient depends on commons-logging. Since 
+	                    this webapp uses log4j (see the slf4j-log4j12 dependency below), we need to
+	                    override this dependency with jcl104-over-sflf4j, found below
+	                -->
+	                <exclusion>
+	                    <groupId>commons-logging</groupId>
+	                    <artifactId>commons-logging</artifactId>
+	                </exclusion>
+	            </exclusions>
+	        </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
@@ -620,6 +637,12 @@ setting is not correct.
                 <version>1.5.0</version>
                 <scope>provided</scope>
             </dependency>
+	        <dependency>
+	            <groupId>org.slf4j</groupId>
+	            <artifactId>slf4j-log4j12</artifactId>
+                <version>1.5.0</version>
+                <scope>provided</scope>
+	        </dependency>
 
             <dependency>
                 <groupId>junit</groupId>
