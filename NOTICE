@@ -1,76 +1,46 @@
 Apache Sling (Parent)
-Copyright 2007-2008 The Apache Software Foundation
+
+Apache Sling
+Copyright 2008 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
 
 Based on source code originally developed by
 Day Software (http://www.day.com/).
 
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
-Licensed under the Apache License 2.0.
+==============================================================
+ Jetty Web Container 
+ Copyright 1995-2006 Mort Bay Consulting Pty Ltd
+==============================================================
 
-See http://www.apache.org/legal/3party.html for the ASF policy on 
-third-party licenses.
-
-This product includes ASM software developed at asm.objectweb.org, distributed
-under ObjectWeb Apache-like license (http://asm.objectweb.org/license.html). 
-
-This product includes CGLIB software developed at cglib.sourceforge.net,
-distributed under the Apache Software License 
-(http://sourceforge.net/projects/cglib).
-
-This product includes software developed at codehaus.org, under BSD-like 
+The Jetty Web Container is Copyright Mort Bay Consulting Pty Ltd
+unless otherwise noted. It is licensed under the apache 2.0
 license.
 
-This product includes concurrent library software developed by Doug Lea, 
-http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html
-That code is public domain and includes classes adapted from Sun JDK source
-code which is used with permission, see
-http://gee.cs.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/sun-u.c.license.pdf
+The javax.servlet package used by Jetty is copyright 
+Sun Microsystems, Inc and Apache Software Foundation. It is 
+distributed under the Common Development and Distribution License.
+You can obtain a copy of the license at 
+https://glassfish.dev.java.net/public/CDDLv1.0.html.
 
-This product includes Equinox software developed by the Eclipse foundation, 
-distributed under EPL license (http://www.eclipse.org/legal/epl-v10.html).
+The UnixCrypt.java code ~Implements the one way cryptography used by
+Unix systems for simple password protection.  Copyright 1996 Aki Yoshida,
+modified April 2001  by Iris Van den Broeke, Daniel Deville.
+Permission to use, copy, modify and distribute UnixCrypt 
+for non-commercial or commercial purposes and without fee is
+granted provided that the copyright notice appears in all copies.
 
-This product includes software developed under the JCP from 
-http://www.jcp.org. Copyright 2005 Day Management AG.
+The default JSP implementation is provided by the Glassfish JSP engine
+from project Glassfish http://glassfish.dev.java.net.  Copyright 2005
+Sun Microsystems, Inc. and portions Copyright Apache Software Foundation.
 
-This product includes Jetty software developed at mortbay.org, under Apache
-License.
+Some portions of the code are Copyright:
+  2006 Tim Vernum 
+  1999 Jason Gilbert.
 
-This product includes software developed at json.org, under BSD-like json.org
-license, see http://www.json.org/license.html .
+The jboss integration module contains some LGPL code.
 
-This product includes software developed at junit.org, distributed under CPL 
-license (http://sourceforge.net/projects/junit/).
-
-This product includes kXML2 software developed at 
-http://kxml.sourceforge.net/, under BSD license. 
-Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany.
-
-This product includes software developed at http://mx4j.sourceforge.net/, 
-http://kxml.sourceforge.net/, under Apache License.
-
-This product includes CyberNeko software developed at
-http://sourceforge.net/projects/nekohtml, under Apache License. 
-
-This product includes software developed at Opensymphony 
-(http://www.opensymphony.org/quartz). Licensed under the Apache License 2.0.
-
-This product includes Pax software developed at ops4j.org, under Apache
-License (http://wiki.ops4j.org/confluence/display/ops4j/Licensing).
-
-This product includes software developed at pdfbox.org, www.pdfbox.org, under 
-Apache License.
-
-This product includes software developed at qdox.codehaus.org, under 
-Apache License.
-
-This product includes Rhino software developed at mozilla.org 
-(http://www.mozilla.org/), dual-licensed under both an MPL and a GPL license, 
-see http://developer.mozilla.org/en/docs/Rhino_License . 
-
-This product includes software developed at http://slf4j.org, distributed
-under the slf4j MIT-like license (http://slf4j.org/license.html). 
-
-This software contains code written by Ryan Ackley.
-Please go to http://www.textmining.org for the latest version. 
+This product includes software developed by the
+MX4J project (http://mx4j.sourceforge.net).
 
