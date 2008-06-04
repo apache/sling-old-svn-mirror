@@ -55,6 +55,7 @@
         <dojo.target>target/dojo</dojo.target>
         <dojo.version>release-1.1.0</dojo.version>
         <dojo.name>dojo-${dojo.version}-src.tar.gz</dojo.name>
+        <dojo.md5>b868cdab2537db98aa3c1084a918acea</dojo.md5>
     </properties>
 
     <build>
@@ -76,6 +77,12 @@
                                     src="http://download.dojotoolkit.org/${dojo.version}/${dojo.name}"
                                     dest="${dojo.download.dir}/${dojo.name}"
                                     usetimestamp="true" />
+                                <checksum file="${dojo.download.dir}/${dojo.name}" property="${dojo.md5}" verifyProperty="isEqual"/>
+                                <fail message="Dojo Toolkit Package checksum does not match, please check ${dojo.download.dir}/${dojo.name}.">
+                                  <condition>
+                                    <isfalse value="${isEqual}"/>
+                                  </condition>
+                                </fail>
                                 <untar src="${dojo.download.dir}/${dojo.name}"
                                     dest="${dojo.target}"
                                     compression="gzip" />
