@@ -82,7 +82,7 @@ map_deps() {
 	done | cut -d= -f2
 }
 
-#Êcollect dependencies, map them to their notice
+# collect dependencies, map them to their notice
 # files and concatenate those
 generate_notice() {
 	set_project_name
@@ -106,7 +106,7 @@ generate_notice() {
 		  echo ""
 		  echo ""
 		done
-		[[ -f $LOCAL_NOTICE ]] && cat $LOCAL_NOTICE
+		[[ -f $LOCAL_NOTICE ]] && egrep '^($|[^#])' $LOCAL_NOTICE
 	) | cat -s
 }
 
