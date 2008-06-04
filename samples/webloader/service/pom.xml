@@ -30,7 +30,7 @@
     <groupId>org.apache.sling.samples</groupId>
     <artifactId>org.apache.sling.samples.webloader.service</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.0-incubator-SNAPSHOT</version>
+    <version>2.0.0-incubator</version>
 
     <name>Sling - Webloader Service</name>
     <description>
@@ -39,15 +39,9 @@
     </description>
 
     <scm>
-        <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/samples/webloader/service
-        </connection>
-        <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/samples/webloader/service
-        </developerConnection>
-        <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/samples/webloader/service
-        </url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.samples.webloader.service-2.0.0-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.samples.webloader.service-2.0.0-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.samples.webloader.service-2.0.0-incubator</url>
     </scm>
 
     <build>
