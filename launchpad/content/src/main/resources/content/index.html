@@ -1,15 +1,68 @@
 <html>
   <!-- Do not remove this comment, used for Launchpad integration tests -->
+  <head>
+    <title>Welcome to the Sling Launchpad</title>
+    <link rel="stylesheet" type="text/css" href="sling.css"/>
+  </head>
   <body>
-    <h1>Welcome to the Sling Launchpad</h1>
-    <p>
-    	The Sling OSGi management console is available at <a href="system/console">system/console</a>.
-    </p>
-    <p>
-    	The Sling client library tests are available at <a href="sling-test/sling/sling-test.html">sling-test/sling/sling-test.html</a>.
-    </p>
-    <p>
-      We'll have more content for you here, hopefully soon...
-    </p>
+  	<div class="title">
+  		<div class="logo">
+		    <a href="http://incubator.apache.org/sling">
+		    	<img border="0" src="sling-logo.png"/>
+			</a>
+  		</div>
+	</div>
+	
+	<div class="menu">
+	</div>  		
+  
+    <div class="main">
+	    <h1>Welcome to the Sling Launchpad</h1>
+	    
+		<p>
+			Apache Sling (currently in incubation) is a web framework that uses a Java Content Repository, 
+			such as Apache Jackrabbit, to store and manage content.
+
+			Sling applications use either scripts or Java servlets, selected based on simple name conventions, 
+			to process HTTP requests in a RESTful way.
+
+			The embedded Apache Felix OSGi framework and <a href="/system/console">console</a> provide a dynamic 
+			runtime environment, where code and content bundles can be loaded, unloaded and reconfigured at runtime.
+	    </p>
+	    <p>
+	    	The Sling Launchpad is a ready-to-run Sling configuration, providing an embedded 
+	    	JCR content repository and web server, a selection of Sling components, and 
+	    	documentation and examples. The Launchpad makes it easy to get started with Sling 
+	    	and to develop script-based applications.
+	    </p>
+	    
+	    <h2>Getting started</h2>
+		<p>
+			To get started with Sling, see our
+			<a href="http://incubator.apache.org/sling">website</a> and
+			the 
+			<a href="http://incubator.apache.org/sling/site/discover-sling-in-15-minutes.html">
+			Sling in 15 minutes
+			</a>
+			tutorial.
+		</p>    	
+		<p>
+			Note that you can mount the repository via WebDAV to explore or modify content,
+			simply use the the <a href="/">root URL</a> as the WebDAV server URL.
+		</p>
+		<p>
+			Use our 
+			<a href="http://incubator.apache.org/sling/site/project-information.html#ProjectInformation-lists">
+			mailing lists
+			</a> to contact the Sling developers team.
+		</p>	
+	    <p>
+	    	The Sling OSGi management console is available at <a href="system/console">system/console</a>.
+	    </p>
+	    <p>
+	    	The Sling client library tests are available at 
+	    	<a href="sling-test/sling/sling-test.html">sling-test/sling/sling-test.html</a>.
+	    </p>
+    </div>
   </body>
 </html>
