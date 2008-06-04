@@ -25,7 +25,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-builder</artifactId>
     <packaging>pom</packaging>
-    <version>1-incubator-SNAPSHOT</version>
+    <version>1-incubator</version>
 
     <name>Sling (Builder)</name>
     <description>
