@@ -29,7 +29,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>3-incubator-SNAPSHOT</version>
+    <version>2-incubator-SNAPSHOT</version>
 
     <name>Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
