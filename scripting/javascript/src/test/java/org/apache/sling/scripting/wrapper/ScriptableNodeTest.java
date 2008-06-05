@@ -321,4 +321,17 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
                 script.eval("node.javascriptWrapperClass.getName()", data)
         );
     }
+    
+    public void testGetSession() throws Exception {
+        assertEquals(
+                "Root node found via node.session",
+                "/", 
+                script.eval("node.session.getRootNode().getPath()", data)
+        );
+        assertEquals(
+                "Root node found via node.getSession()",
+                "/", 
+                script.eval("node.getSession().getRootNode().getPath()", data)
+        );
+    }
 }
