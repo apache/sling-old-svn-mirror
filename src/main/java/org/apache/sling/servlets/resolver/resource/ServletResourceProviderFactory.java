@@ -146,12 +146,17 @@ public class ServletResourceProviderFactory {
         // handle the methods property specially (SLING-430)
         String[] methods = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_METHODS));
         if (methods == null || methods.length == 0) {
-            if (log.isInfoEnabled()) {
-                log.info(
-                    "addByType({}): No methods declared, assuming GET/HEAD",
-                    getServiceIdentifier(ref));
+            
+            // SLING-512 only, set default methods if no extensions are declared
+            if (extensions == null || extensions.length == 0) {
+                if (log.isInfoEnabled()) {
+                    log.info(
+                        "addByType({}): No methods declared, assuming GET/HEAD",
+                        getServiceIdentifier(ref));
+                }
+                methods = DEFAULT_SERVLET_METHODS;
             }
-            methods = DEFAULT_SERVLET_METHODS;
+            
         } else if (methods.length == 1 && ALL_METHODS.equals(methods[0])) {
             if (log.isInfoEnabled()) {
                 log.info("addByType({}): Assuming all methods for '*'",
