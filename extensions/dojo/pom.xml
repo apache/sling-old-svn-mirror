@@ -23,12 +23,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>1-incubator</version>
+        <version>2-incubator-SNAPSHOT</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.sling.extensions.dojo</artifactId>
-    <version>1.1.0.001-incubator</version>
+    <version>1.1.0.002-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Sling - Dojo JavaScript Library</name>
