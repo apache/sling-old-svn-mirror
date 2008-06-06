@@ -53,9 +53,9 @@
     <properties>
         <dojo.download.dir>./download-cache</dojo.download.dir>
         <dojo.target>target/dojo</dojo.target>
-        <dojo.version>release-1.1.0</dojo.version>
+        <dojo.version>release-1.1.1</dojo.version>
         <dojo.name>dojo-${dojo.version}-src.tar.gz</dojo.name>
-        <dojo.md5>b868cdab2537db98aa3c1084a918acea</dojo.md5>
+        <dojo.md5>aad0cd4c16b846286a6277f05f51814e</dojo.md5>
     </properties>
 
     <build>
