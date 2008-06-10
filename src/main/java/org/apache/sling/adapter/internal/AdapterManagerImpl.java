@@ -37,8 +37,8 @@ import org.osgi.service.log.LogService;
  * The <code>AdapterManagerImpl</code> class implements the
  * {@link AdapterManager} interface and is registered as a service for that
  * interface to be used by any clients.
- * 
- * @scr.component metatype="no"
+ *
+ * @scr.component metatype="no" immediate="true"
  * @scr.property name="service.description" value="Sling Adapter Manager"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.service
@@ -87,7 +87,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * indexed by the fully qualified class names listed in the
      * {@link AdapterFactory#ADAPTABLE_CLASSES} property of the
      * {@link AdapterFactory} services.
-     * 
+     *
      * @see AdapterFactoryDescriptorMap
      */
     private Map<String, AdapterFactoryDescriptorMap> factories = new HashMap<String, AdapterFactoryDescriptorMap>();
@@ -302,7 +302,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * Returns a map of {@link AdapterFactory} instances for the given class to
      * be adapted. The returned map is indexed by the fully qualified name of
      * the target classes (to adapt to) registered.
-     * 
+     *
      * @param clazz The type of the object for which the registered adapter
      *            factories are requested
      * @return The map of adapter factories. If there is no adapter factory
@@ -324,7 +324,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * Returns the map of adapter factories index by adapter (target) class name
      * for the given adaptable <code>clazz</code>. If no adapter exists for
      * the <code>clazz</code> and empty map is returned.
-     * 
+     *
      * @param clazz The adaptable <code>Class</code> for which to return the
      *            adapter factory map by target class name.
      * @param cache The cache of already defined adapter factory mappings
@@ -352,7 +352,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * registration are taken. Next all factories for the implemented interfaces
      * and finally all base class factories are copied. Later adapter factory
      * entries do NOT overwrite earlier entries.
-     * 
+     *
      * @param clazz The adaptable <code>Class</code> for which to build the
      *            adapter factory map by target class name.
      * @param cache The cache of already defined adapter factory mappings
@@ -400,7 +400,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * <code>cache</code> to the <code>dest</code> map except for those
      * factories whose target class already exists in the <code>dest</code>
      * map.
-     * 
+     *
      * @param dest The map of target class name to adapter factory into which
      *            additional factories are copied. Existing factories are not
      *            replaced.
