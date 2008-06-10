@@ -56,7 +56,7 @@ public class SlingPropertyValueHandler {
      * the post processor
      */
     private final HtmlResponse response;
-    
+
     private final DateParser dateParser;
 
     /**
@@ -66,7 +66,6 @@ public class SlingPropertyValueHandler {
 
     /**
      * Constructs a propert value handler
-     * @param ctx the post processor
      */
     public SlingPropertyValueHandler(DateParser dateParser, HtmlResponse response) {
         this.dateParser = dateParser;

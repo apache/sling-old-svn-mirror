@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY;
 import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
 
 import java.util.Iterator;

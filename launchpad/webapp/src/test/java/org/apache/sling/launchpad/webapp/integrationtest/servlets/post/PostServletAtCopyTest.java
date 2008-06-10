@@ -20,11 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.sling.commons.testing.integration.HttpStatusCodeException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
-import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test item copy support by @CopyFrom suffix (SLING-455) */
 public class PostServletAtCopyTest extends HttpTestBase {
@@ -41,73 +37,73 @@ public class PostServletAtCopyTest extends HttpTestBase {
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("src@CopyFrom", testPath + "/src");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.-1.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.src.text)");
-        
+
         // assert content at old location
         String contentOld = getContent(HTTP_BASE_URL + testPath + "/src.-1.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", contentOld, "out.println(data.text)");
     }
-    
+
     public void testCopyNodeRelative() throws IOException {
         final String testPath = TEST_BASE_PATH + "/rel/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("src@CopyFrom", "../src");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.-1.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.src.text)");
-        
+
         // assert content at old location
         String contentOld = getContent(HTTP_BASE_URL + testPath + "/src.-1.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", contentOld, "out.println(data.text)");
     }
-    
+
     public void testCopyPropertyAbsolute() throws IOException {
         final String testPath = TEST_BASE_PATH + "/abs/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("text@CopyFrom", testPath + "/src/text");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
-        
+
         // assert content at old location
         String contentOld = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", contentOld, "out.println(data.text)");
     }
-    
+
     public void testCopyPropertyRelative() throws IOException {
         final String testPath = TEST_BASE_PATH + "/rel/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
@@ -117,16 +113,16 @@ public class PostServletAtCopyTest extends HttpTestBase {
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("text@CopyFrom", "../src/text");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
-        
+
         // assert content at old location
         String contentOld = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", contentOld, "out.println(data.text)");
