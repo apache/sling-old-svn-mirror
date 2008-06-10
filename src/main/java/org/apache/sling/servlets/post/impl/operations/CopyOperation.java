@@ -22,10 +22,8 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +59,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     /**
      * Copy the <code>src</code> item into the <code>dstParent</code> node.
      * The name of the newly created item is set to <code>name</code>.
-     * 
+     *
      * @param src The item to copy to the new location
      * @param dstParent The node into which the <code>src</code> node is to be
      *            copied
@@ -89,7 +87,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
      * This method does a recursive (deep) copy of the subtree rooted at the
      * source node to the destination. Any protected child nodes and and
      * properties are not copied.
-     * 
+     *
      * @param src The node to copy to the new location
      * @param dstParent The node into which the <code>src</code> node is to be
      *            copied
@@ -137,7 +135,7 @@ public class CopyOperation extends AbstractCopyMoveOperation {
      * node. The name of the newly created property is set to <code>name</code>.
      * <p>
      * If the source property is protected, this method does nothing.
-     * 
+     *
      * @param src The property to copy to the new location
      * @param dstParent The node into which the <code>src</code> property is
      *            to be copied

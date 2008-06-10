@@ -89,7 +89,7 @@ public class SlingFileUploadHandler {
 
     /**
      * Constructs file upload handler
-     * @param ctx the post processor
+     * @param servletCtx the post processor
      */
     public SlingFileUploadHandler(ServletContext servletCtx) {
         this.servletContext = servletCtx;
