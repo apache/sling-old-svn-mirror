@@ -37,7 +37,7 @@ public class SlingLocatorFactory implements DavLocatorFactory {
                 "Request handle must not be null.");
         }
 
-        
+
         // if href starts with the prefix, cut the prefix off the href
         if (prefix != null && prefix.length() > 0) {
             if (href.startsWith(prefix)) {
@@ -69,7 +69,7 @@ public class SlingLocatorFactory implements DavLocatorFactory {
      * workspace path and resource path, whithout modifying the specified
      * Strings. Note, that it is expected that the resource path starts with the
      * given workspace path unless both values are <code>null</code>.
-     * 
+     *
      * @param prefix
      * @param workspacePath path or the workspace containing this resource or
      *            <code>null</code>.
@@ -85,17 +85,12 @@ public class SlingLocatorFactory implements DavLocatorFactory {
 
     /**
      * Create a new <code>DavResourceLocator</code> from the specified prefix,
-     * workspace path and resource path. If <code>isResourcePath</code> is set
-     * to <code>false</code>, the given 'resourcePath' is converted by
-     * calling {@link #getResourcePath(String, String)}. Otherwise the same
-     * restriction applies as for
-     * {@link #createResourceLocator(String, String, String)}.
-     * 
+     * workspace path and resource path. I
+     *
      * @param prefix
      * @param workspacePath
-     * @param path
+     * @param resourcePath
      * @param isResourcePath
-     * @return
      * @see DavLocatorFactory#createResourceLocator(String, String, String,
      *      boolean)
      */
