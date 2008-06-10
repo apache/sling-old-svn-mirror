@@ -22,9 +22,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.commons.testing.integration.HttpStatusCodeException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
-import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test item move support by @MoveFrom suffix (SLING-455) */
 public class PostServletAtMoveTest extends HttpTestBase {
@@ -41,70 +39,70 @@ public class PostServletAtMoveTest extends HttpTestBase {
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("src@MoveFrom", testPath + "/src");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.-1.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.src.text)");
-        
+
         // assert no content at old location
         assertHttpStatus(HTTP_BASE_URL + testPath + "/src.json",
             HttpServletResponse.SC_NOT_FOUND,
         "Expected Not_Found for old content");
     }
-    
+
     public void testMoveNodeRelative() throws IOException {
         final String testPath = TEST_BASE_PATH + "/rel/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("src@MoveFrom", "../src");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.-1.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.src.text)");
-        
+
         // assert no content at old location
         assertHttpStatus(HTTP_BASE_URL + testPath + "/src.json",
             HttpServletResponse.SC_NOT_FOUND,
         "Expected Not_Found for old content");
     }
-    
+
     public void testMovePropertyAbsolute() throws IOException {
         final String testPath = TEST_BASE_PATH + "/abs/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
         props.put("text", "Hello");
         testClient.createNode(HTTP_BASE_URL + testPath + "/src", props);
-        
+
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("text@MoveFrom", testPath + "/src/text");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
-        
+
         // assert no content at old location
         assertHttpStatus(HTTP_BASE_URL + testPath + "/src.json",
             HttpServletResponse.SC_OK, "Expected source parent existing");
@@ -112,7 +110,7 @@ public class PostServletAtMoveTest extends HttpTestBase {
             HttpServletResponse.SC_NOT_FOUND,
             "Expected Not_Found for old content");
     }
-    
+
     public void testMovePropertyRelative() throws IOException {
         final String testPath = TEST_BASE_PATH + "/rel/" + System.currentTimeMillis();
         Map<String, String> props = new HashMap<String, String>();
@@ -122,16 +120,16 @@ public class PostServletAtMoveTest extends HttpTestBase {
         // assert content at source location
         final String oldContent = getContent(HTTP_BASE_URL + testPath + "/src.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", oldContent, "out.println(data.text)");
-        
+
         // create dest with text set from src/text
         props.clear();
         props.put("text@MoveFrom", "../src/text");
         testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
-        
+
         // assert content at new location
         String content = getContent(HTTP_BASE_URL + testPath + "/dest.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
-        
+
         // assert no content at old location
         assertHttpStatus(HTTP_BASE_URL + testPath + "/src.json",
             HttpServletResponse.SC_OK, "Expected source parent existing");
