@@ -1,13 +1,12 @@
-Apache Sling - Launchpad Application
-
-Apache Sling
-Copyright 2008 The Apache Software Foundation
-
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
+Apache Sling Launchpad App
+Copyright 2007-2008 The Apache Software Foundation
 
 Apache Sling is based on source code originally developed 
 by Day Software (http://www.day.com/).
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+Licensed under the Apache License 2.0.
 
 ==============================================================
  Jetty Web Container 
@@ -41,3 +40,6 @@ Some portions of the code are Copyright:
 
 The jboss integration module contains some LGPL code.
 
+TODO TODO TODO TODO 
+ Check all dependencies
+TODO TODO TODO TODO 
