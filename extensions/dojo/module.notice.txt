@@ -1,3 +1,0 @@
-# This file lists additional dependencies that must
-# be used to generate the NOTICE file
-dojo:dojo-release

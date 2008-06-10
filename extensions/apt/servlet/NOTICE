@@ -1,11 +1,9 @@
-Apache Sling - APT servlet
-
-Apache Sling
+Apache Sling APT Servlet
 Copyright 2008 The Apache Software Foundation
-
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
 
 Apache Sling is based on source code originally developed 
 by Day Software (http://www.day.com/).
 
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+Licensed under the Apache License 2.0.
