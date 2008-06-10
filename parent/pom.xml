@@ -682,7 +682,7 @@ setting is not correct.
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.1-SNAPSHOT</version>
                 <scope>provided</scope>
             </dependency>
         
