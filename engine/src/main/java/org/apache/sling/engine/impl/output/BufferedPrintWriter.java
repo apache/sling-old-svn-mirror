@@ -89,6 +89,8 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
     /** flag to indicate that the writer has been closed */
     protected boolean closed;
 
+    protected boolean loggedNoBuffering = false;
+
     /**
      * Creates an instance wrapping the <code>PrintWriter</code> and providing
      * an initial buffer size.
@@ -299,7 +301,10 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
         if (this.buffer == null) {
 
             // checks for open stream itself
-            log.debug("write: Direct writing due to disabled buffering");
+            if ( !loggedNoBuffering ) {
+                log.debug("write: Direct writing due to disabled buffering");
+                loggedNoBuffering = true;
+            }
             super.write(c);
 
         } else {
@@ -338,7 +343,10 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
 
         if (this.buffer == null) {
             // checks for open stream itself
-            log.debug("write: Direct writing due to disabled buffering");
+            if ( !loggedNoBuffering ) {
+                log.debug("write: Direct writing due to disabled buffering");
+                loggedNoBuffering = true;
+            }
             super.write(buf, off, len);
         } else {
             // copy all buffer parts bigger than the current space
@@ -402,7 +410,10 @@ public class BufferedPrintWriter extends PrintWriter implements Buffer {
 
         if (this.buffer == null) {
             // checks for open stream itself
-            log.debug("write: Direct writing due to disabled buffering");
+            if ( !loggedNoBuffering ) {
+                log.debug("write: Direct writing due to disabled buffering");
+                loggedNoBuffering = true;
+            }
             super.write(s, off, len);
         } else {
             // copy all buffer parts bigger than the current space
