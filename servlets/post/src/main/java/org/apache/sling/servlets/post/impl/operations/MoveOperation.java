@@ -21,8 +21,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>MoveOperation</code> class implements the
@@ -47,7 +45,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         String sourcePath = source.getPath();
         String destPath = destParent + "/" + destName;
         Session session = source.getSession();
-        
+
         if (session.itemExists(destPath)) {
             session.getItem(destPath).remove();
         }

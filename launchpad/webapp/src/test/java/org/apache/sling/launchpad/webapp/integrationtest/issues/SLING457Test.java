@@ -21,11 +21,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.issues;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
-import org.apache.sling.servlets.post.SlingPostConstants;
 
 public class SLING457Test extends HttpTestBase {
 
@@ -59,7 +55,7 @@ public class SLING457Test extends HttpTestBase {
         props.clear();
         props.put("sling:resourceType", rtB);
         contentUrl = testClient.createNode(HTTP_BASE_URL + rtX, props);
-        
+
         // create content node "x/image" of type rtB
         String rtXImage = rtX + "/image";
         props.clear();
@@ -76,7 +72,7 @@ public class SLING457Test extends HttpTestBase {
         testClient.delete(testRootUrl);
         super.tearDown();
     }
-    
+
     public void testCallFooHtml() throws Exception {
         String url = contentUrl + ".foo.html";
         String content = getContent(url, CONTENT_TYPE_HTML);

@@ -18,8 +18,6 @@
  */
 package org.apache.sling.engine.impl.request;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY;
-
 import java.io.IOException;
 
 import javax.servlet.RequestDispatcher;
@@ -155,7 +153,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
         private final String resourceType;
-        
+
         private String resourceSuperType;
 
         TypeOverwritingResourceWrapper(Resource delegatee, String resourceType) {
