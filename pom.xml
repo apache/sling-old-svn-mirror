@@ -73,11 +73,6 @@
                         <Embed-Dependency>
                             commons-fileupload
                         </Embed-Dependency>
-                                                
-                        <Service-Component>
-                            OSGI-INF/manual_serviceComponents.xml,
-                            OSGI-INF/serviceComponents.xml
-                        </Service-Component>
                     </instructions>
                 </configuration>
             </plugin>
