@@ -80,7 +80,7 @@ public class SessionPoolManager {
     /**
      * @param credentials
      * @param workspace
-     * @return
+     * @return If the login is successful a new session.
      * @throws LoginException
      * @throws NoSuchWorkspaceException
      * @throws RepositoryException
