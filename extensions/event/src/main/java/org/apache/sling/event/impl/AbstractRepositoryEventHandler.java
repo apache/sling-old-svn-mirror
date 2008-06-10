@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract base class for all event handlers in this package.
  *
- * @scr.component abstract="true" metatype="no"
+ * @scr.component abstract="true" metatype="no" immediate="true"
  * @scr.service interface="org.osgi.service.event.EventHandler"
  */
 public abstract class AbstractRepositoryEventHandler
