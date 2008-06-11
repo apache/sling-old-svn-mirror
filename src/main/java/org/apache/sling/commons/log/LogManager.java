@@ -16,40 +16,24 @@
  */
 package org.apache.sling.commons.log;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
-import org.apache.sling.commons.log.slf4j.SlingLogFileWriter;
-import org.apache.sling.commons.log.slf4j.SlingLogWriter;
-import org.apache.sling.commons.log.slf4j.SlingLogger;
-import org.apache.sling.commons.log.slf4j.SlingLoggerFactory;
-import org.apache.sling.commons.log.slf4j.SlingLoggerLevel;
+import org.apache.sling.commons.log.slf4j.LogConfigManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import org.osgi.service.cm.ManagedServiceFactory;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The <code>LogManager</code> manages the loggers used by the LogService and
  * the rest of the system.
  */
-public class LogManager implements ManagedService {
-
-    /**
-     * Initial configuration property specifying whether logging should be
-     * initialized here or not (value is
-     * "org.apache.sling.commons.log.intialize"). If this property is missing or
-     * set to <code>true</code>, this class will reset and configure logging.
-     * Otherwise, logging is neither reset nor configured by this class.
-     */
-    public static final String LOG_INITIALIZE = "org.apache.sling.commons.log.intialize";
+public class LogManager {
 
     public static final String LOG_LEVEL = "org.apache.sling.commons.log.level";
 
@@ -61,49 +45,74 @@ public class LogManager implements ManagedService {
 
     public static final String LOG_PATTERN = "org.apache.sling.commons.log.pattern";
 
-    public static final String LOG_CONFIG_URL = "org.apache.sling.commons.log.url";
-
     public static final String LOG_PATTERN_DEFAULT = "{0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}";
+
+    public static final String LOG_LOGGERS = "org.apache.sling.commons.log.names";
 
     public static final int LOG_FILE_NUMBER_DEFAULT = 5;
 
     public static final String LOG_FILE_SIZE_DEFAULT = "10M";
 
+    public static final String PID = LogManager.class.getName();
+
+    public static final String FACTORY_PID_WRITERS = PID + ".factory.writer";
+
+    public static final String FACTORY_PID_CONFIGS = PID + ".factory.config";
+
+    private final LogConfigManager logConfigManager;
+
     /**
      * default log category - set during init()
      */
-    private org.slf4j.Logger log;
-
-    private File rootDir;
+    private Logger log;
 
     private ServiceRegistration loggingConfigurable;
 
-    LogManager(final BundleContext context) {
+    private ServiceRegistration writerConfigurer;
 
-        // the base for relative path names
-        String root = context.getProperty("sling.home");
-        rootDir = new File((root == null) ? "" : root).getAbsoluteFile();
+    private ServiceRegistration configConfigurer;
 
-        // set initial default configuration
-        configureLogging(new ConfigProperties() {
-            public String getProperty(String name) {
-                return context.getProperty(name);
-            }
-        });
+    LogManager(final BundleContext context) throws ConfigurationException {
+
+        // set the root folder for relative log file names
+        logConfigManager = LogConfigManager.getInstance();
+        logConfigManager.setRoot(context.getProperty("sling.home"));
+
+        // Global configuration handler and update this configuration
+        // immediately
+        ManagedService globalConfigurator = new GlobalConfigurator(
+            logConfigManager, getBundleConfiguration(context));
+        globalConfigurator.updated(null);
 
         // get our own logger
         log = LoggerFactory.getLogger(LogServiceFactory.class);
         log.info("LogManager: Logging set up from context");
 
-        // register for official configuration now
+        // prepare registration properties (will be reused)
         Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, LogManager.class.getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "LogManager Configuration Admin support");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
+        // register for official (global) configuration now
+        props.put(Constants.SERVICE_PID, PID);
+        props.put(Constants.SERVICE_DESCRIPTION,
+            "LogManager Configuration Admin support");
         loggingConfigurable = context.registerService(
-            ManagedService.class.getName(), this, props);
+            ManagedService.class.getName(), globalConfigurator, props);
+
+        // register for log writer configuration
+        ManagedServiceFactory msf = new LogWriterManagedServiceFactory(
+            logConfigManager);
+        props.put(Constants.SERVICE_PID, FACTORY_PID_WRITERS);
+        props.put(Constants.SERVICE_DESCRIPTION, msf.getName());
+        writerConfigurer = context.registerService(
+            ManagedServiceFactory.class.getName(), msf, props);
+
+        // register for log configuration
+        msf = new LoggerManagedServiceFactory(logConfigManager);
+        props.put(Constants.SERVICE_PID, FACTORY_PID_CONFIGS);
+        props.put(Constants.SERVICE_DESCRIPTION, msf.getName());
+        configConfigurer = context.registerService(
+            ManagedServiceFactory.class.getName(), msf, props);
     }
 
     void shutdown() {
@@ -112,211 +121,122 @@ public class LogManager implements ManagedService {
             loggingConfigurable = null;
         }
 
+        if (writerConfigurer != null) {
+            writerConfigurer.unregister();
+            writerConfigurer = null;
+        }
+
+        if (configConfigurer != null) {
+            configConfigurer.unregister();
+            configConfigurer = null;
+        }
+
         // shutdown the log manager
-        SlingLoggerFactory loggerFactory = SlingLoggerFactory.getInstance();
-        loggerFactory.close();
+        logConfigManager.close();
     }
 
     // ---------- ManagedService interface -------------------------------------
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
-     */
-    @SuppressWarnings("unchecked")
-    public void updated(final Dictionary properties) { // unchecked
-        if (properties != null) {
-            configureLogging(new ConfigProperties() {
-                public String getProperty(String name) {
-                    final Object obj = properties.get(name);
-                    return (obj == null) ? null : obj.toString();
-                }
-            });
+    private Dictionary<String, String> getBundleConfiguration(
+            BundleContext bundleContext) {
+        Dictionary<String, String> config = new Hashtable<String, String>();
+
+        final String[] props = { LOG_LEVEL, LOG_LEVEL, LOG_FILE,
+            LOG_FILE_NUMBER, LOG_FILE_SIZE, LOG_PATTERN };
+        for (String prop : props) {
+            String value = bundleContext.getProperty(prop);
+            if (value != null) {
+                config.put(prop, value);
+            }
         }
+
+        // only configure the root logger with bundle context properties !
+        config.put(LOG_LOGGERS, LogConfigManager.ROOT);
+
+        return config;
     }
 
-    // --------- log management ------------------------------------------------
+    private static class GlobalConfigurator implements ManagedService {
 
-    /**
-     * Start this service. Nothing to be done here.
-     */
-    // public void reconfigure(URL configLocation) throws Exception {
-    // // reset logging first
-    // LoggerContext loggerContext = (LoggerContext)
-    // LoggerFactory.getILoggerFactory();
-    // loggerContext.shutdownAndReset();
-    //
-    // // get the configurator
-    // JoranConfigurator configuration = new JoranConfigurator();
-    // configuration.setContext(loggerContext);
-    //
-    // // check for log configuration URL and try that first
-    // try {
-    // configuration.doConfigure(configLocation);
-    // } catch (Throwable t) {
-    // this.log.error("reconfigure: Cannot configure from {}",
-    // configLocation);
-    // // well then, fall back to simple configuration
-    // }
-    //
-    // this.log.info("reconfigure: Logging reconfigured from ", configLocation);
-    // }
-    // void reconfigure(String data) {
-    // LoggerContext loggerContext = (LoggerContext)
-    // LoggerFactory.getILoggerFactory();
-    // loggerContext.shutdownAndReset();
-    //
-    // // get the configurator
-    // JoranConfigurator configuration = new JoranConfigurator();
-    // configuration.setContext(loggerContext);
-    //
-    // InputSource source = new InputSource();
-    // source.setCharacterStream(new StringReader(data));
-    // }
-    public String[] getLoggers() {
-        Set<String> loggerSet = new TreeSet<String>();
+        private final LogConfigManager logConfigManager;
 
-        SlingLoggerFactory loggerFactory = SlingLoggerFactory.getInstance();
-        List<SlingLogger> loggers = loggerFactory.getLoggerList();
-        for (SlingLogger logger : loggers) {
-            loggerSet.add(logger.getName() + ", level=" + logger.getLogLevel());
+        private final Dictionary<String, String> defaultConfiguration;
+
+        GlobalConfigurator(LogConfigManager logConfigManager,
+                Dictionary<String, String> defaultConfiguration) {
+            this.logConfigManager = logConfigManager;
+            this.defaultConfiguration = defaultConfiguration;
         }
 
-        return loggerSet.toArray(new String[loggerSet.size()]);
+        @SuppressWarnings("unchecked")
+        public void updated(Dictionary properties)
+                throws ConfigurationException { // unchecked
+
+            if (properties == null) {
+                properties = defaultConfiguration;
+            }
+
+            logConfigManager.updateLogWriter(PID, properties);
+            logConfigManager.updateLoggerConfiguration(PID, properties);
+        }
+
     }
 
-    public String setLogLevel(String logger, String levelName) {
-        // ignore if logger is not set
-        if (logger == null || logger.length() == 0) {
-            return "Logger name required to set logging level";
+    private static class LogWriterManagedServiceFactory implements
+            ManagedServiceFactory {
+
+        private final LogConfigManager logConfigManager;
+
+        LogWriterManagedServiceFactory(LogConfigManager logConfigManager) {
+            this.logConfigManager = logConfigManager;
         }
 
-        SlingLoggerFactory loggerFactory = SlingLoggerFactory.getInstance();
-        SlingLogger log = loggerFactory.getSlingLogger(logger);
-        if (log != null) {
-            log.setLogLevel(levelName);
-
-            return "Set level '" + levelName + "' on logger '" + log.getName()
-                + "'";
+        public String getName() {
+            return "LogWriter configurator";
         }
 
-        // Fallback
-        return "Logger '" + logger + "' cannot be retrieved";
-    }
-
-    /**
-     * Configures logging from the given properties. This is intended as an
-     * initial configuration. <p/> Sets up the initial logging properties for
-     * the logging support until the real logging configuration file can be read
-     * from the ContentBus.
-     * 
-     * @param properties The <code>Properties</code> containing the initial
-     *            configuration.
-     * @throws NullPointerException if <code>properties</code> is
-     *             <code>null</code>.
-     */
-    protected void configureLogging(ConfigProperties context) {
-
-        // check whether we should configure logging at all
-        String initialize = context.getProperty(LOG_INITIALIZE);
-        if (initialize != null && !"true".equalsIgnoreCase(initialize)) {
-            // not initializing logging now
-            return;
+        public void updated(String pid, Dictionary configuration)
+                throws ConfigurationException {
+            logConfigManager.updateLogWriter(pid, configuration);
         }
 
-        // check for log configuration URL and try that first
-        // String logConfig = context.getProperty(LOG_CONFIG_URL);
-        // if (logConfig != null && logConfig.length() > 0) {
-        // try {
-        // URL logConfigURL = new URL(logConfig);
-        // configuration.doConfigure(logConfigURL);
-        // return;
-        // } catch (Throwable t) {
-        // // well then, fall back to simple configuration
-        // }
-        // }
-
-        // if a log file is defined, use the file appender
-        String logFileName = context.getProperty(LOG_FILE);
-        SlingLogWriter output;
-        if (logFileName != null && logFileName.length() > 0) {
-
-            // ensure proper separator in the path
-            logFileName = logFileName.replace('/', File.separatorChar);
-
-            // ensure absolute path
-            File logFile = new File(logFileName);
-            if (!logFile.isAbsolute()) {
-                logFile = new File(rootDir, logFileName);
-                logFileName = logFile.getAbsolutePath();
-            }
-
-            // check parent directory
-            File logDir = logFile.getParentFile();
-            if (logDir != null) {
-                logDir.mkdirs();
-            }
-
-            // get number of files and ensure minimum and default
-            String fileNumProp = context.getProperty(LOG_FILE_NUMBER);
-            int fileNum = -1;
-            if (fileNumProp != null) {
-                try {
-                    fileNum = Integer.parseInt(fileNumProp.toString());
-                } catch (NumberFormatException nfe) {
-                    // don't care
-                }
-            }
-            if (fileNum <= 0) {
-                fileNum = LOG_FILE_NUMBER_DEFAULT;
-            }
-
-            // get the log file size
-            String fileSize = context.getProperty(LOG_FILE_SIZE);
-            if (fileSize == null || fileSize.length() == 0) {
-                fileSize = LOG_FILE_SIZE_DEFAULT;
-            }
-
+        public void deleted(String pid) {
             try {
-                output = new SlingLogFileWriter(logFileName, fileNum, fileSize);
-            } catch (IOException ioe) {
-                SlingLoggerFactory.internalFailure("Cannot creat log file "
-                    + logFileName, ioe);
-                SlingLoggerFactory.internalFailure("Logging to the console",
-                    null);
-                output = new SlingLogWriter();
+                logConfigManager.updateLogWriter(pid, null);
+            } catch (ConfigurationException ce) {
+                // not expected
+                LogConfigManager.internalFailure(
+                    "Unexpected Configuration Problem", ce);
             }
-
-        } else {
-
-            // fall back to console if no log file defined
-            output = new SlingLogWriter();
-
         }
-
-        // check for the log level setting in the web app properties
-        String logLevel = context.getProperty(LOG_LEVEL);
-        if (logLevel == null || logLevel.length() == 0) {
-            logLevel = SlingLoggerLevel.INFO.toString();
-        } else {
-            logLevel = logLevel.toUpperCase();
-        }
-
-        // set the log appender message pattern
-        String messageFormatString = context.getProperty(LOG_PATTERN);
-        if (messageFormatString == null || messageFormatString.length() == 0) {
-            messageFormatString = LOG_PATTERN_DEFAULT;
-        }
-        MessageFormat messageFormat = new MessageFormat(messageFormatString);
-
-        // configure the logger factory now from the setup
-        SlingLoggerFactory loggerFactory = SlingLoggerFactory.getInstance();
-        loggerFactory.configure(logLevel, output, messageFormat);
     }
 
-    protected static interface ConfigProperties {
-        String getProperty(String name);
-    }
+    private static class LoggerManagedServiceFactory implements
+            ManagedServiceFactory {
 
+        private final LogConfigManager logConfigManager;
+
+        LoggerManagedServiceFactory(LogConfigManager logConfigManager) {
+            this.logConfigManager = logConfigManager;
+        }
+
+        public String getName() {
+            return "Logger configurator";
+        }
+
+        public void updated(String pid, Dictionary configuration)
+                throws ConfigurationException {
+            logConfigManager.updateLoggerConfiguration(pid, configuration);
+        }
+
+        public void deleted(String pid) {
+            try {
+                logConfigManager.updateLoggerConfiguration(pid, null);
+            } catch (ConfigurationException ce) {
+                // not expected
+                LogConfigManager.internalFailure(
+                    "Unexpected Configuration Problem", ce);
+            }
+        }
+    }
 }
