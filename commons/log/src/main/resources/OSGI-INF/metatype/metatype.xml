@@ -1,58 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one
-  or more contributor license agreements.  See the NOTICE file
-  distributed with this work for additional information
-  regarding copyright ownership.  The ASF licenses this file
-  to you under the Apache License, Version 2.0 (the
-  "License"); you may not use this file except in compliance
-  with the License.  You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing,
-  software distributed under the License is distributed on an
-  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  KIND, either express or implied.  See the License for the
-  specific language governing permissions and limitations
-  under the License.
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
 -->
 <metatype:MetaData
     xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0"
     localization="metatype">
+
+    <!-- global configuration through the LogManager -->
     <metatype:OCD id="org.apache.sling.commons.log.LogManager"
         name="%log.name" description="%log.description">
-        <metatype:AD id="org.apache.sling.commons.log.level" type="String"
-            default="info" name="%log.level.name"
+        <metatype:AD id="org.apache.sling.commons.log.level"
+            type="String" default="info" name="%log.level.name"
             description="%log.level.description">
             <metatype:Option value="debug" label="Debug" />
             <metatype:Option value="info" label="Information" />
             <metatype:Option value="warn" label="Warnings" />
             <metatype:Option value="error" label="Error" />
         </metatype:AD>
-        <metatype:AD id="org.apache.sling.commons.log.file" type="String"
-            default="logs/error.log" name="%log.file.name"
+        <metatype:AD id="org.apache.sling.commons.log.file"
+            type="String" default="logs/error.log" name="%log.file.name"
             description="%log.file.description" />
-        <metatype:AD id="org.apache.sling.commons.log.file.number" type="Integer"
-            default="5" name="%log.file.number.name"
+        <metatype:AD id="org.apache.sling.commons.log.file.number"
+            type="Integer" default="5" name="%log.file.number.name"
             description="%log.file.number.description" />
-        <metatype:AD id="org.apache.sling.commons.log.file.size" type="String"
-            default="10mb" name="%log.file.size.name"
+        <metatype:AD id="org.apache.sling.commons.log.file.size"
+            type="String" default="10mb" name="%log.file.size.name"
             description="%log.file.size.description" />
-        <metatype:AD id="org.apache.sling.commons.log.pattern" type="String"
+        <metatype:AD id="org.apache.sling.commons.log.pattern"
+            type="String"
             default="{0\,date\,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"
             name="%log.pattern.name"
             description="%log.pattern.description" />
-            
-<!-- 
-        Log File configuration is not supported at the moment
-        <metatype:AD id="org.apache.sling.commons.log.url" type="String"
-            default="" name="%log.url.name"
-            description="%log.url.description" />
--->
-
     </metatype:OCD>
     <metatype:Designate pid="org.apache.sling.commons.log.LogManager">
-        <metatype:Object ocdref="org.apache.sling.commons.log.LogManager" />
+        <metatype:Object
+            ocdref="org.apache.sling.commons.log.LogManager" />
+    </metatype:Designate>
+
+    <!-- LoggerWriter factory configuration -->
+    <metatype:OCD
+        id="org.apache.sling.commons.log.LogManager.factory.writer"
+        name="%log.factory.writer.name"
+        description="%log.factory.writer.description">
+        <metatype:AD id="org.apache.sling.commons.log.file"
+            type="String" default="logs/error.log" name="%log.file.name"
+            description="%log.file.description" />
+        <metatype:AD id="org.apache.sling.commons.log.file.number"
+            type="Integer" default="5" name="%log.file.number.name"
+            description="%log.file.number.description" />
+        <metatype:AD id="org.apache.sling.commons.log.file.size"
+            type="String" default="10mb" name="%log.file.size.name"
+            description="%log.file.size.description" />
+    </metatype:OCD>
+    <metatype:Designate
+        pid="org.apache.sling.commons.log.LogManager.factory.writer">
+        <metatype:Object
+            ocdref="org.apache.sling.commons.log.LogManager.factory.writer" />
+    </metatype:Designate>
+
+    <!-- LoggerConfig factory configuration -->
+    <metatype:OCD
+        id="org.apache.sling.commons.log.LogManager.factory.config"
+        name="%log.factory.config.name"
+        description="%log.factory.config.description">
+        <metatype:AD id="org.apache.sling.commons.log.level"
+            type="String" default="info" name="%log.level.name"
+            description="%log.level.description">
+            <metatype:Option value="debug" label="Debug" />
+            <metatype:Option value="info" label="Information" />
+            <metatype:Option value="warn" label="Warnings" />
+            <metatype:Option value="error" label="Error" />
+        </metatype:AD>
+        <metatype:AD id="org.apache.sling.commons.log.file"
+            type="String" default="logs/error.log" name="%log.file.name"
+            description="%log.file.description" />
+        <metatype:AD id="org.apache.sling.commons.log.pattern"
+            type="String"
+            default="{0\,date\,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"
+            name="%log.pattern.name"
+            description="%log.pattern.description" />
+        <metatype:AD id="org.apache.sling.commons.log.names"
+            type="String" name="%log.loggers.name"
+            description="%log.loggers.description"
+            cardinality="2147483647" />
+    </metatype:OCD>
+    <metatype:Designate
+        pid="org.apache.sling.commons.log.LogManager.factory.config">
+        <metatype:Object
+            ocdref="org.apache.sling.commons.log.LogManager.factory.config" />
     </metatype:Designate>
 </metatype:MetaData>

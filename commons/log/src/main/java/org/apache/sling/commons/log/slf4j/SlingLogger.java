@@ -18,28 +18,20 @@
  */
 package org.apache.sling.commons.log.slf4j;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.FieldPosition;
-import java.text.MessageFormat;
-import java.util.Date;
 
 import org.slf4j.Marker;
 import org.slf4j.helpers.MessageFormatter;
 import org.slf4j.spi.LocationAwareLogger;
 
-public class SlingLogger implements LocationAwareLogger {
+class SlingLogger implements LocationAwareLogger {
 
     private final String name;
 
-    private SlingLoggerLevel level;
+    private SlingLoggerConfig config;
 
-    private SlingLogWriter output;
-
-    private MessageFormat format;
-
-    public SlingLogger(String name) {
+    SlingLogger(String name) {
         this.name = name;
     }
 
@@ -47,11 +39,8 @@ public class SlingLogger implements LocationAwareLogger {
      * Configures this logger with the given log level, output and message
      * format. None of these is allowed to be <code>null</code>.
      */
-    void configure(SlingLoggerLevel level, SlingLogWriter output,
-            MessageFormat messageFormat) {
-        this.level = level;
-        this.output = output;
-        this.format = messageFormat;
+    void configure(SlingLoggerConfig config) {
+        this.config = config;
     }
 
     // ---------- Actual Loger Entry writing -----------------------------------
@@ -67,12 +56,7 @@ public class SlingLogger implements LocationAwareLogger {
 
         // create the formatted log line; use a local copy because the field
         // may be exchanged while we are trying to use it
-        MessageFormat myFormat = format;
-        synchronized (myFormat) {
-            myFormat.format(new Object[] { new Date(), marker,
-                Thread.currentThread().getName(), getName(), level.toString(),
-                msg, fqcn }, writer.getBuffer(), new FieldPosition(0));
-        }
+        config.formatMessage(writer.getBuffer(), marker, getName(), level, msg, fqcn);
 
         // marker indicating whether a line terminator is to be written after
         // the message: If a throwable is given, the stacktrace generator
@@ -93,54 +77,7 @@ public class SlingLogger implements LocationAwareLogger {
 
         // use a local copy because the field may be exchanged while we are
         // trying to use it
-        SlingLogWriter myOutput = output;
-        synchronized (myOutput) {
-            String message = writer.toString();
-            try {
-                myOutput.write(message);
-
-                // write line termination or flush, whatever is needed
-                if (needsEOL) {
-                    myOutput.writeln();
-                } else {
-                    myOutput.flush();
-                }
-
-            } catch (IOException ioe) {
-                SlingLoggerFactory.internalFailure("Failed logging message: "
-                    + message, ioe);
-            }
-        }
-    }
-
-    // ---------- Log Level support --------------------------------------------
-
-    public void setLogLevel(String levelString) {
-        try {
-            // ensure upper case level name
-            levelString = levelString.toUpperCase();
-
-            // try to convert to a SlingLoggerLevel instance,
-            // throws if the string is invalid
-            SlingLoggerLevel level = SlingLoggerLevel.valueOf(levelString);
-
-            // finally set the level
-            this.setLogLevel(level);
-        } catch (Exception e) {
-            warn("Cannot set loglevel to " + level, e);
-        }
-    }
-
-    public void setLogLevel(SlingLoggerLevel level) {
-        this.level = level;
-    }
-
-    public SlingLoggerLevel getLogLevel() {
-        return level;
-    }
-
-    private boolean isLevel(SlingLoggerLevel reference) {
-        return level.compareTo(reference) <= 0;
+        config.printMessage(writer.toString(), needsEOL);
     }
 
     // ---------- Logger interface ---------------------------------------------
@@ -149,6 +86,10 @@ public class SlingLogger implements LocationAwareLogger {
         return name;
     }
 
+    SlingLoggerConfig getConfiguration() {
+        return  config;
+    }
+    
     public void trace(String msg) {
         if (isTraceEnabled()) {
             log(null, SlingLoggerLevel.TRACE, msg, null);
@@ -480,49 +421,50 @@ public class SlingLogger implements LocationAwareLogger {
     }
 
     public boolean isTraceEnabled() {
-        return isLevel(SlingLoggerLevel.TRACE);
+        return config.isLevel(SlingLoggerLevel.TRACE);
     }
 
     public boolean isTraceEnabled(Marker marker) {
-        return isLevel(SlingLoggerLevel.TRACE);
+        return config.isLevel(SlingLoggerLevel.TRACE);
     }
 
     public boolean isDebugEnabled() {
-        return isLevel(SlingLoggerLevel.DEBUG);
+        return config.isLevel(SlingLoggerLevel.DEBUG);
     }
 
     public boolean isDebugEnabled(Marker marker) {
-        return isLevel(SlingLoggerLevel.DEBUG);
+        return config.isLevel(SlingLoggerLevel.DEBUG);
     }
 
     public boolean isInfoEnabled() {
-        return isLevel(SlingLoggerLevel.INFO);
+        return config.isLevel(SlingLoggerLevel.INFO);
     }
 
     public boolean isInfoEnabled(Marker marker) {
-        return isLevel(SlingLoggerLevel.INFO);
+        return config.isLevel(SlingLoggerLevel.INFO);
     }
 
     public boolean isWarnEnabled() {
-        return isLevel(SlingLoggerLevel.WARN);
+        return config.isLevel(SlingLoggerLevel.WARN);
     }
 
     public boolean isWarnEnabled(Marker marker) {
-        return isLevel(SlingLoggerLevel.WARN);
+        return config.isLevel(SlingLoggerLevel.WARN);
     }
 
     public boolean isErrorEnabled() {
-        return isLevel(SlingLoggerLevel.ERROR);
+        return config.isLevel(SlingLoggerLevel.ERROR);
     }
 
     public boolean isErrorEnabled(Marker marker) {
-        return isLevel(SlingLoggerLevel.ERROR);
+        return config.isLevel(SlingLoggerLevel.ERROR);
     }
 
     public void log(Marker marker, String fqcn, int level, String message,
             Throwable t) {
         SlingLoggerLevel slingLevel = SlingLoggerLevel.fromSlf4jLevel(level);
-
-        log(marker, fqcn, slingLevel, message, t);
+        if (config.isLevel(slingLevel)) {
+            log(marker, fqcn, slingLevel, message, t);
+        }
     }
 }

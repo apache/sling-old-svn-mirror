@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-public class SlingLogFileWriterTest extends TestCase {
+public class SlingLogWriterTest extends TestCase {
     private static int counter;
 
     @Override
@@ -46,7 +46,7 @@ public class SlingLogFileWriterTest extends TestCase {
 
     public void testNoRotateSize() throws IOException {
         final String base = getBase();
-        SlingLogFileWriter slfw = new SlingLogFileWriter(base, -1, 10);
+        SlingLoggerWriter slfw = createLogWriter(base, -1, 10);
 
         // only base file should exist with size 0 (for now)
         File test = new File(base);
@@ -77,7 +77,7 @@ public class SlingLogFileWriterTest extends TestCase {
 
     public void testRotate0Size() throws IOException {
         final String base = getBase();
-        SlingLogFileWriter slfw = new SlingLogFileWriter(base, 0, 10);
+        SlingLoggerWriter slfw = createLogWriter(base, 0, 10);
 
         // only base file should exist with size 0 (for now)
         File test = new File(base);
@@ -111,7 +111,7 @@ public class SlingLogFileWriterTest extends TestCase {
 
     public void testRotate1Size() throws IOException {
         final String base = getBase();
-        SlingLogFileWriter slfw = new SlingLogFileWriter(base, 1, 10);
+        SlingLoggerWriter slfw = createLogWriter(base, 1, 10);
 
         // only base file should exist with size 0 (for now)
         File test = new File(base);
@@ -153,32 +153,35 @@ public class SlingLogFileWriterTest extends TestCase {
     }
 
     public void testMaxSizeConversion() {
-        assertEquals(1, SlingLogFileWriter.convertMaxSizeSpec("1"));
+        assertEquals(1, SlingLoggerWriter.convertMaxSizeSpec("1"));
 
         // kilo
-        assertEquals(1 * 1024, SlingLogFileWriter.convertMaxSizeSpec("1K"));
-        assertEquals(1 * 1024, SlingLogFileWriter.convertMaxSizeSpec("1k"));
-        assertEquals(1 * 1024, SlingLogFileWriter.convertMaxSizeSpec("1KB"));
-        assertEquals(1 * 1024, SlingLogFileWriter.convertMaxSizeSpec("1kb"));
+        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1K"));
+        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1k"));
+        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1KB"));
+        assertEquals(1 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1kb"));
 
         // mega
-        assertEquals(1 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1M"));
-        assertEquals(1 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1m"));
-        assertEquals(1 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1MB"));
-        assertEquals(1 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1mb"));
+        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1M"));
+        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1m"));
+        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1MB"));
+        assertEquals(1 * 1024 * 1024, SlingLoggerWriter.convertMaxSizeSpec("1mb"));
 
         // giga
         assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1G"));
+            SlingLoggerWriter.convertMaxSizeSpec("1G"));
         assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1g"));
+            SlingLoggerWriter.convertMaxSizeSpec("1g"));
         assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1GB"));
+            SlingLoggerWriter.convertMaxSizeSpec("1GB"));
         assertEquals(1 * 1024 * 1024 * 1024,
-            SlingLogFileWriter.convertMaxSizeSpec("1gb"));
+            SlingLoggerWriter.convertMaxSizeSpec("1gb"));
+    }
+
+    private SlingLoggerWriter createLogWriter(String file, int numFiles, long size)
+            throws IOException {
+        SlingLoggerWriter slw = new SlingLoggerWriter(getClass().getName());
+        slw.configure(file, numFiles, String.valueOf(size));
+        return slw;
     }
 }
