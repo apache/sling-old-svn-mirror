@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.app</artifactId>
     <packaging>jar</packaging>
-    <version>2.0.3-incubator-SNAPSHOT</version>
+    <version>3-incubator-SNAPSHOT</version>
 
     <name>Sling - Launchpad Application</name>
     <description>
