@@ -32,6 +32,13 @@ import javax.servlet.http.HttpServletResponse;
 public interface AuthenticationHandler {
 
     /**
+     * An authentication handler is associated with url paths.
+     * If the handler is not configured with a path, it is regarded as inactive.
+     * If the handler should be used for all requests, the path should be '/'.
+     */
+    String PATH_PROPERTY = "path";
+
+    /**
      * Extracts credential data from the request if at all contained.
      * <p>
      * The method returns any of the following values : <table>
