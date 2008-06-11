@@ -94,7 +94,7 @@
                             <outputDirectory>
                                 ${project.build.outputDirectory}
                             </outputDirectory>
-                            <include>**</include>
+                            <includes>**</includes>
                             <excludes>
                                 org/osgi/framework/**,
                                 org/osgi/service/packageadmin/**,
@@ -118,8 +118,8 @@
                             <outputDirectory>
                                 ${project.build.outputDirectory}
                             </outputDirectory>
-                            <include>**</include>
-                            <excludes>META-INF/**</excludes>
+                            <includes>**</includes>
+                            <excludes>META-INF/**,**/NOTICE</excludes>
                         </configuration>
                     </execution>
                 </executions>
