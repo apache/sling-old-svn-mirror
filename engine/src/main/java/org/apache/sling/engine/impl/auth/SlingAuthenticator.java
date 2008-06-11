@@ -19,8 +19,12 @@
 package org.apache.sling.engine.impl.auth;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -32,12 +36,14 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.apache.sling.jcr.api.TooManySessionsException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.service.http.HttpContext;
@@ -111,7 +117,7 @@ public class SlingAuthenticator implements ManagedService {
 
     private int authHandlerTrackerCount;
 
-    private AuthenticationHandler[] authHandlerCache;
+    private AuthenticationHandlerInfo[] authHandlerCache;
 
     /** The name of the impersonation parameter */
     private String sudoParameterName;
@@ -246,20 +252,22 @@ public class SlingAuthenticator implements ManagedService {
     public void requestAuthentication(HttpServletRequest request,
             HttpServletResponse response) {
 
-        AuthenticationHandler[] handlers = getAuthenticationHandlers();
+        AuthenticationHandlerInfo[] handlerInfos = getAuthenticationHandlers();
         boolean done = false;
-        for (int i = 0; !done && i < handlers.length; i++) {
-            log.debug(
-                "requestAuthentication: requesting authentication using handler: {0}",
-                handlers[i]);
+        for (int i = 0; !done && i < handlerInfos.length; i++) {
+            if ( request.getPathInfo().startsWith(handlerInfos[i].path) ) {
+                log.debug(
+                    "requestAuthentication: requesting authentication using handler: {0}",
+                    handlerInfos[i]);
 
-            try {
-                done = handlers[i].requestAuthentication(request, response);
-            } catch (IOException ioe) {
-                log.error(
-                    "requestAuthentication: Failed sending authentication request through handler "
-                        + handlers[i] + ", access forbidden", ioe);
-                done = true;
+                try {
+                    done = handlerInfos[i].handler.requestAuthentication(request, response);
+                } catch (IOException ioe) {
+                    log.error(
+                        "requestAuthentication: Failed sending authentication request through handler "
+                            + handlerInfos[i] + ", access forbidden", ioe);
+                    done = true;
+                }
             }
         }
 
@@ -319,15 +327,32 @@ public class SlingAuthenticator implements ManagedService {
         return repo;
     }
 
-    private AuthenticationHandler[] getAuthenticationHandlers() {
+    private static AuthenticationHandlerInfo[] EMPTY_INFO = new AuthenticationHandlerInfo[0];
+    private AuthenticationHandlerInfo[] getAuthenticationHandlers() {
         if (authHandlerCache == null
             || authHandlerTrackerCount < authHandlerTracker.getTrackingCount()) {
-            Object[] services = authHandlerTracker.getServices();
-            AuthenticationHandler[] ac = new AuthenticationHandler[services == null ? 0 : services.length];
-            for (int i = 0; i < ac.length; i++) {
-                ac[i] = (AuthenticationHandler) services[i];
+            final ServiceReference[] services = authHandlerTracker.getServiceReferences();
+            if ( services == null || services.length == 0 ) {
+                this.authHandlerCache = EMPTY_INFO;
+            } else {
+                final List<AuthenticationHandlerInfo> infos = new ArrayList<AuthenticationHandlerInfo>();
+                for (int i = 0; i < services.length; i++) {
+                    log.info("** Found handler reference " + services[i]);
+                    final String paths[] = OsgiUtil.toStringArray(services[i].getProperty(AuthenticationHandler.PATH_PROPERTY));
+                    log.info("** Paths " + paths);
+                    if ( paths != null && paths.length > 0 ) {
+                        final AuthenticationHandler handler = (AuthenticationHandler) authHandlerTracker.getService(services[i]);
+                        log.info("** Handler " + handler);
+                        for(int m = 0; m < paths.length; m++) {
+                            log.info("** Path " + paths[m]);
+                            infos.add(new AuthenticationHandlerInfo(paths[m], handler));
+                        }
+                    }
+                }
+                final AuthenticationHandlerInfo[] ac = infos.toArray(new AuthenticationHandlerInfo[infos.size()]);
+                Arrays.sort(ac, AuthenticationHandlerInfoComparator.SINGLETON);
+                authHandlerCache = ac;
             }
-            authHandlerCache = ac;
             authHandlerTrackerCount = authHandlerTracker.getTrackingCount();
         }
         return authHandlerCache;
@@ -335,12 +360,14 @@ public class SlingAuthenticator implements ManagedService {
 
     private AuthenticationInfo getAuthenticationInfo(
             HttpServletRequest request, HttpServletResponse response) {
-        AuthenticationHandler[] local = getAuthenticationHandlers();
+        AuthenticationHandlerInfo[] local = getAuthenticationHandlers();
         for (int i = 0; i < local.length; i++) {
-            AuthenticationInfo authInfo = local[i].authenticate(request,
-                response);
-            if (authInfo != null) {
-                return authInfo;
+            if ( request.getPathInfo().startsWith(local[i].path) ) {
+                final AuthenticationInfo authInfo = local[i].handler.authenticate(request,
+                    response);
+                if (authInfo != null) {
+                    return authInfo;
+                }
             }
         }
 
@@ -557,5 +584,29 @@ public class SlingAuthenticator implements ManagedService {
         // return the session
         return session;
     }
+
+    protected static final class AuthenticationHandlerInfo {
+        public final String path;
+        public final AuthenticationHandler handler;
+
+        public AuthenticationHandlerInfo(final String p, final AuthenticationHandler h) {
+            this.path = p;
+            this.handler = h;
+        }
+    }
+
+    protected static final class AuthenticationHandlerInfoComparator implements Comparator<AuthenticationHandlerInfo> {
+
+        public static final AuthenticationHandlerInfoComparator SINGLETON = new AuthenticationHandlerInfoComparator();
+        /**
+         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         */
+        public int compare(AuthenticationHandlerInfo arg0,
+                AuthenticationHandlerInfo arg1) {
+            return arg0.path.compareTo(arg1.path) * -1;
+        }
+
+    }
+
 
 }
