@@ -337,21 +337,23 @@ public class SlingAuthenticator implements ManagedService {
             } else {
                 final List<AuthenticationHandlerInfo> infos = new ArrayList<AuthenticationHandlerInfo>();
                 for (int i = 0; i < services.length; i++) {
-                    log.info("** Found handler reference " + services[i]);
                     final String paths[] = OsgiUtil.toStringArray(services[i].getProperty(AuthenticationHandler.PATH_PROPERTY));
-                    log.info("** Paths " + paths);
                     if ( paths != null && paths.length > 0 ) {
                         final AuthenticationHandler handler = (AuthenticationHandler) authHandlerTracker.getService(services[i]);
-                        log.info("** Handler " + handler);
                         for(int m = 0; m < paths.length; m++) {
-                            log.info("** Path " + paths[m]);
-                            infos.add(new AuthenticationHandlerInfo(paths[m], handler));
+                            if ( paths[m] != null && paths[m].length() > 0 ) {
+                                infos.add(new AuthenticationHandlerInfo(paths[m], handler));
+                            }
                         }
                     }
                 }
-                final AuthenticationHandlerInfo[] ac = infos.toArray(new AuthenticationHandlerInfo[infos.size()]);
-                Arrays.sort(ac, AuthenticationHandlerInfoComparator.SINGLETON);
-                authHandlerCache = ac;
+                if ( infos.size() == 0 ) {
+                    authHandlerCache = EMPTY_INFO;
+                } else {
+                    final AuthenticationHandlerInfo[] ac = infos.toArray(new AuthenticationHandlerInfo[infos.size()]);
+                    Arrays.sort(ac, AuthenticationHandlerInfoComparator.SINGLETON);
+                    authHandlerCache = ac;
+                }
             }
             authHandlerTrackerCount = authHandlerTracker.getTrackingCount();
         }
