@@ -38,11 +38,12 @@ import org.slf4j.LoggerFactory;
  * the authorization steps based on the Authorization header of the HTTP
  * request. This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
- * 
+ *
  * @scr.component immediate="false" label="%auth.http.name"
  *                description="%auth.http.description"
  * @scr.property name="service.description" value="HTTP Header Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
+ * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" value="/"
  * @scr.service
  */
 public class AuthorizationHeaderAuthenticationHandler implements
@@ -58,7 +59,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * in the {@link #authenticate(HttpServletRequest, HttpServletResponse)}
      * method if no credentials are present in the request (value is
      * "sling:authRequestLogin").
-     * 
+     *
      * @see #authenticate(HttpServletRequest, HttpServletResponse)
      */
     static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
@@ -119,7 +120,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * the request may be for an included servlet, in which case the values for
      * some URI specific values are contained in javax.servlet.include.* request
      * attributes.
-     * 
+     *
      * @param request The request object containing the information for the
      *            authentication.
      * @param response The response object which may be used to send the
@@ -159,7 +160,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * authentication with the <code>Basic</code> scheme and the configured
      * realm name. If the response is already committed, an error message is
      * logged but the 401 status is not sent.
-     * 
+     *
      * @param request The request object
      * @param response The response object to which to send the request
      * @return <code>true</code> is always returned by this handler
