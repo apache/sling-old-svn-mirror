@@ -1,4 +1,0 @@
-# This product includes software developed at jruby.codehaus.org, distributed 
-# under a tri-license (CPL/GPL/LGPL). CPL is a reciprocal license, but this 
-# product uses it in binary form only, with no modifications.
-# No required notices.

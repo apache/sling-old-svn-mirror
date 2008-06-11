@@ -1,3 +1,0 @@
-# This product includes Equinox software developed by the Eclipse foundation, 
-# distributed under EPL license (http://www.eclipse.org/legal/epl-v10.html).
-# No required notices.

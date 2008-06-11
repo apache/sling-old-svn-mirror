@@ -1,4 +1,0 @@
-# This product includes Rhino software developed at mozilla.org 
-# (http://www.mozilla.org/), dual-licensed under both an MPL and a GPL license, 
-# see http://developer.mozilla.org/en/docs/Rhino_License . 
-# No required notices.
