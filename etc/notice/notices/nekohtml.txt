@@ -1,3 +1,0 @@
-# This product includes CyberNeko software developed at
-# http://sourceforge.net/projects/nekohtml, under Apache License.
-# No required notices.
