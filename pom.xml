@@ -518,7 +518,7 @@ setting is not correct.
 	                <!-- 
 	                    Same problem as JCR-683: commons-httpclient depends on commons-logging. Since 
 	                    this webapp uses log4j (see the slf4j-log4j12 dependency below), we need to
-	                    override this dependency with jcl104-over-sflf4j, found below
+	                    override this dependency with jcl-over-sflf4j, found below
 	                -->
 	                <exclusion>
 	                    <groupId>commons-logging</groupId>
@@ -616,31 +616,31 @@ setting is not correct.
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
-                <version>1.5.0</version>
+                <version>1.5.2</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.5.0</version>
+                <version>1.5.2</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
-                <artifactId>jcl104-over-slf4j</artifactId>
-                <version>1.5.0</version>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>1.5.2</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>log4j-over-slf4j</artifactId>
-                <version>1.5.0</version>
+                <version>1.5.2</version>
                 <scope>provided</scope>
             </dependency>
 	        <dependency>
 	            <groupId>org.slf4j</groupId>
 	            <artifactId>slf4j-log4j12</artifactId>
-                <version>1.5.0</version>
+                <version>1.5.2</version>
                 <scope>provided</scope>
 	        </dependency>
 
