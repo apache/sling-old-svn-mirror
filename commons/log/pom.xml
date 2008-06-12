@@ -34,7 +34,9 @@
     <name>Sling - OSGi LogService Implementation</name>
     <description>
         Implementation of the OSGi Compendium Log Service using SLF4J
-        ontop of NLOG4J. Provides SLF4J and Jakarta Commons Logging API.
+        on top of a private implementation. In addition to providing the
+        implemented SLF4J API, the Log4J and Jakarta Commons Logging APIs
+        are provided with implementations on top of the SLF4J API.
     </description>
 
     <scm>
