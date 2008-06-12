@@ -27,6 +27,7 @@
         <metatype:AD id="org.apache.sling.commons.log.level"
             type="String" default="info" name="%log.level.name"
             description="%log.level.description">
+            <metatype:Option value="trace" label="Trace" />
             <metatype:Option value="debug" label="Debug" />
             <metatype:Option value="info" label="Information" />
             <metatype:Option value="warn" label="Warnings" />
@@ -81,6 +82,7 @@
         <metatype:AD id="org.apache.sling.commons.log.level"
             type="String" default="info" name="%log.level.name"
             description="%log.level.description">
+            <metatype:Option value="trace" label="Trace" />
             <metatype:Option value="debug" label="Debug" />
             <metatype:Option value="info" label="Information" />
             <metatype:Option value="warn" label="Warnings" />
