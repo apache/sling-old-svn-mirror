@@ -35,11 +35,7 @@ class SlingLogger implements LocationAwareLogger {
         this.name = name;
     }
 
-    /**
-     * Configures this logger with the given log level, output and message
-     * format. None of these is allowed to be <code>null</code>.
-     */
-    void configure(SlingLoggerConfig config) {
+    void setLoggerConfig(SlingLoggerConfig config) {
         this.config = config;
     }
 
@@ -86,10 +82,6 @@ class SlingLogger implements LocationAwareLogger {
         return name;
     }
 
-    SlingLoggerConfig getConfiguration() {
-        return  config;
-    }
-    
     public void trace(String msg) {
         if (isTraceEnabled()) {
             log(null, SlingLoggerLevel.TRACE, msg, null);
