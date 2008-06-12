@@ -23,11 +23,15 @@ import java.text.FieldPosition;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.slf4j.Marker;
 
+/**
+ * The <code>SlingLoggerConfig</code> conveys the logger configuration in
+ * terms of writer used and log level set. The respective instances of this
+ * class are also used for the actual message formatting and writing.
+ */
 class SlingLoggerConfig {
 
     private String configPid;
@@ -62,8 +66,8 @@ class SlingLoggerConfig {
         return categories.contains(category);
     }
 
-    Iterator<String> getCategories() {
-        return categories.iterator();
+    Set<String> getCategories() {
+        return categories;
     }
 
     SlingLoggerWriter getLogWriter() {
@@ -72,6 +76,18 @@ class SlingLoggerConfig {
 
     void setLogWriter(SlingLoggerWriter writer) {
         this.writer = writer;
+    }
+
+    SlingLoggerLevel getLogLevel() {
+        return level;
+    }
+
+    boolean isLevel(SlingLoggerLevel reference) {
+        return level.compareTo(reference) <= 0;
+    }
+
+    void setLogLevel(SlingLoggerLevel level) {
+        this.level = level;
     }
 
     void formatMessage(StringBuffer buffer, Marker marker, String name,
@@ -106,36 +122,6 @@ class SlingLoggerConfig {
                     + message, ioe);
             }
         }
-    }
-
-    // ---------- Log Level support --------------------------------------------
-
-    void setLogLevel(String levelString) {
-        try {
-            // ensure upper case level name
-            levelString = levelString.toUpperCase();
-
-            // try to convert to a SlingLoggerLevel instance,
-            // throws if the string is invalid
-            SlingLoggerLevel level = SlingLoggerLevel.valueOf(levelString);
-
-            // finally set the level
-            this.setLogLevel(level);
-        } catch (Exception e) {
-            // TODO: warn("Cannot set loglevel to " + level, e);
-        }
-    }
-
-    void setLogLevel(SlingLoggerLevel level) {
-        this.level = level;
-    }
-
-    SlingLoggerLevel getLogLevel() {
-        return level;
-    }
-
-    boolean isLevel(SlingLoggerLevel reference) {
-        return level.compareTo(reference) <= 0;
     }
 
 }
