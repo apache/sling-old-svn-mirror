@@ -20,7 +20,6 @@ package org.apache.sling.commons.log.slf4j;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.text.MessageFormat;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
@@ -39,6 +38,7 @@ public class SlingLoggerTest extends TestCase {
     private String messageOnly = "{5}";
 
     private SlingLoggerConfig config;
+
     private SlingLogger logger;
 
     @Override
@@ -47,54 +47,15 @@ public class SlingLoggerTest extends TestCase {
 
         config = new SlingLoggerConfig(getClass().getName(), "",
             new HashSet<String>(), SlingLoggerLevel.DEBUG, output);
-        
+
         logger = new SlingLogger("sample");
-        logger.configure(config);
+        logger.setLoggerConfig(config);
     }
 
     @Override
     protected void tearDown() throws Exception {
         output.close();
         super.tearDown();
-    }
-
-    public void testSetLogLevel() {
-
-        // prevent real output, set output delegatee to null
-        try {
-            output.close();
-        } catch (IOException ignore) {
-        }
-
-        // initial assertion
-        config.setLogLevel(SlingLoggerLevel.DEBUG);
-        assertEquals(SlingLoggerLevel.DEBUG, config.getLogLevel());
-
-        // valid as is
-        config.setLogLevel("INFO");
-        assertEquals(SlingLoggerLevel.INFO, config.getLogLevel());
-
-        // valid internal conversion to upper case
-        config.setLogLevel("warn");
-        assertEquals(SlingLoggerLevel.WARN, config.getLogLevel());
-        config.setLogLevel("ErrOr");
-        assertEquals(SlingLoggerLevel.ERROR, config.getLogLevel());
-
-        // reset log level to debug
-        config.setLogLevel(SlingLoggerLevel.DEBUG);
-        assertEquals(SlingLoggerLevel.DEBUG, config.getLogLevel());
-
-        // invalid, last level is still set
-        config.setLogLevel((String) null);
-        assertEquals(SlingLoggerLevel.DEBUG, config.getLogLevel());
-
-        // invalid, last level is still set
-        config.setLogLevel("");
-        assertEquals(SlingLoggerLevel.DEBUG, config.getLogLevel());
-
-        // invalid, last level is still set
-        config.setLogLevel("gurk");
-        assertEquals(SlingLoggerLevel.DEBUG, config.getLogLevel());
     }
 
     public void testCheckLogLevelTrace() {
@@ -178,7 +139,8 @@ public class SlingLoggerTest extends TestCase {
         output.setDelegatee(w);
 
         // a single message
-        config.configure(messageOnly, new HashSet<String>(), SlingLoggerLevel.DEBUG, output);
+        config.configure(messageOnly, new HashSet<String>(),
+            SlingLoggerLevel.DEBUG, output);
 
         String message = "This is a message";
         logger.warn(message);
@@ -186,7 +148,8 @@ public class SlingLoggerTest extends TestCase {
 
         // reset output buffer and format with logger name and message
         w.getBuffer().delete(0, w.getBuffer().length());
-        config.configure("{3}|{5}", new HashSet<String>(), SlingLoggerLevel.DEBUG, output);
+        config.configure("{3}|{5}", new HashSet<String>(),
+            SlingLoggerLevel.DEBUG, output);
 
         logger.warn(message);
         assertEquals(logger.getName() + "|" + message, w.toString());
@@ -194,7 +157,8 @@ public class SlingLoggerTest extends TestCase {
         // reset output buffer and format with logger name, level, thread and
         // message
         w.getBuffer().delete(0, w.getBuffer().length());
-        config.configure("{2}|{3}|{4}|{5}", new HashSet<String>(), SlingLoggerLevel.DEBUG, output);
+        config.configure("{2}|{3}|{4}|{5}", new HashSet<String>(),
+            SlingLoggerLevel.DEBUG, output);
         logger.warn(message);
         assertEquals(Thread.currentThread().getName() + "|" + logger.getName()
             + "|" + SlingLoggerLevel.WARN + "|" + message, w.toString());
