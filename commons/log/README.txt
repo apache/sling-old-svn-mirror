@@ -8,8 +8,9 @@ components:
   (1) An implementation of the Log Service Specification contained in
       the OSGi Service Platform Service Compendium book.
       
-  (2) The SLF4J API package (org.slfj) and Apache Commons Logging API
-      package (org.apache.commons.logging) for clients to use.
+  (2) The SLF4J API package (org.slfj), Apache Commons Logging API
+      package (org.apache.commons.logging) and Log4J package
+      (org.apache.log4j) for clients to use.
       
   (3) Backend logging implementation of the SLF4J interfaces.
   
