@@ -315,10 +315,29 @@ public class LogSupport implements BundleListener, ServiceListener,
         Long bundleId = new Long((bundle == null) ? 0 : bundle.getBundleId());
         Logger log = this.loggers.get(bundleId);
         if (log == null) {
-            // TODO: use systembundle for bundle==null
-            String name = (bundle == null)
-                    ? Constants.SYSTEM_BUNDLE_SYMBOLICNAME
-                    : bundle.getSymbolicName();
+            
+            String name;
+            if (bundle == null) {
+                
+                // if we have no bundle, use the system bundle's name
+                name = Constants.SYSTEM_BUNDLE_SYMBOLICNAME;
+                
+            } else {
+                
+                // otherwise use the bundle symbolic name
+                name = bundle.getSymbolicName();
+                
+                // if the bundle has no symbolic name, use the location
+                if (name == null) {
+                    name = bundle.getLocation(); 
+                }
+                
+                // if the bundle also has no location, use the bundle Id
+                if (name == null) {
+                    name = String.valueOf(bundle.getBundleId());
+                }
+            }
+            
             log = LoggerFactory.getLogger(name);
             this.loggers.put(bundleId, log);
         }
