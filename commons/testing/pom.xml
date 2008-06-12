@@ -74,7 +74,7 @@
                 <!-- 
                     Same problem as JCR-683: commons-httpclient depends on commons-logging. Since 
                     this webapp uses log4j (see the slf4j-log4j12 dependency below), we need to
-                    override this dependency with jcl104-over-sflf4j, found below
+                    override this dependency with jcl-over-sflf4j, found below
                 -->
                 <exclusion>
                     <groupId>commons-logging</groupId>
