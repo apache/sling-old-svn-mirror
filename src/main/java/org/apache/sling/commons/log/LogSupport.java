@@ -371,6 +371,13 @@ public class LogSupport implements BundleListener, ServiceListener,
             case LogService.LOG_ERROR:
                 log.error(message, exception);
                 break;
+            default:
+                if (logEntry.getLevel() > LogService.LOG_DEBUG) {
+                    log.trace(message, exception);
+                } else if (logEntry.getLevel() < LogService.LOG_ERROR) {
+                    log.error(message, exception);
+                }
+                break;
         }
     }
 
