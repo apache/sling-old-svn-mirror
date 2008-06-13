@@ -1,8 +1,6 @@
 Apache Sling Mime Library
 
-
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for configurable MIME type mapping and querying.
 
 Disclaimer
 ==========

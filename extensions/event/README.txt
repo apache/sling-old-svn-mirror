@@ -1,6 +1,7 @@
-Apache Sling Threads
+Apache Sling Event
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+This bundle provides additional features for event handling, like replication
+events in a cluster, providing the support for timed events and jobs.
 
 
 Disclaimer

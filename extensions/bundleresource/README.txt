@@ -1,7 +1,7 @@
 Apache Sling Bundle Resource Provider
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Provides a ResourceProvider implementation supporting bundle
+based resources.
 
 Disclaimer
 ==========

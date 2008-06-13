@@ -1,7 +1,7 @@
 Apache Sling Dojo JavaScript Library
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides support to look at the repository using
+Dojo.
 
 Disclaimer
 ==========

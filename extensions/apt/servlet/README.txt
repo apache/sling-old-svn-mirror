@@ -1,7 +1,6 @@
 Apache Sling APT Servlet
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+A servlet for *.apt requests, uses the apt-parser to convert *.apt files to HTML.
 
 Disclaimer
 ==========
