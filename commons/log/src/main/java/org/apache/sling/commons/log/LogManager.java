@@ -150,9 +150,6 @@ public class LogManager {
             }
         }
 
-        // only configure the root logger with bundle context properties !
-        config.put(LOG_LOGGERS, LogConfigManager.ROOT);
-
         return config;
     }
 
@@ -172,10 +169,16 @@ public class LogManager {
         public void updated(Dictionary properties)
                 throws ConfigurationException { // unchecked
 
+            // fallback to start default settings when the config is deleted
             if (properties == null) {
                 properties = defaultConfiguration;
             }
+            
+            // set the logger name to a special value to indicate the global
+            // (ROOT) logger setting (SLING-529)
+            properties.put(LOG_LOGGERS, LogConfigManager.ROOT);
 
+            // update the default log writer and logger configuration
             logConfigManager.updateLogWriter(PID, properties);
             logConfigManager.updateLoggerConfiguration(PID, properties);
         }
