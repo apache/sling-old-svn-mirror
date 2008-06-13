@@ -1,7 +1,6 @@
 Apache Sling JCR API
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This OSGi bundle provides the Jackrabbit API packages.
 
 Disclaimer
 ==========

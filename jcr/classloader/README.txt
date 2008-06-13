@@ -1,7 +1,8 @@
 Apache Sling JCR Classloader
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Provides Support for delegate class loaders built dynamically.
+Delegate class loaders supported are generic ClassLoader, OSGi
+bundles and repository class loader.
 
 Disclaimer
 ==========

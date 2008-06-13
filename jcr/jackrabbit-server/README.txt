@@ -1,7 +1,7 @@
 Apache Sling JCR Jackrabbit Server
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Bundle providing support to embed Jackrabbit Repository
+instances and publish via RMI and/or JNDI
 
 Disclaimer
 ==========

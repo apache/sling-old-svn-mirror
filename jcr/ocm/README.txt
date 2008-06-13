@@ -1,7 +1,8 @@
 Apache Sling Object Content Mapping
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides Object Content Mapping support for
+resources loaded from a JCR repositories. This support is
+implemented as an AdapterFactory for Resource objects.
 
 Disclaimer
 ==========

@@ -1,7 +1,6 @@
 Apache Sling Servlet Resolver
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Bundle implementing the Sling API ServletResolver.
 
 Disclaimer
 ==========

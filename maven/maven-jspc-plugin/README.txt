@@ -1,7 +1,6 @@
 Apache Sling JSP Compiler Maven Plugin
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Maven Plugin compiling JSPs
 
 Disclaimer
 ==========
