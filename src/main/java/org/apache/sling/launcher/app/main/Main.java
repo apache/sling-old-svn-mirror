@@ -27,7 +27,7 @@ import org.apache.sling.launcher.app.ClassLoaderResourceProvider;
 import org.apache.sling.launcher.app.ResourceProvider;
 import org.apache.sling.launcher.app.Sling;
 import org.osgi.framework.BundleException;
-
+import org.osgi.framework.Constants;
 
 /**
  * The <code>Main</code> class is a simple Java Application which interprests
@@ -87,6 +87,13 @@ public class Main {
     /** The default port on which the HTTP service listens. */
     private static final String DEFAULT_PORT = "8080";
 
+    /**
+     * The property value to export the Servlet API 2.5 from the system
+     * bundle.
+     */
+    private static final String SERVLET_API_EXPORT =
+        "javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.5";
+
     /** The parsed command line mapping (Sling) option name to option value */
     private static Map<String, String> commandLine;
 
@@ -113,13 +120,14 @@ public class Main {
         if (!commandLine.containsKey(PROP_LOG_LEVEL)) {
             logLevel = DEFAULT_LOG_LEVEL;
         } else {
-            logLevel = toLogLevelInt(commandLine.get(PROP_LOG_LEVEL), DEFAULT_LOG_LEVEL);
+            logLevel = toLogLevelInt(commandLine.get(PROP_LOG_LEVEL),
+                DEFAULT_LOG_LEVEL);
             commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
         Logger logger = new Logger();
-        
+
         // prevent tons of needless WARN from the framework
-//        logger.setLogLevel(logLevel);
+        // logger.setLogLevel(logLevel);
         logger.setLogLevel(Logger.LOG_ERROR);
 
         // prevent tons of needless WARN messages from the framework
@@ -135,6 +143,16 @@ public class Main {
                     if (commandLine != null) {
                         properties.putAll(commandLine);
                     }
+
+                    // add Servlet API to the system bundle exports
+                    String sysExport = properties.get(Constants.FRAMEWORK_SYSTEMPACKAGES);
+                    if (sysExport == null) {
+                        sysExport = SERVLET_API_EXPORT;
+                    } else {
+                        sysExport += "," + SERVLET_API_EXPORT;
+                    }
+                    properties.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
+                        sysExport);
                 }
             };
 
