@@ -73,7 +73,7 @@
                         </goals>
                         <configuration>
                             <excludeArtifactIds>
-                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,org.apache.sling.commons.log,org.apache.sling.launchpad.base
+                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,servlet-api,org.apache.sling.commons.log,org.apache.sling.launchpad.base
                             </excludeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -88,7 +88,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.osgi.core,org.osgi.compendium
+                                org.osgi.core,org.osgi.compendium,servlet-api
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -178,9 +178,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <scope>provded</scope>
+            <scope>provided</scope>
         </dependency>
 
         <!-- the most important bundle after the framework: logging -->
