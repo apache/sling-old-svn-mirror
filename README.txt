@@ -1,7 +1,7 @@
 Apache Sling Commons Scheduler
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+The commons scheduler provides a scheduling services which allows to schedule
+tasks periodically.
 
 Disclaimer
 ==========
