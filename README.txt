@@ -1,7 +1,9 @@
 Apache Sling Sample
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides a simple Sling Application to show some of
+the features and functionalities of Sling, such as node type
+definition, content mapping, running JSPs off the repository and
+the bundle.
 
 Disclaimer
 ==========
