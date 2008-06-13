@@ -1,7 +1,6 @@
 Apache Sling JST Scripting
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for JST scripting.
 
 Disclaimer
 ==========

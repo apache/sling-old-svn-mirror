@@ -1,6 +1,6 @@
 Apache Sling Initial Content Loader
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+This bundle provides initial content installation through bundles.
 
 
 Disclaimer

@@ -1,7 +1,6 @@
 Apache Sling JSP Scripting
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for JSP scripting.
 
 Disclaimer
 ==========

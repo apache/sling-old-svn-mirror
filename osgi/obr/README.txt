@@ -1,7 +1,9 @@
 Apache Sling OSGi OBR
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides a servlet, which implements an OSGi Bundle
+Repository with the following functionality: Upload of bundles,
+browsing the repository, accessing the repository using the
+Felix bundlerepository bundle.
 
 Disclaimer
 ==========

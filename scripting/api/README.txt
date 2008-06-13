@@ -1,7 +1,7 @@
 Apache Sling Scripting API
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides the internal API to implement scripting. As such
+it bundles the Java Scripting API provided by Apache BSF.
 
 Disclaimer
 ==========

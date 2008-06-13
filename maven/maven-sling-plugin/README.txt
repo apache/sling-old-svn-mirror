@@ -1,7 +1,6 @@
 Apache Sling Maven Plugin
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Maven Plugin supporting various Sling Development Tasks
 
 Disclaimer
 ==========

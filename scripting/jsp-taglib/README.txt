@@ -1,7 +1,6 @@
 Apache Sling JSP Taglib
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Core Tag Library for Project Sling JSP support.
 
 Disclaimer
 ==========

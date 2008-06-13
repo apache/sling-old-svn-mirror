@@ -1,7 +1,6 @@
 Apache Sling Default Post Servlets
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Provides default POST servlets.
 
 Disclaimer
 ==========

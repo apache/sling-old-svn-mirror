@@ -1,7 +1,6 @@
 Apache Sling - Scripting - Ruby Support
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for Ruby scripting.
 
 Disclaimer
 ==========

@@ -1,7 +1,6 @@
 Apache Sling FreeMarker Scripting Support
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for Freemarker scripting.
 
 Disclaimer
 ==========

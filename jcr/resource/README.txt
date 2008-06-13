@@ -1,7 +1,6 @@
 Apache Sling Resource Resolver
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides the JCR based Resource Resolver.
 
 Disclaimer
 ==========

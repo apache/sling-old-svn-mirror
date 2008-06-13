@@ -1,7 +1,6 @@
 Apache Sling JavaScript (Rhino) Scripting Support
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for JavaScript scripting.
 
 Disclaimer
 ==========

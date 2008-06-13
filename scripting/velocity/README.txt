@@ -1,7 +1,6 @@
 Apache Sling Velocity Scripting Support
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for Velocity scripting.
 
 Disclaimer
 ==========
