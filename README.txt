@@ -1,7 +1,6 @@
 Apache Sling JCR Base Bundle
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+The JCR base bundle provides JCR utility classes.
 
 Disclaimer
 ==========
