@@ -1,7 +1,7 @@
 Apache Sling I18N
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for creating Java I18N ResourceBundles from repository
+resources.
 
 Disclaimer
 ==========

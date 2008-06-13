@@ -1,6 +1,6 @@
 Apache Sling Engine
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+This is the engine of Sling.
 
 
 Disclaimer

@@ -1,7 +1,8 @@
 Apache Sling JCR API
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This OSGi bundle provides the JCR packages as
+well as a helper service interface to be implemented and
+provided by repository providers.
 
 Disclaimer
 ==========

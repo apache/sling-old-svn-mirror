@@ -1,7 +1,7 @@
 Apache Sling APT Parser
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Parser for the Sling variant of the APT (Almost Plain Text) 
+structured text format.
 
 Disclaimer
 ==========

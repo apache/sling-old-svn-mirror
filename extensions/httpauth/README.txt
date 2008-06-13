@@ -1,7 +1,7 @@
 Apache Sling HTTP Header Authentication
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Bundle implementing Basic HTTP Header authentication with login
+and logout support
 
 Disclaimer
 ==========

@@ -1,7 +1,6 @@
 Apache Sling JSON Library
 
-
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+The Sling JSON library provides json support.
 
 
 Disclaimer

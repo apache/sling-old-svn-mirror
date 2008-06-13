@@ -1,7 +1,6 @@
 Apache Sling Testing Utilities
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Tools and utilities for automated testing of Sling modules
 
 Disclaimer
 ==========

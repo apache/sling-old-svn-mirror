@@ -1,6 +1,8 @@
 Apache Sling Adapter Manager
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+Bundle implementing the AdapterManager and provides a convenience
+implementation of the Adaptable interface to make use of this
+AdapterManager.
 
 
 Disclaimer

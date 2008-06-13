@@ -1,7 +1,7 @@
 Apache Sling Dojo JavaScript Library
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+This bundle provides the Dojo 1.1.0 JavaScript library and
+provides it as BundleResources.
 
 Disclaimer
 ==========
