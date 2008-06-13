@@ -1,8 +1,7 @@
 Apache Sling Commons OSGi
 
-
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+The Commons OSGi library provides utility methods when implementing OSGi related services
+and components.
 
 Disclaimer
 ==========
