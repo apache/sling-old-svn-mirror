@@ -1,7 +1,7 @@
 Apache Sling Default Get Servlets
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Provides default GET servlets for HTML, Text and JSON rendering
+and streaming resources.
 
 Disclaimer
 ==========
