@@ -1,6 +1,6 @@
 Apache Sling WebDAV
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
+Bundle to access JCR repositories over WebDAV
 
 
 Disclaimer
