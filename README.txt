@@ -1,7 +1,6 @@
 Apache Sling JCR Jackrabbit Client
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Bundle to access an existing JCR repository from JNDI or through RMI
 
 Disclaimer
 ==========
