@@ -30,6 +30,15 @@ new features.
 Apache Sling is a project of the Apache Software Foundation
 (http://www.apache.org).
 
+Disclaimer
+==========
+Apache Sling is an effort undergoing incubation at The Apache Software Foundation (ASF),
+sponsored by the Apache Jackrabbit PMC. Incubation is required of all newly accepted
+projects until a further review indicates that the infrastructure, communications,
+and decision making process have stabilized in a manner consistent with other
+successful ASF projects. While incubation status is not necessarily a reflection of
+the completeness or stability of the code, it does indicate that the project has yet
+to be fully endorsed by the ASF.
 
 License (see also LICENSE)
 ==========================
@@ -51,13 +60,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-
 Getting Started
 ===============
 
 This component uses a Maven 2 (http://maven.apache.org/) build
-environment. If you have Maven 2 installed, you can compile and
-package the org.apache.sling.commons.log jar using the following command:
+environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
+2.0.7 or later. We recommend to use the latest Maven version.
+
+If you have Maven 2 installed, you can compile and
+package the jar using the following command:
 
     mvn package
 
