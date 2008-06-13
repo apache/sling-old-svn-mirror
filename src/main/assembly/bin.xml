@@ -27,8 +27,14 @@
     <fileSet>
       <includes>
         <include>README*</include>
-        <include>LICENSE*</include>
-        <include>NOTICE*</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>src/main/resources/META-INF/LICENSE*</include>
+        <include>src/main/resources/META-INF/NOTICE*</include>
+        <include>src/main/resources/META-INF/DISCLAIMER</include>
       </includes>
     </fileSet>
     <fileSet>
