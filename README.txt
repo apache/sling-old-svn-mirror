@@ -1,7 +1,6 @@
 Apache Sling Threads
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Support for thread handling like pooling.
 
 Disclaimer
 ==========
