@@ -1,7 +1,6 @@
 Apache Sling Script Resolver
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Sling Scripting core functionality.
 
 Disclaimer
 ==========
