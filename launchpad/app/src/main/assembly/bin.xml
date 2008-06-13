@@ -30,11 +30,12 @@
       </includes>
     </fileSet>
     <fileSet>
+      <directory>src/main/resources/META-INF</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>src/main/resources/META-INF/LICENSE*</include>
-        <include>src/main/resources/META-INF/NOTICE*</include>
-        <include>src/main/resources/META-INF/DISCLAIMER</include>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+        <include>DISCLAIMER</include>
       </includes>
     </fileSet>
     <fileSet>
