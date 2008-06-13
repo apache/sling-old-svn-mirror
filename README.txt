@@ -1,7 +1,7 @@
 Apache Sling Samples Path Based RTP
 
-WE NEED A LOT MORE HERE!!!!!!!!!!!!!!!!!!
-
+Provides a configurable path-based sample resource type provider
+for resources which do not have an explicit one.
 
 Disclaimer
 ==========
