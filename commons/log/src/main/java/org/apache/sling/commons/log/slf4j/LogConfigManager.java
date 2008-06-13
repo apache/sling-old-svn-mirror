@@ -584,6 +584,16 @@ public class LogConfigManager implements ILoggerFactory {
             return null;
         }
 
+        // prepare set of names (used already in case loggers == ROOT)
+        Set<String> loggerNames = new HashSet<String>();
+
+        // in case of the special setting ROOT, return a set of just the
+        // root logger name (SLING-529)
+        if (loggers == ROOT) {
+            loggerNames.add(ROOT);
+            return loggerNames;
+        }
+
         // convert the loggers object to an array
         Object[] loggersArray;
         if (loggers.getClass().isArray()) {
@@ -596,7 +606,6 @@ public class LogConfigManager implements ILoggerFactory {
 
         // conver the array of potentially comma-separated logger names
         // into the set of logger names
-        Set<String> loggerNames = new HashSet<String>();
         for (Object loggerObject : loggersArray) {
             if (loggerObject != null) {
                 String[] splitLoggers = loggerObject.toString().split(",");
