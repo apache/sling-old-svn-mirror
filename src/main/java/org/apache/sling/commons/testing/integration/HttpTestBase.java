@@ -64,6 +64,9 @@ public class HttpTestBase extends TestCase {
     protected HttpClient httpClient;
 
     private static Boolean slingStartupOk;
+    
+    /** Means "don't care about Content-Type" in getContent(...) methods */
+    public static final String CONTENT_TYPE_DONTCARE = "*";
 
     /** URLs stored here are deleted in tearDown */
     protected final List<String> urlsToDelete = new LinkedList<String>();
@@ -279,6 +282,7 @@ public class HttpTestBase extends TestCase {
     }
 
     /** retrieve the contents of given URL and assert its content type
+     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked 
      * @throws IOException
      * @throws HttpException */
     protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
@@ -295,6 +299,8 @@ public class HttpTestBase extends TestCase {
             if(h!=null) {
                 fail("Expected null Content-Type, got " + h.getValue());
             }
+        } else if(CONTENT_TYPE_DONTCARE.equals(expectedContentType)) {
+            // no check
         } else if(h==null) {
             fail(
                     "Expected Content-Type that starts with '" + expectedContentType
