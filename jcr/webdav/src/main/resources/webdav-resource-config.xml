@@ -56,12 +56,6 @@
         -->
         <class name="org.apache.jackrabbit.server.io.IOManagerImpl" />
         <iohandler>
-            <class name="org.apache.jackrabbit.server.io.ZipHandler" />
-        </iohandler>
-        <iohandler>
-            <class name="org.apache.jackrabbit.server.io.XmlHandler" />
-        </iohandler>
-        <iohandler>
             <class name="org.apache.jackrabbit.server.io.DirListingExportHandler" />
         </iohandler>
         <iohandler>
