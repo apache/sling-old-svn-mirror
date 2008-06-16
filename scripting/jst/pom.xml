@@ -57,7 +57,7 @@
                         <Private-Package>
                             org.apache.sling.scripting.jst,
                             org.apache.sling.scripting.javascript.io.*,
-                            org.apache.sling.servlets.helpers.*
+                            org.apache.sling.servlets.get.helpers.*
                         </Private-Package>
                         
                         <Import-Package>
