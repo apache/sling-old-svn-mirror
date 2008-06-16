@@ -876,6 +876,121 @@ Rhino
      use the text of this Exhibit A rather than the text found in the
      Original Code Source Code for Your Modifications.]
 
+W3C XPath parser
+
+   XPath 2.0/XQuery 1.0 Parser:
+   http://www.w3.org/2002/11/xquery-xpath-applets/xgrammar.zip
+
+   Copyright (C) 2002 World Wide Web Consortium, (Massachusetts Institute of
+   Technology, European Research Consortium for Informatics and Mathematics,
+   Keio University). All Rights Reserved.
+
+   This work is distributed under the W3C(R) Software License in the hope
+   that it will be useful, but WITHOUT ANY WARRANTY; without even the
+   implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+   W3C(R) SOFTWARE NOTICE AND LICENSE
+   http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
+
+   This work (and included software, documentation such as READMEs, or
+   other related items) is being provided by the copyright holders under
+   the following license. By obtaining, using and/or copying this work,
+   you (the licensee) agree that you have read, understood, and will comply
+   with the following terms and conditions.
+
+   Permission to copy, modify, and distribute this software and its
+   documentation, with or without modification, for any purpose and
+   without fee or royalty is hereby granted, provided that you include
+   the following on ALL copies of the software and documentation or
+   portions thereof, including modifications:
+
+      1. The full text of this NOTICE in a location viewable to users
+         of the redistributed or derivative work.
+
+      2. Any pre-existing intellectual property disclaimers, notices,
+         or terms and conditions. If none exist, the W3C Software Short
+         Notice should be included (hypertext is preferred, text is
+         permitted) within the body of any redistributed or derivative code.
+
+      3. Notice of any changes or modifications to the files, including
+         the date changes were made. (We recommend you provide URIs to the
+         location from which the code is derived.)
+
+   THIS SOFTWARE AND DOCUMENTATION IS PROVIDED "AS IS," AND COPYRIGHT
+   HOLDERS MAKE NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED,
+   INCLUDING BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY OR FITNESS
+   FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE SOFTWARE OR
+   DOCUMENTATION WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,
+   TRADEMARKS OR OTHER RIGHTS.
+
+   COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL
+   OR CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR
+   DOCUMENTATION.
+
+   The name and trademarks of copyright holders may NOT be used in
+   advertising or publicity pertaining to the software without specific,
+   written prior permission. Title to copyright in this software and
+   any associated documentation will at all times remain with
+   copyright holders.
+
+Concurrent
+
+   http://g.oswego.edu/dl/classes/EDU/oswego/cs/dl/util/concurrent/intro.html
+
+   All classes are released to the public domain and may be used for any
+   purpose whatsoever without permission or acknowledgment. Portions of
+   the CopyOnWriteArrayList and ConcurrentReaderHashMap classes are adapted
+   from Sun JDK source code. These are copyright of Sun Microsystems, Inc,
+   and are used with their kind permission, as described in this license:
+
+   TECHNOLOGY LICENSE FROM SUN MICROSYSTEMS, INC. TO DOUG LEA
+
+   Whereas Doug Lea desires to utlized certain Java Software technologies
+   in the util.concurrent technology; and Whereas Sun Microsystems, Inc.
+   ("Sun") desires that Doug Lea utilize certain Java Software technologies
+   in the util.concurrent technology;
+
+   Therefore the parties agree as follows, effective May 31, 2002:
+
+   "Java Software technologies" means
+
+       classes/java/util/ArrayList.java, and
+       classes/java/util/HashMap.java.
+
+   The Java Software technologies are Copyright (c) 1994-2000 Sun
+   Microsystems, Inc. All rights reserved.
+
+   Sun hereby grants Doug Lea a non-exclusive, worldwide, non-transferrable
+   license to use, reproduce, create derivate works of, and distribute the
+   Java Software and derivative works thereof in source and binary forms
+   as part of a larger work, and to sublicense the right to use, reproduce
+   and distribute the Java Software and Doug Lea's derivative works as the
+   part of larger works through multiple tiers of sublicensees provided that
+   the following conditions are met:
+
+   -Neither the name of or trademarks of Sun may be used to endorse or
+   promote products including or derived from the Java Software technology
+   without specific prior written permission; and
+   -Redistributions of source or binary code must contain the above
+   copyright notice, this notice and and the following disclaimers:
+
+   This software is provided "AS IS," without a warranty of any kind.
+   ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES,
+   INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A
+   PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN
+   MICROSYSTEMS, INC. AND ITS LICENSORS SHALL NOT BE LIABLE FOR ANY DAMAGES
+   SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING
+   THE SOFTWARE OR ITS DERIVATIVES. IN NO EVENT WILL SUN MICROSYSTEMS, INC.
+   OR ITS LICENSORS BE LIABLE FOR ANY LOST REVENUE, PROFIT OR DATA, OR FOR
+   DIRECT, INDIRECT, SPECIAL, CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES,
+   HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF
+   THE USE OF OR INABILITY TO USE SOFTWARE, EVEN IF SUN MICROSYSTEMS, INC.
+   HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+   You acknowledge that Software is not designed,licensed or intended for
+   use in the design, construction, operation or maintenance of any nuclear
+   facility.
+
 PDFBox
 
    Copyright (c) 2003-2005, www.pdfbox.org
@@ -906,3 +1021,52 @@ PDFBox
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
    OF SUCH DAMAGE.
+
+CyberNeko HTML Parser
+
+   The CyberNeko Software License, Version 1.0
+
+   (C) Copyright 2002-2005, Andy Clark.  All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in
+      the documentation and/or other materials provided with the
+      distribution.
+
+   3. The end-user documentation included with the redistribution,
+      if any, must include the following acknowledgment:
+        "This product includes software developed by Andy Clark."
+      Alternately, this acknowledgment may appear in the software itself,
+      if and wherever such third-party acknowledgments normally appear.
+
+   4. The names "CyberNeko" and "NekoHTML" must not be used to endorse
+      or promote products derived from this software without prior
+      written permission. For written permission, please contact
+      andyc@cyberneko.net.
+
+   5. Products derived from this software may not be called "CyberNeko",
+      nor may "CyberNeko" appear in their name, without prior written
+      permission of the author.
+
+   THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+   DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR OTHER CONTRIBUTORS
+   BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+   OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+   OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+   BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+   OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+   ====================================================================
+
+   This license is based on the Apache Software License, version 1.1.
