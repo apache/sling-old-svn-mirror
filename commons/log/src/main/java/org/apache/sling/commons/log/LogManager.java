@@ -49,6 +49,8 @@ public class LogManager {
 
     public static final String LOG_LOGGERS = "org.apache.sling.commons.log.names";
 
+    public static final String LOG_LEVEL_DEFAULT = "INFO";
+    
     public static final int LOG_FILE_NUMBER_DEFAULT = 5;
 
     public static final String LOG_FILE_SIZE_DEFAULT = "10M";
@@ -150,6 +152,11 @@ public class LogManager {
             }
         }
 
+        // ensure sensible default values for required configuration field(s)
+        if (config.get(LOG_LEVEL) == null) {
+            config.put(LOG_LEVEL, LOG_LEVEL_DEFAULT);
+        }
+        
         return config;
     }
 
