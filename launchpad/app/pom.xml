@@ -257,7 +257,6 @@
         <dependency>
             <groupId>org.ops4j.pax.web</groupId>
             <artifactId>pax-web-service</artifactId>
-            <version>0.2.3</version>
             <optional>true</optional>
         </dependency>
 

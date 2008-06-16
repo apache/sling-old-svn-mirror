@@ -685,6 +685,13 @@ setting is not correct.
                 <version>1.0.0</version>
                 <scope>provided</scope>
             </dependency>
+
+            <!-- HttpService implementation: embedded Jetty -->
+            <dependency>
+                <groupId>org.ops4j.pax.web</groupId>
+                <artifactId>pax-web-service</artifactId>
+                <version>0.2.3</version>
+            </dependency>
         </dependencies>
         
     </dependencyManagement>

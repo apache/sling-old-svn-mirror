@@ -1,9 +1,10 @@
-Apache Sling Launchpad Webapp
+Apache Sling Launchpad JCR App
 
-This webapp contains the necessary bundles to run launchpad.
-
-See also the "Discover Sling in 15 minutes" page at
-http://incubator.apache.org/sling/site/discover-sling-in-15-minutes.html
+Standalone Sling JCR Server launching the embedded Jackrabbit Repository.
+Note, that this is not the full Sling Application but just the bundles
+needed to start the Jackrabbit Repository. For the full Sling
+Application look at the Launchpad Application or Launpad Web
+Application.
 
 
 Disclaimer
@@ -35,7 +36,7 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/webapp
+    svn checkout http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/jcrapp
 
 See the Subversion documentation for other source control features.
 
