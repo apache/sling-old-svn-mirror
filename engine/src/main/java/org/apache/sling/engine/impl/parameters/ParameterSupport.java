@@ -18,6 +18,7 @@
  */
 package org.apache.sling.engine.impl.parameters;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -118,6 +119,18 @@ public class ParameterSupport {
 
     private void getContainerParameters(ParameterMap parameters) {
 
+        // SLING-508 Try to force servlet container to decode parameters
+        // as ISO-8859-1 such that we can recode later
+        String encoding = getServletRequest().getCharacterEncoding();
+        if (encoding == null) {
+            encoding = Util.ENCODING_DIRECT;
+            try {
+                getServletRequest().setCharacterEncoding(encoding);
+            } catch (UnsupportedEncodingException uee) {
+                throw new SlingUnsupportedEncodingException(uee);
+            }
+        }
+
         final Map<?, ?> pMap = getServletRequest().getParameterMap();
         for (Map.Entry<?, ?> entry : pMap.entrySet()) {
 
@@ -126,7 +139,7 @@ public class ParameterSupport {
 
             for (int i = 0; i < values.length; i++) {
                 parameters.addParameter(name, new ContainerRequestParameter(
-                    values[i], Util.ENCODING_DEFAULT));
+                    values[i], encoding));
             }
 
         }
