@@ -21,6 +21,10 @@ The OSGi Alliance (http://www.osgi.org/).
 Copyright 2006 The OSGi Alliance.
 Licensed under the Apache License 2.0.
 
+This product includes the Quartz scheduler library
+(http://www.opensymphony.com/quartz/).
+Copyright 2004-2005 OpenSymphony
+
 This product includes software from http://kxml.sourceforge.net.
 Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany.
 Licensed under BSD License.
