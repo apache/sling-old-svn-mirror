@@ -99,4 +99,15 @@ public class PostServletUpdateTest extends HttpTestBase {
         assertJavascript("123457", content, "out.println(data.a + data.b)");
     }
 
- }
+    public void testMultivalueHint() throws IOException {
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("./f","123");
+        props.put("./f@TypeHint", "String[]");
+        props.put("./g","456");
+
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        String content = getContent(location + ".json", CONTENT_TYPE_JSON);
+        assertTrue(content.indexOf("\"f\":[\"123\"]") > 0);
+        assertTrue(content.indexOf("\"g\":\"456\"") > 0);
+    }
+}
