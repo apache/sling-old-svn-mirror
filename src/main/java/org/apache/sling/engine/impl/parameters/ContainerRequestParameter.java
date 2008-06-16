@@ -27,7 +27,7 @@ import java.io.UnsupportedEncodingException;
  */
 public class ContainerRequestParameter extends AbstractRequestParameter {
 
-    private final String value;
+    private String value;
 
     private byte[] content;
 
@@ -39,8 +39,15 @@ public class ContainerRequestParameter extends AbstractRequestParameter {
 
     @Override
     void setEncoding(String encoding) {
+        // recode this parameter by encoding the string with the current
+        // encoding and decode the bytes with the encoding
+        try {
+            this.value = getString(encoding);
+        } catch (UnsupportedEncodingException uee) {
+            throw new SlingUnsupportedEncodingException(uee);
+        }
+        
         super.setEncoding(encoding);
-        content = null;
     }
 
     /**
@@ -100,8 +107,7 @@ public class ContainerRequestParameter extends AbstractRequestParameter {
      */
     public String getString(String encoding)
             throws UnsupportedEncodingException {
-        // we ignore the provided encoding as we're using the correct encoding anyway :)
-        return value;
+        return new String(this.get(), encoding);
     }
 
     /**
