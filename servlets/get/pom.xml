@@ -56,11 +56,9 @@
                 <configuration>
                     <instructions>
                         <Private-Package>
-                            org.apache.sling.servlets.get.* ; -split-package:=merge-first
+                            org.apache.sling.servlets.get.*
                         </Private-Package>
-                        <Export-Package>
-                            org.apache.sling.servlets.get.helpers
-                        </Export-Package>
+
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/redirect.cnd
                         </Sling-Nodetypes>
