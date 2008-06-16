@@ -27,6 +27,7 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -200,7 +201,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
     /**
      * Create node(s) according to current request
-     * 
+     *
      * @throws RepositoryException if a repository error occurs
      */
     private void processCreate(Session session,
@@ -256,7 +257,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * Any intermediary nodes to the destination as indicated by the
      * <code>property</code> path are created using the
      * <code>reqProperties</code> as indications for required node types.
-     * 
+     *
      * @param property The {@link RequestProperty} identifying the source
      *            content of the operation.
      * @param isMove <code>true</code> if the source item is to be moved.
@@ -322,7 +323,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             // make sure the property is not deleted even in case for a given
             // property both @MoveFrom and @Delete is set
             property.setDelete(false);
-            
+
             // record successful move
             if (isMove) {
                 response.onMoved(source, propPath);
@@ -335,7 +336,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Removes all properties listed as {@link RequestProperty#isDelete()} from
      * the repository.
-     * 
+     *
      * @param session The <code>javax.jcr.Session</code> used to access the
      *            repository to delete the properties.
      * @param reqProperties The map of request properties to check for
@@ -363,7 +364,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
     /**
      * Writes back the content
-     * 
+     *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
@@ -395,7 +396,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Collects the properties that form the content to be written back to the
      * repository.
-     * 
+     *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
@@ -436,7 +437,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
                 final RequestParameter[] rp = e.getValue();
                 if (rp.length > 0) {
-                    prop.setTypeHint(rp[0].getString());
+                    prop.setTypeHintValue(rp[0].getString());
                 }
 
                 continue;
@@ -553,7 +554,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * Returns the request property for the given property path. If such a
      * request property does not exist yet it is created and stored in the
      * <code>props</code>.
-     * 
+     *
      * @param props The map of already seen request properties.
      * @param paramName The absolute path of the property including the
      *            <code>suffix</code> to be looked up.
@@ -580,7 +581,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Checks the collected content for a jcr:primaryType property at the
      * specified path.
-     * 
+     *
      * @param path path to check
      * @return the primary type or <code>null</code>
      */
@@ -593,7 +594,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Checks the collected content for a jcr:mixinTypes property at the
      * specified path.
-     * 
+     *
      * @param path path to check
      * @return the mixin types or <code>null</code>
      */
@@ -606,7 +607,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     /**
      * Deep gets or creates a node, parent-padding with default nodes nodes. If
      * the path is empty, the given parent node is returned.
-     * 
+     *
      * @param path path to node that needs to be deep-created
      * @return node at path
      * @throws RepositoryException if an error occurs

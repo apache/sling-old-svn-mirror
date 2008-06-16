@@ -220,9 +220,17 @@ public class SlingPropertyValueHandler {
                     // try conversion
                     Calendar c = dateParser.parse(values[0]);
                     if (c != null) {
-                        response.onModified(
-                            parent.setProperty(prop.getName(), c).getPath()
-                        );
+                        if ( prop.hasMultiValueTypeHint() ) {
+                            final Value[] array = new Value[1];
+                            array[0] = parent.getSession().getValueFactory().createValue(c);
+                            response.onModified(
+                                parent.setProperty(prop.getName(), array).getPath()
+                            );
+                        } else {
+                            response.onModified(
+                                    parent.setProperty(prop.getName(), c).getPath()
+                                );
+                        }
                         return;
                     }
                     // fall back to default behaviour
@@ -231,7 +239,13 @@ public class SlingPropertyValueHandler {
                 if ( type == PropertyType.UNDEFINED ) {
                     p = parent.setProperty(prop.getName(), values[0]);
                 } else {
-                    p = parent.setProperty(prop.getName(), values[0], type);
+                    if ( prop.hasMultiValueTypeHint() ) {
+                        final Value[] array = new Value[1];
+                        array[0] = parent.getSession().getValueFactory().createValue(values[0], type);
+                        p = parent.setProperty(prop.getName(), array);
+                    } else {
+                        p = parent.setProperty(prop.getName(), values[0], type);
+                    }
                 }
                 response.onModified(p.getPath());
             }

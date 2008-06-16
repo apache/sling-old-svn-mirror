@@ -46,6 +46,8 @@ public class RequestProperty {
 
     private String typeHint;
 
+    private boolean hasMultiValueTypeHint;
+
     private RequestParameter[] defaultValues = EMPTY_PARAM_ARRAY;
 
     private boolean isDelete;
@@ -65,8 +67,18 @@ public class RequestProperty {
         return typeHint;
     }
 
-    public void setTypeHint(String typeHint) {
-        this.typeHint = typeHint;
+    public boolean hasMultiValueTypeHint() {
+        return this.hasMultiValueTypeHint;
+    }
+
+    public void setTypeHintValue(String typeHint) {
+        if ( typeHint != null && typeHint.endsWith("[]") ) {
+            this.typeHint = typeHint.substring(0, typeHint.length() - 2);
+            this.hasMultiValueTypeHint = true;
+        } else {
+            this.typeHint = typeHint;
+            this.hasMultiValueTypeHint = false;
+        }
     }
 
     public String getPath() {
