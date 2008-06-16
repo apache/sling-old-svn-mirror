@@ -28,12 +28,18 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>DefaultErrorHandlerServlet</code> TODO
  */
+@SuppressWarnings("serial")
 public class DefaultErrorHandlerServlet extends GenericServlet {
 
+    /** default log */
+    private static final Logger log = LoggerFactory.getLogger(DefaultErrorHandlerServlet.class);
+    
     @Override
     public void service(ServletRequest req, ServletResponse res)
             throws IOException {
@@ -106,16 +112,22 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             throws IOException {
 
         // set the status code and content type in the response
-        response.setStatus(statusCode);
-        response.setContentType("text/html; charset=UTF-8");
-
-        PrintWriter pw = response.getWriter();
-        pw.println("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">");
-        pw.println("<html>");
-        pw.println("<head>");
-        pw.println("<title>" + statusCode + " " + statusMessage + "</title>");
-        pw.println("</head>");
-        pw.println("<body>");
+        final PrintWriter pw = response.getWriter();
+        if(!response.isCommitted()) {
+            response.setStatus(statusCode);
+            response.setContentType("text/html; charset=UTF-8");
+    
+            pw.println("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">");
+            pw.println("<html>");
+            pw.println("<head>");
+            pw.println("<title>" + statusCode + " " + statusMessage + "</title>");
+            pw.println("</head>");
+            pw.println("<body>");
+        } else {
+            // Response already committed: don't change status or write HTML prolog, but report
+            // the error inline and warn about that
+            log.warn("Response already committed, unable to change status, output might not be well formed");
+        }
         pw.println("<h1>" + statusMessage + " (" + statusCode + ")</h1>");
         pw.print("<p>The requested URL " + requestUri
             + " resulted in an error");
