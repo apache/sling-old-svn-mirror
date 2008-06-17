@@ -58,17 +58,26 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <!--
+                          TODO the xerces and dom dependencies should
+                          come from separate bundles
+                         -->
                         <Private-Package>
                             org.apache.sling.scripting.jst,
                             org.apache.sling.scripting.javascript.io.*,
-                            org.apache.sling.servlets.get.helpers.*
+                            org.apache.sling.servlets.get.helpers.*,
+                            org.cyberneko.html.*,
+                            org.apache.xerces.*,
+                            org.w3c.dom.*,
+                            org.apache.html.dom.*
                         </Private-Package>
                         
                         <Import-Package>
                             org.apache.bsf.*;
                             sun.misc; resolution:=optional,
-                            *
+                            javax.xml.*
                         </Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
                         
                         <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
@@ -122,6 +131,20 @@
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>${pom.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.4.0</version>
         </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>

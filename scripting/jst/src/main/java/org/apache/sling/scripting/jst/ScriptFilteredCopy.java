@@ -37,10 +37,16 @@ class ScriptFilteredCopy {
         final BufferedReader br = new BufferedReader(r);
         String line = null;
         while( (line = br.readLine()) != null) {
-            final String toWrite = processLine(line);
-            w.write(toWrite, 0, toWrite.length());
-            w.write('\n');
+            if(copyLine(line)) {
+                final String toWrite = processLine(line);
+                w.write(toWrite, 0, toWrite.length());
+                w.write('\n');
+            }
         }
+    }
+    
+    protected boolean copyLine(String line) {
+        return true;
     }
 
     /** Transform lines that look like
