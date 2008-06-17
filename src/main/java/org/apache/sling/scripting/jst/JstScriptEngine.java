@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.jst;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 
 import javax.jcr.RepositoryException;
@@ -31,6 +32,8 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** JST script engine.
  *  This engine does not really execute the supplied script: it dumps a default
@@ -42,7 +45,8 @@ import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 public class JstScriptEngine extends AbstractSlingScriptEngine {
 
     private final HtmlCodeGenerator htmlGenerator;
-    
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     JstScriptEngine(ScriptEngineFactory scriptEngineFactory) {
         super(scriptEngineFactory);
         htmlGenerator = new HtmlCodeGenerator();
@@ -53,10 +57,12 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
 
         final Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
         final SlingScriptHelper helper = (SlingScriptHelper) props.get(SlingBindings.SLING);
+        final InputStream scriptStream = helper.getScript().getScriptResource().adaptTo(InputStream.class);
         
         try {
             htmlGenerator.generateHtml(helper.getRequest(), 
-                    helper.getScript().getScriptResource().getPath(), helper.getResponse().getWriter());
+                    helper.getScript().getScriptResource().getPath(), scriptStream,
+                    helper.getResponse().getWriter());
                     
         } catch (IOException ioe) {
             throw new ScriptException(ioe);
@@ -66,6 +72,15 @@ public class JstScriptEngine extends AbstractSlingScriptEngine {
             
         } catch(JSONException je) {
             throw new ScriptException(je);
+            
+        } finally {
+            if(scriptStream != null) {
+                try { 
+                    scriptStream.close();
+                } catch(IOException ioe) {
+                    log.warn("IOException while closing scriptStream",ioe);
+                }
+            }
         }
 
         return null;

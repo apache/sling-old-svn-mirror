@@ -18,12 +18,22 @@
  */
 package org.apache.sling.scripting.jst;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.script.ScriptException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -31,8 +41,11 @@ import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
+import org.cyberneko.html.parsers.DOMParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 /** Generates HTML code for JST templates */ 
 class HtmlCodeGenerator {
@@ -55,68 +68,86 @@ class HtmlCodeGenerator {
         htmlRenderer = new HtmlRendererServlet();
     }
     
-    /** Generate HTML code for the given request and script path */
-    void generateHtml(SlingHttpServletRequest request, String scriptPath, PrintWriter output) throws RepositoryException, JSONException {
+    /** Generate HTML code for the given request and script path */ 
+    void generateHtml(SlingHttpServletRequest request, String scriptPath, 
+            InputStream scriptStream, PrintWriter output) 
+    throws RepositoryException, JSONException, ScriptException, IOException {
         
         // access our data (need a Node)
         final Resource r = request.getResource();
         final Node n = r.adaptTo(Node.class);
-
-        // output HEAD with javascript initializations
-        // TODO we should instead parse (at least minimally) the template file, and inject our
-        // stuff in the right places
-        output.println("<html><head><title id=\"JstPageTitle\">");
-        output.println(getTitle(r, n));
-        output.println("</title>");
+        final String pageTitle = getTitle(r, n);
         
-        // TODO get additional head stuff from the script?
-        // something like
-        //  <!-- jst:head
-        //      <link rel="stylesheet" href="/apps/foo/foo.css"/>
-        //  -->
-
-        // library scripts
-        for(String lib : libraryScripts) {
-            final String fullScriptPath =
-                SlingRequestPaths.getContextPath(request)
-                + SlingRequestPaths.getServletPath(request)
-                + lib
-            ;
-            output.println("<script type=\"text/javascript\" src=\"" + fullScriptPath + "\"></script>");
+        // Parse script using the NekoHTML permissive HTML parser 
+        final DOMParser parser = new DOMParser();
+        try {
+            parser.setFeature("http://xml.org/sax/features/namespaces", false);  
+            parser.setProperty("http://cyberneko.org/html/properties/names/elems", "lower");
+            parser.setProperty("http://cyberneko.org/html/properties/names/attrs", "lower");
+            parser.parse(new InputSource(scriptStream));
+        } catch(Exception e) {
+            final ScriptException se = new ScriptException("Error parsing script " + scriptPath);
+            se.initCause(e);
+            throw se;
         }
-
-        // Node data in JSON format
-        final JsonItemWriter j = new JsonItemWriter(null);
-        final int maxRecursionLevels = 1;
-        output.println("<script language='javascript'>");
-        output.print("var currentNode=");
+        final Document template = parser.getDocument();
+        
+        // compute default rendering
+        final StringWriter defaultRendering = new StringWriter();
         if(n!=null) {
-            j.dump(n, output, maxRecursionLevels);
-        } else {
-            output.print("{}");
+            final PrintWriter pw = new PrintWriter(defaultRendering);
+            htmlRenderer.render(pw, r, n);
+            pw.flush();
         }
-        output.println(";");
-        output.println("</script>");
-
-        // default rendering, turned off automatically from the javascript that
-        // follows, if javascript is enabled
-        output.println("</head><body>");
-        output.println("<div id=\"JstDefaultRendering\">");
-        if(n!=null) {
-            htmlRenderer.render(output, r, n);
+        
+        // compute currentNode values in JSON format
+        final StringWriter jsonData = new StringWriter();
+        if(n != null) {
+            final PrintWriter pw = new PrintWriter(jsonData);
+            final JsonItemWriter j = new JsonItemWriter(null);
+            final int maxRecursionLevels = 1;
+            pw.print("var currentNode=");
+            if(n!=null) {
+                j.dump(n, pw, maxRecursionLevels);
+            } else {
+                pw.print("{}");
+            }
+            pw.print(";");
+            pw.flush();
         }
-        output.println("</div>");
-        output.println("<script language=\"javascript\">");
-        output.println("var e = document.getElementById(\"JstDefaultRendering\"); e.parentNode.removeChild(e);");
-        output.println("</script>");
         
-        // reference to script provided by the JstCodeGeneratorServlet
-        final String scriptUrl = scriptPath + ".jst.js";
-        output.println("<script type=\"text/javascript\" src=\"" + scriptUrl + "\"></script>");
-
-        // all done
-        output.println("</body></html>");
-        
+        // run XSLT transform on script, passing parameter
+        // for our computed values
+        final String xslt = "/xslt/script-transform.xsl";
+        InputStream xslTransform = getClass().getResourceAsStream(xslt);
+        if(xslTransform == null) {
+            throw new ScriptException("XSLT transform " + xslt + " not found");
+        }
+        try {
+            final TransformerFactory tf = TransformerFactory.newInstance();
+            final Transformer t = tf.newTransformer(new StreamSource(xslTransform));
+            t.setParameter("pageTitle", pageTitle);
+            t.setParameter("slingScriptPath", fullPath(request,SLING_JS_PATH));
+            t.setParameter("jstScriptPath", fullPath(request, scriptPath + ".jst.js"));
+            t.setParameter("defaultRendering", defaultRendering.toString());
+            t.setParameter("jsonData", jsonData.toString());
+            final Result result = new StreamResult(output);
+            final DOMSource source = new DOMSource(template);
+            t.transform(source, result);
+            
+        } catch (Exception e) {
+            final ScriptException se = new ScriptException("Error in XSLT transform for " + scriptPath);
+            se.initCause(e);
+            throw se;
+            
+        } finally {
+            xslTransform.close();
+        }
+    }
+    
+    /** Return the full path to supplied resource */
+    static String fullPath (SlingHttpServletRequest request, String path) {
+        return SlingRequestPaths.getContextPath(request) + SlingRequestPaths.getServletPath(request) + path;
     }
     
     /** Return the title to use for the generated page */ 
