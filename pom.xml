@@ -25,7 +25,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-builder</artifactId>
     <packaging>pom</packaging>
-    <version>3-incubator</version>
+    <version>4incubator</version>
 
     <name>Sling (Builder)</name>
     <description>
@@ -110,7 +110,6 @@
         <module>extensions/bundleresource</module>
         <module>extensions/event</module>
         <module>extensions/httpauth</module>
-        <module>extensions/i18n</module>
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
 
@@ -162,6 +161,7 @@
         <profile>
             <id>allModules</id>
             <modules>
+                <module>extensions/i18n</module>
                 <module>scripting/freemarker</module>
                 <module>scripting/jst</module>
                 <module>scripting/ruby</module>
