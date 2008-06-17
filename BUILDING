@@ -1,0 +1,18 @@
+How to build Sling
+------------------
+Requires a Java 5 JDK and Maven (http://maven.apache.org/) 2.0.7 or later.
+
+To build Sling, run
+
+  mvn clean install
+
+in this directory. This will build, test and install the Sling modules
+in your local Maven repository.
+
+Some modules might not be listed in the pom.xml found in this directory,
+those won't be built by the above command. If you need one of these 
+modules, run "mvn clean install" in the directory that contains its
+pom.xml file.
+
+To get started with Sling, start the launchpad/launchpad-webapp module,
+see README.txt in that module's directory.
