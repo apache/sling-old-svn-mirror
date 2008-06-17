@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.webapp</artifactId>
     <packaging>war</packaging>
-    <version>3-incubator-SNAPSHOT</version>
+    <version>3-incubator</version>
 
     <name>Sling - Launchpad Web Application</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/webapp</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/webapp</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/webapp</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.webapp-3-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.webapp-3-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.launchpad.webapp-3-incubator</url>
     </scm>
 
     <properties>
