@@ -22,13 +22,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>2-incubator-SNAPSHOT</version>
+        <version>3-incubator</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.sling.bundleresource.impl</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.1-incubator-SNAPSHOT</version>
+    <version>2.0.2-incubator</version>
 
     <name>Sling - Bundle Resource Provider</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/bundleresource</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.bundleresource.impl-2.0.2-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.bundleresource.impl-2.0.2-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.bundleresource.impl-2.0.2-incubator</url>
     </scm>
 
     <build>
@@ -86,12 +86,12 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.1-incubator-SNAPSHOT</version>
+            <version>2.0.2-incubator</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.0.1-incubator-SNAPSHOT</version>
+            <version>2.0.2-incubator</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
