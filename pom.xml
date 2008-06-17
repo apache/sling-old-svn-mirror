@@ -29,7 +29,7 @@
 
   <artifactId>org.apache.sling.launchpad.content</artifactId>
   <packaging>bundle</packaging>
-  <version>2.0.1-incubator-SNAPSHOT</version>
+  <version>2.0.2-incubator</version>
 
   <name>Sling - Launchpad Content</name>
   <description>
@@ -38,9 +38,9 @@
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/content</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/content</developerConnection>
-    <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/content</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.content-2.0.2-incubator</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.content-2.0.2-incubator</developerConnection>
+    <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.launchpad.content-2.0.2-incubator</url>
   </scm>
 
   <build>
