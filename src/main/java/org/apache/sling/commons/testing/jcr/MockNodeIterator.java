@@ -27,7 +27,12 @@ public class MockNodeIterator implements NodeIterator {
 
     private Node[] nodes;
     private int idx;
+    private static final Node [] EMPTY_NODE_ARRAY = {};
 
+    public MockNodeIterator() {
+        this(EMPTY_NODE_ARRAY);
+    }
+    
     public MockNodeIterator(Node[] nodes) {
         this.nodes = (nodes != null) ? nodes : new Node[0];
         this.idx = 0;
