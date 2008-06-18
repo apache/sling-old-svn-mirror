@@ -158,11 +158,11 @@ public class MockNode implements Node {
     }
 
     public NodeIterator getNodes() {
-        return null;
+        return new MockNodeIterator();
     }
 
     public NodeIterator getNodes(String namePattern) {
-        return null;
+        return new MockNodeIterator();
     }
 
     public Item getPrimaryItem() {
@@ -178,7 +178,7 @@ public class MockNode implements Node {
     }
 
     public Property getProperty(String relPath) {
-        return null;
+        return properties.get(relPath);
     }
 
     public PropertyIterator getReferences() {
@@ -206,7 +206,7 @@ public class MockNode implements Node {
     }
 
     public boolean hasProperty(String relPath) {
-        return false;
+        return properties.containsKey(relPath);
     }
 
     public boolean holdsLock() {
