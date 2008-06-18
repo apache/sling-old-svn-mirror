@@ -68,19 +68,27 @@
   <!-- replace body with default rendering + script reference -->
   <xsl:template match="body|BODY" mode="inner">
     <div id="JstDefaultRendering">
-     <xsl:value-of select="$defaultRendering" disable-output-escaping="yes" />
+      <xsl:text>
+      </xsl:text>
+      <xsl:value-of select="$defaultRendering" disable-output-escaping="yes" />
+      <xsl:text>
+      </xsl:text>
     </div>
     <script language="javascript">
       var e = document.getElementById("JstDefaultRendering"); 
       e.parentNode.removeChild(e);
     </script>
+    <xsl:text>
+    </xsl:text>
     <script src="{$jstScriptPath}"/>
   </xsl:template>
   
   <!-- add reference to sling.js in head, and currentNode data -->
   <xsl:template match="head|HEAD" mode="inner">
     <xsl:apply-templates/>
-    <script src="{$slingScriptPath}"/>
+    <script src="{$slingScriptPath}"></script>
+    <xsl:text>
+    </xsl:text>
     <script language="javascript">
       <xsl:value-of select="$jsonData"/>
     </script>
