@@ -24,55 +24,52 @@ import java.io.StringWriter;
 
 import junit.framework.TestCase;
 
-/** Test the ScriptFilteredCopy */
-public class ScriptFilteredCopyTest extends TestCase {
+/** Test the BodyOnlyScriptFilteredCopy */
+public class BodyOnlyScriptFilteredCopyTest extends TestCase {
     
-    private final ScriptFilteredCopy sfc = new ScriptFilteredCopy();
+    private final BodyOnlyScriptFilteredCopy bfc = new BodyOnlyScriptFilteredCopy();
     
     private void runTest(String input, String expected) throws IOException {
         final StringWriter sw = new StringWriter();
-        sfc.copy(new StringReader(input), sw);
+        bfc.copy(new StringReader(input), sw);
         assertEquals(StringUtil.flatten(expected), StringUtil.flatten(sw.toString()));
     }
     
     public void testNoChanges() throws IOException {
         final String input = "No out.write statements on their own lines";
-        final String expected = input + "\n";
+        final String expected = "";
+        runTest(input,expected);
+    }
+    
+    public void testBasicTemplate() throws IOException {
+        final String input = 
+            "out.write('Something before body');\n"
+            + "out.write('<body class='foo'>');\n"
+            + "out.write(\"some template code\");\n"
+            + "out.write('</body>');\n"
+            + "out.write('Something after body');\n"
+        ;
+            
+        final String expected = 
+            "out.write(\"some template code\");\n"
+            ;
+        
         runTest(input,expected);
     }
     
     public void testOpenClose() throws IOException {
         final String input = 
             "A\n"
+            + "out.write('    <body class='foo'>');\n"
             + "out.write(\"some <script> here </script>\");\n"
+            + "out.write('</body>');\n"
             + "B\n";
         
         final String expected = 
-        "A\n"
-        + "out.write(\"some <\");\n"
+        "out.write(\"some <\");\n"
         + "out.write(\"script> here </\");\n"
-        + "out.write(\"script>\");\n"
-        + "B\n";
+        + "out.write(\"script>\");\n";
         
-        runTest(input,expected);
-    }
-    
-    public void testOpenAtStart() throws IOException {
-        final String input = "out.write(\"<script> here\");\n";
-        final String expected = 
-            "out.write(\"<\");\n"
-            + "out.write(\"script> here\");\n"
-        ;
-        
-        runTest(input,expected);
-    }
-
-    public void testOpenAtEnd() throws IOException {
-        final String input = "out.write(\"Here a <script>\");\n";
-        final String expected = 
-            "out.write(\"Here a <\");\n"
-            + "out.write(\"script>\");\n"
-        ;
         runTest(input,expected);
     }
 }
