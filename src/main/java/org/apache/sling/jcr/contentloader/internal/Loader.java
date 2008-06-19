@@ -295,13 +295,14 @@ public class Loader {
             return;
         }
 
-        Set<URL> ignoreEntry = new HashSet<URL>();
+        Map<URL, Node> processedEntries = new HashMap<URL, Node>();
 
         // potential root node import/extension
         URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle,
             path, versionables, checkin);
         if (rootNodeDescriptor != null) {
-            ignoreEntry.add(rootNodeDescriptor);
+            processedEntries.put(rootNodeDescriptor,
+                parent.getSession().getRootNode());
         }
 
         while (entries.hasMoreElements()) {
@@ -325,11 +326,13 @@ public class Loader {
                 // otherwise call createFolder, which creates an nt:folder or
                 // returns an existing node (created by a descriptor)
                 Node node = null;
-                if (nodeDescriptor != null
-                    && !ignoreEntry.contains(nodeDescriptor)) {
-                    node = createNode(parent, name, nodeDescriptor, overwrite,
-                        versionables, checkin);
-                    ignoreEntry.add(nodeDescriptor);
+                if (nodeDescriptor != null) {
+                    node = processedEntries.get(nodeDescriptor);
+                    if (node == null) {
+                        node = createNode(parent, name, nodeDescriptor,
+                            overwrite, versionables, checkin);
+                        processedEntries.put(nodeDescriptor, node);
+                    }
                 } else {
                     node = createFolder(parent, name, overwrite);
                 }
@@ -344,7 +347,7 @@ public class Loader {
                 
                 // file => create file
                 URL file = bundle.getEntry(entry);
-                if (ignoreEntry.contains(file)) {
+                if (processedEntries.containsKey(file)) {
                     // this is a consumed node descriptor
                     continue;
                 }
@@ -359,9 +362,10 @@ public class Loader {
                     }
                 }
                 if (foundProvider) {
-                    if (createNode(parent, getName(entry), file, overwrite,
-                        versionables, checkin) != null) {
-                        ignoreEntry.add(file);
+                    Node node = null;
+                    if ((node = createNode(parent, getName(entry), file, overwrite,
+                        versionables, checkin)) != null) {
+                        processedEntries.put(file, node);
                         continue;
                     }
                 }
