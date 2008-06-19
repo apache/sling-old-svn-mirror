@@ -65,8 +65,8 @@ import org.xmlpull.v1.XmlPullParserException;
 /**
  * The <code>ObjectContentManagerFactory</code> TODO
  *
- * @scr.component metatype="no"
- * @scr.service name="org.apache.sling.jcr.ocm.ObjectContentManagerFactory"
+ * @scr.component metatype="no" immediate="true"
+ * @scr.service interface="org.apache.sling.jcr.ocm.ObjectContentManagerFactory"
  * @scr.property name="service.description"
  *               value="Sling Object Content Manager Factory"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
