@@ -42,12 +42,14 @@
 <body onload="runTests()">
 
 <h1>Automated Sling client library tests</h1>
-<p class="warning">TODO: for now, running these tests requires setting <em>Allow
-Anonymous Access</em> to <em>false</em> on the Sling <em>Authentication
-Filter</em> configuration page.</p>
-
 <p>Loading this page executes some simple automated javascript tests
 of the Sling client library.</p>
+
+<p>
+Note that, in Sling revision 669215, <b>the tests fail</b> unless the 
+<em>Allow Anonymous Access</em> parameter of the <em>Sling Request Authenticator</em>
+component is set to false, see <a href="https://issues.apache.org/jira/browse/SLING-322">SLING-322</a>.
+</p>
 
 <h2>Test results</h2>
 <p>If all goes well, the paragraph styled <span class="output">like
@@ -76,65 +78,71 @@ should show the JSON data of the nodes created by the test cases.</p>
 	    return httpcon;
 	  }
 	  
+	  function uniqueId() {
+	    return new Date().getTime();
+	  }
+	    
 	  var passes = 0;
-	  var now = new Date().getTime();
 	  var baseTestPath = "/test-data/sling-test/testhtml-nodes";
-	  var testPath = baseTestPath + "/test-" + now;
+	  var testPath = baseTestPath + "/test-" + uniqueId();
+	  var testTime = uniqueId();
 	  
 	  function testPost() {
-	    var c = slingPost(testPath,"title=hello&created=&empty=&time=" + now);
-	    assert("Expected 200 status for POST",c.status == 200);
+	    var path = testPath + "/" + uniqueId();
+	    var c = slingPost(path,"title=hello&created=&empty=&time=" + testTime);
+	    assert("testPost(): Expected 201 status for POST, got " + c.status,c.status == 201);
+	    return path;
 	  }
 	  
-	  function verifyPostedElement() {
-	    var data = Sling.getContent(testPath,1);
+	  function verifyPostedElement(path) {
+	    var data = Sling.getContent(path,1);
 	    assertNotNull("data",data);
-	    assertEquals("title matches","hello",data.title);
-	    assertEquals("time matches",now,data.time);
-	    assertEquals("created property is a string","string",typeof(data.created));
+	    assertEquals("verifyPostedElement: title matches","hello",data.title);
+	    assertEquals("verifyPostedElement: time matches",testTime,data.time);
+	    assertEquals("verifyPostedElement: created property is a string","string",typeof(data.created));
         // TODO implement 'created' autoset property
 	    // assert("created property is not empty",data.created.length > 0);
-	    assertEquals("empty property is not stored","undefined",typeof(data.dummy));
+	    assertEquals("verifyPostedElement: empty property is not stored","undefined",typeof(data.dummy));
 	  }
 	  
 	  function testGetSessionInfo() {
 	    var session = Sling.getSessionInfo();
-	    assertNotNull("Sling.getSessionInfo()", session);
-	    assertEquals("session.userID is a string","string",typeof(session.userID));
-        assertEquals("session.userID == 'admin'","admin",session.userID);
-	    assertEquals("session.workspace is a string","string",typeof(session.workspace));
-	    assert("session.workspace contains 'default'",session.workspace.indexOf('default') >= 0);
+	    assertNotNull("testGetSessionInfo: Sling.getSessionInfo()", session);
+	    assertEquals("testGetSessionInfo: session.userID is a string","string",typeof(session.userID));
+        assertEquals("testGetSessionInfo: session.userID == 'admin'","admin",session.userID);
+	    assertEquals("testGetSessionInfo: session.workspace is a string","string",typeof(session.workspace));
+	    assert("testGetSessionInfo: session.workspace contains 'default'",session.workspace.indexOf('default') >= 0);
 	  }
 	  
 	  function testRemoveContent() {
-		var deletePath = baseTestPath + "/sling-test/testhtml-nodes/delete-" + now;
-	    var c = slingPost(deletePath,"title=hello&created=&dummy=&time=" + now);
-	    assert("Expected 200 status for POST",c.status == 200);
+		var deletePath = baseTestPath + "/sling-test/testhtml-nodes/delete-" + uniqueId();
+	    var c = slingPost(deletePath,"title=hello&created=&dummy=&time=" + uniqueId());
+	    assert("testRemoveContent: Expected 201 status for POST, got " + c.status,c.status == 201);
 	    
 	    var data = Sling.getContent(deletePath,1);
-	    assertNotNull("data must be found before removeContent",data);
+	    assertNotNull("testRemoveContent: data must be found before removeContent",data);
 	    
 	    var d = Sling.removeContent(deletePath);
-	    assert("Expected 200 status for removeContent, got " + d.status,d.status == 200);
+	    assert("testRemoveContent: Expected 200 status for removeContent, got " + d.status,d.status == 200);
 	    data = Sling.getContent(deletePath,1);
-	    assertNull("data should be gone after deletePath (" + deletePath + ")",data);
+	    assertNull("testRemoveContent: data should be gone after deletePath (" + deletePath + ")",data);
 	  }
 	  
 	  function testJsonLevels() {
 	    var c = slingPost(baseTestPath + "/json-levels", "title=JsonLevelsTest");
 	    var data0 = Sling.getContent(baseTestPath,0);
 	    var data1 = Sling.getContent(baseTestPath,1);
-	    assert("Level 0 must not provide child", typeof data0['json-levels'] == "undefined");
-	    assert("Level 1 must provide child", typeof data1['json-levels'] == "object");
-	    assert("Level 1 must provide child title", data1['json-levels'].title == "JsonLevelsTest");
+	    assert("testJsonLevels: Level 0 must not provide child", typeof data0['json-levels'] == "undefined");
+	    assert("testJsonLevels: Level 1 must provide child", typeof data1['json-levels'] == "object");
+	    assert("testJsonLevels: Level 1 must provide child title", data1['json-levels'].title == "JsonLevelsTest");
 	  }
 	  
 	  function runTests() {
 	    var out = document.getElementById("output");
 	    out.innerHTML = "Tests are running...";
 	    assert(null,2 + 2 == 4);
-	    testPost();
-	    verifyPostedElement();
+	    var path = testPost();
+	    verifyPostedElement(path);
 	    testGetSessionInfo();
 	    testRemoveContent();
 	    testJsonLevels();
