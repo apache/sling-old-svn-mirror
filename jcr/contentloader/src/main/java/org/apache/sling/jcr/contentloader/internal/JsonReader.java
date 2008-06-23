@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
@@ -35,7 +36,7 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * The <code>JsonReader</code> TODO
  */
-class JsonReader implements NodeReader {
+class JsonReader implements ContentReader {
 
     private static final Set<String> ignoredNames = new HashSet<String>();
     static {
@@ -52,7 +53,7 @@ class JsonReader implements NodeReader {
     static final ImportProvider PROVIDER = new ImportProvider() {
         private JsonReader jsonReader;
 
-        public NodeReader getReader() {
+        public ContentReader getReader() {
             if (jsonReader == null) {
                 jsonReader = new JsonReader();
             }
@@ -60,7 +61,11 @@ class JsonReader implements NodeReader {
         }
     };
 
-    public NodeDescription parse(InputStream ins) throws IOException {
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     */
+    public void parse(InputStream ins, ContentCreator contentCreator)
+    throws IOException, RepositoryException {
         try {
             String jsonString = toString(ins).trim();
             if (!jsonString.startsWith("{")) {
@@ -68,92 +73,85 @@ class JsonReader implements NodeReader {
             }
 
             JSONObject json = new JSONObject(jsonString);
-            return this.createNode(null, json);
+            this.createNode(null, json, contentCreator);
 
         } catch (JSONException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
         }
     }
 
-    protected NodeDescription createNode(String name, JSONObject obj) throws JSONException {
-        NodeDescription node = new NodeDescription();
-        node.setName(name);
-
-        Object primaryType = obj.opt("jcr:primaryType");
-        if (primaryType != null) {
-            node.setPrimaryNodeType(String.valueOf(primaryType));
+    protected void createNode(String name, JSONObject obj, ContentCreator contentCreator)
+    throws JSONException, RepositoryException {
+        Object primaryTypeObj = obj.opt("jcr:primaryType");
+        String primaryType = null;
+        if (primaryTypeObj != null) {
+            primaryType = String.valueOf(primaryTypeObj);
         }
 
+        String[] mixinTypes = null;
         Object mixinsObject = obj.opt("jcr:mixinTypes");
         if (mixinsObject instanceof JSONArray) {
             JSONArray mixins = (JSONArray) mixinsObject;
+            mixinTypes = new String[mixins.length()];
             for (int i = 0; i < mixins.length(); i++) {
-                node.addMixinNodeType(mixins.getString(i));
+                mixinTypes[i] = mixins.getString(i);
             }
         }
+
+        contentCreator.createNode(name, primaryType, mixinTypes);
 
         // add properties and nodes
         JSONArray names = obj.names();
         for (int i = 0; names != null && i < names.length(); i++) {
-            String n = names.getString(i);
+            final String n = names.getString(i);
             // skip well known objects
             if (!ignoredNames.contains(n)) {
                 Object o = obj.get(n);
                 if (o instanceof JSONObject) {
-                    NodeDescription child = this.createNode(n, (JSONObject) o);
-                    node.addChild(child);
-                } else if (o instanceof JSONArray) {
-                    PropertyDescription prop = createProperty(n, o);
-                    node.addProperty(prop);
+                    this.createNode(n, (JSONObject) o, contentCreator);
                 } else {
-                    PropertyDescription prop = createProperty(n, o);
-                    node.addProperty(prop);
+                    this.createProperty(n, o, contentCreator);
                 }
             }
         }
-        return node;
+        contentCreator.finishNode();
     }
 
-    protected PropertyDescription createProperty(String name, Object value)
-            throws JSONException {
-        PropertyDescription property = new PropertyDescription();
-        property.setName(name);
-
+    protected void createProperty(String name, Object value, ContentCreator contentCreator)
+    throws JSONException, RepositoryException {
         // assume simple value
         if (value instanceof JSONArray) {
             // multivalue
-            JSONArray array = (JSONArray) value;
+            final JSONArray array = (JSONArray) value;
             if (array.length() > 0) {
+                final String values[] = new String[array.length()];
                 for (int i = 0; i < array.length(); i++) {
-                    property.addValue(array.get(i));
+                    values[i] = array.get(i).toString();
                 }
-                value = array.opt(0);
+                final int propertyType = getType(values[0]);
+                contentCreator.createProperty(name, propertyType, values);
             } else {
-                property.addValue(null);
-                value = null;
+                contentCreator.createProperty(name, PropertyType.STRING, new String[0]);
             }
 
         } else {
             // single value
-            property.setValue(String.valueOf(value));
+            final int propertyType = getType(value);
+            contentCreator.createProperty(name, propertyType, String.valueOf(value));
         }
-        // set type
-        property.setType(getType(value));
-
-        return property;
     }
 
-    protected String getType(Object object) {
+    protected int getType(Object object) {
         if (object instanceof Double || object instanceof Float) {
-            return PropertyType.TYPENAME_DOUBLE;
+            return PropertyType.DOUBLE;
         } else if (object instanceof Number) {
-            return PropertyType.TYPENAME_LONG;
+            return PropertyType.LONG;
         } else if (object instanceof Boolean) {
-            return PropertyType.TYPENAME_BOOLEAN;
+            return PropertyType.BOOLEAN;
         }
 
         // fall back to default
-        return PropertyType.TYPENAME_STRING;
+        return PropertyType.STRING;
     }
 
     private String toString(InputStream ins) throws IOException {
