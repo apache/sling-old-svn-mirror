@@ -160,6 +160,9 @@
         </profile>
         <profile>
             <id>allModules</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <modules>
                 <module>extensions/i18n</module>
                 <module>scripting/freemarker</module>
