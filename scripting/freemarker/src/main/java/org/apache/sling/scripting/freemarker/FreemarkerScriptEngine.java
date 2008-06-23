@@ -22,10 +22,12 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
+import javax.jcr.Node;
 
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
+import org.apache.sling.scripting.freemarker.wrapper.NodeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +66,7 @@ public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
 
         try {
             Template tmpl = new Template(scriptName, reader, configuration);
+            bindings.put("currentNode", new NodeModel((Node) bindings.get("currentNode")));
             tmpl.process(bindings, scriptContext.getWriter());
         } catch (Throwable t) {
             log.error("Failure running Freemarker script.", t);
