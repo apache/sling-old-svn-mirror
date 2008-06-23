@@ -686,6 +686,13 @@ setting is not correct.
                 <scope>provided</scope>
             </dependency>
 
+	        <!-- the web based OSGi framework console -->
+	        <dependency>
+	            <groupId>org.apache.felix</groupId>
+	            <artifactId>org.apache.felix.webconsole</artifactId>
+	            <version>1.0.0</version>
+	        </dependency>
+
             <!-- HttpService implementation: embedded Jetty -->
             <dependency>
                 <groupId>org.ops4j.pax.web</groupId>
