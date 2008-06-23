@@ -123,6 +123,10 @@
             <artifactId>kxml2</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
     <!-- Testing -->        
         <dependency>
             <groupId>junit</groupId>

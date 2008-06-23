@@ -80,6 +80,8 @@ public class Loader {
         importProviders.put(EXT_JCR_XML, null);
         importProviders.put(EXT_JSON, JsonReader.PROVIDER);
         importProviders.put(EXT_XML, XmlReader.PROVIDER);
+        importProviders.put(".jar", ZipReader.JAR_PROVIDER);
+        importProviders.put(".zip", ZipReader.ZIP_PROVIDER);
     }
 
     public void dispose() {
