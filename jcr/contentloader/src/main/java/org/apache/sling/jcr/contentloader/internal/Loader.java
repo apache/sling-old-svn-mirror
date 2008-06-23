@@ -26,7 +26,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +39,6 @@ import java.util.Set;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -71,14 +69,13 @@ public class Loader {
 
     private Map<String, ImportProvider> importProviders;
 
-    private Map<String, List<String>> delayedReferences;
+    private ContentLoader contentCreator = new ContentLoader();
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
     public Loader(ContentLoaderService jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
-        this.delayedReferences = new HashMap<String, List<String>>();
         this.delayedBundles = new LinkedList<Bundle>();
 
         importProviders = new LinkedHashMap<String, ImportProvider>();
@@ -88,7 +85,6 @@ public class Loader {
     }
 
     public void dispose() {
-        delayedReferences = null;
         if (delayedBundles != null) {
             delayedBundles.clear();
             delayedBundles = null;
@@ -99,12 +95,13 @@ public class Loader {
 
     /**
      * Register a bundle and install its content.
-     * 
+     *
      * @param session
      * @param bundle
      */
-    public void registerBundle(final Session session, final Bundle bundle,
-            final boolean isUpdate) {
+    public void registerBundle(final Session session,
+                               final Bundle bundle,
+                               final boolean isUpdate) {
 
         log.debug("Registering bundle {} for content loading.",
             bundle.getSymbolicName());
@@ -147,11 +144,11 @@ public class Loader {
         }
 
         try {
-            
+
             // check if the content has already been loaded
             final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
                 session, bundle);
-            
+
             // if we don't get an info, someone else is currently loading
             if (bundleContentInfo == null) {
                 return false;
@@ -159,36 +156,36 @@ public class Loader {
 
             boolean success = false;
             try {
-                
+
                 final boolean contentAlreadyLoaded = ((Boolean) bundleContentInfo.get(ContentLoaderService.PROPERTY_CONTENT_LOADED)).booleanValue();
-                
+
                 if (!isUpdate && contentAlreadyLoaded) {
-                    
+
                     log.info("Content of bundle already loaded {}.",
                         bundle.getSymbolicName());
-                    
+
                 } else {
-                    
+
                     installContent(session, bundle, pathIter,
                         contentAlreadyLoaded);
-                    
+
                     if (isRetry) {
                         // log success of retry
                         log.info(
                             "Retrytring to load initial content for bundle {} succeeded.",
                             bundle.getSymbolicName());
                     }
-                    
+
                 }
-                
+
                 success = true;
                 return true;
-                
+
             } finally {
                 jcrContentHelper.unlockBundleContentInfo(session, bundle,
                     success);
             }
-            
+
         } catch (RepositoryException re) {
             // if we are retrying we already logged this message once, so we
             // won't log it again
@@ -203,49 +200,46 @@ public class Loader {
 
     /**
      * Unregister a bundle. Remove installed content.
-     * 
+     *
      * @param bundle The bundle.
      */
     public void unregisterBundle(final Session session, final Bundle bundle) {
-        
+
         // check if bundle has initial content
         final Iterator<PathEntry> pathIter = PathEntry.getContentPaths(bundle);
         if (delayedBundles.contains(bundle)) {
-            
+
             delayedBundles.remove(bundle);
-            
+
         } else {
-            
+
             if (pathIter != null) {
                 uninstallContent(session, bundle, pathIter);
                 jcrContentHelper.contentIsUninstalled(session, bundle);
             }
-            
+
         }
     }
 
     // ---------- internal -----------------------------------------------------
 
-    private void installContent(final Session session, final Bundle bundle,
-            final Iterator<PathEntry> pathIter,
-            final boolean contentAlreadyLoaded) throws RepositoryException {
+    private void installContent(final Session session,
+                                final Bundle bundle,
+                                final Iterator<PathEntry> pathIter,
+                                final boolean contentAlreadyLoaded)
+    throws RepositoryException {
         log.debug("Installing initial content from bundle {}",
             bundle.getSymbolicName());
         try {
 
-            // the nodes marked to be checked-in after import
-            List<Node> versionables = new ArrayList<Node>();
-
             while (pathIter.hasNext()) {
                 final PathEntry entry = pathIter.next();
                 if (!contentAlreadyLoaded || entry.isOverwrite()) {
-                    
-                    Node targetNode = getTargetNode(session, entry.getTarget());
+
+                    final Node targetNode = getTargetNode(session, entry.getTarget());
 
                     if (targetNode != null) {
-                        installFromPath(bundle, entry.getPath(),
-                            entry.isOverwrite(), versionables,
-                            entry.isCheckin(), targetNode);
+                        installFromPath(bundle, entry.getPath(), entry, targetNode);
                     }
                 }
             }
@@ -254,7 +248,7 @@ public class Loader {
             session.save();
 
             // finally checkin versionable nodes
-            for (Node versionable : versionables) {
+            for (final Node versionable : this.contentCreator.getVersionables()) {
                 versionable.checkin();
             }
 
@@ -268,6 +262,7 @@ public class Loader {
                     "Failure to rollback partial initial content for bundle {}",
                     bundle.getSymbolicName(), re);
             }
+            this.contentCreator.clear();
         }
         log.debug("Done installing initial content from bundle {}",
             bundle.getSymbolicName());
@@ -276,18 +271,19 @@ public class Loader {
 
     /**
      * Handle content installation for a single path.
-     * 
+     *
      * @param bundle The bundle containing the content.
      * @param path The path
      * @param overwrite Should the content be overwritten.
      * @param parent The parent node.
      * @throws RepositoryException
      */
-    private void installFromPath(final Bundle bundle, final String path,
-            final boolean overwrite, List<Node> versionables,
-            final boolean checkin, final Node parent)
-            throws RepositoryException {
-        
+    private void installFromPath(final Bundle bundle,
+                                 final String path,
+                                 final PathEntry configuration,
+                                 final Node parent)
+    throws RepositoryException {
+
         @SuppressWarnings("unchecked")
         Enumeration<String> entries = bundle.getEntryPaths(path);
         if (entries == null) {
@@ -298,8 +294,7 @@ public class Loader {
         Map<URL, Node> processedEntries = new HashMap<URL, Node>();
 
         // potential root node import/extension
-        URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle,
-            path, versionables, checkin);
+        URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle, path, configuration);
         if (rootNodeDescriptor != null) {
             processedEntries.put(rootNodeDescriptor,
                 parent.getSession().getRootNode());
@@ -309,7 +304,7 @@ public class Loader {
             final String entry = entries.nextElement();
             log.debug("Processing initial content entry {}", entry);
             if (entry.endsWith("/")) {
-                
+
                 // dir, check for node descriptor , else create dir
                 String base = entry.substring(0, entry.length() - 1);
                 String name = getName(base);
@@ -330,21 +325,20 @@ public class Loader {
                     node = processedEntries.get(nodeDescriptor);
                     if (node == null) {
                         node = createNode(parent, name, nodeDescriptor,
-                            overwrite, versionables, checkin);
+                            configuration);
                         processedEntries.put(nodeDescriptor, node);
                     }
                 } else {
-                    node = createFolder(parent, name, overwrite);
+                    node = createFolder(parent, name, configuration.isOverwrite());
                 }
 
                 // walk down the line
                 if (node != null) {
-                    installFromPath(bundle, entry, overwrite, versionables,
-                        checkin, node);
+                    installFromPath(bundle, entry, configuration, node);
                 }
 
             } else {
-                
+
                 // file => create file
                 URL file = bundle.getEntry(entry);
                 if (processedEntries.containsKey(file)) {
@@ -363,8 +357,7 @@ public class Loader {
                 }
                 if (foundProvider) {
                     Node node = null;
-                    if ((node = createNode(parent, getName(entry), file, overwrite,
-                        versionables, checkin)) != null) {
+                    if ((node = createNode(parent, getName(entry), file, configuration)) != null) {
                         processedEntries.put(file, node);
                         continue;
                     }
@@ -380,20 +373,34 @@ public class Loader {
         }
     }
 
-    private Node createNode(Node parent, String name, URL nodeXML,
-            boolean overwrite, List<Node> versionables, boolean checkin)
-            throws RepositoryException {
-
+    /**
+     * Create a new node from a content resource found in the bundle.
+     * @param parent The parent node
+     * @param name   The name of the new content node
+     * @param resourceUrl The resource url.
+     * @param overwrite Should the content be overwritten?
+     * @param versionables
+     * @param checkin
+     * @return
+     * @throws RepositoryException
+     */
+    private Node createNode(Node parent,
+                            String name,
+                            URL resourceUrl,
+                            PathEntry configuration)
+    throws RepositoryException {
+        final String resourcePath = resourceUrl.getPath().toLowerCase();
         InputStream ins = null;
         try {
             // special treatment for system view imports
-            if (nodeXML.getPath().toLowerCase().endsWith(EXT_JCR_XML)) {
-                return importSystemView(parent, name, nodeXML);
+            if (resourcePath.endsWith(EXT_JCR_XML)) {
+                return importSystemView(parent, name, resourceUrl);
             }
 
-            NodeReader nodeReader = null;
+            // get the node reader for this resource
+            ContentReader nodeReader = null;
             for (Map.Entry<String, ImportProvider> e : importProviders.entrySet()) {
-                if (nodeXML.getPath().toLowerCase().endsWith(e.getKey())) {
+                if (resourcePath.endsWith(e.getKey())) {
                     nodeReader = e.getValue().getReader();
                     break;
                 }
@@ -404,20 +411,11 @@ public class Loader {
                 return null;
             }
 
-            ins = nodeXML.openStream();
-            NodeDescription clNode = nodeReader.parse(ins);
+            this.contentCreator.init(configuration, parent, toPlainName(name));
+            ins = resourceUrl.openStream();
+            nodeReader.parse(ins, this.contentCreator);
 
-            // nothing has been parsed
-            if (clNode == null) {
-                return null;
-            }
-
-            if (clNode.getName() == null) {
-                // set the name without the [last] extension (xml or json)
-                clNode.setName(toPlainName(name));
-            }
-
-            return createNode(parent, clNode, overwrite, versionables, checkin);
+            return this.contentCreator.getRootNode();
         } catch (RepositoryException re) {
             throw re;
         } catch (Throwable t) {
@@ -434,7 +432,7 @@ public class Loader {
 
     /**
      * Delete the node from the initial content.
-     * 
+     *
      * @param parent
      * @param name
      * @param nodeXML
@@ -447,118 +445,9 @@ public class Loader {
         }
     }
 
-    private Node createNode(Node parentNode, NodeDescription clNode,
-            final boolean overwrite, List<Node> versionables, boolean checkin)
-            throws RepositoryException {
-        
-        // if node already exists but should be overwritten, delete it
-        if (overwrite && parentNode.hasNode(clNode.getName())) {
-            parentNode.getNode(clNode.getName()).remove();
-        }
-
-        // ensure repository node
-        Node node;
-        if (parentNode.hasNode(clNode.getName())) {
-
-            // use existing node
-            node = parentNode.getNode(clNode.getName());
-
-        } else if (clNode.getPrimaryNodeType() == null) {
-
-            // node explicit node type, use repository default
-            node = parentNode.addNode(clNode.getName());
-
-        } else {
-
-            // explicit primary node type
-            node = parentNode.addNode(clNode.getName(),
-                clNode.getPrimaryNodeType());
-        }
-
-        return setupNode(node, clNode, versionables, checkin);
-    }
-
-    private Node setupNode(Node node, NodeDescription clNode,
-            List<Node> versionables, boolean checkin)
-            throws RepositoryException {
-
-        // ammend mixin node types
-        if (clNode.getMixinNodeTypes() != null) {
-            for (String mixin : clNode.getMixinNodeTypes()) {
-                if (!node.isNodeType(mixin)) {
-                    node.addMixin(mixin);
-                }
-            }
-        }
-
-        // check if node is versionable
-        boolean addToVersionables = checkin
-            && node.isNodeType("mix:versionable");
-
-        if (clNode.getProperties() != null) {
-            for (PropertyDescription prop : clNode.getProperties()) {
-                if (node.hasProperty(prop.getName())
-                    && !node.getProperty(prop.getName()).isNew()) {
-                    continue;
-                }
-
-                int type = PropertyType.valueFromName(prop.getType());
-                if (prop.isMultiValue()) {
-
-                    String[] values = prop.getValues().toArray(
-                        new String[prop.getValues().size()]);
-                    node.setProperty(prop.getName(), values, type);
-
-                } else if (type == PropertyType.REFERENCE) {
-
-                    // need to resolve the reference
-                    String propPath = node.getPath() + "/" + prop.getName();
-                    String uuid = getUUID(node.getSession(), propPath,
-                        prop.getValue());
-                    if (uuid != null) {
-                        node.setProperty(prop.getName(), uuid, type);
-                    }
-
-                } else if ("jcr:isCheckedOut".equals(prop.getName())) {
-
-                    // don't try to write the property but record its state
-                    // for later checkin if set to false
-                    boolean checkedout = Boolean.valueOf(prop.getValue());
-                    if (!checkedout) {
-                        addToVersionables = true;
-                    }
-
-                } else {
-
-                    node.setProperty(prop.getName(), prop.getValue(), type);
-
-                }
-            }
-        }
-
-        // add the current node to the list of versionables to be checked
-        // in at the end. This is done if checkin is true and the node is
-        // versionable or if the jcr:isCheckedOut property is false
-        if (addToVersionables) {
-            versionables.add(node);
-        }
-
-        // create child nodes from the descriptor
-        if (clNode.getChildren() != null) {
-            for (NodeDescription child : clNode.getChildren()) {
-                createNode(node, child, false, versionables, checkin);
-            }
-        }
-
-        // resolve REFERENCE property values pointing to this node
-        resolveReferences(node);
-
-        return node;
-    }
-
     /**
      * Create a folder
-     * 
+     *
      * @param parent The parent node.
      * @param name The name of the folder
      * @param overwrite If set to true, an existing folder is removed first.
@@ -580,7 +469,7 @@ public class Loader {
 
     /**
      * Create a file from the given url.
-     * 
+     *
      * @param parent
      * @param source
      * @throws IOException
@@ -623,7 +512,7 @@ public class Loader {
 
     /**
      * Delete the file from the given url.
-     * 
+     *
      * @param parent
      * @param source
      * @throws IOException
@@ -637,53 +526,6 @@ public class Loader {
         }
     }
 
-    private String getUUID(Session session, String propPath,
-            String referencePath) throws RepositoryException {
-        if (session.itemExists(referencePath)) {
-            Item item = session.getItem(referencePath);
-            if (item.isNode()) {
-                Node refNode = (Node) item;
-                if (refNode.isNodeType("mix:referenceable")) {
-                    return refNode.getUUID();
-                }
-            }
-        } else {
-            // not existing yet, keep for delayed setting
-            List<String> current = delayedReferences.get(referencePath);
-            if (current == null) {
-                current = new ArrayList<String>();
-                delayedReferences.put(referencePath, current);
-            }
-            current.add(propPath);
-        }
-
-        // no UUID found
-        return null;
-    }
-
-    private void resolveReferences(Node node) throws RepositoryException {
-        List<String> props = delayedReferences.remove(node.getPath());
-        if (props == null || props.size() == 0) {
-            return;
-        }
-
-        // check whether we can set at all
-        if (!node.isNodeType("mix:referenceable")) {
-            return;
-        }
-
-        Session session = node.getSession();
-        String uuid = node.getUUID();
-
-        for (String property : props) {
-            String name = getName(property);
-            Node parentNode = getParentNode(session, property);
-            if (parentNode != null) {
-                parentNode.setProperty(name, uuid, PropertyType.REFERENCE);
-            }
-        }
-    }
-
     /**
      * Gets and decods the name part of the <code>path</code>. The name is
      * the part of the path after the last slash (or the complete path if no
@@ -693,7 +535,7 @@ public class Loader {
      * encoding. In this case, this method decodes the name using the
      * <code>java.netURLDecoder</code> class with the <i>UTF-8</i> character
      * encoding.
-     * 
+     *
      * @param path The path from which to extract the name part.
      * @return The URL decoded name part.
      */
@@ -719,30 +561,6 @@ public class Loader {
 
         // not encoded or problems decoding, return the name unmodified
         return name;
-    }
-
-    private Node getParentNode(Session session, String path)
-            throws RepositoryException {
-        int lastSlash = path.lastIndexOf('/');
-
-        // not an absolute path, cannot find parent
-        if (lastSlash < 0) {
-            return null;
-        }
-
-        // node below root
-        if (lastSlash == 0) {
-            return session.getRootNode();
-        }
-
-        // item in the hierarchy
-        path = path.substring(0, lastSlash);
-        if (!session.itemExists(path)) {
-            return null;
-        }
-
-        Item item = session.getItem(path);
-        return (item.isNode()) ? (Node) item : null;
     }
 
     private Node getTargetNode(Session session, String path)
@@ -800,7 +618,7 @@ public class Loader {
 
     /**
      * Handle content uninstallation for a single path.
-     * 
+     *
      * @param bundle The bundle containing the content.
      * @param path The path
      * @param parent The parent node.
@@ -897,7 +715,7 @@ public class Loader {
      * Import the XML file as JCR system or document view import. If the XML
      * file is not a valid system or document view export/import file,
      * <code>false</code> is returned.
-     * 
+     *
      * @param parent The parent node below which to import
      * @param nodeXML The URL to the XML file to import
      * @return <code>true</code> if the import succeeds, <code>false</code>
@@ -958,14 +776,14 @@ public class Loader {
     protected static final class Descriptor {
         public URL rootNodeDescriptor;
 
-        public NodeReader nodeReader;
+        public ContentReader nodeReader;
     }
 
     /**
      * Return the root node descriptor.
      */
     private Descriptor getRootNodeDescriptor(final Bundle bundle,
-            final String path) {
+                                             final String path) {
         URL rootNodeDescriptor = null;
 
         for (Map.Entry<String, ImportProvider> e : importProviders.entrySet()) {
@@ -993,9 +811,8 @@ public class Loader {
      * Imports mixin nodes and properties (and optionally child nodes) of the
      * root node.
      */
-    private URL importRootNode(Session session, Bundle bundle, String path,
-            List<Node> versionables, boolean checkin)
-            throws RepositoryException {
+    private URL importRootNode(Session session, Bundle bundle, String path, PathEntry configuration)
+    throws RepositoryException {
         final Descriptor descriptor = getRootNodeDescriptor(bundle, path);
         // no root descriptor found
         if (descriptor == null) {
@@ -1006,9 +823,8 @@ public class Loader {
         try {
 
             ins = descriptor.rootNodeDescriptor.openStream();
-            NodeDescription clNode = descriptor.nodeReader.parse(ins);
-
-            setupNode(session.getRootNode(), clNode, versionables, checkin);
+            this.contentCreator.init(configuration, session.getRootNode(), null);
+            descriptor.nodeReader.parse(ins, this.contentCreator);
 
             return descriptor.rootNodeDescriptor;
         } catch (RepositoryException re) {

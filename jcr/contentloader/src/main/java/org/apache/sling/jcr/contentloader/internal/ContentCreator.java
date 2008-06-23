@@ -18,14 +18,25 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
+import javax.jcr.RepositoryException;
 
-/**
- * The <code>NodeReader</code> TODO
- */
-interface NodeReader {
+interface ContentCreator {
 
-    NodeDescription parse(InputStream ins) throws IOException;
+    void createNode(String name,
+                    String primaryNodeType,
+                    String[] mixinNodeTypes)
+    throws RepositoryException;
 
+    void finishNode()
+    throws RepositoryException;
+
+    void createProperty(String name,
+                        int    propertyType,
+                        String value)
+    throws RepositoryException;
+
+    void createProperty(String name,
+                        int    propertyType,
+                        String[] values)
+    throws RepositoryException;
 }

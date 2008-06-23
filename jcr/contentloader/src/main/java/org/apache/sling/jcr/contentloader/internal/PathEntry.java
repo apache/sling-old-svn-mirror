@@ -54,6 +54,14 @@ public class PathEntry {
      */
     public static final String CHECKIN_DIRECTIVE = "checkin";
 
+    /**
+     * The expand directive specifying whether the available {@link ImportProvider}s
+     * should be used during content loading. This is a boolean value that
+     * defaults to true.
+     * @since 2.0.4
+     */
+    public static final String EXPAND_DIRECTIVE = "expand";
+
     /** The path for the initial content. */
     private final String path;
 
@@ -62,9 +70,12 @@ public class PathEntry {
 
     /** Should existing content be uninstalled? */
     private final boolean uninstall;
-    
+
     /** Should versionable nodes be checked in? */
     private final boolean checkin;
+
+    /** Should archives be expanded? @since 2.0.4 */
+    private final boolean expand;
 
     /**
      * Target path where initial content will be loaded. If it´s null then
@@ -90,31 +101,48 @@ public class PathEntry {
     }
 
     public PathEntry(ManifestHeader.Entry entry) {
-        // check for directives
-        final String overwriteValue = entry.getDirectiveValue(OVERWRITE_DIRECTIVE);
-        final String uninstallValue = entry.getDirectiveValue(UNINSTALL_DIRECTIVE);
-        final String pathValue = entry.getDirectiveValue(PATH_DIRECTIVE);
-        final String checkinValue = entry.getDirectiveValue(CHECKIN_DIRECTIVE);
-        boolean overwriteFlag = false;
-        if (overwriteValue != null) {
-            overwriteFlag = Boolean.valueOf(overwriteValue);
-        }
         this.path = entry.getValue();
-        this.overwrite = overwriteFlag;
+
+        // check for directives
+
+        // overwrite directive
+        final String overwriteValue = entry.getDirectiveValue(OVERWRITE_DIRECTIVE);
+        if (overwriteValue != null) {
+            this.overwrite = Boolean.valueOf(overwriteValue);
+        } else {
+            this.overwrite = false;
+        }
+
+        // uninstall directive
+        final String uninstallValue = entry.getDirectiveValue(UNINSTALL_DIRECTIVE);
         if (uninstallValue != null) {
             this.uninstall = Boolean.valueOf(uninstallValue);
         } else {
             this.uninstall = this.overwrite;
         }
+
+        // path directive
+        final String pathValue = entry.getDirectiveValue(PATH_DIRECTIVE);
         if (pathValue != null) {
             this.target = pathValue;
         } else {
             this.target = null;
         }
+
+        // checkin directive
+        final String checkinValue = entry.getDirectiveValue(CHECKIN_DIRECTIVE);
         if (checkinValue != null) {
             this.checkin = Boolean.valueOf(checkinValue);
         } else {
             this.checkin = false;
+        }
+
+        // expand directive
+        final String expandValue = entry.getDirectiveValue(EXPAND_DIRECTIVE);
+        if ( expandValue != null ) {
+            this.expand = Boolean.valueOf(expandValue);
+        } else {
+            this.expand = true;
         }
     }
 
@@ -133,7 +161,11 @@ public class PathEntry {
     public boolean isCheckin() {
         return this.checkin;
     }
-    
+
+    public boolean isExpand() {
+        return this.expand;
+    }
+
     public String getTarget() {
         return target;
     }

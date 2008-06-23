@@ -20,13 +20,47 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-public class XmlReader implements NodeReader {
+/**
+ * This reader reads an xml file defining the content.
+ * The xml format should have this format:
+ * <node>
+ *   <name>the name of the node</name>
+ *   <primaryNodeType>type</primaryNodeType>
+ *   <mixinNodeTypes>
+ *     <mixinNodeType>mixtype1</mixinNodeType>
+ *     <mixinNodeType>mixtype2</mixinNodeType>
+ *   </mixingNodeTypes>
+ *   <properties>
+ *     <property>
+ *       <name>propName</name>
+ *       <value>propValue</value>
+ *           or
+ *       <values>
+ *         <value/> for multi value properties
+ *       </values>
+ *       <type>propType</type>
+ *     </property>
+ *     <!-- more properties -->
+ *   </properties>
+ *   <nodes>
+ *     <!-- child nodes -->
+ *     <node>
+ *       ..
+ *     </node>
+ *   </nodes>
+ * </node>
+ */
+public class XmlReader implements ContentReader {
 
     /*
      * <node> <primaryNodeType>type</primaryNodeType> <mixinNodeTypes>
@@ -55,7 +89,7 @@ public class XmlReader implements NodeReader {
     static final ImportProvider PROVIDER = new ImportProvider() {
         private XmlReader xmlReader;
 
-        public NodeReader getReader() throws IOException {
+        public ContentReader getReader() throws IOException {
             if (xmlReader == null) {
                 try {
                     xmlReader = new XmlReader();
@@ -75,39 +109,46 @@ public class XmlReader implements NodeReader {
 
     // ---------- XML content access -------------------------------------------
 
-    public synchronized NodeDescription parse(InputStream ins) throws IOException {
+
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     */
+    public synchronized void parse(InputStream ins, ContentCreator creator)
+    throws IOException, RepositoryException {
         try {
-            return this.parseInternal(ins);
+            this.parseInternal(ins, creator);
         } catch (XmlPullParserException xppe) {
             throw (IOException) new IOException(xppe.getMessage()).initCause(xppe);
         }
     }
 
-    private NodeDescription parseInternal(InputStream ins) throws IOException,
-            XmlPullParserException {
-        String currentElement = "<root>";
-        LinkedList<String> elements = new LinkedList<String>();
-        NodeDescription currentNode = null;
-        LinkedList<NodeDescription> nodes = new LinkedList<NodeDescription>();
-        StringBuffer contentBuffer = new StringBuffer();
-        PropertyDescription currentProperty = null;
+    private void parseInternal(InputStream ins, ContentCreator creator)
+    throws IOException, XmlPullParserException, RepositoryException {
+        final StringBuffer contentBuffer = new StringBuffer();
 
         // set the parser input, use null encoding to force detection with
         // <?xml?>
         this.xmlParser.setInput(ins, null);
 
+        NodeDescription.SHARED.clear();
+        PropertyDescription.SHARED.clear();
+
+        NodeDescription currentNode = null;
+        PropertyDescription currentProperty = null;
+        String currentElement;
+
         int eventType = this.xmlParser.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
 
-                elements.add(currentElement);
                 currentElement = this.xmlParser.getName();
 
                 if (ELEM_PROPERTY.equals(currentElement)) {
-                    currentProperty = new PropertyDescription();
+                    currentNode = NodeDescription.create(currentNode, creator);
+                    currentProperty = PropertyDescription.SHARED;
                 } else if (ELEM_NODE.equals(currentElement)) {
-                    if (currentNode != null) nodes.add(currentNode);
-                    currentNode = new NodeDescription();
+                    currentNode = NodeDescription.create(currentNode, creator);
+                    currentNode = NodeDescription.SHARED;
                 }
 
             } else if (eventType == XmlPullParser.END_TAG) {
@@ -117,45 +158,40 @@ public class XmlReader implements NodeReader {
                 contentBuffer.delete(0, contentBuffer.length());
 
                 if (ELEM_PROPERTY.equals(qName)) {
-                    currentNode.addProperty(currentProperty);
-                    currentProperty = null;
+                    currentProperty = PropertyDescription.create(currentProperty, creator);
 
                 } else if (ELEM_NAME.equals(qName)) {
                     if (currentProperty != null) {
-                        currentProperty.setName(content);
+                        currentProperty.name = content;
                     } else if (currentNode != null) {
-                        currentNode.setName(content);
+                        currentNode.name = content;
                     }
 
                 } else if (ELEM_VALUE.equals(qName)) {
-                    if (currentProperty.isMultiValue()) {
-                        currentProperty.addValue(content);
-                    } else {
-                        currentProperty.setValue(content);
-                    }
+                    currentProperty.addValue(content);
 
                 } else if (ELEM_VALUES.equals(qName)) {
-                    currentProperty.addValue(null);
-                    currentProperty.setValue(null);
+                    currentProperty.isMultiValue = true;
 
                 } else if (ELEM_TYPE.equals(qName)) {
-                    currentProperty.setType(content);
+                    currentProperty.type = content;
 
                 } else if (ELEM_NODE.equals(qName)) {
-                    if (!nodes.isEmpty()) {
-                        NodeDescription parent = nodes.removeLast();
-                        parent.addChild(currentNode);
-                        currentNode = parent;
-                    }
+                    currentNode = NodeDescription.create(currentNode, creator);
+                    creator.finishNode();
 
                 } else if (ELEM_PRIMARY_NODE_TYPE.equals(qName)) {
-                    currentNode.setPrimaryNodeType(content);
+                    if ( currentNode == null ) {
+                        throw new IOException("Element is not allowed at this location: " + qName);
+                    }
+                    currentNode.primaryNodeType = content;
 
                 } else if (ELEM_MIXIN_NODE_TYPE.equals(qName)) {
-                    currentNode.addMixinNodeType(content);
+                    if ( currentNode == null ) {
+                        throw new IOException("Element is not allowed at this location: " + qName);
+                    }
+                    currentNode.addMixinType(content);
                 }
-
-                currentElement = elements.removeLast();
 
             } else if (eventType == XmlPullParser.TEXT) {
                 contentBuffer.append(this.xmlParser.getText());
@@ -163,7 +199,95 @@ public class XmlReader implements NodeReader {
 
             eventType = this.xmlParser.next();
         }
+    }
 
-        return currentNode;
+    protected static final class NodeDescription {
+
+        public static NodeDescription SHARED = new NodeDescription();
+
+        public String name;
+        public String primaryNodeType;
+        public List<String> mixinTypes;
+
+        public static NodeDescription create(NodeDescription desc, ContentCreator creator)
+        throws RepositoryException {
+            if ( desc != null ) {
+                creator.createNode(desc.name, desc.primaryNodeType, desc.getMixinTypes());
+                desc.clear();
+            }
+            return null;
+        }
+
+        public void addMixinType(String v) {
+            if ( this.mixinTypes == null ) {
+                this.mixinTypes = new ArrayList<String>();
+            }
+            this.mixinTypes.add(v);
+        }
+
+
+        private String[] getMixinTypes() {
+            if ( this.mixinTypes == null || this.mixinTypes.size() == 0) {
+                return null;
+            }
+            return mixinTypes.toArray(new String[this.mixinTypes.size()]);
+        }
+
+        private void clear() {
+            this.name = null;
+            this.primaryNodeType = null;
+            if ( this.mixinTypes != null ) {
+                this.mixinTypes.clear();
+            }
+        }
+    }
+
+    protected static final class PropertyDescription {
+
+        public static PropertyDescription SHARED = new PropertyDescription();
+
+        public static PropertyDescription create(PropertyDescription desc, ContentCreator creator)
+        throws RepositoryException {
+            int type = (desc.type == null ? PropertyType.STRING : PropertyType.valueFromName(desc.type));
+            if ( desc.isMultiValue ) {
+                creator.createProperty(desc.name, type, desc.getPropertyValues());
+            } else {
+                String value = null;
+                if ( desc.values != null && desc.values.size() == 1 ) {
+                    value = desc.values.get(0);
+                }
+                creator.createProperty(desc.name, type, value);
+            }
+            desc.clear();
+            return null;
+        }
+
+        public String name;
+        public String type;
+        public List<String> values;
+        public boolean isMultiValue;
+
+        public void addValue(String v) {
+            if ( this.values == null ) {
+                this.values = new ArrayList<String>();
+            }
+            this.values.add(v);
+        }
+
+        private String[] getPropertyValues() {
+            if ( this.values == null || this.values.size() == 0) {
+                return null;
+            }
+            return values.toArray(new String[this.values.size()]);
+        }
+
+        private void clear() {
+            this.name = null;
+            this.type = null;
+            if ( this.values != null ) {
+                this.values.clear();
+            }
+            this.isMultiValue = false;
+        }
     }
 }
