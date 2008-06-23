@@ -84,14 +84,23 @@ public class ContentLoader implements ContentCreator {
         isRootNodeImport = defaultRootName == null;
     }
 
+    /**
+     * Get the list of versionable nodes.
+     */
     public List<Node> getVersionables() {
         return this.versionables;
     }
 
+    /**
+     * Clear the content loader.
+     */
     public void clear() {
         this.versionables.clear();
     }
 
+    /**
+     * Get the created root node.
+     */
     public Node getRootNode() {
         return this.rootNode;
     }
@@ -100,7 +109,7 @@ public class ContentLoader implements ContentCreator {
     /**
      * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createNode(java.lang.String, java.lang.String, java.lang.String[])
      */
-    public Node createNode(String name,
+    public void createNode(String name,
                            String primaryNodeType,
                            String[] mixinNodeTypes)
     throws RepositoryException {
@@ -157,9 +166,7 @@ public class ContentLoader implements ContentCreator {
             if ( this.rootNode == null ) {
                 this.rootNode = node;
             }
-            return node;
         }
-        return null;
     }
 
     /**
@@ -393,6 +400,8 @@ public class ContentLoader implements ContentCreator {
         if (this.configuration.isOverwrite() && parentNode.hasNode(name)) {
             parentNode.getNode(name).remove();
         } else if (parentNode.hasNode(name)) {
+            this.parentNodeStack.push(parentNode.getNode(name));
+            this.parentNodeStack.push(parentNode.getNode(name).getNode("jcr:content"));
             return;
         }
 
@@ -424,9 +433,6 @@ public class ContentLoader implements ContentCreator {
      */
     public boolean switchCurrentNode(String subPath, String newNodeType)
     throws RepositoryException {
-        if ( this.parentNodeStack.size() > 1 ) {
-            throw new RepositoryException("Switching the current node is not allowed.");
-        }
         if ( subPath.startsWith("/") ) {
             subPath = subPath.substring(1);
         }
@@ -438,8 +444,9 @@ public class ContentLoader implements ContentCreator {
                 if ( newNodeType == null ) {
                     return false;
                 }
-                node = node.addNode(token, newNodeType);
+                node.addNode(token, newNodeType);
             }
+            node = node.getNode(token);
         }
         this.parentNodeStack.push(node);
         return true;
