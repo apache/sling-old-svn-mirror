@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>1-incubator-SNAPSHOT</version>
+        <relativePath>../../../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>org.apache.sling.extensions.gwt.sample</artifactId>
+    <version>2.0.0-incubator-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Sling Google Web Toolkit Sample</name>
+    <description>
+        This bundle provides a small demonstration of using Google Web
+        Toolkit with RPC servlet interaction. The application lets you
+        take notes that are persisted via GWT RPC / Servlet in the JCR
+        repository and displayed via GWT widgets.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/gwt/sample</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/gwt/sample</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/gwt/sample</url>
+    </scm>
+
+    <build>
+        <plugins>
+            <!-- Apache Felix SCR Plugin: automatically extracts SCR-descriptors
+                from the source and generates the required bundle metadata -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.apache.sling.extensions.gwt.sample.*
+                        </Export-Package>
+                        <DynamicImport-Package>
+                            com.google.gwt.*
+                        </DynamicImport-Package>
+                        <Sling-Initial-Content>
+                            SLING-INF/content
+                        </Sling-Initial-Content>
+                        <Sling-Bundle-Resources>
+                            /gwt
+                        </Sling-Bundle-Resources>
+                        <Include-Resource>
+                            target/gwt,{maven-resources}
+                        </Include-Resource>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.xi8ix</groupId>
+                <artifactId>xi8ix-gwtc</artifactId>
+                <version>1.4.60</version>
+                <configuration>
+                    <modules>
+                        <module>
+                            org.apache.sling.extensions.gwt.sample.Notes
+                        </module>
+                    </modules>
+                    <webappDirectory>target/gwt</webappDirectory>
+                </configuration>
+                <executions>
+                    <!-- Run the gwtc goal during the compile phase -->
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>gwtc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>
+                org.apache.sling.extensions.gwt.servlet
+            </artifactId>
+            <version>1.4.60-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>1.4.60</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.api</artifactId>
+            <version>2.0.0-incubator-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>xi8ix-repository</id>
+            <name>xi8ix Maven2 Repository</name>
+            <url>http://maven.xi8ix.org</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>
+
