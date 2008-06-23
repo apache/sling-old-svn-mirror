@@ -29,9 +29,13 @@ import org.apache.commons.io.input.CloseShieldInputStream;
 
 
 /**
- * The <code>JsonReader</code> TODO
+ * The <code>ZipReader</code> TODO
+ *
+ * @since 2.0.4
  */
 class ZipReader implements ContentReader {
+
+    private static final String NT_FOLDER = "nt:folder";
 
     static final ImportProvider ZIP_PROVIDER = new ImportProvider() {
         private ZipReader zipReader;
@@ -56,10 +60,10 @@ class ZipReader implements ContentReader {
     };
 
     /** Is this a jar reader? */
-    private final boolean jarReader;
+    //private final boolean jarReader;
 
     public ZipReader(boolean jarReader) {
-        this.jarReader = jarReader;
+        //this.jarReader = jarReader;
     }
 
     /**
@@ -67,7 +71,7 @@ class ZipReader implements ContentReader {
      */
     public void parse(InputStream ins, ContentCreator creator)
     throws IOException, RepositoryException {
-        creator.createNode(null, "nt:folder", null);
+        creator.createNode(null, NT_FOLDER, null);
         final ZipInputStream zis = new ZipInputStream(ins);
         final InputStream dataIS = new CloseShieldInputStream(zis);
         ZipEntry entry;
@@ -78,7 +82,7 @@ class ZipReader implements ContentReader {
                     String name = entry.getName();
                     int pos = name.lastIndexOf('/');
                     if ( pos != -1 ) {
-                        creator.switchCurrentNode(name.substring(0, pos), "nt:folder");
+                        creator.switchCurrentNode(name.substring(0, pos), NT_FOLDER);
                     }
                     creator.createFileAndResourceNode(name, dataIS, null, entry.getTime());
                     creator.finishNode();
