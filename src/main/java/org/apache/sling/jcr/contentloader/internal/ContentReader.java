@@ -19,9 +19,24 @@
 package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-interface ImportProvider {
+import javax.jcr.RepositoryException;
 
-    ContentReader getReader() throws IOException;
-    
+/**
+ * The <code>ContentReader</code>
+ * A content reader is provided by an {@link ImportProvider}.
+ */
+interface ContentReader {
+
+    /**
+     * Read the content from the input stream and create the
+     * content throught the provided content creator.
+     * The content reader should not close the input stream, this is
+     * done by the calling component!
+     * @param ins The input stream.
+     * @throws IOException
+     */
+    void parse(InputStream ins, ContentCreator creator) throws IOException, RepositoryException;
+
 }
