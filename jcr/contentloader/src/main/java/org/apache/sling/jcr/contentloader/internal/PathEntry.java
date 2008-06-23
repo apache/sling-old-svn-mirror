@@ -21,6 +21,7 @@ package org.apache.sling.jcr.contentloader.internal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.sling.commons.osgi.ManifestHeader;
 import org.osgi.framework.Bundle;
@@ -55,12 +56,12 @@ public class PathEntry {
     public static final String CHECKIN_DIRECTIVE = "checkin";
 
     /**
-     * The expand directive specifying whether the available {@link ImportProvider}s
-     * should be used during content loading. This is a boolean value that
-     * defaults to true.
+     * The ignore import providers directive specifying whether the available {@link ImportProvider}s
+     * should be used during content loading. This is a string value that defaults to the empty
+     * string..
      * @since 2.0.4
      */
-    public static final String EXPAND_DIRECTIVE = "expand";
+    public static final String IGNORE_IMPORT_PROVIDERS_DIRECTIVE = "ignoreImportProviders";
 
     /** The path for the initial content. */
     private final String path;
@@ -74,8 +75,8 @@ public class PathEntry {
     /** Should versionable nodes be checked in? */
     private final boolean checkin;
 
-    /** Should archives be expanded? @since 2.0.4 */
-    private final boolean expand;
+    /** Which import providers should be ignored? @since 2.0.4 */
+    private final List<String> ignoreImportProviders;
 
     /**
      * Target path where initial content will be loaded. If it´s null then
@@ -138,11 +139,13 @@ public class PathEntry {
         }
 
         // expand directive
-        final String expandValue = entry.getDirectiveValue(EXPAND_DIRECTIVE);
-        if ( expandValue != null ) {
-            this.expand = Boolean.valueOf(expandValue);
-        } else {
-            this.expand = true;
+        this.ignoreImportProviders = new ArrayList<String>();
+        final String expandValue = entry.getDirectiveValue(IGNORE_IMPORT_PROVIDERS_DIRECTIVE);
+        if ( expandValue != null && expandValue.length() > 0 ) {
+            final StringTokenizer st = new StringTokenizer(expandValue, ",");
+            while ( st.hasMoreTokens() ) {
+                this.ignoreImportProviders.add(st.nextToken());
+            }
         }
     }
 
@@ -162,8 +165,11 @@ public class PathEntry {
         return this.checkin;
     }
 
-    public boolean isExpand() {
-        return this.expand;
+    public boolean isIgnoredImportProvider(String extension) {
+        if ( extension.startsWith(".") ) {
+            extension = extension.substring(1);
+        }
+        return this.ignoreImportProviders.contains(extension);
     }
 
     public String getTarget() {

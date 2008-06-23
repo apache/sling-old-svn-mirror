@@ -57,6 +57,10 @@ public class Loader {
 
     public static final String EXT_JSON = ".json";
 
+    public static final String EXT_JAR = ".jar";
+
+    public static final String EXT_ZIP = ".zip";
+
     public static final String ROOT_DESCRIPTOR = "/ROOT";
 
     /** default log */
@@ -64,7 +68,8 @@ public class Loader {
 
     private ContentLoaderService jcrContentHelper;
 
-    private Map<String, ImportProvider> importProviders;
+    /** All available import providers. */
+    private Map<String, ImportProvider> defaultImportProviders;
 
     private final ContentLoader contentCreator;
 
@@ -76,12 +81,12 @@ public class Loader {
         this.contentCreator = new ContentLoader(jcrContentHelper);
         this.delayedBundles = new LinkedList<Bundle>();
 
-        importProviders = new LinkedHashMap<String, ImportProvider>();
-        importProviders.put(EXT_JCR_XML, null);
-        importProviders.put(EXT_JSON, JsonReader.PROVIDER);
-        importProviders.put(EXT_XML, XmlReader.PROVIDER);
-        importProviders.put(".jar", ZipReader.JAR_PROVIDER);
-        importProviders.put(".zip", ZipReader.ZIP_PROVIDER);
+        defaultImportProviders = new LinkedHashMap<String, ImportProvider>();
+        defaultImportProviders.put(EXT_JCR_XML, null);
+        defaultImportProviders.put(EXT_JSON, JsonReader.PROVIDER);
+        defaultImportProviders.put(EXT_XML, XmlReader.PROVIDER);
+        defaultImportProviders.put(EXT_JAR, ZipReader.JAR_PROVIDER);
+        defaultImportProviders.put(EXT_ZIP, ZipReader.ZIP_PROVIDER);
     }
 
     public void dispose() {
@@ -90,7 +95,7 @@ public class Loader {
             delayedBundles = null;
         }
         jcrContentHelper = null;
-        importProviders.clear();
+        defaultImportProviders = null;
     }
 
     /**
@@ -290,11 +295,12 @@ public class Loader {
             log.info("install: No initial content entries at {}", path);
             return;
         }
+        //  init content creator
+        this.contentCreator.init(configuration, this.defaultImportProviders);
 
-        Map<URL, Node> processedEntries = new HashMap<URL, Node>();
-
+        final Map<URL, Node> processedEntries = new HashMap<URL, Node>();
         // potential root node import/extension
-        URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle, path, configuration);
+        URL rootNodeDescriptor = importRootNode(parent.getSession(), bundle, path);
         if (rootNodeDescriptor != null) {
             processedEntries.put(rootNodeDescriptor,
                 parent.getSession().getRootNode());
@@ -310,7 +316,7 @@ public class Loader {
                 String name = getName(base);
 
                 URL nodeDescriptor = null;
-                for (String ext : importProviders.keySet()) {
+                for (String ext : this.contentCreator.getImportProviders().keySet()) {
                     nodeDescriptor = bundle.getEntry(base + ext);
                     if (nodeDescriptor != null) {
                         break;
@@ -325,7 +331,7 @@ public class Loader {
                     node = processedEntries.get(nodeDescriptor);
                     if (node == null) {
                         node = createNode(parent, name, nodeDescriptor,
-                            configuration);
+                                          configuration);
                         processedEntries.put(nodeDescriptor, node);
                     }
                 } else {
@@ -347,14 +353,8 @@ public class Loader {
                 }
 
                 // install if it is a descriptor
-                boolean foundProvider = false;
-                final Iterator<String> ipIter = importProviders.keySet().iterator();
-                while (!foundProvider && ipIter.hasNext()) {
-                    final String ext = ipIter.next();
-                    if (entry.endsWith(ext)) {
-                        foundProvider = true;
-                    }
-                }
+                boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
+
                 if (foundProvider) {
                     Node node = null;
                     if ((node = createNode(parent, getName(entry), file, configuration)) != null) {
@@ -398,20 +398,18 @@ public class Loader {
             }
 
             // get the node reader for this resource
-            ContentReader nodeReader = null;
-            for (Map.Entry<String, ImportProvider> e : importProviders.entrySet()) {
-                if (resourcePath.endsWith(e.getKey())) {
-                    nodeReader = e.getValue().getReader();
-                    break;
-                }
+            final ImportProvider ip = this.contentCreator.getImportProvider(resourcePath);
+            if ( ip == null ) {
+                return null;
             }
+            final ContentReader nodeReader = ip.getReader();
 
             // cannot find out the type
             if (nodeReader == null) {
                 return null;
             }
 
-            this.contentCreator.init(configuration, parent, toPlainName(name));
+            this.contentCreator.prepareParsing(parent, toPlainName(name));
             ins = resourceUrl.openStream();
             nodeReader.parse(ins, this.contentCreator);
 
@@ -487,7 +485,8 @@ public class Loader {
             path = srcPath.substring(0, pos + 1) + name;
         }
 
-        this.contentCreator.init(configuration, parent, name);
+        this.contentCreator.init(configuration, defaultImportProviders);
+        this.contentCreator.prepareParsing(parent, name);
         final URLConnection conn = source.openConnection();
         final long lastModified = conn.getLastModified();
         final String type = conn.getContentType();
@@ -575,7 +574,7 @@ public class Loader {
                 if (entry.isUninstall()) {
                     Node targetNode = getTargetNode(session, entry.getTarget());
                     if (targetNode != null)
-                        uninstallFromPath(bundle, entry.getPath(), targetNode);
+                        uninstallFromPath(bundle, entry.getPath(), entry, targetNode);
                 } else {
                     log.debug(
                         "Ignoring to uninstall content at {}, uninstall directive is not set.",
@@ -611,15 +610,19 @@ public class Loader {
      * @param parent The parent node.
      * @throws RepositoryException
      */
-    private void uninstallFromPath(final Bundle bundle, final String path,
-            final Node parent) throws RepositoryException {
+    private void uninstallFromPath(final Bundle bundle,
+                                   final String path,
+                                   final PathEntry configuration,
+                                   final Node parent) throws RepositoryException {
         @SuppressWarnings("unchecked")
         Enumeration<String> entries = bundle.getEntryPaths(path);
         if (entries == null) {
             return;
         }
 
-        Set<URL> ignoreEntry = new HashSet<URL>();
+        this.contentCreator.init(configuration, defaultImportProviders);
+
+        final Set<URL> ignoreEntry = new HashSet<URL>();
 
         // potential root node import/extension
         Descriptor rootNodeDescriptor = getRootNodeDescriptor(bundle, path);
@@ -636,7 +639,7 @@ public class Loader {
                 String name = getName(base);
 
                 URL nodeDescriptor = null;
-                for (String ext : importProviders.keySet()) {
+                for (String ext : this.contentCreator.getImportProviders().keySet()) {
                     nodeDescriptor = bundle.getEntry(base + ext);
                     if (nodeDescriptor != null) {
                         break;
@@ -657,7 +660,7 @@ public class Loader {
 
                 if (node != null) {
                     // walk down the line
-                    uninstallFromPath(bundle, entry, node);
+                    uninstallFromPath(bundle, entry, configuration, node);
                 }
 
                 if (delete) {
@@ -674,14 +677,7 @@ public class Loader {
                 }
 
                 // uninstall if it is a descriptor
-                boolean foundProvider = false;
-                final Iterator<String> ipIter = importProviders.keySet().iterator();
-                while (!foundProvider && ipIter.hasNext()) {
-                    final String ext = ipIter.next();
-                    if (entry.endsWith(ext)) {
-                        foundProvider = true;
-                    }
-                }
+                boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
                 if (foundProvider) {
                     deleteNode(parent, toPlainName(getName(entry)));
                     ignoreEntry.add(file);
@@ -710,13 +706,15 @@ public class Loader {
      * @throws IOException If an IO error occurrs reading the XML file.
      */
     private Node importSystemView(Node parent, String name, URL nodeXML)
-            throws IOException {
+    throws IOException {
 
         InputStream ins = null;
         try {
 
             // check whether we have the content already, nothing to do then
-            name = toPlainName(name);
+            if ( name.endsWith(EXT_JCR_XML) ) {
+                name = name.substring(0, name.length() - EXT_JCR_XML.length());
+            }
             if (parent.hasNode(name)) {
                 log.debug(
                     "importSystemView: Node {} for XML {} already exists, nothing to to",
@@ -773,7 +771,7 @@ public class Loader {
                                              final String path) {
         URL rootNodeDescriptor = null;
 
-        for (Map.Entry<String, ImportProvider> e : importProviders.entrySet()) {
+        for (Map.Entry<String, ImportProvider> e : this.contentCreator.getImportProviders().entrySet()) {
             if (e.getValue() != null) {
                 rootNodeDescriptor = bundle.getEntry(path + ROOT_DESCRIPTOR
                     + e.getKey());
@@ -798,7 +796,7 @@ public class Loader {
      * Imports mixin nodes and properties (and optionally child nodes) of the
      * root node.
      */
-    private URL importRootNode(Session session, Bundle bundle, String path, PathEntry configuration)
+    private URL importRootNode(Session session, Bundle bundle, String path)
     throws RepositoryException {
         final Descriptor descriptor = getRootNodeDescriptor(bundle, path);
         // no root descriptor found
@@ -810,7 +808,7 @@ public class Loader {
         try {
 
             ins = descriptor.rootNodeDescriptor.openStream();
-            this.contentCreator.init(configuration, session.getRootNode(), null);
+            this.contentCreator.prepareParsing(session.getRootNode(), null);
             descriptor.nodeReader.parse(ins, this.contentCreator);
 
             return descriptor.rootNodeDescriptor;
@@ -830,14 +828,7 @@ public class Loader {
     }
 
     private String toPlainName(String name) {
-        String providerExt = null;
-        final Iterator<String> ipIter = importProviders.keySet().iterator();
-        while (providerExt == null && ipIter.hasNext()) {
-            final String ext = ipIter.next();
-            if (name.endsWith(ext)) {
-                providerExt = ext;
-            }
-        }
+        final String providerExt = this.contentCreator.getImportProviderExtension(name);
         if (providerExt != null) {
             return name.substring(0, name.length() - providerExt.length());
         }

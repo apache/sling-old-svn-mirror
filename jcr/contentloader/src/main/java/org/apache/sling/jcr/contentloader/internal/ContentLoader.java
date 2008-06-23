@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -38,6 +39,7 @@ import javax.jcr.ValueFactory;
 
 /**
  * The <code>ContentLoader</code> creates the nodes and properties.
+ * @since 2.0.4
  */
 public class ContentLoader implements ContentCreator {
 
@@ -62,21 +64,39 @@ public class ContentLoader implements ContentCreator {
 
     private final ContentLoaderService jcrContentHelper;
 
+    private Map<String, ImportProvider> importProviders;
+
     public ContentLoader(ContentLoaderService jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
     }
 
     /**
      * Initialize this component.
-     * If the defaultRootName is null, we are in ROOT_NODE import mode.
      * @param pathEntry
+     */
+    public void init(final PathEntry pathEntry,
+                     final Map<String, ImportProvider> defaultImportProviders) {
+
+        this.configuration = pathEntry;
+        // create list of allowed import providers
+        this.importProviders = new HashMap<String, ImportProvider>();
+        final Iterator<Map.Entry<String, ImportProvider>> entryIter = defaultImportProviders.entrySet().iterator();
+        while ( entryIter.hasNext() ) {
+            final Map.Entry<String, ImportProvider> current = entryIter.next();
+            if (!configuration.isIgnoredImportProvider(current.getKey()) ) {
+                importProviders.put(current.getKey(), current.getValue());
+            }
+        }
+    }
+
+    /**
+     *
+     * If the defaultRootName is null, we are in ROOT_NODE import mode.
      * @param parentNode
      * @param defaultRootName
      */
-    public void init(final PathEntry pathEntry,
-                     final Node parentNode,
-                     final String defaultRootName) {
-        this.configuration = pathEntry;
+    public void prepareParsing(final Node parentNode,
+                               final String defaultRootName) {
         this.parentNodeStack.clear();
         this.parentNodeStack.push(parentNode);
         this.defaultRootName = defaultRootName;
@@ -105,6 +125,33 @@ public class ContentLoader implements ContentCreator {
         return this.rootNode;
     }
 
+    public Map<String, ImportProvider> getImportProviders() {
+        return this.importProviders;
+    }
+
+    public ImportProvider getImportProvider(String name) {
+        ImportProvider provider = null;
+        final Iterator<String> ipIter = importProviders.keySet().iterator();
+        while (provider == null && ipIter.hasNext()) {
+            final String ext = ipIter.next();
+            if (name.endsWith(ext)) {
+                provider = importProviders.get(ext);
+            }
+        }
+        return provider;
+    }
+
+    public String getImportProviderExtension(String name) {
+        String providerExt = null;
+        final Iterator<String> ipIter = importProviders.keySet().iterator();
+        while (providerExt == null && ipIter.hasNext()) {
+            final String ext = ipIter.next();
+            if (name.endsWith(ext)) {
+                providerExt = ext;
+            }
+        }
+        return providerExt;
+    }
 
     /**
      * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createNode(java.lang.String, java.lang.String, java.lang.String[])
