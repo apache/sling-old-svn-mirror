@@ -25,6 +25,8 @@ import javax.jcr.RepositoryException;
 /**
  * The <code>ContentCreator</code>
  * is used by the {@link ContentReader} to create the actual content.
+ *
+ * @since 2.0.4
  */
 interface ContentCreator {
 
