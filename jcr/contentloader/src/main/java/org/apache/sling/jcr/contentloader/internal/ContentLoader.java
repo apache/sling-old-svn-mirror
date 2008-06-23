@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -55,6 +56,15 @@ public class ContentLoader implements ContentCreator {
     private Node rootNode;
 
     private boolean isRootNodeImport;
+
+    // default content type for createFile()
+    private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+
+    private final ContentLoaderService jcrContentHelper;
+
+    public ContentLoader(ContentLoaderService jcrContentHelper) {
+        this.jcrContentHelper = jcrContentHelper;
+    }
 
     /**
      * Initialize this component.
@@ -90,7 +100,7 @@ public class ContentLoader implements ContentCreator {
     /**
      * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createNode(java.lang.String, java.lang.String, java.lang.String[])
      */
-    public void createNode(String name,
+    public Node createNode(String name,
                            String primaryNodeType,
                            String[] mixinNodeTypes)
     throws RepositoryException {
@@ -147,7 +157,9 @@ public class ContentLoader implements ContentCreator {
             if ( this.rootNode == null ) {
                 this.rootNode = node;
             }
+            return node;
         }
+        return null;
     }
 
     /**
@@ -362,6 +374,75 @@ public class ContentLoader implements ContentCreator {
 
         Item item = session.getItem(path);
         return (item.isNode()) ? (Node) item : null;
+    }
+
+
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createFileAndResourceNode(java.lang.String, java.io.InputStream, java.lang.String, long)
+     */
+    public void createFileAndResourceNode(String name,
+                                          InputStream data,
+                                          String mimeType,
+                                          long lastModified)
+    throws RepositoryException {
+        int lastSlash = name.lastIndexOf('/');
+        name = (lastSlash < 0) ? name : name.substring(lastSlash + 1);
+        final Node parentNode = this.parentNodeStack.peek();
+
+        // if node already exists but should be overwritten, delete it
+        if (this.configuration.isOverwrite() && parentNode.hasNode(name)) {
+            parentNode.getNode(name).remove();
+        } else if (parentNode.hasNode(name)) {
+            return;
+        }
+
+        // ensure content type
+        if (mimeType == null) {
+            mimeType = jcrContentHelper.getMimeType(name);
+            if (mimeType == null) {
+                jcrContentHelper.log.info(
+                    "createFile: Cannot find content type for {}, using {}",
+                    name, DEFAULT_CONTENT_TYPE);
+                mimeType = DEFAULT_CONTENT_TYPE;
+            }
+        }
+
+        // ensure sensible last modification date
+        if (lastModified <= 0) {
+            lastModified = System.currentTimeMillis();
+        }
+
+        this.createNode(name, "nt:file", null);
+        this.createNode("jcr:content", "nt:resource", null);
+        this.createProperty("jcr:mimeType", mimeType);
+        this.createProperty("jcr:lastModified", lastModified);
+        this.createProperty("jcr:data", data);
+    }
+
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#switchCurrentNode(java.lang.String, java.lang.String)
+     */
+    public boolean switchCurrentNode(String subPath, String newNodeType)
+    throws RepositoryException {
+        if ( this.parentNodeStack.size() > 1 ) {
+            throw new RepositoryException("Switching the current node is not allowed.");
+        }
+        if ( subPath.startsWith("/") ) {
+            subPath = subPath.substring(1);
+        }
+        final StringTokenizer st = new StringTokenizer(subPath, "/");
+        Node node = this.parentNodeStack.peek();
+        while ( st.hasMoreTokens() ) {
+            final String token = st.nextToken();
+            if ( !node.hasNode(token) ) {
+                if ( newNodeType == null ) {
+                    return false;
+                }
+                node = node.addNode(token, newNodeType);
+            }
+        }
+        this.parentNodeStack.push(node);
+        return true;
     }
 
 }

@@ -18,6 +18,9 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
+import java.io.InputStream;
+
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 /**
@@ -38,7 +41,7 @@ interface ContentCreator {
      * @param mixinNodeTypes The mixin node types or null.
      * @throws RepositoryException If anything goes wrong.
      */
-    void createNode(String name,
+    Node createNode(String name,
                     String primaryNodeType,
                     String[] mixinNodeTypes)
     throws RepositoryException;
@@ -94,5 +97,40 @@ interface ContentCreator {
      */
     void createProperty(String name,
                         Object[] values)
+    throws RepositoryException;
+
+    /**
+     * Create a file and a resource node.
+     * After the nodes have been created, the current node is the resource node.
+     * So this method call should be followed by two calls to {@link #finishNode()}
+     * to be on the same level as before the file creation.
+     * @param name The name of the file node
+     * @param data The data of the file
+     * @param mimeType The mime type or null
+     * @param lastModified The last modified or -1
+     * @throws RepositoryException
+     */
+    void createFileAndResourceNode(String name,
+                                   InputStream data,
+                                   String      mimeType,
+                                   long         lastModified)
+    throws RepositoryException;
+
+    /**
+     * Switch the current node to the path (which must be relative
+     * to the root node of the import).
+     * If the path does not exist and a node type is supplied,
+     * the nodes are created with the given node type.
+     * If the path does not exist and node type is null, false is
+     * returned.
+     * Switching is only allowed if the current node is the root node
+     * of the import.
+     * When the changes to the node are finished, {@link #finishNode()}
+     * must be callsed.
+     * @param subPath The relative path
+     * @param newNodeType Node typ for newly created nodes.
+     * @throws RepositoryException
+     */
+    boolean switchCurrentNode(String subPath, String newNodeType)
     throws RepositoryException;
 }

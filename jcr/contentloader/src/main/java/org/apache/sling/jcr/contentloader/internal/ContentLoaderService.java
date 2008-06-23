@@ -60,7 +60,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
     public static final String BUNDLE_CONTENT_NODE = "/var/sling/bundle-content";
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The JCR Repository we access to resolve resources

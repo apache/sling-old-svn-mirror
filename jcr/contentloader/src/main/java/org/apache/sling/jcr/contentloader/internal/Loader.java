@@ -59,9 +59,6 @@ public class Loader {
 
     public static final String ROOT_DESCRIPTOR = "/ROOT";
 
-    // default content type for createFile()
-    private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
-
     /** default log */
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
@@ -69,13 +66,14 @@ public class Loader {
 
     private Map<String, ImportProvider> importProviders;
 
-    private ContentLoader contentCreator = new ContentLoader();
+    private final ContentLoader contentCreator;
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
     public Loader(ContentLoaderService jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
+        this.contentCreator = new ContentLoader(jcrContentHelper);
         this.delayedBundles = new LinkedList<Bundle>();
 
         importProviders = new LinkedHashMap<String, ImportProvider>();
@@ -365,7 +363,7 @@ public class Loader {
 
                 // otherwise just place as file
                 try {
-                    createFile(parent, file);
+                    createFile(configuration, parent, file);
                 } catch (IOException ioe) {
                     log.warn("Cannot create file node for {}", file, ioe);
                 }
@@ -475,39 +473,26 @@ public class Loader {
      * @throws IOException
      * @throws RepositoryException
      */
-    private void createFile(Node parent, URL source) throws IOException,
-            RepositoryException {
-        String name = getName(source.getPath());
-        if (parent.hasNode(name)) {
-            return;
+    private void createFile(PathEntry configuration, Node parent, URL source)
+    throws IOException, RepositoryException {
+        final String srcPath = source.getPath();
+        int pos = srcPath.lastIndexOf("/");
+        final String name = getName(source.getPath());
+        final String path;
+        if ( pos == -1 ) {
+            path = name;
+        } else {
+            path = srcPath.substring(0, pos + 1) + name;
         }
 
-        URLConnection conn = source.openConnection();
-        long lastModified = conn.getLastModified();
-        String type = conn.getContentType();
-        InputStream data = conn.getInputStream();
-
-        // ensure content type
-        if (type == null) {
-            type = jcrContentHelper.getMimeType(name);
-            if (type == null) {
-                log.info(
-                    "createFile: Cannot find content type for {}, using {}",
-                    source.getPath(), DEFAULT_CONTENT_TYPE);
-                type = DEFAULT_CONTENT_TYPE;
-            }
-        }
-
-        // ensure sensible last modification date
-        if (lastModified <= 0) {
-            lastModified = System.currentTimeMillis();
-        }
-
-        Node file = parent.addNode(name, "nt:file");
-        Node content = file.addNode("jcr:content", "nt:resource");
-        content.setProperty("jcr:mimeType", type);
-        content.setProperty("jcr:lastModified", lastModified);
-        content.setProperty("jcr:data", data);
+        this.contentCreator.init(configuration, parent, name);
+        final URLConnection conn = source.openConnection();
+        final long lastModified = conn.getLastModified();
+        final String type = conn.getContentType();
+        final InputStream data = conn.getInputStream();
+        this.contentCreator.createFileAndResourceNode(path, data, type, lastModified);
+        this.contentCreator.finishNode();
+        this.contentCreator.finishNode();
     }
 
     /**
