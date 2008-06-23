@@ -20,23 +20,79 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import javax.jcr.RepositoryException;
 
+/**
+ * The <code>ContentCreator</code>
+ * is used by the {@link ContentReader} to create the actual content.
+ */
 interface ContentCreator {
 
+    /**
+     * Create a new node.
+     * To add properties to this node, one of the createProperty() methods
+     * should be called.
+     * To add child nodes, this method should be called to create a new child node.
+     * If all properties and child nodes have been added {@link #finishNode()} must be called.
+     *
+     * @param name The name of the node.
+     * @param primaryNodeType The primary node type or null.
+     * @param mixinNodeTypes The mixin node types or null.
+     * @throws RepositoryException If anything goes wrong.
+     */
     void createNode(String name,
                     String primaryNodeType,
                     String[] mixinNodeTypes)
     throws RepositoryException;
 
+    /**
+     * Indicates that a node is finished.
+     * The parent node of the current node becomes the current node.
+     * @throws RepositoryException
+     */
     void finishNode()
     throws RepositoryException;
 
+    /**
+     * Create a new property to the current node.
+     * @param name The property name.
+     * @param propertyType The type of the property.
+     * @param value The string value.
+     * @throws RepositoryException
+     */
     void createProperty(String name,
                         int    propertyType,
                         String value)
     throws RepositoryException;
 
+    /**
+     * Create a new multi value property to the current node.
+     * @param name The property name.
+     * @param propertyType The type of the property.
+     * @param values The string values.
+     * @throws RepositoryException
+     */
     void createProperty(String name,
                         int    propertyType,
                         String[] values)
+    throws RepositoryException;
+
+    /**
+     * Add a new property to the current node.
+     * @param name The property name.
+     * @param value The value.
+     * @throws RepositoryException
+     */
+    void createProperty(String name,
+                        Object value)
+    throws RepositoryException;
+
+    /**
+     * Add a new multi value property to the current node.
+     * @param name The property name.
+     * @param propertyType The type of the property.
+     * @param values The values.
+     * @throws RepositoryException
+     */
+    void createProperty(String name,
+                        Object[] values)
     throws RepositoryException;
 }

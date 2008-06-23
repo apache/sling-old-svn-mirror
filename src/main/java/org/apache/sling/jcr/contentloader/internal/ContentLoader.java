@@ -18,7 +18,10 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,8 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 
 /**
  * The <code>ContentLoader</code> creates the nodes and properties.
@@ -192,6 +197,74 @@ public class ContentLoader implements ContentCreator {
             return;
         }
         node.setProperty(name, values, propertyType);
+    }
+
+    protected Value createValue(final ValueFactory factory, Object value) {
+        if ( value == null ) {
+            return null;
+        }
+        if ( value instanceof Long ) {
+            return factory.createValue((Long)value);
+        } else if ( value instanceof Date ) {
+            final Calendar c = Calendar.getInstance();
+            c.setTime((Date)value);
+            return factory.createValue(c);
+        } else if ( value instanceof Calendar ) {
+            return factory.createValue((Calendar)value);
+        } else if ( value instanceof Double ) {
+            return factory.createValue((Double)value);
+        } else if ( value instanceof Boolean ) {
+            return factory.createValue((Boolean)value);
+        } else if ( value instanceof InputStream ) {
+            return factory.createValue((InputStream)value);
+        } else {
+            return factory.createValue(value.toString());
+        }
+
+    }
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createProperty(java.lang.String, java.lang.Object)
+     */
+    public void createProperty(String name, Object value)
+    throws RepositoryException {
+        final Node node = this.parentNodeStack.peek();
+        // check if the property already exists, don't overwrite it in this case
+        if (node.hasProperty(name)
+            && !node.getProperty(name).isNew()) {
+            return;
+        }
+        if ( value == null ) {
+            if ( node.hasProperty(name) ) {
+                node.getProperty(name).remove();
+            }
+        } else {
+            final Value jcrValue = this.createValue(node.getSession().getValueFactory(), value);
+            node.setProperty(name, jcrValue);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentCreator#createProperty(java.lang.String, java.lang.Object[])
+     */
+    public void createProperty(String name, Object[] values)
+    throws RepositoryException {
+        final Node node = this.parentNodeStack.peek();
+        // check if the property already exists, don't overwrite it in this case
+        if (node.hasProperty(name)
+            && !node.getProperty(name).isNew()) {
+            return;
+        }
+        if ( values == null || values.length == 0 ) {
+            if ( node.hasProperty(name) ) {
+                node.getProperty(name).remove();
+            }
+        } else {
+            final Value[] jcrValues = new Value[values.length];
+            for(int i = 0; i < values.length; i++) {
+                jcrValues[i] = this.createValue(node.getSession().getValueFactory(), values[i]);
+            }
+            node.setProperty(name, jcrValues);
+        }
     }
 
     /**
