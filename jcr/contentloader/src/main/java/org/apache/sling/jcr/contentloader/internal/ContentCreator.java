@@ -20,7 +20,6 @@ package org.apache.sling.jcr.contentloader.internal;
 
 import java.io.InputStream;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 /**
@@ -41,7 +40,7 @@ interface ContentCreator {
      * @param mixinNodeTypes The mixin node types or null.
      * @throws RepositoryException If anything goes wrong.
      */
-    Node createNode(String name,
+    void createNode(String name,
                     String primaryNodeType,
                     String[] mixinNodeTypes)
     throws RepositoryException;
@@ -118,13 +117,11 @@ interface ContentCreator {
 
     /**
      * Switch the current node to the path (which must be relative
-     * to the root node of the import).
+     * to the current node).
      * If the path does not exist and a node type is supplied,
      * the nodes are created with the given node type.
      * If the path does not exist and node type is null, false is
      * returned.
-     * Switching is only allowed if the current node is the root node
-     * of the import.
      * When the changes to the node are finished, {@link #finishNode()}
      * must be callsed.
      * @param subPath The relative path

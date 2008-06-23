@@ -25,6 +25,8 @@ import java.util.zip.ZipInputStream;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.input.CloseShieldInputStream;
+
 
 /**
  * The <code>JsonReader</code> TODO
@@ -60,17 +62,36 @@ class ZipReader implements ContentReader {
         this.jarReader = jarReader;
     }
 
+    /**
+     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     */
     public void parse(InputStream ins, ContentCreator creator)
     throws IOException, RepositoryException {
+        creator.createNode(null, "nt:folder", null);
         final ZipInputStream zis = new ZipInputStream(ins);
+        final InputStream dataIS = new CloseShieldInputStream(zis);
         ZipEntry entry;
         do {
             entry = zis.getNextEntry();
             if ( entry != null ) {
-                entry.getName();
+                if ( !entry.isDirectory() ) {
+                    String name = entry.getName();
+                    int pos = name.lastIndexOf('/');
+                    if ( pos != -1 ) {
+                        creator.switchCurrentNode(name.substring(0, pos), "nt:folder");
+                    }
+                    creator.createFileAndResourceNode(name, dataIS, null, entry.getTime());
+                    creator.finishNode();
+                    creator.finishNode();
+                    if ( pos != -1 ) {
+                        creator.finishNode();
+                    }
+                }
+                zis.closeEntry();
             }
 
         } while ( entry != null );
+        creator.finishNode();
     }
 
 }
