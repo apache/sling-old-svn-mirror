@@ -68,11 +68,11 @@
   <!-- replace body with default rendering + script reference -->
   <xsl:template match="body|BODY" mode="inner">
     <div id="JstDefaultRendering">
-      <xsl:text>
-      </xsl:text>
+<xsl:text>
+</xsl:text>
       <xsl:value-of select="$defaultRendering" disable-output-escaping="yes" />
-      <xsl:text>
-      </xsl:text>
+<xsl:text>
+</xsl:text>
     </div>
     <script language="javascript">
       var e = document.getElementById("JstDefaultRendering"); 

@@ -65,7 +65,6 @@
                         <Private-Package>
                             org.apache.sling.scripting.jst,
                             org.apache.sling.scripting.javascript.io.*,
-                            org.apache.sling.servlets.get.helpers.*,
                             org.cyberneko.html.*,
                             org.apache.xerces.*,
                             org.w3c.dom.*,
@@ -119,12 +118,6 @@
             <artifactId>org.apache.sling.scripting.api</artifactId>
             <version>${pom.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.get</artifactId>
-            <version>${pom.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
