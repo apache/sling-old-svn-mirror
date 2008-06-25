@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
@@ -557,9 +558,21 @@ public class Loader {
 
         int firstSlash = path.indexOf("/");
 
-        // it´s a relative path
+        // it's a relative path
         if (firstSlash != 0) path = "/" + path;
 
+        if ( !session.itemExists(path) ) {
+            Node currentNode = session.getRootNode();
+            final StringTokenizer st = new StringTokenizer(path.substring(1), "/");
+            while ( st.hasMoreTokens() ) {
+                final String name = st.nextToken();
+                if ( !currentNode.hasNode(name) ) {
+                    currentNode.addNode(name, "nt:folder");
+                }
+                currentNode = currentNode.getNode(name);
+            }
+            return currentNode;
+        }
         Item item = session.getItem(path);
         return (item.isNode()) ? (Node) item : null;
     }
