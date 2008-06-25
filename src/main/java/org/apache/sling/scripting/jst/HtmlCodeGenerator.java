@@ -40,7 +40,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
-import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
 import org.cyberneko.html.parsers.DOMParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,7 @@ import org.xml.sax.InputSource;
 /** Generates HTML code for JST templates */ 
 class HtmlCodeGenerator {
     private final List<String> libraryScripts = new LinkedList<String>();
-    private final HtmlRendererServlet htmlRenderer;
+    private final HtmlContentRenderer htmlRenderer;
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     // TODO should be configurable or synced with the actual location
@@ -65,7 +64,7 @@ class HtmlCodeGenerator {
 
     public HtmlCodeGenerator() {
         libraryScripts.add(SLING_JS_PATH);
-        htmlRenderer = new HtmlRendererServlet();
+        htmlRenderer = new HtmlContentRenderer();
     }
     
     /** Generate HTML code for the given request and script path */ 
@@ -96,7 +95,7 @@ class HtmlCodeGenerator {
         final StringWriter defaultRendering = new StringWriter();
         if(n!=null) {
             final PrintWriter pw = new PrintWriter(defaultRendering);
-            htmlRenderer.render(pw, r, n);
+            htmlRenderer.render(pw, r, n, pageTitle);
             pw.flush();
         }
         

@@ -8,14 +8,18 @@
 	<script language="javascript">var currentNode={"title":"test.title","desc":"test.desc"};</script>
  </head>
  <body>
- <div id="JstDefaultRendering">
-	<h1>Node dumped by HtmlRendererServlet</h1>
-	<p>Node path: <b>/foo/node</b></p>
-	<p>Resource metadata: <b>{sling.resolutionPath=/foo/node}</b></p>
-	<h2>Node properties</h2>
-	title: <b>test.title</b><br/>desc: <b>test.desc</b><br/>
- </div>
- <script language="javascript">
+ 
+	<div id="JstDefaultRendering">
+	<h1 class='title'>test.title</h1>
+	<div class='breadcrumbs'>
+	</div>
+	<div class='childnodes'>
+	</div>
+	<div class='title'>test.title</div>
+	<div class='desc'>test.desc</div>
+	</div>
+	
+<script language="javascript">
       var e = document.getElementById("JstDefaultRendering"); 
       e.parentNode.removeChild(e);
   </script>
