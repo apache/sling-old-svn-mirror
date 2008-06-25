@@ -18,10 +18,9 @@ package org.apache.sling.scripting.freemarker.wrapper;
 
 import freemarker.template.*;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
+import javax.jcr.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * A wrapper for JCR nodes to support freemarker scripting.
@@ -131,7 +130,16 @@ public class NodeModel implements TemplateScalarModel, TemplateNodeModel, Templa
                     return new NodeModel(node.getNode(key));
                 }
                 else if (node.hasProperty(key) && node.getProperty(key).getType() == PropertyType.REFERENCE) {
-                    return new NodeModel(node.getProperty(key).getNode());
+                    if (node.getProperty(key).getDefinition().isMultiple()) {
+                        List<Node> nodes = new ArrayList<Node>();
+                        for (Value value : node.getProperty(key).getValues()) {
+                            nodes.add(node.getSession().getNodeByUUID(value.getString()));
+                        }
+                        return new NodeListModel(nodes);
+                    }
+                    else {
+                        return new NodeModel(node.getProperty(key).getNode());
+                    }
                 }
                 return null;
             } catch (RepositoryException e) {

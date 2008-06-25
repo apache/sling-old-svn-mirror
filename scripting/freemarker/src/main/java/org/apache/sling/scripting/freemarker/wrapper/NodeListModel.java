@@ -33,6 +33,10 @@ public class NodeListModel implements TemplateSequenceModel {
 
     private List<Node> nodes;
 
+    public NodeListModel(List<Node> nodes) {
+        this.nodes = nodes;
+    }
+
     public NodeListModel(NodeIterator nodes) {
         this.nodes = new ArrayList<Node>();
         while (nodes.hasNext()) {
