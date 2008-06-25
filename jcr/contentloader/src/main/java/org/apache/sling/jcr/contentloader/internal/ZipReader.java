@@ -73,7 +73,6 @@ class ZipReader implements ContentReader {
     throws IOException, RepositoryException {
         creator.createNode(null, NT_FOLDER, null);
         final ZipInputStream zis = new ZipInputStream(ins);
-        final InputStream dataIS = new CloseShieldInputStream(zis);
         ZipEntry entry;
         do {
             entry = zis.getNextEntry();
@@ -84,7 +83,7 @@ class ZipReader implements ContentReader {
                     if ( pos != -1 ) {
                         creator.switchCurrentNode(name.substring(0, pos), NT_FOLDER);
                     }
-                    creator.createFileAndResourceNode(name, dataIS, null, entry.getTime());
+                    creator.createFileAndResourceNode(name, new CloseShieldInputStream(zis), null, entry.getTime());
                     creator.finishNode();
                     creator.finishNode();
                     if ( pos != -1 ) {
