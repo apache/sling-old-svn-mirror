@@ -108,7 +108,7 @@ class Util {
                     AbstractRequestParameter param = (AbstractRequestParameter) params[i];
 
                     // fix encoding if different
-                    if (param.getEncoding() == null) {
+                    if (!formEncoding.equals(param.getEncoding())) {
                         param.setEncoding(formEncoding);
 
                         // prepare the parameter for renaming

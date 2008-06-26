@@ -608,7 +608,7 @@ public class RequestData implements BufferProvider {
 
     public ParameterSupport getParameterSupport() {
         if (parameterSupport == null) {
-            parameterSupport = new ParameterSupport(this /* getServletRequest() */);
+            parameterSupport = ParameterSupport.getInstance(getServletRequest());
         }
 
         return parameterSupport;
