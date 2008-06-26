@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.collections.iterators.IteratorEnumeration;
@@ -35,26 +36,45 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
-import org.apache.sling.engine.impl.request.RequestData;
 
 public class ParameterSupport {
 
-    private RequestData requestData;
+    private static final String ATTR_NAME = ParameterSupport.class.getName();
+
+    /**
+     * The name of the request attribute to set to get the Jetty servlet
+     * container to decode the request query using ISO-8859-1 encoding (value is
+     * "org.mortbay.jetty.Request.queryEncoding").
+     */
+    private static final String ATTR_JETTY_QUERY_ENCODING = "org.mortbay.jetty.Request.queryEncoding";
+
+    private final HttpServletRequest servletRequest;
 
     private ParameterMap postParameterMap;
 
     private boolean requestDataUsed;
 
-    public ParameterSupport(RequestData servletRequest) {
-        this.requestData = servletRequest;
+    public static ParameterSupport getInstance(ServletRequest servletRequest) {
+        ParameterSupport instance = (ParameterSupport) servletRequest.getAttribute(ATTR_NAME);
+        if (instance == null) {
+            instance = new ParameterSupport((HttpServletRequest) servletRequest);
+            servletRequest.setAttribute(ATTR_NAME, instance);
+
+            // SLING-559: Hack to get Jetty into decoding the request
+            // query with ISO-8859-1 as stipulated by the servlet
+            // spec. Other containers ignore this parameter
+            servletRequest.setAttribute(ATTR_JETTY_QUERY_ENCODING,
+                Util.ENCODING_DIRECT);
+        }
+        return instance;
     }
 
-    protected RequestData getRequestData() {
-        return this.requestData;
+    private ParameterSupport(HttpServletRequest servletRequest) {
+        this.servletRequest = servletRequest;
     }
 
-    protected HttpServletRequest getServletRequest() {
-        return this.getRequestData().getServletRequest();
+    private HttpServletRequest getServletRequest() {
+        return servletRequest;
     }
 
     public boolean requestDataUsed() {
