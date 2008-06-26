@@ -22,11 +22,42 @@ See http://incubator.apache.org/sling for more information.
 Getting started
 ---------------
 
-Requires a Java 5 JDK and Maven (http://maven.apache.org/) 2.0.7 or later.
+You need a Java 5 (or higher) JDK and Maven 2 (http://maven.apache.org/,
+version 2.0.7 or higher) to build Sling.
 
-To build Sling, run
+Sling depends on artifacts and plugins available only in the Incubator Maven
+repository at Apache. You can make this repository available to Maven by
+adding the following profile in your ~/.m2/settings.xml configuration file:
 
-  mvn clean install
+    <?xml version="1.0"?>
+    <settings>
+      <profiles>
+        <profile>
+          <id>apache-incubation</id>
+          <activation>
+            <activeByDefault>true</activeByDefault>
+          </activation>
+          <repositories>
+            <repository>
+              <id>apache.incubating</id>
+              <name>Apache Incubating Repository</name>
+              <url>http://people.apache.org/repo/m2-incubating-repository</url>
+            </repository>
+          </repositories>
+          <pluginRepositories>
+            <pluginRepository>
+              <id>apache.incubating.plugins</id>
+              <name>Apache Incubating Plugin Repository</name>
+              <url>http://people.apache.org/repo/m2-incubating-repository</url>
+            </pluginRepository>
+          </pluginRepositories>
+        </profile>
+      </profiles>
+    </settings>
+
+Once you have everything in place, run
+
+    MAVEN_OPTS=-Xmx256m mvn clean install
 
 in this directory. This will build, test and install the Sling modules
 in your local Maven repository.
