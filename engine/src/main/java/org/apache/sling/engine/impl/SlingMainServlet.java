@@ -32,6 +32,7 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Session;
 import javax.servlet.Filter;
@@ -44,6 +45,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingException;
@@ -63,6 +65,7 @@ import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
 import org.apache.sling.engine.impl.helper.SlingFilterConfig;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
 import org.apache.sling.engine.impl.log.RequestLogger;
+import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
@@ -767,6 +770,34 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         if (authenticator != null) {
             try {
 
+                // SLING-559: ensure correct parameter handling according to
+                // ParameterSupport
+                request = new HttpServletRequestWrapper(request) {
+                    @Override
+                    public String getParameter(String name) {
+                        return getParameterSupport().getParameter(name);
+                    }
+
+                    @Override
+                    public Map<String, String[]> getParameterMap() {
+                        return getParameterSupport().getParameterMap();
+                    }
+
+                    @Override
+                    public Enumeration<String> getParameterNames() {
+                        return getParameterSupport().getParameterNames();
+                    }
+
+                    @Override
+                    public String[] getParameterValues(String name) {
+                        return getParameterSupport().getParameterValues(name);
+                    }
+
+                    private ParameterSupport getParameterSupport() {
+                        return ParameterSupport.getInstance(getRequest());
+                    }
+                };
+                
                 return authenticator.authenticate(request, response);
 
             } catch (MissingRepositoryException mre) {
