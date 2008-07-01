@@ -27,7 +27,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 /**
  * The <code>LoginServlet</code> TODO
- * 
+ *
  * @scr.component metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="HTTP Header Login Servlet"
@@ -76,15 +76,16 @@ public class LoginServlet extends SlingAllMethodsServlet {
         pw.println("    var pass = document.forms['login'].pwd.value;");
         pw.println("    sendRequest(user, pass);");
         pw.println("    document.location = document.location");
+        pw.println("    return false;");
         pw.println("}");
         pw.println("</script>");
 
-        pw.println("<form name='login'>");
+        pw.println("<form name='login' onsubmit='return loginuser()'>");
         pw.println("<table align='center'>");
         pw.println("<tr><td colspan='2' align='center'>You are not currently logged in</td></tr>");
         pw.println("<tr><td>Name</td><td><input type='text' name='usr' /></td></tr>");
         pw.println("<tr><td>Password</td><td><input type='text' name='pwd' /></td></tr>");
-        pw.println("<tr><td colspan='2' align='center'><input type='button' value='Login' onClick='loginuser();'/></td></tr>");
+        pw.println("<tr><td colspan='2' align='center'><input type='submit' value='Login' onClick='loginuser();'/></td></tr>");
         pw.println("</table>");
         pw.println("</form>");
     }
