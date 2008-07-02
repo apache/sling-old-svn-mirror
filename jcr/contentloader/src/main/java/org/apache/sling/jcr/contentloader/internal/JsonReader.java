@@ -38,6 +38,9 @@ import org.apache.sling.commons.json.JSONObject;
  */
 class JsonReader implements ContentReader {
 
+    private static final String REFERENCE = "jcr:reference:";
+    private static final String PATH = "jcr:path:";
+
     private static final Set<String> ignoredNames = new HashSet<String>();
     static {
         ignoredNames.add("jcr:primaryType");
@@ -128,30 +131,39 @@ class JsonReader implements ContentReader {
                 for (int i = 0; i < array.length(); i++) {
                     values[i] = array.get(i).toString();
                 }
-                final int propertyType = getType(values[0]);
-                contentCreator.createProperty(name, propertyType, values);
+                final int propertyType = getType(name, values[0]);
+                contentCreator.createProperty(getName(name), propertyType, values);
             } else {
-                contentCreator.createProperty(name, PropertyType.STRING, new String[0]);
+                contentCreator.createProperty(getName(name), PropertyType.STRING, new String[0]);
             }
 
         } else {
             // single value
-            final int propertyType = getType(value);
-            contentCreator.createProperty(name, propertyType, String.valueOf(value));
+            final int propertyType = getType(name, value);
+            contentCreator.createProperty(getName(name), propertyType, value.toString());
         }
     }
 
-    protected int getType(Object object) {
+    protected int getType(String name, Object object) {
         if (object instanceof Double || object instanceof Float) {
             return PropertyType.DOUBLE;
         } else if (object instanceof Number) {
             return PropertyType.LONG;
         } else if (object instanceof Boolean) {
             return PropertyType.BOOLEAN;
+        } else if (object instanceof String) {
+            if (name.startsWith(REFERENCE)) return PropertyType.REFERENCE;
+            if (name.startsWith(PATH)) return PropertyType.PATH;
         }
 
         // fall back to default
         return PropertyType.STRING;
+    }
+
+    protected String getName(String name) {
+        if (name.startsWith(REFERENCE)) return name.substring(REFERENCE.length());
+        if (name.startsWith(PATH)) return name.substring(PATH.length());
+        return name;
     }
 
     private String toString(InputStream ins) throws IOException {
