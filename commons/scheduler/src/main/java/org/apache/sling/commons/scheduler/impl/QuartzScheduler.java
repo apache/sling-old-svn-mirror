@@ -68,17 +68,14 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the job name */
     static final String DATA_MAP_NAME = "QuartzJobScheduler.JobName";
 
-    /** Map key for the concurrent run property */
-    static final String DATA_MAP_RUN_CONCURRENT = "QuartzJobScheduler.RunConcurrently";
-
-    /** Map key for the run status */
-    static final String DATA_MAP_KEY_ISRUNNING = "QuartzJobExecutor.isRunning";
-
     /** Map key for the configuration. */
     static final String DATA_MAP_CONFIGURATION = "QuartzJobScheduler.Configuration";
 
     /** Map key for the logger. */
     static final String DATA_MAP_LOGGER = "QuartzJobScheduler.Logger";
+
+    /** Map key for the concurrent handler */
+    static final String DATA_MAP_CONCURRENT_HANDLER = "QuartzJobExecutor.ConcurrentHandler";
 
     protected org.quartz.Scheduler scheduler;
 
@@ -215,7 +212,9 @@ public class QuartzScheduler implements Scheduler {
         jobDataMap.put(DATA_MAP_OBJECT, job);
 
         jobDataMap.put(DATA_MAP_NAME, jobName);
-        jobDataMap.put(DATA_MAP_RUN_CONCURRENT, (concurent? Boolean.TRUE: Boolean.FALSE));
+        final ConcurrentHandler handler = new ConcurrentHandler();
+        handler.runConcurrently = concurent;
+        jobDataMap.put(DATA_MAP_CONCURRENT_HANDLER, handler);
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
         if ( config != null ) {
             jobDataMap.put(DATA_MAP_CONFIGURATION, config);
@@ -465,4 +464,10 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
+    protected static final class ConcurrentHandler {
+
+        public boolean runConcurrently;
+
+        public boolean isRunning = false;
+    }
 }

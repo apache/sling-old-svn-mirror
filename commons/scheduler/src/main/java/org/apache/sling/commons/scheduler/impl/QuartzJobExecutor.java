@@ -40,17 +40,16 @@ public class QuartzJobExecutor implements Job {
 
         final JobDataMap data = context.getJobDetail().getJobDataMap();
 
-        final Boolean canRunConcurrentlyB = ((Boolean) data.get(QuartzScheduler.DATA_MAP_RUN_CONCURRENT));
-        final boolean canRunConcurrently = ((canRunConcurrentlyB == null) ? true : canRunConcurrentlyB.booleanValue());
+        final QuartzScheduler.ConcurrentHandler concurrentHandler
+             = (QuartzScheduler.ConcurrentHandler)data.get(QuartzScheduler.DATA_MAP_CONCURRENT_HANDLER);
+        final boolean canRunConcurrently = (concurrentHandler == null ? true : concurrentHandler.runConcurrently);
 
         if (!canRunConcurrently) {
-            Boolean isRunning = (Boolean) data.get(QuartzScheduler.DATA_MAP_KEY_ISRUNNING);
-            if (Boolean.TRUE.equals(isRunning)) {
+            if ( concurrentHandler.isRunning ) {
                 return;
             }
+            concurrentHandler.isRunning = true;
         }
-
-        this.setup(data);
 
         final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
         final Logger logger = (Logger)data.get(QuartzScheduler.DATA_MAP_LOGGER);
@@ -77,17 +76,10 @@ public class QuartzJobExecutor implements Job {
             // there is nothing we can do here, so we just log
             logger.error("Exception during job execution of " + job + " : " + t.getMessage(), t);
         } finally {
-
-            this.release(data);
+            if (!canRunConcurrently) {
+                concurrentHandler.isRunning = false;
+            }
         }
-    }
-
-    protected void setup(JobDataMap data) throws JobExecutionException {
-        data.put(QuartzScheduler.DATA_MAP_KEY_ISRUNNING, Boolean.TRUE);
-    }
-
-    protected void release(JobDataMap data) {
-        data.put(QuartzScheduler.DATA_MAP_KEY_ISRUNNING, Boolean.FALSE);
     }
 
     public static final class JobContextImpl implements JobContext {
