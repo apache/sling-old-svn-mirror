@@ -52,6 +52,7 @@ public class ContentLoader implements ContentCreator {
 
     /** Delayed references during content loading for the reference property. */
     private final Map<String, List<String>> delayedReferences = new HashMap<String, List<String>>();
+    private final Map<String, String[]> delayedMultipleReferences = new HashMap<String, String[]>();
 
     private String defaultRootName;
 
@@ -231,7 +232,7 @@ public class ContentLoader implements ContentCreator {
         if ( propertyType == PropertyType.REFERENCE ) {
             // need to resolve the reference
             String propPath = node.getPath() + "/" + name;
-            String uuid = getUUID(node.getSession(), propPath, value);
+            String uuid = getUUID(node.getSession(), propPath, getAbsPath(node, value));
             if (uuid != null) {
                 node.setProperty(name, uuid, propertyType);
             }
@@ -262,7 +263,26 @@ public class ContentLoader implements ContentCreator {
             && !node.getProperty(name).isNew()) {
             return;
         }
-        node.setProperty(name, values, propertyType);
+        if ( propertyType == PropertyType.REFERENCE ) {
+            String propPath = node.getPath() + "/" + name;
+
+            boolean hasAll = true;
+            String[] uuids = new String[values.length];
+            String[] uuidOrPaths = new String[values.length];
+            for (int i = 0; i < values.length; i++) {
+                uuids[i] = getUUID(node.getSession(), propPath, getAbsPath(node, values[i]));
+                uuidOrPaths[i] = uuids[i] != null ? uuids[i] : getAbsPath(node, values[i]);
+                if (uuids[i] == null) hasAll = false;
+            }
+
+            node.setProperty(name, uuids, propertyType);
+
+            if (!hasAll) {
+                delayedMultipleReferences.put(propPath, uuidOrPaths);
+            }
+        } else {
+            node.setProperty(name, values, propertyType);
+        }
     }
 
     protected Value createValue(final ValueFactory factory, Object value) {
@@ -343,6 +363,21 @@ public class ContentLoader implements ContentCreator {
         resolveReferences(node);
     }
 
+    private String getAbsPath(Node node, String path) throws RepositoryException {
+        if (path.startsWith("/")) return path;
+
+        while (path.startsWith("../")) {
+            path = path.substring(3);
+            node = node.getParent();
+        }
+
+        while (path.startsWith("./")) {
+            path = path.substring(2);
+        }
+
+        return node.getPath() + "/" + path;
+    }
+
     private String getUUID(Session session, String propPath,
                           String referencePath)
     throws RepositoryException {
@@ -386,7 +421,32 @@ public class ContentLoader implements ContentCreator {
             String name = getName(property);
             Node parentNode = getParentNode(session, property);
             if (parentNode != null) {
-                parentNode.setProperty(name, uuid, PropertyType.REFERENCE);
+                if (parentNode.hasProperty(name) && parentNode.getProperty(name).getDefinition().isMultiple()) {
+                    boolean hasAll = true;
+                    String[] uuidOrPaths = delayedMultipleReferences.get(property);
+                    String[] uuids = new String[uuidOrPaths.length];
+                    for (int i = 0; i < uuidOrPaths.length; i++) {
+                        // is the reference still a path
+                        if (uuidOrPaths[i].startsWith("/")) {
+                            if (uuidOrPaths[i].equals(node.getPath())) {
+                                uuidOrPaths[i] = uuid;
+                                uuids[i] = uuid;
+                            } else {
+                                uuids[i] = null;
+                                hasAll = false;
+                            }
+                        } else {
+                            uuids[i] = uuidOrPaths[i];
+                        }
+                    }
+                    parentNode.setProperty(name, uuids, PropertyType.REFERENCE);
+
+                    if (hasAll) {
+                        delayedMultipleReferences.remove(property);
+                    }
+                } else {
+                    parentNode.setProperty(name, uuid, PropertyType.REFERENCE);
+                }
             }
         }
     }
