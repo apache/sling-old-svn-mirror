@@ -40,6 +40,7 @@ import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ public class JcrNodeResource extends JcrItemResource {
             return (Type) getInputStream(); // unchecked cast
         } else if (type == URL.class) {
             return (Type) getURL(); // unchecked cast
-        } else if (type == Map.class) {
+        } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrPropertyMap(getNode()); // unchecked cast
         }
 
