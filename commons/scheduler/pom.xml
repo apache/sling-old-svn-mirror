@@ -68,7 +68,11 @@
                             org.apache.commons.modeler.util
                         </Private-Package>
                         <DynamicImport-Package>
-                            javax.ejb,org.apache.commons.logging.impl,javax.jms
+                            javax.ejb,
+                            org.apache.commons.logging.impl,
+                            javax.jms,
+                            javax.mail,
+                            javax.mail.internet
                         </DynamicImport-Package>
                         <Embed-Dependency>
                             quartz,commons-pool,commons-dbcp,commons-beanutils,commons-digester
