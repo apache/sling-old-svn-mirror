@@ -19,8 +19,16 @@
 package org.apache.sling.api.resource;
 
 import java.util.Map;
+import java.util.Collections;
+
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 public interface ValueMap extends Map<String, Object> {
+
+    /**
+     * Empty value map
+     */
+    final ValueMap EMPTY = new ValueMapDecorator(Collections.<String, Object>emptyMap());
     
     // return named value converted to type T or
     // null if not existing
