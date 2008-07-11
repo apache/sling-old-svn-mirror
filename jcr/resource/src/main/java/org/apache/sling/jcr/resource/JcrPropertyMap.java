@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper.jcr;
+package org.apache.sling.jcr.resource;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -35,22 +35,21 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class JcrPropertyMap implements ValueMap {
+public class JcrPropertyMap implements ValueMap {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final Node node;
 
     private final Map<String, Object> cache;
 
     private boolean fullyRead;
 
-    JcrPropertyMap(Node node) {
+    public JcrPropertyMap(Node node) {
         this.node = node;
         this.cache = new HashMap<String, Object>();
         this.fullyRead = false;
