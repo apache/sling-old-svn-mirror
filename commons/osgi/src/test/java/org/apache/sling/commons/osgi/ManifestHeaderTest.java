@@ -86,4 +86,24 @@ public class ManifestHeaderTest extends TestCase {
         assertEquals("1", entry.getEntries()[0].getDirectives()[0].getValue());
         assertEquals("2", entry.getEntries()[0].getDirectives()[1].getValue());
     }
+
+    public void testMultipleEntries() {
+        String header = "SLING-INF/content/etc;checkin:=true;path:=/etc,\nSLING-INF/content/libs;overwrite:=true;path:=/libs";
+        final ManifestHeader entry = ManifestHeader.parse(header);
+        assertEquals(2, entry.getEntries().length);
+        assertEquals("SLING-INF/content/etc", entry.getEntries()[0].getValue());
+        assertEquals(2, entry.getEntries()[0].getDirectives().length);
+        assertEquals(0, entry.getEntries()[0].getAttributes().length);
+        assertEquals("checkin", entry.getEntries()[0].getDirectives()[0].getName());
+        assertEquals("path", entry.getEntries()[0].getDirectives()[1].getName());
+        assertEquals("true", entry.getEntries()[0].getDirectives()[0].getValue());
+        assertEquals("/etc", entry.getEntries()[0].getDirectives()[1].getValue());
+        assertEquals("SLING-INF/content/libs", entry.getEntries()[1].getValue());
+        assertEquals(2, entry.getEntries()[1].getDirectives().length);
+        assertEquals(0, entry.getEntries()[1].getAttributes().length);
+        assertEquals("overwrite", entry.getEntries()[1].getDirectives()[0].getName());
+        assertEquals("path", entry.getEntries()[1].getDirectives()[1].getName());
+        assertEquals("true", entry.getEntries()[1].getDirectives()[0].getValue());
+        assertEquals("/libs", entry.getEntries()[1].getDirectives()[1].getValue());
+    }
 }
