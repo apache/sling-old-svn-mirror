@@ -129,6 +129,14 @@ public class JcrPropertyMap implements ValueMap {
         return cache.values();
     }
 
+    public String getPath() {
+        try {
+            return node.getPath();
+        } catch (RepositoryException e) {
+            // TODO
+            return "";
+        }
+    }
     // ---------- Helpers to access the node's property ------------------------
 
     private Object read(String key) {
