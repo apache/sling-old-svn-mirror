@@ -26,7 +26,8 @@ import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.servlets.resolver.helper.ResourceCollector;
 
 /** Various tests that explain and demonstrate how scripts are 
- *  selected
+ *  selected. See the assertScript methods for how to interpret
+ *  the various tests.
  */
 public class ScriptSelectionTest extends HelperTestBase {
     
@@ -43,6 +44,12 @@ public class ScriptSelectionTest extends HelperTestBase {
     /** Given a list of available scripts and the request method, selectors 
      *  and extension, check that the expected script is selected.
      *  The resource type is foo:bar, set by HelperTestBase
+     *  
+     *  @param method the HTTP method of the simulated request
+     *  @param selectors the selectors of the simulated request
+     *  @param extension the extension of the simulated request
+     *  @param scripts the list of scripts that would be available in the repository
+     *  @param expectedScript the script that we expect to be selected
      */ 
     protected void assertScript(String method, String selectors, String extension,
             String [] scripts, String expectedScript) 
@@ -120,6 +127,62 @@ public class ScriptSelectionTest extends HelperTestBase {
     
     public void testXmlGetSelectors() {
         assertScript("GET", "print.a4", "xml", SET_A, "/apps/foo/bar/print.xml.esp");
+    }
+    
+    public void testMultipleSelectorsA() {
+        final String [] scripts = {
+                "/apps/foo/bar/print/a4.esp",
+                "/apps/foo/bar/print.a4.esp",
+                "/apps/foo/bar/html.print.a4.esp",
+                "/apps/foo/bar/html.print.esp",
+                "/apps/foo/bar/print.esp",
+                "/apps/foo/bar/html.esp"
+            };
+            assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/print/a4.esp");
+    }
+    
+    public void testMultipleSelectorsB() {
+        final String [] scripts = {
+                "/apps/foo/bar/print.a4.esp",
+                "/apps/foo/bar/print.esp",
+                "/apps/foo/bar/a4.esp",
+                "/apps/foo/bar/html.esp"
+            };
+            assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/print.esp");
+            assertScript("GET", "a4.print", "html", scripts, "/apps/foo/bar/a4.esp");
+            assertScript("GET", null, "html", scripts, "/apps/foo/bar/html.esp");
+    }
+    
+    public void testMultipleSelectorsC() {
+        final String [] scripts = {
+                "/apps/foo/bar/print.esp",
+                "/apps/foo/bar/html.esp"
+            };
+            assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/print.esp");
+    }
+    
+    public void testMultipleSelectorsD() {
+        final String [] scripts = {
+                "/apps/foo/bar/a4.esp",
+                "/apps/foo/bar/html.esp"
+            };
+            assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/html.esp");
+            assertScript("GET", "a4.print", "html", scripts, "/apps/foo/bar/a4.esp");
+    }
+    
+    public void testMultipleSelectorsE() {
+        final String [] scripts = {
+                "/apps/foo/bar/bar.print.a4.esp",
+                "/apps/foo/bar/bar.print.esp",
+                "/apps/foo/bar/print.esp",
+                "/apps/foo/bar/a4.esp",
+                "/apps/foo/bar/bar.a4.esp",
+                "/apps/foo/bar/print/a4.esp",
+                "/apps/foo/bar/html.esp"
+            };
+            assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/print/a4.esp");
+            assertScript("GET", "a4.print", "html", scripts, "/apps/foo/bar/a4.esp");
+            assertScript("GET", null, "html", scripts, "/apps/foo/bar/html.esp");
     }
     
     public void testXmlGetSingleSelector() {
