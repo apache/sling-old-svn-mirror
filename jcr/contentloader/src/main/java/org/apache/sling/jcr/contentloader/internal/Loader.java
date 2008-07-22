@@ -567,7 +567,7 @@ public class Loader {
             while ( st.hasMoreTokens() ) {
                 final String name = st.nextToken();
                 if ( !currentNode.hasNode(name) ) {
-                    currentNode.addNode(name, "nt:folder");
+                    currentNode.addNode(name, "sling:Folder");
                 }
                 currentNode = currentNode.getNode(name);
             }
