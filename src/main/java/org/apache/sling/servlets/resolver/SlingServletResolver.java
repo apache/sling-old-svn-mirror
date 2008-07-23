@@ -128,13 +128,20 @@ public class SlingServletResolver implements ServletResolver,
 
         Servlet servlet = null;
 
+        final String type = resource.getResourceType();
+        if(log.isDebugEnabled()) {
+        	log.debug("resolveServlet called for Resource {}", request.getResource());
+        }
+        
         // first check whether the type of a resource is the absolute
         // path of a servlet (or script)
-        String type = resource.getResourceType();
         if (type.charAt(0) == '/') {
             Resource res = request.getResourceResolver().getResource(type);
             if (res != null) {
                 servlet = res.adaptTo(Servlet.class);
+            }
+            if(servlet!=null && log.isDebugEnabled()) {
+            	log.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet), type);
             }
         }
 
@@ -142,10 +149,17 @@ public class SlingServletResolver implements ServletResolver,
         if (servlet == null) {
             ResourceCollector locationUtil = ResourceCollector.create(request);
             servlet = getServlet(locationUtil, request, resource);
+            
+            if(log.isDebugEnabled()) {
+            	log.debug("getServlet returns Servlet {}", RequestUtil.getServletName(servlet));
+            }
         }
 
         // last resort, use the core bundle default servlet
         if (servlet == null) {
+            if(log.isDebugEnabled()) {
+            	log.debug("No specific Servlet found, trying default");
+            }
             servlet = getDefaultServlet();
         }
 
@@ -379,13 +393,37 @@ public class SlingServletResolver implements ServletResolver,
     private Servlet getServlet(ResourceCollector locationUtil,
             SlingHttpServletRequest request, Resource resource) {
         Collection<Resource> candidates = locationUtil.getServlets(resource);
+        
+    	if(log.isDebugEnabled()) {
+    		if(candidates.isEmpty()) {
+        		log.debug("No Servlet candidates found");
+    		} else {
+        		log.debug("Ordered list of Servlet candidates follows");
+                for (Resource candidateResource : candidates) {
+                	log.debug("Servlet candidate: {}", candidateResource.getPath());
+                }
+    		}
+    	}
+    	
         for (Resource candidateResource : candidates) {
+        	if(log.isDebugEnabled()) {
+        		log.debug("Checking if candidate Resource {} adapts to Servlet and accepts request", 
+        				candidateResource.getPath());
+        	}
             Servlet candidate = candidateResource.adaptTo(Servlet.class);
             if (candidate != null) {
                 boolean servletAcceptsRequest = !(candidate instanceof OptingServlet)
                     || ((OptingServlet) candidate).accepts(request);
                 if (servletAcceptsRequest) {
                     return candidate;
+                } else {
+                	if(log.isDebugEnabled()) {
+                		log.debug("Candidate {} does not accept request, ignored", candidateResource.getPath());
+                	}
+                }
+            } else {
+                if(log.isDebugEnabled()) {
+                	log.debug("Candidate {} does not adapt to a Servlet, ignored", candidateResource.getPath()); 
                 }
             }
         }
