@@ -60,6 +60,8 @@ public class ContentLoader implements ContentCreator {
 
     private boolean isRootNodeImport;
 
+    private boolean ignoreOverwriteFlag = false;
+
     // default content type for createFile()
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
@@ -119,6 +121,10 @@ public class ContentLoader implements ContentCreator {
         this.versionables.clear();
     }
 
+    public void setIgnoreOverwriteFlag(boolean flag) {
+        this.ignoreOverwriteFlag = flag;
+    }
+
     /**
      * Get the created root node.
      */
@@ -172,7 +178,7 @@ public class ContentLoader implements ContentCreator {
         // if we are in root node import mode, we don't create the root top level node!
         if ( !isRootNodeImport || this.parentNodeStack.size() > 1 ) {
             // if node already exists but should be overwritten, delete it
-            if (this.configuration.isOverwrite() && parentNode.hasNode(name)) {
+            if (!this.ignoreOverwriteFlag && this.configuration.isOverwrite() && parentNode.hasNode(name)) {
                 parentNode.getNode(name).remove();
             }
 
@@ -185,7 +191,7 @@ public class ContentLoader implements ContentCreator {
 
             } else if (primaryNodeType == null) {
 
-                // node explicit node type, use repository default
+                // no explicit node type, use repository default
                 node = parentNode.addNode(name);
 
             } else {
