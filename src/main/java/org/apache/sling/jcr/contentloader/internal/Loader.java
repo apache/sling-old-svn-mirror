@@ -313,8 +313,7 @@ public class Loader {
             if (entry.endsWith("/")) {
 
                 // dir, check for node descriptor , else create dir
-                String base = entry.substring(0, entry.length() - 1);
-                String name = getName(base);
+                final String base = entry.substring(0, entry.length() - 1);
 
                 URL nodeDescriptor = null;
                 for (String ext : this.contentCreator.getImportProviders().keySet()) {
@@ -327,6 +326,7 @@ public class Loader {
                 // if we have a descriptor, which has not been processed yet,
                 // otherwise call createFolder, which creates an nt:folder or
                 // returns an existing node (created by a descriptor)
+                final String name = getName(base);
                 Node node = null;
                 if (nodeDescriptor != null) {
                     node = processedEntries.get(nodeDescriptor);
@@ -347,28 +347,52 @@ public class Loader {
             } else {
 
                 // file => create file
-                URL file = bundle.getEntry(entry);
+                final URL file = bundle.getEntry(entry);
                 if (processedEntries.containsKey(file)) {
                     // this is a consumed node descriptor
                     continue;
+                }
+                final String name = getName(entry);
+
+                // file, check for node descriptor , else create dir
+                URL nodeDescriptor = null;
+                for (String ext : this.contentCreator.getImportProviders().keySet()) {
+                    nodeDescriptor = bundle.getEntry(entry + ext);
+                    if (nodeDescriptor != null) {
+                        break;
+                    }
                 }
 
                 // install if it is a descriptor
                 boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
 
+                Node node = null;
                 if (foundProvider) {
-                    Node node = null;
-                    if ((node = createNode(parent, getName(entry), file, configuration)) != null) {
+                    if ((node = createNode(parent, name, file, configuration)) != null) {
                         processedEntries.put(file, node);
-                        continue;
                     }
                 }
 
                 // otherwise just place as file
-                try {
-                    createFile(configuration, parent, file);
-                } catch (IOException ioe) {
-                    log.warn("Cannot create file node for {}", file, ioe);
+                if ( node == null ) {
+                    try {
+                        createFile(configuration, parent, file);
+                        node = parent.getNode(name);
+                    } catch (IOException ioe) {
+                        log.warn("Cannot create file node for {}", file, ioe);
+                    }
+                }
+                // if we have a descriptor, which has not been processed yet,
+                // process it
+                if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null ) {
+                    try {
+                        this.contentCreator.setIgnoreOverwriteFlag(true);
+                        node = createNode(parent, name, nodeDescriptor,
+                                          configuration);
+                        processedEntries.put(nodeDescriptor, node);
+                    } finally {
+                        this.contentCreator.setIgnoreOverwriteFlag(false);
+                    }
                 }
             }
         }
@@ -463,7 +487,7 @@ public class Loader {
             }
         }
 
-        return parent.addNode(name, "nt:folder");
+        return parent.addNode(name, "sling:Folder");
     }
 
     /**
