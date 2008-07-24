@@ -251,6 +251,7 @@ public class Loader {
             }
 
             // persist modifications now
+            session.refresh(true);
             session.save();
 
             // finally checkin versionable nodes
