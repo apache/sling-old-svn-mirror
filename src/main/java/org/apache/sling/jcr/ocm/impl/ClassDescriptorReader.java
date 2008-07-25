@@ -462,7 +462,6 @@ public class ClassDescriptorReader {
                 rootClassDescriptors.add(cd);
             }
 
-            @SuppressWarnings("unchecked")
             Collection<String> interfaces = cd.getImplements();
             for (String interfaceName : interfaces) {
                 ClassDescriptor interfaceClassDescriptor = this.descriptors.getClassDescriptorByName(interfaceName);
