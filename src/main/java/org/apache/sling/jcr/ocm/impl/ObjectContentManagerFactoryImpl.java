@@ -67,7 +67,6 @@ import org.xmlpull.v1.XmlPullParserException;
  *
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="org.apache.sling.jcr.ocm.ObjectContentManagerFactory"
- * @scr.service interface="SynchronousBundleListener"
  * @scr.property name="service.description"
  *               value="Sling Object Content Manager Factory"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
