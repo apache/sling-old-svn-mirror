@@ -79,7 +79,8 @@ public class FsFolderServlet extends SlingSafeMethodsServlet {
 
         pw.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\"> <html>");
 
-        pw.printf("<head><title>Index of %s</title></head><body>%n", res.getPath());
+        pw.printf("<head><title>Index of %s</title></head><body>%n",
+            res.getPath());
         pw.printf("<h1>Index of %s</h1>%n", res.getPath());
 
         pw.println("<pre>");
@@ -94,7 +95,7 @@ public class FsFolderServlet extends SlingSafeMethodsServlet {
 
         // render the children
         renderChildren(pw, file);
-        
+
         pw.println("</pre>");
         pw.println("</body></html>");
     }
@@ -140,7 +141,7 @@ public class FsFolderServlet extends SlingSafeMethodsServlet {
             }
         }
     }
-    
+
     // order files by type (folder before files) and name (case insensitive)
     private static class FileNameComparator implements Comparator<File> {
 
