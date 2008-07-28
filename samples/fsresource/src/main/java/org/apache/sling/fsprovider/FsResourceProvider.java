@@ -94,36 +94,7 @@ public class FsResourceProvider implements ResourceProvider {
      * method returns <code>null</code>.
      */
     public Resource getResource(ResourceResolver resourceResolver, String path) {
-
-        // convert the path to a file
-        File file = getFile(path);
-        if (file != null) {
-
-            // if the file is a directory, and a repository item exists for
-            // the path, do not return the directory here
-            if (file.isDirectory()) {
-                Session session = resourceResolver.adaptTo(Session.class);
-                if (session != null) {
-                    try {
-                        if (session.itemExists(path)) {
-                            return null;
-                        }
-                    } catch (RepositoryException re) {
-                        // don't care
-                    }
-                }
-            }
-
-            // if the file exists, but is not a directory or no repository entry
-            // exists, return it as a resource
-            if (file.exists()) {
-                return new FsResource(resourceResolver, path, file);
-            }
-
-        }
-
-        // not applicable or not an existing file path
-        return null;
+        return getResource(resourceResolver, path, getFile(path));
     }
 
     /**
@@ -137,19 +108,20 @@ public class FsResourceProvider implements ResourceProvider {
             // if the parent path is at or below the provider root, get
             // the respective file
             parentFile = getFile(parent.getPath());
-            
+
             // if the parent path is actually the parent of the provider
             // root, return a single element iterator just containing the
             // provider file, unless the provider file is a directory and
             // a repository item with the same path actually exists
             if (parentFile == null) {
-                
+
                 String parentPath = parent.getPath().concat("/");
                 if (providerRoot.startsWith(parentPath)) {
                     String relPath = providerRoot.substring(parentPath.length());
                     if (relPath.indexOf('/') < 0) {
                         Resource res = getResource(
-                            parent.getResourceResolver(), providerRoot);
+                            parent.getResourceResolver(), providerRoot,
+                            providerFile);
                         if (res != null) {
                             return Collections.singletonList(res).iterator();
                         }
@@ -171,8 +143,10 @@ public class FsResourceProvider implements ResourceProvider {
                 return new Iterator<Resource>() {
                     int index = 0;
 
+                    Resource next = seek();
+
                     public boolean hasNext() {
-                        return index < children.length;
+                        return next != null;
                     }
 
                     public Resource next() {
@@ -180,15 +154,27 @@ public class FsResourceProvider implements ResourceProvider {
                             throw new NoSuchElementException();
                         }
 
-                        File file = children[index];
-                        index++;
-
-                        return new FsResource(resolver, parentPath + "/"
-                            + file.getName(), file);
+                        Resource result = next;
+                        next = seek();
+                        return result;
                     }
 
                     public void remove() {
                         throw new UnsupportedOperationException("remove");
+                    }
+
+                    private Resource seek() {
+                        while (index < children.length) {
+                            File file = children[index++];
+                            String path = parentPath + "/" + file.getName();
+                            Resource result = getResource(resolver, path, file);
+                            if (result != null) {
+                                return result;
+                            }
+                        }
+
+                        // nothing found any more
+                        return null;
                     }
                 };
             }
@@ -273,6 +259,38 @@ public class FsResourceProvider implements ResourceProvider {
             return new File(providerFile, relPath);
         }
 
+        return null;
+    }
+
+    private Resource getResource(ResourceResolver resourceResolver,
+            String resourcePath, File file) {
+
+        if (file != null) {
+
+            // if the file is a directory, and a repository item exists for
+            // the path, do not return the directory here
+            if (file.isDirectory()) {
+                Session session = resourceResolver.adaptTo(Session.class);
+                if (session != null) {
+                    try {
+                        if (session.itemExists(resourcePath)) {
+                            return null;
+                        }
+                    } catch (RepositoryException re) {
+                        // don't care
+                    }
+                }
+            }
+
+            // if the file exists, but is not a directory or no repository entry
+            // exists, return it as a resource
+            if (file.exists()) {
+                return new FsResource(resourceResolver, resourcePath, file);
+            }
+
+        }
+
+        // not applicable or not an existing file path
         return null;
     }
 }
