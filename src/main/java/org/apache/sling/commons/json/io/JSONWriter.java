@@ -60,9 +60,27 @@ SOFTWARE.
  * @version 2
  */
 public class JSONWriter {
+
     // This was previously 20 - increased while creating
     // the JsonRenderingTest.testRecursiveInfinity test
     private static final int maxdepth = 50;
+
+    /**
+     * indentations
+     */
+    private static final String[] INDENTS = new String[maxdepth];
+    static {
+        StringBuffer indent = new StringBuffer();
+        for (int i=0; i<INDENTS.length; i++) {
+            INDENTS[i] = indent.toString();
+            indent.append("  ");
+        }
+    }
+
+    /**
+     * flag indicates that output should be nicely formatted
+     */
+    private boolean tidy;
 
     /**
      * The comma flag determines if a comma should be output before the next
@@ -107,6 +125,22 @@ public class JSONWriter {
     }
 
     /**
+     * Checks if the output is nicely formatted.
+     * @return <code>true</code> if nicely formatted
+     */
+    public boolean isTidy() {
+        return tidy;
+    }
+
+    /**
+     * Controls if output should be nicely formatted.
+     * @param tidy <code>true</code> to nicely format.
+     */
+    public void setTidy(boolean tidy) {
+        this.tidy = tidy;
+    }
+
+    /**
      * Append a value.
      * @param s A string value.
      * @return this
@@ -120,6 +154,10 @@ public class JSONWriter {
             try {
                 if (this.comma && this.mode == 'a') {
                     this.writer.write(',');
+                }
+                if (tidy && this.mode == 'a' && !"{".equals(s) && !"[".equals(s)) {
+                    this.writer.write('\n');
+                    this.writer.write(INDENTS[top]);
                 }
                 this.writer.write(s);
             } catch (IOException e) {
@@ -167,6 +205,10 @@ public class JSONWriter {
         }
         this.pop(m);
         try {
+            if (tidy) {
+                this.writer.write('\n');
+                this.writer.write(INDENTS[top]);
+            }
             this.writer.write(c);
         } catch (IOException e) {
             throw new JSONException(e);
@@ -212,8 +254,15 @@ public class JSONWriter {
                 if (this.comma) {
                     this.writer.write(',');
                 }
+                if (tidy) {
+                    this.writer.write('\n');
+                    this.writer.write(INDENTS[top]);
+                }
                 this.writer.write(JSONObject.quote(s));
                 this.writer.write(':');
+                if (tidy) {
+                    this.writer.write(' ');
+                }
                 this.comma = false;
                 this.mode = 'o';
                 return this;
