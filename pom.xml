@@ -68,18 +68,6 @@
         -->
         <jetty.sling.home>target/sling</jetty.sling.home>
 
-        <!-- 
-            Defines which tests are for the "integration-testing" phase
-        -->
-        <integration.test.code.path>
-            **/launchpad/webapp/integrationtest
-        </integration.test.code.path>
-
-        <!-- 
-            Set this to true to stop mvn once the integration test Jetty instance is
-            started. Useful to manually test the integration testing webapp.
-        -->
-        <integration.test.wait>false</integration.test.wait>
     </properties>
 
     <build>
@@ -249,34 +237,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemProperties>
-                        <!-- 
-                            WARNING: make sure these URLs are consistent with the
-                            cargo-maven2-plugin settings: AFAIK Maven does not
-                            expand variables in the <value> element.
-                            And WARNING: these properties are duplicated somewhere in this
-                            POM with slightly different values...there must be a better way. 
-                        -->
-                        <property>
-                            <name>launchpad.http.server.url</name>
-                            <value>
-                                http://${test.host}:${http.port}/${http.base.path}
-                            </value>
-                        </property>
-                        <property>
-                            <name>launchpad.webdav.server.url</name>
-                            <value>
-                                http://${test.host}:${http.port}/${webdav.workspace.path}
-                            </value>
-                        </property>
-                    </systemProperties>
-                </configuration>
-            </plugin>
-
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
@@ -301,144 +261,6 @@
         </plugins>
     </reporting>
 
-    <profiles>
-        <profile>
-            <!--
-                Run the cargo-based integration tests.
-            -->
-            <id>cargoIntegrationTesting</id>
-            <activation>
-                <property>
-                    <name>!maven.test.skip</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>surefire-integration-test</id>
-                                <phase>integration-test</phase>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <configuration>
-                                    <excludes>
-                                        <exclude>none</exclude>
-                                    </excludes>
-                                    <includes>
-                                        <include>
-                                            ${integration.test.code.path}/**/*Test.java
-                                        </include>
-                                    </includes>
-                                    <systemProperties>
-                                        <!-- 
-                                            WARNING: make sure these URLs are consistent with the
-                                            cargo-maven2-plugin settings: AFAIK Maven does not
-                                            expand variables in the <value> element.
-                                            And WARNING: these properties are duplicated somewhere in this
-                                            POM with slightly different values...there must be a better way. 
-                                        -->
-                                        <property>
-                                            <name>
-                                                launchpad.http.server.url
-                                            </name>
-                                            <value>
-                                                http://${test.host}:${http.port}/${project.build.finalName}
-                                            </value>
-                                        </property>
-                                        <property>
-                                            <name>
-                                                launchpad.webdav.server.url
-                                            </name>
-                                            <value>
-                                                http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
-                                            </value>
-                                        </property>
-                                    </systemProperties>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.cargo</groupId>
-                        <artifactId>cargo-maven2-plugin</artifactId>
-                        <version>0.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>start-container</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>start</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>stop-container</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>stop</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <wait>${integration.test.wait}</wait>
-                            <container>
-                                <containerId>jetty6x</containerId>
-                                <type>embedded</type>
-                                <systemProperties>
-                                    <sling.home>
-                                        ${basedir}/target/it/sling
-                                    </sling.home>
-                                </systemProperties>
-                            </container>
-                            <configuration>
-                                <properties>
-                                    <cargo.servlet.port>
-                                        ${http.port}
-                                    </cargo.servlet.port>
-                                    <!-- 
-                                        <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
-                                    -->
-                                </properties>
-                            </configuration>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <!--
-                By default, do not run the integration tests in the test phase, as they have
-                no Sling instance to talk to.
-                See README.txt for how to run the integration tests against a running instance
-                of Sling.
-            -->
-            <id>disableIntegrationTestsInTestPhase</id>
-            <activation>
-                <property>
-                    <name>!maven.test.skip</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    ${integration.test.code.path}/**/*.java
-                                </exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -455,54 +277,6 @@
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.2-incubator</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.2-incubator</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.post</artifactId>
-            <version>2.0.2-incubator</version>
-            <scope>test</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.javascript</artifactId>
-            <version>2.0.2-incubator</version>
-            <scope>test</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- The servlet container will have to provide these API classes -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
