@@ -26,6 +26,8 @@ import java.io.StringWriter;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.commons.testing.util.TestStringUtil;
+
 /** Test the JsCodeGenerator */
 public class JsCodeGeneratorTest extends TestCase {
 
@@ -53,8 +55,8 @@ public class JsCodeGeneratorTest extends TestCase {
         generator.generateCode(r, new PrintWriter(result));
         
         assertEquals("Generated code matches expected code", 
-                StringUtil.flatten(expectedCode.toString().trim()), 
-                StringUtil.flatten(result.toString().trim())
+                TestStringUtil.flatten(expectedCode.toString().trim()), 
+                TestStringUtil.flatten(result.toString().trim())
                 );
         
         return true;

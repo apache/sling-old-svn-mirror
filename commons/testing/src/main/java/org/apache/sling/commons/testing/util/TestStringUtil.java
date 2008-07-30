@@ -16,27 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.jst;
+package org.apache.sling.commons.testing.util;
 
-import java.io.IOException;
-import java.io.InputStream;
+/** String utilities for testing */
+public class TestStringUtil {
+    static private final String NATIVE_LINE_SEP = System.getProperty("line.separator");
 
-/** Test utilities */
-class StringUtil {
+    /** Replace \n with . in strings to make it easier to compare visually for testing */
+    public static String flatten(String str) {
 
-    /** Read given Class resource */
-    static String readClassResource(Class<?> clazz, String path, String encoding) throws IOException {
-        final InputStream s = clazz.getResourceAsStream(path);
-        if(s == null) {
-            throw new IOException("Class resource " + path + " not found");
+        // First replace native line-endings
+        if(str.indexOf(NATIVE_LINE_SEP) >= 0) {
+            str = str.replace(NATIVE_LINE_SEP, ".");
         }
-        final byte [] buffer = new byte[4096];
-        final StringBuffer result = new StringBuffer();
-        int bytesRead = 0;
-        while( (bytesRead = s.read(buffer, 0, buffer.length)) > 0) {
-            final String str = new String(buffer, 0, bytesRead, encoding);
-            result.append(str);
+
+        // Now find non-native line-endings, e.g. cygwin needs this
+        if(str.indexOf('\n') >= 0) {
+            str = str.replace('\n', '.');
         }
-        return result.toString();
+
+        return str;
     }
 }
