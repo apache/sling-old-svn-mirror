@@ -54,6 +54,8 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     /** Recursion level selector that means "all levels" */
     public static final String INFINITY = "infinity";
 
+    public static final String TIDY = "tidy";
+
     public JsonRendererServlet() {
         itemWriter = new JsonItemWriter(null);
     }
@@ -93,16 +95,18 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         int maxRecursionLevels = 0;
         final String[] selectors = req.getRequestPathInfo().getSelectors();
         if (selectors != null && selectors.length > 0) {
-            String level = selectors[selectors.length - 1];
-            if (INFINITY.equals(level)) {
-                maxRecursionLevels = -1;
-            } else {
-                try {
-                    maxRecursionLevels = Integer.parseInt(level);
-                } catch (NumberFormatException nfe) {
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                        "Invalid recursion selector value '" + level + "'");
-                    return;
+            final String level = selectors[selectors.length - 1];
+            if(!TIDY.equals(level)) {
+                if (INFINITY.equals(level)) {
+                    maxRecursionLevels = -1;
+                } else {
+                    try {
+                        maxRecursionLevels = Integer.parseInt(level);
+                    } catch (NumberFormatException nfe) {
+                        resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                            "Invalid recursion selector value '" + level + "'");
+                        return;
+                    }
                 }
             }
         }
@@ -112,12 +116,22 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
         // do the dump
         try {
-            itemWriter.dump(n, resp.getWriter(), maxRecursionLevels);
+            itemWriter.dump(n, resp.getWriter(), maxRecursionLevels, isTidy(req));
         } catch (JSONException je) {
             reportException(je);
         } catch (RepositoryException re) {
             reportException(re);
         }
+    }
+    
+    /** True if our request wants the "tidy" pretty-printed format */
+    protected boolean isTidy(SlingHttpServletRequest req) {
+        for(String selector : req.getRequestPathInfo().getSelectors()) {
+            if(TIDY.equals(selector)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Render a Property by dumping its String value */

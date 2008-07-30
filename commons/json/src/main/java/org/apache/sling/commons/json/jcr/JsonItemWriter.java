@@ -81,7 +81,18 @@ public class JsonItemWriter {
     /** Dump given node in JSON, optionally recursing into its child nodes */
     public void dump(Node node, Writer w, int maxRecursionLevels)
             throws RepositoryException, JSONException {
-        dump(node, new JSONWriter(w), 0, maxRecursionLevels);
+        dump(node, w, maxRecursionLevels, false);
+    }
+
+    /**
+     * Dump given node in JSON, optionally recursing into its child nodes
+     * @param tidy if <code>true</code> the json dump is nicely formatted
+     */
+    public void dump(Node node, Writer w, int maxRecursionLevels, boolean tidy)
+            throws RepositoryException, JSONException {
+        JSONWriter jw = new JSONWriter(w);
+        jw.setTidy(tidy);
+        dump(node, jw, 0, maxRecursionLevels);
     }
 
     /** Dump given property in JSON */
