@@ -123,6 +123,7 @@
         <module>launchpad/base</module>
         <module>launchpad/content</module>
         <module>launchpad/app</module>
+        <module>launchpad/webapp</module>
 
     </modules>
     <distributionManagement>
@@ -147,15 +148,15 @@
     <profiles>
         <profile>
 	        <!--
-	          Launchpad build is relatively slow when integration tests
-	          run - having it here makes it possible to disable it.
+	          Allow the launchpad testing build to be excluded, as the integration
+                  tests are relatively slow.
 	        -->
-            <id>launchpadBuild</id>
+            <id>launchpadTesting</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>launchpad/webapp</module>
+                <module>launchpad/testing</module>
             </modules>
         </profile>
         <profile>
