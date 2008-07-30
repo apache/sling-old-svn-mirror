@@ -24,6 +24,8 @@ import java.io.StringWriter;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.commons.testing.util.TestStringUtil;
+
 /** Test the BodyOnlyScriptFilteredCopy */
 public class BodyOnlyScriptFilteredCopyTest extends TestCase {
     
@@ -32,7 +34,7 @@ public class BodyOnlyScriptFilteredCopyTest extends TestCase {
     private void runTest(String input, String expected) throws IOException {
         final StringWriter sw = new StringWriter();
         bfc.copy(new StringReader(input), sw);
-        assertEquals(StringUtil.flatten(expected), StringUtil.flatten(sw.toString()));
+        assertEquals(TestStringUtil.flatten(expected), TestStringUtil.flatten(sw.toString()));
     }
     
     public void testNoChanges() throws IOException {
