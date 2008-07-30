@@ -23,9 +23,23 @@ import java.io.InputStream;
 
 /** Test utilities */
 class StringUtil {
+
+    static private final String NATIVE_LINE_SEP = System.getProperty("line.separator");
+
     /** Replace \n with . in strings to make it easier to compare visually for testing */
     static String flatten(String str) {
-        return str.replace('\n', '.');
+
+        // First replace native line-endings
+        if(str.indexOf(NATIVE_LINE_SEP) >= 0) {
+            str = str.replace(NATIVE_LINE_SEP, ".");
+        }
+
+        // Now find non-native line-endings, e.g. cygwin needs this
+        if(str.indexOf('\n') >= 0) {
+            str = str.replace('\n', '.');
+        }
+
+        return str;
     }
     
     /** Read given Class resource */
