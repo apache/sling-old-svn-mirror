@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.util.TestStringUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating Nodes and rendering them in JSON */
@@ -173,5 +174,52 @@ public class JsonRenderingTest extends HttpTestBase {
             assertJavascript(props.get(key), json, "out.println(data." + key
                 + ")");
         }
+    }
+    
+    public void testTidyNonRecursive() throws IOException {
+        {
+            final String json = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+            final String expected =
+                "{\"jcr:primaryType\":\"nt:unstructured\",\"text\":\"" + testText + "\"}";
+            assertEquals("Without .tidy selector, json should be flat", 
+                    expected, TestStringUtil.flatten(json));
+        }
+        
+        {
+            final String json = getContent(createdNodeUrl + ".tidy.json", CONTENT_TYPE_JSON);
+            final String expected = 
+                "{.  \"jcr:primaryType\": \"nt:unstructured\",.  \"text\": \"" + testText + "\".}";
+            assertEquals("With .tidy selector, json should be pretty-printed", 
+                    expected, TestStringUtil.flatten(json));
+        }
+    }
+    
+    public void testTidyRecursive() throws IOException {
+        final Map<String, String> props = new HashMap<String, String>();
+        props.put("text", testText);
+        props.put("a/b", "yes");
+        final String url = testClient.createNode(postUrl, props);
+        
+        {
+            final String json = getContent(url + ".tidy.infinity.json", CONTENT_TYPE_JSON);
+            final String expected = 
+                "{.  \"jcr:primaryType\": \"nt:unstructured\",.  \"text\": \"" + testText 
+                + "\",.  \"a\": {.    \"jcr:primaryType\": \"nt:unstructured\",.    \"b\": \"yes\".  }"
+                + ".}";
+            assertEquals("With .tidy.infinity selector, json should be pretty-printed", 
+                    expected, TestStringUtil.flatten(json));
+        }
+        
+        {
+            final String json = getContent(url + ".infinity.json", CONTENT_TYPE_JSON);
+            final String expected = 
+                "{\"jcr:primaryType\":\"nt:unstructured\",\"text\":"
+                + "\"" + testText + "\",\"a\":{\"jcr:primaryType\":"
+                + "\"nt:unstructured\",\"b\":\"yes\"}}"
+            ;
+            assertEquals("With .infinity selector only, json should be flat", 
+                    expected, TestStringUtil.flatten(json));
+        }
+        
     }
 }
