@@ -17,6 +17,7 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -29,6 +30,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
+import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
@@ -40,7 +42,9 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
 
     @Override
     protected final void doRun(SlingHttpServletRequest request,
-            HtmlResponse response) throws RepositoryException {
+            HtmlResponse response,
+            List<Modification> changes)
+    throws RepositoryException {
 
         Resource resource = request.getResource();
         String source = resource.getPath();
@@ -103,7 +107,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
             }
 
             String dstName = trailingSlash ? null : ResourceUtil.getName(dest);
-            execute(response, item, dstParent, dstName);
+            execute(changes, item, dstParent, dstName);
 
         } else {
 
@@ -122,7 +126,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
                 Resource applyTo = resources.next();
                 Item item = applyTo.adaptTo(Item.class);
                 if (item != null) {
-                    execute(response, item, dstParent, null);
+                    execute(changes, item, dstParent, null);
                 }
             }
 
@@ -139,7 +143,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
 
     /**
      * Actually executes the operation.
-     * 
+     *
      * @param response The <code>HtmlResponse</code> used to record success of
      *            the operation.
      * @param source The source item to act upon.
@@ -150,7 +154,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
      * @throws RepositoryException May be thrown if an error occurrs executing
      *             the operation.
      */
-    protected abstract void execute(HtmlResponse response, Item source,
+    protected abstract void execute(List<Modification> changes, Item source,
             String destParent, String destName) throws RepositoryException;
 
 }

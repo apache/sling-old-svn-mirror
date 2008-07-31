@@ -59,7 +59,7 @@ public interface SlingPostOperation {
     /**
      * Executes the operation provided by this service implementation. This
      * method is called by the Sling default POST servlet.
-     * 
+     *
      * @param request The <code>SlingHttpServletRequest</code> object
      *            providing the request input for the operation.
      * @param response The <code>HtmlResponse</code> into which the operation
@@ -73,5 +73,4 @@ public interface SlingPostOperation {
      *             occurrs running the operation.
      */
     void run(SlingHttpServletRequest request, HtmlResponse response);
-
 }

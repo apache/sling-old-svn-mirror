@@ -17,6 +17,7 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -26,6 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
+import org.apache.sling.servlets.post.Modification;
 
 /**
  * The <code>DeleteOperation</code> class implements the
@@ -35,12 +37,12 @@ import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 public class DeleteOperation extends AbstractSlingPostOperation {
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, HtmlResponse response)
-            throws RepositoryException {
+    protected void doRun(SlingHttpServletRequest request, HtmlResponse response, List<Modification> changes)
+    throws RepositoryException {
 
         Iterator<Resource> res = getApplyToResources(request);
         if (res == null) {
-            
+
             Resource resource = request.getResource();
             Item item = resource.adaptTo(Item.class);
             if (item == null) {
@@ -49,19 +51,19 @@ public class DeleteOperation extends AbstractSlingPostOperation {
             }
 
             item.remove();
-            response.onDeleted(resource.getPath());
-            
+            changes.add(Modification.onDeleted(resource.getPath()));
+
         } else {
-            
+
             while (res.hasNext()) {
                 Resource resource = res.next();
                 Item item = resource.adaptTo(Item.class);
                 if (item != null) {
                     item.remove();
-                    response.onDeleted(resource.getPath());
+                    changes.add(Modification.onDeleted(resource.getPath()));
                 }
             }
-            
+
         }
 
     }
