@@ -16,6 +16,8 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.util.List;
+
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -24,9 +26,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.sling.api.servlets.HtmlResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.servlets.post.Modification;
 
 /**
  * The <code>CopyOperation</code> class implements the
@@ -35,24 +35,19 @@ import org.slf4j.LoggerFactory;
  */
 public class CopyOperation extends AbstractCopyMoveOperation {
 
-    /**
-     * default log
-     */
-    private static final Logger log = LoggerFactory.getLogger(CopyOperation.class);
-
     @Override
     protected String getOperationName() {
         return "copy";
     }
 
     @Override
-    protected void execute(HtmlResponse response, Item source,
+    protected void execute(List<Modification> changes, Item source,
             String destParent, String destName) throws RepositoryException {
 
         copy(source, (Node) source.getSession().getItem(destParent), destName);
 
         String dest = destParent + "/" + destName;
-        response.onCopied(source.getPath(), dest);
+        changes.add(Modification.onCopied(source.getPath(), dest));
         log.debug("copy {} to {}", source, dest);
     }
 

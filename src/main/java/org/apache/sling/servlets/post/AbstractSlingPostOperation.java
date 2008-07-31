@@ -16,8 +16,10 @@
  */
 package org.apache.sling.servlets.post;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.jcr.Item;
@@ -44,14 +46,14 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     /**
      * default log
      */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * Prepares and finalizes the actual operation. Preparation encompasses
      * getting the absolute path of the item to operate on by calling the
      * {@link #getItemPath(SlingHttpServletRequest)} method and setting the
      * location and parent location on the response. After the operation has
-     * been done in the {@link #doRun(SlingHttpServletRequest, HtmlResponse)}
+     * been done in the {@link #doRun(SlingHttpServletRequest, HtmlResponse, List)}
      * method the session is saved if there are unsaved modifications. In case
      * of errorrs, the unsaved changes in the session are rolled back.
      *
@@ -59,7 +61,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      * @param response The <code>HtmlResponse</code> to record execution
      *            progress.
      */
-    public final void run(SlingHttpServletRequest request, HtmlResponse response) {
+    public void run(SlingHttpServletRequest request,
+            HtmlResponse response) {
 
         // calculate the paths
         String path = getItemPath(request);
@@ -74,10 +77,22 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
+        final List<Modification> changes = new ArrayList<Modification>();
+
         try {
 
-            doRun(request, response);
+            doRun(request, response, changes);
 
+            // set changes on html response
+            for(Modification change : changes) {
+                switch ( change.getType() ) {
+                    case MODIFY : response.onModified(change.getSource()); break;
+                    case DELETE : response.onDeleted(change.getSource()); break;
+                    case MOVE :   response.onMoved(change.getSource(), change.getDestination()); break;
+                    case COPY :   response.onCopied(change.getSource(), change.getDestination()); break;
+                    case CREATE : response.onCreated(change.getSource()); break;
+                }
+            }
             if (session.hasPendingChanges()) {
                 session.save();
             }
@@ -111,7 +126,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
     }
 
     protected abstract void doRun(SlingHttpServletRequest request,
-            HtmlResponse response) throws RepositoryException;
+            HtmlResponse response,
+            List<Modification> changes) throws RepositoryException;
 
     /**
      * Returns an iterator on <code>Resource</code> instances addressed in the
