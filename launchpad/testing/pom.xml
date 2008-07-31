@@ -226,6 +226,9 @@
                                     resources/bundles/org.apache.sling**
                                 </exclude>
                                 <exclude>
+                                    resources/corebundles/org.apache.sling**
+                                </exclude>
+                                <exclude>
                                     resources/bundles/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
