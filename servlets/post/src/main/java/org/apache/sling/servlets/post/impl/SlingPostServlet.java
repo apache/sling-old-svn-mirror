@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default" private="true"
  * @scr.property name="sling.servlet.methods" value="POST" private="true"
- * @scr.reference name="postProcessors" interface="org.apache.sling.servlets.post.SlingPostProcessor" cardinality="0..n" policy="dynamic"
+ * @scr.reference name="postProcessor" interface="org.apache.sling.servlets.post.SlingPostProcessor" cardinality="0..n" policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -296,7 +296,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         this.componentContext = null;
     }
 
-    protected void bindPostProcessors(ServiceReference ref) {
+    protected void bindPostProcessor(ServiceReference ref) {
         synchronized ( this.delayedPostProcessors ) {
             if ( this.componentContext == null ) {
                 this.delayedPostProcessors.add(ref);
@@ -306,7 +306,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         }
     }
 
-    protected void unbindPostProcessors(ServiceReference ref) {
+    protected void unbindPostProcessor(ServiceReference ref) {
         synchronized ( this.delayedPostProcessors ) {
             this.delayedPostProcessors.remove(ref);
             this.postProcessors.remove(ref);
