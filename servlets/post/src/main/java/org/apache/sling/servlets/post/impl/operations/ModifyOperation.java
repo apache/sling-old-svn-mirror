@@ -19,6 +19,7 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Item;
@@ -36,14 +37,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
+import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.impl.helper.SlingFileUploadHandler;
 import org.apache.sling.servlets.post.impl.helper.SlingPropertyValueHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ModifyOperation</code> class implements the default operation
@@ -51,9 +51,6 @@ import org.slf4j.LoggerFactory;
  * client. This operation is able to create and/or modify content.
  */
 public class ModifyOperation extends AbstractSlingPostOperation {
-
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * utility class for generating node names
@@ -75,27 +72,27 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     }
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, HtmlResponse response)
+    protected void doRun(SlingHttpServletRequest request, HtmlResponse response, List<Modification> changes)
             throws RepositoryException {
 
         Map<String, RequestProperty> reqProperties = collectContent(request,
-            response);
+                response);
 
         // do not change order unless you have a very good reason.
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
         // ensure root of new content
-        processCreate(session, reqProperties, response);
+        processCreate(session, reqProperties, response, changes);
 
         // write content from existing content (@Move/CopyFrom parameters)
-        processMoves(session, reqProperties, response);
-        processCopies(session, reqProperties, response);
+        processMoves(session, reqProperties, changes);
+        processCopies(session, reqProperties, changes);
 
         // cleanup any old content (@Delete parameters)
-        processDeletes(session, reqProperties, response);
+        processDeletes(session, reqProperties, changes);
 
         // write content from form
-        writeContent(session, reqProperties, response);
+        writeContent(session, reqProperties, changes);
 
         // order content
         String path = response.getPath();
@@ -205,12 +202,12 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * @throws RepositoryException if a repository error occurs
      */
     private void processCreate(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, HtmlResponse response, List<Modification> changes)
             throws RepositoryException {
 
         String path = response.getPath();
         if (!session.itemExists(path)) {
-            deepGetOrCreateNode(session, path, reqProperties, response);
+            deepGetOrCreateNode(session, path, reqProperties, changes);
             response.setCreateRequest(true);
         }
 
@@ -221,13 +218,13 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * request properties to the locations indicated by the resource properties.
      */
     private void processMoves(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes)
             throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.hasRepositoryMoveSource()) {
                 processMovesCopiesInternal(property, true, session,
-                    reqProperties, response);
+                    reqProperties, changes);
             }
         }
     }
@@ -237,13 +234,13 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * request properties to the locations indicated by the resource properties.
      */
     private void processCopies(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes)
             throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.hasRepositoryCopySource()) {
                 processMovesCopiesInternal(property, false, session,
-                    reqProperties, response);
+                    reqProperties, changes);
             }
         }
     }
@@ -272,7 +269,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      */
     private void processMovesCopiesInternal(RequestProperty property,
             boolean isMove, Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes)
             throws RepositoryException {
 
         String propPath = property.getPath();
@@ -285,10 +282,10 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             // first, otherwise ensure the parent location
             if (session.itemExists(propPath)) {
                 session.getItem(propPath).remove();
-                response.onDeleted(propPath);
+                changes.add(Modification.onDeleted(propPath));
             } else {
                 deepGetOrCreateNode(session, property.getParentPath(),
-                    reqProperties, response);
+                    reqProperties, changes);
             }
 
             // move through the session and record operation
@@ -326,9 +323,9 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
             // record successful move
             if (isMove) {
-                response.onMoved(source, propPath);
+                changes.add(Modification.onMoved(source, propPath));
             } else {
-                response.onCopied(source, propPath);
+                changes.add(Modification.onCopied(source, propPath));
             }
         }
     }
@@ -347,7 +344,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      *             removing properties.
      */
     private void processDeletes(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes)
             throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
@@ -355,7 +352,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                 String propPath = property.getPath();
                 if (session.itemExists(propPath)) {
                     session.getItem(propPath).remove();
-                    response.onDeleted(propPath);
+                    changes.add(Modification.onDeleted(propPath));
                 }
             }
         }
@@ -369,23 +366,23 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      * @throws ServletException if an internal error occurs
      */
     private void writeContent(Session session,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes)
             throws RepositoryException {
 
         SlingPropertyValueHandler propHandler = new SlingPropertyValueHandler(
-            dateParser, response);
+            dateParser, changes);
 
         for (RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
                 Node parent = deepGetOrCreateNode(session,
-                    prop.getParentPath(), reqProperties, response);
+                    prop.getParentPath(), reqProperties, changes);
                 // skip jcr special properties
                 if (prop.getName().equals("jcr:primaryType")
                     || prop.getName().equals("jcr:mixinTypes")) {
                     continue;
                 }
                 if (prop.isFileUpload()) {
-                    uploadHandler.setFile(parent, prop, response);
+                    uploadHandler.setFile(parent, prop, changes);
                 } else {
                     propHandler.setProperty(parent, prop);
                 }
@@ -615,7 +612,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      *             <code>null</code>
      */
     private Node deepGetOrCreateNode(Session session, String path,
-            Map<String, RequestProperty> reqProperties, HtmlResponse response)
+            Map<String, RequestProperty> reqProperties, List<Modification> changes)
             throws RepositoryException {
         if (log.isDebugEnabled()) {
             log.debug("Deep-creating Node '{}'", path);
@@ -675,7 +672,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
                         node.addMixin(mix);
                     }
                 }
-                response.onCreated(node.getPath());
+                changes.add(Modification.onCreated(node.getPath()));
             }
             from = to + 1;
         }

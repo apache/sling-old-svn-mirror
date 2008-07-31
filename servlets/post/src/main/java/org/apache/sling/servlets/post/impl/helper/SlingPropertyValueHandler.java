@@ -19,6 +19,7 @@ package org.apache.sling.servlets.post.impl.helper;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Node;
@@ -28,7 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.Modification;
 
 /**
  * Sets a Property on the given Node, in some cases with a specific type and
@@ -55,7 +56,7 @@ public class SlingPropertyValueHandler {
     /**
      * the post processor
      */
-    private final HtmlResponse response;
+    private final List<Modification> changes;
 
     private final DateParser dateParser;
 
@@ -67,9 +68,9 @@ public class SlingPropertyValueHandler {
     /**
      * Constructs a propert value handler
      */
-    public SlingPropertyValueHandler(DateParser dateParser, HtmlResponse response) {
+    public SlingPropertyValueHandler(DateParser dateParser, List<Modification> changes) {
         this.dateParser = dateParser;
-        this.response = response;
+        this.changes = changes;
     }
 
 
@@ -132,9 +133,9 @@ public class SlingPropertyValueHandler {
     private void setCurrentDate(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        response.onModified(
+        changes.add(Modification.onModified(
             parent.setProperty(name, now).getPath()
-        );
+        ));
     }
 
     /**
@@ -146,9 +147,9 @@ public class SlingPropertyValueHandler {
     private void setCurrentUser(Node parent, String name)
             throws RepositoryException {
         removePropertyIfExists(parent, name);
-        response.onModified(
+        changes.add(Modification.onModified(
             parent.setProperty(name, parent.getSession().getUserID()).getPath()
-        );
+        ));
     }
 
     /**
@@ -197,22 +198,22 @@ public class SlingPropertyValueHandler {
         String[] values = prop.getStringValues();
         if (values == null) {
             // remove property
-            response.onDeleted(
+            changes.add(Modification.onDeleted(
                 removePropertyIfExists(parent, prop.getName())
-            );
+            ));
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
-                response.onModified(
+                changes.add(Modification.onModified(
                     parent.setProperty(prop.getName(), "").getPath()
-                );
+                ));
             }
         } else if (values.length == 1) {
             final String removePath = removePropertyIfExists(parent, prop.getName());
             // if the provided value is the empty string, we don't have to do anything.
             if ( values[0].length() == 0 ) {
                 if ( removePath != null ) {
-                    response.onDeleted(removePath);
+                    changes.add(Modification.onDeleted(removePath));
                 }
             } else {
                 // modify property
@@ -223,13 +224,13 @@ public class SlingPropertyValueHandler {
                         if ( prop.hasMultiValueTypeHint() ) {
                             final Value[] array = new Value[1];
                             array[0] = parent.getSession().getValueFactory().createValue(c);
-                            response.onModified(
+                            changes.add(Modification.onModified(
                                 parent.setProperty(prop.getName(), array).getPath()
-                            );
+                            ));
                         } else {
-                            response.onModified(
+                            changes.add(Modification.onModified(
                                     parent.setProperty(prop.getName(), c).getPath()
-                                );
+                                ));
                         }
                         return;
                     }
@@ -247,7 +248,7 @@ public class SlingPropertyValueHandler {
                         p = parent.setProperty(prop.getName(), values[0], type);
                     }
                 }
-                response.onModified(p.getPath());
+                changes.add(Modification.onModified(p.getPath()));
             }
         } else {
             removePropertyIfExists(parent, prop.getName());
@@ -256,9 +257,9 @@ public class SlingPropertyValueHandler {
                 ValueFactory valFac = parent.getSession().getValueFactory();
                 Value[] c = dateParser.parse(values, valFac);
                 if (c != null) {
-                    response.onModified(
+                    changes.add(Modification.onModified(
                         parent.setProperty(prop.getName(), c).getPath()
-                    );
+                    ));
                     return;
                 }
                 // fall back to default behaviour
@@ -269,7 +270,7 @@ public class SlingPropertyValueHandler {
             } else {
                 p = parent.setProperty(prop.getName(), values, type);
             }
-            response.onModified(p.getPath());
+            changes.add(Modification.onModified(p.getPath()));
         }
     }
 

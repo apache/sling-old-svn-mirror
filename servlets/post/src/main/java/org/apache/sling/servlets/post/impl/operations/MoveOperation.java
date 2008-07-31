@@ -16,11 +16,13 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.util.List;
+
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.Modification;
 
 /**
  * The <code>MoveOperation</code> class implements the
@@ -35,7 +37,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
     }
 
     @Override
-    protected void execute(HtmlResponse response, Item source,
+    protected void execute(List<Modification> changes, Item source,
             String destParent, String destName) throws RepositoryException {
 
         if (destName == null) {
@@ -51,7 +53,7 @@ public class MoveOperation extends AbstractCopyMoveOperation {
         }
 
         session.move(sourcePath, destPath);
-        response.onMoved(sourcePath, destPath);
+        changes.add(Modification.onMoved(sourcePath, destPath));
     }
 
 }

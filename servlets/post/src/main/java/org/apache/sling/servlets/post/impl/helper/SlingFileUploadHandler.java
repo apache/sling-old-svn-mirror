@@ -18,6 +18,7 @@ package org.apache.sling.servlets.post.impl.helper;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -27,7 +28,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.Modification;
 
 /**
  * Handles file uploads.
@@ -105,7 +106,7 @@ public class SlingFileUploadHandler {
      * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    public void setFile(Node parent, RequestProperty prop, HtmlResponse response)
+    public void setFile(Node parent, RequestProperty prop, List<Modification> changes)
             throws RepositoryException {
         RequestParameter value = prop.getValues()[0];
         assert !value.isFormField();
@@ -162,14 +163,14 @@ public class SlingFileUploadHandler {
         if (createNtFile) {
             // create nt:file
             parent = parent.addNode(name, typeHint);
-            response.onCreated(parent.getPath());
+            changes.add(Modification.onCreated(parent.getPath()));
             name = JCR_CONTENT;
             typeHint = NT_RESOURCE;
         }
 
         // create resource node
         Node res = parent.addNode(name, typeHint);
-        response.onCreated(res.getPath());
+        changes.add(Modification.onCreated(res.getPath()));
 
         // get content type
         String contentType = value.getContentType();
@@ -188,16 +189,16 @@ public class SlingFileUploadHandler {
         }
 
         // set properties
-        response.onModified(
+        changes.add(Modification.onModified(
             res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance()).getPath()
-        );
-        response.onModified(
+        ));
+        changes.add(Modification.onModified(
             res.setProperty(JCR_MIMETYPE, contentType).getPath()
-        );
+        ));
         try {
-            response.onModified(
+            changes.add(Modification.onModified(
                 res.setProperty(JCR_DATA, value.getInputStream()).getPath()
-            );
+            ));
         } catch (IOException e) {
             throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
         }
