@@ -62,7 +62,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      *            progress.
      */
     public void run(SlingHttpServletRequest request,
-            HtmlResponse response) {
+                    HtmlResponse response,
+                    SlingPostProcessor[] processors) {
 
         // calculate the paths
         String path = getItemPath(request);
@@ -82,6 +83,11 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
         try {
 
             doRun(request, response, changes);
+
+            // invoke processors
+            for(int i=0; i<processors.length; i++) {
+                processors[i].process(request, changes);
+            }
 
             // set changes on html response
             for(Modification change : changes) {

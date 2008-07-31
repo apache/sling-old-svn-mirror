@@ -17,8 +17,10 @@
 package org.apache.sling.servlets.post.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -33,29 +35,33 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.SlingPostOperation;
+import org.apache.sling.servlets.post.SlingPostProcessor;
 import org.apache.sling.servlets.post.impl.helper.DateParser;
 import org.apache.sling.servlets.post.impl.helper.NodeNameGenerator;
 import org.apache.sling.servlets.post.impl.operations.CopyOperation;
 import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.apache.sling.servlets.post.impl.operations.MoveOperation;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * POST servlet that implements the sling client library "protocol"
- * 
+ *
  * @scr.component immediate="true" label="%servlet.post.name"
  *                description="%servlet.post.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="Sling Post Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * Use this as the default servlet for POST requests for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default" private="true"
  * @scr.property name="sling.servlet.methods" value="POST" private="true"
+ * @scr.reference name="postProcessors" interface="org.apache.sling.servlets.post.SlingPostProcessor" cardinality="0..n" policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -100,6 +106,14 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private final Map<String, SlingPostOperation> postOperations = new HashMap<String, SlingPostOperation>();
 
+    private final List<ServiceReference> delayedPostProcessors = new ArrayList<ServiceReference>();
+
+    private final List<ServiceReference> postProcessors = new ArrayList<ServiceReference>();
+
+    private SlingPostProcessor[] cachedPostProcessors = new SlingPostProcessor[0];
+
+    private ComponentContext componentContext;
+
     @Override
     public void init() {
         // default operation: create/modify
@@ -138,8 +152,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         } else {
 
+            final SlingPostProcessor[] processors;
+            synchronized ( this.delayedPostProcessors ) {
+                processors = this.cachedPostProcessors;
+            }
             try {
-                operation.run(request, htmlResponse);
+                operation.run(request, htmlResponse, processors);
             } catch (ResourceNotFoundException rnfe) {
                 htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
                     rnfe.getMessage());
@@ -176,7 +194,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     /**
      * compute redirect URL (SLING-126)
-     * 
+     *
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
@@ -251,6 +269,13 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
+        synchronized ( this.delayedPostProcessors ) {
+            this.componentContext = context;
+            for(final ServiceReference ref : this.delayedPostProcessors) {
+                this.registerPostProcessor(ref);
+            }
+            this.delayedPostProcessors.clear();
+        }
         Dictionary<?, ?> props = context.getProperties();
 
         String[] nameHints = OsgiUtil.toStringArray(props.get(PROP_NODE_NAME_HINT_PROPERTIES));
@@ -268,5 +293,44 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     protected void deactivate(ComponentContext context) {
         nodeNameGenerator = null;
         dateParser = null;
+        this.componentContext = null;
+    }
+
+    protected void bindPostProcessors(ServiceReference ref) {
+        synchronized ( this.delayedPostProcessors ) {
+            if ( this.componentContext == null ) {
+                this.delayedPostProcessors.add(ref);
+            } else {
+                this.registerPostProcessor(ref);
+            }
+        }
+    }
+
+    protected void unbindPostProcessors(ServiceReference ref) {
+        synchronized ( this.delayedPostProcessors ) {
+            this.delayedPostProcessors.remove(ref);
+            this.postProcessors.remove(ref);
+        }
+    }
+
+    protected void registerPostProcessor(ServiceReference ref) {
+        final int ranking = OsgiUtil.toInteger(ref.getProperty(Constants.SERVICE_RANKING), 0);
+        int index = 0;
+        while ( index < this.postProcessors.size() &&
+                ranking < OsgiUtil.toInteger(this.postProcessors.get(index).getProperty(Constants.SERVICE_RANKING), 0)) {
+            index++;
+        }
+        if ( index == this.postProcessors.size() ) {
+            this.postProcessors.add(ref);
+        } else {
+            this.postProcessors.add(index, ref);
+        }
+        this.cachedPostProcessors = new SlingPostProcessor[this.postProcessors.size()];
+        index = 0;
+        for(final ServiceReference current : this.postProcessors) {
+            final SlingPostProcessor processor = (SlingPostProcessor) this.componentContext.locateService("postProcessor", current);
+            this.cachedPostProcessors[index] = processor;
+            index++;
+        }
     }
 }
