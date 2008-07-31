@@ -1,0 +1,10 @@
+{
+    "jcr:primaryType" : "sling:Folder",
+    "sling" : {
+	    "jcr:primaryType" : "sling:Folder",
+	    "webloader" : {
+		    "jcr:primaryType" : "nt:unstructured",
+		    "sling:resourceType" : "sling/webloader"
+	    }
+    }
+}
