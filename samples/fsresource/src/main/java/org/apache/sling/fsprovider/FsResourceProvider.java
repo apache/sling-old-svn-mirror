@@ -44,7 +44,7 @@ import org.osgi.service.component.ComponentContext;
  * resource tree where resources are provided ({@link ResourceProvider#ROOTS})
  * and the file system path from where files and folders are mapped into the
  * resource ({@link #PROP_PROVIDER_FILE}).
- * 
+ *
  * @scr.component label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  *                factory="org.apache.sling.fsprovider.FsResourceProviderFactory"
@@ -76,7 +76,7 @@ public class FsResourceProvider implements ResourceProvider {
     /**
      * Same as {@link #getResource(ResourceResolver, String)}, i.e. the
      * <code>request</code> parameter is ignored.
-     * 
+     *
      * @see #getResource(ResourceResolver, String)
      */
     public Resource getResource(ResourceResolver resourceResolver,
@@ -133,51 +133,48 @@ public class FsResourceProvider implements ResourceProvider {
             }
         }
 
-        if (parentFile != null) {
+        final File[] children = parentFile.listFiles();
 
-            final File[] children = parentFile.listFiles();
+        if (children != null && children.length > 0) {
+            final ResourceResolver resolver = parent.getResourceResolver();
+            final String parentPath = parent.getPath();
+            return new Iterator<Resource>() {
+                int index = 0;
 
-            if (children != null && children.length > 0) {
-                final ResourceResolver resolver = parent.getResourceResolver();
-                final String parentPath = parent.getPath();
-                return new Iterator<Resource>() {
-                    int index = 0;
+                Resource next = seek();
 
-                    Resource next = seek();
+                public boolean hasNext() {
+                    return next != null;
+                }
 
-                    public boolean hasNext() {
-                        return next != null;
+                public Resource next() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
                     }
 
-                    public Resource next() {
-                        if (!hasNext()) {
-                            throw new NoSuchElementException();
+                    Resource result = next;
+                    next = seek();
+                    return result;
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException("remove");
+                }
+
+                private Resource seek() {
+                    while (index < children.length) {
+                        File file = children[index++];
+                        String path = parentPath + "/" + file.getName();
+                        Resource result = getResource(resolver, path, file);
+                        if (result != null) {
+                            return result;
                         }
-
-                        Resource result = next;
-                        next = seek();
-                        return result;
                     }
 
-                    public void remove() {
-                        throw new UnsupportedOperationException("remove");
-                    }
-
-                    private Resource seek() {
-                        while (index < children.length) {
-                            File file = children[index++];
-                            String path = parentPath + "/" + file.getName();
-                            Resource result = getResource(resolver, path, file);
-                            if (result != null) {
-                                return result;
-                            }
-                        }
-
-                        // nothing found any more
-                        return null;
-                    }
-                };
-            }
+                    // nothing found any more
+                    return null;
+                }
+            };
         }
 
         // no children
