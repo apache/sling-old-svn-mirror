@@ -158,9 +158,23 @@ public class OsgiUtil {
      * returned.
      */
     public static String[] toStringArray(Object propValue) {
+        return toStringArray(propValue, null);
+    }
+
+    /**
+     * Returns the named service reference property as an array of Strings. If
+     * the property is a scalar value its string value is returned as a single
+     * element array. If the property is an array, the elements are converted to
+     * String objects and returned as an array. If the property is a vector, the
+     * vector elements are converted to String objects and returned as an array.
+     * Otherwise (if the property does not exist) a provided default value is
+     * returned.
+     * @since 2.0.4
+     */
+    public static String[] toStringArray(Object propValue, String[] defaultArray) {
         if (propValue == null) {
             // no value at all
-            return null;
+            return defaultArray;
 
         } else if (propValue instanceof String) {
             // single string
@@ -193,7 +207,7 @@ public class OsgiUtil {
             return values.toArray(new String[values.size()]);
         }
 
-        return null;
+        return defaultArray;
     }
 
     public static Event createEvent(Bundle sourceBundle,
