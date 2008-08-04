@@ -59,4 +59,7 @@ public class MockServiceReference implements ServiceReference {
         return false;
     }
 
+    public int compareTo(Object reference) {
+        return 0;
+    }
 }

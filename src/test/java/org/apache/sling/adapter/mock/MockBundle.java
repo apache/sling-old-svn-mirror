@@ -25,6 +25,7 @@ import java.util.Enumeration;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
 
 public class MockBundle implements Bundle {
@@ -124,4 +125,9 @@ public class MockBundle implements Bundle {
         return null;
     }
 
+    public void start(int options) throws BundleException {
+    }
+
+    public void stop(int options) throws BundleException {
+    }
 }
