@@ -125,6 +125,11 @@ public class JcrResourceResolverFactoryImplTest {
             // TODO Auto-generated method stub
             return false;
         }
+
+        public int compareTo(Object reference) {
+            // TODO Auto-generated method stub
+            return 0;
+        }
     }
 
 }
