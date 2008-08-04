@@ -29,7 +29,7 @@ import org.osgi.framework.ServiceReference;
 public class MockServiceReference implements ServiceReference {
 
     private static long serviceIdCounter = 0;
-    
+
     private Bundle bundle;
 
     private Dictionary<String, Object> props;
@@ -37,7 +37,7 @@ public class MockServiceReference implements ServiceReference {
     public MockServiceReference(Bundle bundle) {
         this.bundle = bundle;
         this.props = new Hashtable<String, Object>();
-        
+
         // mockup a service id
         props.put(Constants.SERVICE_ID, serviceIdCounter++);
     }
@@ -64,6 +64,10 @@ public class MockServiceReference implements ServiceReference {
 
     public boolean isAssignableTo(Bundle bundle, String className) {
         return false;
+    }
+
+    public int compareTo(Object reference) {
+        return 0;
     }
 
 }
