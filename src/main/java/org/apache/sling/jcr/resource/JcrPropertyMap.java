@@ -72,7 +72,16 @@ public class JcrPropertyMap implements ValueMap {
             return (T) get(name);
         }
 
-        T value = get(name, (Class<T>) defaultValue.getClass());
+        // special handling in case the default value implements one
+        // of the interface types supported by the convertToType method
+        Class<T> type = (Class<T>) defaultValue.getClass();
+        if (Calendar.class.isAssignableFrom(type)) {
+            type = (Class<T>) Calendar.class;
+        } else if (Value.class.isAssignableFrom(type)) {
+            type = (Class<T>) Value.class;
+        }
+
+        T value = get(name, type);
         if (value == null) {
             value = defaultValue;
         }
@@ -137,6 +146,7 @@ public class JcrPropertyMap implements ValueMap {
             return "";
         }
     }
+
     // ---------- Helpers to access the node's property ------------------------
 
     private Object read(String key) {
