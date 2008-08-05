@@ -64,6 +64,7 @@
                             org.apache.sling.engine.impl.*
                         </Private-Package>
                         <Import-Package>
+                            org.osgi.service.useradmin;
                             javax.portlet;resolution:=optional,
                             *
                         </Import-Package>

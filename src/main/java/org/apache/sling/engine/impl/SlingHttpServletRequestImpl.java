@@ -20,7 +20,9 @@ package org.apache.sling.engine.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -47,6 +49,8 @@ import org.apache.sling.engine.impl.helper.NullResourceBundle;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.useradmin.Authorization;
 
 /**
  * The <code>SlingHttpServletRequestImpl</code> TODO
@@ -248,4 +252,74 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
             IOException {
         return this.getRequestData().getReader();
     }
+
+    /**
+     * @see javax.servlet.http.HttpServletRequestWrapper#getUserPrincipal()
+     */
+    @Override
+    public Principal getUserPrincipal() {
+        String remoteUser = getRemoteUser();
+        return (remoteUser != null) ? new UserPrincipal(remoteUser) : null;
+    }
+
+    /**
+     * @see javax.servlet.http.HttpServletRequestWrapper#isUserInRole()
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean isUserInRole(String role) {
+        Object authorization = getAttribute(HttpContext.AUTHORIZATION);
+        return (authorization instanceof Authorization)
+                ? ((Authorization) authorization).hasRole(role)
+                : false;
+    }
+
+    /**
+     * A <code>UserPrincipal</code> ...
+     */
+    private static class UserPrincipal implements Principal, Serializable {
+
+        private final String name;
+
+        /**
+         * Creates a <code>UserPrincipal</code> with the given name.
+         *
+         * @param name the name of this principal
+         * @throws IllegalArgumentException if <code>name</code> is <code>null</code>.
+         */
+        public UserPrincipal(String name) throws IllegalArgumentException {
+            if (name == null) {
+                throw new IllegalArgumentException("name can not be null");
+            }
+            this.name = name;
+        }
+
+        public String toString() {
+            return ("UserPrincipal: " + name);
+        }
+
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj instanceof UserPrincipal) {
+                UserPrincipal other = (UserPrincipal) obj;
+                return name.equals(other.name);
+            }
+            return false;
+        }
+
+        public int hashCode() {
+            return name.hashCode();
+        }
+
+        //------------------------------------------------------------< Principal >
+        /**
+         * {@inheritDoc}
+         */
+        public String getName() {
+            return name;
+        }
+    }
+
 }
