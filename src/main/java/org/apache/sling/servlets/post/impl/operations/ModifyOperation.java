@@ -541,7 +541,11 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      */
     private String toPropertyPath(String paramName, HtmlResponse response) {
         if (!paramName.startsWith("/")) {
-            paramName = response.getPath() + "/" + paramName;
+            if ( paramName.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT) ) {
+                paramName = response.getPath() + paramName.substring(1);
+            } else {
+                paramName = response.getPath() + "/" + paramName;
+            }
         }
 
         return paramName;
