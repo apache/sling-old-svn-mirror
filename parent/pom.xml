@@ -668,14 +668,14 @@ setting is not correct.
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr</artifactId>
-                <version>1.0.2</version>
+                <version>1.0.4</version>
                 <scope>provided</scope>
             </dependency>
         
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.configadmin</artifactId>
-                <version>1.0.1</version>
+                <version>1.0.4</version>
                 <scope>provided</scope>
             </dependency>
            
