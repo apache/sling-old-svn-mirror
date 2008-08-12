@@ -18,25 +18,40 @@
  */
 package org.apache.sling.api.resource;
 
-import java.util.Map;
 import java.util.Collections;
+import java.util.Map;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
+/**
+ * The <code>ValueMap</code> is an easy way to access
+ * properties of a resource. With most resources you can
+ * use {@link Resource#adaptTo(Class)} to adapt the resource
+ * to a value map. The various getter methods can be used
+ * to get the properties of the resource.
+ */
 public interface ValueMap extends Map<String, Object> {
 
     /**
      * Empty value map
      */
     final ValueMap EMPTY = new ValueMapDecorator(Collections.<String, Object>emptyMap());
-    
-    // return named value converted to type T or
-    // null if not existing
+
+    /**
+     * Get a named property and convert it into the given type.
+     * @param name The name of the property
+     * @param type The class of the type
+     * @return Return named value converted to type T or <code>null</code>
+     *         if non existing or can't be converted.
+     */
     <T> T get(String name, Class<T> type);
 
-    // return named value converted to the type T of
-    // the default value or the default value if the
-    // named value does not exist
+    /**
+     * Get a named property and convert it into the given type.
+     * @param name The name of the property
+     * @param type The class of the type
+     * @return Return named value converted to type T or the
+     *         default value if non existing or can't be converted.
+     */
     <T> T get(String name, T defaultValue);
-    
 }
