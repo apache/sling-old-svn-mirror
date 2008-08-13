@@ -486,6 +486,10 @@ public class JspServletWrapper {
             Throwable realException = ex;
             if (ex instanceof ServletException) {
                 realException = ((ServletException) ex).getRootCause();
+                // root cause might be null (eg. for a JasperException ex)
+                if (realException == null) {
+                    realException = ex;
+                }
             }
 
             // First identify the stack frame in the trace that represents the JSP

@@ -280,11 +280,31 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                 try {
                     callJsp(props, scriptHelper);
                 } catch (Exception e) {
-                    throw new ScriptException(e);
+                    throw new BetterScriptException(e.getMessage(), e);
                 }
             }
             return null;
         }
     }
 
+    /**
+     * Fixes {@link ScriptException} that overwrites the
+     * {@link ScriptException#getMessage()} method to display its own
+     * <code>message</code> instead of the <code>detailMessage</code>
+     * defined in {@link Throwable}. Unfortunately using the constructor
+     * {@link ScriptException#ScriptException(Exception)} does not set the
+     * <code>message</code> member of {@link ScriptException}, which leads to
+     * a message of <code>"null"</code>, effectively supressing the detailed
+     * information of the cause. This class provides a way to do that explicitly
+     * with a new constructor accepting both a message and a causing exception.
+     * 
+     */
+    private static class BetterScriptException extends ScriptException {
+        
+        public BetterScriptException(String message, Exception cause) {
+            super(cause);
+            this.message = message;
+        }
+        
+    }
 }
