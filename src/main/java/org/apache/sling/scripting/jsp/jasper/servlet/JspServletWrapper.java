@@ -482,16 +482,16 @@ public class JspServletWrapper {
      * @return a JasperException with more detailed information
      */
     protected JasperException handleJspException(Exception ex) {
-        try {
-            Throwable realException = ex;
-            if (ex instanceof ServletException) {
-                realException = ((ServletException) ex).getRootCause();
-                // root cause might be null (eg. for a JasperException ex)
-                if (realException == null) {
-                    realException = ex;
-                }
+        Throwable realException = ex;
+        if (ex instanceof ServletException) {
+            realException = ((ServletException) ex).getRootCause();
+            // root cause might be null (eg. for a JasperException ex)
+            if (realException == null) {
+                realException = ex;
             }
+        }
 
+        try {
             // First identify the stack frame in the trace that represents the JSP
             StackTraceElement[] frames = realException.getStackTrace();
             StackTraceElement jspFrame = null;
@@ -506,7 +506,7 @@ public class JspServletWrapper {
             if (jspFrame == null) {
                 // If we couldn't find a frame in the stack trace corresponding
                 // to the generated servlet class, we can't really add anything
-                return new JasperException(ex);
+                return new JasperException(realException);
             }
             else {
                 int javaLineNumber = jspFrame.getLineNumber();
@@ -521,7 +521,7 @@ public class JspServletWrapper {
                 // where in the JSP things went wrong
                 int jspLineNumber = detail.getJspBeginLineNumber();
                 if (jspLineNumber < 1) {
-                    throw new JasperException(ex);
+                    throw new JasperException(realException);
                 }
 
                 if (options.getDisplaySourceFragment()) {
@@ -529,20 +529,20 @@ public class JspServletWrapper {
                             ("jsp.exception", detail.getJspFileName(),
                                     "" + jspLineNumber) +
                                     "\n\n" + detail.getJspExtract() +
-                                    "\n\nStacktrace:", ex);
+                                    "\n\nStacktrace:", realException);
                     
                 } else {
                     return new JasperException(Localizer.getMessage
                             ("jsp.exception", detail.getJspFileName(),
-                                    "" + jspLineNumber), ex);
+                                    "" + jspLineNumber), realException);
                 }
             }
         } catch (Exception je) {
             // If anything goes wrong, just revert to the original behaviour
-            if (ex instanceof JasperException) {
-                return (JasperException) ex;
+            if (realException instanceof JasperException) {
+                return (JasperException) realException;
             } else {
-                return new JasperException(ex);
+                return new JasperException(realException);
             }
         }
     }
