@@ -41,18 +41,22 @@ import org.slf4j.LoggerFactory;
 public class JcrPropertyMap implements ValueMap {
 
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private Logger logger = LoggerFactory.getLogger(JcrPropertyMap.class);
 
     private final Node node;
 
-    private final Map<String, Object> cache;
+    protected final Map<String, Object> cache;
 
-    private boolean fullyRead;
+    protected boolean fullyRead;
 
     public JcrPropertyMap(Node node) {
         this.node = node;
         this.cache = new HashMap<String, Object>();
         this.fullyRead = false;
+    }
+
+    protected Node getNode() {
+        return node;
     }
 
     // ---------- ValueMap
@@ -100,56 +104,76 @@ public class JcrPropertyMap implements ValueMap {
         return value;
     }
 
+    /**
+     * @see java.util.Map#containsKey(java.lang.Object)
+     */
     public boolean containsKey(Object key) {
         return get(key) != null;
     }
 
+    /**
+     * @see java.util.Map#containsValue(java.lang.Object)
+     */
     public boolean containsValue(Object value) {
         readFully();
         return cache.containsValue(value);
     }
 
+    /**
+     * @see java.util.Map#isEmpty()
+     */
     public boolean isEmpty() {
-        // only start reading if there is nothing in the cache yet
-        if (cache.isEmpty()) {
-            readFully();
-        }
-
-        return cache.isEmpty();
+        return size() == 0;
     }
 
+    /**
+     * @see java.util.Map#size()
+     */
     public int size() {
         readFully();
         return cache.size();
     }
 
+    /**
+     * @see java.util.Map#entrySet()
+     */
     public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
         return cache.entrySet();
     }
 
+    /**
+     * @see java.util.Map#keySet()
+     */
     public Set<String> keySet() {
         readFully();
         return cache.keySet();
     }
 
+    /**
+     * @see java.util.Map#values()
+     */
     public Collection<Object> values() {
         readFully();
         return cache.values();
     }
 
+    /**
+     * Return the path of the current node.
+     * @throws IllegalStateException If a repository exception occurs
+     */
     public String getPath() {
         try {
             return node.getPath();
         } catch (RepositoryException e) {
-            // TODO
-            return "";
+            throw new IllegalStateException(e);
         }
     }
 
+
     // ---------- Helpers to access the node's property ------------------------
 
-    private Object read(String key) {
+    protected Object read(String key) {
 
         // if the node has been completely read, we need not check
         // again, as we certainly will not find the key
@@ -172,7 +196,7 @@ public class JcrPropertyMap implements ValueMap {
         return null;
     }
 
-    private void readFully() {
+    protected void readFully() {
         if (!fullyRead) {
             try {
                 PropertyIterator pi = node.getProperties();
@@ -228,10 +252,10 @@ public class JcrPropertyMap implements ValueMap {
             }
 
         } catch (ValueFormatException vfe) {
-            log.info("converToType: Cannot convert value of " + name + " to "
+            logger.info("converToType: Cannot convert value of " + name + " to "
                 + type, vfe);
         } catch (RepositoryException re) {
-            log.info("converToType: Cannot get value of " + name, re);
+            logger.info("converToType: Cannot get value of " + name, re);
         }
 
         // fall back to nothing
