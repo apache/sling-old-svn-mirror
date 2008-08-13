@@ -18,11 +18,16 @@
  */
 package org.apache.sling.jcr.resource;
 
+import java.io.InputStream;
+import java.util.Calendar;
+
+import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
@@ -93,10 +98,69 @@ public class JcrResourceUtil {
     }
 
     /**
+     * Creates a {@link javax.jcr.Value JCR Value} for the given object with
+     * the given Session.
+     * Selects the the {@link javax.jcr.PropertyType PropertyType} according
+     * the instance of the object's Class
+     *
+     * @param value object
+     * @param session to create value for
+     * @return the value or null if not convertible to a valid PropertyType
+     * @throws RepositoryException in case of error, accessing the Repository
+     */
+    public static Value createValue(Object value, Session session)
+            throws RepositoryException {
+        Value val;
+        ValueFactory fac = session.getValueFactory();
+        if(value.getClass().isAssignableFrom(Calendar.class)) {
+            val = fac.createValue((Calendar)value);
+        } else if (value.getClass().isAssignableFrom(InputStream.class)) {
+            val = fac.createValue((InputStream)value);
+        } else if (value.getClass().isAssignableFrom(Node.class)) {
+            val = fac.createValue((Node)value);
+        } else if (value.getClass().isAssignableFrom(Long.class)) {
+            val = fac.createValue((Long)value);
+        } else if (value.getClass().isAssignableFrom(Number.class)) {
+            val = fac.createValue(((Number)value).doubleValue());
+        } else if (value.getClass().isAssignableFrom(Boolean.class)) {
+            val = fac.createValue((Boolean) value);
+        } else {
+            val = fac.createValue((String)value);
+        }
+        return val;
+    }
+
+    /**
+     * Sets the value of the property.
+     * Selects the {@link javax.jcr.PropertyType PropertyType} according
+     * to the instance of the object's class.
+     * @param node         The node where the property will be set on.
+     * @param propertyName The name of the property.
+     * @param propertyValue The value for the property.
+     */
+    public static void setProperty(final Node node,
+                                   final String propertyName,
+                                   final Object propertyValue)
+    throws RepositoryException {
+        if ( propertyValue == null ) {
+            node.setProperty(propertyName, (String)null);
+        } else if ( propertyValue.getClass().isArray() ) {
+            final Object[] values = (Object[])propertyValue;
+            final Value[] setValues = new Value[values.length];
+            for(int i=0; i<values.length; i++) {
+                setValues[i] = createValue(values[i], node.getSession());
+            }
+            node.setProperty(propertyName, setValues);
+        } else {
+            node.setProperty(propertyName, createValue(propertyValue, node.getSession()));
+        }
+    }
+
+    /**
      * Helper method, which returns the given resource type as returned from the
      * {@link org.apache.sling.api.resource.Resource#getResourceType()} as a
      * relative path.
-     * 
+     *
      * @param type The resource type to be converted into a path
      * @return The resource type as a path.
      */
@@ -111,7 +175,7 @@ public class JcrResourceUtil {
      * <code>Resource</code> addressed by the <code>resourceType</code> to a
      * string. If no such child resource exists or if the resource does not
      * adapt to a string, this method returns <code>null</code>.
-     * 
+     *
      * @param resourceResolver The <code>ResourceResolver</code> used to
      *            access the resource whose path (relative or absolute) is given
      *            by the <code>resourceType</code> parameter.
@@ -151,7 +215,7 @@ public class JcrResourceUtil {
      * This mechanism allows to specifically set the resource super type on a
      * per-resource level overwriting any resource super type hierarchy
      * pre-defined by the actual resource type of the resource.
-     * 
+     *
      * @param resource The <code>Resource</code> whose resource super type is
      *            requested.
      * @return The resource super type or <code>null</code> if the algorithm
