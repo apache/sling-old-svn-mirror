@@ -27,6 +27,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingIOException;
@@ -279,6 +280,25 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             if (scriptHelper != null) {
                 try {
                     callJsp(props, scriptHelper);
+                } catch (SlingServletException e) {
+                    // ServletExceptions use getRootCause() instead of getCause(),
+                    // so we have to extract the actual root cause and pass it as
+                    // cause in our new ScriptException
+                    if (e.getCause() != null) {
+                        // SlingServletException always wraps ServletExceptions
+                        ServletException se = (ServletException) e.getCause();
+                        if (se.getRootCause() != null) {
+                            // the ScriptException unfortunately does not accept a Throwable as cause,
+                            // but only a Exception, so we have to wrap it with a dummy Exception in Throwable cases
+                            if (se.getRootCause() instanceof Exception) {
+                                throw new BetterScriptException(se.getRootCause().getMessage(), (Exception) se.getRootCause());
+                            } else {
+                                throw new BetterScriptException(se.getRootCause().getMessage(), new Exception("Wrapping Throwable: " + se.getRootCause().toString(), se.getRootCause()));
+                            }
+                        }
+                    }
+                    // fallback to standard behaviour
+                    throw new BetterScriptException(e.getMessage(), e);
                 } catch (Exception e) {
                     throw new BetterScriptException(e.getMessage(), e);
                 }
