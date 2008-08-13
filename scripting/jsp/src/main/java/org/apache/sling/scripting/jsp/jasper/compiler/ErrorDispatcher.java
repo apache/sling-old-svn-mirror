@@ -521,20 +521,25 @@ public class ErrorDispatcher {
     public static JavacErrorDetail createJavacError(String fname,
             Node.Nodes page, StringBuffer errMsgBuf, int lineNum,
             JspCompilationContext ctxt) throws JasperException {
-        JavacErrorDetail javacError;
-        // Attempt to map javac error line number to line in JSP page
-        ErrorVisitor errVisitor = new ErrorVisitor(lineNum);
-        page.visit(errVisitor);
-        Node errNode = errVisitor.getJspSourceNode();
-        if ((errNode != null) && (errNode.getStart() != null)) {
-            javacError = new JavacErrorDetail(
-                    fname,
-                    lineNum,
-                    errNode.getStart().getFile(),
-                    errNode.getStart().getLineNumber(),
-                    errMsgBuf,
-                    ctxt);
-        } else {
+        JavacErrorDetail javacError = null;
+        
+        if (page != null) {
+            // Attempt to map javac error line number to line in JSP page
+            ErrorVisitor errVisitor = new ErrorVisitor(lineNum);
+            page.visit(errVisitor);
+            Node errNode = errVisitor.getJspSourceNode();
+            if ((errNode != null) && (errNode.getStart() != null)) {
+                javacError = new JavacErrorDetail(
+                        fname,
+                        lineNum,
+                        errNode.getStart().getFile(),
+                        errNode.getStart().getLineNumber(),
+                        errMsgBuf,
+                        ctxt);
+            }
+        }
+        
+        if (javacError == null) {
             /*
              * javac error line number cannot be mapped to JSP page
              * line number. For example, this is the case if a 
