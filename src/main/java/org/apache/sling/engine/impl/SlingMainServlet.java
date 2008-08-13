@@ -151,8 +151,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
 
     private SlingAuthenticator slingAuthenticator;
 
-    public static final String INCLUDE_COUNTER = "Sling.ScriptHelper.include.counter";
-    public static final int MAX_INCLUDE_RECURSION_LEVEL = 50;
+    private static final String INCLUDE_COUNTER = "Sling.ScriptHelper.include.counter";
+    private static final int MAX_INCLUDE_RECURSION_LEVEL = 50;
 
     public static class InfiniteIncludeLoopException extends SlingException {
         InfiniteIncludeLoopException(String path) {
@@ -372,22 +372,26 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
 
         checkRecursionLevel(request, resolvedURL.getResourcePath());
 
-        // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel to continue
-        SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
-        SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
-
-        // get the request data (and btw check the correct type)
-        RequestData requestData = RequestData.getRequestData(cRequest);
-        ContentData contentData = requestData.pushContent(resource, resolvedURL);
-
         try {
-            // resolve the servlet
-            Servlet servlet = getServletResolver().resolveServlet(cRequest);
-            contentData.setServlet(servlet);
+            // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel to continue
+            SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
+            SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
 
-            processRequest(cRequest, cResponse);
+            // get the request data (and btw check the correct type)
+            RequestData requestData = RequestData.getRequestData(cRequest);
+            ContentData contentData = requestData.pushContent(resource, resolvedURL);
+
+            try {
+                // resolve the servlet
+                Servlet servlet = getServletResolver().resolveServlet(cRequest);
+                contentData.setServlet(servlet);
+
+                processRequest(cRequest, cResponse);
+            } finally {
+                requestData.popContent();
+            }
         } finally {
-            requestData.popContent();
+            decreaseRecursionLevel(request);
         }
     }
 
@@ -403,6 +407,19 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             recursionLevel = new Integer(recursionLevel.intValue() + 1);
         }
         request.setAttribute(INCLUDE_COUNTER, recursionLevel);
+    }
+
+    /** Decrease the recursion counter  */
+    protected void decreaseRecursionLevel(ServletRequest request) {
+        // this should never be null, but we better do a sanity check
+        final Integer recursionLevel = (Integer)request.getAttribute(INCLUDE_COUNTER);
+        if ( recursionLevel != null ) {
+            if ( recursionLevel == 1 ) {
+                request.removeAttribute(INCLUDE_COUNTER);
+            } else {
+                request.setAttribute(INCLUDE_COUNTER, new Integer(recursionLevel.intValue() -1));
+            }
+        }
     }
 
     public void processRequest(SlingHttpServletRequest request,
@@ -797,7 +814,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
                         return ParameterSupport.getInstance(getRequest());
                     }
                 };
-                
+
                 return authenticator.authenticate(request, response);
 
             } catch (MissingRepositoryException mre) {
