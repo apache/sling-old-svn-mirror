@@ -37,10 +37,12 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.net.URLFactory;
+import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
@@ -81,6 +83,15 @@ public class JcrNodeResource extends JcrItemResource {
             return (Type) getURL(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrPropertyMap(getNode()); // unchecked cast
+        } else if (type == PersistableValueMap.class ) {
+            // check write
+            try {
+                getNode().getSession().checkPermission(getNode().getPath(), "set_property");
+                return (Type) new JcrModifiablePropertyMap(getNode());
+            } catch (RepositoryException e) {
+                // either the user has no write permission or a more
+                // sever exception occured - in both cases we don't return the map
+            }
         }
 
         // fall back to default implementation
