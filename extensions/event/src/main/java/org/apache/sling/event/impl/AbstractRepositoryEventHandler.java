@@ -23,18 +23,26 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.observation.EventListener;
 
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
@@ -42,6 +50,7 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -293,46 +302,86 @@ public abstract class AbstractRepositoryEventHandler
         eventNode.setProperty(EventHelper.NODE_PROPERTY_APPLICATION, this.applicationId);
 
         final String[] names = e.getPropertyNames();
-        // we will  not write the distributable property, so length must be greater 1
-        if ( names != null && names.length > 1 ) {
-            // if the application property is available, we will override it
-            // if it is not available we will add it
-            boolean addApplication = false;
-            boolean removeNotifierContextProperty = false;
-            if ( e.getProperty(EventUtil.PROPERTY_APPLICATION) == null ) {
-                addApplication = true;
-            }
-            if ( e.getProperty(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME) != null ) {
-                removeNotifierContextProperty = true;
-            }
-            try {
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                final ObjectOutputStream oos = new ObjectOutputStream(baos);
-                oos.writeInt(names.length  - 1 + (addApplication ? 1 : 0) - (removeNotifierContextProperty ? 1 : 0));
-                for(int i=0;i<names.length;i++) {
-                    if ( names[i].equals(EventUtil.PROPERTY_APPLICATION) ) {
-                        oos.writeObject(names[i]);
-                        oos.writeObject(this.applicationId);
-                    } else if ( !names[i].equals(EventUtil.PROPERTY_DISTRIBUTE)
-                             && !names[i].equals(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME) ) {
-                        oos.writeObject(names[i]);
-                        oos.writeObject(e.getProperty(names[i]));
+
+        // if the application property is available, we will override it
+        // if it is not available we will add it
+        eventNode.setProperty(EventUtil.PROPERTY_APPLICATION, this.applicationId);
+
+        if ( names != null ) {
+            // check which props we can write directly and
+            // which we need to write as a binary blob
+            final List<String> propsAsBlob = new ArrayList<String>();
+
+            for(final String propName : names) {
+                // ignore application, distribute and context property
+                if ( !propName.equals(EventUtil.PROPERTY_DISTRIBUTE)
+                    && !propName.equals(EventUtil.PROPERTY_APPLICATION)
+                    && !propName.equals(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME) ) {
+                    final Object value = e.getProperty(propName);
+                    // sanity check
+                    if ( value != null ) {
+                        if ( !this.setProperty(propName, value, eventNode) ) {
+                            propsAsBlob.add(propName);
+                        }
                     }
                 }
-                if ( addApplication ) {
-                    oos.writeObject(EventUtil.PROPERTY_APPLICATION);
-                    oos.writeObject(this.applicationId);
+            }
+            // write the remaining properties as a blob
+            if ( propsAsBlob.size() > 0 ) {
+                try {
+                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    final ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    for(final String propName : propsAsBlob) {
+                        oos.writeObject(propName);
+                        oos.writeObject(e.getProperty(propName));
+                    }
+                    oos.close();
+                    eventNode.setProperty(EventHelper.NODE_PROPERTY_PROPERTIES, new ByteArrayInputStream(baos.toByteArray()));
+                } catch (IOException ioe) {
+                    throw new RepositoryException("Unable to serialize event properties.", ioe);
                 }
-                oos.close();
-                eventNode.setProperty(EventHelper.NODE_PROPERTY_PROPERTIES, new ByteArrayInputStream(baos.toByteArray()));
-            } catch (IOException ioe) {
-                throw new RepositoryException("Unable to serialize event properties.", ioe);
             }
         }
         this.addNodeProperties(eventNode, e);
         rootNode.save();
 
         return eventNode;
+    }
+
+    /**
+     * Try to set the OSGi event property as a property of the node.
+     * @param name
+     * @param value
+     * @param node
+     * @return
+     * @throws RepositoryException
+     */
+    private boolean setProperty(String name, Object value, Node node)
+    throws RepositoryException {
+        // if name contains a colon, we can't set it as a property
+        if ( name.indexOf(':') != -1 ) {
+            return false;
+        }
+        final ValueFactory fac = node.getSession().getValueFactory();
+        final Value val;
+        if (value.getClass().isAssignableFrom(Calendar.class)) {
+            val = fac.createValue((Calendar)value);
+        } else if (value.getClass().isAssignableFrom(Long.class)) {
+            val = fac.createValue((Long)value);
+        } else if (value.getClass().isAssignableFrom(Double.class)) {
+            val = fac.createValue(((Double)value).doubleValue());
+        } else if (value.getClass().isAssignableFrom(Boolean.class)) {
+            val = fac.createValue((Boolean) value);
+        } else if (value instanceof String) {
+            val = fac.createValue((String)value);
+        } else {
+            val = null;
+        }
+        if ( val != null ) {
+            node.setProperty(ISO9075.encode(name), val);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -346,6 +395,7 @@ public abstract class AbstractRepositoryEventHandler
     throws RepositoryException, ClassNotFoundException {
         final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        // check the properties blob
         if ( eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES) ) {
             try {
                 final ObjectInputStream ois = new ObjectInputStream(eventNode.getProperty(EventHelper.NODE_PROPERTY_PROPERTIES).getStream());
@@ -357,6 +407,31 @@ public abstract class AbstractRepositoryEventHandler
                 }
             } catch (IOException ioe) {
                 throw new RepositoryException("Unable to deserialize event properties.", ioe);
+            }
+        }
+        // now all properties that have been set directly
+        final PropertyIterator pI = eventNode.getProperties();
+        while ( pI.hasNext() ) {
+            final Property p = pI.nextProperty();
+            if ( !p.getName().startsWith("jcr:") && !p.getName().startsWith(EventHelper.EVENT_PREFIX) ) {
+                final String name = ISO9075.decode(p.getName());
+                final Value value = p.getValue();
+                final Object o;
+                switch (value.getType()) {
+                    case PropertyType.BOOLEAN:
+                        o = value.getBoolean(); break;
+                    case PropertyType.DATE:
+                        o = value.getDate(); break;
+                    case PropertyType.DOUBLE:
+                        o = value.getDouble(); break;
+                    case PropertyType.LONG:
+                        o = value.getLong(); break;
+                    case PropertyType.STRING:
+                        o = value.getString(); break;
+                    default: // this should never happen - we convert to a string...
+                        o = value.getString();
+                }
+                properties.put(name, o);
             }
         }
         this.addEventProperties(eventNode, properties);
