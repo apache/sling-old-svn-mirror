@@ -30,7 +30,7 @@
 [slingevent:Jobs] > nt:folder, mix:lockable
   + * (slingevent:Job)
   
-[slingevent:Event] > nt:base
+[slingevent:Event] > nt:unstructured
   - slingevent:topic (string)
   - slingevent:application (string)
   - slingevent:created (date)
