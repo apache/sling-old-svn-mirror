@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -65,7 +66,7 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         assertEquals(handler.applicationId, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
         assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
         // as a starting point we just check if the properties property exists
-        assertTrue(eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES));
+        assertTrue(eventNode.hasProperty(ISO9075.encode("a property")));
     }
 
     @org.junit.Test public void testWriteEventPlusAppId() throws Exception {
@@ -83,6 +84,6 @@ public class DistributingEventHandlerTest extends AbstractRepositoryEventHandler
         assertEquals(handler.applicationId, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
         assertTrue(Calendar.getInstance().compareTo(eventNode.getProperty(EventHelper.NODE_PROPERTY_CREATED).getDate()) >= 0);
         // as a starting point we just check if the properties property exists
-        assertTrue(eventNode.hasProperty(EventHelper.NODE_PROPERTY_PROPERTIES));
+        assertTrue(eventNode.hasProperty(ISO9075.encode("a property")));
     }
 }
