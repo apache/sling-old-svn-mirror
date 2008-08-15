@@ -21,6 +21,7 @@ package org.apache.sling.event.impl;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.osgi.framework.BundleEvent;
@@ -50,7 +52,7 @@ import org.osgi.service.event.EventAdmin;
 
 
 /**
- * An event handler handling special job events.
+ * An event handler for special job events.
  *
  * @scr.component label="%job.events.name" description="%job.events.description"
  * @scr.service interface="org.apache.sling.event.JobStatusProvider"
@@ -110,6 +112,9 @@ public class JobEventHandler
 
     /** We remove everything which is older than 5 min by default. */
     protected int cleanupPeriod = DEFAULT_CLEANUP_PERIOD;
+
+    /** The scheduler for rescheduling jobs. @scr.reference */
+    protected Scheduler scheduler;
 
     /**
      * Activate this component.
@@ -371,20 +376,16 @@ public class JobEventHandler
                                     final Node eventNode = (Node) this.backgroundSession.getItem(info.nodePath);
                                     if ( !eventNode.isLocked() && !eventNode.hasProperty(EventHelper.NODE_PROPERTY_FINISHED)) {
                                         final EventInfo eInfo = info;
-                                        // we put it back into the queue after a specific time
-                                        this.threadPool.execute(new Runnable() {
+                                        final Date fireDate = new Date();
+                                        fireDate.setTime(System.currentTimeMillis() + this.sleepTime * 1000);
+
+                                            // we put it back into the queue after a specific time
+                                        final Runnable r = new Runnable() {
 
                                             /**
                                              * @see java.lang.Runnable#run()
                                              */
                                             public void run() {
-                                                // wait time before we put it back into the pool
-                                                try {
-                                                    Thread.sleep(sleepTime * 1000);
-                                                } catch (InterruptedException e) {
-                                                    // ignore
-                                                    ignoreException(e);
-                                                }
                                                 try {
                                                     queue.put(eInfo);
                                                 } catch (InterruptedException e) {
@@ -393,7 +394,22 @@ public class JobEventHandler
                                                 }
                                             }
 
-                                        });
+                                        };
+                                        try {
+                                            this.scheduler.fireJobAt(null, r, null, fireDate);
+                                        } catch (Exception e) {
+                                            // we ignore the exception
+                                            ignoreException(e);
+                                            // then wait for the time and readd the job
+                                            try {
+                                                Thread.sleep(sleepTime * 1000);
+                                            } catch (InterruptedException ie) {
+                                                // ignore
+                                                ignoreException(ie);
+                                            }
+                                            r.run();
+                                        }
+
                                     }
                                 } catch (RepositoryException e) {
                                     // ignore
@@ -868,14 +884,11 @@ public class JobEventHandler
                     // delay rescheduling?
                     if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
                         final long delay = (Long)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
+                        final Date fireDate = new Date();
+                        fireDate.setTime(System.currentTimeMillis() + delay);
+
                         final Runnable t = new Runnable() {
                             public void run() {
-                                try {
-                                    Thread.sleep(delay);
-                                } catch (InterruptedException e) {
-                                    // this should never happen
-                                    ignoreException(e);
-                                }
                                 try {
                                     queue.put(info);
                                 } catch (InterruptedException e) {
@@ -884,7 +897,13 @@ public class JobEventHandler
                                 }
                             }
                         };
-                        this.threadPool.execute(t);
+                        try {
+                            this.scheduler.fireJobAt(null, t, null, fireDate);
+                        } catch (Exception e) {
+                            // we ignore the exception and just put back the job in the queue
+                            ignoreException(e);
+                            t.run();
+                        }
                     } else {
                         // put directly into queue
                         try {
