@@ -26,6 +26,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
@@ -933,12 +935,16 @@ public class JobEventHandler
     }
 
     /**
-     * Search for active nodes
-     * @param topic
+     * Search for job nodes
+     * @param topic The job topic
+     * @param filterProps optional filter props
+     * @param locked only active jobs?
      * @return
      * @throws RepositoryException
      */
-    protected Collection<Event> queryCurrentJobs(String topic, boolean locked)  {
+    private Collection<Event> queryCurrentJobs(final String topic,
+                                               final Map<String, Object> filterProps,
+                                               final boolean locked)  {
         // we create a new session
         Session s = null;
         final List<Event> jobs = new ArrayList<Event>();
@@ -949,9 +955,11 @@ public class JobEventHandler
             buffer.append(this.repositoryPath);
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
+            buffer.append(") [not(@");
+            buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
             buffer.append(")");
             if ( topic != null ) {
-                buffer.append(" [");
+                buffer.append(" @");
                 buffer.append(EventHelper.NODE_PROPERTY_TOPIC);
                 buffer.append(" = '");
                 buffer.append(topic);
@@ -959,10 +967,32 @@ public class JobEventHandler
             }
             if ( locked ) {
                 buffer.append(" and ");
-                buffer.append("jcr:lockOwner");
+                buffer.append("@jcr:lockOwner");
+            }
+            if ( filterProps != null ) {
+                final Iterator<Map.Entry<String, Object>> i = filterProps.entrySet().iterator();
+                while ( i.hasNext() ) {
+                    final Map.Entry<String, Object> current = i.next();
+                    // check prop name first
+                    final String propName = this.getNodePropertyName(current.getKey());
+                    if ( propName != null ) {
+                        // check value
+                        final Value value = this.getNodePropertyValue(s.getValueFactory(), current.getValue());
+                        if ( value != null ) {
+                            buffer.append(" and @");
+                            buffer.append(propName);
+                            buffer.append(" = '");
+                            buffer.append(current.getValue());
+                            buffer.append("'");
+                        }
+                    }
+                }
             }
             buffer.append("]");
-            final Query q = qManager.createQuery(buffer.toString(), Query.XPATH);
+            final String queryString = buffer.toString();
+            logger.debug("Executing job query {}.", queryString);
+
+            final Query q = qManager.createQuery(queryString, Query.XPATH);
             final NodeIterator iter = q.execute().getNodes();
             while ( iter.hasNext() ) {
                 final Node eventNode = iter.nextNode();
@@ -989,13 +1019,34 @@ public class JobEventHandler
      * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String)
      */
     public Collection<Event> getCurrentJobs(String topic) {
-        return this.queryCurrentJobs(topic, true);
+        return this.getCurrentJobs(topic, null);
     }
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#scheduledJobs(java.lang.String)
+     * This is deprecated.
      */
     public Collection<Event> scheduledJobs(String topic) {
-        return this.queryCurrentJobs(topic, false);
+        return this.getScheduledJobs(topic);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String)
+     */
+    public Collection<Event> getScheduledJobs(String topic) {
+        return this.getScheduledJobs(topic, null);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String, java.util.Map)
+     */
+    public Collection<Event> getCurrentJobs(String topic, Map<String, Object> filterProps) {
+        return this.queryCurrentJobs(topic, null, true);
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String, java.util.Map)
+     */
+    public Collection<Event> getScheduledJobs(String topic, Map<String, Object> filterProps) {
+        return this.queryCurrentJobs(topic, null, false);
     }
 }

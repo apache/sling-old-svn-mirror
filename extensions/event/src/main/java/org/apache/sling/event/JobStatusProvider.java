@@ -19,6 +19,7 @@
 package org.apache.sling.event;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.osgi.service.event.Event;
 
@@ -28,11 +29,17 @@ import org.osgi.service.event.Event;
 public interface JobStatusProvider {
 
     /**
+     * @deprecated Use {@link #getScheduledJobs(String)} instead.
+     */
+    @Deprecated
+    Collection<Event> scheduledJobs(String topic);
+
+    /**
      * Return a list of currently schedulded jobs.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @return A non null collection.
      */
-    Collection<Event> scheduledJobs(String topic);
+    Collection<Event> getScheduledJobs(String topic);
 
     /**
      * Return the jobs which are currently in processing. If there are several application nodes
@@ -41,4 +48,21 @@ public interface JobStatusProvider {
      * @return A non null collection.
      */
     Collection<Event> getCurrentJobs(String topic);
+
+    /**
+     * Return a list of currently schedulded jobs.
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param filterProps An optional map of filter props that act like a template.
+     * @return A non null collection.
+     */
+    Collection<Event> getScheduledJobs(String topic, Map<String, Object> filterProps);
+
+    /**
+     * Return the jobs which are currently in processing. If there are several application nodes
+     * in the cluster, there could be more than one job in processing
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param filterProps An optional map of filter props that act like a template.
+     * @return A non null collection.
+     */
+    Collection<Event> getCurrentJobs(String topic, Map<String, Object> filterProps);
 }
