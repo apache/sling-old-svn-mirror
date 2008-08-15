@@ -80,7 +80,7 @@ public class JobEventHandler
     protected final Map<String, Boolean> processingMap = new HashMap<String, Boolean>();
 
     /** Default sleep time. */
-    protected static final long DEFAULT_SLEEP_TIME = 60;
+    protected static final long DEFAULT_SLEEP_TIME = 30;
 
     /** @scr.property valueRef="DEFAULT_SLEEP_TIME" */
     protected static final String CONFIG_PROPERTY_SLEEP_TIME = "sleep.time";
@@ -91,7 +91,7 @@ public class JobEventHandler
     /** @scr.property valueRef="DEFAULT_MAX_JOB_RETRIES" */
     protected static final String CONFIG_PROPERTY_MAX_JOB_RETRIES = "max.job.retries";
 
-    /** We check every 60 secs by default. */
+    /** We check every 30 secs by default. */
     protected long sleepTime;
 
     /** How often should a job be retried by default. */
