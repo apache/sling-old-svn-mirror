@@ -349,6 +349,43 @@ public abstract class AbstractRepositoryEventHandler
     }
 
     /**
+     * Return the converted repository property name
+     * @param name The OSGi event property name
+     * @return The converted name or null if not possible.
+     */
+    protected String getNodePropertyName(final String name) {
+        // if name contains a colon, we can't set it as a property
+        if ( name.indexOf(':') != -1 ) {
+            return null;
+        }
+        return ISO9075.encode(name);
+    }
+
+    /**
+     * Return the converted repository property value
+     * @param valueFactory The value factory
+     * @param eventValue The event value
+     * @return The converted value or null if not possible
+     */
+    protected Value getNodePropertyValue(final ValueFactory valueFactory, final Object eventValue) {
+        final Value val;
+        if (eventValue.getClass().isAssignableFrom(Calendar.class)) {
+            val = valueFactory.createValue((Calendar)eventValue);
+        } else if (eventValue.getClass().isAssignableFrom(Long.class)) {
+            val = valueFactory.createValue((Long)eventValue);
+        } else if (eventValue.getClass().isAssignableFrom(Double.class)) {
+            val = valueFactory.createValue(((Double)eventValue).doubleValue());
+        } else if (eventValue.getClass().isAssignableFrom(Boolean.class)) {
+            val = valueFactory.createValue((Boolean) eventValue);
+        } else if (eventValue instanceof String) {
+            val = valueFactory.createValue((String)eventValue);
+        } else {
+            val = null;
+        }
+        return val;
+    }
+
+    /**
      * Try to set the OSGi event property as a property of the node.
      * @param name
      * @param value
@@ -358,27 +395,14 @@ public abstract class AbstractRepositoryEventHandler
      */
     private boolean setProperty(String name, Object value, Node node)
     throws RepositoryException {
-        // if name contains a colon, we can't set it as a property
-        if ( name.indexOf(':') != -1 ) {
+        final String propName = this.getNodePropertyName(name);
+        if ( propName == null ) {
             return false;
         }
         final ValueFactory fac = node.getSession().getValueFactory();
-        final Value val;
-        if (value.getClass().isAssignableFrom(Calendar.class)) {
-            val = fac.createValue((Calendar)value);
-        } else if (value.getClass().isAssignableFrom(Long.class)) {
-            val = fac.createValue((Long)value);
-        } else if (value.getClass().isAssignableFrom(Double.class)) {
-            val = fac.createValue(((Double)value).doubleValue());
-        } else if (value.getClass().isAssignableFrom(Boolean.class)) {
-            val = fac.createValue((Boolean) value);
-        } else if (value instanceof String) {
-            val = fac.createValue((String)value);
-        } else {
-            val = null;
-        }
+        final Value val = this.getNodePropertyValue(fac, value);
         if ( val != null ) {
-            node.setProperty(ISO9075.encode(name), val);
+            node.setProperty(propName, val);
             return true;
         }
         return false;
