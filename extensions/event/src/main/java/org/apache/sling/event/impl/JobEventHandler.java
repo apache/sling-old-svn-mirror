@@ -632,6 +632,26 @@ public class JobEventHandler
         if ( jobId != null ) {
             eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, jobId);
         }
+        final long retryCount = OsgiUtil.toLong(event.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT), 0);
+        final long retries = OsgiUtil.toLong(event.getProperty(EventUtil.PROPERTY_JOB_RETRIES), this.maxJobRetries);
+        eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
+        eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRIES, retries);
+    }
+
+    /**
+     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#addEventProperties(javax.jcr.Node, java.util.Dictionary)
+     */
+    protected void addEventProperties(Node eventNode,
+                                      Dictionary<String, Object> properties)
+    throws RepositoryException {
+        super.addEventProperties(eventNode, properties);
+        // convert to integers (jcr only supports long)
+        if ( properties.get(EventUtil.PROPERTY_JOB_RETRIES) != null ) {
+            properties.put(EventUtil.PROPERTY_JOB_RETRIES, Integer.valueOf(properties.get(EventUtil.PROPERTY_JOB_RETRIES).toString()));
+        }
+        if ( properties.get(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
+            properties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, Integer.valueOf(properties.get(EventUtil.PROPERTY_JOB_RETRY_COUNT).toString()));
+        }
     }
 
     /**
@@ -756,19 +776,22 @@ public class JobEventHandler
                 retryCount = (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT);
             }
             retryCount++;
-            if ( retryCount > retries ) {
+            if ( retries != -1 && retryCount > retries ) {
                 reschedule = false;
             }
-            // update event with retry count
-            final Dictionary<String, Object> newProperties;
-            // create a new dictionary
-            newProperties = new Hashtable<String, Object>();
-            final String[] names = job.getPropertyNames();
-            for(int i=0; i<names.length; i++ ) {
-                newProperties.put(names[i], job.getProperty(names[i]));
+            if ( !reschedule ) {
+                // update event with retry count and retries
+                final Dictionary<String, Object> newProperties;
+                // create a new dictionary
+                newProperties = new Hashtable<String, Object>();
+                final String[] names = job.getPropertyNames();
+                for(int i=0; i<names.length; i++ ) {
+                    newProperties.put(names[i], job.getProperty(names[i]));
+                }
+                newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
+                newProperties.put(EventUtil.PROPERTY_JOB_RETRIES, retries);
+                job = new Event(job.getTopic(), newProperties);
             }
-            newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
-            job = new Event(job.getTopic(), newProperties);
         }
         final boolean parallelProcessing = job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
         // we have to use the same session for unlocking that we used for locking!
@@ -825,6 +848,15 @@ public class JobEventHandler
                     }
                 }
                 if ( reschedule ) {
+                    // update retry count and retries in the repository
+                    try {
+                        eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRIES, (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRIES));
+                        eventNode.setProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT, (Integer)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_COUNT));
+                        eventNode.save();
+                    } catch (RepositoryException re) {
+                        // if an exception occurs, we just log
+                        this.logger.error("Exception during job updating job rescheduling information.", re);
+                    }
                     final EventInfo info = new EventInfo();
                     try {
                         info.event = job;
