@@ -50,7 +50,6 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -331,6 +330,7 @@ public abstract class AbstractRepositoryEventHandler
                 try {
                     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     final ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    oos.writeInt(propsAsBlob.size());
                     for(final String propName : propsAsBlob) {
                         oos.writeObject(propName);
                         oos.writeObject(e.getProperty(propName));
