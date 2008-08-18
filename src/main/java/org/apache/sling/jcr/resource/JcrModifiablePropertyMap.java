@@ -26,13 +26,16 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 
 /**
  * This implementation of the value map allows to change
  * the properies and save them later on.
  */
-public class JcrModifiablePropertyMap extends JcrPropertyMap {
+public class JcrModifiablePropertyMap
+    extends JcrPropertyMap
+    implements PersistableValueMap {
 
     /** Set of removed and changed properties. */
     private Set<String> changedProperties;
