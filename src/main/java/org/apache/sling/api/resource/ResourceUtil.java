@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.Iterator;
+
 
 /**
  * The <code>ResourceUtil</code> class provides helper methods dealing
@@ -246,5 +248,23 @@ public class ResourceUtil {
      */
     public static boolean isNonExistingResource(Resource res) {
         return NonExistingResource.RESOURCE_TYPE_NON_EXISTING.equals(res.getResourceType());
+    }
+
+    /**
+     * Returns an <code>Iterator</code> of {@link Resource} objects loaded
+     * from the children of the given <code>Resource</code>.
+     * <p>
+     * This is a convenience method for {@link ResourceResolver#listChildren(Resource)}.
+     *
+     * @param parent The {@link Resource Resource} whose children are requested.
+     * @return An <code>Iterator</code> of {@link Resource} objects.
+     * @throws NullPointerException If <code>parent</code> is
+     *             <code>null</code>.
+     * @throws org.apache.sling.api.SlingException If any error occurs acquiring
+     *             the child resource iterator.
+     * @see ResourceResolver#listChildren(Resource)
+     */
+    public static Iterator<Resource> listChildren(Resource parent) {
+        return parent.getResourceResolver().listChildren(parent);
     }
 }
