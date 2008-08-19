@@ -317,14 +317,14 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * a message of <code>"null"</code>, effectively supressing the detailed
      * information of the cause. This class provides a way to do that explicitly
      * with a new constructor accepting both a message and a causing exception.
-     * 
+     *
      */
     private static class BetterScriptException extends ScriptException {
-        
+
         public BetterScriptException(String message, Exception cause) {
-            super(cause);
-            this.message = message;
+            super(message);
+            this.initCause(cause);
         }
-        
+
     }
 }
