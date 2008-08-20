@@ -101,7 +101,11 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     private ServletConfig servletConfig;
 
+    private RepositoryClassLoaderProvider repoCLProvider;
+
     public static final String SCRIPT_TYPE = "jsp";
+
+    private static final String CLASSLOADER_NAME = "admin";
 
     public JspScriptEngineFactory() {
         setExtensions(SCRIPT_TYPE);
@@ -248,23 +252,51 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         }
     }
 
-    protected void bindRepositoryClassLoaderProvider(
-            RepositoryClassLoaderProvider repositoryClassLoaderProvider) {
+    /**
+     * Bind the class load provider.
+     * @param repositoryClassLoaderProvider the new provider
+     */
+    protected void bindRepositoryClassLoaderProvider(RepositoryClassLoaderProvider rclp) {
+        if ( this.jspClassLoader != null ) {
+            this.ungetClassLoader();
+        }
+        this.getClassLoader(rclp);
+    }
+
+    /**
+     * Unbind the class loader provider.
+     * @param repositoryClassLoaderProvider the old provider
+     */
+    protected void unbindRepositoryClassLoaderProvider(RepositoryClassLoaderProvider rclp) {
+        if ( this.repoCLProvider == rclp ) {
+            this.ungetClassLoader();
+        }
+    }
+
+    /**
+     * Get the class loader
+     */
+    private void getClassLoader(RepositoryClassLoaderProvider rclp) {
         try {
-            jspClassLoader = repositoryClassLoaderProvider.getClassLoader("admin");
+            this.repoCLProvider = rclp;
+            this.jspClassLoader = rclp.getClassLoader(CLASSLOADER_NAME);
         } catch (RepositoryException re) {
             log.error("Cannot get JSP class loader", re);
         }
     }
 
-    protected void unbindRepositoryClassLoaderProvider(
-            RepositoryClassLoaderProvider repositoryClassLoaderProvider) {
-        if (jspClassLoader != null) {
-            repositoryClassLoaderProvider.ungetClassLoader(jspClassLoader);
-            jspClassLoader = null;
+    /**
+     * Unget the class loader
+     */
+    private void ungetClassLoader() {
+        if ( this.repoCLProvider != null ) {
+            if ( this.jspClassLoader != null ) {
+                this.repoCLProvider.ungetClassLoader(this.jspClassLoader);
+                this.jspClassLoader = null;
+            }
+            this.repoCLProvider = null;
         }
     }
-
     // ---------- Internal -----------------------------------------------------
 
     private class JspScriptEngine extends AbstractSlingScriptEngine {
