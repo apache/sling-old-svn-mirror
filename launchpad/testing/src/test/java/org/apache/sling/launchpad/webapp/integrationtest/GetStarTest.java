@@ -25,30 +25,30 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
  */
 public class GetStarTest extends HttpTestBase {
     private final String random = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
-    
+
     public void testGetStarHtml() throws IOException {
         getContent(HTTP_BASE_URL + "/*.html", CONTENT_TYPE_HTML);
         getContent(HTTP_BASE_URL + "/" + random + "/*.html", CONTENT_TYPE_HTML);
         getContent(HTTP_BASE_URL + "/" + random + "/" + random + "/*.html", CONTENT_TYPE_HTML);
         getContent(HTTP_BASE_URL + "/" + random + "/*.someselector.html", CONTENT_TYPE_HTML);
     }
-    
+
     public void testGetStarJson() throws IOException {
         getContent(HTTP_BASE_URL + "/*.json", CONTENT_TYPE_JSON);
         getContent(HTTP_BASE_URL + "/" + random + "/*.json", CONTENT_TYPE_JSON);
         getContent(HTTP_BASE_URL + "/" + random + "/*.12.json", CONTENT_TYPE_JSON);
     }
-    
+
     public void testGetStarWithScript() throws IOException {
         final String scriptPath = "/apps/" + random;
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
         urlsToDelete.add(WEBDAV_BASE_URL + scriptPath);
-        final String fakeNodePath = HTTP_BASE_URL + "/sling-test-pbrt/" + random + "/something/*.html"; 
+        final String fakeNodePath = HTTP_BASE_URL + "/sling-test-pbrt/" + random + "/something/*.html";
 
         {
             final String content = getContent(fakeNodePath, CONTENT_TYPE_HTML);
             assertTrue("Without script, default renderer marker must be present (" + content + ")",
-                    content.contains("Node dumped by HtmlRendererServlet"));
+                    content.contains("Resource dumped by HtmlRendererServlet"));
         }
 
         final String urlToDelete = uploadTestScript(scriptPath, "rendering-test.esp", "html.esp");
@@ -59,7 +59,7 @@ public class GetStarTest extends HttpTestBase {
         } finally {
             testClient.delete(urlToDelete);
         }
-        
+
     }
 
 }

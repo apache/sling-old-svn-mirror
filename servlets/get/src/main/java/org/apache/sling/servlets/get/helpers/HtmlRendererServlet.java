@@ -18,12 +18,9 @@ package org.apache.sling.servlets.get.helpers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.Map;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -53,79 +50,55 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
 
         final PrintWriter pw = resp.getWriter();
 
-        final Node node = r.adaptTo(Node.class);
-        /*
-         * TODO final SyntheticResourceData srd =
-         * r.adaptTo(SyntheticResourceData.class);
-         */
-        final Property p = r.adaptTo(Property.class);
-
-        try {
-            /*
-             * TODO if(srd != null) { renderer.render(pw, r, srd); } else
-             */
-            if (node != null) {
-                pw.println("<html><body>");
-                render(pw, r, node);
-                pw.println("</body></html>");
-
-            } else if (p != null) {
-                // for properties, we just output the String value
-                render(pw, r, p);
-            }
-
-        } catch (RepositoryException re) {
-            throw new ServletException("Cannot dump contents of "
-                + req.getResource().getPath(), re);
-        }
-    }
-
-    public void render(PrintWriter pw, Resource r, Node n)
-            throws RepositoryException {
-        pw.println("<h1>Node dumped by " + getClass().getSimpleName() + "</h1>");
-        pw.println("<p>Node path: <b>" + n.getPath() + "</b></p>");
+        pw.println("<html><body>");
+        pw.println("<h1>Resource dumped by " + getClass().getSimpleName() + "</h1>");
+        pw.println("<p>Resource path: <b>" + r.getPath() + "</b></p>");
         pw.println("<p>Resource metadata: <b>" + r.getResourceMetadata()
             + "</b></p>");
 
-        pw.println("<h2>Node properties</h2>");
-        for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
-            final Property p = pi.nextProperty();
-            printPropertyValue(pw, p);
+        @SuppressWarnings("unchecked")
+        final Map map = r.adaptTo(Map.class);
+        if ( map != null ) {
+            render(pw, r, map);
+        } else if ( r.adaptTo(String.class) != null ) {
+            render(pw, r, r.adaptTo(String.class));
+        } else {
+            pw.println("<p>Resource can't be adapted to a map or a string.</p>");
+        }
+        pw.println("</body></html>");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void render(PrintWriter pw, Resource r, Map map) {
+        pw.println("<h2>Resource properties</h2>");
+        final Iterator<Map.Entry> pi = map.entrySet().iterator();
+        while ( pi.hasNext() ) {
+            final Map.Entry p = pi.next();
+            printPropertyValue(pw, p.getKey().toString(), p.getValue());
+            pw.println();
         }
     }
 
-    public void render(PrintWriter pw, Resource r, Property p)
-            throws RepositoryException {
-        pw.print(p.getValue().getString());
+    private void render(PrintWriter pw, Resource r, String value) {
+        printPropertyValue(pw, "Resource Value", value);
     }
 
-    protected void dump(PrintWriter pw, Resource r, Property p)
-            throws RepositoryException {
-        pw.println("<h2>Property dumped by " + getClass().getSimpleName()
-            + "</h1>");
-        pw.println("<p>Property path:" + p.getPath() + "</p>");
-        pw.println("<p>Resource metadata: " + r.getResourceMetadata() + "</p>");
+    private void printPropertyValue(PrintWriter pw, String name, Object value) {
 
-        printPropertyValue(pw, p);
-    }
+        pw.print(name + ": <b>");
 
-    protected void printPropertyValue(PrintWriter pw, Property p)
-            throws RepositoryException {
-
-        pw.print(p.getName() + ": <b>");
-
-        if (p.getDefinition().isMultiple()) {
-            Value[] values = p.getValues();
+        if ( value.getClass().isArray() ) {
+            Object[] values = (Object[])value;
             pw.print('[');
             for (int i = 0; i < values.length; i++) {
                 if (i > 0) {
                     pw.print(", ");
                 }
-                pw.print(values[i].getString());
+                pw.print(values[i].toString());
             }
             pw.print(']');
         } else {
-            pw.print(p.getValue().getString());
+            pw.print(value.toString());
         }
 
         pw.print("</b><br/>");

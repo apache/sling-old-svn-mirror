@@ -22,7 +22,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -51,7 +52,7 @@ public class JcrPropertyMap implements ValueMap {
 
     public JcrPropertyMap(Node node) {
         this.node = node;
-        this.cache = new HashMap<String, Object>();
+        this.cache = new LinkedHashMap<String, Object>();
         this.fullyRead = false;
     }
 
@@ -244,10 +245,10 @@ public class JcrPropertyMap implements ValueMap {
                 boolean array = type.isArray();
 
                 if (array && multiValue) {
-                    return (T) convertToArray(prop.getValues(),
+                    return (T) convertToArray(prop, prop.getValues(),
                         type.getComponentType());
                 } else if (!array && !multiValue) {
-                    return convertToType(prop.getValue(), type);
+                    return convertToType(prop, -1, prop.getValue(), type);
                 }
             }
 
@@ -262,11 +263,11 @@ public class JcrPropertyMap implements ValueMap {
         return null;
     }
 
-    private <T> T[] convertToArray(Value[] jcrValues, Class<T> type)
+    private <T> T[] convertToArray(Property p, Value[] jcrValues, Class<T> type)
             throws ValueFormatException, RepositoryException {
         List<T> values = new ArrayList<T>();
         for (int i = 0; i < jcrValues.length; i++) {
-            T value = convertToType(jcrValues[i], type);
+            T value = convertToType(p, i, jcrValues[i], type);
             if (value != null) {
                 values.add(value);
             }
@@ -279,12 +280,18 @@ public class JcrPropertyMap implements ValueMap {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(Value jcrValue, Class<T> type)
+    private <T> T convertToType(Property p, int index, Value jcrValue, Class<T> type)
             throws ValueFormatException, RepositoryException {
 
         if (String.class == type) {
             return (T) jcrValue.getString();
         } else if (Long.class == type) {
+            if ( jcrValue.getType() == PropertyType.BINARY ) {
+                if ( index == -1 ) {
+                    return (T)new Long(p.getLength());
+                }
+                return (T)new Long(p.getLengths()[index]);
+            }
             return (T) new Long(jcrValue.getLong());
         } else if (Double.class == type) {
             return (T) new Double(jcrValue.getDouble());

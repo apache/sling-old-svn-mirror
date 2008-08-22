@@ -29,7 +29,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 public class NodetypeRenderingTest extends RenderingTestBase {
 
     private String secondFolderOfContentPath;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -56,7 +56,7 @@ public class NodetypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Node dumped by HtmlRendererServlet"));
+        assertTrue("Content contains default rendering",content.contains("Resource dumped by HtmlRendererServlet"));
     }
 
     public void testMiniScriptHtml() throws IOException {
@@ -90,15 +90,15 @@ public class NodetypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
+
     public void TODO_FAILS_testEspHtmlWithContentBasedPath() throws IOException {
-        
+
         // make sure there's no leftover rendering script
         {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertFalse("Content must not include ESP marker before test",content.contains("ESP template"));
         }
-        
+
         // put our script in the /apps/<second folder level of content> (SLING-125)
         final String path = "/apps/" + secondFolderOfContentPath;
         testClient.mkdirs(WEBDAV_BASE_URL, path);

@@ -59,7 +59,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Node dumped by HtmlRendererServlet"));
+        assertTrue("Content contains default rendering",content.contains("Resource dumped by HtmlRendererServlet"));
     }
 
     public void testEspHtml() throws IOException {
@@ -107,13 +107,13 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
     }
 
     public void TODO_FAILS_testEspHtmlWithContentBasedPath() throws IOException {
-        
+
         // make sure there's no leftover rendering script
         {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertFalse("Content must not include ESP marker before test",content.contains("ESP template"));
         }
-        
+
         // put our script in the /apps/<second folder level of content> (SLING-125)
         final String path = "/apps/" + secondFolderOfContentPath;
         testClient.mkdirs(WEBDAV_BASE_URL, path);
@@ -132,20 +132,20 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDeleteA = uploadTestScript("rendering-test.esp","html.esp");
         final String toDeleteB = uploadTestScript("rendering-test-2.esp","a4.esp");
         final String toDeleteC = uploadTestScript("rendering-test-3.esp","a4/print.esp");
-        
+
         try {
             String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Without selectors, content includes standard marker",content.contains("ESP template"));
             assertTrue("Without selectors, content contains formatted test text",content.contains("<p>" + testText + "</p>"));
-            
+
             content = getContent(displayUrl + ".a4.print.html", CONTENT_TYPE_HTML);
             assertTrue("With a4.print selectors, content includes marker 3",content.contains("Template #3 for ESP tests"));
             assertTrue("With a4.print selectors, content contains italic text",content.contains("<em>" + testText + "</em>"));
-            
+
             content = getContent(displayUrl + ".a4.html", CONTENT_TYPE_HTML);
             assertTrue("With a4 selector, content includes marker 2",content.contains("Template #2 for ESP tests"));
             assertTrue("With a4 selector, content contains bold text",content.contains("<b>" + testText + "</b>"));
-            
+
             content = getContent(displayUrl + ".different.html", CONTENT_TYPE_HTML);
             assertTrue("With different selector only, content includes standard marker",content.contains("ESP template"));
             assertTrue("With different selector only, content contains formatted test text",content.contains("<p>" + testText + "</p>"));
@@ -177,9 +177,9 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             assertTrue("Content contains scripted stuff (" + content + ")",
                     content.contains("something scripted"));
             assertFalse("Script opening tag must be broken in two in content (" + content + ")",
-                    content.contains("<script>something")); 
+                    content.contains("<script>something"));
             assertFalse("Script closing tag must be broken in two in content (" + content + ")",
-                    content.contains("scripted</script>")); 
+                    content.contains("scripted</script>"));
         } finally {
             testClient.delete(toDelete);
         }
@@ -194,9 +194,9 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             assertTrue("Content contains scripted stuff (" + content + ")",
                     content.contains("more scripting"));
             assertFalse("Script opening tag must be broken in two in content (" + content + ")",
-                    content.contains("<script>more")); 
+                    content.contains("<script>more"));
             assertFalse("Script closing tag must be broken in two in content (" + content + ")",
-                    content.contains("scripting</script>")); 
+                    content.contains("scripting</script>"));
         } finally {
             testClient.delete(toDelete);
         }
