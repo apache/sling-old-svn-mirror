@@ -27,10 +27,10 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
  */
 
 public class PathBasedResourceTypeTest extends HttpTestBase {
-    
+
     public static final String testPath = "sling-integration-test-" + System.currentTimeMillis();
     public static final String contentPath = "/sling-test-pbrt/" + testPath;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -39,11 +39,11 @@ public class PathBasedResourceTypeTest extends HttpTestBase {
 
     public void testDefaultResourceType() throws IOException {
         final TestNode tn = new TestNode(HTTP_BASE_URL + contentPath, null);
-        
+
         // without script -> default rendering
         String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Node dumped by HtmlRendererServlet"));
-        
+        assertTrue("Content contains default rendering",content.contains("Resource dumped by HtmlRendererServlet"));
+
         // check default resource type
         final String scriptPath = "/apps/" + testPath;
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
@@ -56,14 +56,14 @@ public class PathBasedResourceTypeTest extends HttpTestBase {
             testClient.delete(urlsToDelete);
         }
     }
-    
+
     public void testExplicitResourceType() throws IOException {
-        
+
         final String resourceType = getClass().getSimpleName();
         final Map<String, String> properties = new HashMap<String, String>();
         properties.put(SLING_RESOURCE_TYPE, resourceType);
         final TestNode tn = new TestNode(HTTP_BASE_URL + contentPath, properties);
-        
+
         urlsToDelete.add(uploadTestScript(tn.scriptPath, "rendering-test-2.esp", "html.esp"));
         final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
         assertTrue("Test script marker found in content (" + content + ")",content.contains("Template #2 for ESP tests"));
