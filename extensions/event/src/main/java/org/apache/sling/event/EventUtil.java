@@ -18,10 +18,30 @@
  */
 package org.apache.sling.event;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil.JobStatusNotifier.NotifierContext;
 import org.osgi.service.event.Event;
 import org.slf4j.Logger;
@@ -243,5 +263,173 @@ public abstract class EventUtil {
          * Execute the job in the background
          */
         void execute(Runnable job);
+    }
+
+    /**
+     * Add all java properties as properties to the node.
+     * If the name and the value of a map entry can easily converted into
+     * a repository property, it is directly added. All other java
+     * properties are stored in one binary property.
+     *
+     * @param node The node where all properties are added to
+     * @param properties The map of properties.
+     * @param ignoreProps optional list of property which should be ignored
+     * @param binPropertyName The name of the binary property.
+     * @throws RepositoryException
+     */
+    public static void addProperties(final Node node,
+                                     final Map<String, Object> properties,
+                                     final List<String> ignoreProps,
+                                     final String binPropertyName)
+    throws RepositoryException {
+        if ( properties != null ) {
+            // check which props we can write directly and
+            // which we need to write as a binary blob
+            final List<String> propsAsBlob = new ArrayList<String>();
+
+            final Iterator<Map.Entry<String, Object>> i = properties.entrySet().iterator();
+            while ( i.hasNext() ) {
+                final Map.Entry<String, Object> current = i.next();
+
+                if (ignoreProps == null || !ignoreProps.contains(current.getKey()) ) {
+                    // sanity check
+                    if ( current.getValue() != null ) {
+                        if ( !setProperty(current.getKey(), current.getValue(), node) ) {
+                            propsAsBlob.add(current.getKey());
+                        }
+                    }
+                }
+            }
+            // write the remaining properties as a blob
+            if ( propsAsBlob.size() > 0 ) {
+                try {
+                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    final ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    oos.writeInt(propsAsBlob.size());
+                    for(final String propName : propsAsBlob) {
+                        oos.writeObject(propName);
+                        oos.writeObject(properties.get(propName));
+                    }
+                    oos.close();
+                    node.setProperty(binPropertyName, new ByteArrayInputStream(baos.toByteArray()));
+                } catch (IOException ioe) {
+                    throw new RepositoryException("Unable to serialize properties.", ioe);
+                }
+            }
+        }
+    }
+
+    /**
+     * Read properties from a repository node and create a property map.
+     * @throws RepositoryException
+     * @throws ClassNotFoundException
+     */
+    public static Map<String, Object> readProperties(final Node node,
+                                                     final String binPropertyName,
+                                                     final List<String> ignorePrefixes)
+    throws RepositoryException, ClassNotFoundException {
+        final Map<String, Object> properties = new HashMap<String, Object>();
+
+        // check the properties blob
+        if ( node.hasProperty(binPropertyName) ) {
+            try {
+                final ObjectInputStream ois = new ObjectInputStream(node.getProperty(binPropertyName).getStream());
+                int length = ois.readInt();
+                for(int i=0;i<length;i++) {
+                    final String key = (String)ois.readObject();
+                    final Object value = ois.readObject();
+                    properties.put(key, value);
+                }
+            } catch (IOException ioe) {
+                throw new RepositoryException("Unable to deserialize event properties.", ioe);
+            }
+        }
+        // now all properties that have been set directly
+        final PropertyIterator pI = node.getProperties();
+        while ( pI.hasNext() ) {
+            final Property p = pI.nextProperty();
+            if ( !p.getName().startsWith("jcr:") &&
+                 (ignorePrefixes == null || !ignorePrefixes.contains(p.getName())))  {
+                final String name = ISO9075.decode(p.getName());
+                final Value value = p.getValue();
+                final Object o;
+                switch (value.getType()) {
+                    case PropertyType.BOOLEAN:
+                        o = value.getBoolean(); break;
+                    case PropertyType.DATE:
+                        o = value.getDate(); break;
+                    case PropertyType.DOUBLE:
+                        o = value.getDouble(); break;
+                    case PropertyType.LONG:
+                        o = value.getLong(); break;
+                    case PropertyType.STRING:
+                        o = value.getString(); break;
+                    default: // this should never happen - we convert to a string...
+                        o = value.getString();
+                }
+                properties.put(name, o);
+            }
+        }
+        return properties;
+    }
+
+    /**
+     * Return the converted repository property name
+     * @param name The java object property name
+     * @return The converted name or null if not possible.
+     */
+    public static String getNodePropertyName(final String name) {
+        // if name contains a colon, we can't set it as a property
+        if ( name.indexOf(':') != -1 ) {
+            return null;
+        }
+        return ISO9075.encode(name);
+    }
+
+    /**
+     * Return the converted repository property value
+     * @param valueFactory The value factory
+     * @param eventValue The event value
+     * @return The converted value or null if not possible
+     */
+    public static Value getNodePropertyValue(final ValueFactory valueFactory, final Object eventValue) {
+        final Value val;
+        if (eventValue.getClass().isAssignableFrom(Calendar.class)) {
+            val = valueFactory.createValue((Calendar)eventValue);
+        } else if (eventValue.getClass().isAssignableFrom(Long.class)) {
+            val = valueFactory.createValue((Long)eventValue);
+        } else if (eventValue.getClass().isAssignableFrom(Double.class)) {
+            val = valueFactory.createValue(((Double)eventValue).doubleValue());
+        } else if (eventValue.getClass().isAssignableFrom(Boolean.class)) {
+            val = valueFactory.createValue((Boolean) eventValue);
+        } else if (eventValue instanceof String) {
+            val = valueFactory.createValue((String)eventValue);
+        } else {
+            val = null;
+        }
+        return val;
+    }
+
+    /**
+     * Try to set the java property as a property of the node.
+     * @param name
+     * @param value
+     * @param node
+     * @return
+     * @throws RepositoryException
+     */
+    private static boolean setProperty(String name, Object value, Node node)
+    throws RepositoryException {
+        final String propName = getNodePropertyName(name);
+        if ( propName == null ) {
+            return false;
+        }
+        final ValueFactory fac = node.getSession().getValueFactory();
+        final Value val = getNodePropertyValue(fac, value);
+        if ( val != null ) {
+            node.setProperty(propName, val);
+            return true;
+        }
+        return false;
     }
 }

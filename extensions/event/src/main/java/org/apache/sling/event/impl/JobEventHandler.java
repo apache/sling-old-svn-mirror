@@ -974,10 +974,10 @@ public class JobEventHandler
                 while ( i.hasNext() ) {
                     final Map.Entry<String, Object> current = i.next();
                     // check prop name first
-                    final String propName = this.getNodePropertyName(current.getKey());
+                    final String propName = EventUtil.getNodePropertyName(current.getKey());
                     if ( propName != null ) {
                         // check value
-                        final Value value = this.getNodePropertyValue(s.getValueFactory(), current.getValue());
+                        final Value value = EventUtil.getNodePropertyValue(s.getValueFactory(), current.getValue());
                         if ( value != null ) {
                             buffer.append(" and @");
                             buffer.append(propName);
