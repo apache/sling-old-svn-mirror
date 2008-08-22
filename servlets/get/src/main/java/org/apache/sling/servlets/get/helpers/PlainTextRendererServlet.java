@@ -18,17 +18,15 @@ package org.apache.sling.servlets.get.helpers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.Map;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
@@ -57,29 +55,21 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         resp.setCharacterEncoding("UTF-8");
 
         final PrintWriter pw = resp.getWriter();
-        try {
-            renderItem(pw, r);
-        } catch (RepositoryException re) {
-            throw new ServletException("Exception while rendering Resource "
-                + req.getResource(), re);
-        }
+        renderResource(pw, r);
     }
 
-    /** Render a Node or Property */
-    private void renderItem(PrintWriter pw, Resource r)
-            throws ServletException, RepositoryException {
-        Node n = null;
-        Property p = null;
-
-        if ((n = r.adaptTo(Node.class)) != null) {
-            dump(pw, r, n);
-
-        } else if ((p = r.adaptTo(Property.class)) != null) {
-            dump(pw, r, p);
-
+    /** Render a resource (map or string) */
+    private void renderResource(PrintWriter pw, Resource r)
+            throws ServletException {
+        @SuppressWarnings("unchecked")
+        final Map map = r.adaptTo(Map.class);
+        if ( map != null ) {
+            dump(pw, r, map);
+        } else if ( r.adaptTo(String.class) != null ) {
+            printPropertyValue(pw, ResourceUtil.getName(r), r.adaptTo(String.class), false);
         } else {
             throw new ServletException("Resource " + r
-                + " does not adapt to a Node or a Property");
+                + " does not adapt to a map or string.");
         }
     }
 
@@ -91,44 +81,41 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
      * resp.getOutputStream().write(data.toString().getBytes()); }
      */
 
-    protected void dump(PrintWriter pw, Resource r, Node n)
-            throws RepositoryException {
-        pw.println("** Node dumped by " + getClass().getSimpleName() + "**");
-        pw.println("Node path:" + n.getPath());
+    @SuppressWarnings("unchecked")
+    protected void dump(PrintWriter pw, Resource r, Map map) {
+        pw.println("** Resource dumped by " + getClass().getSimpleName() + "**");
+        pw.println("Resource path:" + r.getPath());
         pw.println("Resource metadata: " + r.getResourceMetadata());
 
-        pw.println("\n** Node properties **");
-        for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
-            final Property p = pi.nextProperty();
-            printPropertyValue(pw, p, true);
+        pw.println("\n** Resource properties **");
+        final Iterator<Map.Entry> pi = map.entrySet().iterator();
+        while ( pi.hasNext() ) {
+            final Map.Entry p = pi.next();
+            printPropertyValue(pw, p.getKey().toString(), p.getValue(), true);
             pw.println();
         }
     }
 
-    protected void dump(PrintWriter pw, Resource r, Property p)
-            throws RepositoryException {
-        printPropertyValue(pw, p, false);
-    }
-
-    protected void printPropertyValue(PrintWriter pw, Property p,
-            boolean includeName) throws RepositoryException {
+    protected void printPropertyValue(PrintWriter pw, String name,
+            Object value,
+            boolean includeName) {
 
         if (includeName) {
-            pw.print(p.getName() + ": ");
+            pw.print(name + ": ");
         }
 
-        if (p.getDefinition().isMultiple()) {
-            Value[] values = p.getValues();
+        if ( value.getClass().isArray() ) {
+            final Object[] values = (Object[])value;
             pw.print('[');
             for (int i = 0; i < values.length; i++) {
                 if (i > 0) {
                     pw.print(", ");
                 }
-                pw.print(values[i].getString());
+                pw.print(values[i].toString());
             }
             pw.print(']');
         } else {
-            pw.print(p.getValue().getString());
+            pw.print(value.toString());
         }
     }
 }
