@@ -82,8 +82,7 @@
                 <configuration>
                   <!-- No javadocs at all -->
                     <excludePackageNames>
-                        org.apache.sling.commons.log,
-                        org/slf4j/impl
+                        org.apache.sling.commons.log,org/slf4j/impl
                     </excludePackageNames>
                 </configuration>
             </plugin>
