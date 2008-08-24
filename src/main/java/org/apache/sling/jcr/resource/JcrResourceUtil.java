@@ -249,8 +249,8 @@ public class JcrResourceUtil {
      * will be created with the given nodeType
      *
      * @param path to create
-     * @param intermediateNodeType to use for creation of intermediate nodes
-     * @param nodeType to use for creation of the final node
+     * @param intermediateNodeType to use for creation of intermediate nodes (or null)
+     * @param nodeType to use for creation of the final node (or null)
      * @param session to use
      * @param autoSave Should save be called when a new node is created?
      * @return the Node at path
@@ -274,7 +274,11 @@ public class JcrResourceUtil {
                     final String token = st.nextToken();
                     if ( !node.hasNode(token) ) {
                         try {
-                            node.addNode(token, intermediateNodeType);
+                            if ( intermediateNodeType != null ) {
+                                node.addNode(token, intermediateNodeType);
+                            } else {
+                                node.addNode(token);
+                            }
                             if ( autoSave ) node.save();
                         } catch (RepositoryException re) {
                             // we ignore this as this folder might be created from a different task
@@ -286,7 +290,11 @@ public class JcrResourceUtil {
                 path = path.substring(pos + 1);
             }
             if ( !node.hasNode(path) ) {
-                node.addNode(path, nodeType);
+                if ( nodeType != null ) {
+                    node.addNode(path, nodeType);
+                } else {
+                    node.addNode(path);
+                }
                 if ( autoSave ) node.save();
             }
             return node.getNode(path);
