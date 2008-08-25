@@ -19,10 +19,8 @@
 package org.apache.sling.event.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -101,18 +99,16 @@ public abstract class AbstractRepositoryEventHandler
     protected SlingSettingsService settingsService;
 
     /** List of ignored properties to write to the repository. */
-    private static final List<String> IGNORE_PROPERTIES = new ArrayList<String>();
-    static {
-        IGNORE_PROPERTIES.add(EventUtil.PROPERTY_DISTRIBUTE);
-        IGNORE_PROPERTIES.add(EventUtil.PROPERTY_APPLICATION);
-        IGNORE_PROPERTIES.add(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME);
-    }
+    private static final String[] IGNORE_PROPERTIES = new String[] {
+        EventUtil.PROPERTY_DISTRIBUTE,
+        EventUtil.PROPERTY_APPLICATION,
+        EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME
+    };
 
     /** List of ignored prefixes to read from the repository. */
-    private static final List<String> IGNORE_PREFIXES = new ArrayList<String>();
-    static {
-        IGNORE_PREFIXES.add(EventHelper.EVENT_PREFIX);
-    }
+    private static final String[] IGNORE_PREFIXES = new String[] {
+        EventHelper.EVENT_PREFIX
+    };
 
     /**
      * Activate this component.
