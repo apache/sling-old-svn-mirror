@@ -265,11 +265,43 @@ public class JcrResourceUtil {
         if (path == null || path.length() == 0 || "/".equals(path)) {
             return session.getRootNode();
         } else if (!session.itemExists(path)) {
-            Node node = session.getRootNode();
-            path = path.substring(1);
-            int pos = path.lastIndexOf('/');
+            return createPath(session.getRootNode(),
+                    path.substring(1),
+                    intermediateNodeType,
+                    nodeType,
+                    autoSave);
+        } else {
+            return (Node) session.getItem(path);
+        }
+    }
+
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given Path.
+     * In case it has to create the Node all non-existent intermediate path-elements
+     * will be create with the given intermediate node type and the returned node
+     * will be created with the given nodeType
+     *
+     * @param parentNode starting node
+     * @param relativePath to create
+     * @param intermediateNodeType to use for creation of intermediate nodes (or null)
+     * @param nodeType to use for creation of the final node (or null)
+     * @param autoSave Should save be called when a new node is created?
+     * @return the Node at path
+     * @throws RepositoryException in case of exception accessing the Repository
+     */
+    public static Node createPath(Node   parentNode,
+                                  String relativePath,
+                                  String intermediateNodeType,
+                                  String nodeType,
+                                  boolean autoSave)
+    throws RepositoryException {
+        if (relativePath == null || relativePath.length() == 0 || "/".equals(relativePath)) {
+            return parentNode;
+        } else if (!parentNode.hasNode(relativePath)) {
+            Node node = parentNode;
+            int pos = relativePath.lastIndexOf('/');
             if ( pos != -1 ) {
-                final StringTokenizer st = new StringTokenizer(path.substring(0, pos), "/");
+                final StringTokenizer st = new StringTokenizer(relativePath.substring(0, pos), "/");
                 while ( st.hasMoreTokens() ) {
                     final String token = st.nextToken();
                     if ( !node.hasNode(token) ) {
@@ -281,25 +313,26 @@ public class JcrResourceUtil {
                             }
                             if ( autoSave ) node.save();
                         } catch (RepositoryException re) {
+                            re.printStackTrace();
                             // we ignore this as this folder might be created from a different task
                             node.refresh(false);
                         }
                     }
                     node = node.getNode(token);
                 }
-                path = path.substring(pos + 1);
+                relativePath = relativePath.substring(pos + 1);
             }
-            if ( !node.hasNode(path) ) {
+            if ( !node.hasNode(relativePath) ) {
                 if ( nodeType != null ) {
-                    node.addNode(path, nodeType);
+                    node.addNode(relativePath, nodeType);
                 } else {
-                    node.addNode(path);
+                    node.addNode(relativePath);
                 }
                 if ( autoSave ) node.save();
             }
-            return node.getNode(path);
+            return node.getNode(relativePath);
         } else {
-            return (Node) session.getItem(path);
+            return parentNode.getNode(relativePath);
         }
     }
 }
