@@ -65,6 +65,13 @@ public class EventPropertiesMap
     }
 
     /**
+     * Construct a new map.
+     */
+    public EventPropertiesMap() {
+        this.delegatee = new HashMap<String, Object>();
+    }
+
+    /**
      * @see java.util.Map#clear()
      */
     public void clear() {
