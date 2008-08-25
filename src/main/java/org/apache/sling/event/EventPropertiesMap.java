@@ -184,4 +184,11 @@ public class EventPropertiesMap
     public Enumeration<String> keys() {
         return new IteratorEnumeration(this.keySet().iterator());
     }
+
+    /**
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return this.delegatee.toString();
+    }
 }
