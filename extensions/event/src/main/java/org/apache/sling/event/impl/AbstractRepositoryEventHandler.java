@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -32,6 +31,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
@@ -40,6 +40,7 @@ import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -217,7 +218,7 @@ public abstract class AbstractRepositoryEventHandler
     protected void startWriterSession() throws RepositoryException {
         this.writerSession = this.createSession();
         if ( this.repositoryPath != null ) {
-            this.createRepositoryPath();
+            this.ensureRepositoryPath();
         }
     }
 
@@ -238,56 +239,39 @@ public abstract class AbstractRepositoryEventHandler
     }
 
     /**
-     * Create the repository path in the repository.
+     * Check if the repository path already exists. If not, create it.
      */
-    protected void createRepositoryPath()
+    protected Node ensureRepositoryPath()
     throws RepositoryException {
-        if ( !this.writerSession.itemExists(this.repositoryPath) ) {
-            Node node = this.writerSession.getRootNode();
-            String path = this.repositoryPath.substring(1);
-            int pos = path.lastIndexOf('/');
-            if ( pos != -1 ) {
-                final StringTokenizer st = new StringTokenizer(path.substring(0, pos), "/");
-                while ( st.hasMoreTokens() ) {
-                    final String token = st.nextToken();
-                    if ( !node.hasNode(token) ) {
-                        try {
-                            node.addNode(token, "nt:folder");
-                            node.save();
-                        } catch (RepositoryException re) {
-                            // we ignore this as this folder might be created from a different task
-                            node.refresh(false);
-                        }
-                    }
-                    node = node.getNode(token);
-                }
-                path = path.substring(pos + 1);
-            }
-            if ( !node.hasNode(path) ) {
-                node.addNode(path, this.getContainerNodeType());
-                node.save();
-            }
+        final Node node = JcrResourceUtil.createPath(this.repositoryPath,
+                                   EventHelper.NODETYPE_FOLDER,
+                                   EventHelper.NODETYPE_FOLDER,
+                                   this.writerSession, true);
+        if ( !node.isNodeType(JcrConstants.MIX_LOCKABLE) ) {
+            node.addMixin(JcrConstants.MIX_LOCKABLE);
+            node.save();
         }
+        return node;
     }
 
-    protected String getContainerNodeType() {
-        return EventHelper.EVENTS_NODE_TYPE;
-    }
-
+    /**
+     * Return the node type for the event.
+     */
     protected String getEventNodeType() {
         return EventHelper.EVENT_NODE_TYPE;
     }
 
     /**
      * Write an event to the repository.
-     * @param e
+     * @param e The event
+     * @param suggestName A suggest name/path for the node.
      * @throws RepositoryException
      * @throws IOException
      */
     protected Node writeEvent(Event e, String suggestedName)
     throws RepositoryException {
         // create new node with name of topic
-        final Node rootNode = (Node) this.writerSession.getItem(this.repositoryPath);
+        final Node rootNode = this.ensureRepositoryPath();
 
         final String nodeType = this.getEventNodeType();
         final String nodeName;
@@ -298,7 +282,10 @@ public abstract class AbstractRepositoryEventHandler
             final int sepPos = nodeType.indexOf(':');
             nodeName = nodeType.substring(sepPos+1) + "-" + this.applicationId + "-" + now.getTime().getTime();
         }
-        final Node eventNode = rootNode.addNode(nodeName, nodeType);
+        final Node eventNode = JcrResourceUtil.createPath(rootNode,
+                nodeName,
+                EventHelper.NODETYPE_FOLDER,
+                nodeType, false);
 
         eventNode.setProperty(EventHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, e.getTopic());
@@ -343,6 +330,12 @@ public abstract class AbstractRepositoryEventHandler
         }
     }
 
+    /**
+     * Add properties from the node to the event properties.
+     * @param eventNode The repository node.
+     * @param properties The event properties.
+     * @throws RepositoryException
+     */
     protected void addEventProperties(Node eventNode, Dictionary<String, Object> properties)
     throws RepositoryException {
         // nothing to do
