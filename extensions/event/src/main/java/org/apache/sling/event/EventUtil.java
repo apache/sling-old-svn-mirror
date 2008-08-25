@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -278,11 +279,32 @@ public abstract class EventUtil {
      * @throws RepositoryException
      */
     public static void addProperties(final Node node,
+                                     final Map<String, Object> properties,
+                                     final String[] ignoreProps,
+                                     final String binPropertyName)
+    throws RepositoryException {
+        addProperties(node, new EventPropertiesMap(properties), ignoreProps, binPropertyName);
+    }
+
+    /**
+     * Add all java properties as properties to the node.
+     * If the name and the value of a map entry can easily converted into
+     * a repository property, it is directly added. All other java
+     * properties are stored in one binary property.
+     *
+     * @param node The node where all properties are added to
+     * @param properties The map of properties.
+     * @param ignoreProps optional list of property which should be ignored
+     * @param binPropertyName The name of the binary property.
+     * @throws RepositoryException
+     */
+    public static void addProperties(final Node node,
                                      final EventPropertiesMap properties,
-                                     final List<String> ignoreProps,
+                                     final String[] ignoreProps,
                                      final String binPropertyName)
     throws RepositoryException {
         if ( properties != null ) {
+            final List<String> ignorePropList = (ignoreProps == null ? null : Arrays.asList(ignoreProps));
             // check which props we can write directly and
             // which we need to write as a binary blob
             final List<String> propsAsBlob = new ArrayList<String>();
@@ -291,7 +313,7 @@ public abstract class EventUtil {
             while ( i.hasNext() ) {
                 final Map.Entry<String, Object> current = i.next();
 
-                if (ignoreProps == null || !ignoreProps.contains(current.getKey()) ) {
+                if (ignorePropList == null || !ignorePropList.contains(current.getKey()) ) {
                     // sanity check
                     if ( current.getValue() != null ) {
                         if ( !setProperty(current.getKey(), current.getValue(), node) ) {
@@ -326,7 +348,7 @@ public abstract class EventUtil {
      */
     public static EventPropertiesMap readProperties(final Node node,
                                                     final String binPropertyName,
-                                                    final List<String> ignorePrefixes)
+                                                    final String[] ignorePrefixes)
     throws RepositoryException, ClassNotFoundException {
         final Map<String, Object> properties = new HashMap<String, Object>();
 
@@ -348,8 +370,14 @@ public abstract class EventUtil {
         final PropertyIterator pI = node.getProperties();
         while ( pI.hasNext() ) {
             final Property p = pI.nextProperty();
-            if ( !p.getName().startsWith("jcr:") &&
-                 (ignorePrefixes == null || !ignorePrefixes.contains(p.getName())))  {
+            boolean ignore = p.getName().startsWith("jcr:");
+            if ( !ignore && ignorePrefixes != null ) {
+                int index = 0;
+                while ( !ignore && index < ignorePrefixes.length ) {
+                    ignore = p.getName().startsWith(ignorePrefixes[index]);
+                }
+            }
+            if ( !ignore ) {
                 final String name = ISO9075.decode(p.getName());
                 final Value value = p.getValue();
                 final Object o;
