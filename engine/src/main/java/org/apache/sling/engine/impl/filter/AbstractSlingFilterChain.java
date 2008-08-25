@@ -28,6 +28,7 @@ import javax.servlet.ServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestProgressTracker;
 
 public abstract class AbstractSlingFilterChain implements FilterChain {
 
@@ -49,6 +50,10 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
         this.current++;
 
         if (this.current < this.filters.length) {
+            
+            RequestProgressTracker tracker = ((SlingHttpServletRequest) request).getRequestProgressTracker();
+            tracker.log("Calling filter: {0}", this.filters[this.current].getClass().getName());
+            
             this.filters[this.current].doFilter(request, response, this);
         } else {
             this.render((SlingHttpServletRequest) request,
