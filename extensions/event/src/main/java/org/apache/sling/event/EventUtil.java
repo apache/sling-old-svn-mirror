@@ -375,6 +375,7 @@ public abstract class EventUtil {
                 int index = 0;
                 while ( !ignore && index < ignorePrefixes.length ) {
                     ignore = p.getName().startsWith(ignorePrefixes[index]);
+                    index++;
                 }
             }
             if ( !ignore ) {
