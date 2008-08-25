@@ -153,7 +153,7 @@ public class JobEventHandler
     /**
      * Return the query string for the clean up.
      */
-    protected String getCleanUpQueryString() {
+    private String getCleanUpQueryString() {
         final Calendar deleteBefore = Calendar.getInstance();
         deleteBefore.add(Calendar.MINUTE, -this.cleanupPeriod);
         final String dateString = ISO8601.format(deleteBefore);
@@ -229,26 +229,26 @@ public class JobEventHandler
                 }
                 final EventInfo info = new EventInfo();
                 info.event = event;
-                final String nodeName = this.getNodeName(event);
+                final String nodePath = this.getNodePath(event);
 
                 // if the job has no job id, we can just write the job to the repo and don't
                 // need locking
                 final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
                 if ( jobId == null ) {
                     try {
-                        final Node eventNode = this.writeEvent(event, nodeName);
+                        final Node eventNode = this.writeEvent(event, nodePath);
                         info.nodePath = eventNode.getPath();
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job '" + nodeName + "' to repository.", re);
+                        this.logger.error("Exception during writing new job '" + nodePath + "' to repository.", re);
                     }
                 } else {
                     try {
                         // let's first search for an existing node with the same id
-                        final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
+                        final Node parentNode = this.ensureRepositoryPath();
                         Node foundNode = null;
-                        if ( parentNode.hasNode(nodeName) ) {
-                            foundNode = parentNode.getNode(nodeName);
+                        if ( parentNode.hasNode(nodePath) ) {
+                            foundNode = parentNode.getNode(nodePath);
                         }
                         if ( foundNode != null ) {
                             // if the node is locked, someone else was quicker
@@ -268,7 +268,7 @@ public class JobEventHandler
                         } else {
                             // We now write the event into the repository
                             try {
-                                final Node eventNode = this.writeEvent(event, nodeName);
+                                final Node eventNode = this.writeEvent(event, nodePath);
                                 info.nodePath = eventNode.getPath();
                             } catch (ItemExistsException iee) {
                                 // someone else did already write this node in the meantime
@@ -277,7 +277,7 @@ public class JobEventHandler
                         }
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job '" + nodeName + "' to repository.", re);
+                        this.logger.error("Exception during writing new job '" + nodePath + "' to repository.", re);
                     }
                 }
                 // if we were able to write the event into the repository
@@ -300,13 +300,13 @@ public class JobEventHandler
     protected void runInBackground() throws RepositoryException {
         this.backgroundSession = this.createSession();
         this.backgroundSession.getWorkspace().getObservationManager()
-        .addEventListener(this,
-                          javax.jcr.observation.Event.PROPERTY_REMOVED,
-                          this.repositoryPath,
-                          true,
-                          null,
-                          new String[] {this.getEventNodeType()},
-                          true);
+                .addEventListener(this,
+                                  javax.jcr.observation.Event.PROPERTY_REMOVED,
+                                  this.repositoryPath,
+                                  true,
+                                  null,
+                                  new String[] {this.getEventNodeType()},
+                                  true);
         // load unprocessed jobs from repository
         this.loadJobs();
         while ( this.running ) {
@@ -426,13 +426,6 @@ public class JobEventHandler
                 }
             }
         }
-    }
-
-    /**
-     * @see org.apache.sling.engine.event.impl.JobPersistenceHandler#getContainerNodeType()
-     */
-    protected String getContainerNodeType() {
-        return EventHelper.JOBS_NODE_TYPE;
     }
 
     /**
@@ -566,18 +559,16 @@ public class JobEventHandler
     }
 
     /**
-     * Create a unique node name for the job.
+     * Create a unique node path (folder and name) for the job.
      */
-    protected String getNodeName(Event event) {
+    private String getNodePath(Event event) {
+        final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC)).replace('/', '.');
         final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
-        final String name;
+
         if ( jobId != null ) {
-            final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC));
-            name = jobTopic + " " + jobId;
-        } else {
-            name = "Job " + UUID.randomUUID().toString();
+            return jobTopic + "/" + filter(jobId);
         }
-        return filter(name);
+        return jobTopic + "/Job " + UUID.randomUUID().toString();
     }
 
     /**
@@ -585,7 +576,7 @@ public class JobEventHandler
      * @param event The original event.
      * @param eventNode The node in the repository where the job is stored.
      */
-    protected void processJob(Event event, Node eventNode)  {
+    private void processJob(Event event, Node eventNode)  {
         final boolean parallelProcessing = event.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         boolean unlock = true;
@@ -627,7 +618,7 @@ public class JobEventHandler
      * @param e
      * @return
      */
-    protected Event getJobEvent(Event e, String nodePath) {
+    private Event getJobEvent(Event e, String nodePath) {
         final String eventTopic = (String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
         final String[] propertyNames = e.getPropertyNames();
@@ -737,7 +728,7 @@ public class JobEventHandler
      * Load all active jobs from the repository.
      * @throws RepositoryException
      */
-    protected void loadJobs() {
+    private void loadJobs() {
         try {
             final QueryManager qManager = this.backgroundSession.getWorkspace().getQueryManager();
             final StringBuffer buffer = new StringBuffer("/jcr:root");

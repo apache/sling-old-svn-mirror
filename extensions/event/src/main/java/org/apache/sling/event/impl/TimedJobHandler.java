@@ -549,13 +549,6 @@ public class TimedJobHandler
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getContainerNodeType()
-     */
-    protected String getContainerNodeType() {
-        return EventHelper.TIMED_EVENTS_NODE_TYPE;
-    }
-
-    /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#getEventNodeType()
      */
     protected String getEventNodeType() {

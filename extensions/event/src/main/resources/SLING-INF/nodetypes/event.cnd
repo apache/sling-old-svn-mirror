@@ -21,15 +21,6 @@
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 
-[slingevent:Events] > nt:folder, mix:lockable
-  + * (slingevent:Event)
-
-[slingevent:TimedEvents] > nt:folder, mix:lockable
- + * (slingevent:TimedEvent)
-
-[slingevent:Jobs] > nt:folder, mix:lockable
-  + * (slingevent:Job)
-  
 [slingevent:Event] > nt:unstructured
   - slingevent:topic (string)
   - slingevent:application (string)
