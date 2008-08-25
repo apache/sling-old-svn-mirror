@@ -57,6 +57,7 @@ import javax.servlet.ServletResponse;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
@@ -218,8 +219,17 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             eval(props);
 
         } catch (ScriptEvaluationException see) {
+
+            // log in the request progress tracker
+            logScriptError(request, see);
+            
             throw see;
+            
         } catch (Exception e) {
+            
+            // log in the request progress tracker
+            logScriptError(request, e);
+            
             throw new SlingException("Cannot get DefaultSlingScript: "
                 + e.getMessage(), e);
         }
@@ -451,8 +461,24 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
     private String getLoggerName() {
         String name = getScriptResource().getPath();
-        name = name.replace('.', '$');
-        name = name.replace('/', '.');
+        name = name.substring(1);       // cut-off leading slash
+        name = name.replace('.', '$');  // extension separator as part of name
+        name = name.replace('/', '.');  // hierarchy defined by dot
         return name;
+    }
+
+    /**
+     * Logs the error caused by executing the script in the request progress
+     * tracker.
+     */
+    private void logScriptError(SlingHttpServletRequest request,
+            Throwable throwable) {
+        String message = throwable.getMessage();
+        if (message != null) {
+            message = throwable.getMessage().replace('\n', '/');
+        } else {
+            message = throwable.toString();
+        }
+        request.getRequestProgressTracker().log("SCRIPT ERROR: {0}", message);
     }
 }
