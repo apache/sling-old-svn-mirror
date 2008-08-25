@@ -278,7 +278,7 @@ public abstract class EventUtil {
      * @throws RepositoryException
      */
     public static void addProperties(final Node node,
-                                     final Map<String, Object> properties,
+                                     final EventPropertiesMap properties,
                                      final List<String> ignoreProps,
                                      final String binPropertyName)
     throws RepositoryException {
@@ -324,9 +324,9 @@ public abstract class EventUtil {
      * @throws RepositoryException
      * @throws ClassNotFoundException
      */
-    public static Map<String, Object> readProperties(final Node node,
-                                                     final String binPropertyName,
-                                                     final List<String> ignorePrefixes)
+    public static EventPropertiesMap readProperties(final Node node,
+                                                    final String binPropertyName,
+                                                    final List<String> ignorePrefixes)
     throws RepositoryException, ClassNotFoundException {
         final Map<String, Object> properties = new HashMap<String, Object>();
 
@@ -370,7 +370,7 @@ public abstract class EventUtil {
                 properties.put(name, o);
             }
         }
-        return properties;
+        return new EventPropertiesMap(properties);
     }
 
     /**

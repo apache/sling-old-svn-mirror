@@ -22,9 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -330,11 +328,10 @@ public abstract class AbstractRepositoryEventHandler
     protected Event readEvent(Node eventNode)
     throws RepositoryException, ClassNotFoundException {
         final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
-        final Map<String, Object> properties = EventUtil.readProperties(eventNode,
+        final EventPropertiesMap eventProps = EventUtil.readProperties(eventNode,
                 EventHelper.NODE_PROPERTY_PROPERTIES,
                 IGNORE_PREFIXES);
 
-        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>(properties);
         this.addEventProperties(eventNode, eventProps);
         try {
             final Event event = new Event(topic, eventProps);
