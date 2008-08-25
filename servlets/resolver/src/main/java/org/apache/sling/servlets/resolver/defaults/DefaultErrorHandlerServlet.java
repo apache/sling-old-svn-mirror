@@ -28,6 +28,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +71,14 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             pw.println("<pre>");
             printStackTrace(pw, throwable);
             pw.println("</pre>");
+            
+            if (req instanceof SlingHttpServletRequest) {
+                RequestProgressTracker tracker = ((SlingHttpServletRequest) req).getRequestProgressTracker();
+                pw.println("<h3>Request Progress:</h3>");
+                pw.println("<pre>");
+                tracker.dump(pw);
+                pw.println("</pre>");
+            }
         }
 
         // conclude the response message
