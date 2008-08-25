@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -136,12 +137,11 @@ public class IncludeTagHandler extends TagSupport {
             } else {
                 TagUtil.log(log, pageContext, "No content to include...", null);
             }
-
+            
         } catch (IOException ioe) {
-            throw new JspException("Error including " + path, ioe);
+            throw new JspTagException(ioe);
         } catch (ServletException ce) {
-            throw new JspException("Error including " + path,
-                TagUtil.getRootCause(ce));
+            throw new JspTagException(TagUtil.getRootCause(ce));
         }
 
         return EVAL_PAGE;
