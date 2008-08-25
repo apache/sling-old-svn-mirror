@@ -70,6 +70,7 @@ public abstract class AbstractRepositoryEventHandlerTest {
         final SlingRepository repository = RepositoryUtil.getRepository();
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         assertTrue(RepositoryUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/event.cnd")));
+        assertTrue(RepositoryUtil.registerNodeType(session, DistributingEventHandler.class.getResourceAsStream("/SLING-INF/nodetypes/resource.cnd")));
     }
 
     @org.junit.AfterClass public static void shutdownRepository() throws Exception {

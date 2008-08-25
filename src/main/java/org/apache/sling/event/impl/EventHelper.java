@@ -45,4 +45,6 @@ public abstract class EventHelper {
     public static final String JOB_NODE_TYPE = "slingevent:Job";
     public static final String TIMED_EVENTS_NODE_TYPE = "slingevent:TimedEvents";
     public static final String TIMED_EVENT_NODE_TYPE = "slingevent:TimedEvent";
+
+    public static final String NODETYPE_FOLDER = "sling:Folder";
 }
