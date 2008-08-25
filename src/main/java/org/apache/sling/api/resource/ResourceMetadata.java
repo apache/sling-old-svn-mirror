@@ -26,10 +26,11 @@ import java.util.HashMap;
  * just a map of objects indexed by string keys.
  * <p>
  * The actual contents of the meta data map is implementation specific with the
- * exception for the {@link #RESOLUTION_PATH sling.resolutionPath} property
- * which must be provided by all implementations and contain the part of the
- * request URI used to resolve the resource. The type of this property value is
- * defined to be <code>String</code>.
+ * exception the {@link #RESOLUTION_PATH sling.resolutionPath} and
+ * {@link #RESOLUTION_PATH_INFO sling.resolutionPathInfo} properties which must
+ * be provided by all implementations and contain the parts of the request URI
+ * used to resolve the resource. The type of these property values is defined to
+ * be <code>String</code>.
  * <p>
  * Note, that the prefix <em>sling.</em> to key names is reserved for the
  * Sling implementation.
@@ -42,6 +43,18 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * instance belongs (value is "sling.resolutionPath").
      */
     public static final String RESOLUTION_PATH = "sling.resolutionPath";
+
+    /**
+     * The name of the required property providing the part of the request URI
+     * which was not used to the resolve the resource to which the meta data
+     * instance belongs (value is "sling.resolutionPathInfo"). The value of this
+     * property concatenated to the value of the
+     * {@link #RESOLUTION_PATH sling.resolutionPath} property returns the
+     * original request URI leading to the resource.
+     * 
+     * @since 2.0.3-incubator-SNAPSHOT
+     */
+    public static final String RESOLUTION_PATH_INFO = "sling.resolutionPathInfo";
 
     /**
      * The name of the optional property providing the content type of the
@@ -222,6 +235,30 @@ public class ResourceMetadata extends HashMap<String, Object> {
      */
     public String getResolutionPath() {
         Object value = get(RESOLUTION_PATH);
+        if (value instanceof String) {
+            return (String) value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets the {@link #RESOLUTION_PATH_INFO} property to
+     * <code>resolutionPathInfo</code> if not <code>null</code>.
+     */
+    public void setResolutionPathInfo(String resolutionPathInfo) {
+        if (resolutionPathInfo != null) {
+            put(RESOLUTION_PATH_INFO, resolutionPathInfo);
+        }
+    }
+
+    /**
+     * Returns the {@link #RESOLUTION_PATH_INFO} property if not
+     * <code>null</code> and a <code>String</code> instance. Otherwise
+     * <code>null</code> is returned.
+     */
+    public String getResolutionPathInfo() {
+        Object value = get(RESOLUTION_PATH_INFO);
         if (value instanceof String) {
             return (String) value;
         }
