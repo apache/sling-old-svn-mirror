@@ -119,7 +119,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             }
         }
 
-        cRequest.getRequestProgressTracker().log("Including resource " + info.getResourcePath());
+        cRequest.getRequestProgressTracker().log("Including resource {0} ({1})", resource, info);
         rd.getSlingMainServlet().includeContent(request, response, resource,
             info);
     }
