@@ -164,7 +164,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
 
     @Override
     public String toString() {
-        return "SlingRequestPathInfoParser:" + ", path='" + resourcePath + "'"
+        return "SlingRequestPathInfo: path='" + resourcePath + "'"
             + ", selectorString='" + selectorString + "'" + ", extension='"
             + extension + "'" + ", suffix='" + suffix + "'";
     }

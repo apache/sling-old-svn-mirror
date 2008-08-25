@@ -155,6 +155,8 @@ public class RequestData implements BufferProvider {
             getServletRequest().getPathInfo());
         ContentData contentData = pushContent(resource, requestPathInfo);
 
+	    requestProgressTracker.log("Resource Path Info: {0}", requestPathInfo);
+
         // finally resolve the servlet for the resource
         ServletResolver sr = slingMainServlet.getServletResolver();
         if (sr != null) {
@@ -162,7 +164,7 @@ public class RequestData implements BufferProvider {
             Servlet servlet = sr.resolveServlet(slingRequest);
             requestProgressTracker.logTimer("ServletResolution",
                 "URI={0} handled by Servlet={1}",
-                getServletRequest().getRequestURI(), servlet.getServletInfo());
+                getServletRequest().getRequestURI(), RequestUtil.getServletName(servlet));
             contentData.setServlet(servlet);
         } else {
             log.warn("init(): No ServletResolver available");

@@ -52,6 +52,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -272,7 +273,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             if (filters != null) {
                 FilterChain processor = new RequestSlingFilterChain(this,
                     filters);
-
+                
+                request.getRequestProgressTracker().log("Applying request filters");
+                
                 processor.doFilter(request, response);
 
             } else {
@@ -433,6 +436,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         if (filters != null) {
             FilterChain processor = new SlingComponentFilterChain(filters);
 
+            request.getRequestProgressTracker().log("Applying inner filters");
+            
             processor.doFilter(request, response);
         } else {
             log.debug("service: No Resource level filters, calling servlet");
@@ -507,8 +512,15 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             pw.println("</p>");
 
             if (throwable != null) {
+                pw.println("<h3>Exception stacktrace:</h3>");
                 pw.println("<pre>");
                 throwable.printStackTrace(pw);
+                pw.println("</pre>");
+                
+                RequestProgressTracker tracker = ((SlingHttpServletRequest) request).getRequestProgressTracker();
+                pw.println("<h3>Request Progress:</h3>");
+                pw.println("<pre>");
+                tracker.dump(pw);
                 pw.println("</pre>");
             }
 
@@ -755,7 +767,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         }
         return stringConfig;
     }
-
+    
     //---------- HttpContext interface ----------------------------------------
 
     public String getMimeType(String name) {
