@@ -18,198 +18,163 @@
  */
 package org.apache.sling.event;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.osgi.service.event.Event;
 
 /**
- * An implementation of a map that wrapps an OSGi event.
+ * An implementation of a map that helps in dealing with properties
+ * of an OSGi event.
+ * This map implements both, the map and the dictionary interfaces.
  */
-public class EventPropertiesMap implements Map<String, Object> {
+public class EventPropertiesMap
+    extends Dictionary<String, Object>
+    implements Map<String, Object> {
 
-    private final boolean isEmpty;
+    private final Map<String, Object> delegatee;
 
-    private final Event event;
-
+    /**
+     * Construct a new map out of an event object.
+     * The resulting map is unmodifiable.
+     * @param event The event object.
+     */
     public EventPropertiesMap(final Event event) {
-        this.event = event;
-        this.isEmpty = (event.getPropertyNames() == null || event.getPropertyNames().length == 0);
+        // create a map out of the event properties
+        final Map<String, Object> props = new HashMap<String, Object>();
+        if ( event.getPropertyNames() != null ) {
+            for(final String key : event.getPropertyNames() ) {
+                props.put(key, event.getProperty(key));
+            }
+        }
+        this.delegatee = Collections.unmodifiableMap(props);
+    }
+
+    /**
+     * Construct a new map out of another map.
+     * @param props The properties map object.
+     */
+    public EventPropertiesMap(final Map<String, Object> props) {
+        this.delegatee = props;
     }
 
     /**
      * @see java.util.Map#clear()
      */
     public void clear() {
-        throw new UnsupportedOperationException("clear is not supported.");
-    }
-
-    /**
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-     */
-    public Object put(String key, Object value) {
-        throw new UnsupportedOperationException("put is not supported.");
-    }
-
-    /**
-     * @see java.util.Map#putAll(java.util.Map)
-     */
-    public void putAll(Map<? extends String, ? extends Object> t) {
-        throw new UnsupportedOperationException("putAll is not supported.");
-    }
-
-    /**
-     * @see java.util.Map#remove(java.lang.Object)
-     */
-    public Object remove(Object key) {
-        throw new UnsupportedOperationException("remove is not supported.");
+        delegatee.clear();
     }
 
     /**
      * @see java.util.Map#containsKey(java.lang.Object)
      */
     public boolean containsKey(Object key) {
-        if ( this.isEmpty || key == null ) {
-            return false;
-        }
-        final String[] names = this.event.getPropertyNames();
-        for(final String name : names) {
-            if ( name.equals(key) ) {
-                return true;
-            }
-        }
-        return false;
+        return delegatee.containsKey(key);
     }
 
     /**
      * @see java.util.Map#containsValue(java.lang.Object)
      */
     public boolean containsValue(Object value) {
-        if ( this.isEmpty ) {
-            return false;
-        }
-        final String[] names = this.event.getPropertyNames();
-        for(final String name : names) {
-            if ( this.event.getProperty(name).equals(value) ) {
-                return true;
-            }
-        }
-        return false;
+        return delegatee.containsValue(value);
     }
 
     /**
      * @see java.util.Map#entrySet()
      */
-    public Set<Map.Entry<String, Object>> entrySet() {
-        if ( this.isEmpty ) {
-            return Collections.emptySet();
-        }
-        final Set<Map.Entry<String, Object>> set = new HashSet<Map.Entry<String,Object>>();
-        final String[] names = event.getPropertyNames();
-        for(final String key : names) {
-            set.add(new PropertyEntry(key, this.event.getProperty(key)));
-        }
-        return set;
+    public Set<java.util.Map.Entry<String, Object>> entrySet() {
+        return delegatee.entrySet();
     }
 
     /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object o) {
-        if ( o instanceof EventPropertiesMap ) {
-            return this.event.equals(((EventPropertiesMap)o).event);
-        }
-        return false;
+        return delegatee.equals(o);
     }
 
     /**
-     * @see java.util.Map#get(java.lang.Object)
+     * @see java.util.Dictionary#get(java.lang.Object)
      */
     public Object get(Object key) {
-        return (this.isEmpty || key == null ? null : this.event.getProperty(key.toString()));
+        return delegatee.get(key);
     }
 
     /**
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        return this.event.hashCode();
+        return delegatee.hashCode();
     }
 
     /**
-     * @see java.util.Map#isEmpty()
+     * @see java.util.Dictionary#isEmpty()
      */
     public boolean isEmpty() {
-        return this.isEmpty;
+        return delegatee.isEmpty();
     }
 
     /**
      * @see java.util.Map#keySet()
      */
     public Set<String> keySet() {
-        if ( this.isEmpty ) {
-            return Collections.emptySet();
-        }
-        final Set<String> set = new HashSet<String>();
-        set.addAll(Arrays.asList(this.event.getPropertyNames()));
-        return set;
+        return delegatee.keySet();
     }
 
     /**
-     * @see java.util.Map#size()
+     * @see java.util.Dictionary#put(java.lang.Object, java.lang.Object)
+     */
+    public Object put(String key, Object value) {
+        return delegatee.put(key, value);
+    }
+
+    /**
+     * @see java.util.Map#putAll(java.util.Map)
+     */
+    public void putAll(Map<? extends String, ? extends Object> t) {
+        delegatee.putAll(t);
+    }
+
+    /**
+     * @see java.util.Dictionary#remove(java.lang.Object)
+     */
+    public Object remove(Object key) {
+        return delegatee.remove(key);
+    }
+
+    /**
+     * @see java.util.Dictionary#size()
      */
     public int size() {
-        return (this.isEmpty ? 0 : this.event.getPropertyNames().length);
+        return delegatee.size();
     }
 
     /**
      * @see java.util.Map#values()
      */
     public Collection<Object> values() {
-        if ( this.isEmpty ) {
-            return Collections.emptySet();
-        }
-        final Set<Object> set = new HashSet<Object>();
-        final String[] names = this.event.getPropertyNames();
-        for(final String name : names) {
-            set.add(this.event.getProperty(name));
-        }
-        return set;
+        return delegatee.values();
     }
 
-    protected static final class PropertyEntry implements Map.Entry<String, Object> {
+    /**
+     * @see java.util.Dictionary#elements()
+     */
+    @SuppressWarnings("unchecked")
+    public Enumeration<Object> elements() {
+        return new IteratorEnumeration(this.values().iterator());
+    }
 
-        private final String key;
-        private final Object value;
-
-        public PropertyEntry(final String key, final Object value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        /**
-         * @see java.util.Map.Entry#getKey()
-         */
-        public String getKey() {
-            return this.key;
-        }
-
-        /**
-         * @see java.util.Map.Entry#getValue()
-         */
-        public Object getValue() {
-            return this.value;
-        }
-
-        /**
-         * @see java.util.Map.Entry#setValue(java.lang.Object)
-         */
-        public Object setValue(Object value) {
-            throw new UnsupportedOperationException("setValue is not supported.");
-        }
+    /**
+     * @see java.util.Dictionary#keys()
+     */
+    @SuppressWarnings("unchecked")
+    public Enumeration<String> keys() {
+        return new IteratorEnumeration(this.keySet().iterator());
     }
 }
