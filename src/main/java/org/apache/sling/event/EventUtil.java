@@ -44,6 +44,7 @@ import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil.JobStatusNotifier.NotifierContext;
+import org.apache.sling.event.impl.JobEventHandler;
 import org.osgi.service.event.Event;
 import org.slf4j.LoggerFactory;
 
@@ -245,12 +246,13 @@ public abstract class EventUtil {
             }
 
         };
-        final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
-        if ( ctx != null ) {
-            ctx.notifier.execute(task);
+        // check if the job handler thread pool is available
+        if ( JobEventHandler.JOB_THREAD_POOL != null ) {
+            JobEventHandler.JOB_THREAD_POOL.execute(task);
         } else {
-            // if we don't have a job status notifier, we create the thread directly
-            // (this should never happen but is a safe fallback)
+            // if we don't have a thread pool, we create the thread directly
+            // (this should never happen for jobs, but is a safe fallback and
+            // allows to call this method for other background processing.
             new Thread(task).start();
         }
     }
@@ -284,11 +286,6 @@ public abstract class EventUtil {
          * @return <code>true</code> if everything went fine, <code>false</code> otherwise.
          */
         boolean finishedJob(Event job, String eventNodePath, boolean reschedule);
-
-        /**
-         * Execute the job in the background
-         */
-        void execute(Runnable job);
     }
 
     /**
