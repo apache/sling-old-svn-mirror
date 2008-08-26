@@ -18,7 +18,13 @@
  */
 package org.apache.sling.launcher.app;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -77,6 +83,9 @@ class BootstrapInstaller implements BundleActivator {
      */
     private final ResourceProvider resourceProvider;
 
+    /** The data file which works as a marker to detect the first startup. */
+    private static final String DATA_FILE = "bootstrapinstaller.ser";
+
     BootstrapInstaller(Logger logger, ResourceProvider resourceProvider) {
         this.logger = logger;
         this.resourceProvider = resourceProvider;
@@ -86,30 +95,78 @@ class BootstrapInstaller implements BundleActivator {
      * Installs any Bundles missing in the current framework instance. The
      * Bundles are verified by the Bundle location string. All missing Bundles
      * are first installed and then started in the order of installation.
+     * Also install all deployment packages.
+     *
+     * This installation stuff is only performed during the first startup!
      */
     public void start(BundleContext context) throws Exception {
-
-        // register deployment package support
-        final DeploymentPackageInstaller dpi =
-            new DeploymentPackageInstaller(context, logger, resourceProvider);
-        context.addFrameworkListener(dpi);
-        context.addServiceListener(dpi, "("
-                + Constants.OBJECTCLASS + "=" + DeploymentPackageInstaller.DEPLOYMENT_ADMIN + ")");
-
-        // list all existing bundles
-        Bundle[] bundles = context.getBundles();
-        Map<String, Bundle> byLocation = new HashMap<String, Bundle>();
-        for (int i = 0; i < bundles.length; i++) {
-            byLocation.put(bundles[i].getLocation(), bundles[i]);
+        boolean alreadyInstalled = false;
+        final File dataFile = context.getDataFile(DATA_FILE);
+        if ( dataFile != null && dataFile.exists() ) {
+            try {
+                final FileInputStream fis = new FileInputStream(dataFile);
+                try {
+                    final ObjectInputStream ois = new ObjectInputStream(fis);
+                    try {
+                        alreadyInstalled = ois.readBoolean();
+                    } finally {
+                        try {
+                            ois.close();
+                        } catch (IOException ignore) {}
+                    }
+                } finally {
+                    try {
+                        fis.close();
+                    } catch (IOException ignore) {}
+                }
+            } catch (IOException ioe) {
+                logger.log(Logger.LOG_ERROR, "IOException during reading of installed flag.", ioe);
+            }
         }
 
-        // install bundles
-        List<Bundle> installed = new LinkedList<Bundle>();
-        installBundles(context, byLocation, PATH_CORE_BUNDLES, installed);
-        installBundles(context, byLocation, PATH_BUNDLES, installed);
+        if ( !alreadyInstalled ) {
+            // register deployment package support
+            final DeploymentPackageInstaller dpi =
+                new DeploymentPackageInstaller(context, logger, resourceProvider);
+            context.addFrameworkListener(dpi);
+            context.addServiceListener(dpi, "("
+                    + Constants.OBJECTCLASS + "=" + DeploymentPackageInstaller.DEPLOYMENT_ADMIN + ")");
 
-        // set start levels on the bundles and start them
-        startBundles(context, installed);
+            // list all existing bundles
+            Bundle[] bundles = context.getBundles();
+            Map<String, Bundle> byLocation = new HashMap<String, Bundle>();
+            for (int i = 0; i < bundles.length; i++) {
+                byLocation.put(bundles[i].getLocation(), bundles[i]);
+            }
+
+            // install bundles
+            List<Bundle> installed = new LinkedList<Bundle>();
+            installBundles(context, byLocation, PATH_CORE_BUNDLES, installed);
+            installBundles(context, byLocation, PATH_BUNDLES, installed);
+
+            try {
+                final FileOutputStream fos = new FileOutputStream(dataFile);
+                try {
+                    final ObjectOutputStream oos = new ObjectOutputStream(fos);
+                    try {
+                        oos.writeBoolean(true);
+                    } finally {
+                        try {
+                            oos.close();
+                        } catch (IOException ignore) {}
+                    }
+                } finally {
+                    try {
+                        fos.close();
+                    } catch (IOException ignore) {}
+                }
+            } catch (IOException ioe) {
+                logger.log(Logger.LOG_ERROR, "IOException during writing of installed flag.", ioe);
+            }
+
+            // set start levels on the bundles and start them
+            startBundles(context, installed);
+        }
     }
 
     /** Nothing to be done on stop */

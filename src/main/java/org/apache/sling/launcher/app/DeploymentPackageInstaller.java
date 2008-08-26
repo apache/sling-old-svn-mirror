@@ -103,6 +103,7 @@ public class DeploymentPackageInstaller implements ServiceListener, FrameworkLis
     /**
      * Deploy the deployment packages.
      */
+    @SuppressWarnings("unchecked")
     private void deploy() {
         ArrayList<String> installedPcks = null;
         final File dataFile = this.bundleContext.getDataFile(DATA_FILE);
