@@ -103,7 +103,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
 
         // ensure request path info and optional merges
-        SlingRequestPathInfo info = new SlingRequestPathInfo(resource, absPath);
+        SlingRequestPathInfo info = new SlingRequestPathInfo(resource);
         info = info.merge(cRequest.getRequestPathInfo());
 
         // merge request dispatcher options and resource type overwrite
