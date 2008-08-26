@@ -87,6 +87,33 @@ public class ManifestHeaderTest extends TestCase {
         assertEquals("2", entry.getEntries()[0].getDirectives()[1].getValue());
     }
 
+    public void testQuoting() {
+        String header = "one;a:=\"1,2\"";
+        final ManifestHeader entry = ManifestHeader.parse(header);
+        assertEquals(1, entry.getEntries().length);
+        assertEquals("one", entry.getEntries()[0].getValue());
+        assertEquals(1, entry.getEntries()[0].getDirectives().length);
+        assertEquals(0, entry.getEntries()[0].getAttributes().length);
+        assertEquals("a", entry.getEntries()[0].getDirectives()[0].getName());
+        assertEquals("1,2", entry.getEntries()[0].getDirectives()[0].getValue());
+    }
+
+    public void testQuoting2() {
+        String header = "CQ-INF/content/apps/xyz/docroot;overwrite:=true;path:=/apps/xyz/docroot;ignoreImportProviders:=\"json,xml\"";
+        final ManifestHeader entry = ManifestHeader.parse(header);
+        assertEquals(1, entry.getEntries().length);
+        assertEquals("CQ-INF/content/apps/xyz/docroot", entry.getEntries()[0].getValue());
+        assertEquals(3, entry.getEntries()[0].getDirectives().length);
+        assertEquals(0, entry.getEntries()[0].getAttributes().length);
+        assertEquals("overwrite", entry.getEntries()[0].getDirectives()[0].getName());
+        assertEquals("true", entry.getEntries()[0].getDirectives()[0].getValue());
+        assertEquals("path", entry.getEntries()[0].getDirectives()[1].getName());
+        assertEquals("/apps/xyz/docroot", entry.getEntries()[0].getDirectives()[1].getValue());
+        assertEquals("ignoreImportProviders", entry.getEntries()[0].getDirectives()[2].getName());
+        assertEquals("json,xml", entry.getEntries()[0].getDirectives()[2].getValue());
+    }
+
+
     public void testMultipleEntries() {
         String header = "SLING-INF/content/etc;checkin:=true;path:=/etc,\nSLING-INF/content/libs;overwrite:=true;path:=/libs";
         final ManifestHeader entry = ManifestHeader.parse(header);
