@@ -31,8 +31,8 @@ class BodyOnlyScriptFilteredCopy extends ScriptFilteredCopy {
     private final Pattern bodyEnd;
     
     BodyOnlyScriptFilteredCopy() {
-        bodyStart = Pattern.compile("^out.write\\(. *<body.*");
-        bodyEnd = Pattern.compile("^out.write\\(. *</body.*");
+        bodyStart = Pattern.compile("^out.write\\(.*<body.*");
+        bodyEnd = Pattern.compile("^out.write\\(.*</body.*");
     }
     
     protected boolean copyLine(String line) {
