@@ -314,6 +314,12 @@ public class JobEventHandler
             EventInfo info = null;
             try {
                 info = this.queue.take();
+                // check for local only jobs and remove them from the queue if they're meant
+                // for another application node
+                if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
+                    && !this.applicationId.equals(EventUtil.PROPERTY_APPLICATION) ) {
+                    info = null;
+                }
             } catch (InterruptedException e) {
                 // we ignore this
                 this.ignoreException(e);

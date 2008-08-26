@@ -45,7 +45,6 @@ import javax.jcr.ValueFactory;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil.JobStatusNotifier.NotifierContext;
 import org.osgi.service.event.Event;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -60,6 +59,10 @@ public abstract class EventUtil {
     /** This event property specifies the application node. */
     public static final String PROPERTY_APPLICATION = "event.application";
 
+    /**
+     * Job Handling
+     */
+
     /** The job topic property. */
     public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
 
@@ -68,6 +71,9 @@ public abstract class EventUtil {
 
     /** The property to set if a job can be run parallel to any other job. */
     public static final String PROPERTY_JOB_PARALLEL = "event.job.parallel";
+
+    /** The property to set if a job should only be run on the same app it has been created. */
+    public static final String PROPERTY_JOB_RUN_LOCAL = "event.job.run.local";
 
     /** The property to track the retry count for jobs. Value is of type Integer. */
     public static final String PROPERTY_JOB_RETRY_COUNT = "event.job.retrycount";
@@ -78,8 +84,25 @@ public abstract class EventUtil {
     /** The property to set a retry delay. Value is of type Long and specifies milliseconds. */
     public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
 
+    /** The property to set to put the jobs into a separate job queue. This property
+     * spcifies the name of the job queue. If the job queue does not exists yet
+     * a new queue is created.
+     * If a job queue is used, the jobs are never executed in parallel from this queue!
+     */
+    public static final String PROPERTY_JOB_QUEUE_NAME = "event.job.queuename";
+
+    /** If this property is set with any value, the queue processes the jobs in the same
+     * order as they have arrived.
+     * This property has only an effect if {@link #PROPERTY_JOB_QUEUE_NAME} is specified.
+     */
+    public static final String PROPERTY_JOB_QUEUE_ORDERED = "event.job.queueordered";
+
     /** The topic for jobs. */
     public static final String TOPIC_JOB = "org/apache/sling/event/job";
+
+    /**
+     * Timed Events
+     */
 
     /** The topic for timed events. */
     public static final String TOPIC_TIMED_EVENT = "org/apache/sling/event/timed";
@@ -99,7 +122,9 @@ public abstract class EventUtil {
     /** The date for the timed event. */
     public static final String PROPERTY_TIMED_EVENT_DATE = "event.timed.date";
 
-    private final static Logger logger = LoggerFactory.getLogger(EventUtil.class);
+    /**
+     * Utility Methods
+     */
 
     /**
      * Create a distributable event.
@@ -207,7 +232,7 @@ public abstract class EventUtil {
                 try {
                     result = processor.process(job);
                 } catch (Throwable t) {
-                    logger.error("Unhandled error occured in job processor " + t.getMessage(), t);
+                    LoggerFactory.getLogger(EventUtil.class).error("Unhandled error occured in job processor " + t.getMessage(), t);
                     // we don't reschedule if an exception occurs
                     result = true;
                 } finally {
