@@ -26,11 +26,10 @@ import java.util.HashMap;
  * just a map of objects indexed by string keys.
  * <p>
  * The actual contents of the meta data map is implementation specific with the
- * exception the {@link #RESOLUTION_PATH sling.resolutionPath} and
- * {@link #RESOLUTION_PATH_INFO sling.resolutionPathInfo} properties which must
- * be provided by all implementations and contain the parts of the request URI
- * used to resolve the resource. The type of these property values is defined to
- * be <code>String</code>.
+ * exception of the {@link #RESOLUTION_PATH sling.resolutionPath} property which
+ * must be provided by all implementations and contain the part of the request
+ * URI used to resolve the resource. The type of this property value is defined
+ * to be <code>String</code>.
  * <p>
  * Note, that the prefix <em>sling.</em> to key names is reserved for the
  * Sling implementation.
@@ -51,6 +50,9 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * property concatenated to the value of the
      * {@link #RESOLUTION_PATH sling.resolutionPath} property returns the
      * original request URI leading to the resource.
+     * <p>
+     * This property is optional. If missing, it should be assumed equal to an
+     * empty string.
      * 
      * @since 2.0.3-incubator-SNAPSHOT
      */
