@@ -151,8 +151,7 @@ public class RequestData implements BufferProvider {
 
     public void initServlet(final Resource resource) {
         // the resource and the request path info, will never be null
-        RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource,
-            getServletRequest().getPathInfo());
+        RequestPathInfo requestPathInfo = new SlingRequestPathInfo(resource);
         ContentData contentData = pushContent(resource, requestPathInfo);
 
 	    requestProgressTracker.log("Resource Path Info: {0}", requestPathInfo);

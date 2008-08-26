@@ -46,22 +46,19 @@ public class SlingRequestPathInfo implements RequestPathInfo {
     private final static String[] NO_SELECTORS = new String[0];
 
     /** break requestPath as required by SlingRequestPathInfo */
-    public SlingRequestPathInfo(Resource r, String requestPath) {
+    public SlingRequestPathInfo(Resource r) {
 
         // ensure the resource
         if (r == null) {
             throw new NullPointerException("resource");
         }
 
-        String pathToParse = requestPath;
+        resourcePath = r.getResourceMetadata().getResolutionPath();
+
+        // the extra path in the request URI
+        String pathToParse = r.getResourceMetadata().getResolutionPathInfo();
         if (pathToParse == null) {
             pathToParse = "";
-        }
-
-        resourcePath = r.getResourceMetadata().getResolutionPath();
-        if (resourcePath != null
-            && pathToParse.length() >= resourcePath.length()) {
-            pathToParse = pathToParse.substring(resourcePath.length());
         }
 
         // separate selectors/ext from the suffix
