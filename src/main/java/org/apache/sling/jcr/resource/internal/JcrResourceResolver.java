@@ -287,7 +287,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     }
 
-    private Resource scanPath(String uriPath)
+    private Resource scanPath(final String uriPath)
             throws SlingException {
         Resource resource = null;
         String curPath = uriPath;
@@ -302,6 +302,14 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 + " for request path " + uriPath, ex);
         }
 
+        // SLING-627: set the part cut off from the uriPath as
+        // sling.resolutionPathInfo property such that
+        // uriPath = curPath + sling.resolutionPathInfo
+        if (resource != null) {
+            String rpi = uriPath.substring(curPath.length());
+            resource.getResourceMetadata().setResolutionPathInfo(rpi);
+        }
+        
         return resource;
     }
 
