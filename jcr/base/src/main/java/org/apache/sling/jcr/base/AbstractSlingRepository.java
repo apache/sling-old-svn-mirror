@@ -151,10 +151,10 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     private Loader loader;
 
     // the poll interval used while the repository is not active
-    private long pollTimeInActive;
+    private long pollTimeInActiveSeconds;
 
     // the poll interval used while the repository is active
-    private long pollTimeActive;
+    private long pollTimeActiveSeconds;
 
     // whether the repository checker task should be active. this field
     // is managed by the startRepositoryPinger and stopRepositoryPinger methods
@@ -732,14 +732,14 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         if (seconds < MIN_POLL) {
             seconds = DEFAULT_POLL_ACTIVE;
         }
-        pollTimeActive = 1000L * seconds;
+        pollTimeActiveSeconds = seconds;
     }
 
     private void setPollTimeInActive(int seconds) {
         if (seconds < MIN_POLL) {
             seconds = DEFAULT_POLL_INACTIVE;
         }
-        pollTimeInActive = 1000L * seconds;
+        pollTimeInActiveSeconds = seconds;
     }
 
     private void startRepositoryPinger() {
@@ -883,10 +883,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
     }
 
     public void run() {
-        // start polling with min value to be faster at system startup
+        // start polling with a small value to be faster at system startup
         // we'll increase the polling time after each try
-        long pollTime = MIN_POLL;
-        final long pollTimeIncrement = 1;
+        long pollTimeMsec = 100L;
+        final long MSEC = 1000L;
+        final int pollTimeFactor = 2;
         Object waitLock = repositoryPinger;
 
         try {
@@ -898,41 +899,52 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                     try {
                         // no debug logging, see SLING-505
                         // log(LogService.LOG_DEBUG, "Waiting " + pollTime + " seconds before checking repository");
-                        waitLock.wait(pollTime * 1000L);
+                        waitLock.wait(pollTimeMsec);
                     } catch (InterruptedException ie) {
                         // don't care, go ahead
                     }
                 }
 
-                // only apply any checks if we are running after waiting
+                long newPollTime = pollTimeMsec;
                 if (running) {
 
                     Repository repo = repository;
+                    boolean ok = false;
                     if (repo == null) {
-
+                        // No Repository yet, try to start
                         if (startRepository()) {
-                            pollTime = pollTimeActive;
+                            log(LogService.LOG_INFO, "Repository started successfully"); 
+                            ok = true;
+                            newPollTime = pollTimeActiveSeconds * MSEC;
+                        } else {
+                            // ramp up poll time, up to the max of our configured times
+                            newPollTime = Math.min(pollTimeMsec * pollTimeFactor, Math.max(pollTimeInActiveSeconds, pollTimeActiveSeconds) * MSEC);
                         }
 
-                    } else if (!pingAndCheck()) {
-
-                        log(LogService.LOG_INFO,
-                            "run: Repository not accessible, unregistering service");
-                        stopRepository();
-                        pollTime = Math.min(pollTime + pollTimeIncrement, pollTimeInActive);
-
+                    } else if (pingAndCheck()) {
+                        ok = true;
+                        newPollTime = pollTimeActiveSeconds * MSEC;
+                        
                     } else {
-
-                        // no debug logging, see SLING-505
-                        // log(LogService.LOG_DEBUG,
-                        //    "run: Repository available, checking again in "
-                        //        + pollTime + " seconds");
+                        // Repository disappeared
+                        log(LogService.LOG_INFO,
+                            "run: Repository not accessible anymore, unregistering service");
+                        stopRepository();
+                        newPollTime = pollTimeInActiveSeconds * MSEC;
+                    }
+                    
+                    if(newPollTime != pollTimeMsec) {
+                        pollTimeMsec = newPollTime;
+                        log(LogService.LOG_DEBUG, 
+                                "Repository Pinger interval set to " + pollTimeMsec + " msec, repository is "
+                                + (ok ? "available" : "NOT available")
+                                );
                     }
                 }
             }
 
         } finally {
-            // whatever goes on, make sure the repository is disposed off
+            // whatever goes on, make sure the repository is disposed of
             // at the end of the thread....
             stopRepository();
         }
