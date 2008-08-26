@@ -74,4 +74,18 @@ public class BodyOnlyScriptFilteredCopyTest extends TestCase {
         
         runTest(input,expected);
     }
+    
+    public void test_SLING_615() throws IOException {
+        final String input =
+            "out.write(' <meta name='decorator' content='tssdotcom'></head><body>');\n"
+            + "out.write('the body');\n"
+            + "out.write('</body></html>');\n"
+            ;
+        
+        final String expected =
+            "out.write('the body');\n"
+            ;
+        
+        runTest(input,expected);
+    }
 }

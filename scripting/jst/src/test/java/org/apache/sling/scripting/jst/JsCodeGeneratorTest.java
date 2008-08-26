@@ -54,7 +54,7 @@ public class JsCodeGeneratorTest extends TestCase {
         final StringWriter result = new StringWriter();
         generator.generateCode(r, new PrintWriter(result));
         
-        assertEquals("Generated code matches expected code", 
+        assertEquals("Generated code must match expected code for " + input, 
                 TestStringUtil.flatten(expectedCode.toString().trim()), 
                 TestStringUtil.flatten(result.toString().trim())
                 );
