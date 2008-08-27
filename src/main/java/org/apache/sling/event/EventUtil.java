@@ -44,6 +44,7 @@ import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.event.EventUtil.JobStatusNotifier.NotifierContext;
+import org.apache.sling.event.impl.AbstractRepositoryEventHandler;
 import org.apache.sling.event.impl.JobEventHandler;
 import org.osgi.service.event.Event;
 import org.slf4j.LoggerFactory;
@@ -166,7 +167,8 @@ public abstract class EventUtil {
      * @return <code>true</code> if this is a local event
      */
     public static boolean isLocal(Event event) {
-        return getApplicationId(event) == null;
+        final String appId = getApplicationId(event);
+        return appId == null || appId.equals(AbstractRepositoryEventHandler.APPLICATION_ID);
     }
 
     /**

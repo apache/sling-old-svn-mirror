@@ -98,6 +98,8 @@ public abstract class AbstractRepositoryEventHandler
      *  Sling settings service. */
     protected SlingSettingsService settingsService;
 
+    public static String APPLICATION_ID;
+
     /** List of ignored properties to write to the repository. */
     private static final String[] IGNORE_PROPERTIES = new String[] {
         EventUtil.PROPERTY_DISTRIBUTE,
@@ -118,6 +120,7 @@ public abstract class AbstractRepositoryEventHandler
     protected void activate(final ComponentContext context)
     throws Exception {
         this.applicationId = this.settingsService.getSlingId();
+        APPLICATION_ID = this.applicationId;
         this.repositoryPath = OsgiUtil.toString(context.getProperties().get(
             CONFIG_PROPERTY_REPO_PATH), DEFAULT_PROPERTY_REPO_PATH);
 
@@ -286,10 +289,6 @@ public abstract class AbstractRepositoryEventHandler
         eventNode.setProperty(EventHelper.NODE_PROPERTY_CREATED, Calendar.getInstance());
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, e.getTopic());
         eventNode.setProperty(EventHelper.NODE_PROPERTY_APPLICATION, this.applicationId);
-
-        // if the application property is available, we will override it
-        // if it is not available we will add it
-        eventNode.setProperty(EventUtil.PROPERTY_APPLICATION, this.applicationId);
 
         EventUtil.addProperties(eventNode,
                                 new EventPropertiesMap(e),
