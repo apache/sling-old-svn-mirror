@@ -37,10 +37,11 @@ import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
  * <code>HttpServletResponse</code>. This is required if any user of the
  * <code>RequestDispatcher.include</code> method uses a
  * <code>HttpServletResponseWrapper</code> instead of a
- * <code>ComponentResponseWrapper</code>. One such case is the Jasper runtime
- * which does this.
+ * <code>SlingHttpServletResponseWrapper</code>. One such case is the Jasper
+ * runtime which does this.
  */
-public class SlingServletResponseAdapter extends SlingHttpServletResponseWrapper {
+public class SlingServletResponseAdapter extends
+        SlingHttpServletResponseWrapper {
 
     private final HttpServletResponse response;
 
