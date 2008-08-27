@@ -323,6 +323,12 @@ public class JobEventHandler
                                   null,
                                   new String[] {this.getEventNodeType()},
                                   true);
+        // give the system some time to start
+        try {
+            Thread.sleep(1000 * 60 * 2); // 2min
+        } catch (InterruptedException e) {
+            this.ignoreException(e);
+        }
         // load unprocessed jobs from repository
         this.loadJobs();
         while ( this.running ) {
@@ -338,8 +344,9 @@ public class JobEventHandler
             if ( info != null && this.running ) {
                 // check for local only jobs and remove them from the queue if they're meant
                 // for another application node
+                final String appId = (String)info.event.getProperty(EventUtil.PROPERTY_APPLICATION);
                 if ( info.event.getProperty(EventUtil.PROPERTY_JOB_RUN_LOCAL) != null
-                    && !this.applicationId.equals(EventUtil.PROPERTY_APPLICATION) ) {
+                    && appId != null && !this.applicationId.equals(appId) ) {
                     info = null;
                 }
 
@@ -819,6 +826,8 @@ public class JobEventHandler
         if ( properties.get(EventUtil.PROPERTY_JOB_RETRY_COUNT) != null ) {
             properties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, Integer.valueOf(properties.get(EventUtil.PROPERTY_JOB_RETRY_COUNT).toString()));
         }
+        // add application id
+        properties.put(EventUtil.PROPERTY_APPLICATION, eventNode.getProperty(EventHelper.NODE_PROPERTY_APPLICATION).getString());
     }
 
     /**
