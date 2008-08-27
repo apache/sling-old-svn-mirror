@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
@@ -33,8 +34,7 @@ import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
  */
 public class StarResource extends SyntheticResource {
 
-    public final static String PATH_PATTERN = "/*.";
-    public final static String PATH_CLEAN_SUFFIX = "/*";
+    final static String SLASH_STAR = "/*";
     public final static String DEFAULT_RESOURCE_TYPE = "sling:syntheticStarResource";
 
     @SuppressWarnings("serial")
@@ -48,7 +48,7 @@ public class StarResource extends SyntheticResource {
      *  a real Resource was not found */
     public static boolean appliesTo(HttpServletRequest request) {
         String path = request.getPathInfo();
-        return path.contains(PATH_PATTERN) || path.endsWith(PATH_CLEAN_SUFFIX);
+        return path.contains(SLASH_STAR) || path.endsWith(SLASH_STAR);
     }
 
     /**
@@ -57,11 +57,11 @@ public class StarResource extends SyntheticResource {
      * resource.
      */
     public static boolean isStarResource(Resource res) {
-        return res.getPath().endsWith(PATH_CLEAN_SUFFIX);
+        return res.getPath().endsWith(SLASH_STAR);
     }
 
     public StarResource(ResourceResolver resourceResolver, String path, JcrResourceTypeProvider[] jcrProviders) throws SlingException {
-        super(resourceResolver, convertPath(path), null);
+        super(resourceResolver, getResourceMetadata(path), null);
 
         // The only way we can set a meaningful resource type is via the drtp
         final Node n = new FakeNode(getPath());
@@ -90,17 +90,24 @@ public class StarResource extends SyntheticResource {
     public <Type> Type adaptTo(Class<Type> type) {
         if(type == Node.class) {
             return (Type) new FakeNode(getPath());
+        } else if(type == String.class) {
+        	return (Type)"";
         }
         return null;
     }
-
-    /** Cleanup our path, for example /foo/*.html becomes /foo/* */
-    protected static String convertPath(String path) {
-        final int index = path.indexOf(PATH_PATTERN);
+    
+    /** Get our ResourceMetadata for given path */
+    static ResourceMetadata getResourceMetadata(String path) {
+    	ResourceMetadata result = new ResourceMetadata();
+    	
+    	// The path is up to /*, what follows is pathInfo
+        final int index = path.indexOf(SLASH_STAR);
         if(index >= 0) {
-            return path.substring(0, index) + PATH_CLEAN_SUFFIX;
+            result.setResolutionPath(path.substring(0, index) + SLASH_STAR);
+            result.setResolutionPathInfo(path.substring(index + SLASH_STAR.length()));
+        } else {
+            result.setResolutionPath(path);
         }
-        return path;
+        return result;
     }
-
 }
