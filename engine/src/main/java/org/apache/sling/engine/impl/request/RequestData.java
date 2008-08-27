@@ -54,6 +54,7 @@ import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.adapter.SlingServletRequestAdapter;
+import org.apache.sling.engine.impl.adapter.SlingServletResponseAdapter;
 import org.apache.sling.engine.impl.output.BufferProvider;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.slf4j.Logger;
@@ -411,7 +412,8 @@ public class RequestData implements BufferProvider {
 
         // otherwise, we create a new response wrapping the servlet response
         // and unwrapped component response
-        return null;
+        return new SlingServletResponseAdapter(cResponse,
+            (HttpServletResponse) response);
     }
 
     /**
