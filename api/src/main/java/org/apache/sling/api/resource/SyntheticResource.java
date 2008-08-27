@@ -49,6 +49,18 @@ public class SyntheticResource implements Resource {
         this.resourceMetadata = new ResourceMetadata();
         this.resourceMetadata.setResolutionPath(path);
     }
+    
+    /**
+     * Creates a synthetic resource with the given <code>ResourceMetadata</code>
+     * and <code>resourceType</code>.
+     */
+    public SyntheticResource(ResourceResolver resourceResolver, ResourceMetadata rm, 
+    		String resourceType) {
+        this.resourceResolver = resourceResolver;
+        this.path = rm.getResolutionPath();
+        this.resourceType = resourceType;
+        this.resourceMetadata = rm;
+    }
 
     public String getPath() {
         return path;
