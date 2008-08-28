@@ -29,6 +29,11 @@ import org.osgi.service.event.Event;
 public interface JobStatusProvider {
 
     /**
+     * This is a unique identifer which can be used to cancel the job.
+     */
+    String PROPERTY_EVENT_ID = "slingevent:eventId";
+
+    /**
      * @deprecated Use {@link #getScheduledJobs(String)} instead.
      */
     @Deprecated
@@ -75,4 +80,18 @@ public interface JobStatusProvider {
      * @return A non null collection.
      */
     Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps);
+
+    /**
+     * Cancel this job.
+     * @param jobId The unique identifer as found in the property {@link #PROPERTY_EVENT_ID}.
+     */
+    void cancelJob(String jobId);
+
+    /**
+     * Cancel this job.
+     * This method can be used if the topic and the provided job id is known.
+     * @param topic The job topic as put into the property {@link EventUtil#PROPERTY_JOB_TOPIC}.
+     * @param jobId The unique identifer as put into the property {@link EventUtil#PROPERTY_JOB_ID}.
+     */
+    void cancelJob(String topic, String jobId);
 }

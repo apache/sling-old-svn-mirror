@@ -34,7 +34,6 @@ public abstract class EventHelper {
     public static final String NODE_PROPERTY_PROPERTIES = "slingevent:properties";
     public static final String NODE_PROPERTY_PROCESSOR = "slingevent:processor";
     public static final String NODE_PROPERTY_JOBID = "slingevent:id";
-    public static final String NODE_PROPERTY_NODE_PATH = "slingevent:nodePath";
     public static final String NODE_PROPERTY_FINISHED = "slingevent:finished";
     public static final String NODE_PROPERTY_TE_EXPRESSION = "slingevent:expression";
     public static final String NODE_PROPERTY_TE_DATE = "slingevent:date";

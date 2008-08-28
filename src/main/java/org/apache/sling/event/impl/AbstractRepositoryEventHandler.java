@@ -36,6 +36,7 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.JobStatusProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.osgi.service.component.ComponentContext;
@@ -103,7 +104,7 @@ public abstract class AbstractRepositoryEventHandler
     private static final String[] IGNORE_PROPERTIES = new String[] {
         EventUtil.PROPERTY_DISTRIBUTE,
         EventUtil.PROPERTY_APPLICATION,
-        EventHelper.NODE_PROPERTY_NODE_PATH,
+        JobStatusProvider.PROPERTY_EVENT_ID,
         EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME
     };
 
@@ -311,7 +312,7 @@ public abstract class AbstractRepositoryEventHandler
                 EventHelper.NODE_PROPERTY_PROPERTIES,
                 IGNORE_PREFIXES);
 
-        eventProps.put(EventHelper.NODE_PROPERTY_NODE_PATH, eventNode.getPath());
+        eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
         this.addEventProperties(eventNode, eventProps);
         try {
             final Event event = new Event(topic, eventProps);
