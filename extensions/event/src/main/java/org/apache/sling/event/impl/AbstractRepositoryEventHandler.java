@@ -29,7 +29,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
@@ -246,10 +245,7 @@ public abstract class AbstractRepositoryEventHandler
                                    EventHelper.NODETYPE_FOLDER,
                                    EventHelper.NODETYPE_FOLDER,
                                    this.writerSession, true);
-        if ( !node.isNodeType(JcrConstants.MIX_LOCKABLE) ) {
-            node.addMixin(JcrConstants.MIX_LOCKABLE);
-            node.save();
-        }
+
         return node;
     }
 
