@@ -57,14 +57,11 @@
                         <Private-Package>
                             org.apache.sling.scripting.ruby
                         </Private-Package>
-                        
                         <Embed-Dependency>jruby-complete;inline=true</Embed-Dependency>
-                        <Import-Package>
-                            javax.swing.*;
-                            org.apache.bsf.*;
-                            sun.misc; resolution:=optional
-                        </Import-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
+		        <Import-Package>
+		          com.sun.*;org.apache.bsf.*;sun.*;resolution:=optional
+			</Import-Package> 
+			<DynamicImport-Package>*</DynamicImport-Package>
                         <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
                     </instructions>
@@ -101,7 +98,7 @@
         <dependency>
             <groupId>org.jruby</groupId>
             <artifactId>jruby-complete</artifactId>
-            <version>1.0</version>
+            <version>1.1.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
