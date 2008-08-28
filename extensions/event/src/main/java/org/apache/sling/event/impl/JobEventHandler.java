@@ -1127,18 +1127,15 @@ public class JobEventHandler
             final QueryManager qManager = s.getWorkspace().getQueryManager();
             final StringBuffer buffer = new StringBuffer("/jcr:root");
             buffer.append(this.repositoryPath);
+            if ( topic != null ) {
+                buffer.append('/');
+                buffer.append(topic.replace('/', '.'));
+            }
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
             buffer.append(") [not(@");
             buffer.append(EventHelper.NODE_PROPERTY_FINISHED);
             buffer.append(")");
-            if ( topic != null ) {
-                buffer.append(" and @");
-                buffer.append(EventHelper.NODE_PROPERTY_TOPIC);
-                buffer.append(" = '");
-                buffer.append(topic);
-                buffer.append("'");
-            }
             if ( locked != null ) {
                 if ( locked ) {
                     buffer.append(" and @jcr:lockOwner");
