@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -245,11 +246,12 @@ public class JobEventHandler
                 }
                 final EventInfo info = new EventInfo();
                 info.event = event;
-                final String nodePath = this.getNodePath(event);
+                final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
+                final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
+                final String nodePath = this.getNodePath(jobTopic, jobId);
 
                 // if the job has no job id, we can just write the job to the repo and don't
                 // need locking
-                final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
                 if ( jobId == null ) {
                     try {
                         final Node eventNode = this.writeEvent(event, nodePath);
@@ -723,14 +725,11 @@ public class JobEventHandler
     /**
      * Create a unique node path (folder and name) for the job.
      */
-    private String getNodePath(Event event) {
-        final String jobTopic = ((String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC)).replace('/', '.');
-        final String jobId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
-
+    private String getNodePath(final String jobTopic, final String jobId) {
         if ( jobId != null ) {
-            return jobTopic + "/" + filter(jobId);
+            return jobTopic.replace('/', '.') + "/" + filter(jobId);
         }
-        return jobTopic + "/Job " + UUID.randomUUID().toString();
+        return jobTopic.replace('/', '.') + "/Job " + UUID.randomUUID().toString();
     }
 
     /**
@@ -1233,6 +1232,41 @@ public class JobEventHandler
      */
     public Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps) {
         return this.queryJobs(topic, filterProps, null);
+    }
+
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String, java.lang.String)
+     */
+    public void cancelJob(String topic, String jobId) {
+        if ( jobId != null && topic != null ) {
+            this.cancelJob(this.getNodePath(topic, jobId));
+        }
+    }
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#cancelJob(java.lang.String)
+     */
+    public void cancelJob(String jobId) {
+        if ( jobId != null ) {
+            synchronized ( this.writerSession ) {
+                try {
+                    this.writerSession.refresh(false);
+                } catch (RepositoryException e) {
+                    this.ignoreException(e);
+                }
+                try {
+                    if ( this.writerSession.itemExists(jobId) ) {
+                        final Item item = this.writerSession.getItem(jobId);
+                        final Node parentNode = item.getParent();
+                        item.remove();
+                        parentNode.save();
+                    }
+                } catch (RepositoryException e) {
+                    this.logger.error("Error during cancelling job at " + jobId, e);
+                }
+            }
+        }
     }
 
 
