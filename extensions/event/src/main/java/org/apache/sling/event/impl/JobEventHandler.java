@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -319,8 +318,7 @@ public class JobEventHandler
         this.backgroundSession.getWorkspace().getObservationManager()
                 .addEventListener(this,
                                   javax.jcr.observation.Event.PROPERTY_REMOVED
-                                    |javax.jcr.observation.Event.NODE_REMOVED
-                                    |javax.jcr.observation.Event.PROPERTY_CHANGED,
+                                    |javax.jcr.observation.Event.NODE_REMOVED,
                                   this.repositoryPath,
                                   true,
                                   null,
@@ -782,19 +780,18 @@ public class JobEventHandler
     }
 
     /**
-     * Create the job event.
-     * @param e
-     * @return
+     * Create the real job event.
+     * This generates a new event object with the same properties, but with the
+     * {@link EventUtil#PROPERTY_JOB_TOPIC} topic.
+     * @param e The job event.
+     * @return The real job event.
      */
     private Event getJobEvent(Event e, String nodePath) {
         final String eventTopic = (String)e.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        final String[] propertyNames = e.getPropertyNames();
-        for(int i=0; i<propertyNames.length; i++) {
-            properties.put(propertyNames[i], e.getProperty(propertyNames[i]));
-        }
+        final Dictionary<String, Object> properties = new EventPropertiesMap(e);
         // put properties for finished job callback
-        properties.put(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME, new EventUtil.JobStatusNotifier.NotifierContext(this, nodePath));
+        properties.put(EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME,
+                new EventUtil.JobStatusNotifier.NotifierContext(this, nodePath));
         return new Event(eventTopic, properties);
     }
 
@@ -883,9 +880,6 @@ public class JobEventHandler
                     } catch (RepositoryException re) {
                         this.logger.error("Exception during jcr event processing.", re);
                     }
-                } else if ( event.getType() == javax.jcr.observation.Event.NODE_REMOVED ) {
-                    final String nodePath = event.getPath();
-                    // TODO Cancel job
                 }
             }
         } catch (RepositoryException re) {
@@ -977,6 +971,10 @@ public class JobEventHandler
         synchronized ( this.backgroundSession ) {
             try {
                 this.backgroundSession.refresh(false);
+                // check if the job has been cancelled
+                if ( !this.backgroundSession.itemExists(eventNodePath) ) {
+                    return true;
+                }
                 final Node eventNode = (Node) this.backgroundSession.getItem(eventNodePath);
                 boolean unlock = true;
                 try {
