@@ -33,7 +33,7 @@ import org.jruby.javasupport.JavaEmbedUtils;
 import org.jruby.runtime.builtin.IRubyObject;
 
 /**
- * A ScriptEngine that uses ruby erb templates to render a Resource.
+ * JRuby ScriptEngine
  */
 public class ErbScriptEngine extends AbstractSlingScriptEngine {
 
@@ -46,12 +46,18 @@ public class ErbScriptEngine extends AbstractSlingScriptEngine {
     public ErbScriptEngine(ErbScriptEngineFactory factory) {
         super(factory);
 
-        runtime = Ruby.newInstance();
-        runtime.evalScriptlet("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
-            + "for name,v in @props;instance_eval \"def #{name}; @props['#{name}'];end\";end;end;end;");
+        final ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+        	Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+            runtime = Ruby.getDefaultInstance();
+            runtime.evalScript("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
+                + "for name,v in @props;instance_eval \"def #{name}; @props['#{name}'];end\";end;end;end;");
 
-        erbModule = runtime.getClassFromPath("ERB");
-        bindingSym = RubySymbol.newSymbol(runtime, "get_binding");
+            erbModule = runtime.getClassFromPath("ERB");
+            bindingSym = RubySymbol.newSymbol(runtime, "get_binding");
+        } finally {
+        	Thread.currentThread().setContextClassLoader(oldClassLoader);
+        }
     }
 
     public Object eval(Reader script, ScriptContext scriptContext)
@@ -66,10 +72,12 @@ public class ErbScriptEngine extends AbstractSlingScriptEngine {
         // ensure GET request
         if (!"GET".equals(helper.getRequest().getMethod())) {
             throw new ScriptException(
-                "FreeMarker templates only support GET requests");
+                "JRuby scripting only supports GET requests");
         }
 
+        final ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+        	Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
             StringBuffer scriptString = new StringBuffer();
             BufferedReader bufferedScript = new BufferedReader(script);
             String nextLine = bufferedScript.readLine();
@@ -97,8 +105,11 @@ public class ErbScriptEngine extends AbstractSlingScriptEngine {
                 (String) JavaEmbedUtils.invokeMethod(runtime, erb, "result",
                     new Object[] { binding }, String.class));
         } catch (Throwable t) {
-            throw new ScriptException("Failure running Ruby script:"
-                + t.getMessage());
+        	final ScriptException ex = new ScriptException("Failure running Ruby script:" + t);
+        	ex.initCause(t);
+        	throw ex;
+        } finally {
+        	Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
         return null;
     }
