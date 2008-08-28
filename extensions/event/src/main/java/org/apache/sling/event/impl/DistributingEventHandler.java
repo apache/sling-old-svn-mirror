@@ -145,16 +145,7 @@ public class DistributingEventHandler
             }
             if ( event != null && this.running ) {
                 try {
-                    final Node eventNode = this.writeEvent(event, null);
-                    final EventInfo info = new EventInfo();
-                    info.event = event;
-                    info.nodePath = eventNode.getPath();
-                    try {
-                        this.queue.put(info);
-                    } catch (InterruptedException e) {
-                        // we ignore this
-                        this.ignoreException(e);
-                    }
+                    this.writeEvent(event, null);
                 } catch (Exception e) {
                     this.logger.error("Exception during writing the event to the repository.", e);
                 }
