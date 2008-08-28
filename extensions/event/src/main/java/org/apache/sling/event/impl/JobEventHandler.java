@@ -48,6 +48,7 @@ import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
 import org.osgi.service.component.ComponentContext;
@@ -959,13 +960,7 @@ public class JobEventHandler
             }
             if ( reschedule ) {
                 // update event with retry count and retries
-                final Dictionary<String, Object> newProperties;
-                // create a new dictionary
-                newProperties = new Hashtable<String, Object>();
-                final String[] names = job.getPropertyNames();
-                for(int i=0; i<names.length; i++ ) {
-                    newProperties.put(names[i], job.getProperty(names[i]));
-                }
+                final Dictionary<String, Object> newProperties = new EventPropertiesMap(job);
                 newProperties.put(EventUtil.PROPERTY_JOB_RETRY_COUNT, retryCount);
                 newProperties.put(EventUtil.PROPERTY_JOB_RETRIES, retries);
                 job = new Event(job.getTopic(), newProperties);
@@ -1123,7 +1118,7 @@ public class JobEventHandler
      */
     private Collection<Event> queryCurrentJobs(final String topic,
                                                final Map<String, Object> filterProps,
-                                               final boolean locked)  {
+                                               final Boolean locked)  {
         // we create a new session
         Session s = null;
         final List<Event> jobs = new ArrayList<Event>();
@@ -1144,10 +1139,12 @@ public class JobEventHandler
                 buffer.append(topic);
                 buffer.append("'");
             }
-            if ( locked ) {
-                buffer.append(" and @jcr:lockOwner");
-            } else {
-                buffer.append(" and not(@jcr:lockOwner)");
+            if ( locked != null ) {
+                if ( locked ) {
+                    buffer.append(" and @jcr:lockOwner");
+                } else {
+                    buffer.append(" and not(@jcr:lockOwner)");
+                }
             }
             if ( filterProps != null ) {
                 final Iterator<Map.Entry<String, Object>> i = filterProps.entrySet().iterator();
@@ -1229,6 +1226,15 @@ public class JobEventHandler
     public Collection<Event> getScheduledJobs(String topic, Map<String, Object> filterProps) {
         return this.queryCurrentJobs(topic, null, false);
     }
+
+
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#getAllJobs(java.lang.String, java.util.Map)
+     */
+    public Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps) {
+        return this.queryCurrentJobs(topic, null, null);
+    }
+
 
     private static final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
 
