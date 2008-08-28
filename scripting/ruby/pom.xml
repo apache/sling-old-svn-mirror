@@ -62,10 +62,9 @@
                         <Import-Package>
                             javax.swing.*;
                             org.apache.bsf.*;
-                            sun.misc; resolution:=optional,
-                            *
+                            sun.misc; resolution:=optional
                         </Import-Package>
-                        
+                        <DynamicImport-Package>*</DynamicImport-Package>
                         <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
                     </instructions>
@@ -102,7 +101,7 @@
         <dependency>
             <groupId>org.jruby</groupId>
             <artifactId>jruby-complete</artifactId>
-            <version>1.1.1</version>
+            <version>1.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
