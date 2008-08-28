@@ -103,6 +103,7 @@ public abstract class AbstractRepositoryEventHandler
     private static final String[] IGNORE_PROPERTIES = new String[] {
         EventUtil.PROPERTY_DISTRIBUTE,
         EventUtil.PROPERTY_APPLICATION,
+        EventHelper.NODE_PROPERTY_NODE_PATH,
         EventUtil.JobStatusNotifier.CONTEXT_PROPERTY_NAME
     };
 
@@ -310,6 +311,7 @@ public abstract class AbstractRepositoryEventHandler
                 EventHelper.NODE_PROPERTY_PROPERTIES,
                 IGNORE_PREFIXES);
 
+        eventProps.put(EventHelper.NODE_PROPERTY_NODE_PATH, eventNode.getPath());
         this.addEventProperties(eventNode, eventProps);
         try {
             final Event event = new Event(topic, eventProps);
