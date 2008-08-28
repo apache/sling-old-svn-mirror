@@ -19,7 +19,6 @@
 package org.apache.sling.event;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -42,7 +41,8 @@ public class EventPropertiesMap
 
     /**
      * Construct a new map out of an event object.
-     * The resulting map is unmodifiable.
+     * The resulting map is modifiable. But any modification has
+     * no influence on the original properties of the event!
      * @param event The event object.
      */
     public EventPropertiesMap(final Event event) {
@@ -53,7 +53,7 @@ public class EventPropertiesMap
                 props.put(key, event.getProperty(key));
             }
         }
-        this.delegatee = Collections.unmodifiableMap(props);
+        this.delegatee = props;
     }
 
     /**
