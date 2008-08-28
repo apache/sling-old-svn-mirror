@@ -65,4 +65,14 @@ public interface JobStatusProvider {
      * @return A non null collection.
      */
     Collection<Event> getCurrentJobs(String topic, Map<String, Object> filterProps);
+
+    /**
+     * Return all jobs either running or scheduled.
+     * This is actually a convenience method and collects the results from {@link #getScheduledJobs(String, Map)}
+     * and {@link #getCurrentJobs(String, Map)}
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param filterProps An optional map of filter props that act like a template.
+     * @return A non null collection.
+     */
+    Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps);
 }
