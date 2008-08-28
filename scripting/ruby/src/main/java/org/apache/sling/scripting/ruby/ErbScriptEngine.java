@@ -49,8 +49,8 @@ public class ErbScriptEngine extends AbstractSlingScriptEngine {
         final ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
         	Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
-            runtime = Ruby.getDefaultInstance();
-            runtime.evalScript("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
+            runtime = Ruby.newInstance();
+            runtime.evalScriptlet("require 'java';require 'erb';self.send :include, ERB::Util;class ERB;def get_binding;binding;end;attr_reader :props;def set_props(p);@props = p;"
                 + "for name,v in @props;instance_eval \"def #{name}; @props['#{name}'];end\";end;end;end;");
 
             erbModule = runtime.getClassFromPath("ERB");
