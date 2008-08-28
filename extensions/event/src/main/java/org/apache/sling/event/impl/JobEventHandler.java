@@ -318,7 +318,9 @@ public class JobEventHandler
         this.backgroundSession = this.createSession();
         this.backgroundSession.getWorkspace().getObservationManager()
                 .addEventListener(this,
-                                  javax.jcr.observation.Event.PROPERTY_REMOVED,
+                                  javax.jcr.observation.Event.PROPERTY_REMOVED
+                                    |javax.jcr.observation.Event.NODE_REMOVED
+                                    |javax.jcr.observation.Event.PROPERTY_CHANGED,
                                   this.repositoryPath,
                                   true,
                                   null,
@@ -881,6 +883,9 @@ public class JobEventHandler
                     } catch (RepositoryException re) {
                         this.logger.error("Exception during jcr event processing.", re);
                     }
+                } else if ( event.getType() == javax.jcr.observation.Event.NODE_REMOVED ) {
+                    final String nodePath = event.getPath();
+                    // TODO Cancel job
                 }
             }
         } catch (RepositoryException re) {
@@ -1116,9 +1121,9 @@ public class JobEventHandler
      * @return
      * @throws RepositoryException
      */
-    private Collection<Event> queryCurrentJobs(final String topic,
-                                               final Map<String, Object> filterProps,
-                                               final Boolean locked)  {
+    private Collection<Event> queryJobs(final String topic,
+                                        final Map<String, Object> filterProps,
+                                        final Boolean locked)  {
         // we create a new session
         Session s = null;
         final List<Event> jobs = new ArrayList<Event>();
@@ -1214,14 +1219,14 @@ public class JobEventHandler
      * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String, java.util.Map)
      */
     public Collection<Event> getCurrentJobs(String topic, Map<String, Object> filterProps) {
-        return this.queryCurrentJobs(topic, null, true);
+        return this.queryJobs(topic, filterProps, true);
     }
 
     /**
      * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String, java.util.Map)
      */
     public Collection<Event> getScheduledJobs(String topic, Map<String, Object> filterProps) {
-        return this.queryCurrentJobs(topic, null, false);
+        return this.queryJobs(topic, filterProps, false);
     }
 
 
@@ -1229,7 +1234,7 @@ public class JobEventHandler
      * @see org.apache.sling.event.JobStatusProvider#getAllJobs(java.lang.String, java.util.Map)
      */
     public Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps) {
-        return this.queryCurrentJobs(topic, null, null);
+        return this.queryJobs(topic, filterProps, null);
     }
 
 
