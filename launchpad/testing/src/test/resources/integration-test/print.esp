@@ -1,0 +1,3 @@
+// Verify that the print() method compiles
+<% print("something from print.esp"); %>
+print.esp ends
