@@ -355,7 +355,7 @@ public class JobEventHandler
 
                 // check if we should put this into a separate queue
                 if ( info != null && info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME) != null ) {
-                    final String queueName = EventUtil.PROPERTY_JOB_QUEUE_NAME;
+                    final String queueName = (String)info.event.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME);
                     synchronized ( this.jobQueues ) {
                         BlockingQueue<EventInfo> jobQueue = this.jobQueues.get(queueName);
                         if ( jobQueue == null ) {
@@ -415,14 +415,15 @@ public class JobEventHandler
                 final EventInfo processInfo = info;
                 info = null;
                 if ( this.executeJob(processInfo, jobQueue) ) {
+                    EventInfo newInfo = null;
                     try {
-                        jobQueue.wait();
+                        newInfo = jobQueue.waitForFinish();
                     } catch (InterruptedException e) {
                         this.ignoreException(e);
                     }
                     // if we have an info, this is a reschedule
-                    final EventInfo newInfo = jobQueue.get();
                     if ( newInfo != null ) {
+                        final EventInfo newEventInfo = newInfo;
                         final Event job = newInfo.event;
 
                         // is this an ordered queue?
@@ -450,7 +451,7 @@ public class JobEventHandler
                                 final Runnable t = new Runnable() {
                                     public void run() {
                                         try {
-                                            jobQueue.put(newInfo);
+                                            jobQueue.put(newEventInfo);
                                         } catch (InterruptedException e) {
                                             // this should never happen
                                             ignoreException(e);
@@ -1049,8 +1050,7 @@ public class JobEventHandler
                         synchronized ( this.jobQueues ) {
                             jobQueue = this.jobQueues.get(job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME));
                         }
-                        jobQueue.set(info);
-                        jobQueue.notify();
+                        jobQueue.notifyFinish(info);
                     } else {
 
                         // delay rescheduling?
@@ -1095,8 +1095,7 @@ public class JobEventHandler
                         synchronized ( this.jobQueues ) {
                             jobQueue = this.jobQueues.get(job.getProperty(EventUtil.PROPERTY_JOB_QUEUE_NAME));
                         }
-                        jobQueue.set(null);
-                        jobQueue.notify();
+                        jobQueue.notifyFinish(null);
                     }
                 }
                 if ( !shouldReschedule ) {
@@ -1274,14 +1273,22 @@ public class JobEventHandler
 
         private EventInfo eventInfo;
 
-        public void set(EventInfo i) {
-            this.eventInfo = i;
-        }
+        private final Object lock = new Object();
 
-        public EventInfo get() {
+        public EventInfo waitForFinish() throws InterruptedException {
+            synchronized ( this.lock ) {
+                this.lock.wait();
+            }
             final EventInfo object = this.eventInfo;
             this.eventInfo = null;
             return object;
+        }
+
+        public void notifyFinish(EventInfo i) {
+            this.eventInfo = i;
+            synchronized ( this.lock ) {
+                this.lock.notify();
+            }
         }
     }
 }
