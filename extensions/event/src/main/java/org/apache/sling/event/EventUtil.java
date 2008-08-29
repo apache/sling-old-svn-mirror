@@ -404,23 +404,36 @@ public abstract class EventUtil {
             }
             if ( !ignore ) {
                 final String name = ISO9075.decode(p.getName());
-                final Value value = p.getValue();
-                final Object o;
-                switch (value.getType()) {
-                    case PropertyType.BOOLEAN:
-                        o = value.getBoolean(); break;
-                    case PropertyType.DATE:
-                        o = value.getDate(); break;
-                    case PropertyType.DOUBLE:
-                        o = value.getDouble(); break;
-                    case PropertyType.LONG:
-                        o = value.getLong(); break;
-                    case PropertyType.STRING:
-                        o = value.getString(); break;
-                    default: // this should never happen - we convert to a string...
-                        o = value.getString();
+                if ( p.getDefinition().isMultiple() ) {
+                    final Value[] values = p.getValues();
+                    if ( values.length > 0 ) {
+                        // get first value
+                        final Object firstObject = getPropertyValue(values[0]);
+                        final Object[] array;
+                        if ( firstObject instanceof Boolean ) {
+                            array = new Boolean[values.length];
+                        } else if ( firstObject instanceof Calendar ) {
+                            array = new Calendar[values.length];
+                        } else if ( firstObject instanceof Double ) {
+                            array = new Double[values.length];
+                        } else if ( firstObject instanceof Long ) {
+                            array = new Long[values.length];
+                        } else {
+                            array = new String[values.length];
+                        }
+                        array[0] = firstObject;
+                        int index = 1;
+                        while ( index < values.length ) {
+                            array[index] = getPropertyValue(values[index]);
+                            index++;
+                        }
+                        properties.put(name, array);
+                    }
+                } else {
+                    final Value value = p.getValue();
+                    final Object o = getPropertyValue(value);
+                    properties.put(name, o);
                 }
-                properties.put(name, o);
             }
         }
         return new EventPropertiesMap(properties);
@@ -464,6 +477,32 @@ public abstract class EventUtil {
     }
 
     /**
+     * Convert the value back to an object.
+     * @param value
+     * @return
+     * @throws RepositoryException
+     */
+    private static Object getPropertyValue(final Value value)
+    throws RepositoryException {
+        final Object o;
+        switch (value.getType()) {
+            case PropertyType.BOOLEAN:
+                o = value.getBoolean(); break;
+            case PropertyType.DATE:
+                o = value.getDate(); break;
+            case PropertyType.DOUBLE:
+                o = value.getDouble(); break;
+            case PropertyType.LONG:
+                o = value.getLong(); break;
+            case PropertyType.STRING:
+                o = value.getString(); break;
+            default: // this should never happen - we convert to a string...
+                o = value.getString();
+        }
+        return o;
+    }
+
+    /**
      * Try to set the java property as a property of the node.
      * @param name
      * @param value
@@ -478,6 +517,26 @@ public abstract class EventUtil {
             return false;
         }
         final ValueFactory fac = node.getSession().getValueFactory();
+        // check for multi value
+        if ( value.getClass().isArray() ) {
+            final Object[] array = (Object[])value;
+            // now we try to convert each value
+            // and check if all converted values have the same type
+            final Value[] values = new Value[array.length];
+            int index = 0;
+            for(final Object v : array ) {
+                values[index] = getNodePropertyValue(fac, v);
+                if ( values[index] == null ) {
+                    return false;
+                }
+                if ( index > 0 && !values[index-1].getClass().equals(values[index].getClass()) ) {
+                    return false;
+                }
+                index++;
+            }
+            node.setProperty(propName, values);
+            return true;
+        }
         final Value val = getNodePropertyValue(fac, value);
         if ( val != null ) {
             node.setProperty(propName, val);
