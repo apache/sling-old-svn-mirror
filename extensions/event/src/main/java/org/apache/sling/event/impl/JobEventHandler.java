@@ -193,7 +193,7 @@ public class JobEventHandler
      * @see java.lang.Runnable#run()
      */
     public void run() {
-        if ( this.cleanupPeriod > 0 ) {
+        if ( this.cleanupPeriod > 0 && this.running ) {
             this.logger.debug("Cleaning up repository, removing all finished jobs older than {} minutes.", this.cleanupPeriod);
 
             final String queryString = this.getCleanUpQueryString();
@@ -333,7 +333,9 @@ public class JobEventHandler
             this.ignoreException(e);
         }
         // load unprocessed jobs from repository
-        this.loadJobs();
+        if ( this.running ) {
+            this.loadJobs();
+        }
         while ( this.running ) {
             // so let's wait/get the next job from the queue
             EventInfo info = null;
@@ -1118,8 +1120,8 @@ public class JobEventHandler
      * @throws RepositoryException
      */
     private Collection<Event> queryJobs(final String topic,
-                                        final Map<String, Object> filterProps,
-                                        final Boolean locked)  {
+                                        final Boolean locked,
+                                        final Map<String, Object>... filterProps)  {
         // we create a new session
         Session s = null;
         final List<Event> jobs = new ArrayList<Event>();
@@ -1144,24 +1146,41 @@ public class JobEventHandler
                     buffer.append(" and not(@jcr:lockOwner)");
                 }
             }
-            if ( filterProps != null ) {
-                final Iterator<Map.Entry<String, Object>> i = filterProps.entrySet().iterator();
-                while ( i.hasNext() ) {
-                    final Map.Entry<String, Object> current = i.next();
-                    // check prop name first
-                    final String propName = EventUtil.getNodePropertyName(current.getKey());
-                    if ( propName != null ) {
-                        // check value
-                        final Value value = EventUtil.getNodePropertyValue(s.getValueFactory(), current.getValue());
-                        if ( value != null ) {
-                            buffer.append(" and @");
-                            buffer.append(propName);
-                            buffer.append(" = '");
-                            buffer.append(current.getValue());
-                            buffer.append("'");
+            if ( filterProps != null && filterProps.length > 0 ) {
+                buffer.append(" and (");
+                int index = 0;
+                for (Map<String,Object> template : filterProps) {
+                    if ( index > 0 ) {
+                        buffer.append(" or ");
+                    }
+                    buffer.append('(');
+                    final Iterator<Map.Entry<String, Object>> i = template.entrySet().iterator();
+                    boolean first = true;
+                    while ( i.hasNext() ) {
+                        final Map.Entry<String, Object> current = i.next();
+                        // check prop name first
+                        final String propName = EventUtil.getNodePropertyName(current.getKey());
+                        if ( propName != null ) {
+                            // check value
+                            final Value value = EventUtil.getNodePropertyValue(s.getValueFactory(), current.getValue());
+                            if ( value != null ) {
+                                if ( first ) {
+                                    first = false;
+                                    buffer.append('@');
+                                } else {
+                                    buffer.append(" and @");
+                                }
+                                buffer.append(propName);
+                                buffer.append(" = '");
+                                buffer.append(current.getValue());
+                                buffer.append("'");
+                            }
                         }
                     }
+                    buffer.append(')');
+                    index++;
                 }
+                buffer.append(')');
             }
             buffer.append("]");
             final String queryString = buffer.toString();
@@ -1194,7 +1213,7 @@ public class JobEventHandler
      * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String)
      */
     public Collection<Event> getCurrentJobs(String topic) {
-        return this.getCurrentJobs(topic, null);
+        return this.getCurrentJobs(topic, (Map<String, Object>[])null);
     }
 
     /**
@@ -1208,29 +1227,29 @@ public class JobEventHandler
      * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String)
      */
     public Collection<Event> getScheduledJobs(String topic) {
-        return this.getScheduledJobs(topic, null);
+        return this.getScheduledJobs(topic, (Map<String, Object>[])null);
     }
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String, java.util.Map)
+     * @see org.apache.sling.event.JobStatusProvider#getCurrentJobs(java.lang.String, java.util.Map...)
      */
-    public Collection<Event> getCurrentJobs(String topic, Map<String, Object> filterProps) {
-        return this.queryJobs(topic, filterProps, true);
+    public Collection<Event> getCurrentJobs(String topic, Map<String, Object>... filterProps) {
+        return this.queryJobs(topic, true, filterProps);
     }
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String, java.util.Map)
+     * @see org.apache.sling.event.JobStatusProvider#getScheduledJobs(java.lang.String, java.util.Map...)
      */
-    public Collection<Event> getScheduledJobs(String topic, Map<String, Object> filterProps) {
-        return this.queryJobs(topic, filterProps, false);
+    public Collection<Event> getScheduledJobs(String topic, Map<String, Object>... filterProps) {
+        return this.queryJobs(topic, false, filterProps);
     }
 
 
     /**
-     * @see org.apache.sling.event.JobStatusProvider#getAllJobs(java.lang.String, java.util.Map)
+     * @see org.apache.sling.event.JobStatusProvider#getAllJobs(java.lang.String, java.util.Map...)
      */
-    public Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps) {
-        return this.queryJobs(topic, filterProps, null);
+    public Collection<Event> getAllJobs(String topic, Map<String, Object>... filterProps) {
+        return this.queryJobs(topic, null, filterProps);
     }
 
 

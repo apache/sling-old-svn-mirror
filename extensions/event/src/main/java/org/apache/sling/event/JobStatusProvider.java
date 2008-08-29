@@ -57,29 +57,35 @@ public interface JobStatusProvider {
     /**
      * Return a list of currently schedulded jobs.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param filterProps An optional map of filter props that act like a template.
+     * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
      * @return A non null collection.
      */
-    Collection<Event> getScheduledJobs(String topic, Map<String, Object> filterProps);
+    Collection<Event> getScheduledJobs(String topic, Map<String, Object>... filterProps);
 
     /**
      * Return the jobs which are currently in processing. If there are several application nodes
      * in the cluster, there could be more than one job in processing
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param filterProps An optional map of filter props that act like a template.
+     * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
      * @return A non null collection.
      */
-    Collection<Event> getCurrentJobs(String topic, Map<String, Object> filterProps);
+    Collection<Event> getCurrentJobs(String topic, Map<String, Object>... filterProps);
 
     /**
      * Return all jobs either running or scheduled.
-     * This is actually a convenience method and collects the results from {@link #getScheduledJobs(String, Map)}
-     * and {@link #getCurrentJobs(String, Map)}
+     * This is actually a convenience method and collects the results from {@link #getScheduledJobs(String, Map...)}
+     * and {@link #getCurrentJobs(String, Map...)}
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param filterProps An optional map of filter props that act like a template.
+     * @param filterProps A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
      * @return A non null collection.
      */
-    Collection<Event> getAllJobs(String topic, Map<String, Object> filterProps);
+    Collection<Event> getAllJobs(String topic, Map<String, Object>... filterProps);
 
     /**
      * Cancel this job.
