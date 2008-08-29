@@ -1,0 +1,6 @@
+// Test SLING-428
+main.esp before load.
+
+<% load(currentNode.scriptToInclude); %>
+
+main.esp after load

@@ -1,0 +1,6 @@
+// Test SLING-428
+included-a.esp before load.
+
+<% load("subfolder/included-b.esp"); %>
+
+included-a.esp after load

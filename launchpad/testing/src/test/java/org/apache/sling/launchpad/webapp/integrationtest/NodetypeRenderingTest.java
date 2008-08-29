@@ -68,7 +68,19 @@ public class NodetypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-
+    
+    public void testPrint() throws IOException {
+        final String toDelete = uploadTestScript("print.esp","html.esp");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            final String expected = "print.esp ends";
+            assertTrue("Content (" + content + ") must contain '" + expected + "'",
+                    content.contains(expected));
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+    
     public void testEspHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
