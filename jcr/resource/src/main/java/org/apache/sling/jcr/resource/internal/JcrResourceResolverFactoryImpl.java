@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Session;
 
@@ -41,13 +39,9 @@ import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.EventConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,13 +111,6 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private SlingRepository repository;
 
-    /**
-     * The OSGi EventAdmin service used to dispatch events
-     *
-     * @scr.reference cardinality="0..1" policy="dynamic"
-     */
-    private EventAdmin eventAdmin;
-
     /** The (optional) resource type providers.
      */
     protected final List<JcrResourceTypeProviderEntry> jcrResourceTypeProviders = new ArrayList<JcrResourceTypeProviderEntry>();
@@ -141,12 +128,6 @@ public class JcrResourceResolverFactoryImpl implements
     protected List<ServiceReference> delayedJcrResourceTypeProviders = new LinkedList<ServiceReference>();
 
     protected ComponentContext componentContext;
-
-    /**
-     * This services ServiceReference for use in
-     * {@link #fireEvent(Bundle, String, Map)}
-     */
-    private ServiceReference serviceReference;
 
     /** all mappings */
     private Mapping[] mappings;
@@ -193,56 +174,6 @@ public class JcrResourceResolverFactoryImpl implements
         return providers;
     }
 
-    // ---------- EventAdmin Event Dispatching ---------------------------------
-
-    /**
-     * Fires an OSGi event through the EventAdmin service.
-     *
-     * @param sourceBundle The Bundle from which the event originates. This may
-     *            be <code>null</code> if there is no originating bundle.
-     * @param eventName The name of the event
-     * @param props Event properties. This must not be <code>null</code>.
-     * @throws NullPointerException if eventName or props is <code>null</code>.
-     */
-    public void fireEvent(Bundle sourceBundle, String eventName,
-            Map<String, Object> props) {
-        // check event admin service, return if not available
-        EventAdmin ea = eventAdmin;
-        if (ea == null) {
-            return;
-        }
-
-        // get a private copy of the properties
-        Dictionary<String, Object> table = new Hashtable<String, Object>(props);
-
-        // service information of this JcrResourceResolverFactoryImpl service
-        ServiceReference sr = serviceReference;
-        if (sr != null) {
-            table.put(EventConstants.SERVICE, sr);
-            table.put(EventConstants.SERVICE_ID,
-                sr.getProperty(org.osgi.framework.Constants.SERVICE_ID));
-            table.put(EventConstants.SERVICE_OBJECTCLASS,
-                sr.getProperty(org.osgi.framework.Constants.OBJECTCLASS));
-            if (sr.getProperty(org.osgi.framework.Constants.SERVICE_PID) != null) {
-                table.put(EventConstants.SERVICE_PID,
-                    sr.getProperty(org.osgi.framework.Constants.SERVICE_PID));
-            }
-        }
-
-        // source bundle information (if available)
-        if (sourceBundle != null) {
-            table.put(EventConstants.BUNDLE_SYMBOLICNAME,
-                sourceBundle.getSymbolicName());
-        }
-
-        // timestamp the event
-        table.put(EventConstants.TIMESTAMP,
-            new Long(System.currentTimeMillis()));
-
-        // create the event
-        ea.postEvent(new Event(eventName, table));
-    }
-
     // ---------- Implementation helpers --------------------------------------
 
     /** If uri is a virtual URI returns the real URI, otherwise returns null */
@@ -275,7 +206,6 @@ public class JcrResourceResolverFactoryImpl implements
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
         this.componentContext = componentContext;
-        this.serviceReference = componentContext.getServiceReference();
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
