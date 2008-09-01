@@ -21,8 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -107,23 +110,47 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
             ScriptEngineManager tmp = new ScriptEngineManager(loader);
 
             // register script engines from bundles
+            final SortedSet<Object> extensions = new TreeSet<Object>(); 
             for (Bundle bundle : engineSpiBundles) {
-                registerFactories(tmp, bundle);
+                extensions.addAll(registerFactories(tmp, bundle));
             }
 
             // register script engines from registered services
             for (ScriptEngineFactory factory : engineSpiServices) {
-                registerFactory(tmp, factory);
+                extensions.addAll(registerFactory(tmp, factory));
             }
 
             scriptEngineManager = tmp;
+            
+            // Log messages to verify which ScriptEngine is actually used
+            // for our registered extensions
+            if(log.isInfoEnabled()) {
+                for(Object o : extensions) {
+                    final String ext = o.toString();
+                    final ScriptEngine e = scriptEngineManager.getEngineByExtension(ext);
+                    if(e == null) {
+                        log.warn("No ScriptEngine found for extension '{}' that was just registered", ext);
+                    } else {
+                        log.info(
+                                "Script extension '{}' is now handled by ScriptEngine '{}', version='{}', class='{}'",
+                                new Object [] {
+                                        ext,
+                                        e.getFactory().getEngineName(),
+                                        e.getFactory().getEngineVersion(),
+                                        e.getClass().getName()
+                                }
+                                );
+                    }
+                }
+            }
         }
         return scriptEngineManager;
     }
 
-    private void registerFactories(ScriptEngineManager mgr, Bundle bundle) {
+    private Collection<?> registerFactories(ScriptEngineManager mgr, Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
         InputStream ins = null;
+        final SortedSet<String> extensions = new TreeSet<String>(); 
         try {
             ins = url.openStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -135,6 +162,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
                     Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
                     ScriptEngineFactory spi = clazz.newInstance();
                     registerFactory(mgr, spi);
+                    extensions.addAll(spi.getExtensions());
                 } catch (Throwable t) {
                     log.error("Cannot register ScriptEngineFactory " + line, t);
                 }
@@ -148,9 +176,11 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
                 }
             }
         }
+        
+        return extensions;
     }
 
-    private void registerFactory(ScriptEngineManager mgr,
+    private Collection<?> registerFactory(ScriptEngineManager mgr,
             ScriptEngineFactory factory) {
         log.info("Adding ScriptEngine {}, {} for language {}, {}",
             new Object[] { factory.getEngineName(), factory.getEngineVersion(),
@@ -167,6 +197,8 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         for (Object name : factory.getNames()) {
             mgr.registerEngineName((String) name, factory);
         }
+        
+        return factory.getExtensions();
     }
 
     // ---------- BundleListener interface -------------------------------------
