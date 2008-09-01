@@ -53,7 +53,7 @@ public class StarResource extends SyntheticResource {
 
     /**
      * Returns true if the path of the resource ends with the
-     * {@link #PATH_CLEAN_SUFFIX} and therefore should be considered a star
+     * {@link #SLASH_STAR} and therefore should be considered a star
      * resource.
      */
     public static boolean isStarResource(Resource res) {
@@ -95,11 +95,11 @@ public class StarResource extends SyntheticResource {
         }
         return null;
     }
-    
+
     /** Get our ResourceMetadata for given path */
     static ResourceMetadata getResourceMetadata(String path) {
     	ResourceMetadata result = new ResourceMetadata();
-    	
+
     	// The path is up to /*, what follows is pathInfo
         final int index = path.indexOf(SLASH_STAR);
         if(index >= 0) {
