@@ -85,9 +85,12 @@ public class SimpleWebDavServlet extends AbstractSlingWebDavServlet {
                 uri += slingRepo.getDefaultWorkspace();
                 response.sendRedirect(uri);
             }
+            
+        } else {
+        
+            super.service(request, response);
         }
-
-        super.service(request, response);
+        
     }
 
     // ---------- SCR integration ----------------------------------------------
