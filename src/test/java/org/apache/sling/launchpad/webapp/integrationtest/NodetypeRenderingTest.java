@@ -51,12 +51,12 @@ public class NodetypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptTxt() throws IOException {
         final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
-        assertTrue("Content includes PlainTextRendererServlet marker",content.contains("dumped by PlainTextRendererServlet"));
+        assertContains(content, "dumped by PlainTextRendererServlet");
     }
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Resource dumped by HtmlRendererServlet"));
+        assertContains(content, "dumped by HtmlRendererServlet");
     }
 
     public void testMiniScriptHtml() throws IOException {
@@ -74,8 +74,7 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             final String expected = "print.esp ends";
-            assertTrue("Content (" + content + ") must contain '" + expected + "'",
-                    content.contains(expected));
+            assertContains(content, expected);
         } finally {
             testClient.delete(toDelete);
         }
@@ -85,8 +84,8 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -96,8 +95,8 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.esp","xml.esp");
         try {
             final String content = getContent(displayUrl + ".xml", CONTENT_TYPE_XML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -117,8 +116,8 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript(path,"rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -128,8 +127,8 @@ public class NodetypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.esp","txt.esp");
         try {
             final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
