@@ -61,7 +61,7 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
         }
 
         final Resource resource = request.getResource();
-        if (ResourceUtil.isSyntheticResource(resource)) {
+        if (ResourceUtil.isNonExistingResource(resource)) {
             throw new ResourceNotFoundException("No data to render.");
         }
 

@@ -61,7 +61,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             SlingHttpServletResponse resp) throws IOException {
         // Access and check our data
         final Resource r = req.getResource();
-        if (ResourceUtil.isSyntheticResource(r)) {
+        if (ResourceUtil.isNonExistingResource(r)) {
             throw new ResourceNotFoundException("No data to render.");
         }
 
