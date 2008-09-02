@@ -23,9 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.slf4j.Logger;
@@ -61,8 +61,8 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             SlingHttpServletResponse resp) throws IOException {
         // Access and check our data
         final Resource r = req.getResource();
-        if (r instanceof NonExistingResource) {
-            throw new ResourceNotFoundException("No data to dump");
+        if (ResourceUtil.isSyntheticResource(r)) {
+            throw new ResourceNotFoundException("No data to render.");
         }
 
         // SLING-167: the last selector, if present, gives the number of
