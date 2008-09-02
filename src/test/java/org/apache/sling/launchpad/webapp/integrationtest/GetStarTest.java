@@ -18,12 +18,10 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
-import org.apache.sling.commons.testing.integration.HttpTestBase;
-
 /** A GET to *.html and *.json must work even if there is no Node
  *  at the specified path (SLING-344)
  */
-public class GetStarTest extends HttpTestBase {
+public class GetStarTest extends RenderingTestBase {
     private final String random = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
 
     public void testGetStarHtml() throws IOException {
@@ -47,15 +45,13 @@ public class GetStarTest extends HttpTestBase {
 
         {
             final String content = getContent(fakeNodePath, CONTENT_TYPE_HTML);
-            assertTrue("Without script, default renderer marker must be present (" + content + ")",
-                    content.contains("Resource dumped by HtmlRendererServlet"));
+            assertContains(content, "dumped by HtmlRendererServlet");
         }
 
         final String urlToDelete = uploadTestScript(scriptPath, "rendering-test.esp", "html.esp");
         try {
             final String content = getContent(fakeNodePath, CONTENT_TYPE_HTML);
-            assertTrue("With script, test script marker must be present (" + content + ")",
-                    content.contains("ESP template"));
+            assertContains(content, "ESP template");
         } finally {
             testClient.delete(urlToDelete);
         }
