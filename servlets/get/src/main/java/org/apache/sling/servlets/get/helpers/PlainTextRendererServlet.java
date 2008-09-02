@@ -47,7 +47,7 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws ServletException, IOException {
         final Resource r = req.getResource();
-        if (ResourceUtil.isSyntheticResource(r)) {
+        if (ResourceUtil.isNonExistingResource(r)) {
             throw new ResourceNotFoundException("No data to render.");
         }
 
