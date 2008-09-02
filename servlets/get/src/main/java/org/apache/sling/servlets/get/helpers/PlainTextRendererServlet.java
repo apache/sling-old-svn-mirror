@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -60,12 +61,6 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         resp.setCharacterEncoding("UTF-8");
 
         final PrintWriter pw = resp.getWriter();
-        renderResource(pw, r);
-    }
-
-    /** Render a resource (map or string) */
-    private void renderResource(PrintWriter pw, Resource r)
-            throws ServletException {
         @SuppressWarnings("unchecked")
         final Map map = r.adaptTo(Map.class);
         if ( map != null ) {
@@ -73,8 +68,7 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
         } else if ( r.adaptTo(String.class) != null ) {
             printPropertyValue(pw, ResourceUtil.getName(r), r.adaptTo(String.class), false);
         } else {
-            throw new ServletException("Resource " + r
-                + " does not adapt to a map or string.");
+            resp.sendError(HttpServletResponse.SC_NO_CONTENT);
         }
     }
 
