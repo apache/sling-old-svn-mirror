@@ -30,10 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceNotFoundException;
+import org.apache.sling.api.resource.ResourceUtil;
 
 /**
  * The <code>StreamRendererServlet</code> streams the current resource to the
@@ -61,8 +61,8 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
         }
 
         final Resource resource = request.getResource();
-        if (resource instanceof NonExistingResource) {
-            throw new ResourceNotFoundException("Resource not found at " + resource.getPath());
+        if (ResourceUtil.isSyntheticResource(resource)) {
+            throw new ResourceNotFoundException("No data to render.");
         }
 
         // check the last modification time and If-Modified-Since header
