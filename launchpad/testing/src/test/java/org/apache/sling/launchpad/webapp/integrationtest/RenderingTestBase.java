@@ -30,4 +30,10 @@ class RenderingTestBase extends HttpTestBase {
     protected String uploadTestScript(String localFilename,String filenameOnServer) throws IOException {
         return uploadTestScript(scriptPath, localFilename, filenameOnServer);
     }
+    
+    protected void assertContains(String content, String expected) {
+        if(!content.contains(expected)) {
+            fail("Content does not contain '" + expected + "' (content=" + content + ")");
+        }
+    }
 }
