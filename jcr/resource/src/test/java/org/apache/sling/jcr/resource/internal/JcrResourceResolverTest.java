@@ -65,6 +65,10 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mappingsField.setAccessible(true);
         mappingsField.set(resFac, new Mapping[] { Mapping.DIRECT });
 
+        Field patternsField = resFac.getClass().getDeclaredField("patterns");
+        patternsField.setAccessible(true);
+        patternsField.set(resFac, new JcrResourceResolverFactoryImpl.ResourcePattern[0]);
+
         try {
             NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
             nsr.registerNamespace(SlingConstants.NAMESPACE_PREFIX,

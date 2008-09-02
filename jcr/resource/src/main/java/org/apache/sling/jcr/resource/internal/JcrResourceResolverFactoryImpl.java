@@ -25,6 +25,7 @@ import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.jcr.Session;
 
@@ -70,8 +71,18 @@ import org.slf4j.LoggerFactory;
  *                cardinality="0..n" policy="dynamic"
 
  */
-public class JcrResourceResolverFactoryImpl implements
-        JcrResourceResolverFactory {
+public class JcrResourceResolverFactoryImpl
+    implements JcrResourceResolverFactory {
+
+    public final static class ResourcePattern {
+        public final Pattern pattern;
+        public final String  replacement;
+
+        public ResourcePattern(final Pattern p, final String r) {
+            this.pattern = p;
+            this.replacement = r;
+        }
+    }
 
     /**
      * @scr.property value="true" type="Boolean"
@@ -100,6 +111,21 @@ public class JcrResourceResolverFactoryImpl implements
      * @scr.property values.1="/apps" values.2="/libs"
      */
     public static final String PROP_PATH = "resource.resolver.searchpath";
+
+    /**
+     * These regexps are executing during the resource resolving phase
+     * before the mappings are applied.
+     * @scr.property values.1="/_(.+?)_|/$1:"
+     */
+    private static final String PROP_REGEXPS = "resource.resolver.regexps";
+
+    /**
+     * These regexps are executed during a map operation as the back conversion
+     * of the {@link #PROP_REGEXPS}.
+     * @scr.property values.1="/_(.+?)_|/$1:"
+     */
+    private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
+
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -134,6 +160,12 @@ public class JcrResourceResolverFactoryImpl implements
 
     /** The fake urls */
     private BidiMap virtualURLMap;
+
+    /** The regexp patterns */
+    private ResourcePattern[] patterns;
+
+    /** The back regexp patterns */
+    private ResourcePattern[] backPatterns;
 
     /** <code>true</code>, if direct mappings from URI to handle are allowed */
     private boolean allowDirect = false;
@@ -201,6 +233,14 @@ public class JcrResourceResolverFactoryImpl implements
         return searchPath;
     }
 
+    ResourcePattern[] getPatterns() {
+        return patterns;
+    }
+
+    ResourcePattern[] getBackPatterns() {
+        return backPatterns;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -236,6 +276,10 @@ public class JcrResourceResolverFactoryImpl implements
             mappings = tmp;
         }
 
+        // regexps
+        this.patterns = this.getResourcePatterns((String[]) properties.get(PROP_REGEXPS));
+        this.backPatterns = this.getResourcePatterns((String[]) properties.get(PROP_MAPREGEXPS));
+
         // from configuration if available
         searchPath = OsgiUtil.toStringArray(properties.get(PROP_PATH));
         if (searchPath != null && searchPath.length > 0) {
@@ -260,6 +304,24 @@ public class JcrResourceResolverFactoryImpl implements
         }
         delayedResourceProviders.clear();
         this.processDelayedJcrResourceTypeProviders();
+    }
+
+    private ResourcePattern[] getResourcePatterns(String[] patternList) {
+        // regexps
+        List<ResourcePattern> patterns = new ArrayList<ResourcePattern>();
+        if ( patternList != null ) {
+            for(final String p : patternList) {
+                int pos = p.lastIndexOf('|');
+                if ( pos == -1 ) {
+                    log.error("Invalid regexp: {}", p);
+                } else {
+                    final String replString = p.substring(pos + 1);
+                    final Pattern pat = Pattern.compile(p.substring(0, pos));
+                    patterns.add(new ResourcePattern(pat, replString));
+                }
+            }
+        }
+        return patterns.toArray(new ResourcePattern[patterns.size()]);
     }
 
     protected void processDelayedJcrResourceTypeProviders() {
