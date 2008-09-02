@@ -25,9 +25,9 @@ import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
@@ -47,8 +47,8 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
             SlingHttpServletResponse resp) throws ServletException, IOException {
         final Resource r = req.getResource();
 
-        if (r instanceof NonExistingResource) {
-            throw new ResourceNotFoundException("Resource not found at " + r.getPath());
+        if (ResourceUtil.isSyntheticResource(r)) {
+            throw new ResourceNotFoundException("No data to render.");
         }
 
         resp.setContentType(responseContentType);
