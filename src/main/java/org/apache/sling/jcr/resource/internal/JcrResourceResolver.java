@@ -21,6 +21,7 @@ package org.apache.sling.jcr.resource.internal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -38,6 +39,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl.ResourcePattern;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
@@ -132,6 +134,9 @@ public class JcrResourceResolver extends SlingAdaptable implements
         if (href == null) {
             href = resourcePath;
         }
+
+        // apply regexp
+        href = applyPattern(href, factory.getBackPatterns());
 
         // check virtual mappings
         String virtual = factory.realToVirtualUri(href);
@@ -256,7 +261,10 @@ public class JcrResourceResolver extends SlingAdaptable implements
     }
 
     private Resource urlToResource(String uri)
-            throws SlingException {
+    throws SlingException {
+        // apply regexp
+        uri = applyPattern(uri, factory.getPatterns());
+
         Mapping[] mappings = factory.getMappings();
         for (int i = 0; i < mappings.length; i++) {
             // exchange the 'to'-portion with the 'from' portion and check
@@ -287,6 +295,27 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     }
 
+    private String applyPattern(String uri, final ResourcePattern[] patterns) {
+        for(final ResourcePattern pattern : patterns) {
+            final Matcher matcher = pattern.pattern.matcher(uri);
+
+            final StringBuffer myStringBuffer = new StringBuffer();
+            while (matcher.find()) {
+                String repl = pattern.replacement;
+                for(int i=1; i<=matcher.groupCount(); i++) {
+                    int pos = repl.indexOf("$"+i);
+                    if ( pos != -1 ) {
+                       repl = repl.substring(0, pos) + matcher.group(i) + repl.substring(pos +2);
+                    }
+                }
+                matcher.appendReplacement(myStringBuffer, repl);
+            }
+            matcher.appendTail(myStringBuffer);
+            uri = myStringBuffer.toString();
+        }
+        return uri;
+    }
+
     private Resource scanPath(final String uriPath)
             throws SlingException {
         Resource resource = null;
@@ -309,7 +338,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
             String rpi = uriPath.substring(curPath.length());
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
         }
-        
+
         return resource;
     }
 
