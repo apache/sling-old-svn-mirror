@@ -22,7 +22,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -56,22 +58,44 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
 
         final PrintWriter pw = resp.getWriter();
 
-        pw.println("<html><body>");
-        pw.println("<h1>Resource dumped by " + getClass().getSimpleName() + "</h1>");
-        pw.println("<p>Resource path: <b>" + r.getPath() + "</b></p>");
-        pw.println("<p>Resource metadata: <b>" + r.getResourceMetadata()
-            + "</b></p>");
+        final boolean isIncluded = req.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null;
 
         @SuppressWarnings("unchecked")
         final Map map = r.adaptTo(Map.class);
         if ( map != null ) {
+            printProlog(pw, isIncluded);
+            printResourceInfo(pw, r);
             render(pw, r, map);
+            printEpilog(pw, isIncluded);
         } else if ( r.adaptTo(String.class) != null ) {
+            printProlog(pw, isIncluded);
+            printResourceInfo(pw, r);
             render(pw, r, r.adaptTo(String.class));
+            printEpilog(pw, isIncluded);
         } else {
-            pw.println("<p>Resource can't be adapted to a map or a string.</p>");
+            if ( !isIncluded ) {
+                resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
+            }
         }
-        pw.println("</body></html>");
+    }
+
+    private void printProlog(PrintWriter pw, boolean isIncluded) {
+        if ( !isIncluded ) {
+            pw.println("<html><body>");
+        }
+    }
+
+    private void printEpilog(PrintWriter pw, boolean isIncluded) {
+        if ( !isIncluded ) {
+            pw.println("</body></html>");
+        }
+    }
+
+    private void printResourceInfo(PrintWriter pw, Resource r) {
+        pw.println("<h1>Resource dumped by " + getClass().getSimpleName() + "</h1>");
+        pw.println("<p>Resource path: <b>" + r.getPath() + "</b></p>");
+        pw.println("<p>Resource metadata: <b>" + r.getResourceMetadata()
+            + "</b></p>");
     }
 
     @SuppressWarnings("unchecked")
