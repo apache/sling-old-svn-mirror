@@ -54,22 +54,21 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
 
     public void testWithoutScriptTxt() throws IOException {
         final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
-        assertTrue("Content includes PlainTextRendererServlet marker",content.contains("dumped by PlainTextRendererServlet"));
+        assertContains(content, "dumped by PlainTextRendererServlet");
     }
 
     public void testWithoutScriptHtml() throws IOException {
         final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("Content contains default rendering",content.contains("Resource dumped by HtmlRendererServlet"));
+        assertContains(content, "dumped by HtmlRendererServlet");
     }
 
     public void testEspHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
-            assertTrue("Content (" + content + ") contains attribute generated with simplified syntax",
-                    content.contains("<div class=\"SLING-142\" id=\"22\"/>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
+            assertContains(content, "<div class=\"SLING-142\" id=\"22\"/>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -79,8 +78,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains java code output",content.contains("TestLinkedListTest"));
+            assertContains(content, "ESP template");
+            assertContains(content, "TestLinkedListTest");
         } finally {
             testClient.delete(toDelete);
         }
@@ -90,7 +89,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         // make sure there's no leftover rendering script
         {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertFalse("Content must not include ESP marker before test",content.contains("ESP template"));
+            assertFalse("Content must not contain script marker before testing", content.contains("ESP template"));
         }
 
         // put our script under /apps/<resource type>
@@ -99,8 +98,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript(path,"rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -111,7 +110,7 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         // make sure there's no leftover rendering script
         {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertFalse("Content must not include ESP marker before test",content.contains("ESP template"));
+            assertContains(content, "ESP template");
         }
 
         // put our script in the /apps/<second folder level of content> (SLING-125)
@@ -120,8 +119,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript(path,"rendering-test.esp","html.esp");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -160,10 +159,10 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes JST marker",content.contains("JST template"));
-            assertTrue("Content contains JSON data",content.contains("\"text\":\"" + testText + "\""));
-            assertTrue("Content contains default rendering",content.contains("div id=\"JstDefaultRendering"));
-            assertTrue("Content contains javascript rendering code",content.contains("out.write( currentNode.text )"));
+            assertContains(content, "JST template");
+            assertContains(content, "\"text\":\"" + testText + "\"");
+            assertContains(content, "div id=\"JstDefaultRendering");
+            assertContains(content, "out.write( currentNode.text )");
         } finally {
             testClient.delete(toDelete);
         }
@@ -173,13 +172,10 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes JST marker",content.contains("JST template"));
-            assertTrue("Content contains scripted stuff (" + content + ")",
-                    content.contains("something scripted"));
-            assertFalse("Script opening tag must be broken in two in content (" + content + ")",
-                    content.contains("<script>something"));
-            assertFalse("Script closing tag must be broken in two in content (" + content + ")",
-                    content.contains("scripted</script>"));
+            assertContains(content, "JST template");
+            assertContains(content, "something scripted");
+            assertContains(content, "<script>something");
+            assertContains(content, "scripted</script>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -190,13 +186,10 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
         try {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes JST marker",content.contains("JST template"));
-            assertTrue("Content contains scripted stuff (" + content + ")",
-                    content.contains("more scripting"));
-            assertFalse("Script opening tag must be broken in two in content (" + content + ")",
-                    content.contains("<script>more"));
-            assertFalse("Script closing tag must be broken in two in content (" + content + ")",
-                    content.contains("scripting</script>"));
+            assertContains(content, "JST template");
+            assertContains(content, "more scripting");
+            assertContains(content, "<script>more");
+            assertContains(content, "scripting</script>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -230,8 +223,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         try {
             final String content = getContent(displayUrl + ".js", CONTENT_TYPE_JS);
             // template makes no JS sense, that's not a problem for this test
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -241,8 +234,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.esp","xml.esp");
         try {
             final String content = getContent(displayUrl + ".xml", CONTENT_TYPE_XML);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
@@ -252,8 +245,8 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         final String toDelete = uploadTestScript("rendering-test.esp","txt.esp");
         try {
             final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
-            assertTrue("Content includes ESP marker",content.contains("ESP template"));
-            assertTrue("Content contains formatted test text",content.contains("<p>" + testText + "</p>"));
+            assertContains(content, "ESP template");
+            assertContains(content, "<p>" + testText + "</p>");
         } finally {
             testClient.delete(toDelete);
         }
