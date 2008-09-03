@@ -118,7 +118,10 @@ public abstract class AbstractServiceReferenceConfig {
         String servletName = null;
         for (int i = 0; i < NAME_PROPERTIES.length
             && (servletName == null || servletName.length() == 0); i++) {
-            servletName = (String) reference.getProperty(NAME_PROPERTIES[i]);
+            Object prop = reference.getProperty(NAME_PROPERTIES[i]);
+            if (prop != null) {
+                servletName = String.valueOf(prop);
+            }
         }
         return servletName;
     }
