@@ -58,7 +58,7 @@ import org.osgi.service.event.EventAdmin;
  * An event handler for timed events.
  *
  * @scr.component metatype="no"
- * @scr.interface interface="TimedEventStatusProvider"
+ * @scr.service interface="TimedEventStatusProvider"
  * @scr.property name="event.topics" refValues="EventUtil.TOPIC_TIMED_EVENT"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
@@ -151,39 +151,41 @@ public class TimedJobHandler
                 this.ignoreException(e);
             }
             if ( info != null && this.running ) {
-                ScheduleInfo scheduleInfo = null;
-                try {
-                    scheduleInfo = new ScheduleInfo(info.event);
-                } catch (IllegalArgumentException iae) {
-                    this.logger.error(iae.getMessage());
-                }
-                if ( scheduleInfo != null ) {
+                synchronized ( this.writerSession ) {
+                    ScheduleInfo scheduleInfo = null;
                     try {
-                        this.writerSession.refresh(true);
-                        final Node eventNode = (Node) this.writerSession.getItem(info.nodePath);
-                        if ( !eventNode.isLocked() ) {
-                            // lock node
-                            Lock lock = null;
-                            try {
-                                lock = eventNode.lock(false, true);
-                            } catch (RepositoryException re) {
-                                // lock failed which means that the node is locked by someone else, so we don't have to requeue
-                            }
-                            if ( lock != null ) {
-                                // if something went wrong, we reschedule
-                                if ( !this.processEvent(info.event, scheduleInfo) ) {
-                                    try {
-                                        this.queue.put(info);
-                                    } catch (InterruptedException e) {
-                                        // this should never happen, so we ignore it
-                                        this.ignoreException(e);
+                        scheduleInfo = new ScheduleInfo(info.event);
+                    } catch (IllegalArgumentException iae) {
+                        this.logger.error(iae.getMessage());
+                    }
+                    if ( scheduleInfo != null ) {
+                        try {
+                            this.writerSession.refresh(true);
+                            final Node eventNode = (Node) this.writerSession.getItem(info.nodePath);
+                            if ( !eventNode.isLocked() ) {
+                                // lock node
+                                Lock lock = null;
+                                try {
+                                    lock = eventNode.lock(false, true);
+                                } catch (RepositoryException re) {
+                                    // lock failed which means that the node is locked by someone else, so we don't have to requeue
+                                }
+                                if ( lock != null ) {
+                                    // if something went wrong, we reschedule
+                                    if ( !this.processEvent(info.event, scheduleInfo) ) {
+                                        try {
+                                            this.queue.put(info);
+                                        } catch (InterruptedException e) {
+                                            // this should never happen, so we ignore it
+                                            this.ignoreException(e);
+                                        }
                                     }
                                 }
                             }
+                        } catch (RepositoryException e) {
+                            // ignore
+                            this.ignoreException(e);
                         }
-                    } catch (RepositoryException e) {
-                        // ignore
-                        this.ignoreException(e);
                     }
                 }
             }
@@ -623,14 +625,14 @@ public class TimedJobHandler
     }
 
     /**
-     * @see org.apache.sling.event.TimedEventStatusProvider#getScheduledEvent(java.lang.String, java.lang.String)
+     * @see org.apache.sling.event.TimedEventStatusProvider#getScheduledEvent(java.lang.String, java.lang.String, java.lang.String)
      */
-    public Event getScheduledEvent(String topic, String eventId) {
+    public Event getScheduledEvent(String topic, String eventId, String jobId) {
         Session s = null;
         try {
             s = this.createSession();
             final Node parentNode = (Node)s.getItem(this.repositoryPath);
-            final String nodeName = this.getNodeName(ScheduleInfo.getJobId(topic, eventId, null));
+            final String nodeName = this.getNodeName(ScheduleInfo.getJobId(topic, eventId, jobId));
             final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
             if ( eventNode != null ) {
                 return this.readEvent(eventNode);
@@ -659,10 +661,6 @@ public class TimedJobHandler
             final QueryManager qManager = s.getWorkspace().getQueryManager();
             final StringBuffer buffer = new StringBuffer("/jcr:root");
             buffer.append(this.repositoryPath);
-            if ( topic != null ) {
-                buffer.append('/');
-                buffer.append(topic.replace('/', '.'));
-            }
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
             buffer.append(") [");
@@ -670,6 +668,7 @@ public class TimedJobHandler
                 buffer.append('@');
                 buffer.append(EventHelper.NODE_PROPERTY_TOPIC);
                 buffer.append("='");
+                buffer.append(topic);
                 buffer.append("'");
             }
             if ( filterProps != null && filterProps.length > 0 ) {
@@ -733,5 +732,46 @@ public class TimedJobHandler
             }
         }
         return jobs;
+    }
+
+    /**
+     * @see org.apache.sling.event.TimedEventStatusProvider#cancelTimedEvent(java.lang.String)
+     */
+    public void cancelTimedEvent(String jobId) {
+        synchronized ( this.writerSession ) {
+            try {
+                // get parent node
+                final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
+                final String nodeName = jobId;
+
+                // is there a node?
+                final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+                // we should remove the node from the repository
+                // if there is no node someone else was faster and we can ignore this
+                if ( foundNode != null ) {
+                    try {
+                        foundNode.remove();
+                        parentNode.save();
+                    } catch (LockException le) {
+                        // if someone else has the lock this is fine
+                    }
+                }
+            } catch ( RepositoryException re) {
+                this.logger.error("Unable to cancel timed event: " + jobId, re);
+            }
+            // stop the scheduler
+            if ( this.logger.isDebugEnabled() ) {
+                this.logger.debug("Stopping timed event " + jobId);
+            }
+            final Scheduler localScheduler = this.scheduler;
+            if ( localScheduler != null ) {
+                try {
+                    localScheduler.removeJob(jobId);
+                } catch (NoSuchElementException nsee) {
+                    // this can happen if the job is scheduled on another node
+                    // so we can just ignore this
+                }
+            }
+        }
     }
 }
