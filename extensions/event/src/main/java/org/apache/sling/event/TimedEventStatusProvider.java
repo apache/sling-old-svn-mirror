@@ -29,6 +29,11 @@ import org.osgi.service.event.Event;
 public interface TimedEventStatusProvider {
 
     /**
+     * This is a unique identifer which can be used to cancel the job.
+     */
+    String PROPERTY_EVENT_ID = "slingevent:eventId";
+
+    /**
      * Return a list of currently schedulded events.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @param filterProps A list of filter property maps. Each map acts like a template. The searched event
@@ -42,5 +47,11 @@ public interface TimedEventStatusProvider {
      * Return the scheduled event with the given id.
      * @return The scheduled event or null.
      */
-    Event getScheduledEvent(String topic, String eventId);
+    Event getScheduledEvent(String topic, String eventId, String jobId);
+
+    /**
+     * Cancel this timed event.
+     * @param jobId The unique identifer as found in the property {@link #PROPERTY_EVENT_ID}.
+     */
+    void cancelTimedEvent(String jobId);
 }
