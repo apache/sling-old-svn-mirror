@@ -382,6 +382,11 @@ public class JcrResourceResolverFactoryImpl
                     "ResourceProvider", reference);
 
                 for (String root : roots) {
+                    // cut off trailing slash
+                    if (root.endsWith("/") && root.length() > 1) {
+                        root = root.substring(0, root.length() - 1);
+                    }
+                    
                     try {
                         rootProviderEntry.addResourceProvider(root, provider);
                     } catch (IllegalStateException ise) {
@@ -398,6 +403,11 @@ public class JcrResourceResolverFactoryImpl
         String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
         if (roots != null && roots.length > 0) {
             for (String root : roots) {
+                // cut off trailing slash
+                if (root.endsWith("/") && root.length() > 1) {
+                    root = root.substring(0, root.length() - 1);
+                }
+                
                 // TODO: Do not remove this path, if another resource
                 // owns it. This may be the case if adding the provider
                 // yielded an IllegalStateException
