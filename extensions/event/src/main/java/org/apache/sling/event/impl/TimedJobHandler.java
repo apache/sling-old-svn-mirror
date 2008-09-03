@@ -19,12 +19,16 @@
 package org.apache.sling.event.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -33,6 +37,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.EventIterator;
@@ -44,6 +49,7 @@ import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.TimedEventStatusProvider;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
@@ -52,6 +58,7 @@ import org.osgi.service.event.EventAdmin;
  * An event handler for timed events.
  *
  * @scr.component metatype="no"
+ * @scr.interface interface="TimedEventStatusProvider"
  * @scr.property name="event.topics" refValues="EventUtil.TOPIC_TIMED_EVENT"
  *               values.updated="org/osgi/framework/BundleEvent/UPDATED"
  *               values.started="org/osgi/framework/BundleEvent/STARTED"
@@ -59,7 +66,7 @@ import org.osgi.service.event.EventAdmin;
  */
 public class TimedJobHandler
     extends AbstractRepositoryEventHandler
-    implements Job {
+    implements Job, TimedEventStatusProvider {
 
     protected static final String JOB_TOPIC = "topic";
 
@@ -126,8 +133,8 @@ public class TimedJobHandler
     /**
      * Create a unique node name for this timed job.
      */
-    protected String getNodeName(final ScheduleInfo info) {
-        return Text.escapeIllegalJcrChars(info.jobId);
+    private String getNodeName(final String jobId) {
+        return Text.escapeIllegalJcrChars(jobId);
     }
 
     /**
@@ -187,7 +194,7 @@ public class TimedJobHandler
         try {
             // get parent node
             final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
-            final String nodeName = this.getNodeName(scheduleInfo);
+            final String nodeName = this.getNodeName(scheduleInfo.jobId);
             // is there already a node?
             final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
             Lock lock = null;
@@ -459,7 +466,7 @@ public class TimedJobHandler
             try {
                 s = this.createSession();
                 final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                final String nodeName = this.getNodeName(info);
+                final String nodeName = this.getNodeName(info.jobId);
                 final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
                 if ( eventNode != null ) {
                     try {
@@ -592,7 +599,7 @@ public class TimedJobHandler
             String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
             String jId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
 
-            this.jobId = "TimedEvent: " + topic + ':' + (id != null ? id : "") + ':' + (jId != null ? jId : "");
+            this.jobId = getJobId(topic, id, jId);
         }
 
         private ScheduleInfo(String jobId) {
@@ -609,5 +616,122 @@ public class TimedJobHandler
         public boolean isStopEvent() {
             return this.expression == null && this.period == null && this.date == null;
         }
+
+        public static String getJobId(String topic, String timedEventId, String jobId) {
+            return "TimedEvent: " + topic + ':' + (timedEventId != null ? timedEventId : "") + ':' + (jobId != null ? jobId : "");
+        }
+    }
+
+    /**
+     * @see org.apache.sling.event.TimedEventStatusProvider#getScheduledEvent(java.lang.String, java.lang.String)
+     */
+    public Event getScheduledEvent(String topic, String eventId) {
+        Session s = null;
+        try {
+            s = this.createSession();
+            final Node parentNode = (Node)s.getItem(this.repositoryPath);
+            final String nodeName = this.getNodeName(ScheduleInfo.getJobId(topic, eventId, null));
+            final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+            if ( eventNode != null ) {
+                return this.readEvent(eventNode);
+            }
+        } catch (RepositoryException re) {
+            this.logger.error("Unable to create a session.", re);
+        } catch (ClassNotFoundException e) {
+            this.ignoreException(e);
+        } finally {
+            if ( s != null ) {
+                s.logout();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.event.TimedEventStatusProvider#getScheduledEvents(java.lang.String, java.util.Map...)
+     */
+    public Collection<Event> getScheduledEvents(String topic, Map<String, Object>... filterProps) {
+        // we create a new session
+        Session s = null;
+        final List<Event> jobs = new ArrayList<Event>();
+        try {
+            s = this.createSession();
+            final QueryManager qManager = s.getWorkspace().getQueryManager();
+            final StringBuffer buffer = new StringBuffer("/jcr:root");
+            buffer.append(this.repositoryPath);
+            if ( topic != null ) {
+                buffer.append('/');
+                buffer.append(topic.replace('/', '.'));
+            }
+            buffer.append("//element(*, ");
+            buffer.append(this.getEventNodeType());
+            buffer.append(") [");
+            if ( topic != null ) {
+                buffer.append('@');
+                buffer.append(EventHelper.NODE_PROPERTY_TOPIC);
+                buffer.append("='");
+                buffer.append("'");
+            }
+            if ( filterProps != null && filterProps.length > 0 ) {
+                buffer.append(" and (");
+                int index = 0;
+                for (Map<String,Object> template : filterProps) {
+                    if ( index > 0 ) {
+                        buffer.append(" or ");
+                    }
+                    buffer.append('(');
+                    final Iterator<Map.Entry<String, Object>> i = template.entrySet().iterator();
+                    boolean first = true;
+                    while ( i.hasNext() ) {
+                        final Map.Entry<String, Object> current = i.next();
+                        // check prop name first
+                        final String propName = EventUtil.getNodePropertyName(current.getKey());
+                        if ( propName != null ) {
+                            // check value
+                            final Value value = EventUtil.getNodePropertyValue(s.getValueFactory(), current.getValue());
+                            if ( value != null ) {
+                                if ( first ) {
+                                    first = false;
+                                    buffer.append('@');
+                                } else {
+                                    buffer.append(" and @");
+                                }
+                                buffer.append(propName);
+                                buffer.append(" = '");
+                                buffer.append(current.getValue());
+                                buffer.append("'");
+                            }
+                        }
+                    }
+                    buffer.append(')');
+                    index++;
+                }
+                buffer.append(')');
+            }
+            buffer.append("]");
+            final String queryString = buffer.toString();
+            logger.debug("Executing job query {}.", queryString);
+
+            final Query q = qManager.createQuery(queryString, Query.XPATH);
+            final NodeIterator iter = q.execute().getNodes();
+            while ( iter.hasNext() ) {
+                final Node eventNode = iter.nextNode();
+                try {
+                    final Event event = this.readEvent(eventNode);
+                    jobs.add(event);
+                } catch (ClassNotFoundException cnfe) {
+                    // in the case of a class not found exception we just ignore the exception
+                    this.ignoreException(cnfe);
+                }
+            }
+        } catch (RepositoryException e) {
+            // in the case of an error, we return an empty list
+            this.ignoreException(e);
+        } finally {
+            if ( s != null) {
+                s.logout();
+            }
+        }
+        return jobs;
     }
 }
