@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -740,15 +741,12 @@ public class TimedJobHandler
     public void cancelTimedEvent(String jobId) {
         synchronized ( this.writerSession ) {
             try {
-                // get parent node
-                final Node parentNode = (Node)this.writerSession.getItem(this.repositoryPath);
-                final String nodeName = jobId;
-
                 // is there a node?
-                final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+                final Item foundNode = this.writerSession.itemExists(jobId) ? this.writerSession.getItem(jobId) : null;
                 // we should remove the node from the repository
                 // if there is no node someone else was faster and we can ignore this
                 if ( foundNode != null ) {
+                    final Node parentNode = foundNode.getParent();
                     try {
                         foundNode.remove();
                         parentNode.save();
