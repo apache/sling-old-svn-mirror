@@ -59,8 +59,9 @@ public class Activator implements BundleActivator, BundleListener {
                 }
             }
         } catch (Throwable t) {
-            log.error("activate: Problem while loading initial content and"
-                + " registering mappings for existing bundles", t);
+            log.error(
+                "activate: Problem while registering bundle resources for existing bundles",
+                t);
         }
     }
 
@@ -73,7 +74,7 @@ public class Activator implements BundleActivator, BundleListener {
      * Loads and unloads any components provided by the bundle whose state
      * changed. If the bundle has been started, the components are loaded. If
      * the bundle is about to stop, the components are unloaded.
-     *
+     * 
      * @param event The <code>BundleEvent</code> representing the bundle state
      *            change.
      */
@@ -110,6 +111,5 @@ public class Activator implements BundleActivator, BundleListener {
             brp.unregisterService();
         }
     }
-
 
 }
