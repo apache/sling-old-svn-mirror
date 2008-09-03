@@ -18,12 +18,14 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,20 +42,20 @@ import org.osgi.framework.ServiceRegistration;
 public class BundleResourceProvider implements ResourceProvider {
 
     /** The bundle providing the resources */
-    private final Bundle bundle;
+    private final BundleResourceCache bundle;
 
     /** The root paths */
     private final MappedPath[] roots;
 
     private ServiceRegistration serviceRegistration;
-
+    
     /**
      * Creates Bundle resource provider accessing entries in the given Bundle an
      * supporting resources below root paths given by the rootList which is a
      * comma (and whitespace) separated list of absolute paths.
      */
     public BundleResourceProvider(Bundle bundle, String rootList) {
-        this.bundle = bundle;
+        this.bundle = new BundleResourceCache(bundle);
 
         StringTokenizer pt = new StringTokenizer(rootList, ", \t\n\r\f");
         List<MappedPath> prefixList = new ArrayList<MappedPath>();

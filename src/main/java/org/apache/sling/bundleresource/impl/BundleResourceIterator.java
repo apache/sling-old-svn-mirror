@@ -42,12 +42,12 @@ class BundleResourceIterator implements Iterator<Resource> {
     private final ResourceResolver resourceResolver;
 
     /** Bundle providing the entry resources */
-    private final Bundle bundle;
+    private final BundleResourceCache bundle;
 
     private final MappedPath mappedPath;
     
     /** Underlying bundle entry path enumeration */
-    private final Enumeration<String> entries;
+    private final Iterator<String> entries;
 
     /** The length of the parent entry path, see seek() */
     private final int prefixLength;
@@ -58,7 +58,6 @@ class BundleResourceIterator implements Iterator<Resource> {
     /**
      * Creates an instance using the given parent bundle resource.
      */
-    @SuppressWarnings("unchecked")
     BundleResourceIterator(BundleResource parent) {
 
         if (parent.isFile()) {
@@ -78,17 +77,14 @@ class BundleResourceIterator implements Iterator<Resource> {
             this.resourceResolver = parent.getResourceResolver();
             this.bundle = parent.getBundle();
             this.mappedPath = parent.getMappedPath();
-            
-            // unchecked cast
             this.entries = parent.getBundle().getEntryPaths(parentPath);
             this.prefixLength = parentPath.length();
-            
-            this.nextResult = seek();
+
+            this.nextResult = (entries != null) ? seek() : null;
         }
     }
 
-    @SuppressWarnings("unchecked")
-    BundleResourceIterator(ResourceResolver resourceResolver, Bundle bundle,
+    BundleResourceIterator(ResourceResolver resourceResolver, BundleResourceCache bundle,
             MappedPath mappedPath, String parentPath) {
         
         // trailing slash to enumerate children
@@ -99,8 +95,6 @@ class BundleResourceIterator implements Iterator<Resource> {
         this.resourceResolver = resourceResolver;
         this.bundle = bundle;
         this.mappedPath = mappedPath;
-        
-        // unchecked cast
         this.entries = bundle.getEntryPaths(parentPath);
         this.prefixLength = parentPath.length();
 
@@ -136,8 +130,8 @@ class BundleResourceIterator implements Iterator<Resource> {
      * direct child of the parent resource.
      */
     private Resource seek() {
-        while (entries.hasMoreElements()) {
-            String entry = entries.nextElement();
+        while (entries.hasNext()) {
+            String entry = entries.next();
 
             // require leading slash
             if (!entry.startsWith("/")) {

@@ -44,7 +44,7 @@ public class BundleResource extends SlingAdaptable implements Resource {
 
     private final ResourceResolver resourceResolver;
 
-    private final Bundle bundle;
+    private final BundleResourceCache bundle;
 
     private final MappedPath mappedPath;
 
@@ -57,7 +57,8 @@ public class BundleResource extends SlingAdaptable implements Resource {
     private final ResourceMetadata metadata;
 
     public static BundleResource getResource(ResourceResolver resourceResolver,
-            Bundle bundle, MappedPath mappedPath, String resourcePath) {
+            BundleResourceCache bundle, MappedPath mappedPath,
+            String resourcePath) {
 
         String entryPath = mappedPath.getEntryPath(resourcePath);
 
@@ -100,8 +101,9 @@ public class BundleResource extends SlingAdaptable implements Resource {
         return null;
     }
 
-    public BundleResource(ResourceResolver resourceResolver, Bundle bundle,
-            MappedPath mappedPath, String resourcePath) {
+    public BundleResource(ResourceResolver resourceResolver,
+            BundleResourceCache bundle, MappedPath mappedPath,
+            String resourcePath) {
 
         this.resourceResolver = resourceResolver;
         this.bundle = bundle;
@@ -109,8 +111,8 @@ public class BundleResource extends SlingAdaptable implements Resource {
 
         metadata = new ResourceMetadata();
         metadata.setResolutionPath(resourcePath);
-        metadata.setCreationTime(bundle.getLastModified());
-        metadata.setModificationTime(bundle.getLastModified());
+        metadata.setCreationTime(bundle.getBundle().getLastModified());
+        metadata.setModificationTime(bundle.getBundle().getLastModified());
 
         if (resourcePath.endsWith("/")) {
 
@@ -197,8 +199,8 @@ public class BundleResource extends SlingAdaptable implements Resource {
         if (url == null) {
             try {
                 url = new URL(BundleResourceURLStreamHandler.PROTOCOL, null,
-                    -1, path, new BundleResourceURLStreamHandler(bundle,
-                        mappedPath.getEntryPath(path)));
+                    -1, path, new BundleResourceURLStreamHandler(
+                        bundle.getBundle(), mappedPath.getEntryPath(path)));
             } catch (MalformedURLException mue) {
                 log.error("getURL: Cannot get URL for " + this, mue);
             }
@@ -211,14 +213,14 @@ public class BundleResource extends SlingAdaptable implements Resource {
         return new BundleResourceIterator(this);
     }
 
-    Bundle getBundle() {
+    BundleResourceCache getBundle() {
         return bundle;
     }
 
     MappedPath getMappedPath() {
         return mappedPath;
     }
-    
+
     boolean isFile() {
         return NT_FILE.equals(getResourceType());
     }
