@@ -18,6 +18,7 @@
  */
 package org.apache.sling.bundleresource.impl;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +37,26 @@ public class Activator implements BundleActivator, BundleListener {
      * paths provided by the bundle (value is "Sling-Bundle-Resources").
      */
     public static final String BUNDLE_RESOURCE_ROOTS = "Sling-Bundle-Resources";
+
+    /**
+     * Fully qualified name of the Web Console Plugin class. This class will be
+     * loaded dynamically to prevent issues if the Felix Web Console is not
+     * installed in the system (value is
+     * "org.apache.sling.bundleresource.impl.BundleResourceWebConsolePlugin").
+     */
+    private static final String CONSOLE_PLUGIN_CLASS = "org.apache.sling.bundleresource.impl.BundleResourceWebConsolePlugin";
+
+    /**
+     * Name of the initialization method to call on the Web Console Plugin class
+     * (value is "initPlugin").
+     */
+    private static final String METHOD_INIT = "initPlugin";
+
+    /**
+     * Name of the shutdown method to call on the Web Console Plugin class
+     * (value is "destroyPlugin").
+     */
+    private static final String METHOD_DESTROY = "destroyPlugin";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -63,9 +84,17 @@ public class Activator implements BundleActivator, BundleListener {
                 "activate: Problem while registering bundle resources for existing bundles",
                 t);
         }
+
+        // hackery thing to prevent problems if the web console is not present
+        callMethod(CONSOLE_PLUGIN_CLASS, METHOD_INIT,
+            new Class<?>[] { BundleContext.class }, new Object[] { context });
+
     }
 
     public void stop(BundleContext context) throws Exception {
+        // hackery thing to prevent problems if the web console is not present
+        callMethod(CONSOLE_PLUGIN_CLASS, METHOD_DESTROY, null, null);
+
         context.removeBundleListener(this);
         this.bundleContext = null;
     }
@@ -112,4 +141,36 @@ public class Activator implements BundleActivator, BundleListener {
         }
     }
 
+    /**
+     * Helper method to call the static method <code>methodName</code> on the
+     * class <code>clazzName</code> with the given <code>args</code>. This
+     * method operates exclusively using reflection to prevent any issues if the
+     * class cannot be loaded.
+     * <p>
+     * The goal is to enable running the bundle resource provider without a hard
+     * dependency on the Felix Web Console.
+     * 
+     * @param clazzName The fully qualified name of the class whose static
+     *            method is to be called.
+     * @param methodName The name of the method to call. This method must be
+     *            declared in the given class.
+     * @param argTypes The types of arguments of the methods to be able to find
+     *            the method. This may be <code>null</code> if the method has
+     *            no arguments.
+     * @param args The actual arguments to the method. This may be
+     *            <code>null</code> if the method has no arguments.
+     */
+    private void callMethod(String clazzName, String methodName,
+            Class<?>[] argTypes, Object[] args) {
+        try {
+            Class<?> clazz = getClass().getClassLoader().loadClass(clazzName);
+            Method method = clazz.getDeclaredMethod(methodName, argTypes);
+            if (!method.isAccessible()) {
+                method.setAccessible(true);
+            }
+            method.invoke(null, args);
+        } catch (Throwable t) {
+            // ignore anything
+        }
+    }
 }
