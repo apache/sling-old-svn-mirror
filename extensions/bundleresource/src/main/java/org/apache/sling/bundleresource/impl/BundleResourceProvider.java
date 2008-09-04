@@ -48,7 +48,7 @@ public class BundleResourceProvider implements ResourceProvider {
     private final MappedPath[] roots;
 
     private ServiceRegistration serviceRegistration;
-    
+
     /**
      * Creates Bundle resource provider accessing entries in the given Bundle an
      * supporting resources below root paths given by the rootList which is a
@@ -70,38 +70,51 @@ public class BundleResourceProvider implements ResourceProvider {
 
     void registerService(BundleContext context) {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.SERVICE_DESCRIPTION, "Provider of Bundle based Resources");
+        props.put(Constants.SERVICE_DESCRIPTION,
+            "Provider of Bundle based Resources");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(ROOTS, getRoots());
-        
+
         serviceRegistration = context.registerService(SERVICE_NAME, this, props);
     }
-    
+
     void unregisterService() {
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         }
     }
+
+    //---------- Web Console plugin support
+    
+    BundleResourceCache getBundleResourceCache() {
+        return bundle;
+    }
+
+    MappedPath[] getMappedPaths() {
+        return roots;
+    }
+    
+    //---------- internal
     
     /** Returns the root paths */
     private String[] getRoots() {
         String[] rootPaths = new String[roots.length];
-        for (int i=0; i < roots.length; i++) {
+        for (int i = 0; i < roots.length; i++) {
             rootPaths[i] = roots[i].getResourceRoot();
         }
         return rootPaths;
     }
-    
+
     private MappedPath getMappedPath(String resourcePath) {
-        for (MappedPath mappedPath: roots) {
+        for (MappedPath mappedPath : roots) {
             if (mappedPath.isChild(resourcePath)) {
                 return mappedPath;
             }
         }
-        
+
         return null;
     }
-    
+
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) {
         return getResource(resourceResolver, path);
@@ -115,9 +128,10 @@ public class BundleResourceProvider implements ResourceProvider {
     public Resource getResource(ResourceResolver resourceResolver, String path) {
         MappedPath mappedPath = getMappedPath(path);
         if (mappedPath != null) {
-            return BundleResource.getResource(resourceResolver, bundle, mappedPath, path);
+            return BundleResource.getResource(resourceResolver, bundle,
+                mappedPath, path);
         }
-        
+
         return null;
     }
 
@@ -140,6 +154,6 @@ public class BundleResourceProvider implements ResourceProvider {
         // the parent resource cannot have children in this provider,
         // though this is basically not expected, we still have to
         // be prepared for such a situation
-        return Collections.<Resource>emptyList().iterator();
+        return Collections.<Resource> emptyList().iterator();
     }
 }
