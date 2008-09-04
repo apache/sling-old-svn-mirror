@@ -37,17 +37,19 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/bundleresource</url>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/bundleresource
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/bundleresource
+        </url>
     </scm>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -58,8 +60,12 @@
                             org.apache.sling.bundleresource.impl.Activator
                         </Bundle-Activator>
                         <Private-Package>
-                            org.apache.sling.bundleresource.*
+                            org.apache.sling.bundleresource.*,
+                            org.osgi.util.tracker
                         </Private-Package>
+                        <DynamicImport-Package>
+                            org.apache.felix.webconsole
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -95,11 +101,17 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
