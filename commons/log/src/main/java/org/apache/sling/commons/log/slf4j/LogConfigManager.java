@@ -245,7 +245,7 @@ public class LogConfigManager implements ILoggerFactory {
                 // ensure unique configuration of the log writer
                 SlingLoggerWriter existingWriter = writerByFileName.get(logFileName);
                 if (existingWriter != null
-                    && existingWriter.getConfigurationPID().equals(pid)) {
+                    && !existingWriter.getConfigurationPID().equals(pid)) {
                     // this file is already configured by another LOG_PID
                     throw new ConfigurationException(LogManager.LOG_FILE,
                         "LogFile " + logFileName
