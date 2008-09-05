@@ -44,7 +44,7 @@ public class LogServiceFactory implements ServiceFactory {
 
     }
 
-    // ---------- ServiceFactory ----------------------------------------------
+    // ---------- ServiceFactory
 
     public Object getService(Bundle bundle, ServiceRegistration registration) {
         return new LogServiceImpl(bundle);
@@ -72,7 +72,6 @@ public class LogServiceFactory implements ServiceFactory {
         }
 
         // ---------- LogService
-        // ---------------------------------------------------
 
         public void log(int level, String message) {
             this.log(null, level, message, null);
