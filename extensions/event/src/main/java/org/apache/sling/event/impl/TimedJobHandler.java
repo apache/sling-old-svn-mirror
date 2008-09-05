@@ -134,13 +134,6 @@ public class TimedJobHandler
     }
 
     /**
-     * Create a unique node name for this timed job.
-     */
-    private String getNodeName(final String jobId) {
-        return Text.escapeIllegalJcrChars(jobId);
-    }
-
-    /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#runInBackground()
      */
     protected void runInBackground() {
@@ -201,7 +194,7 @@ public class TimedJobHandler
         try {
             // get parent node
             final Node parentNode = this.ensureRepositoryPath();
-            final String nodeName = this.getNodeName(scheduleInfo.jobId);
+            final String nodeName = scheduleInfo.jobId;
             // is there already a node?
             final Node foundNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
             Lock lock = null;
@@ -480,16 +473,18 @@ public class TimedJobHandler
             Session s = null;
             try {
                 s = this.createSession();
-                final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                final String nodeName = this.getNodeName(info.jobId);
-                final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
-                if ( eventNode != null ) {
-                    try {
-                        eventNode.remove();
-                        parentNode.save();
-                    } catch (RepositoryException re) {
-                        // we ignore the exception if removing fails
-                        ignoreException(re);
+                if ( s.itemExists(this.repositoryPath) ) {
+                    final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                    final String nodeName = info.jobId;
+                    final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+                    if ( eventNode != null ) {
+                        try {
+                            eventNode.remove();
+                            parentNode.save();
+                        } catch (RepositoryException re) {
+                            // we ignore the exception if removing fails
+                            ignoreException(re);
+                        }
                     }
                 }
             } catch (RepositoryException re) {
@@ -556,7 +551,6 @@ public class TimedJobHandler
         super.addNodeProperties(eventNode, event);
         eventNode.setProperty(EventHelper.NODE_PROPERTY_TOPIC, (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC));
         final ScheduleInfo info = new ScheduleInfo(event);
-        eventNode.setProperty(EventHelper.NODE_PROPERTY_JOBID, info.jobId);
         if ( info.date != null ) {
             final Calendar c = Calendar.getInstance();
             c.setTime(info.date);
@@ -614,6 +608,7 @@ public class TimedJobHandler
             String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
             String jId = (String)event.getProperty(EventUtil.PROPERTY_JOB_ID);
 
+            //this.jobId = getJobId(topic, id, jId);
             this.jobId = getJobId(topic, id, jId);
         }
 
@@ -633,7 +628,7 @@ public class TimedJobHandler
         }
 
         public static String getJobId(String topic, String timedEventId, String jobId) {
-            return "TimedEvent: " + topic + ':' + (timedEventId != null ? timedEventId : "") + ':' + (jobId != null ? jobId : "");
+            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? Text.escapeIllegalJcrChars(timedEventId) : "") + '_' + (jobId != null ? Text.escapeIllegalJcrChars(jobId) : "");
         }
     }
 
@@ -644,11 +639,13 @@ public class TimedJobHandler
         Session s = null;
         try {
             s = this.createSession();
-            final Node parentNode = (Node)s.getItem(this.repositoryPath);
-            final String nodeName = this.getNodeName(ScheduleInfo.getJobId(topic, eventId, jobId));
-            final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
-            if ( eventNode != null ) {
-                return this.readEvent(eventNode);
+            if ( s.itemExists(this.repositoryPath) ) {
+                final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                final String nodeName = ScheduleInfo.getJobId(topic, eventId, jobId);
+                final Node eventNode = parentNode.hasNode(nodeName) ? parentNode.getNode(nodeName) : null;
+                if ( eventNode != null ) {
+                    return this.readEvent(eventNode);
+                }
             }
         } catch (RepositoryException re) {
             this.logger.error("Unable to create a session.", re);
@@ -674,18 +671,15 @@ public class TimedJobHandler
             final QueryManager qManager = s.getWorkspace().getQueryManager();
             final StringBuffer buffer = new StringBuffer("/jcr:root");
             buffer.append(this.repositoryPath);
+            if ( topic != null ) {
+                buffer.append('/');
+                buffer.append(topic.replace('/', '.'));
+            }
             buffer.append("//element(*, ");
             buffer.append(this.getEventNodeType());
-            buffer.append(") [");
-            if ( topic != null ) {
-                buffer.append('@');
-                buffer.append(EventHelper.NODE_PROPERTY_TOPIC);
-                buffer.append("='");
-                buffer.append(topic);
-                buffer.append("'");
-            }
+            buffer.append(")");
             if ( filterProps != null && filterProps.length > 0 ) {
-                buffer.append(" and (");
+                buffer.append(" [");
                 int index = 0;
                 for (Map<String,Object> template : filterProps) {
                     if ( index > 0 ) {
@@ -718,9 +712,8 @@ public class TimedJobHandler
                     buffer.append(')');
                     index++;
                 }
-                buffer.append(')');
+                buffer.append(']');
             }
-            buffer.append("]");
             final String queryString = buffer.toString();
             logger.debug("Executing job query {}.", queryString);
 
