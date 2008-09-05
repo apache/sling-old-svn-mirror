@@ -16,10 +16,13 @@
  */
 package org.apache.sling.commons.log;
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -39,12 +42,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>LogReaderServiceFactory</code> TODO
- * <p>
- * <blockquote> When a bundle which registers a LogListener object is stopped or
- * otherwise releases the Log Reader Service, the Log Reader Service must remove
- * all of the bundle's listeners.</blockquote>
- * <p>
- * TODO: To support configuration, we will implement ManagedService here !
  */
 public class LogSupport implements BundleListener, ServiceListener,
         FrameworkListener {
@@ -56,64 +53,103 @@ public class LogSupport implements BundleListener, ServiceListener,
      */
     private static final String COMPONENT_NAME = "component.name";
 
-    private final Object lock = new Object();
+    /**
+     * The empty enumeration currently returned on the {@link #getLog()} call
+     * because we do not currently record the log events.
+     */
+    private final Enumeration<?> EMPTY = Collections.enumeration(Collections.emptyList());
 
+    // The registered LogListeners
     private LogListenerProxy[] listeners;
 
+    // The lock used to guard concurrent access to the listeners array
+    private final Object listenersLock = new Object();
+
+    // The loggers by bundle id used for logging messages originated from
+    // specific bundles
+    private Map<Long, Logger> loggers = new HashMap<Long, Logger>();
+
+    // the worker thread actually sending LogEvents to LogListeners
+    private LogEntryDispatcher logEntryDispatcher;
+
     /* package */LogSupport() {
+        logEntryDispatcher = new LogEntryDispatcher(this);
+        logEntryDispatcher.start();
     }
 
     /* package */void shutdown() {
-        synchronized (this.lock) {
-            this.listeners = null;
+
+        // terminate the dispatcher and wait for its termination here
+        logEntryDispatcher.terminate();
+        try {
+            logEntryDispatcher.join(1000L);
+        } catch (InterruptedException ie) {
+            // don't care
+        }
+
+        // drop all listeners
+        synchronized (listenersLock) {
+            listeners = null;
         }
     }
 
     // ---------- LogReaderService interface -----------------------------------
 
     /* package */void addLogListener(Bundle bundle, LogListener listener) {
-        synchronized (this.lock) {
+        synchronized (listenersLock) {
             LogListenerProxy llp = new LogListenerProxy(bundle, listener);
-            if (this.listeners == null) {
-                this.listeners = new LogListenerProxy[] { llp };
-            } else if (this.getListener(listener) < 0) {
-                LogListenerProxy[] newListeners = new LogListenerProxy[this.listeners.length + 1];
-                System.arraycopy(this.listeners, 0, newListeners, 0,
-                    this.listeners.length);
-                newListeners[this.listeners.length] = llp;
-                this.listeners = newListeners;
+            if (listeners == null) {
+                listeners = new LogListenerProxy[] { llp };
+            } else if (getListener(listener) < 0) {
+                LogListenerProxy[] newListeners = new LogListenerProxy[listeners.length + 1];
+                System.arraycopy(listeners, 0, newListeners, 0,
+                    listeners.length);
+                newListeners[listeners.length] = llp;
+                listeners = newListeners;
             }
         }
     }
 
     /* package */void removeLogListener(LogListener listener) {
-        synchronized (this.lock) {
+        synchronized (listenersLock) {
             // no listeners registered, nothing to do
-            if (this.listeners == null) {
+            if (listeners == null) {
                 return;
             }
 
             // listener is not registered, nothing to do
-            int idx = this.getListener(listener);
+            int idx = getListener(listener);
             if (idx < 0) {
                 return;
             }
 
-            LogListenerProxy[] newListeners = new LogListenerProxy[this.listeners.length - 1];
+            LogListenerProxy[] newListeners = new LogListenerProxy[listeners.length - 1];
             if (idx > 0) {
-                System.arraycopy(this.listeners, 0, newListeners, 0, idx);
+                System.arraycopy(listeners, 0, newListeners, 0, idx);
             }
-            if (idx < this.listeners.length) {
-                System.arraycopy(this.listeners, idx + 1, newListeners, 0,
+            if (idx < listeners.length) {
+                System.arraycopy(listeners, idx + 1, newListeners, 0,
                     newListeners.length - idx);
             }
-            this.listeners = newListeners;
+            listeners = newListeners;
         }
     }
 
+    /**
+     * Removes all registered LogListeners belonging to the given bundle. This
+     * is the task required by the specification from a Log Service
+     * implemenation:
+     * <p>
+     * <blockquote> When a bundle which registers a LogListener object is
+     * stopped or otherwise releases the Log Reader Service, the Log Reader
+     * Service must remove all of the bundle's listeners.</blockquote>
+     * <p>
+     * 
+     * @param bundle The bundle whose listeners are to be removed.
+     */
     /* package */void removeLogListeners(Bundle bundle) {
         // grab an immediate copy of the array
-        LogListenerProxy[] current = this.getListeners();
+        LogListenerProxy[] current = getListeners();
         if (current == null) {
             return;
         }
@@ -121,15 +157,15 @@ public class LogSupport implements BundleListener, ServiceListener,
         // check for listeners by bundle
         for (int i = 0; i < current.length; i++) {
             if (current[i].hasBundle(bundle)) {
-                this.removeLogListener(current[i]);
+                removeLogListener(current[i]);
             }
         }
     }
 
     private int getListener(LogListener listener) {
-        if (this.listeners != null) {
-            for (int i = 0; i < this.listeners.length; i++) {
-                if (this.listeners[i].isSame(listener)) {
+        if (listeners != null) {
+            for (int i = 0; i < listeners.length; i++) {
+                if (listeners[i].isSame(listener)) {
                     return i;
                 }
             }
@@ -139,47 +175,45 @@ public class LogSupport implements BundleListener, ServiceListener,
         return -1;
     }
 
+    /**
+     * Returns the currently registered LogListeners
+     */
     private LogListenerProxy[] getListeners() {
-        synchronized (this.lock) {
-            return this.listeners;
+        synchronized (listenersLock) {
+            return listeners;
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private final Enumeration EMPTY = new Enumeration() {
-        public boolean hasMoreElements() {
-            return false;
-        }
-
-        public Object nextElement() {
-            throw new NoSuchElementException("Empty");
-        }
-    };
-
-    /* package */@SuppressWarnings("unchecked")
-    Enumeration getLog() {
-        return this.EMPTY;
+    /**
+     * Returns an empty enumeration for now because we do not implement log
+     * entry recording for the moment.
+     */
+    Enumeration<?> getLog() {
+        return EMPTY;
     }
 
     // ---------- Firing a log event -------------------------------------------
 
-    /* package */void fireLogEvent(LogEntry entry) {
-        this.logOut(entry);
+    /**
+     * Logs the given log entry to the log file and enqueues for the dispatching
+     * to the registered LogListeners in a separate worker thread.
+     */
+    /* package */void fireLogEvent(LogEntry logEntry) {
 
-        // grab an immediate copy of the array
-        LogListener[] current = this.getListeners();
-        if (current == null) {
-            return;
-        }
+        // actually log it to SLF4J
+        logOut(logEntry);
 
-        // fire the events outside of the lock
-        for (int i = 0; i < current.length; i++) {
-            current[i].logged(entry);
-        }
+        // enqueue for asynchronous delivery
+        logEntryDispatcher.enqueLogEntry(logEntry);
     }
 
     // ---------- BundleListener -----------------------------------------------
 
+    /**
+     * Listens for Bundle events and logs the respective events according to the
+     * Log Service specification. In addition, all LogListener instances
+     * registered for stopped bundles are removed by this method.
+     */
     public void bundleChanged(BundleEvent event) {
         String message;
         switch (event.getType()) {
@@ -192,7 +226,7 @@ public class LogSupport implements BundleListener, ServiceListener,
             case BundleEvent.STOPPED:
                 // this is special, as we have to fix the listener list for
                 // stopped bundles
-                this.removeLogListeners(event.getBundle());
+                removeLogListeners(event.getBundle());
                 message = "BundleEvent STOPPED";
                 break;
             case BundleEvent.UPDATED:
@@ -213,11 +247,15 @@ public class LogSupport implements BundleListener, ServiceListener,
 
         LogEntry entry = new LogEntryImpl(event.getBundle(), null,
             LogService.LOG_INFO, message, null);
-        this.fireLogEvent(entry);
+        fireLogEvent(entry);
     }
 
     // ---------- ServiceListener ----------------------------------------------
 
+    /**
+     * Listens for Service events and logs the respective events according to
+     * the Log Service specification.
+     */
     public void serviceChanged(ServiceEvent event) {
         int level = LogService.LOG_INFO;
         String message;
@@ -244,11 +282,21 @@ public class LogSupport implements BundleListener, ServiceListener,
         LogEntry entry = new LogEntryImpl(
             event.getServiceReference().getBundle(),
             event.getServiceReference(), level, message, null);
-        this.fireLogEvent(entry);
+        fireLogEvent(entry);
     }
 
     // ---------- FrameworkListener --------------------------------------------
 
+    /**
+     * Listens for Framework events and logs the respective events according to
+     * the Log Service specification.
+     * <p>
+     * In the case of a Framework ERROR which is a ClassNotFoundException for an
+     * unresolved bundle, the message is logged at INFO level instead of ERROR
+     * level as prescribed by the spec. This is because such a situation should
+     * not really result in a Framework ERROR but the Apache Felix framework has
+     * no means of controlling this at the moment (framework 1.0.4 release).
+     */
     public void frameworkEvent(FrameworkEvent event) {
         int level = LogService.LOG_INFO;
         String message;
@@ -304,52 +352,61 @@ public class LogSupport implements BundleListener, ServiceListener,
 
         LogEntry entry = new LogEntryImpl(event.getBundle(), null, level,
             message, exception);
-        this.fireLogEvent(entry);
+        fireLogEvent(entry);
     }
 
     // ---------- Effective logging --------------------------------------------
 
-    private Map<Long, Logger> loggers = new HashMap<Long, Logger>();
-
+    /**
+     * Get a logger for messages orginating from the given bundle. If no bundle
+     * is specified, we use the system bundle logger.
+     * 
+     * @param bundle The bundle for which a logger is to be returned.
+     * @return The Logger for the bundle.
+     */
     private Logger getLogger(Bundle bundle) {
         Long bundleId = new Long((bundle == null) ? 0 : bundle.getBundleId());
-        Logger log = this.loggers.get(bundleId);
+        Logger log = loggers.get(bundleId);
         if (log == null) {
-            
+
             String name;
             if (bundle == null) {
-                
+
                 // if we have no bundle, use the system bundle's name
                 name = Constants.SYSTEM_BUNDLE_SYMBOLICNAME;
-                
+
             } else {
-                
+
                 // otherwise use the bundle symbolic name
                 name = bundle.getSymbolicName();
-                
+
                 // if the bundle has no symbolic name, use the location
                 if (name == null) {
-                    name = bundle.getLocation(); 
+                    name = bundle.getLocation();
                 }
-                
+
                 // if the bundle also has no location, use the bundle Id
                 if (name == null) {
                     name = String.valueOf(bundle.getBundleId());
                 }
             }
-            
+
             log = LoggerFactory.getLogger(name);
-            this.loggers.put(bundleId, log);
+            loggers.put(bundleId, log);
         }
         return log;
     }
 
+    /**
+     * Actually logs the given log entry to the logger for the bundle recorded
+     * in the log entry.
+     */
     private void logOut(LogEntry logEntry) {
         // /* package */ void logOut(Bundle bundle, ServiceReference sr, int
         // level, String message, Throwable exception) {
 
         // get the logger for the bundle
-        Logger log = this.getLogger(logEntry.getBundle());
+        Logger log = getLogger(logEntry.getBundle());
 
         StringBuffer msg = new StringBuffer();
 
@@ -402,6 +459,13 @@ public class LogSupport implements BundleListener, ServiceListener,
 
     // ---------- internal class -----------------------------------------------
 
+    /**
+     * The <code>LogListenerProxy</code> class is a proxy to the actually
+     * registered <code>LogListener</code> which also records the bundle
+     * registering the listener. This allows for the removal of the log
+     * listeners registered by bundles which have not been removed before the
+     * bundle has been stopped.
+     */
     private static class LogListenerProxy implements LogListener {
 
         private final int runningBundle = Bundle.STARTING | Bundle.ACTIVE
@@ -417,17 +481,106 @@ public class LogSupport implements BundleListener, ServiceListener,
         }
 
         public void logged(LogEntry entry) {
-            if ((this.bundle.getState() & this.runningBundle) != 0) {
-                this.delegatee.logged(entry);
+            if ((bundle.getState() & runningBundle) != 0) {
+                delegatee.logged(entry);
             }
         }
 
         /* package */boolean isSame(LogListener listener) {
-            return listener == this.delegatee || listener == this;
+            return listener == delegatee || listener == this;
         }
 
         /* package */boolean hasBundle(Bundle bundle) {
-            return this.bundle == bundle;
+            return bundle == bundle;
+        }
+    }
+
+    /**
+     * The <code>LogEntryDispatcher</code> implements the worker thread
+     * responsible for delivering log events to the log listeners.
+     */
+    private static class LogEntryDispatcher extends Thread {
+
+        // provides the actual log listeners on demand
+        private final LogSupport logSupport;
+
+        // the queue of log events to be dispatched
+        private final BlockingQueue<LogEntry> dispatchQueue;
+
+        // true as long as the thread is active
+        private boolean active;
+
+        LogEntryDispatcher(LogSupport logSupport) {
+            super("LogEntry Dispatcher");
+
+            this.logSupport = logSupport;
+            this.dispatchQueue = new LinkedBlockingQueue<LogEntry>();
+            this.active = true;
+        }
+
+        /**
+         * Add a log entry for dispatching.
+         */
+        void enqueLogEntry(LogEntry logEntry) {
+            dispatchQueue.offer(logEntry);
+        }
+
+        /**
+         * Get the next log entry for dispatching. This method blocks until an
+         * event is available or the thread is interrupted.
+         * 
+         * @return The next event to dispatch
+         * @throws InterruptedException If the thread has been interrupted while
+         *             waiting for a log event to dispatch.
+         */
+        LogEntry dequeueLogEntry() throws InterruptedException {
+            return dispatchQueue.take();
+        }
+
+        /**
+         * Terminates this work thread by resetting the active flag and
+         * interrupting itself such that the {@link #dequeueLogEntry()} is
+         * aborted for the thread to terminate.
+         */
+        void terminate() {
+            active = false;
+            interrupt();
+        }
+
+        /**
+         * Runs the actual log event dispatching. This method continues to get
+         * log events from the {@link #dequeueLogEntry()} method until the
+         * active flag is reset.
+         */
+        @Override
+        public void run() {
+            while (active) {
+
+                LogEntry logEntry = null;
+                try {
+                    logEntry = dequeueLogEntry();
+                } catch (InterruptedException ie) {
+                    // don't care, this is expected
+                }
+
+                // dispatch the log entry
+                if (logEntry != null) {
+
+                    // grab an immediate copy of the array
+                    LogListener[] logListeners = logSupport.getListeners();
+
+                    // fire the events outside of the listenersLock
+                    if (logListeners != null) {
+                        for (LogListener logListener : logListeners) {
+                            try {
+                                logListener.logged(logEntry);
+                            } catch (Throwable t) {
+                                // should we really care ??
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
