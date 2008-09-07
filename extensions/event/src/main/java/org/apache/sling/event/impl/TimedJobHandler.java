@@ -45,7 +45,6 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -628,7 +627,7 @@ public class TimedJobHandler
         }
 
         public static String getJobId(String topic, String timedEventId, String jobId) {
-            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? Text.escapeIllegalJcrChars(timedEventId) : "") + '_' + (jobId != null ? Text.escapeIllegalJcrChars(jobId) : "");
+            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? JobEventHandler.filter(timedEventId) : "") + '_' + (jobId != null ? JobEventHandler.filter(jobId) : "");
         }
     }
 
