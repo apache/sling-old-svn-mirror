@@ -20,12 +20,14 @@ package org.apache.sling.event.impl;
 
 
 /**
- * Helper class defining some constants and providing support for identifying nodes in a cluster.
+ * Helper class defining some constants and utility methods.
  */
 public abstract class EventHelper {
 
+    /** The name of the thread pool for the eventing stuff. */
     public static final String THREAD_POOL_NAME = "SLING_EVENTING";
 
+    /** The namespace prefix. */
     public static final String EVENT_PREFIX = "slingevent:";
 
     public static final String NODE_PROPERTY_TOPIC = "slingevent:topic";
@@ -46,5 +48,47 @@ public abstract class EventHelper {
     public static final String TIMED_EVENTS_NODE_TYPE = "slingevent:TimedEvents";
     public static final String TIMED_EVENT_NODE_TYPE = "slingevent:TimedEvent";
 
+    /** The nodetype for newly created folders */
     public static final String NODETYPE_FOLDER = "sling:Folder";
+
+    /** Allowed characters for a node name */
+    private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
+    /** Replacement characters for unallowed characters in a node name */
+    private static final char REPLACEMENT_CHAR = '_';
+
+    /**
+     * Filter the node name for not allowed characters and replace them.
+     * @param nodeName The suggested node name.
+     * @return The filtered node name.
+     */
+    public static String filter(final String nodeName) {
+        final StringBuffer sb  = new StringBuffer();
+        char lastAdded = 0;
+
+        for(int i=0; i < nodeName.length(); i++) {
+            final char c = nodeName.charAt(i);
+            char toAdd = c;
+
+            if (ALLOWED_CHARS.indexOf(c) < 0) {
+                if (lastAdded == REPLACEMENT_CHAR) {
+                    // do not add several _ in a row
+                    continue;
+                }
+                toAdd = REPLACEMENT_CHAR;
+
+            } else if(i == 0 && Character.isDigit(c)) {
+                sb.append(REPLACEMENT_CHAR);
+            }
+
+            sb.append(toAdd);
+            lastAdded = toAdd;
+        }
+
+        if (sb.length()==0) {
+            sb.append(REPLACEMENT_CHAR);
+        }
+
+        return sb.toString();
+    }
+
 }
