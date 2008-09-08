@@ -16,12 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrbundles;
+package org.apache.sling.jcr.jcrinstall.osgi;
 
-import junit.framework.TestCase;
+/** Result codes for resource installation operations */
+public class InstallResultCode {
+    /** Result code for installOrUpdate: resource was ignored */
+    public static final int IGNORED = 0;
 
-public class DummyTest extends TestCase {
-    public void testNothing() {
-        
-    }
+    /** Result code for installOrUpdate: resource was installed */
+    public static final int INSTALLED = 1;
+    
+    /** Result code for installOrUpdate: resource was updated */
+    public static final int UPDATED = 2;
 }

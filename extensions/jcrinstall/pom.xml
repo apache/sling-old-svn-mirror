@@ -98,6 +98,11 @@
       <version>2.0.2-incubator</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
 </project>
