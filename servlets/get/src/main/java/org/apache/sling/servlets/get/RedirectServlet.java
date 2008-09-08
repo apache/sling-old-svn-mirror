@@ -30,6 +30,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
 
@@ -53,13 +54,13 @@ import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
  * sent where the target is the relative URL from the current resource to the
  * target resource. Selectors, extension, suffix and query string are also
  * appended to the redirect URL.
- * 
+ *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- * 
+ *
  * @scr.property name="service.description" value="Request Redirect Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"
  * @scr.property name="sling.servlet.methods" value="GET"
  */
@@ -81,34 +82,44 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-        Resource targetResource = request.getResourceResolver().getResource(
-            request.getResource(), TARGET_PROP);
-        if (targetResource == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND,
-                "Missing target for redirection");
-            return;
-        }
-
         String targetPath = null;
 
-        // if the target resource is a reference, we can adapt to node
-        Node targetNode = targetResource.adaptTo(Node.class);
-        if (targetNode != null) {
-
-            // get the node path (aka resource path)
-            try {
-                targetPath = targetNode.getPath();
-            } catch (RepositoryException re) {
-                throw new ServletException(
-                    "Failed to access repository for redirection", re);
-
+        // convert resource to a value map
+        final Resource rsrc = request.getResource();
+        final ValueMap valueMap = rsrc.adaptTo(ValueMap.class);
+        if ( valueMap != null ) {
+            targetPath = valueMap.get(TARGET_PROP, String.class);
+        }
+        if ( targetPath == null ) {
+            // old behaviour
+            final Resource targetResource = request.getResourceResolver().getResource(
+                    rsrc, TARGET_PROP);
+            if (targetResource == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                    "Missing target for redirection");
+                return;
             }
 
-        } else {
 
-            // if the target resource is a path (string), redirect there
-            targetPath = targetResource.adaptTo(String.class);
+            // if the target resource is a reference, we can adapt to node
+            Node targetNode = targetResource.adaptTo(Node.class);
+            if (targetNode != null) {
 
+                // get the node path (aka resource path)
+                try {
+                    targetPath = targetNode.getPath();
+                } catch (RepositoryException re) {
+                    throw new ServletException(
+                        "Failed to access repository for redirection", re);
+
+                }
+
+            } else {
+
+                // if the target resource is a path (string), redirect there
+                targetPath = targetResource.adaptTo(String.class);
+
+            }
         }
 
         // if we got a target path, make it external and redirect to it
@@ -124,7 +135,7 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
         // no way of finding the target, just fail
         response.sendError(HttpServletResponse.SC_NOT_FOUND,
-            "Cannot redirect to target resource " + targetResource);
+            "Cannot redirect to target resource " + targetPath);
     }
 
     /**
