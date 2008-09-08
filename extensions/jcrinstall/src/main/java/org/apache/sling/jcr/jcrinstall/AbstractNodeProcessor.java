@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrbundles;
+package org.apache.sling.jcr.jcrinstall;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -27,7 +27,7 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import static org.apache.sling.jcr.jcrbundles.JcrBundlesConstants.STATUS_BASE_PATH;
+import static org.apache.sling.jcr.jcrinstall.JcrBundlesConstants.STATUS_BASE_PATH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

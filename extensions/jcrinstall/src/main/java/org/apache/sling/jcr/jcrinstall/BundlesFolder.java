@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrbundles;
+package org.apache.sling.jcr.jcrinstall;
 
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +32,8 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.jcr.api.SlingRepository;
-import static org.apache.sling.jcr.jcrbundles.JcrBundlesConstants.BUNDLES_NODENAME;
-import static org.apache.sling.jcr.jcrbundles.JcrBundlesConstants.STATUS_BASE_PATH;
+import static org.apache.sling.jcr.jcrinstall.JcrBundlesConstants.BUNDLES_NODENAME;
+import static org.apache.sling.jcr.jcrinstall.JcrBundlesConstants.STATUS_BASE_PATH;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrbundles;
+package org.apache.sling.jcr.jcrinstall;
 
-/** Constants for this module */
-public class JcrBundlesConstants {
-    
-    /** Where to store our status data */
-	public static final String STATUS_BASE_PATH = "/var/sling/jcrbundles/status";
-	
-	/** Prefix used for the OSGi Location field of bundles that we install */
-	public static final String JCRBUNDLES_LOCATION_PREFIX = "jcrbundles:";
-	
-    /** Only folders having this name can contain bundles and configs */
-    public static final String BUNDLES_NODENAME = "bundles";
+import java.util.Map;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
+/** Interface for accepting and processing Nodes */
+
+interface NodeProcessor {
+    boolean accepts(Node n) throws RepositoryException;
+    void process(Node n, Map<String, Boolean> flags) throws Exception;
+    void checkDeletions(Node statusNode, Map<String, Boolean> flags) throws Exception;
 }

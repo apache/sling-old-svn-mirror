@@ -27,20 +27,20 @@
     <relativePath> ../../sling/parent/</relativePath>
   </parent>
 
-  <artifactId>org.apache.sling.jcr.jcrbundles</artifactId>
+  <artifactId>org.apache.sling.jcr.jcrinstall</artifactId>
   <version>2.0.3-incubator-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Sling - JCR Bundles Manager</name>
+  <name>Sling - JCR OSGi Installer</name>
   <description> 
-    Loads OSGi bundles and their configurations from well-known 
-    locations in the JCR Repository. See SLING-587 for details. 
+    Loads OSGi bundles, deployment packages and configs from
+    configurable locations in the JCR repository.
   </description>
   
   <scm>
-    <connection> scm:svn:http://svn.apache.org/repos/asf/incubator/sling/whiteboard/jcrbundles </connection>
-    <developerConnection> scm:svn:https://svn.apache.org/repos/asf/incubator/sling/whiteboard/jcrbundles </developerConnection>
-    <url> http://svn.apache.org/viewvc/incubator/sling/whiteboard/jcrbundles </url>
+    <connection> scm:svn:http://svn.apache.org/repos/asf/incubator/sling/whiteboard/jcrinstall</connection>
+    <developerConnection> scm:svn:https://svn.apache.org/repos/asf/incubator/sling/whiteboard/jcrinstall</developerConnection>
+    <url> http://svn.apache.org/viewvc/incubator/sling/whiteboard/jcrinstall</url>
   </scm>
   
   <build>
@@ -55,7 +55,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package> org.apache.sling.jcr.jcrbundles </Private-Package>
+            <Private-Package> org.apache.sling.jcr.jcrinstall </Private-Package>
           </instructions>
         </configuration>
       </plugin>
