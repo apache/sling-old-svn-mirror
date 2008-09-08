@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrbundles;
+package org.apache.sling.jcr.jcrinstall;
 
-import static org.apache.sling.jcr.jcrbundles.JcrBundlesConstants.BUNDLES_NODENAME;
+import static org.apache.sling.jcr.jcrinstall.JcrBundlesConstants.BUNDLES_NODENAME;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrbundles;
+package org.apache.sling.jcr.jcrinstall;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import static org.apache.sling.jcr.jcrbundles.JcrBundlesConstants.JCRBUNDLES_LOCATION_PREFIX;
+import static org.apache.sling.jcr.jcrinstall.JcrBundlesConstants.JCRBUNDLES_LOCATION_PREFIX;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
