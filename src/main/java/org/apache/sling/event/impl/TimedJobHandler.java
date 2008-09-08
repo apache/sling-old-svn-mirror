@@ -627,7 +627,7 @@ public class TimedJobHandler
         }
 
         public static String getJobId(String topic, String timedEventId, String jobId) {
-            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? JobEventHandler.filter(timedEventId) : "") + '_' + (jobId != null ? JobEventHandler.filter(jobId) : "");
+            return topic.replace('/', '.') + "/TimedEvent " + (timedEventId != null ? EventHelper.filter(timedEventId) : "") + '_' + (jobId != null ? EventHelper.filter(jobId) : "");
         }
     }
 
