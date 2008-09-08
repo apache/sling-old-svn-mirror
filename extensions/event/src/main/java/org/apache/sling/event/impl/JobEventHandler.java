@@ -694,45 +694,12 @@ public class JobEventHandler
         }
     }
 
-    public static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
-    public static final char REPLACEMENT_CHAR = '_';
-
-    public static String filter(final String nodeName) {
-        final StringBuffer sb  = new StringBuffer();
-        char lastAdded = 0;
-
-        for(int i=0; i < nodeName.length(); i++) {
-            final char c = nodeName.charAt(i);
-            char toAdd = c;
-
-            if (ALLOWED_CHARS.indexOf(c) < 0) {
-                if (lastAdded == REPLACEMENT_CHAR) {
-                    // do not add several _ in a row
-                    continue;
-                }
-                toAdd = REPLACEMENT_CHAR;
-
-            } else if(i == 0 && Character.isDigit(c)) {
-                sb.append(REPLACEMENT_CHAR);
-            }
-
-            sb.append(toAdd);
-            lastAdded = toAdd;
-        }
-
-        if (sb.length()==0) {
-            sb.append(REPLACEMENT_CHAR);
-        }
-
-        return sb.toString();
-    }
-
     /**
      * Create a unique node path (folder and name) for the job.
      */
     private String getNodePath(final String jobTopic, final String jobId) {
         if ( jobId != null ) {
-            return jobTopic.replace('/', '.') + "/" + filter(jobId);
+            return jobTopic.replace('/', '.') + "/" + EventHelper.filter(jobId);
         }
         return jobTopic.replace('/', '.') + "/Job " + UUID.randomUUID().toString();
     }
