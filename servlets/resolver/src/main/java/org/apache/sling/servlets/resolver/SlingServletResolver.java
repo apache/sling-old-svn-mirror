@@ -564,6 +564,7 @@ public class SlingServletResolver implements ServletResolver,
     private boolean createServlet(ServletContext servletContext,
             ServiceReference reference) {
 
+        // check for a name, this is required
         String name = AbstractServiceReferenceConfig.getName(reference);
         if (name == null) {
             log.error(
@@ -572,8 +573,21 @@ public class SlingServletResolver implements ServletResolver,
             return false;
         }
 
-        Servlet servlet = (Servlet) context.locateService(REF_SERVLET,
-            reference);
+        // check for Sling properties in the service registration
+        ServletResourceProvider provider = servletResourceProviderFactory.create(reference);
+        if (provider == null) {
+            // this is expected if the servlet is not destined for Sling
+            return false;
+        }
+
+        // only now try to access the servlet service, this may still fail
+        Servlet servlet = null;
+        try {
+            servlet = (Servlet) context.locateService(REF_SERVLET,reference);
+        } catch (Throwable t) {
+            log.warn("bindServlet: Failed getting the service for reference "
+                + reference, t);
+        }
         if (servlet == null) {
             log.error(
                 "bindServlet: Servlet service not available from reference {}",
@@ -581,15 +595,10 @@ public class SlingServletResolver implements ServletResolver,
             return false;
         }
 
-        ServletResourceProvider provider = servletResourceProviderFactory.create(
-            reference, servlet);
-        if (provider == null) {
-            log.error(
-                "createServlet: Cannot register servlet {} without path or resource type configuration",
-                name);
-            return false;
-        }
-
+        // assign the servlet to the provider
+        provider.setServlet(servlet);
+        
+        // initialize now
         try {
             servlet.init(new SlingServletConfig(servletContext, reference, name));
             log.debug("bindServlet: Servlet {} added", name);
