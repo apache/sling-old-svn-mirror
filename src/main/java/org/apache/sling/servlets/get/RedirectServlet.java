@@ -20,8 +20,6 @@ package org.apache.sling.servlets.get;
 
 import java.io.IOException;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -36,20 +34,16 @@ import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
 
 /**
  * The <code>RedirectServlet</code> implements support for GET requests to
- * resources of type <code>sling:redirect</code>. This servlet accesses the
- * resource <code>sling:target</code> below the requested resource and tries
- * to redirect to the target resource:
+ * resources of type <code>sling:redirect</code>. This servlet tries to
+ * get the redirect target by
  * <ul>
- * <li>If the <code>sling:target</code> resource is based on a JCR property
- * of type <em>REFERENCE</em> the path of the target node is used as the
- * target for the redirection.
- * <li>Otherwise the <code>sling:target</code> resource is adapted to a
- * String which is taken as the path to the target for the redirection if not
- * <code>null</code>.
- * </ul>
+ * <li>first adapting the resource to a {@link ValueMap} and trying
+ * to get the property <code>sling:target</code>.</li>
+ * <li>The second attempt is to access the resource <code>sling:target</code>
+ * below the requested resource and attapt this to a string.</li>
  * <p>
- * If there is no <code>sling:target</code> child resource or the resource
- * does not adapt to a JCR Node or a (path) String a 404 (NOT FOUND) status is
+ * If there is no value found for <code>sling:target</code> a 404 (NOT FOUND)
+ * status is
  * sent by this servlet. Otherwise a 302 (FOUND, temporary redirect) status is
  * sent where the target is the relative URL from the current resource to the
  * target resource. Selectors, extension, suffix and query string are also
@@ -100,26 +94,9 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
                 return;
             }
 
+            // if the target resource is a path (string), redirect there
+            targetPath = targetResource.adaptTo(String.class);
 
-            // if the target resource is a reference, we can adapt to node
-            Node targetNode = targetResource.adaptTo(Node.class);
-            if (targetNode != null) {
-
-                // get the node path (aka resource path)
-                try {
-                    targetPath = targetNode.getPath();
-                } catch (RepositoryException re) {
-                    throw new ServletException(
-                        "Failed to access repository for redirection", re);
-
-                }
-
-            } else {
-
-                // if the target resource is a path (string), redirect there
-                targetPath = targetResource.adaptTo(String.class);
-
-            }
         }
 
         // if we got a target path, make it external and redirect to it
