@@ -38,6 +38,15 @@ class WatchedFolder {
         log.info("Watching folder " + path);
     }
     
+    void cleanup() {
+    	// TODO stop listening to events
+    }
+    
+    @Override
+    public String toString() {
+    	return getClass().getSimpleName() + ":" + path;
+    }
+    
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof WatchedFolder)) {
