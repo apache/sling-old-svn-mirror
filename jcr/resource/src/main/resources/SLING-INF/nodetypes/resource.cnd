@@ -37,3 +37,10 @@
 [sling:Folder] > nt:hierarchyNode, nt:unstructured
   orderable
   + * (nt:base) = sling:Folder version
+  
+//-----------------------------------------------------------------------------
+// Mixin node type for defining vanity resource path.
+[sling:VanityPath]
+  - sling:vanityPath (string)
+  - sling:redirect (boolean)
+  - sling:vanityOrder (long)
