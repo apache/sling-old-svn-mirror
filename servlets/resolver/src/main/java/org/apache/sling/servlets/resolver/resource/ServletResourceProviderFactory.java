@@ -27,8 +27,6 @@ import static org.apache.sling.servlets.resolver.ServletResolverConstants.SLING_
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.servlet.Servlet;
-
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
@@ -80,7 +78,7 @@ public class ServletResourceProviderFactory {
         this.servletRoot = servletRoot;
     }
 
-    public ServletResourceProvider create(ServiceReference ref, Servlet servlet) {
+    public ServletResourceProvider create(ServiceReference ref) {
 
         Set<String> pathSet = new HashSet<String>();
 
@@ -104,7 +102,7 @@ public class ServletResourceProviderFactory {
                 getServiceIdentifier(ref), pathSet);
         }
         
-        return new ServletResourceProvider(pathSet, servlet);
+        return new ServletResourceProvider(pathSet);
     }
 
     private void addByPath(Set<String> pathSet, ServiceReference ref) {
