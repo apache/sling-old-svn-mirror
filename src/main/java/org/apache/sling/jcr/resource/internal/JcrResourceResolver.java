@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.regex.Matcher;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +40,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl.ResourcePattern;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
@@ -260,6 +264,12 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return rootProvider.getSession();
     }
 
+    /**
+     * Try to get a resource for the given url
+     * @param uri The url
+     * @return The resource or null
+     * @throws SlingException
+     */
     private Resource urlToResource(String uri)
     throws SlingException {
         // apply regexp
@@ -290,11 +300,36 @@ public class JcrResourceResolver extends SlingAdaptable implements
             log.debug("Cannot resolve {} to resource", mappedUri);
         }
 
-        log.info("Could not resolve URL {} to a Resource", uri);
+        // handle vanity paths
+        final ResourcePathIterator it = new ResourcePathIterator(uri);
+        while (it.hasNext() ) {
+            final String curPath = it.next();
+            final Resource resource = searchVanityPath(curPath);
+            if ( resource != null ) {
+                final ResourceMetadata rm = resource.getResourceMetadata();
+                String rpi = uri.substring(curPath.length());
+                resource.getResourceMetadata().setResolutionPathInfo(rpi);
+
+                final String path = rm.getResolutionPath();
+                if (!uri.equals(path)) {
+                    resource.getResourceMetadata().setResolutionPath(uri);
+                }
+
+                return resource;
+            }
+        }
+
+        log.debug("Could not resolve URL {} to a Resource", uri);
         return null;
 
     }
 
+    /**
+     * Apply the regexp patterns
+     * @param uri
+     * @param patterns
+     * @return
+     */
     private String applyPattern(String uri, final ResourcePattern[] patterns) {
         for(final ResourcePattern pattern : patterns) {
             final Matcher matcher = pattern.pattern.matcher(uri);
@@ -314,6 +349,34 @@ public class JcrResourceResolver extends SlingAdaptable implements
             uri = myStringBuffer.toString();
         }
         return uri;
+    }
+
+    /**
+     * Search for a vanity path for this
+     * @param path
+     * @return
+     */
+    private Resource searchVanityPath(String path) {
+        final String queryString = "SELECT * FROM sling:VanityPath where sling:vanityPath ='" + path +
+            "' ORDER BY sling:vanityOrder DESC";
+        final Iterator<Resource> i = this.findResources(queryString, Query.SQL);
+        if ( i.hasNext() ) {
+            Resource rsrc = i.next();
+            boolean needsWrapper = false;
+            final ValueMap properties = rsrc.adaptTo(ValueMap.class);
+            if ( properties != null ) {
+                needsWrapper = properties.get("sling:redirect", false);
+            }
+            // check if this is a content node, then use the parent
+            if ( ResourceUtil.getName(rsrc).equals("jcr:content") ) {
+                rsrc = ResourceUtil.getParent(rsrc);
+            }
+            if ( needsWrapper ) {
+                rsrc = new RedirectResource(rsrc, path, rsrc.getPath());
+            }
+            return rsrc;
+        }
+        return null;
     }
 
     private Resource scanPath(final String uriPath)
@@ -357,4 +420,67 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return null;
     }
 
+    private static final class RedirectResource implements Resource {
+
+        final Resource resource;
+
+        final String target;
+
+        final String path;
+
+        public RedirectResource(final Resource rsrc,
+                                final String path,
+                                final String target) {
+            this.resource = rsrc;
+            this.path = path;
+            this.target = target;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getPath()
+         */
+        public String getPath() {
+            return this.path;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+         */
+        public ResourceMetadata getResourceMetadata() {
+            return this.resource.getResourceMetadata();
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+         */
+        public ResourceResolver getResourceResolver() {
+            return this.resource.getResourceResolver();
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+         */
+        public String getResourceSuperType() {
+            return null;
+        }
+
+        /**
+         * @see org.apache.sling.api.resource.Resource#getResourceType()
+         */
+        public String getResourceType() {
+            return "sling:redirect";
+        }
+
+        /**
+         * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
+         */
+        @SuppressWarnings("unchecked")
+        public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+            if ( type == ValueMap.class ) {
+                return (AdapterType) new ValueMapDecorator(Collections.singletonMap("sling:target", (Object)this.target));
+            }
+            return null;
+        }
+
+    }
 }

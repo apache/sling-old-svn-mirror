@@ -39,6 +39,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
@@ -53,7 +54,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        getSession();
+        assertTrue(RepositoryUtil.registerNodeType(getSession(),
+                this.getClass().getResourceAsStream("/SLING-INF/nodetypes/resource.cnd")));
 
         JcrResourceResolverFactoryImpl resFac = new JcrResourceResolverFactoryImpl();
 
