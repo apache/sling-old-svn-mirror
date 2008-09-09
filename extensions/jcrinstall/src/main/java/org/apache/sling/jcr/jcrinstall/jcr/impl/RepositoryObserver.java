@@ -19,12 +19,15 @@
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.observation.Event;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
@@ -50,8 +53,15 @@ public class RepositoryObserver {
     /** @scr.reference */
     private SlingRepository repository;
     
+    private Session session;
+    
+    private List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
+    
     /** Default set of root folders to watch */
     public static String[] DEFAULT_ROOTS = {"/libs", "/apps"};
+    
+    /** Default regexp for watched folders */
+    public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
     
     protected static final Logger log = LoggerFactory.getLogger(WatchedFolder.class);
     
@@ -59,15 +69,64 @@ public class RepositoryObserver {
      *  roots to detect new folders to watch.
      */
     protected void activate(ComponentContext context) throws RepositoryException {
+    	
+    	// TODO make this configurable
+    	final String [] roots = DEFAULT_ROOTS; 
+    	folderNameFilter = new FolderNameFilter(DEFAULT_FOLDER_NAME_REGEXP);
+    	
+        // Listen for any new WatchedFolders created after activation
+        session = repository.loginAdministrative(repository.getDefaultWorkspace());
+        final int eventTypes = Event.NODE_ADDED;
+        final boolean isDeep = true;
+        final boolean noLocal = true;
+        for (String path : roots) {
+            final WatchedFolderCreationListener w = new WatchedFolderCreationListener(folderNameFilter);
+            listeners.add(w);
+            session.getWorkspace().getObservationManager().addEventListener(w, eventTypes, path,
+                    isDeep, null, null, noLocal);
+        }
+
         folders = new HashSet<WatchedFolder>();
         
-        for(String root : DEFAULT_ROOTS) {
+        for(String root : roots) {
             folders.addAll(findWatchedFolders(root));
         }
+        
     }
     
     protected void deactivate(ComponentContext oldContext) {
+    	
+    	for(WatchedFolder f : folders) {
+    		f.cleanup();
+    	}
+    	
+    	if(session != null) {
+	    	for(WatchedFolderCreationListener w : listeners) {
+	    		try {
+		        	session.getWorkspace().getObservationManager().removeEventListener(w);
+	    		} catch(RepositoryException re) {
+	    			log.warn("RepositoryException in removeEventListener call", re);
+	    		}
+	    	}
+	    	
+	    	session.logout();
+	    	session = null;
+    	}
+    	
+    	listeners.clear();
         folders.clear();
+    }
+    
+    /** Add WatchedFolders that have been discovered by our WatchedFolderCreationListeners, if any */
+    void addNewWatchedFolders() {
+    	for(WatchedFolderCreationListener w : listeners) {
+    		final Set<String> paths = w.getAndClearPaths();
+    		if(paths != null) {
+    			for(String path : paths) {
+    				folders.add(new WatchedFolder(path, osgiController));
+    			}
+    		}
+    	}
     }
 
     /** Find all folders to watch under rootPath 
