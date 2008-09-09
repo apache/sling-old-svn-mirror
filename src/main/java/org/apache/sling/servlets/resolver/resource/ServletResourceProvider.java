@@ -30,22 +30,26 @@ import org.apache.sling.api.resource.ResourceResolver;
 
 public class ServletResourceProvider implements ResourceProvider {
 
-    private final Servlet servlet;
+    private Servlet servlet;
 
     private Set<String> resourcePaths;
 
-    ServletResourceProvider(Set<String> resourcePaths, Servlet servlet) {
-        this.servlet = servlet;
+    ServletResourceProvider(Set<String> resourcePaths) {
         this.resourcePaths = resourcePaths;
     }
 
+    public void setServlet(Servlet servlet) {
+        this.servlet = servlet;
+    }
+    
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) {
         return getResource(resourceResolver, path);
     }
 
     public Resource getResource(ResourceResolver resourceResolver, String path) {
-        if (resourcePaths.contains(path)) {
+        // only return a resource if the servlet has been assigned
+        if (servlet != null && resourcePaths.contains(path)) {
             return new ServletResource(resourceResolver, servlet, path);
         }
 

@@ -56,9 +56,9 @@ public class ServletResourceProviderCreateTest extends TestCase {
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES,
             RES_TYPE);
         // msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "*");
-
-        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
+        ServletResourceProvider srp = factory.create(msr);
         assertNotNull(srp);
+        srp.setServlet(TEST_SERVLET);
 
         String[] paths = srp.getSerlvetPaths();
         assertNotNull(paths);
@@ -84,8 +84,9 @@ public class ServletResourceProviderCreateTest extends TestCase {
             RES_TYPE);
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "GET");
 
-        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
+        ServletResourceProvider srp = factory.create(msr);
         assertNotNull(srp);
+        srp.setServlet(TEST_SERVLET);
 
         String[] paths = srp.getSerlvetPaths();
         assertNotNull(paths);
@@ -110,8 +111,9 @@ public class ServletResourceProviderCreateTest extends TestCase {
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS,
             new String[] { "GET", "POST", "PUT" });
 
-        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
+        ServletResourceProvider srp = factory.create(msr);
         assertNotNull(srp);
+        srp.setServlet(TEST_SERVLET);
 
         String[] paths = srp.getSerlvetPaths();
         assertNotNull(paths);
@@ -139,8 +141,9 @@ public class ServletResourceProviderCreateTest extends TestCase {
             RES_TYPE);
         msr.setProperty(ServletResolverConstants.SLING_SERVLET_METHODS, "*");
 
-        ServletResourceProvider srp = factory.create(msr, TEST_SERVLET);
+        ServletResourceProvider srp = factory.create(msr);
         assertNotNull(srp);
+        srp.setServlet(TEST_SERVLET);
 
         String[] paths = srp.getSerlvetPaths();
         assertNotNull(paths);
