@@ -39,16 +39,19 @@ class Utilities {
         for(OsgiResourceProcessor p : processors) {
             list.add(p);
         }
-        
-        final Field f = c.getClass().getDeclaredField("processors");
-        f.setAccessible(true);
-        f.set(c, list);
+        setField(c, "processors", list);
     }
     
     static void setStorage(OsgiControllerImpl c, Storage s) throws Exception {
         final Field f = c.getClass().getDeclaredField("storage");
         f.setAccessible(true);
         f.set(c, s);
+    }
+    
+    static void setField(Object o, String name, Object value) throws Exception {
+        final Field f = o.getClass().getDeclaredField(name);
+        f.setAccessible(true);
+        f.set(o, value);
     }
 
 }
