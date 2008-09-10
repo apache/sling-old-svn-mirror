@@ -63,10 +63,11 @@ class WatchedFolder implements EventListener {
         this.scanDelayMsec = scanDelayMsec;
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         
-        // observe any changes in our folder, but not recursively
+        // observe any changes in our folder (and under it, as changes to properties
+        // might be lower in the hierarchy)
         final int eventTypes = Event.NODE_ADDED | Event.NODE_REMOVED
                 | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
-        final boolean isDeep = false;
+        final boolean isDeep = true;
         final boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);

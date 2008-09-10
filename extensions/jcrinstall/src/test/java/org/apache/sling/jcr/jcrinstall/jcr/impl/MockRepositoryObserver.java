@@ -18,16 +18,37 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
-import java.lang.reflect.Field;
 import java.util.Set;
 
-/** Miscellaneous test helper functions */
-class MiscHelper {
-    static void XXsetField(Object target, String name, Object value) throws Exception, IllegalAccessException {
-        final Field f = target.getClass().getDeclaredField(name);
-        f.setAccessible(true);
-        f.set(target, value);
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 
+/** Slightly customized RepositoryObserver
+ *  used for testing.
+ */
+public class MockRepositoryObserver extends RepositoryObserver {
+    MockRepositoryObserver(SlingRepository repo, final OsgiController c) {
+        repository = repo;
+        osgiController = c;
+        scanDelayMsec = 0;
     }
-
+    
+    public void run() {
+        // Do not run the observation cycle - we do that ourselves in testing
+    }
+    
+    Set<WatchedFolder> getWatchedFolders() {
+        return folders;
+    }
+    
+    boolean folderIsWatched(String path) throws Exception {
+        boolean result = false;
+        for(WatchedFolder wf : folders) {
+            if(wf.getPath().equals("/" + path)) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
 }

@@ -53,16 +53,16 @@ import org.slf4j.LoggerFactory;
  */
 public class RepositoryObserver implements Runnable {
 
-    private Set<WatchedFolder> folders;
+    protected Set<WatchedFolder> folders;
     private RegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
     private boolean running;
     
     /** @scr.reference */
-    private OsgiController osgiController;
+    protected OsgiController osgiController;
     
     /** @scr.reference */
-    private SlingRepository repository;
+    protected SlingRepository repository;
     
     private Session session;
     
@@ -76,7 +76,7 @@ public class RepositoryObserver implements Runnable {
     public static final String DEFAULT_FILENAME_REGEXP = "[a-zA-Z0-9].*\\.[a-zA-Z][a-zA-Z][a-zA-Z]?";
     
     /** Scan delay for watched folders */
-    private final long scanDelayMsec = 1000L;
+    protected long scanDelayMsec = 1000L;
     
     protected static final Logger log = LoggerFactory.getLogger(WatchedFolder.class);
     
@@ -225,9 +225,8 @@ public class RepositoryObserver implements Runnable {
                 log.warn("IllegalArgumentException  in " + getClass().getSimpleName(), ie);
             } catch (RepositoryException re) {
                 log.warn("RepositoryException in " + getClass().getSimpleName(), re);
-            } catch (Throwable t) {
-                log.error("Unhandled Throwable in runOneCycle() - "
-                        + getClass().getSimpleName() + " thread will be stopped", t);
+            } catch (Exception e) {
+                log.error("Unhandled Exception in runOneCycle()", e);
             } finally {
                 try {
                     Thread.sleep(1000L);

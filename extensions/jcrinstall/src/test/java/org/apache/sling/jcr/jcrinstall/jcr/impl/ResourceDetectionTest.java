@@ -108,7 +108,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             inSequence(sequence);
         }});
         
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         ro.activate(null);
         
         // Add two files, run one cycle must install the bundles
@@ -156,7 +156,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
         }});
         
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         ro.activate(null);
         
         // Add two files, run one cycle must install the bundles
@@ -197,7 +197,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
         }});
         
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         ro.activate(null);
         
         for(String file : resources) {
@@ -220,7 +220,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         installedUri.add("/libs/foo/bar/install/dummy.cfg");
         
         final OsgiController c = mockery.mock(OsgiController.class);
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));

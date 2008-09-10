@@ -100,6 +100,7 @@ class ContentHelper {
         c.setTimeInMillis(lastModified);
         res.setProperty(JCR_LASTMODIFIED, c);
         res.setProperty(JCR_DATA, data);
+        
         f.getParent().save();
     }
 }
