@@ -169,6 +169,49 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         mockery.assertIsSatisfied();
     }
     
+    public void testIgnoredFilenames() throws Exception {
+        contentHelper.setupContent();
+        
+        final String [] resources = {
+                "/libs/foo/bar/install/dummy.jar",
+                "/libs/foo/bar/install/dummy.cfg",
+                "/libs/foo/bar/install/dummy.dp"
+        };
+        
+        final String [] ignored  = {
+                "/libs/foo/bar/install/_dummy.jar",
+                "/libs/foo/bar/install/.dummy.cfg",
+                "/libs/foo/bar/install/dummy.longextension"
+        };
+        
+        final InputStream data = new ByteArrayInputStream("hello".getBytes());
+        final long lastModifiedA = System.currentTimeMillis();
+        final Set<String> installedUri = new HashSet<String>();
+        final OsgiController c = mockery.mock(OsgiController.class);
+        
+        mockery.checking(new Expectations() {{
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+        }});
+        
+        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        ro.activate(null);
+        
+        for(String file : resources) {
+            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+        }
+        for(String file : ignored) {
+            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+        }
+        eventHelper.waitForEvents(5000L);
+        
+        ro.runOneCycle();
+        mockery.assertIsSatisfied();
+   }
+    
     public void testInitialDeletions() throws Exception {
         contentHelper.setupContent();
         

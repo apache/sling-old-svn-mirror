@@ -34,10 +34,10 @@ import org.slf4j.LoggerFactory;
  */
 class WatchedFolderCreationListener implements EventListener {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final FolderNameFilter folderNameFilter;
+    private final RegexpFilter folderNameFilter;
     private Set<String> paths = new HashSet<String>();
     
-    WatchedFolderCreationListener(FolderNameFilter fnf) {
+    WatchedFolderCreationListener(RegexpFilter fnf) {
     	folderNameFilter = fnf;
 	}
     
