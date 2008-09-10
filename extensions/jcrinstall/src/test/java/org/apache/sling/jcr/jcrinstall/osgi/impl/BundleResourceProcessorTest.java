@@ -29,6 +29,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -122,4 +124,63 @@ public class BundleResourceProcessorTest {
         // And verify expectations
         mockery.assertIsSatisfied();
     }
+    
+    @org.junit.Test public void testBundleProcessingQueue() throws Exception {
+        
+        // Fill the pending bundles queue with one bundle in each of the
+        // possible states, process the queue and verify results
+        final BundleContext bc = mockery.mock(BundleContext.class);
+        final Bundle [] b = new Bundle[6];
+        for(int i = 0; i < b.length; i++) {
+            b[i] = mockery.mock(Bundle.class);
+        };
+        
+        mockery.checking(new Expectations() {{
+            allowing(bc).getBundle(0L); will(returnValue(b[0]));
+            allowing(bc).getBundle(1L); will(returnValue(b[1]));
+            allowing(bc).getBundle(2L); will(returnValue(b[2]));
+            allowing(bc).getBundle(3L); will(returnValue(b[3]));
+            allowing(bc).getBundle(4L); will(returnValue(b[4]));
+            allowing(bc).getBundle(5L); will(returnValue(b[5]));
+            
+            allowing(b[0]).getBundleId(); will(returnValue(0L));
+            allowing(b[1]).getBundleId(); will(returnValue(1L));
+            allowing(b[2]).getBundleId(); will(returnValue(2L));
+            allowing(b[3]).getBundleId(); will(returnValue(3L));
+            allowing(b[4]).getBundleId(); will(returnValue(4L));
+            allowing(b[5]).getBundleId(); will(returnValue(5L));
+
+            allowing(b[0]).getState(); will(returnValue(Bundle.ACTIVE));
+            allowing(b[1]).getState(); will(returnValue(Bundle.STARTING));
+            allowing(b[2]).getState(); will(returnValue(Bundle.STOPPING));
+            allowing(b[3]).getState(); will(returnValue(Bundle.UNINSTALLED));
+            allowing(b[4]).getState(); will(returnValue(Bundle.INSTALLED));
+            allowing(b[5]).getState(); will(returnValue(Bundle.RESOLVED));
+            
+            allowing(b[0]).getLocation();
+            allowing(b[1]).getLocation();
+            allowing(b[2]).getLocation();
+            allowing(b[3]).getLocation();
+            allowing(b[4]).getLocation();
+            allowing(b[5]).getLocation();
+            
+            one(b[5]).start();
+        }});
+        
+        final BundleResourceProcessor p = new BundleResourceProcessor(bc);
+        final Map<Long, Bundle> pendingBundles = new HashMap<Long, Bundle>();
+        Utilities.setField(p, "pendingBundles", pendingBundles);
+
+        for(Bundle bu : b) {
+            pendingBundles.put(new Long(bu.getBundleId()), bu);
+        }
+        p.processResourceQueue();
+        
+        assertEquals("Only 4 bundles must be left in queue", 4, pendingBundles.size());
+        assertTrue("STARTING bundle must be left in queue", pendingBundles.containsKey(b[1].getBundleId()));
+        assertTrue("STOPPING bundle must be left in queue", pendingBundles.containsKey(b[2].getBundleId()));
+        assertTrue("INSTALLED bundle must be left in queue", pendingBundles.containsKey(b[4].getBundleId()));
+        assertTrue("RESOLVED bundle must be left in queue", pendingBundles.containsKey(b[5].getBundleId()));
+    }
+    
 }

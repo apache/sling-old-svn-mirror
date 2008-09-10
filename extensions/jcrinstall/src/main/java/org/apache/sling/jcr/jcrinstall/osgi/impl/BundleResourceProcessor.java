@@ -105,30 +105,31 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         while(iter.hasNext()) {
             final Long id = iter.next();
             final Bundle bundle = ctx.getBundle(id.longValue());
+            final int state = bundle.getState();
             
             if(bundle == null) {
                 log.debug("Bundle id {} not found in processResourceQueue(), removed from pending bundles queue");
                 iter.remove();
                 
-            } else if ((bundle.getState() & Bundle.ACTIVE) > 0) {
+            } else if ((state & Bundle.ACTIVE) > 0) {
                 log.info("Bundle {} is already active, removed from pending bundles queue", bundle.getLocation());
                 iter.remove();
             
-            } else if ((bundle.getState() & Bundle.STARTING) > 0) {
+            } else if ((state & Bundle.STARTING) > 0) {
                 log.info("Bundle {} is starting.", bundle.getLocation());
                 
-            } else if ((bundle.getState() & Bundle.STOPPING) > 0) {
+            } else if ((state & Bundle.STOPPING) > 0) {
                 log.info("Bundle {} is stopping.", bundle.getLocation());
                 
-            } else if ((bundle.getState() & Bundle.UNINSTALLED) > 0) {
+            } else if ((state & Bundle.UNINSTALLED) > 0) {
                 log.info("Bundle {} is uninstalled, removed from pending bundles queue", bundle.getLocation());
                 iter.remove();
                 
-            } else if ((bundle.getState() & Bundle.RESOLVED) > 0) {
+            } else if ((state & Bundle.RESOLVED) > 0) {
                 log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
                 bundle.start();
                 
-            } else if ((bundle.getState() & Bundle.INSTALLED) > 0) {
+            } else if ((state & Bundle.INSTALLED) > 0) {
                 log.info("Bundle {} is installed but not resolved.", bundle.getLocation());
             }
         }
