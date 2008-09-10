@@ -125,6 +125,8 @@ class WatchedFolder implements EventListener {
     protected void scan() throws Exception {
         log.debug("Scanning {}", path);
         
+        checkDeletions();
+        
         Node folder = null;
         if(session.itemExists(path)) {
         	Item i = session.getItem(path);
@@ -137,9 +139,6 @@ class WatchedFolder implements EventListener {
         	log.info("Folder {} does not exist (or not anymore), cannot scan", path);
         	return;
         }
-        	
-        
-        // TODO: check deletions
         
         // Check adds and updates, for all child nodes that are files
         final NodeIterator it = folder.getNodes();
@@ -150,6 +149,19 @@ class WatchedFolder implements EventListener {
         		log.debug("Node {} does not seem to be a file, ignored", n.getPath());
         	}
         	installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
+        }
+    }
+    
+    /** Check for deleted resources and uninstall them */
+    void checkDeletions() throws Exception {
+        // Check deletions
+        for(String uri : controller.getInstalledUris()) {
+            if(uri.startsWith(path)) {
+                if(!session.itemExists(uri)) {
+                    log.debug("Resource {} has been deleted, uninstalling");
+                    controller.uninstall(uri);
+                }
+            }
         }
     }
     

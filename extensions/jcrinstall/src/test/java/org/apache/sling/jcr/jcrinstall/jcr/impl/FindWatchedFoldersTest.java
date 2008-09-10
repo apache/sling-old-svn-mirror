@@ -18,12 +18,16 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
 
 /** Test the "find watched folders" feature of the RepositoryObserver */
 public class FindWatchedFoldersTest extends RepositoryTestBase {
@@ -32,6 +36,8 @@ public class FindWatchedFoldersTest extends RepositoryTestBase {
     Session session;
     private EventHelper eventHelper; 
     private ContentHelper contentHelper;
+    private Mockery mockery;
+    private OsgiController osgiController;
     
     @Override
     protected void tearDown() throws Exception {
@@ -50,12 +56,18 @@ public class FindWatchedFoldersTest extends RepositoryTestBase {
         eventHelper = new EventHelper(session);
         contentHelper = new ContentHelper(session);
         contentHelper.cleanupContent();
+        mockery = new Mockery();
+        osgiController = mockery.mock(OsgiController.class);
+        final Set<String> installedUri = new HashSet<String>();
+        mockery.checking(new Expectations() {{
+            allowing(osgiController).getInstalledUris(); will(returnValue(installedUri));
+        }});
     }
     
     public void testInitialFind() throws Exception {
     	
     	contentHelper.setupContent();
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, null);
+        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, osgiController);
         ro.activate(null);
         
         final Set<WatchedFolder> wfSet = MiscHelper.getWatchedFolders(ro);
@@ -69,7 +81,7 @@ public class FindWatchedFoldersTest extends RepositoryTestBase {
     
     public void testNewWatchedFolderDetection() throws Exception {
     	contentHelper.setupContent();
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, null);
+        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, osgiController);
         ro.activate(null);
 
         final String newPaths [] = { "libs/tnwf/install", "apps/tnwf/install" };

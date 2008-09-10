@@ -20,6 +20,8 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jcr.Session;
 
@@ -78,14 +80,14 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final InputStream data = new ByteArrayInputStream(dummyJar.getBytes());
         final long lastModifiedA = System.currentTimeMillis();
         final long lastModifiedB = lastModifiedA + 1;
-        
+        final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
-        ro.activate(null);
         
         // Define the whole sequence of calls to OsgiController,
         // Using getLastModified calls to mark the test phases
         mockery.checking(new Expectations() {{
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            
             one(c).getLastModified("phase1"); 
             inSequence(sequence);
             one(c).getLastModified(dummyJar); will(returnValue(-1L));
@@ -106,11 +108,15 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             inSequence(sequence);
         }});
         
+        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        ro.activate(null);
+        
         // Add two files, run one cycle must install the bundles
         c.getLastModified("phase1");
         contentHelper.createOrUpdateFile(dummyJar, data, lastModifiedA);
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
+        installedUri.add(dummyJar);
         
         // Updating with the same timestamp must not call install again
         c.getLastModified("phase2");
@@ -137,19 +143,21 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         };
         final InputStream data = new ByteArrayInputStream("hello".getBytes());
         final long lastModifiedA = System.currentTimeMillis();
-        
+        final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
-        ro.activate(null);
         
         // Define the whole sequence of calls to OsgiController,
         // Using getLastModified calls to mark the test phases
         mockery.checking(new Expectations() {{
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
             one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
             one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
             one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
         }});
+        
+        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        ro.activate(null);
         
         // Add two files, run one cycle must install the bundles
         for(String file : resources) {
@@ -158,6 +166,29 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
         
+        mockery.assertIsSatisfied();
+    }
+    
+    public void testInitialDeletions() throws Exception {
+        contentHelper.setupContent();
+        
+        final Set<String> installedUri = new HashSet<String>();
+        installedUri.add("/libs/foo/bar/install/dummy.jar");
+        installedUri.add("/libs/foo/bar/install/dummy.cfg");
+        
+        final OsgiController c = mockery.mock(OsgiController.class);
+        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, c);
+        
+        mockery.checking(new Expectations() {{
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            one(c).uninstall("/libs/foo/bar/install/dummy.jar");
+            one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
+        }});
+        
+        // Activating with installed resources that are not in
+        // the repository must cause them to be uninstalled
+        ro.activate(null);
         mockery.assertIsSatisfied();
     }
 }
