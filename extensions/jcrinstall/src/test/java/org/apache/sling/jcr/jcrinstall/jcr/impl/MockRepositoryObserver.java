@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.osgi.service.component.ComponentContext;
 
 /** Slightly customized RepositoryObserver
  *  used for testing.
@@ -50,5 +51,9 @@ public class MockRepositoryObserver extends RepositoryObserver {
             }
         }
         return result;
+    }
+    
+    protected String getPropertyValue(ComponentContext ctx, String name) {
+        return null;
     }
 }
