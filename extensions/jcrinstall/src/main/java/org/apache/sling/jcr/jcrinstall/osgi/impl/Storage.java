@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,8 +52,12 @@ class Storage {
         Throwable loadException = null;
         
         try {
-            ois = new ObjectInputStream(new FileInputStream(dataFile));
-            loadedData = (Map<String, Map<String, Object>>)ois.readObject();
+            if(dataFile.exists()) {
+                ois = new ObjectInputStream(new FileInputStream(dataFile));
+                loadedData = (Map<String, Map<String, Object>>)ois.readObject();
+            } else {
+                log.debug("Data file does not exist, will use empty data");
+            }
         } catch(EOFException eof) {
             loadException = eof;
         } catch(ClassNotFoundException cnfe) {
@@ -65,6 +70,8 @@ class Storage {
         
         if(loadException != null) {
             log.debug("Unable to retrieve data from data file, will use empty data", loadException);
+        }
+        if(loadedData == null) {
             loadedData = new HashMap<String, Map<String, Object>>();
         }
         
@@ -114,8 +121,12 @@ class Storage {
         }
     }
     
-    /** Get the Set of of keys in our data map */
+    /** Get a copy of the Set of keys in our data map */
     Set<String> getKeys() {
-        return data.keySet();
+        synchronized(data) {
+            final Set<String> result = new HashSet<String>();
+            result.addAll(data.keySet());
+            return result;
+        }
     }
 }

@@ -22,6 +22,7 @@ import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,20 +30,76 @@ import java.util.Set;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.SynchronousBundleListener;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OsgiControllerImpl implements OsgiController {
+/** OsgiController service
+ *  
+ *  @scr.service
+ *  @scr.component 
+ *      immediate="true"
+ *      metatype="no"
+ *  @scr.property 
+ *      name="service.description" 
+ *      value="Sling jcrinstall OsgiController Service"
+ *  @scr.property 
+ *      name="service.vendor" 
+ *      value="The Apache Software Foundation"
+*/
+public class OsgiControllerImpl implements OsgiController, Runnable, SynchronousBundleListener {
 
     private Storage storage;
     private List<OsgiResourceProcessor> processors;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private boolean running;
+    private long loopDelay;
+    
+    public static final String STORAGE_FILENAME = "controller.storage";
+    
+    /** @scr.reference */
+    private ConfigurationAdmin configAdmin;
+    
+    /** @scr.reference */
+    private PackageAdmin packageAdmin;
     
     /** Storage key: last modified as a Long */
     public static final String KEY_LAST_MODIFIED = "last.modified";
     
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
+    
+    protected void activate(ComponentContext context) throws IOException {
+        processors = new LinkedList<OsgiResourceProcessor>();
+        processors.add(new BundleResourceProcessor(context.getBundleContext(), packageAdmin));
+        processors.add(new ConfigResourceProcessor(configAdmin));
+        
+        storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
+        
+        // start queue processing
+        running = true;
+        final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
+        t.setDaemon(true);
+        t.start();
+    }
+    
+    protected void deactivate(ComponentContext oldContext) {
+        running = false;
+        
+        if(storage != null) {
+            try {
+                storage.saveToFile();
+            } catch(IOException ioe) {
+                log.warn("IOException in Storage.saveToFile()", ioe);
+            }
+        }
+        storage = null;
+        processors = null;
+    }
     
     public int installOrUpdate(String uri, long lastModified, InputStream data) throws IOException, JcrInstallException {
         int result = IGNORED;
@@ -121,5 +178,38 @@ public class OsgiControllerImpl implements OsgiController {
         }
         
         return result;
+    }
+    
+    /** Schedule our next scan sooner if anything happens to bundles */
+    public void bundleChanged(BundleEvent e) {
+        loopDelay = 0;
+    }
+
+    /** Process our resource queues at regular intervals, more often if
+     *  we received bundle events since the last processing
+     */
+    public void run() {
+        log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
+
+        // We could use the scheduler service but that makes things harder to test
+        while (running) {
+            loopDelay = 1000;
+            try {
+                for(OsgiResourceProcessor p : processors) {
+                    p.processResourceQueue();
+                }
+                
+            } catch (Exception e) {
+                log.warn("Exception in run()", e);
+            } finally {
+                try {
+                    Thread.sleep(loopDelay);
+                } catch (InterruptedException ignore) {
+                    // ignore
+                }
+            }
+        }
+
+        log.info("{} thread {} ends", getClass().getSimpleName(), Thread.currentThread().getName());
     }
 }

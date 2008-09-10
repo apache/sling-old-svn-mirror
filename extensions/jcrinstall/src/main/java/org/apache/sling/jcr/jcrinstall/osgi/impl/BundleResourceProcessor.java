@@ -25,11 +25,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,11 +44,13 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
     public static final String KEY_BUNDLE_ID = "bundle.id";
     
     private final BundleContext ctx;
+    private final PackageAdmin packageAdmin;
     private final Map<Long, Bundle> pendingBundles;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    BundleResourceProcessor(BundleContext ctx) {
+    BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin) {
         this.ctx = ctx;
+        this.packageAdmin = packageAdmin;
         pendingBundles = new HashMap<Long, Bundle>();
     }
 
@@ -54,6 +58,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         // Update if we already have a bundle id, else install
         Bundle b = null;
         boolean updated = false;
+        boolean refresh = false;
         final Long longId = (Long)attributes.get(KEY_BUNDLE_ID);
         
         if(longId != null) {
@@ -63,12 +68,19 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
             } else {
                 b.update(data);
                 updated = true;
+                refresh = true;
             }
         }
         
         if(!updated) {
             b = ctx.installBundle(OsgiControllerImpl.getResourceLocation(uri), data);
+            refresh = true;
             attributes.put(KEY_BUNDLE_ID, new Long(b.getBundleId()));
+        }
+        
+        if(refresh) {
+            packageAdmin.resolveBundles(null);
+            packageAdmin.refreshPackages(null);
         }
         
         pendingBundles.put(new Long(b.getBundleId()), b);
@@ -105,6 +117,11 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         while(iter.hasNext()) {
             final Long id = iter.next();
             final Bundle bundle = ctx.getBundle(id.longValue());
+            if(bundle == null) {
+                log.debug("Bundle id {} disappeared (bundle removed from framework?), removed from pending bundles queue");
+                iter.remove();
+                continue;
+            }
             final int state = bundle.getState();
             
             if(bundle == null) {
@@ -128,9 +145,11 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
             } else if ((state & Bundle.RESOLVED) > 0) {
                 log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
                 bundle.start();
+                packageAdmin.resolveBundles(null);
+                packageAdmin.refreshPackages(null);
                 
             } else if ((state & Bundle.INSTALLED) > 0) {
-                log.info("Bundle {} is installed but not resolved.", bundle.getLocation());
+                log.debug("Bundle {} is installed but not resolved.", bundle.getLocation());
             }
         }
     }
