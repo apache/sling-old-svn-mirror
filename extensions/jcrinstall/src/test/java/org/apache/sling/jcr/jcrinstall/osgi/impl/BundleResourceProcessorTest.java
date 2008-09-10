@@ -37,6 +37,7 @@ import org.jmock.Mockery;
 import org.jmock.Sequence;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Test the BundleResourceProcessor */
 public class BundleResourceProcessorTest {
@@ -67,7 +68,8 @@ public class BundleResourceProcessorTest {
         
         final OsgiControllerImpl c = new OsgiControllerImpl();
         final BundleContext bc = mockery.mock(BundleContext.class);
-        final BundleResourceProcessor p = new BundleResourceProcessor(bc);
+        final PackageAdmin pa = mockery.mock(PackageAdmin.class);
+        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
         Utilities.setProcessors(c, p);
         final TestStorage s = new TestStorage(Utilities.getTestFile());
         Utilities.setStorage(c, s);
@@ -80,6 +82,8 @@ public class BundleResourceProcessorTest {
         // We'll try installing a bundle, re-installing to cause
         // it to be updated, and removing
         mockery.checking(new Expectations() {{
+            allowing(pa).refreshPackages(null);
+            allowing(pa).resolveBundles(null);
             allowing(b).getBundleId() ; 
             will(returnValue(bundleId));
             
@@ -129,6 +133,7 @@ public class BundleResourceProcessorTest {
         
         // Fill the pending bundles queue with one bundle in each of the
         // possible states, process the queue and verify results
+        final PackageAdmin pa = mockery.mock(PackageAdmin.class);
         final BundleContext bc = mockery.mock(BundleContext.class);
         final Bundle [] b = new Bundle[6];
         for(int i = 0; i < b.length; i++) {
@@ -136,6 +141,9 @@ public class BundleResourceProcessorTest {
         };
         
         mockery.checking(new Expectations() {{
+            allowing(pa).refreshPackages(null);
+            allowing(pa).resolveBundles(null);
+
             allowing(bc).getBundle(0L); will(returnValue(b[0]));
             allowing(bc).getBundle(1L); will(returnValue(b[1]));
             allowing(bc).getBundle(2L); will(returnValue(b[2]));
@@ -167,7 +175,7 @@ public class BundleResourceProcessorTest {
             one(b[5]).start();
         }});
         
-        final BundleResourceProcessor p = new BundleResourceProcessor(bc);
+        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
         final Map<Long, Bundle> pendingBundles = new HashMap<Long, Bundle>();
         Utilities.setField(p, "pendingBundles", pendingBundles);
 

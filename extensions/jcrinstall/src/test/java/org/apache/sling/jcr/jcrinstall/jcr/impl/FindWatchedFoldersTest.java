@@ -67,34 +67,34 @@ public class FindWatchedFoldersTest extends RepositoryTestBase {
     public void testInitialFind() throws Exception {
     	
     	contentHelper.setupContent();
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, osgiController);
+        final MockRepositoryObserver ro = new MockRepositoryObserver(repo, osgiController);
         ro.activate(null);
         
-        final Set<WatchedFolder> wfSet = MiscHelper.getWatchedFolders(ro);
+        final Set<WatchedFolder> wfSet = ro.getWatchedFolders();
         assertEquals("activate() must find all watched folders", contentHelper.WATCHED_FOLDERS.length, wfSet.size());
         
         for(String folder : contentHelper.WATCHED_FOLDERS) {
             assertTrue("Folder " + folder + " must be watched (watched=" + wfSet + ")", 
-                    MiscHelper.folderIsWatched(ro, folder)); 
+                    ro.folderIsWatched(folder)); 
         }
     }
     
     public void testNewWatchedFolderDetection() throws Exception {
     	contentHelper.setupContent();
-        final RepositoryObserver ro = MiscHelper.createRepositoryObserver(repo, osgiController);
+        final MockRepositoryObserver ro = new MockRepositoryObserver(repo, osgiController);
         ro.activate(null);
 
         final String newPaths [] = { "libs/tnwf/install", "apps/tnwf/install" };
         for(String newPath : newPaths) {
-            assertFalse(newPath + " must not be watched before test", MiscHelper.folderIsWatched(ro, newPath));
+            assertFalse(newPath + " must not be watched before test", ro.folderIsWatched(newPath));
             
             // Create folder, wait for observation event and check that
             // it is detected
             contentHelper.createFolder(newPath);
             eventHelper.waitForEvents(5000L);
-            assertFalse(newPath + " must not be watched before calling addNewWatchedFolders()", MiscHelper.folderIsWatched(ro, newPath));
+            assertFalse(newPath + " must not be watched before calling addNewWatchedFolders()", ro.folderIsWatched(newPath));
             ro.addNewWatchedFolders();
-            assertTrue(newPath + " must be watched before calling addNewWatchedFolders()", MiscHelper.folderIsWatched(ro, newPath));
+            assertTrue(newPath + " must be watched before calling addNewWatchedFolders()", ro.folderIsWatched(newPath));
         }
     }   
 }
