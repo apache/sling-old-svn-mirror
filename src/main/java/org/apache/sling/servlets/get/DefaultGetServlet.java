@@ -33,20 +33,21 @@ import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
 import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
 import org.apache.sling.servlets.get.helpers.PlainTextRendererServlet;
 import org.apache.sling.servlets.get.helpers.StreamRendererServlet;
+import org.apache.sling.servlets.get.helpers.XMLRendererServlet;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
- * 
+ *
  * @scr.component immediate="true" metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
- * 
+ *
  * @scr.property name="service.description" value="Default GET Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
+ *
  * Use this as a default servlet for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default"
- *               
+ *
  * Generic handler for all get requests
  * @scr.property name="sling.servlet.methods" value="GET"
  */
@@ -71,6 +72,8 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             new JsonRendererServlet());
         setupServlet(rendererMap, StreamRendererServlet.EXT_RES,
             new StreamRendererServlet());
+        setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
+                new XMLRendererServlet());
 
         // use the servlet for rendering StreamRendererServlet.EXT_RES as the
         // streamer servlet
@@ -107,7 +110,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-        request.getRequestProgressTracker().log("Using " 
+        request.getRequestProgressTracker().log("Using "
                 + rendererServlet.getClass().getName()
                 + " to render for extension=" + ext);
         rendererServlet.service(request, response);
