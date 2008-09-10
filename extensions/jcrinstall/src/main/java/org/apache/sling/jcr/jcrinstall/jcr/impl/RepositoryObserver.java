@@ -75,6 +75,9 @@ public class RepositoryObserver implements Runnable {
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
     public static final String DEFAULT_FILENAME_REGEXP = "[a-zA-Z0-9].*\\.[a-zA-Z][a-zA-Z][a-zA-Z]?";
     
+    /** ComponentContext property that overrides the folder name regepx */
+    public static final String FOLDER_NAME_REGEXP_PROPERTY = "sling.jcrinstall.folder.name.regexp";
+    
     /** Scan delay for watched folders */
     protected long scanDelayMsec = 1000L;
     
@@ -85,11 +88,25 @@ public class RepositoryObserver implements Runnable {
      */
     protected void activate(ComponentContext context) throws RepositoryException {
     	
-    	// TODO make this configurable
+    	// TODO make this more configurable?
     	final String [] roots = DEFAULT_ROOTS; 
-    	folderNameFilter = new RegexpFilter(DEFAULT_FOLDER_NAME_REGEXP);
     	filenameFilter = new RegexpFilter(DEFAULT_FILENAME_REGEXP);
     	
+    	String regexp = (String)context.getProperties().get(FOLDER_NAME_REGEXP_PROPERTY);
+    	if(regexp != null) {
+    	    log.info("Using folder name regexp '{}' from ComponentContext {} property", regexp, FOLDER_NAME_REGEXP_PROPERTY);
+    	    folderNameFilter = new RegexpFilter(regexp);
+    	} else {
+    	    regexp = context.getBundleContext().getProperty(FOLDER_NAME_REGEXP_PROPERTY);
+    	    if(regexp != null) {
+                log.info("Using folder name regexp '{}' from BundleContext {} property", regexp, FOLDER_NAME_REGEXP_PROPERTY);
+                folderNameFilter = new RegexpFilter(regexp);
+    	    } else {
+                log.info("Using default folder name regexp '{}'", DEFAULT_FOLDER_NAME_REGEXP);
+    	        folderNameFilter = new RegexpFilter(DEFAULT_FOLDER_NAME_REGEXP);
+    	    }
+    	}
+        
         // Listen for any new WatchedFolders created after activation
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         final int eventTypes = Event.NODE_ADDED;
