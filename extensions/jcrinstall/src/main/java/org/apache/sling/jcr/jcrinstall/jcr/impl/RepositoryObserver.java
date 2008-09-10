@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
 public class RepositoryObserver {
 
     private Set<WatchedFolder> folders;
-    
-    private FolderNameFilter folderNameFilter;
+    private RegexpFilter folderNameFilter;
+    private RegexpFilter filenameFilter;
     
     /** @scr.reference */
     private OsgiController osgiController;
@@ -60,8 +60,9 @@ public class RepositoryObserver {
     /** Default set of root folders to watch */
     public static String[] DEFAULT_ROOTS = {"/libs", "/apps"};
     
-    /** Default regexp for watched folders */
+    /** Default regexp for watched folders and filenames */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
+    public static final String DEFAULT_FILENAME_REGEXP = "[a-zA-Z0-9].*\\.[a-zA-Z][a-zA-Z][a-zA-Z]?";
     
     /** Scan delay for watched folders */
     private final long scanDelayMsec = 1000L;
@@ -75,7 +76,8 @@ public class RepositoryObserver {
     	
     	// TODO make this configurable
     	final String [] roots = DEFAULT_ROOTS; 
-    	folderNameFilter = new FolderNameFilter(DEFAULT_FOLDER_NAME_REGEXP);
+    	folderNameFilter = new RegexpFilter(DEFAULT_FOLDER_NAME_REGEXP);
+    	filenameFilter = new RegexpFilter(DEFAULT_FILENAME_REGEXP);
     	
         // Listen for any new WatchedFolders created after activation
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
@@ -135,7 +137,7 @@ public class RepositoryObserver {
     		final Set<String> paths = w.getAndClearPaths();
     		if(paths != null) {
     			for(String path : paths) {
-    				folders.add(new WatchedFolder(repository, path, osgiController, scanDelayMsec));
+    				folders.add(new WatchedFolder(repository, path, osgiController, filenameFilter, scanDelayMsec));
     			}
     		}
     	}
@@ -172,7 +174,7 @@ public class RepositoryObserver {
     void findWatchedFolders(Node n, Set<WatchedFolder> setToUpdate) throws RepositoryException 
     {
         if (folderNameFilter.accept(n.getPath())) {
-            setToUpdate.add(new WatchedFolder(repository, n.getPath(), osgiController, scanDelayMsec));
+            setToUpdate.add(new WatchedFolder(repository, n.getPath(), osgiController, filenameFilter, scanDelayMsec));
         }
         final NodeIterator it = n.getNodes();
         while (it.hasNext()) {

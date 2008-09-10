@@ -45,6 +45,7 @@ class WatchedFolder implements EventListener {
     private final OsgiController controller;
     private long nextScan;
     private final Session session;
+    private final RegexpFilter filenameFilter;
     protected static final Logger log = LoggerFactory.getLogger(WatchedFolder.class);
     
     /**
@@ -53,9 +54,11 @@ class WatchedFolder implements EventListener {
      */
     private final long scanDelayMsec;
 
-    WatchedFolder(SlingRepository repository, String path, OsgiController ctrl, long scanDelayMsec) throws RepositoryException {
+    WatchedFolder(SlingRepository repository, String path, OsgiController ctrl, 
+            RegexpFilter filenameFilter, long scanDelayMsec) throws RepositoryException {
         this.path = path;
         this.controller = ctrl;
+        this.filenameFilter = filenameFilter;
         this.scanDelayMsec = scanDelayMsec;
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         
@@ -147,8 +150,13 @@ class WatchedFolder implements EventListener {
         	final FileDataProvider dp = new FileDataProvider(n);
         	if(!dp.isFile()) {
         		log.debug("Node {} does not seem to be a file, ignored", n.getPath());
+        	} else if(!filenameFilter.accept(n.getName())) {
+        	    if(log.isDebugEnabled()) {
+                    log.debug("Node " + n.getPath() + " with name " + n.getName() + " ignored due to " + filenameFilter);
+        	    }
+        	} else {
+        	    installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
         	}
-        	installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
         }
     }
     

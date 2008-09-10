@@ -21,11 +21,11 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/** Decide if a folder has a suitable name to be watched */ 
-class FolderNameFilter {
+/** Simple regexp-based filter for folder and file names */ 
+class RegexpFilter {
     private final Pattern pattern;
     
-    FolderNameFilter(String regexp) throws PatternSyntaxException {
+    RegexpFilter(String regexp) throws PatternSyntaxException {
         pattern = Pattern.compile(regexp);
     }
     
