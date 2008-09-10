@@ -92,19 +92,13 @@ public class RepositoryObserver implements Runnable {
     	final String [] roots = DEFAULT_ROOTS; 
     	filenameFilter = new RegexpFilter(DEFAULT_FILENAME_REGEXP);
     	
-    	String regexp = (String)context.getProperties().get(FOLDER_NAME_REGEXP_PROPERTY);
+    	String regexp = getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
     	if(regexp != null) {
-    	    log.info("Using folder name regexp '{}' from ComponentContext {} property", regexp, FOLDER_NAME_REGEXP_PROPERTY);
+    	    log.info("Using folder name regexp '{}' from context property '{}'", regexp, FOLDER_NAME_REGEXP_PROPERTY);
     	    folderNameFilter = new RegexpFilter(regexp);
     	} else {
-    	    regexp = context.getBundleContext().getProperty(FOLDER_NAME_REGEXP_PROPERTY);
-    	    if(regexp != null) {
-                log.info("Using folder name regexp '{}' from BundleContext {} property", regexp, FOLDER_NAME_REGEXP_PROPERTY);
-                folderNameFilter = new RegexpFilter(regexp);
-    	    } else {
-                log.info("Using default folder name regexp '{}'", DEFAULT_FOLDER_NAME_REGEXP);
-    	        folderNameFilter = new RegexpFilter(DEFAULT_FOLDER_NAME_REGEXP);
-    	    }
+            log.info("Using default folder name regexp '{}'", DEFAULT_FOLDER_NAME_REGEXP);
+	        folderNameFilter = new RegexpFilter(DEFAULT_FOLDER_NAME_REGEXP);
     	}
         
         // Listen for any new WatchedFolders created after activation
@@ -140,6 +134,15 @@ public class RepositoryObserver implements Runnable {
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
         t.setDaemon(true);
         t.start();
+    }
+    
+    /** Get a property value from the component context or bundle context */
+    protected String getPropertyValue(ComponentContext ctx, String name) {
+        String result = (String)ctx.getProperties().get(name);
+        if(result == null) {
+            result = ctx.getBundleContext().getProperty(name);
+        }
+        return result;
     }
     
     protected void deactivate(ComponentContext oldContext) {
