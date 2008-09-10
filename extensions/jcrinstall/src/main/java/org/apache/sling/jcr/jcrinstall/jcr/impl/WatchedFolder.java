@@ -20,6 +20,7 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -120,15 +121,15 @@ class WatchedFolder implements EventListener {
     void scanIfNeeded() throws Exception {
         if (nextScan != -1 && System.currentTimeMillis() > nextScan) {
             nextScan = -1;
+            scan();
         }
-        scan();
     }
     
     /** Scan our folder and inform OsgiController of any changes */
     protected void scan() throws Exception {
         log.debug("Scanning {}", path);
         
-        checkDeletions();
+        checkDeletions(controller.getInstalledUris());
         
         Node folder = null;
         if(session.itemExists(path)) {
@@ -161,12 +162,12 @@ class WatchedFolder implements EventListener {
     }
     
     /** Check for deleted resources and uninstall them */
-    void checkDeletions() throws Exception {
+    void checkDeletions(Set<String> installedUri) throws Exception {
         // Check deletions
-        for(String uri : controller.getInstalledUris()) {
+        for(String uri : installedUri) {
             if(uri.startsWith(path)) {
                 if(!session.itemExists(uri)) {
-                    log.debug("Resource {} has been deleted, uninstalling");
+                    log.info("Resource {} has been deleted, uninstalling", uri);
                     controller.uninstall(uri);
                 }
             }

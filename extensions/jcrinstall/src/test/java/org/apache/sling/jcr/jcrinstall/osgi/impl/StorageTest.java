@@ -31,6 +31,25 @@ public class StorageTest {
         assertEquals("Storage is initially empty", 0, s.getKeys().size());
     }
     
+    @org.junit.Test public void testFileCreation() throws Exception {
+
+        // Get a temp file and delete it so that Storage must
+        // create it (i.e. we use just the filename)
+        final File f = Utilities.getTestFile();
+        f.delete();
+        
+        {
+            final Storage s = new Storage(f);
+            s.getMap("one").put("two", "twodata");
+            s.saveToFile();
+        }
+        
+        {
+            final Storage s = new Storage(f);
+            assertTrue("Retrieved Map contains 'two'", s.getMap("one").containsKey("two"));
+        }
+    }
+    
     @org.junit.Test public void testStoreAndRetrieve() throws Exception {
 
         final File f = Utilities.getTestFile();

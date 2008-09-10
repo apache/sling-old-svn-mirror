@@ -39,13 +39,24 @@ import org.slf4j.LoggerFactory;
  *  detect added or updated resources that might be of
  *  interest to the OsgiController.
  *  
- *   Calls the OsgiController to install/remove resources.
+ *  Calls the OsgiController to install/remove resources.
+ *   
+ *  @scr.component 
+ *      immediate="true"
+ *      metatype="no"
+ *  @scr.property 
+ *      name="service.description" 
+ *      value="Sling jcrinstall OsgiController Service"
+ *  @scr.property 
+ *      name="service.vendor" 
+ *      value="The Apache Software Foundation"
  */
-public class RepositoryObserver {
+public class RepositoryObserver implements Runnable {
 
     private Set<WatchedFolder> folders;
     private RegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
+    private boolean running;
     
     /** @scr.reference */
     private OsgiController osgiController;
@@ -101,15 +112,23 @@ public class RepositoryObserver {
         // service was inactive
         for(WatchedFolder wf : folders) {
             try {
-                wf.checkDeletions();
+                wf.checkDeletions(osgiController.getInstalledUris());
             } catch(Exception e) {
                 log.warn("Exception in activate() / checkDeletions", e);
             }
         }
+        
+        // start queue processing
+        running = true;
+        final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
+        t.setDaemon(true);
+        t.start();
     }
     
     protected void deactivate(ComponentContext oldContext) {
     	
+        running = false;
+        
     	for(WatchedFolder f : folders) {
     		f.cleanup();
     	}
@@ -190,6 +209,35 @@ public class RepositoryObserver {
             return path.substring(1);
         }
         return path;
+    }
+    
+    /**
+     * Scan WatchFolders once their timer expires
+     */
+    public void run() {
+        log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
+
+        // We could use the scheduler service but that makes things harder to test
+        while (running) {
+            try {
+                runOneCycle();
+            } catch (IllegalArgumentException ie) {
+                log.warn("IllegalArgumentException  in " + getClass().getSimpleName(), ie);
+            } catch (RepositoryException re) {
+                log.warn("RepositoryException in " + getClass().getSimpleName(), re);
+            } catch (Throwable t) {
+                log.error("Unhandled Throwable in runOneCycle() - "
+                        + getClass().getSimpleName() + " thread will be stopped", t);
+            } finally {
+                try {
+                    Thread.sleep(1000L);
+                } catch (InterruptedException ignore) {
+                    // ignore
+                }
+            }
+        }
+
+        log.info("{} thread {} ends", getClass().getSimpleName(), Thread.currentThread().getName());
     }
     
     /** Let our WatchedFolders run their scanning cycles */ 
