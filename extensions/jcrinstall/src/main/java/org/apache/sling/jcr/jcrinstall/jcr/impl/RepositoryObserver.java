@@ -63,6 +63,9 @@ public class RepositoryObserver {
     /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
     
+    /** Scan delay for watched folders */
+    private final long scanDelayMsec = 1000L;
+    
     protected static final Logger log = LoggerFactory.getLogger(WatchedFolder.class);
     
     /** Upon activation, find folders to watch under our roots, and observe those
@@ -118,12 +121,12 @@ public class RepositoryObserver {
     }
     
     /** Add WatchedFolders that have been discovered by our WatchedFolderCreationListeners, if any */
-    void addNewWatchedFolders() {
+    void addNewWatchedFolders() throws RepositoryException {
     	for(WatchedFolderCreationListener w : listeners) {
     		final Set<String> paths = w.getAndClearPaths();
     		if(paths != null) {
     			for(String path : paths) {
-    				folders.add(new WatchedFolder(path, osgiController));
+    				folders.add(new WatchedFolder(repository, path, osgiController, scanDelayMsec));
     			}
     		}
     	}
@@ -160,7 +163,7 @@ public class RepositoryObserver {
     void findWatchedFolders(Node n, Set<WatchedFolder> setToUpdate) throws RepositoryException 
     {
         if (folderNameFilter.accept(n.getPath())) {
-            setToUpdate.add(new WatchedFolder(n.getPath(), osgiController));
+            setToUpdate.add(new WatchedFolder(repository, n.getPath(), osgiController, scanDelayMsec));
         }
         final NodeIterator it = n.getNodes();
         while (it.hasNext()) {
@@ -176,5 +179,12 @@ public class RepositoryObserver {
             return path.substring(1);
         }
         return path;
+    }
+    
+    /** Let our WatchedFolders run their scanning cycles */ 
+    void runOneCycle() throws Exception {
+    	for(WatchedFolder wf : folders) {
+    		wf.scanIfNeeded();
+    	}
     }
 }
