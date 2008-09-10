@@ -95,6 +95,15 @@ public class RepositoryObserver {
             folders.addAll(findWatchedFolders(root));
         }
         
+        // Check if any deletions happened while this
+        // service was inactive
+        for(WatchedFolder wf : folders) {
+            try {
+                wf.checkDeletions();
+            } catch(Exception e) {
+                log.warn("Exception in activate() / checkDeletions", e);
+            }
+        }
     }
     
     protected void deactivate(ComponentContext oldContext) {
