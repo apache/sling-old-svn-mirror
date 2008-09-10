@@ -261,6 +261,7 @@ public class RepositoryObserver implements Runnable {
     
     /** Let our WatchedFolders run their scanning cycles */ 
     void runOneCycle() throws Exception {
+        addNewWatchedFolders();
     	for(WatchedFolder wf : folders) {
     		wf.scanIfNeeded();
     	}
