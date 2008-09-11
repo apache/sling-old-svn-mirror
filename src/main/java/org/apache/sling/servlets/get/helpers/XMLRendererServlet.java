@@ -26,10 +26,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * The <code>XMLRendererServlet</code> renders the current resource in XML
@@ -64,17 +67,32 @@ public class XMLRendererServlet extends SlingSafeMethodsServlet {
 
         final Node node = r.adaptTo(Node.class);
         if ( node != null ) {
+            // check if response is adaptable to a content handler
+            ContentHandler ch = null;
+            if ( resp instanceof Adaptable ) {
+                ch = ((Adaptable)resp).adaptTo(ContentHandler.class);
+            }
             try {
                 if ( req.getRequestPathInfo().getSelectorString() == null
                      || req.getRequestPathInfo().getSelectorString().equals(DOCVIEW) ) {
-                    node.getSession().exportDocumentView(node.getPath(), resp.getOutputStream(), false, false);
+                    if ( ch == null ) {
+                        node.getSession().exportDocumentView(node.getPath(), resp.getOutputStream(), false, false);
+                    } else {
+                        node.getSession().exportDocumentView(node.getPath(), ch, false, false);
+                    }
                 } else if ( req.getRequestPathInfo().getSelectorString().equals(SYSVIEW) ) {
-                    node.getSession().exportSystemView(node.getPath(), resp.getOutputStream(), false, false);
+                    if ( ch == null ) {
+                        node.getSession().exportSystemView(node.getPath(), resp.getOutputStream(), false, false);
+                    } else {
+                        node.getSession().exportSystemView(node.getPath(), ch, false, false);
+                    }
                 } else {
                     resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
                 }
             } catch (RepositoryException e) {
-                throw new ServletException("Unable to export node as document view.", e);
+                throw new ServletException("Unable to export resource as xml: " + r, e);
+            } catch (SAXException e) {
+                throw new ServletException("Unable to export resource as xml: " + r, e);
             }
         } else {
             if ( !isIncluded ) {
