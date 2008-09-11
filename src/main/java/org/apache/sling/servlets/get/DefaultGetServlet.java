@@ -19,6 +19,7 @@ package org.apache.sling.servlets.get;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -29,11 +30,15 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
 import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
 import org.apache.sling.servlets.get.helpers.PlainTextRendererServlet;
 import org.apache.sling.servlets.get.helpers.StreamRendererServlet;
 import org.apache.sling.servlets.get.helpers.XMLRendererServlet;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
@@ -46,18 +51,34 @@ import org.apache.sling.servlets.get.helpers.XMLRendererServlet;
  *
  * Use this as a default servlet for Sling
  * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
+ *               value="sling/servlet/default" private="true"
  *
  * Generic handler for all get requests
- * @scr.property name="sling.servlet.methods" value="GET"
+ * @scr.property name="sling.servlet.methods" value="GET" private="true"
  */
 public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = -5815904221043005085L;
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     private Map<String, Servlet> rendererMap = new HashMap<String, Servlet>();
 
     private Servlet streamerServlet;
+
+    /** @scr.property */
+    private static final String ALIAS_PROPERTY = "aliases";
+
+    /** Additional aliases. */
+    private String[] aliases;
+
+    protected void activate(ComponentContext ctx) {
+        this.aliases = OsgiUtil.toStringArray(ctx.getProperties().get(ALIAS_PROPERTY));
+    }
+
+    protected void deactivate(ComponentContext ctx) {
+        this.aliases = null;
+    }
 
     @Override
     public void init() throws ServletException {
@@ -75,6 +96,24 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
                 new XMLRendererServlet());
 
+        // check additional aliases
+        if ( this.aliases != null ) {
+            for(final String m : aliases) {
+                final int pos = m.indexOf(':');
+                if ( pos != -1 ) {
+                    final String type = m.substring(0, pos);
+                    final Servlet servlet = rendererMap.get(type);
+                    if ( servlet != null ) {
+                        final String extensions = m.substring(pos+1);
+                        final StringTokenizer st = new StringTokenizer(extensions, ",");
+                        while ( st.hasMoreTokens() ) {
+                            final String ext = st.nextToken();
+                            rendererMap.put(ext, servlet);
+                        }
+                    }
+                }
+            }
+        }
         // use the servlet for rendering StreamRendererServlet.EXT_RES as the
         // streamer servlet
         streamerServlet = rendererMap.get(StreamRendererServlet.EXT_RES);
@@ -123,7 +162,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             try {
                 servlet.destroy();
             } catch (Throwable t) {
-                // TODO: log
+                logger.error("Error while destroying servlet " + servlet, t);
             }
         }
 
@@ -139,7 +178,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             servlet.init(getServletConfig());
             rendererMap.put(key, servlet);
         } catch (Throwable t) {
-            // TODO: log
+            logger.error("Error while initializing servlet " + servlet, t);
         }
     }
 }
