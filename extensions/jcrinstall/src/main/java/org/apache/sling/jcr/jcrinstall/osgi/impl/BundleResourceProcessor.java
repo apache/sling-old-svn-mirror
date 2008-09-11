@@ -129,7 +129,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
                 iter.remove();
                 
             } else if ((state & Bundle.ACTIVE) > 0) {
-                log.info("Bundle {} is already active, removed from pending bundles queue", bundle.getLocation());
+                log.info("Bundle {} is active, removed from pending bundles queue", bundle.getLocation());
                 iter.remove();
             
             } else if ((state & Bundle.STARTING) > 0) {
