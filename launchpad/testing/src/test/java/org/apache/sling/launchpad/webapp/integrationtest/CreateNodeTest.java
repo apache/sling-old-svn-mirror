@@ -55,9 +55,9 @@ public class CreateNodeTest extends HttpTestBase {
         getContent(urlOfNewNode + ".txt", CONTENT_TYPE_PLAIN);
         getContent(urlOfNewNode + ".html", CONTENT_TYPE_HTML);
         getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
+        getContent(urlOfNewNode + ".xml", CONTENT_TYPE_XML);
 
         // And extensions for which we have no renderer fail
-        assertHttpStatus(urlOfNewNode + ".xml", 500);
         assertHttpStatus(urlOfNewNode + ".pdf", 500);
         assertHttpStatus(urlOfNewNode + ".someWeirdExtension", 500);
     }
