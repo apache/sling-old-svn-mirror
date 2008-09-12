@@ -113,6 +113,8 @@
         <module>extensions/httpauth</module>
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
+        <module>extensions/jcrinstall</module>
+        <module>extensions/runmode</module>
 
         <!-- Samples -->
         <module>samples/simple-demo</module>
