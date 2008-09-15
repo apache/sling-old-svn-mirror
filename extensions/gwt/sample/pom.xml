@@ -74,7 +74,7 @@
                             /gwt
                         </Sling-Bundle-Resources>
                         <Include-Resource>
-                            target/gwt,{maven-resources}
+                            gwt=target/gwt,{maven-resources}
                         </Include-Resource>
                     </instructions>
                 </configuration>
