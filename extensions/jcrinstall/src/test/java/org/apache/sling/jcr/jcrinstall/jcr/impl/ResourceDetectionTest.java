@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.jcr.Session;
 
@@ -227,6 +229,35 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
             one(c).uninstall("/libs/foo/bar/install/dummy.jar");
             one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
+        }});
+        
+        // Activating with installed resources that are not in
+        // the repository must cause them to be uninstalled
+        ro.activate(null);
+        mockery.assertIsSatisfied();
+    }
+    
+    public void testInitialDeletionsWithException() throws Exception {
+        contentHelper.setupContent();
+        
+        final SortedSet<String> installedUri = new TreeSet<String>();
+        installedUri.add("/libs/foo/bar/install/dummy.cfg");
+        installedUri.add("/libs/foo/bar/install/dummy.dp");
+        installedUri.add("/libs/foo/bar/install/dummy.jar");
+        
+        final OsgiController c = mockery.mock(OsgiController.class);
+        final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
+        
+        mockery.checking(new Expectations() {{
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
+            inSequence(sequence);
+            one(c).uninstall("/libs/foo/bar/install/dummy.dp");
+            inSequence(sequence);
+            will(throwException(new JcrInstallException("Fake BundleException for testing")));
+            one(c).uninstall("/libs/foo/bar/install/dummy.jar");
+            inSequence(sequence);
         }});
         
         // Activating with installed resources that are not in
