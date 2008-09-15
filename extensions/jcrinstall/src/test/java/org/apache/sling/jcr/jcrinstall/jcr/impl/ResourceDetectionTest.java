@@ -27,6 +27,7 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -147,7 +148,6 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final OsgiController c = mockery.mock(OsgiController.class);
         
         // Define the whole sequence of calls to OsgiController,
-        // Using getLastModified calls to mark the test phases
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
@@ -159,7 +159,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         ro.activate(null);
         
-        // Add two files, run one cycle must install the bundles
+        // Add files, run one cycle must install the bundles
         for(String file : resources) {
             contentHelper.createOrUpdateFile(file, data, lastModifiedA);
         }
@@ -232,6 +232,42 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         // Activating with installed resources that are not in
         // the repository must cause them to be uninstalled
         ro.activate(null);
+        mockery.assertIsSatisfied();
+    }
+    
+    public void testMultipleResourcesWithException() throws Exception {
+        contentHelper.setupContent();
+        
+        final String [] resources = {
+                "/libs/foo/bar/install/dummy.jar",
+                "/libs/foo/bar/install/dummy.cfg",
+                "/libs/foo/bar/install/dummy.dp"
+        };
+        final InputStream data = new ByteArrayInputStream("hello".getBytes());
+        final long lastModifiedA = System.currentTimeMillis();
+        final Set<String> installedUri = new HashSet<String>();
+        final OsgiController c = mockery.mock(OsgiController.class);
+        
+        // Define the whole sequence of calls to OsgiController,
+        mockery.checking(new Expectations() {{
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            will(throwException(new JcrInstallException("Fake BundleException for testing")));
+            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+        }});
+        
+        final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
+        ro.activate(null);
+        
+        // Add files, run one cycle must install the bundles
+        for(String file : resources) {
+            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+        }
+        eventHelper.waitForEvents(5000L);
+        ro.runOneCycle();
+        
         mockery.assertIsSatisfied();
     }
 }

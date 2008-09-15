@@ -157,7 +157,12 @@ class WatchedFolder implements EventListener {
                     log.debug("Node " + n.getPath() + " with name " + n.getName() + " ignored due to " + filenameFilter);
         	    }
         	} else {
-        	    installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
+        		// a single failure must not block the whole thing (SLING-655)
+        		try {
+        			installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
+        		} catch(JcrInstallException jie) {
+        			log.warn("Failed to install bundle " + n.getPath(), jie);
+        		}
         	}
         }
     }
