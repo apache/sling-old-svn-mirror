@@ -174,7 +174,12 @@ class WatchedFolder implements EventListener {
             if(uri.startsWith(path)) {
                 if(!session.itemExists(uri)) {
                     log.info("Resource {} has been deleted, uninstalling", uri);
-                    controller.uninstall(uri);
+            		// a single failure must not block the whole thing (SLING-655)
+                    try {
+                    	controller.uninstall(uri);
+                    } catch(JcrInstallException jie) {
+                    	log.warn("Failed to uninstall " + uri, jie);
+                    }
                 }
             }
         }
