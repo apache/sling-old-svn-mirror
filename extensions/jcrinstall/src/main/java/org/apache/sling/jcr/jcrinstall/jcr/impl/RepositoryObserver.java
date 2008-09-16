@@ -18,9 +18,16 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.jcr.Node;
@@ -30,6 +37,7 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -78,6 +86,9 @@ public class RepositoryObserver implements Runnable {
     /** ComponentContext property that overrides the folder name regepx */
     public static final String FOLDER_NAME_REGEXP_PROPERTY = "sling.jcrinstall.folder.name.regexp";
     
+    public static final String DATA_FILE = "service.properties";
+    public static final String DATA_LAST_FOLDER_REGEXP = "folder.regexp";
+    
     /** Scan delay for watched folders */
     protected long scanDelayMsec = 1000L;
     
@@ -92,14 +103,35 @@ public class RepositoryObserver implements Runnable {
     	final String [] roots = DEFAULT_ROOTS; 
     	filenameFilter = new RegexpFilter(DEFAULT_FILENAME_REGEXP);
     	
-    	String regexp = getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
-    	if(regexp != null) {
-    	    log.info("Using folder name regexp '{}' from context property '{}'", regexp, FOLDER_NAME_REGEXP_PROPERTY);
-    	    folderNameFilter = new RegexpFilter(regexp);
-    	} else {
+    	String folderNameRegexp = getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
+    	if(folderNameRegexp == null) {
+    	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
             log.info("Using default folder name regexp '{}'", DEFAULT_FOLDER_NAME_REGEXP);
-	        folderNameFilter = new RegexpFilter(DEFAULT_FOLDER_NAME_REGEXP);
+    	} else {
+            log.info("Using folder name regexp '{}' from context property '{}'", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
+        folderNameFilter = new RegexpFilter(folderNameRegexp);
+        
+        // If regexp has changed, uninstall everything - it's a bit hard
+        // to know what might have changed otherwise
+        // (null context happens during testing only)
+        if(context != null) { 
+            final File f = context.getBundleContext().getDataFile(DATA_FILE);
+            final Properties props = loadProperties(f);
+            final String oldRegexp = props.getProperty(DATA_LAST_FOLDER_REGEXP);
+            if(oldRegexp != null && !oldRegexp.equals(folderNameRegexp)) {
+                log.info("Folder name regexp has changed, uninstalling all resources ({} -> {}", oldRegexp, folderNameRegexp);
+                for(String uri : osgiController.getInstalledUris()) {
+                    try {
+                        osgiController.uninstall(uri);
+                    } catch (JcrInstallException e) {
+                        log.warn("Exception during 'uninstall all'", e);
+                    }
+                }
+            }
+            props.setProperty(DATA_LAST_FOLDER_REGEXP, folderNameRegexp);
+            saveProperties(props, f);
+        }
         
         // Listen for any new WatchedFolders created after activation
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
@@ -112,21 +144,22 @@ public class RepositoryObserver implements Runnable {
             session.getWorkspace().getObservationManager().addEventListener(w, eventTypes, path,
                     isDeep, null, null, noLocal);
         }
-
-        folders = new HashSet<WatchedFolder>();
-        
-        for(String root : roots) {
-            folders.addAll(findWatchedFolders(root));
-        }
         
         // Check if any deletions happened while this
-        // service was inactive
-        for(WatchedFolder wf : folders) {
-            try {
-                wf.checkDeletions(osgiController.getInstalledUris());
-            } catch(Exception e) {
-                log.warn("Exception in activate() / checkDeletions", e);
-            }
+        // service was inactive: create a fake WatchFolder 
+        // on / and use it to check for any deletions, even 
+        // if the corresponding WatchFolders are gone
+        try {
+            final WatchedFolder rootWf = new WatchedFolder(repository, "/", osgiController, filenameFilter, 0L);
+            rootWf.checkDeletions(osgiController.getInstalledUris());
+        } catch(Exception e) {
+            log.warn("Exception in root WatchFolder.checkDeletions call", e);
+        }
+
+        // Find folders to watch
+        folders = new HashSet<WatchedFolder>();
+        for(String root : roots) {
+            folders.addAll(findWatchedFolders(root));
         }
         
         // start queue processing
@@ -265,5 +298,45 @@ public class RepositoryObserver implements Runnable {
     	for(WatchedFolder wf : folders) {
     		wf.scanIfNeeded();
     	}
+    }
+    
+    Properties loadProperties(File f) {
+        final Properties props = new Properties();
+        if(f.exists()) {
+            InputStream is = null;
+            try {
+                is = new FileInputStream(f);
+                props.load(is);
+            } catch(IOException ioe) {
+                log.warn("Error reading " + f.getName(), ioe);
+            } finally {
+                if(is!=null) {
+                    try {
+                        is.close();
+                    } catch(IOException ignore) {
+                        
+                    }
+                }
+            }
+        }
+        return props;
+    }
+    
+    void saveProperties(Properties props, File f) {
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(f);
+            props.store(os, getClass().getSimpleName());
+        } catch(IOException ioe) {
+            log.warn("Error saving " + f.getName(), ioe);
+        } finally {
+            if(os!=null) {
+                try {
+                    os.close();
+                } catch(IOException ignore) {
+                    
+                }
+            }
+        }
     }
 }

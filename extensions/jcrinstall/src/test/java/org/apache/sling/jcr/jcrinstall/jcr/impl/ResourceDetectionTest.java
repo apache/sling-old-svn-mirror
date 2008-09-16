@@ -19,8 +19,10 @@
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -34,6 +36,8 @@ import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
 
 /** Test that added/updated/removed resources are
  * 	correctly translated to OsgiController calls.
@@ -220,6 +224,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final Set<String> installedUri = new HashSet<String>();
         installedUri.add("/libs/foo/bar/install/dummy.jar");
         installedUri.add("/libs/foo/bar/install/dummy.cfg");
+        installedUri.add("/libs/watchfolder-is-gone/install/gone.cfg");
         
         final OsgiController c = mockery.mock(OsgiController.class);
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
@@ -229,6 +234,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
             one(c).uninstall("/libs/foo/bar/install/dummy.jar");
             one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
+            one(c).uninstall("/libs/watchfolder-is-gone/install/gone.cfg");
         }});
         
         // Activating with installed resources that are not in
@@ -299,6 +305,73 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
         
+        mockery.assertIsSatisfied();
+    }
+    
+    /** Verify that resources are correctly uninstalled if the folder name regexp changes */
+    public void testFolderRegexpChange() throws Exception {
+        contentHelper.setupContent();
+        
+       final String [] resources = {
+                "/libs/foo/bar/install/dummy.jar",
+                "/libs/foo/wii/install/dummy.cfg",
+                "/libs/foo/bar/install/dummy.dp",
+                "/libs/foo/wii/install/more.cfg",
+        };
+        
+        final InputStream data = new ByteArrayInputStream("hello".getBytes());
+        final long lastModifiedA = System.currentTimeMillis();
+
+        for(String file : resources) {
+            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+        }
+        
+        final Set<String> installedUri = new HashSet<String>();
+        final OsgiController c = mockery.mock(OsgiController.class);
+        final Properties props = new Properties();
+        final ComponentContext ctx = mockery.mock(ComponentContext.class);
+        final BundleContext bc = mockery.mock(BundleContext.class);
+        final File f = File.createTempFile(getClass().getSimpleName(), "properties");
+        f.deleteOnExit();
+        
+        // Test with first regexp
+        mockery.checking(new Expectations() {{
+            allowing(ctx).getBundleContext(); will(returnValue(bc));
+            allowing(bc).getDataFile("service.properties"); will(returnValue(f));
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+        }});
+        
+        final MockRepositoryObserver ro = new MockRepositoryObserver(repo, c);
+        ro.setProperties(props);
+        props.setProperty(RepositoryObserver.FOLDER_NAME_REGEXP_PROPERTY, ".*foo/bar/install$");
+        ro.activate(ctx);
+        for(String file : resources) {
+            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+        }
+        eventHelper.waitForEvents(5000L);
+        ro.runOneCycle();
+        mockery.assertIsSatisfied();
+        
+        // Test with a different regexp, install.A resources must be uninstalled
+        mockery.checking(new Expectations() {{
+            allowing(ctx).getBundleContext(); will(returnValue(bc));
+            allowing(bc).getDataFile("service.properties"); will(returnValue(f));
+            allowing(c).getInstalledUris(); will(returnValue(installedUri));
+            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[3])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+        }});
+        
+        props.setProperty(RepositoryObserver.FOLDER_NAME_REGEXP_PROPERTY, ".*foo/wii/install$");
+        ro.activate(ctx);
+        for(String file : resources) {
+            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+        }
+        eventHelper.waitForEvents(5000L);
+        ro.runOneCycle();
         mockery.assertIsSatisfied();
     }
 }
