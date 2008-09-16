@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.sling.jcr.api.SlingRepository;
@@ -28,6 +29,8 @@ import org.osgi.service.component.ComponentContext;
  *  used for testing.
  */
 public class MockRepositoryObserver extends RepositoryObserver {
+    private Properties props;
+    
     MockRepositoryObserver(SlingRepository repo, final OsgiController c) {
         repository = repo;
         osgiController = c;
@@ -53,7 +56,11 @@ public class MockRepositoryObserver extends RepositoryObserver {
         return result;
     }
     
+    public void setProperties(Properties p) {
+        props = p;
+    }
+    
     protected String getPropertyValue(ComponentContext ctx, String name) {
-        return null;
+        return (props == null ? null : props.getProperty(name));
     }
 }
