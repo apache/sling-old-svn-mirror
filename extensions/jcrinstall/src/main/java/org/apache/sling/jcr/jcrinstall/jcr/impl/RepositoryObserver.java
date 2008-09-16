@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -240,18 +241,29 @@ public class RepositoryObserver implements Runnable {
     
     /** Uninstall resources as needed when starting up */
     void handleInitialUninstalls() {
-        // If regexp has changed, uninstall everything - it's a bit hard
-        // to know what might have changed otherwise
-        // (null context happens during testing only)
+        // If regexp has changed, uninstall resources left in folders 
+        // that don't match the new regexp
+        // TODO this happens right after activate() is called on this service,
+        // might conflict with ongoing SCR activities?
         final Properties props = loadProperties(serviceDataFile);
         final String oldRegexp = props.getProperty(DATA_LAST_FOLDER_REGEXP);
         if(oldRegexp != null && !oldRegexp.equals(folderNameFilter.getRegexp())) {
-            log.info("Folder name regexp has changed, uninstalling all resources ( {} -> {} )", 
+            log.info("Folder name regexp has changed uninstalling non-applicable resources ( {} -> {} )", 
                     oldRegexp, folderNameFilter.getRegexp());
             for(String uri : osgiController.getInstalledUris()) {
                 try {
-                    osgiController.uninstall(uri);
-                } catch (JcrInstallException e) {
+                    if(session.itemExists(uri)) {
+                        final Item i = session.getItem(uri);
+                        if(i.isNode()) {
+                            final Node n = (Node)i;
+                            final Node parent = n.getParent();
+                            if(!folderNameFilter.accept(parent.getPath())) {
+                                log.info("Uninstalling resource {}, folder name not accepted by current filter", uri);
+                                osgiController.uninstall(uri);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
                     log.warn("Exception during 'uninstall all'", e);
                 }
             }
