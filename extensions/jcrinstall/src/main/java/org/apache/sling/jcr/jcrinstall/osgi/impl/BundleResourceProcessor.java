@@ -23,9 +23,9 @@ import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
 
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.Bundle;
@@ -47,6 +47,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
     private final PackageAdmin packageAdmin;
     private final Map<Long, Bundle> pendingBundles;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Object refreshLock = new Object();
     
     BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin) {
         this.ctx = ctx;
@@ -79,11 +80,15 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         }
         
         if(refresh) {
-            packageAdmin.resolveBundles(null);
-            packageAdmin.refreshPackages(null);
+            synchronized(refreshLock) {
+                packageAdmin.resolveBundles(null);
+                packageAdmin.refreshPackages(null);
+            }
         }
         
-        pendingBundles.put(new Long(b.getBundleId()), b);
+        synchronized(pendingBundles) {
+            pendingBundles.put(new Long(b.getBundleId()), b);
+        }
         
         return updated ? UPDATED : INSTALLED; 
     }
@@ -97,7 +102,9 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
             if(b == null) {
                 log.debug("Bundle having id {} not found, cannot uninstall");
             } else {
-                pendingBundles.remove(new Long(b.getBundleId()));
+                synchronized(pendingBundles) {
+                    pendingBundles.remove(new Long(b.getBundleId()));
+                }
                 b.uninstall();
             }
         }
@@ -113,24 +120,30 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
             return;
         }
         
-        final Iterator<Long> iter = pendingBundles.keySet().iterator(); 
-        while(iter.hasNext()) {
-            final Long id = iter.next();
+        final List<Long> toRemove = new LinkedList<Long>();
+        final List<Long> idList = new LinkedList<Long>();
+        synchronized(pendingBundles) {
+            for(Long id : pendingBundles.keySet()) {
+                idList.add(id);
+            }
+        }
+        
+        for(Long id : idList) {
             final Bundle bundle = ctx.getBundle(id.longValue());
             if(bundle == null) {
                 log.debug("Bundle id {} disappeared (bundle removed from framework?), removed from pending bundles queue");
-                iter.remove();
+                toRemove.add(id);
                 continue;
             }
             final int state = bundle.getState();
             
             if(bundle == null) {
                 log.debug("Bundle id {} not found in processResourceQueue(), removed from pending bundles queue");
-                iter.remove();
+                toRemove.add(id);
                 
             } else if ((state & Bundle.ACTIVE) > 0) {
                 log.info("Bundle {} is active, removed from pending bundles queue", bundle.getLocation());
-                iter.remove();
+                toRemove.add(id);
             
             } else if ((state & Bundle.STARTING) > 0) {
                 log.info("Bundle {} is starting.", bundle.getLocation());
@@ -140,16 +153,24 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
                 
             } else if ((state & Bundle.UNINSTALLED) > 0) {
                 log.info("Bundle {} is uninstalled, removed from pending bundles queue", bundle.getLocation());
-                iter.remove();
+                toRemove.add(id);
                 
             } else if ((state & Bundle.RESOLVED) > 0) {
                 log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
                 bundle.start();
-                packageAdmin.resolveBundles(null);
-                packageAdmin.refreshPackages(null);
-                
+                synchronized(refreshLock) {
+                    packageAdmin.resolveBundles(null);
+                    packageAdmin.refreshPackages(null);
+                }
+
             } else if ((state & Bundle.INSTALLED) > 0) {
                 log.debug("Bundle {} is installed but not resolved.", bundle.getLocation());
+            }
+        }
+        
+        synchronized(pendingBundles) {
+            for(Long id : toRemove) {
+                pendingBundles.remove(id);
             }
         }
     }
