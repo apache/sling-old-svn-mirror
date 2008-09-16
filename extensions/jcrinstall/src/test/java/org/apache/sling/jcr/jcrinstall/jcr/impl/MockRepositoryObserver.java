@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.Set;
 
@@ -30,11 +32,17 @@ import org.osgi.service.component.ComponentContext;
  */
 public class MockRepositoryObserver extends RepositoryObserver {
     private Properties props;
+    private final File serviceDataFile;
     
     MockRepositoryObserver(SlingRepository repo, final OsgiController c) {
+        this(repo, c, null);
+    }
+    
+    MockRepositoryObserver(SlingRepository repo, final OsgiController c, File serviceDataFile) {
         repository = repo;
         osgiController = c;
         scanDelayMsec = 0;
+        this.serviceDataFile = serviceDataFile;
     }
     
     public void run() {
@@ -62,5 +70,19 @@ public class MockRepositoryObserver extends RepositoryObserver {
     
     protected String getPropertyValue(ComponentContext ctx, String name) {
         return (props == null ? null : props.getProperty(name));
+    }
+    
+    protected File getServiceDataFile(ComponentContext context) {
+        if(serviceDataFile != null) {
+            return serviceDataFile;
+        }
+        
+        try {
+            final File f = File.createTempFile(getClass().getSimpleName(), ".properties");
+            f.deleteOnExit();
+            return f;
+        } catch(IOException ioe) {
+            throw new Error("IOException", ioe);
+        }
     }
 }

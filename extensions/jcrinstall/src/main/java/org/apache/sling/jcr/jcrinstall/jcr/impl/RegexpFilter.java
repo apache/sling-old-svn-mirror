@@ -24,12 +24,18 @@ import java.util.regex.PatternSyntaxException;
 /** Simple regexp-based filter for folder and file names */ 
 class RegexpFilter {
     private final Pattern pattern;
+    private final String regexp;
     
     RegexpFilter(String regexp) throws PatternSyntaxException {
+        this.regexp = regexp;
         pattern = Pattern.compile(regexp);
     }
     
     boolean accept(String path) {
         return pattern.matcher(path).matches();
+    }
+    
+    String getRegexp() {
+        return regexp;
     }
 }

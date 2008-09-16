@@ -73,6 +73,7 @@ public class RepositoryObserver implements Runnable {
     protected SlingRepository repository;
     
     private Session session;
+    private File serviceDataFile;
     
     private List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
     
@@ -111,27 +112,7 @@ public class RepositoryObserver implements Runnable {
             log.info("Using folder name regexp '{}' from context property '{}'", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
         folderNameFilter = new RegexpFilter(folderNameRegexp);
-        
-        // If regexp has changed, uninstall everything - it's a bit hard
-        // to know what might have changed otherwise
-        // (null context happens during testing only)
-        if(context != null) { 
-            final File f = context.getBundleContext().getDataFile(DATA_FILE);
-            final Properties props = loadProperties(f);
-            final String oldRegexp = props.getProperty(DATA_LAST_FOLDER_REGEXP);
-            if(oldRegexp != null && !oldRegexp.equals(folderNameRegexp)) {
-                log.info("Folder name regexp has changed, uninstalling all resources ({} -> {}", oldRegexp, folderNameRegexp);
-                for(String uri : osgiController.getInstalledUris()) {
-                    try {
-                        osgiController.uninstall(uri);
-                    } catch (JcrInstallException e) {
-                        log.warn("Exception during 'uninstall all'", e);
-                    }
-                }
-            }
-            props.setProperty(DATA_LAST_FOLDER_REGEXP, folderNameRegexp);
-            saveProperties(props, f);
-        }
+        serviceDataFile = getServiceDataFile(context);
         
         // Listen for any new WatchedFolders created after activation
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
@@ -145,17 +126,6 @@ public class RepositoryObserver implements Runnable {
                     isDeep, null, null, noLocal);
         }
         
-        // Check if any deletions happened while this
-        // service was inactive: create a fake WatchFolder 
-        // on / and use it to check for any deletions, even 
-        // if the corresponding WatchFolders are gone
-        try {
-            final WatchedFolder rootWf = new WatchedFolder(repository, "/", osgiController, filenameFilter, 0L);
-            rootWf.checkDeletions(osgiController.getInstalledUris());
-        } catch(Exception e) {
-            log.warn("Exception in root WatchFolder.checkDeletions call", e);
-        }
-
         // Find folders to watch
         folders = new HashSet<WatchedFolder>();
         for(String root : roots) {
@@ -167,6 +137,10 @@ public class RepositoryObserver implements Runnable {
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
         t.setDaemon(true);
         t.start();
+    }
+    
+    protected File getServiceDataFile(ComponentContext context) {
+        return context.getBundleContext().getDataFile(DATA_FILE);
     }
     
     /** Get a property value from the component context or bundle context */
@@ -264,12 +238,48 @@ public class RepositoryObserver implements Runnable {
         return path;
     }
     
+    /** Uninstall resources as needed when starting up */
+    void handleInitialUninstalls() {
+        // If regexp has changed, uninstall everything - it's a bit hard
+        // to know what might have changed otherwise
+        // (null context happens during testing only)
+        final Properties props = loadProperties(serviceDataFile);
+        final String oldRegexp = props.getProperty(DATA_LAST_FOLDER_REGEXP);
+        if(oldRegexp != null && !oldRegexp.equals(folderNameFilter.getRegexp())) {
+            log.info("Folder name regexp has changed, uninstalling all resources ( {} -> {} )", 
+                    oldRegexp, folderNameFilter.getRegexp());
+            for(String uri : osgiController.getInstalledUris()) {
+                try {
+                    osgiController.uninstall(uri);
+                } catch (JcrInstallException e) {
+                    log.warn("Exception during 'uninstall all'", e);
+                }
+            }
+        }
+        props.setProperty(DATA_LAST_FOLDER_REGEXP, folderNameFilter.getRegexp());
+        saveProperties(props, serviceDataFile);
+        
+        // Check if any deletions happened while this
+        // service was inactive: create a fake WatchFolder 
+        // on / and use it to check for any deletions, even 
+        // if the corresponding WatchFolders are gone
+        try {
+            final WatchedFolder rootWf = new WatchedFolder(repository, "/", osgiController, filenameFilter, 0L);
+            rootWf.checkDeletions(osgiController.getInstalledUris());
+        } catch(Exception e) {
+            log.warn("Exception in root WatchFolder.checkDeletions call", e);
+        }
+
+    }
+    
     /**
      * Scan WatchFolders once their timer expires
      */
     public void run() {
         log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
 
+        handleInitialUninstalls();
+        
         // We could use the scheduler service but that makes things harder to test
         while (running) {
             try {
