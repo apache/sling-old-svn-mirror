@@ -237,6 +237,8 @@ public class JcrPropertyMap implements ValueMap {
 
     @SuppressWarnings("unchecked")
     private <T> T convertToType(String name, Class<T> type) {
+        T result = null;
+        
         try {
             if (node.hasProperty(name)) {
                 Property prop = node.getProperty(name);
@@ -244,11 +246,33 @@ public class JcrPropertyMap implements ValueMap {
                 boolean multiValue = prop.getDefinition().isMultiple();
                 boolean array = type.isArray();
 
-                if (array && multiValue) {
-                    return (T) convertToArray(prop, prop.getValues(),
-                        type.getComponentType());
-                } else if (!array && !multiValue) {
-                    return convertToType(prop, -1, prop.getValue(), type);
+                if (multiValue) {
+                    
+                    Value[] values = prop.getValues();
+                    if (array) {
+                        
+                        result = (T) convertToArray(prop, values,
+                            type.getComponentType());
+                        
+                    } else if (values.length > 0) {
+                        
+                        result = convertToType(prop, -1, values[0], type);
+                        
+                    }
+                    
+                } else {
+                    
+                    Value value = prop.getValue();
+                    if (array) {
+                        
+                        result = (T) convertToArray(prop,
+                            new Value[] { value }, type.getComponentType());
+                        
+                    } else {
+                        
+                        result = convertToType(prop, -1, value, type);
+                        
+                    }
                 }
             }
 
@@ -260,7 +284,7 @@ public class JcrPropertyMap implements ValueMap {
         }
 
         // fall back to nothing
-        return null;
+        return result;
     }
 
     private <T> T[] convertToArray(Property p, Value[] jcrValues, Class<T> type)
