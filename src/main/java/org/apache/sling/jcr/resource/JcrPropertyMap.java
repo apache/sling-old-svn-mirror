@@ -22,6 +22,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,8 @@ public class JcrPropertyMap implements ValueMap {
         Class<T> type = (Class<T>) defaultValue.getClass();
         if (Calendar.class.isAssignableFrom(type)) {
             type = (Class<T>) Calendar.class;
+        } else if (Date.class.isAssignableFrom(type)) {
+            type = (Class<T>) Date.class;
         } else if (Value.class.isAssignableFrom(type)) {
             type = (Class<T>) Value.class;
         }
@@ -309,6 +312,16 @@ public class JcrPropertyMap implements ValueMap {
 
         if (String.class == type) {
             return (T) jcrValue.getString();
+            
+        } else if (Byte.class == type) {
+            return (T) new Byte((byte) jcrValue.getLong());
+
+        } else if (Short.class == type) {
+            return (T) new Short((short) jcrValue.getLong());
+        
+        } else if (Integer.class == type) {
+            return (T) new Integer((int) jcrValue.getLong());
+
         } else if (Long.class == type) {
             if ( jcrValue.getType() == PropertyType.BINARY ) {
                 if ( index == -1 ) {
@@ -317,12 +330,22 @@ public class JcrPropertyMap implements ValueMap {
                 return (T)new Long(p.getLengths()[index]);
             }
             return (T) new Long(jcrValue.getLong());
+            
+        } else if (Float.class == type) {
+            return (T) new Float(jcrValue.getDouble());
+            
         } else if (Double.class == type) {
             return (T) new Double(jcrValue.getDouble());
+            
         } else if (Boolean.class == type) {
             return (T) Boolean.valueOf(jcrValue.getBoolean());
+            
+        } else if (Date.class == type) {
+            return (T) jcrValue.getDate().getTime();
+            
         } else if (Calendar.class == type) {
             return (T) jcrValue.getDate();
+            
         } else if (Value.class == type) {
             return (T) jcrValue;
         }
