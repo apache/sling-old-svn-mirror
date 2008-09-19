@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.Cookie;
@@ -212,6 +213,36 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         testStarResourceHelper(path, "DELETE");
     }
 
+    public void testSlingFolder() throws Exception {
+        
+        // create a folder
+        String folderPath = "folder";
+        Node folder = rootNode.addNode(folderPath, "sling:Folder");
+        rootNode.save();
+        
+        // test default child node type
+        Node child = folder.addNode("child0");
+        folder.save();
+        assertEquals("sling:Folder", child.getPrimaryNodeType().getName());
+        
+        // test explicit sling:Folder child
+        child = folder.addNode("child1", "sling:Folder");
+        folder.save();
+        assertEquals("sling:Folder", child.getPrimaryNodeType().getName());
+        
+        // test explicit nt:folder child
+        child = folder.addNode("child2", "nt:folder");
+        folder.save();
+        assertEquals("nt:folder", child.getPrimaryNodeType().getName());
+        
+        // test any child node -- use nt:unstructured here
+        child = folder.addNode("child3", "nt:unstructured");
+        folder.save();
+        assertEquals("nt:unstructured", child.getPrimaryNodeType().getName());
+    }
+    
+    //---------- internal
+    
     private void testStarResourceHelper(final String path, final String method) {
         final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, method));
         assertNotNull(res);

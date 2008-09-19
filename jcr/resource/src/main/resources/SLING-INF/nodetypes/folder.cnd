@@ -26,7 +26,7 @@
 [sling:Folder] > nt:folder
   - * (undefined) multiple
   - * (undefined)
-  + * (nt:hierarchyNode) = sling:Folder version
+  + * (nt:base) = sling:Folder version
 
 
 //-----------------------------------------------------------------------------
@@ -43,4 +43,4 @@
 // (See SLING-663)
 [sling:OrderedFolder] > sling:Folder
     orderable
-  + * (nt:hierarchyNode) = sling:OrderedFolder version 
+  + * (nt:base) = sling:OrderedFolder version 
