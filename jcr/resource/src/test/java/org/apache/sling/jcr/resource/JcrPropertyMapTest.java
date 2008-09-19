@@ -21,12 +21,12 @@ import java.util.Calendar;
 import java.util.Date;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.jcr.resource.JcrPropertyMap;
 
 public class JcrPropertyMapTest extends RepositoryTestBase {
 
@@ -126,6 +126,24 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         testDefaultValue(rootNode, refTime);
     }
 
+    public void testProperty() throws Exception {
+        JcrPropertyMap map = createProperty(rootNode, "Sample Value For Prop");
+        Property prop = rootNode.getProperty(PROP_NAME);
+        
+        // explicite type
+        Property result = map.get(PROP_NAME, Property.class);
+        assertEquals(prop, result);
+
+        // type by default value
+        Property defaultValue = rootNode.getProperty("jcr:primaryType");
+        result = map.get(PROP_NAME, defaultValue);
+        assertEquals(prop, result);
+        
+        // default value
+        result = map.get(PROP_NAME_NIL, defaultValue);
+        assertSame(defaultValue, result);
+    }
+    
     // ---------- internal
 
     private void testValue(Node node, Object value, Object defaultValue) throws RepositoryException {
