@@ -321,6 +321,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         if (path.equals(this.path)) {
             return getResourceProvider().getResource(resourceResolver, fullPath);
         } else if (path.startsWith(this.prefix)) {
+            ResourceProviderEntry[] entries = getEntries();
             if (entries != null) {
 
                 // consider relative path for further checks
@@ -355,6 +356,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             Set<ResourceProvider> providers) {
         if (path.startsWith(this.prefix)) {
 
+            ResourceProviderEntry[] entries = getEntries();
             if (entries != null) {
 
                 // consider relative path for further checks
