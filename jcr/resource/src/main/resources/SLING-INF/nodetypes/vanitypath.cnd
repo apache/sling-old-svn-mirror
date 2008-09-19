@@ -20,14 +20,9 @@
 <sling = 'http://sling.apache.org/jcr/sling/1.0'>
 
 //-----------------------------------------------------------------------------
-// Mixin node type for Sling Resource nodes
-[sling:Resource]
+// Mixin node type for defining vanity resource path.
+[sling:VanityPath]
     mixin
-  - sling:resourceType (string)
-
-
-//-----------------------------------------------------------------------------
-// Mixin node type for nodes providing resource super type information
-[sling:ResourceSuperType]
-    mixin
-  - sling:resourceSuperType (string)
+  - sling:vanityPath (string)
+  - sling:redirect (boolean)
+  - sling:vanityOrder (long)

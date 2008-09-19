@@ -55,7 +55,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     protected void setUp() throws Exception {
         super.setUp();
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
-                this.getClass().getResourceAsStream("/SLING-INF/nodetypes/resource.cnd")));
+            this.getClass().getResourceAsStream("/SLING-INF/nodetypes/folder.cnd")));
+        assertTrue(RepositoryUtil.registerNodeType(getSession(),
+            this.getClass().getResourceAsStream("/SLING-INF/nodetypes/resource.cnd")));
+        assertTrue(RepositoryUtil.registerNodeType(getSession(),
+                this.getClass().getResourceAsStream("/SLING-INF/nodetypes/vanitypath.cnd")));
 
         JcrResourceResolverFactoryImpl resFac = new JcrResourceResolverFactoryImpl();
 
