@@ -21,7 +21,7 @@
 <nt='http://www.jcp.org/jcr/nt/1.0'>
 <mix='http://www.jcp.org/jcr/mix/1.0'>
 
-[slingevent:Event] > nt:unstructured
+[slingevent:Event] > nt:unstructured, nt:hierarchyNode
   - slingevent:topic (string)
   - slingevent:application (string)
   - slingevent:created (date)
