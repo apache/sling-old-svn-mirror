@@ -20,20 +20,24 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 
 public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
+    private final ResourceProviderEntry delegatee;
+
     private final Session session;
 
     private final JcrResourceTypeProvider[] resourceTypeProviders;
-
+    
     public JcrResourceProviderEntry(Session session,
-                                    ResourceProviderEntry[] entries,
+                                    ResourceProviderEntry delegatee,
                                     JcrResourceTypeProvider[] resourceTypeProviders) {
-        super("/", new JcrResourceProvider(session, resourceTypeProviders), entries);
+        super("/", new JcrResourceProvider(session, resourceTypeProviders), null);
 
+        this.delegatee = delegatee;
         this.session = session;
         this.resourceTypeProviders = resourceTypeProviders;
     }
@@ -44,5 +48,20 @@ public class JcrResourceProviderEntry extends ResourceProviderEntry {
 
     public JcrResourceTypeProvider[] getResourceTypeProviders() {
         return resourceTypeProviders;
+    }
+    
+    @Override
+    public ResourceProviderEntry[] getEntries() {
+        return delegatee.getEntries();
+    }
+
+    @Override
+    public boolean addResourceProvider(String prefix, ResourceProvider provider) {
+        return delegatee.addResourceProvider(prefix, provider);
+    }
+    
+    @Override
+    public boolean removeResourceProvider(String prefix) {
+        return delegatee.removeResourceProvider(prefix);
     }
 }
