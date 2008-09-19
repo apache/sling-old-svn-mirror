@@ -80,14 +80,7 @@ public class JcrPropertyMap implements ValueMap {
 
         // special handling in case the default value implements one
         // of the interface types supported by the convertToType method
-        Class<T> type = (Class<T>) defaultValue.getClass();
-        if (Calendar.class.isAssignableFrom(type)) {
-            type = (Class<T>) Calendar.class;
-        } else if (Date.class.isAssignableFrom(type)) {
-            type = (Class<T>) Date.class;
-        } else if (Value.class.isAssignableFrom(type)) {
-            type = (Class<T>) Value.class;
-        }
+        Class<T> type = (Class<T>) normalizeClass(defaultValue.getClass());
 
         T value = get(name, type);
         if (value == null) {
@@ -164,6 +157,7 @@ public class JcrPropertyMap implements ValueMap {
 
     /**
      * Return the path of the current node.
+     * 
      * @throws IllegalStateException If a repository exception occurs
      */
     public String getPath() {
@@ -173,7 +167,6 @@ public class JcrPropertyMap implements ValueMap {
             throw new IllegalStateException(e);
         }
     }
-
 
     // ---------- Helpers to access the node's property ------------------------
 
@@ -241,7 +234,7 @@ public class JcrPropertyMap implements ValueMap {
     @SuppressWarnings("unchecked")
     private <T> T convertToType(String name, Class<T> type) {
         T result = null;
-        
+
         try {
             if (node.hasProperty(name)) {
                 Property prop = node.getProperty(name);
@@ -250,38 +243,38 @@ public class JcrPropertyMap implements ValueMap {
                 boolean array = type.isArray();
 
                 if (multiValue) {
-                    
+
                     Value[] values = prop.getValues();
                     if (array) {
-                        
+
                         result = (T) convertToArray(prop, values,
                             type.getComponentType());
-                        
+
                     } else if (values.length > 0) {
-                        
+
                         result = convertToType(prop, -1, values[0], type);
-                        
+
                     }
-                    
+
                 } else {
-                    
+
                     Value value = prop.getValue();
                     if (array) {
-                        
+
                         result = (T) convertToArray(prop,
                             new Value[] { value }, type.getComponentType());
-                        
+
                     } else {
-                        
+
                         result = convertToType(prop, -1, value, type);
-                        
+
                     }
                 }
             }
 
         } catch (ValueFormatException vfe) {
-            logger.info("converToType: Cannot convert value of " + name + " to "
-                + type, vfe);
+            logger.info("converToType: Cannot convert value of " + name
+                + " to " + type, vfe);
         } catch (RepositoryException re) {
             logger.info("converToType: Cannot get value of " + name, re);
         }
@@ -307,50 +300,66 @@ public class JcrPropertyMap implements ValueMap {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(Property p, int index, Value jcrValue, Class<T> type)
-            throws ValueFormatException, RepositoryException {
+    private <T> T convertToType(Property p, int index, Value jcrValue,
+            Class<T> type) throws ValueFormatException, RepositoryException {
 
         if (String.class == type) {
             return (T) jcrValue.getString();
-            
+
         } else if (Byte.class == type) {
             return (T) new Byte((byte) jcrValue.getLong());
 
         } else if (Short.class == type) {
             return (T) new Short((short) jcrValue.getLong());
-        
+
         } else if (Integer.class == type) {
             return (T) new Integer((int) jcrValue.getLong());
 
         } else if (Long.class == type) {
-            if ( jcrValue.getType() == PropertyType.BINARY ) {
-                if ( index == -1 ) {
-                    return (T)new Long(p.getLength());
+            if (jcrValue.getType() == PropertyType.BINARY) {
+                if (index == -1) {
+                    return (T) new Long(p.getLength());
                 }
-                return (T)new Long(p.getLengths()[index]);
+                return (T) new Long(p.getLengths()[index]);
             }
             return (T) new Long(jcrValue.getLong());
-            
+
         } else if (Float.class == type) {
             return (T) new Float(jcrValue.getDouble());
-            
+
         } else if (Double.class == type) {
             return (T) new Double(jcrValue.getDouble());
-            
+
         } else if (Boolean.class == type) {
             return (T) Boolean.valueOf(jcrValue.getBoolean());
-            
+
         } else if (Date.class == type) {
             return (T) jcrValue.getDate().getTime();
-            
+
         } else if (Calendar.class == type) {
             return (T) jcrValue.getDate();
-            
+
         } else if (Value.class == type) {
             return (T) jcrValue;
+
+        } else if (Property.class == type) {
+            return (T) p;
         }
 
         // fallback in case of unsupported type
         return null;
+    }
+
+    private Class<?> normalizeClass(Class<?> type) {
+        if (Calendar.class.isAssignableFrom(type)) {
+            type = Calendar.class;
+        } else if (Date.class.isAssignableFrom(type)) {
+            type = Date.class;
+        } else if (Value.class.isAssignableFrom(type)) {
+            type = Value.class;
+        } else if (Property.class.isAssignableFrom(type)) {
+            type = Property.class;
+        }
+        return type;
     }
 }
