@@ -187,7 +187,7 @@ public class JcrResourceResolverFactoryImpl
      */
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            session, rootProviderEntry.getEntries(), getJcrResourceTypeProvider());
+            session, rootProviderEntry, getJcrResourceTypeProvider());
         return new JcrResourceResolver(sessionRoot, this);
     }
 
