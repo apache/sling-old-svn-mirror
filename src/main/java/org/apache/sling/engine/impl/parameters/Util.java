@@ -21,7 +21,6 @@ package org.apache.sling.engine.impl.parameters;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,15 +111,12 @@ class Util {
                         param.setEncoding(formEncoding);
 
                         // prepare the parameter for renaming
-                        try {
-                            if (parName == null) {
-                                parName = paramEntry.getKey();
-                                String name = URLDecoder.decode(parName,
-                                    formEncoding);
-                                renameMap.put(paramEntry.getKey(), name);
+                        if (parName == null) {
+                            parName = paramEntry.getKey();
+                            String name = reencode(parName, formEncoding);
+                            if (!parName.equals(name)) {
+                                renameMap.put(parName, name);
                             }
-                        } catch (UnsupportedEncodingException uee) {
-                            // unexpected, as the encoding has been checked !
                         }
                     }
                 }
@@ -133,5 +129,19 @@ class Util {
                 parameterMap.renameParameter(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    private static String reencode(String parName, String encoding) {
+        // re-encode the parameter to the encoding
+        if (!ENCODING_DIRECT.equals(encoding)) {
+            try {
+                return new String(parName.getBytes(ENCODING_DIRECT), encoding);
+            } catch (UnsupportedEncodingException uee) {
+                // unexpected, as the encoding is assumed to have been checked !
+            }
+        }
+
+        // otherwise just return the name unmodified
+        return parName;
     }
 }
