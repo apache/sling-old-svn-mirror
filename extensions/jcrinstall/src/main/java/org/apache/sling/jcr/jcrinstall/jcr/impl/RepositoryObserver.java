@@ -38,8 +38,11 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +63,7 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor" 
  *      value="The Apache Software Foundation"
  */
-public class RepositoryObserver implements Runnable {
+public class RepositoryObserver implements Runnable, BundleListener {
 
     protected Set<WatchedFolder> folders;
     private RegexpFilter folderNameFilter;
@@ -75,6 +78,7 @@ public class RepositoryObserver implements Runnable {
     
     private Session session;
     private File serviceDataFile;
+    private long lastBundleEvent;
     
     private List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
     
@@ -94,13 +98,18 @@ public class RepositoryObserver implements Runnable {
     /** Scan delay for watched folders */
     protected long scanDelayMsec = 1000L;
     
-    protected static final Logger log = LoggerFactory.getLogger(WatchedFolder.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     /** Upon activation, find folders to watch under our roots, and observe those
      *  roots to detect new folders to watch.
      */
     protected void activate(ComponentContext context) throws RepositoryException {
     	
+        if(context!=null) {
+            context.getBundleContext().addBundleListener(this);
+        }
+        lastBundleEvent = System.currentTimeMillis();
+        
     	// TODO make this more configurable?
     	final String [] roots = DEFAULT_ROOTS; 
     	filenameFilter = new RegexpFilter(DEFAULT_FILENAME_REGEXP);
@@ -153,10 +162,12 @@ public class RepositoryObserver implements Runnable {
         return result;
     }
     
-    protected void deactivate(ComponentContext oldContext) {
+    protected void deactivate(ComponentContext context) {
     	
         running = false;
         
+        context.getBundleContext().removeBundleListener(this);
+
     	for(WatchedFolder f : folders) {
     		f.cleanup();
     	}
@@ -248,7 +259,7 @@ public class RepositoryObserver implements Runnable {
         final Properties props = loadProperties(serviceDataFile);
         final String oldRegexp = props.getProperty(DATA_LAST_FOLDER_REGEXP);
         if(oldRegexp != null && !oldRegexp.equals(folderNameFilter.getRegexp())) {
-            log.info("Folder name regexp has changed uninstalling non-applicable resources ( {} -> {} )", 
+            log.info("Folder name regexp has changed, uninstalling non-applicable resources ( {} -> {} )", 
                     oldRegexp, folderNameFilter.getRegexp());
             for(String uri : osgiController.getInstalledUris()) {
                 try {
@@ -289,6 +300,24 @@ public class RepositoryObserver implements Runnable {
      */
     public void run() {
         log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
+        
+        // Wait some time after receiving our last bundle event, to
+        // avoid uninstalling stuff while components might be starting
+        final long bundleEventDelayMsec = 1000;
+        boolean logged = false;
+        while(System.currentTimeMillis() - lastBundleEvent < bundleEventDelayMsec) {
+            if(!logged) {
+                log.info("Bundle events were detected in the last {} msec, waiting...", bundleEventDelayMsec);
+            }
+            logged = true;
+            
+            try {
+                Thread.sleep(100);
+            } catch(InterruptedException ignore) {
+                // ignore
+            }
+        }
+        log.info("No bundle events in the last {} msec, starting processing", bundleEventDelayMsec);
 
         handleInitialUninstalls();
         
@@ -360,5 +389,9 @@ public class RepositoryObserver implements Runnable {
                 }
             }
         }
+    }
+
+    public void bundleChanged(BundleEvent event) {
+        lastBundleEvent = System.currentTimeMillis();
     }
 }
