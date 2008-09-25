@@ -43,6 +43,7 @@ import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
+import org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -187,6 +188,9 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         Thread.currentThread().setContextClassLoader(jspClassLoader);
 
         try {
+            // prepare some classes
+            prepareJasperClasses();
+            
             ioProvider = new SlingIOProvider(repository);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
@@ -297,6 +301,23 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             this.repoCLProvider = null;
         }
     }
+    
+    private void prepareJasperClasses() {
+        final String propName = "org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.USE_POOL";
+        final String propValue = System.getProperty(propName);
+        try {
+            // hacky wacky to prevent PageContext pooling !!!
+            System.setProperty(propName, "false");
+            jspClassLoader.loadClass("org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl");
+        } catch (Throwable t) {
+            // don't care for now
+        } finally {
+            if (propValue != null) {
+                System.setProperty(propName, propValue);
+            }
+        }
+    }
+    
     // ---------- Internal -----------------------------------------------------
 
     private class JspScriptEngine extends AbstractSlingScriptEngine {
