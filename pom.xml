@@ -62,7 +62,8 @@
                         <Private-Package>
                             org.apache.sling.scripting.jsp,
                             !org.apache.sling.scripting.jsp.jasper.runtime,
-                            org.apache.sling.scripting.jsp.jasper.*
+                            org.apache.sling.scripting.jsp.jasper.*,
+                            org.apache.juli.logging
                         </Private-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
 
@@ -75,7 +76,7 @@
 
                         <!-- Embed Jasper completely -->
                         <Embed-Dependency>
-                            jasper*,juli,el-api,jsp-api
+                            jasper*,el-api,jsp-api
                         </Embed-Dependency>
                         <Embed-StripGroup>true</Embed-StripGroup>
                     </instructions>
@@ -139,11 +140,6 @@
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>jasper-jdt</artifactId>
-            <version>6.0.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>juli</artifactId>
             <version>6.0.14</version>
         </dependency>
         <dependency>
