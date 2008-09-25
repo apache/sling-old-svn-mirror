@@ -314,6 +314,8 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         } finally {
             if (propValue != null) {
                 System.setProperty(propName, propValue);
+            } else {
+                System.clearProperty(propName);
             }
         }
     }
