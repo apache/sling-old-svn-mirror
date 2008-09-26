@@ -33,7 +33,7 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.scripting.javascript.helper.SlingWrapper;
+import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptRuntime;
