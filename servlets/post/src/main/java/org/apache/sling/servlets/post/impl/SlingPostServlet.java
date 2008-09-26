@@ -162,6 +162,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
                     rnfe.getMessage());
             } catch (Throwable throwable) {
+                log.debug("Exception while handling POST "
+                    + request.getResource().getPath() + " with "
+                    + operation.getClass().getName(), throwable);
                 htmlResponse.setError(throwable);
             }
 
