@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.scripting.javascript.RhinoJavaScriptEngineFactory;
+import org.apache.sling.scripting.javascript.internal.RhinoJavaScriptEngineFactory;
 import org.apache.sling.scripting.javascript.io.EspReader;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.IdFunctionCall;
