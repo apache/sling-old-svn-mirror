@@ -23,3 +23,11 @@ included-a.esp before load.
 <% load("subfolder/included-b.esp"); %>
 
 included-a.esp after load
+
+<%
+// esp is templating, so one needs to enclose functions
+// in the appropriate markers
+function functionFromIncludedA() {
+  %>Here's more from included-a<%
+}
+%>

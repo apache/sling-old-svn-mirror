@@ -56,7 +56,8 @@ public class EspLoadTest extends HttpTestBase {
                     "included-a.esp before load",
                     "included-b.esp",
                     "included-a.esp after load",
-                    "main.esp after load"
+                    "main.esp after load",
+                    "Here's more from included-a"
             };
             
             int pos = 0;
