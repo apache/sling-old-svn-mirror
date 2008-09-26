@@ -18,6 +18,8 @@
  */
 package org.apache.sling.scripting;
 
+import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
+
 
 /** Verify that our test environment works */
 public class TestSetupTest extends RepositoryScriptingTestBase {

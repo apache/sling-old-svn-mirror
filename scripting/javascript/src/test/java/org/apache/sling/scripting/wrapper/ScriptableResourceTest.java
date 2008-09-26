@@ -26,7 +26,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
-import org.apache.sling.scripting.ScriptEngineHelper;
+import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.Wrapper;
 
