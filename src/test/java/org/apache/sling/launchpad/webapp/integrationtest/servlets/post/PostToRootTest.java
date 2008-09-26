@@ -23,7 +23,10 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
 public class PostToRootTest extends HttpTestBase {
 	
 	public void testSetRootProperty() throws Exception {
-		final String url = HTTP_BASE_URL;
+		String url = HTTP_BASE_URL;
+		if(!url.endsWith("/")) {
+			url += "/";
+		}
         final PostMethod post = new PostMethod(url);
 		final String name = getClass().getSimpleName();
 		final String value = getClass().getSimpleName() + System.currentTimeMillis();
@@ -32,7 +35,7 @@ public class PostToRootTest extends HttpTestBase {
 		final int status = httpClient.executeMethod(post);
 		assertEquals(200, status);
 		
-		final String json = getContent(url + "/.json", CONTENT_TYPE_JSON);
+		final String json = getContent(url + ".json", CONTENT_TYPE_JSON);
 		assertJavascript(value, json, "out.print(data." + name + ")");
 	}
 }
