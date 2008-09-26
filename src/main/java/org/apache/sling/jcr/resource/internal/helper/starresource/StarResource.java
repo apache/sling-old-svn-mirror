@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 /** Used to provide the equivalent of an empty Node for GET requests
  *  to *.something (SLING-344)
@@ -36,6 +37,10 @@ public class StarResource extends SyntheticResource {
 
     final static String SLASH_STAR = "/*";
     public final static String DEFAULT_RESOURCE_TYPE = "sling:syntheticStarResource";
+    
+    private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
+
+    private String resourceSuperType;
 
     @SuppressWarnings("serial")
     static class SyntheticStarResourceException extends SlingException {
@@ -81,6 +86,8 @@ public class StarResource extends SyntheticResource {
             resourceType = DEFAULT_RESOURCE_TYPE;
         }
         setResourceType(resourceType);
+        
+        resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
     /** adaptTo(Node) returns a Fake node, that returns empty values
@@ -94,6 +101,17 @@ public class StarResource extends SyntheticResource {
         	return (Type)"";
         }
         return null;
+    }
+
+    /**
+     * Calls {@link JcrResourceUtil#getResourceSuperType(Resource)} method
+     * to dynamically resolve the resource super type of this star resource.
+     */
+    public String getResourceSuperType() {
+        if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
+            resourceSuperType = JcrResourceUtil.getResourceSuperType(this);
+        }
+        return resourceSuperType;
     }
 
     /** Get our ResourceMetadata for given path */
