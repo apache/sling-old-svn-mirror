@@ -18,11 +18,13 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
-import java.io.File;
+import java.lang.reflect.Field;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.tools.debugger.ScopeProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingContextFactory</code> extends the standard Rhino
@@ -32,10 +34,15 @@ import org.mozilla.javascript.tools.debugger.ScopeProvider;
  */
 public class SlingContextFactory extends ContextFactory {
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private SlingRhinoDebugger debugger;
+
     private ScopeProvider scopeProvider;
+
     private boolean debuggerActive;
-    
+
     // conditionally setup the global ContextFactory to be ours. If
     // a global context factory has already been set, we have lost
     // and cannot set this one.
@@ -45,22 +52,38 @@ public class SlingContextFactory extends ContextFactory {
             initGlobal(new SlingContextFactory(sp));
         }
     }
-    
-    // private as instances of this class are only used by setup()
-    private SlingContextFactory(ScopeProvider sp) 
-    {
-        scopeProvider = sp;
-        
-        // TODO make this configurable via OSGi
-        File f = new File("/tmp/sling.debug");
-        debuggerActive = f.exists();
+
+    public static void teardown() {
+        ContextFactory factory = getGlobal();
+        if (factory instanceof SlingContextFactory) {
+            ((SlingContextFactory) factory).dispose();
+        }
     }
-    
+
+    // private as instances of this class are only used by setup()
+    private SlingContextFactory(ScopeProvider sp) {
+        scopeProvider = sp;
+    }
+
+    private void dispose() {
+        // ensure the debugger is closed
+        exitDebugger();
+        
+        // reset the context factory class for future use
+        ContextFactory newGlobal = new ContextFactory();
+        setField(newGlobal, "hasCustomGlobal", Boolean.FALSE);
+        setField(newGlobal, "global", newGlobal);
+        setField(newGlobal, "sealed", Boolean.FALSE);
+        setField(newGlobal, "listeners", null);
+        setField(newGlobal, "disabledListening", Boolean.FALSE);
+        setField(newGlobal, "applicationClassLoader", null);
+    }
+
     @Override
     protected Context makeContext() {
         return new SlingContext();
     }
-    
+
     @Override
     protected boolean hasFeature(Context cx, int featureIndex) {
         if (featureIndex == Context.FEATURE_DYNAMIC_SCOPE) {
@@ -69,7 +92,7 @@ public class SlingContextFactory extends ContextFactory {
 
         return super.hasFeature(cx, featureIndex);
     }
-    
+
     @Override
     protected void onContextCreated(Context cx) {
         super.onContextCreated(cx);
@@ -77,19 +100,55 @@ public class SlingContextFactory extends ContextFactory {
     }
 
     private void initDebugger(Context cx) {
-        if(!debuggerActive) {
-            return;
-        }
-        try {
-            if (debugger == null) {
-                debugger = new SlingRhinoDebugger(getClass().getSimpleName());
-                debugger.setScopeProvider(scopeProvider);
-                debugger.attachTo(this);
+        if (isDebugging()) {
+            try {
+                if (debugger == null) {
+                    debugger = new SlingRhinoDebugger(
+                        getClass().getSimpleName());
+                    debugger.setScopeProvider(scopeProvider);
+                    debugger.attachTo(this);
+                }
+            } catch (Exception e) {
+                log.warn("initDebugger: Failed setting up the Rhino debugger",
+                    e);
             }
-        } catch (Exception e) {
-            // TODO log
-            System.err.println("SlingContextFactory.initDebugger(): " + e);
+        }
+    }
+
+    public void exitDebugger() {
+        if (debugger != null) {
+            debugger.setScopeProvider(null);
+            debugger.detach();
+            debugger.dispose();
+            debugger = null;
         }
     }
     
+    void debuggerStopped() {
+        debugger = null;
+    }
+
+    public void setDebugging(boolean enable) {
+        debuggerActive = enable;
+    }
+
+    public boolean isDebugging() {
+        return debuggerActive;
+    }
+
+    private void setField(Object instance, String fieldName, Object value) {
+        try {
+            Field field = instance.getClass().getDeclaredField(fieldName);
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+            }
+            field.set(instance, value);
+        } catch (IllegalArgumentException iae) {
+            // don't care, but it is strange anyhow
+        } catch (IllegalAccessException iae) {
+            // don't care, but it is strange anyhow
+        } catch (NoSuchFieldException nsfe) {
+            // don't care, but it is strange anyhow
+        }
+    }
 }
