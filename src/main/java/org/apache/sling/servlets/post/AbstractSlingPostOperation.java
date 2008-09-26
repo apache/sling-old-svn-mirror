@@ -74,7 +74,9 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
 
         // parent location
         path = ResourceUtil.getParent(path);
-        response.setParentLocation(externalizePath(request, path));
+        if (path != null) {
+            response.setParentLocation(externalizePath(request, path));
+        }
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
