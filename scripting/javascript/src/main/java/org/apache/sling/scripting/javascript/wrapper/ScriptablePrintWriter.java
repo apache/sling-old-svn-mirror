@@ -22,7 +22,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.scripting.javascript.helper.SlingWrapper;
+import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptRuntime;
