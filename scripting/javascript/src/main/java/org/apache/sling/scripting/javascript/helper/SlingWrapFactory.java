@@ -29,15 +29,13 @@ import org.slf4j.LoggerFactory;
 
 public class SlingWrapFactory extends WrapFactory {
 
-    public static final SlingWrapFactory INSTANCE = new SlingWrapFactory();
-    
     /** List of classes that must not be wrapped (added for SLING-382) */
     private static final Class<?>[] EXCLUDED_CLASSES = {};
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Map<Class<?>, String> wrappers = new HashMap<Class<?>, String>();
+    private final Map<Class<?>, String> wrappers = new HashMap<Class<?>, String>();
 
     /**
      * @param cx the current Context for this thread
