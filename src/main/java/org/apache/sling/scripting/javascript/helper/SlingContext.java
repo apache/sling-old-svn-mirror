@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.javascript.helper;
 
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.ScriptableObject;
 
 /**
@@ -33,6 +34,11 @@ public class SlingContext extends Context {
             boolean sealed) {
         ScriptableObject rootScope = super.initStandardObjects(scope, sealed);
 
+        // prepare the ImporterToplevel host object because it will be
+        // used as top level scope for the RhinoJavaScriptEngine but is
+        // not initialized with the rest of the standard objects
+        ImporterTopLevel.init(this, rootScope, sealed);
+        
         // add Sling global objects
         SlingGlobal.init(rootScope, sealed);
 

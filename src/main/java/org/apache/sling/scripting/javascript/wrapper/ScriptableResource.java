@@ -17,7 +17,7 @@
 package org.apache.sling.scripting.javascript.wrapper;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.scripting.javascript.helper.SlingWrapper;
+import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptRuntime;
