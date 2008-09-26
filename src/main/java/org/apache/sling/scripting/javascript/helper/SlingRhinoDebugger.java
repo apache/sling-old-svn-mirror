@@ -16,13 +16,51 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+
+import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.tools.debugger.Dim;
 import org.mozilla.javascript.tools.debugger.SwingGui;
 
 class SlingRhinoDebugger extends Dim {
+    private SlingContextFactory slingContextFactory;
+
+    private final SwingGui gui;
+
     SlingRhinoDebugger(String windowTitle) {
-        final SwingGui gui = new SwingGui(this, windowTitle);
+        gui = new SwingGui(this, windowTitle);
         gui.pack();
         gui.setVisible(true);
+        gui.setExitAction(new Runnable() {
+            public void run() {
+                if (slingContextFactory != null) {
+                    slingContextFactory.debuggerStopped();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void attachTo(ContextFactory factory) {
+        super.attachTo(factory);
+
+        if (factory instanceof SlingContextFactory) {
+            this.slingContextFactory = (SlingContextFactory) factory;
+        }
+    }
+
+    @Override
+    public void detach() {
+        this.slingContextFactory = null;
+        super.detach();
+    }
+
+    @Override
+    public void dispose() {
+        clearAllBreakpoints();
+        go();
+        gui.dispose();
+        super.dispose();
     }
 }
