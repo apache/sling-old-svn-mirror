@@ -23,3 +23,5 @@ main.esp before load.
 <% load(currentNode.scriptToInclude); %>
 
 main.esp after load
+
+<% functionFromIncludedA() %>
