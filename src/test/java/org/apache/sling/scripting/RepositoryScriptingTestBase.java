@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.naming.NamingException;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 
 
 /** Base class for tests which need a Repository

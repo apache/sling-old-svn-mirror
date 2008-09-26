@@ -26,7 +26,7 @@ import javax.script.ScriptException;
 
 import junit.framework.TestCase;
 
-import org.apache.sling.scripting.ScriptEngineHelper;
+import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 
 /**
  * The <code>EspReaderTest</code> contains some simple test cases for the
