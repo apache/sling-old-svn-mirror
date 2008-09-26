@@ -98,7 +98,7 @@ public class Main {
     private static Map<String, String> commandLine;
 
     public static void main(String[] args) throws Exception {
-        // creating the instance launches the framework and we are done here ..
+        
         Map<String, String> props = new HashMap<String, String>();
 
         // parse the command line (exit in case of failure)
@@ -110,10 +110,6 @@ public class Main {
         if (commandLine.containsKey(Sling.SLING_HOME)) {
             props.put(Sling.SLING_HOME, commandLine.get(Sling.SLING_HOME));
         }
-
-        // overwrite the loadPropertiesOverride method to inject the command
-        // line arguments unconditionally. These will not be persisted in any
-        // properties file, though
 
         // set up and configure Felix Logger
         int logLevel;
@@ -127,17 +123,18 @@ public class Main {
         Logger logger = new Logger();
 
         // prevent tons of needless WARN from the framework
-        // logger.setLogLevel(logLevel);
-        logger.setLogLevel(Logger.LOG_ERROR);
-
-        // prevent tons of needless WARN messages from the framework
-        // logger.setLogLevel(logLevel);
         logger.setLogLevel(Logger.LOG_ERROR);
 
         try {
             ResourceProvider resProvider = new ClassLoaderResourceProvider(
                 Main.class.getClassLoader());
+            
+            // creating the instance launches the framework and we are done here ..
             Sling sling = new Sling(logger, resProvider, props) {
+            	
+                // overwrite the loadPropertiesOverride method to inject the command
+                // line arguments unconditionally. These will not be persisted in any
+                // properties file, though
                 protected void loadPropertiesOverride(
                         Map<String, String> properties) {
                     if (commandLine != null) {
