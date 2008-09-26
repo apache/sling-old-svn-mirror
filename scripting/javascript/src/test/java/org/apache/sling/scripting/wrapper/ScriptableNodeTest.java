@@ -25,7 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
-import org.apache.sling.scripting.ScriptEngineHelper;
+import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.apache.sling.commons.json.jcr.JsonItemWriter;
 
 /** Test the ScriptableNode class "live", by retrieving

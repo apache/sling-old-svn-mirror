@@ -21,7 +21,7 @@ package org.apache.sling.scripting.wrapper;
 import javax.jcr.Node;
 
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
-import org.apache.sling.scripting.ScriptEngineHelper;
+import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 
 /** Test access to Version and VersionHistory objects */
 public class ScriptableVersionTest extends RepositoryScriptingTestBase {
