@@ -33,6 +33,7 @@ import javax.script.ScriptEngineManager;
 
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -42,21 +43,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *  AdapterFactory that adapts Resources to the DefaultSlingScript servlet,
- *  which executes the Resources as scripts.
- *
- * @scr.component metatype="no"
+ * AdapterFactory that adapts Resources to the DefaultSlingScript servlet, which
+ * executes the Resources as scripts.
+ * 
+ * @scr.component metatype="no" immediate="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Default SlingScriptResolver"
- *
  * @scr.property name="adaptables"
  *               value="org.apache.sling.api.resource.Resource";
  * @scr.property name="adapters"
  *               values.0="org.apache.sling.api.scripting.SlingScript"
  *               values.1="javax.servlet.Servlet"
- *
  * @scr.service interface="org.apache.sling.api.adapter.AdapterFactory"
- *
  * @scr.reference name="ScriptEngineFactory"
  *                interface="javax.script.ScriptEngineFactory"
  *                cardinality="0..n" policy="dynamic"
@@ -82,7 +80,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
 
     private BundleContext bundleContext;
 
-    //---------- AdapterFactory -----------------------------------------------
+    // ---------- AdapterFactory -----------------------------------------------
 
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType getAdapter(Object adaptable,
@@ -92,25 +90,25 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         String path = resource.getPath();
         String ext = path.substring(path.lastIndexOf('.') + 1);
 
-        ScriptEngine engine = getScriptEngineManager().getEngineByExtension(
-            ext);
+        ScriptEngine engine = getScriptEngineManager().getEngineByExtension(ext);
         if (engine != null) {
             // unchecked cast
-            return (AdapterType) new DefaultSlingScript(this.bundleContext, resource, engine);
+            return (AdapterType) new DefaultSlingScript(this.bundleContext,
+                resource, engine);
         }
 
         return null;
     }
 
-    private ScriptEngineManager getScriptEngineManager() {
+    /* package */ ScriptEngineManager getScriptEngineManager() {
         if (scriptEngineManager == null) {
 
             // create (empty) script engine manager
             ClassLoader loader = getClass().getClassLoader();
-            ScriptEngineManager tmp = new ScriptEngineManager(loader);
+            SlingScriptEngineManager tmp = new SlingScriptEngineManager(loader);
 
             // register script engines from bundles
-            final SortedSet<Object> extensions = new TreeSet<Object>(); 
+            final SortedSet<Object> extensions = new TreeSet<Object>();
             for (Bundle bundle : engineSpiBundles) {
                 extensions.addAll(registerFactories(tmp, bundle));
             }
@@ -121,25 +119,23 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
             }
 
             scriptEngineManager = tmp;
-            
+
             // Log messages to verify which ScriptEngine is actually used
             // for our registered extensions
-            if(log.isInfoEnabled()) {
-                for(Object o : extensions) {
+            if (log.isInfoEnabled()) {
+                for (Object o : extensions) {
                     final String ext = o.toString();
                     final ScriptEngine e = scriptEngineManager.getEngineByExtension(ext);
-                    if(e == null) {
-                        log.warn("No ScriptEngine found for extension '{}' that was just registered", ext);
+                    if (e == null) {
+                        log.warn(
+                            "No ScriptEngine found for extension '{}' that was just registered",
+                            ext);
                     } else {
                         log.info(
-                                "Script extension '{}' is now handled by ScriptEngine '{}', version='{}', class='{}'",
-                                new Object [] {
-                                        ext,
-                                        e.getFactory().getEngineName(),
-                                        e.getFactory().getEngineVersion(),
-                                        e.getClass().getName()
-                                }
-                                );
+                            "Script extension '{}' is now handled by ScriptEngine '{}', version='{}', class='{}'",
+                            new Object[] { ext, e.getFactory().getEngineName(),
+                                e.getFactory().getEngineVersion(),
+                                e.getClass().getName() });
                     }
                 }
             }
@@ -147,10 +143,11 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         return scriptEngineManager;
     }
 
-    private Collection<?> registerFactories(ScriptEngineManager mgr, Bundle bundle) {
+    private Collection<?> registerFactories(SlingScriptEngineManager mgr,
+            Bundle bundle) {
         URL url = bundle.getEntry(ENGINE_FACTORY_SERVICE);
         InputStream ins = null;
-        final SortedSet<String> extensions = new TreeSet<String>(); 
+        final SortedSet<String> extensions = new TreeSet<String>();
         try {
             ins = url.openStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -176,28 +173,18 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
                 }
             }
         }
-        
+
         return extensions;
     }
 
-    private Collection<?> registerFactory(ScriptEngineManager mgr,
+    private Collection<?> registerFactory(SlingScriptEngineManager mgr,
             ScriptEngineFactory factory) {
         log.info("Adding ScriptEngine {}, {} for language {}, {}",
             new Object[] { factory.getEngineName(), factory.getEngineVersion(),
                 factory.getLanguageName(), factory.getLanguageVersion() });
 
-        for (Object ext : factory.getExtensions()) {
-            mgr.registerEngineExtension((String) ext, factory);
-        }
+        mgr.registerScriptEngineFactory(factory);
 
-        for (Object mime : factory.getMimeTypes()) {
-            mgr.registerEngineMimeType((String) mime, factory);
-        }
-
-        for (Object name : factory.getNames()) {
-            mgr.registerEngineName((String) name, factory);
-        }
-        
         return factory.getExtensions();
     }
 
@@ -231,9 +218,23 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
                 engineSpiBundles.add(bundle);
             }
         }
+
+        try {
+            org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.initPlugin(
+                context.getBundleContext(), this);
+        } catch (Throwable t) {
+            // so what ?
+        }
     }
 
     protected void deactivate(ComponentContext context) {
+
+        try {
+            org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.destroyPlugin();
+        } catch (Throwable t) {
+            // so what ?
+        }
+
         context.getBundleContext().removeBundleListener(this);
 
         engineSpiBundles.clear();
