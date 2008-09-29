@@ -206,13 +206,20 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             props.setRequest((SlingHttpServletRequest) req);
             props.setResponse((SlingHttpServletResponse) res);
 
-            res.setCharacterEncoding("UTF-8");
             // try to set content type
             final String contentType = request.getResponseContentType();
-            if ( contentType != null ) {
+            if (contentType != null) {
                 res.setContentType(contentType);
+
+                // only set the character encoding for text/ content types
+                // see SLING-679
+                if (contentType.startsWith("text/")) {
+                    res.setCharacterEncoding("UTF-8");
+                }
             } else {
-                logger.warn("No response content type defined for request {}.", request.getRequestURI());
+                logger.debug(
+                    "service:No response content type defined for request {}.",
+                    request.getRequestURI());
             }
 
             // evaluate the script now using the ScriptEngine
