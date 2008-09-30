@@ -165,7 +165,7 @@ public class JsonResourceWriter {
             }
         }
 
-        // special handling for binaries: we dump the length and not the length
+        // special handling for binaries: we dump the length and not the data!
         if (value instanceof InputStream
             || (values != null && values[0] instanceof InputStream)) {
             // TODO for now we mark binary properties with an initial colon in
