@@ -18,20 +18,21 @@
  */
 package org.apache.sling.jcr.jcrinstall.osgi.impl;
 
+import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
+import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
+import java.util.Dictionary;
 import java.util.Map;
-import java.util.Properties;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
 
 /** Process OSGi Configuration resources */
 public class ConfigResourceProcessor implements OsgiResourceProcessor {
@@ -49,25 +50,18 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         return uri.endsWith(CONFIG_EXTENSION);
     }
 
+    @SuppressWarnings("unchecked")
     public int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data) throws Exception {
         
         // Load configuration properties
-        final Properties p = new Properties();
-        try {
-            p.load(data);
-        } finally {
-            data.close();
-        }
-
+        final Dictionary dict = loadDictionary(data);
+        
         // Get pids from node name
         final ConfigurationPid pid = new ConfigurationPid(uri);
         log.debug("{} created for uri {}", pid, uri);
 
-        // prepare configuration data
-        Hashtable<Object, Object> ht = new Hashtable<Object, Object>();
-        ht.putAll(p);
         if(pid.getFactoryPid() != null) {
-            ht.put(ALIAS_KEY, pid.getFactoryPid());
+            dict.put(ALIAS_KEY, pid.getFactoryPid());
         }
 
         // get or create configuration
@@ -80,9 +74,19 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         if (config.getBundleLocation() != null) {
             config.setBundleLocation(null);
         }
-        config.update(ht);
+        config.update(dict);
         log.info("Configuration {} {}", config.getPid(), (result == UPDATED ? "updated" : "created"));
         return result;
+    }
+    
+    Dictionary<?,?> loadDictionary(InputStream data) throws IOException {
+        Dictionary<?,?> dict = null;
+        try {
+            dict = ConfigurationHandler.read(data);
+        } finally {
+            data.close();
+        }
+        return dict;
     }
 
     public void processResourceQueue() throws Exception {
