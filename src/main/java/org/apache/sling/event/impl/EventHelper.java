@@ -41,11 +41,8 @@ public abstract class EventHelper {
     public static final String NODE_PROPERTY_TE_DATE = "slingevent:date";
     public static final String NODE_PROPERTY_TE_PERIOD = "slingevent:period";
 
-    public static final String EVENTS_NODE_TYPE = "slingevent:Events";
     public static final String EVENT_NODE_TYPE = "slingevent:Event";
-    public static final String JOBS_NODE_TYPE = "slingevent:Jobs";
     public static final String JOB_NODE_TYPE = "slingevent:Job";
-    public static final String TIMED_EVENTS_NODE_TYPE = "slingevent:TimedEvents";
     public static final String TIMED_EVENT_NODE_TYPE = "slingevent:TimedEvent";
 
     /** The nodetype for newly created folders */
