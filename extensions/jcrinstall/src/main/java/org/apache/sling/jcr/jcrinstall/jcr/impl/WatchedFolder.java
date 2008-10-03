@@ -161,7 +161,7 @@ class WatchedFolder implements EventListener {
         		try {
         			installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
         		} catch(JcrInstallException jie) {
-        			log.warn("Failed to install bundle " + n.getPath(), jie);
+        			log.warn("Failed to install resource " + n.getPath(), jie);
         		}
         	}
         }
