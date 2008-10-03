@@ -43,7 +43,8 @@ import org.slf4j.LoggerFactory;
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
  *
- * @scr.component immediate="true"
+ * @scr.component immediate="true" label="%servlet.get.name"
+ *                                 description="%servlet.get.description"
  * @scr.service interface="javax.servlet.Servlet"
  *
  * @scr.property name="service.description" value="Default GET Servlet"
