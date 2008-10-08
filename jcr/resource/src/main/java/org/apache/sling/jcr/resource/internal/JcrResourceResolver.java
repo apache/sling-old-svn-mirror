@@ -291,7 +291,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 String path = rm.getResolutionPath();
                 String uriPath = mappings[i].mapHandle(path);
                 if (uriPath != null && !uriPath.equals(path)) {
-                    resource.getResourceMetadata().setResolutionPath(uriPath);
+                    rm.setResolutionPath(uriPath);
                 }
 
                 return resource;
@@ -307,12 +307,17 @@ public class JcrResourceResolver extends SlingAdaptable implements
             final Resource resource = searchVanityPath(curPath);
             if ( resource != null ) {
                 final ResourceMetadata rm = resource.getResourceMetadata();
-                String rpi = uri.substring(curPath.length());
-                resource.getResourceMetadata().setResolutionPathInfo(rpi);
+                final String rpi = uri.substring(curPath.length());
+                // append html if no extension available
+                if ( rpi.indexOf('.') == -1 ) {
+                    rm.setResolutionPathInfo(rpi + ".html");
+                } else {
+                    rm.setResolutionPathInfo(rpi);
+                }
 
                 final String path = rm.getResolutionPath();
                 if (!uri.equals(path)) {
-                    resource.getResourceMetadata().setResolutionPath(uri);
+                    rm.setResolutionPath(uri);
                 }
 
                 return resource;
