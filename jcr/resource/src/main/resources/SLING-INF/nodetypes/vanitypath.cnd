@@ -23,6 +23,6 @@
 // Mixin node type for defining vanity resource path.
 [sling:VanityPath]
     mixin
-  - sling:vanityPath (string)
+  - sling:vanityPath (string) multiple
   - sling:redirect (boolean)
   - sling:vanityOrder (long)
