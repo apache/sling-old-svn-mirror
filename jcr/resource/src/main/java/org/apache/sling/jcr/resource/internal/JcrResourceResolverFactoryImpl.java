@@ -115,14 +115,14 @@ public class JcrResourceResolverFactoryImpl
     /**
      * These regexps are executing during the resource resolving phase
      * before the mappings are applied.
-     * @scr.property values.1="/_(.+?)_|/$1:"
+     * @scr.property values.1="/_([^/]+?)_|/$1:"
      */
     private static final String PROP_REGEXPS = "resource.resolver.regexps";
 
     /**
      * These regexps are executed during a map operation as the back conversion
-     * of the {@link #PROP_REGEXPS}.
-     * @scr.property values.1="/_(.+?)_|/$1:"
+     * of the {@link #PROP_REGEXPS}
+     * @scr.property values.1="/([^/]+?):([^/]+)|/_$1_$2"
      */
     private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
 
@@ -386,7 +386,7 @@ public class JcrResourceResolverFactoryImpl
                     if (root.endsWith("/") && root.length() > 1) {
                         root = root.substring(0, root.length() - 1);
                     }
-                    
+
                     try {
                         rootProviderEntry.addResourceProvider(root, provider);
                     } catch (IllegalStateException ise) {
@@ -407,7 +407,7 @@ public class JcrResourceResolverFactoryImpl
                 if (root.endsWith("/") && root.length() > 1) {
                     root = root.substring(0, root.length() - 1);
                 }
-                
+
                 // TODO: Do not remove this path, if another resource
                 // owns it. This may be the case if adding the provider
                 // yielded an IllegalStateException
