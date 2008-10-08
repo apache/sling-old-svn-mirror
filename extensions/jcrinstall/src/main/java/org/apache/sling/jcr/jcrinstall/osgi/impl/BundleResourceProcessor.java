@@ -21,16 +21,22 @@ package org.apache.sling.jcr.jcrinstall.osgi.impl;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
 
+import java.io.BufferedInputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,31 +65,40 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         // Update if we already have a bundle id, else install
         Bundle b = null;
         boolean updated = false;
-        boolean refresh = false;
+
+        // check whether we know the bundle and it exists
         final Long longId = (Long)attributes.get(KEY_BUNDLE_ID);
-        
         if(longId != null) {
             b = ctx.getBundle(longId.longValue());
-            if(b == null) {
-                log.debug("Bundle having id {} not found, uri {} will be installed instead of updating", longId, uri);
-            } else {
-                b.update(data);
-                updated = true;
-                refresh = true;
+        }
+
+        // either we don't know the bundle yet or it does not exist,
+        // so check whether the bundle can be found by its symbolic name
+        if (b == null) {
+            // ensure we can mark and reset to read the manifest
+            if (!data.markSupported()) {
+                data = new BufferedInputStream(data);
             }
+            b = getMatchingBundle(data);
         }
         
-        if(!updated) {
-            b = ctx.installBundle(OsgiControllerImpl.getResourceLocation(uri), data);
-            refresh = true;
-            attributes.put(KEY_BUNDLE_ID, new Long(b.getBundleId()));
+        if (b != null) {
+            b.update(data);
+            updated = true;
+        } else {
+            uri = OsgiControllerImpl.getResourceLocation(uri);
+            log.debug("No matching Bundle for uri {}, installing", uri);
+            b = ctx.installBundle(uri, data);
         }
         
-        if(refresh) {
-            synchronized(refreshLock) {
-                packageAdmin.resolveBundles(null);
-                packageAdmin.refreshPackages(null);
-            }
+        // ensure the bundle id in the attributes, this may be overkill
+        // in simple update situations, but is required for installations
+        // and updates where there are no attributes yet
+        attributes.put(KEY_BUNDLE_ID, new Long(b.getBundleId()));
+
+        synchronized(refreshLock) {
+            packageAdmin.resolveBundles(null);
+            packageAdmin.refreshPackages(null);
         }
         
         synchronized(pendingBundles) {
@@ -173,5 +188,79 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
                 pendingBundles.remove(id);
             }
         }
+    }
+    
+    /**
+     * Returns a bundle with the same symbolic name as the bundle provided in
+     * the input stream. If the input stream has no manifest file or the
+     * manifest file does not have a <code>Bundle-SymbolicName</code> header,
+     * this method returns <code>null</code>. <code>null</code> is also
+     * returned if no bundle with the same symbolic name as provided by the
+     * input stream is currently installed.
+     * <p>
+     * This method reads from the input stream and uses the
+     * <code>InputStream.mark</code> and <code>InputStream.reset</code>
+     * methods to reset the stream to where it started reading. The caller must
+     * make sure, the input stream supports the marking as reported by
+     * <code>InputStream.markSupported</code>.
+     * 
+     * @param data The mark supporting <code>InputStream</code> providing the
+     *            bundle whose symbolic name is to be matched against installed
+     *            bundles.
+     * @return The installed bundle with the same symbolic name as the bundle
+     *         provided by the input stream or <code>null</code> if no such
+     *         bundle exists or if the input stream does not provide a manifest
+     *         with a symbolic name.
+     * @throws IOException If an error occurrs reading from the input stream.
+     */
+    private Bundle getMatchingBundle(InputStream data) throws IOException {
+        // allow 2KB, this should be enough for the manifest
+        data.mark(2048);
+
+        JarInputStream jis = null;
+        try {
+            // we cose the JarInputStream at the end, so wrap the actual
+            // input stream to not propagate this to the actual input
+            // stream, because we still need it
+            InputStream nonClosing = new FilterInputStream(data) {
+                @Override
+                public void close() {
+                    // don't really close
+                }
+            };
+            
+            jis = new JarInputStream(nonClosing);
+            Manifest manifest = jis.getManifest();
+            if (manifest != null) {
+                
+                String symbolicName = manifest.getMainAttributes().getValue(
+                    Constants.BUNDLE_SYMBOLICNAME);
+                if (symbolicName != null) {
+                    
+                    Bundle[] bundles = ctx.getBundles();
+                    for (Bundle bundle : bundles) {
+                        if (symbolicName.equals(bundle.getSymbolicName())) {
+                            return bundle;
+                        }
+                    }
+                    
+                }
+            }
+            
+        } finally {
+            
+            if (jis != null) {
+                try {
+                    jis.close();
+                } catch (IOException ignore) {
+                }
+            }
+            
+            // reset the input to where we started
+            data.reset();
+        }
+        
+        // fall back to no bundle found for update
+        return null;
     }
 }
