@@ -119,15 +119,32 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             }
         }
 
-        cRequest.getRequestProgressTracker().log("Including resource {0} ({1})", resource, info);
+        cRequest.getRequestProgressTracker().log(
+            "Including resource {0} ({1})", resource, info);
         rd.getSlingMainServlet().includeContent(request, response, resource,
             info);
     }
 
     public void forward(ServletRequest request, ServletResponse response)
             throws ServletException, IOException {
-        // TODO Auto-generated method stub
-        // TODO, use servlet container dispatcher !!
+
+        // fail forwarding if the response has already been committed
+        if (response.isCommitted()) {
+            throw new IllegalStateException("Response already committed");
+        }
+
+        // reset the response, will throw an IllegalStateException
+        // if already committed, which will not be the case because
+        // we already tested for this condition
+        response.reset();
+
+        // now just include as normal
+        include(request, response);
+
+        // finally, we would have to ensure the response is committed
+        // and closed. Let's just flush the buffer and thus commit the
+        // response for now
+        response.flushBuffer();
     }
 
     private String getAbsolutePath(SlingHttpServletRequest request, String path) {
@@ -167,9 +184,9 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
 
         /**
-         * Overwrite this here because the wrapped resource will return a
-         * super type based on the resource type of the wrapped resource
-         * instead of the resource type overwritten here
+         * Overwrite this here because the wrapped resource will return a super
+         * type based on the resource type of the wrapped resource instead of
+         * the resource type overwritten here
          */
         @Override
         public String getResourceSuperType() {
