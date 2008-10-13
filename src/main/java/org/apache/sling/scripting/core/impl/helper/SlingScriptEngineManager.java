@@ -49,7 +49,7 @@ public class SlingScriptEngineManager extends ScriptEngineManager {
     }
 
     @Override
-    public List<?> getEngineFactories() {
+    public List<ScriptEngineFactory> getEngineFactories() {
         return factories;
     }
 
