@@ -487,7 +487,7 @@ public class RequestData implements BufferProvider {
                 contentDataStack = new LinkedList<ContentData>();
             }
 
-            // remove the request attributes if the stack is empty now
+            // set the request attributes of the include content data
             servletRequest.setAttribute(ATTR_REQUEST_CONTENT,
                 currentContentData.getResource());
             servletRequest.setAttribute(ATTR_REQUEST_SERVLET,
@@ -513,10 +513,21 @@ public class RequestData implements BufferProvider {
             // remove the topmost content data object
             currentContentData = contentDataStack.removeLast();
 
-            // remove the request attributes if the stack is empty now
             if (contentDataStack.isEmpty()) {
+                
+                // remove the request attributes if the stack is empty now
                 servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
                 servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
+                
+            } else {
+                
+                // otherwise reset the attributes of the including content data
+                ContentData including = contentDataStack.getLast();
+                servletRequest.setAttribute(ATTR_REQUEST_CONTENT,
+                    including.getResource());
+                servletRequest.setAttribute(ATTR_REQUEST_SERVLET,
+                    including.getServlet());
+                
             }
 
         } else {
