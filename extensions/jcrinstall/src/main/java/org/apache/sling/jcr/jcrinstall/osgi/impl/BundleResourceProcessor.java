@@ -45,16 +45,16 @@ import org.slf4j.LoggerFactory;
 public class BundleResourceProcessor implements OsgiResourceProcessor {
 
     public static final String BUNDLE_EXTENSION = ".jar";
-    
+
     /** {@link Storage} key for the bundle ID */
     public static final String KEY_BUNDLE_ID = "bundle.id";
-    
+
     private final BundleContext ctx;
     private final PackageAdmin packageAdmin;
     private final Map<Long, Bundle> pendingBundles;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final Object refreshLock = new Object();
-    
+
     BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin) {
         this.ctx = ctx;
         this.packageAdmin = packageAdmin;
@@ -69,7 +69,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         // check whether we know the bundle and it exists
         final Long longId = (Long)attributes.get(KEY_BUNDLE_ID);
         if(longId != null) {
-            b = ctx.getBundle(longId.longValue());
+            b = ctx.getBundle(longId);
         }
 
         // either we don't know the bundle yet or it does not exist,
@@ -81,7 +81,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
             }
             b = getMatchingBundle(data);
         }
-        
+
         if (b != null) {
             b.update(data);
             updated = true;
@@ -90,22 +90,17 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
             log.debug("No matching Bundle for uri {}, installing", uri);
             b = ctx.installBundle(uri, data);
         }
-        
+
         // ensure the bundle id in the attributes, this may be overkill
         // in simple update situations, but is required for installations
         // and updates where there are no attributes yet
-        attributes.put(KEY_BUNDLE_ID, new Long(b.getBundleId()));
+        attributes.put(KEY_BUNDLE_ID, b.getBundleId());
 
-        synchronized(refreshLock) {
-            packageAdmin.resolveBundles(null);
-            packageAdmin.refreshPackages(null);
-        }
-        
         synchronized(pendingBundles) {
-            pendingBundles.put(new Long(b.getBundleId()), b);
+            pendingBundles.put(b.getBundleId(), b);
         }
-        
-        return updated ? UPDATED : INSTALLED; 
+
+        return updated ? UPDATED : INSTALLED;
     }
 
     public void uninstall(String uri, Map<String, Object> attributes) throws BundleException {
@@ -113,12 +108,12 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         if(longId == null) {
             log.debug("No {} in metadata, bundle cannot be uninstalled");
         } else {
-            final Bundle b = ctx.getBundle(longId.longValue());
+            final Bundle b = ctx.getBundle(longId);
             if(b == null) {
                 log.debug("Bundle having id {} not found, cannot uninstall");
             } else {
                 synchronized(pendingBundles) {
-                    pendingBundles.remove(new Long(b.getBundleId()));
+                    pendingBundles.remove(b.getBundleId());
                 }
                 b.uninstall();
             }
@@ -129,67 +124,69 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         return uri.endsWith(BUNDLE_EXTENSION);
     }
 
-    public void processResourceQueue() throws BundleException {
-        
+    public void processResourceQueue() {
+
         if(pendingBundles.isEmpty()) {
             return;
         }
-        
+
         final List<Long> toRemove = new LinkedList<Long>();
         final List<Long> idList = new LinkedList<Long>();
         synchronized(pendingBundles) {
-            for(Long id : pendingBundles.keySet()) {
-                idList.add(id);
-            }
+            idList.addAll(pendingBundles.keySet());
         }
-        
+
         for(Long id : idList) {
-            final Bundle bundle = ctx.getBundle(id.longValue());
+            final Bundle bundle = ctx.getBundle(id);
             if(bundle == null) {
                 log.debug("Bundle id {} disappeared (bundle removed from framework?), removed from pending bundles queue");
                 toRemove.add(id);
                 continue;
             }
             final int state = bundle.getState();
-            
-            if(bundle == null) {
-                log.debug("Bundle id {} not found in processResourceQueue(), removed from pending bundles queue");
-                toRemove.add(id);
-                
-            } else if ((state & Bundle.ACTIVE) > 0) {
-                log.info("Bundle {} is active, removed from pending bundles queue", bundle.getLocation());
-                toRemove.add(id);
-            
-            } else if ((state & Bundle.STARTING) > 0) {
-                log.info("Bundle {} is starting.", bundle.getLocation());
-                
-            } else if ((state & Bundle.STOPPING) > 0) {
-                log.info("Bundle {} is stopping.", bundle.getLocation());
-                
-            } else if ((state & Bundle.UNINSTALLED) > 0) {
-                log.info("Bundle {} is uninstalled, removed from pending bundles queue", bundle.getLocation());
-                toRemove.add(id);
-                
-            } else if ((state & Bundle.RESOLVED) > 0) {
-                log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
-                bundle.start();
-                synchronized(refreshLock) {
-                    packageAdmin.resolveBundles(null);
-                    packageAdmin.refreshPackages(null);
-                }
 
-            } else if ((state & Bundle.INSTALLED) > 0) {
-                log.debug("Bundle {} is installed but not resolved.", bundle.getLocation());
+            switch ( state ) {
+                case Bundle.ACTIVE :
+                    log.info("Bundle {} is active, removed from pending bundles queue", bundle.getLocation());
+                    toRemove.add(id);
+                    break;
+                case Bundle.STARTING :
+                    log.info("Bundle {} is starting.", bundle.getLocation());
+                    break;
+                case Bundle.STOPPING :
+                    log.info("Bundle {} is stopping.", bundle.getLocation());
+                    break;
+                case Bundle.UNINSTALLED :
+                    log.info("Bundle {} is uninstalled, removed from pending bundles queue", bundle.getLocation());
+                    toRemove.add(id);
+                    break;
+                case Bundle.INSTALLED :
+                    log.debug("Bundle {} is installed but not resolved.", bundle.getLocation());
+                    if ( !packageAdmin.resolveBundles(new Bundle[] {bundle}) ) {
+                        log.debug("Bundle {} is installed, failed to resolve.", bundle.getLocation());
+                        break;
+                    }
+                    // fall through to RESOLVED to start the bundle
+                case Bundle.RESOLVED :
+                    log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
+                    try {
+                        bundle.start();
+                    } catch (BundleException e) {
+                        log.error("Exception during bundle start of Bundle " + bundle.getLocation(), e);
+                    }
+                    break;
             }
         }
-        
+
+        synchronized(refreshLock) {
+            packageAdmin.refreshPackages(null);
+        }
+
         synchronized(pendingBundles) {
-            for(Long id : toRemove) {
-                pendingBundles.remove(id);
-            }
+            pendingBundles.keySet().removeAll(toRemove);
         }
     }
-    
+
     /**
      * Returns a bundle with the same symbolic name as the bundle provided in
      * the input stream. If the input stream has no manifest file or the
@@ -203,7 +200,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
      * methods to reset the stream to where it started reading. The caller must
      * make sure, the input stream supports the marking as reported by
      * <code>InputStream.markSupported</code>.
-     * 
+     *
      * @param data The mark supporting <code>InputStream</code> providing the
      *            bundle whose symbolic name is to be matched against installed
      *            bundles.
@@ -228,38 +225,38 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
                     // don't really close
                 }
             };
-            
+
             jis = new JarInputStream(nonClosing);
             Manifest manifest = jis.getManifest();
             if (manifest != null) {
-                
+
                 String symbolicName = manifest.getMainAttributes().getValue(
                     Constants.BUNDLE_SYMBOLICNAME);
                 if (symbolicName != null) {
-                    
+
                     Bundle[] bundles = ctx.getBundles();
                     for (Bundle bundle : bundles) {
                         if (symbolicName.equals(bundle.getSymbolicName())) {
                             return bundle;
                         }
                     }
-                    
+
                 }
             }
-            
+
         } finally {
-            
+
             if (jis != null) {
                 try {
                     jis.close();
                 } catch (IOException ignore) {
                 }
             }
-            
+
             // reset the input to where we started
             data.reset();
         }
-        
+
         // fall back to no bundle found for update
         return null;
     }
