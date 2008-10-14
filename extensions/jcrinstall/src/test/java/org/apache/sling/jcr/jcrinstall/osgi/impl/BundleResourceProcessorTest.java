@@ -41,13 +41,13 @@ import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Test the BundleResourceProcessor */
 public class BundleResourceProcessorTest {
-    
+
     private Mockery mockery;
     private Sequence sequence;
-    
+
     static class TestStorage extends Storage {
         int saveCounter;
-        
+
         TestStorage(File f) throws IOException {
             super(f);
         }
@@ -58,14 +58,14 @@ public class BundleResourceProcessorTest {
             saveCounter++;
         }
     }
-    
+
     @org.junit.Before public void setup() {
         mockery = new Mockery();
         sequence = mockery.sequence(getClass().getSimpleName());
     }
-    
+
     @org.junit.Test public void testInstall() throws Exception {
-        
+
         final OsgiControllerImpl c = new OsgiControllerImpl();
         final BundleContext bc = mockery.mock(BundleContext.class);
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
@@ -84,53 +84,53 @@ public class BundleResourceProcessorTest {
         mockery.checking(new Expectations() {{
             allowing(pa).refreshPackages(null);
             allowing(pa).resolveBundles(null);
-            allowing(b).getBundleId() ; 
+            allowing(b).getBundleId() ;
             will(returnValue(bundleId));
-            
+
             one(bc).installBundle(OsgiControllerImpl.getResourceLocation(uri), data);
             inSequence(sequence);
             will(returnValue(b));
-            
+
             allowing(bc).getBundle(bundleId);
             inSequence(sequence);
             will(returnValue(b));
-            
+
             one(b).update(data);
             inSequence(sequence);
-            
+
             one(b).uninstall();
             inSequence(sequence);
         }});
-        
+
         // Do the calls and check some stuff on the way
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
-        
+
         assertEquals("First install returns INSTALLED", INSTALLED, c.installOrUpdate(uri, lastModified, data));
         assertTrue("After install, uri must be in list", c.getInstalledUris().contains(uri));
         assertEquals("LastModified must have been stored", lastModified, c.getLastModified(uri));
         assertEquals("Storage data has been saved during install", 1, s.saveCounter);
-        
+
         lastModified = System.currentTimeMillis();
         assertEquals("Second install returns UPDATED", UPDATED, c.installOrUpdate(uri, lastModified, data));
         assertTrue("After update, uri must be in list", c.getInstalledUris().contains(uri));
         assertEquals("LastModified must have been updated", lastModified, c.getLastModified(uri));
         assertEquals("Storage data has been saved during update", 2, s.saveCounter);
-        
+
         c.uninstall(uri);
         assertFalse("After uninstall, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("LastModified must be gone", -1, c.getLastModified(uri));
         assertFalse("After getLastModified, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("Storage data has been saved during uninstall", 3, s.saveCounter);
-        
+
         final String nonJarUri = "no_jar_extension";
         assertEquals(nonJarUri + " must be ignored", c.installOrUpdate("", lastModified, data), IGNORED);
 
         // And verify expectations
         mockery.assertIsSatisfied();
     }
-    
+
     @org.junit.Test public void testBundleProcessingQueue() throws Exception {
-        
+
         // Fill the pending bundles queue with one bundle in each of the
         // possible states, process the queue and verify results
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
@@ -139,10 +139,10 @@ public class BundleResourceProcessorTest {
         for(int i = 0; i < b.length; i++) {
             b[i] = mockery.mock(Bundle.class);
         };
-        
+
         mockery.checking(new Expectations() {{
             allowing(pa).refreshPackages(null);
-            allowing(pa).resolveBundles(null);
+            allowing(pa).resolveBundles(with(any(Bundle[].class)));
 
             allowing(bc).getBundle(0L); will(returnValue(b[0]));
             allowing(bc).getBundle(1L); will(returnValue(b[1]));
@@ -150,7 +150,7 @@ public class BundleResourceProcessorTest {
             allowing(bc).getBundle(3L); will(returnValue(b[3]));
             allowing(bc).getBundle(4L); will(returnValue(b[4]));
             allowing(bc).getBundle(5L); will(returnValue(b[5]));
-            
+
             allowing(b[0]).getBundleId(); will(returnValue(0L));
             allowing(b[1]).getBundleId(); will(returnValue(1L));
             allowing(b[2]).getBundleId(); will(returnValue(2L));
@@ -164,17 +164,17 @@ public class BundleResourceProcessorTest {
             allowing(b[3]).getState(); will(returnValue(Bundle.UNINSTALLED));
             allowing(b[4]).getState(); will(returnValue(Bundle.INSTALLED));
             allowing(b[5]).getState(); will(returnValue(Bundle.RESOLVED));
-            
+
             allowing(b[0]).getLocation();
             allowing(b[1]).getLocation();
             allowing(b[2]).getLocation();
             allowing(b[3]).getLocation();
             allowing(b[4]).getLocation();
             allowing(b[5]).getLocation();
-            
+
             one(b[5]).start();
         }});
-        
+
         final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
         final Map<Long, Bundle> pendingBundles = new HashMap<Long, Bundle>();
         Utilities.setField(p, "pendingBundles", pendingBundles);
@@ -183,12 +183,12 @@ public class BundleResourceProcessorTest {
             pendingBundles.put(new Long(bu.getBundleId()), bu);
         }
         p.processResourceQueue();
-        
+
         assertEquals("Only 4 bundles must be left in queue", 4, pendingBundles.size());
         assertTrue("STARTING bundle must be left in queue", pendingBundles.containsKey(b[1].getBundleId()));
         assertTrue("STOPPING bundle must be left in queue", pendingBundles.containsKey(b[2].getBundleId()));
         assertTrue("INSTALLED bundle must be left in queue", pendingBundles.containsKey(b[4].getBundleId()));
         assertTrue("RESOLVED bundle must be left in queue", pendingBundles.containsKey(b[5].getBundleId()));
     }
-    
+
 }
