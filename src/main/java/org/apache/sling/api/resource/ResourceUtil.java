@@ -267,4 +267,22 @@ public class ResourceUtil {
     public static Iterator<Resource> listChildren(Resource parent) {
         return parent.getResourceResolver().listChildren(parent);
     }
+
+    /**
+     * Returns an <code>ValueMap</code> object for the given
+     * <code>Resource</code>.
+     * This method calls {@link Resource#adaptTo(Class)} with the
+     * {@link ValueMap} class as an argument. If the <code>adaptTo</code>
+     * method returns a map, this map is returned. If the resource is not
+     * adaptable to a value map, an empty value map is returned.
+     * @param res The <code>Resource</code> to adapt to the value map.
+     * @return A value map.
+     */
+    public static ValueMap getValueMap(final Resource res) {
+        ValueMap map = res.adaptTo(ValueMap.class);
+        if ( map == null ) {
+            map = ValueMap.EMPTY;
+        }
+        return map;
+    }
 }
