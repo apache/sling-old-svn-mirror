@@ -43,7 +43,6 @@ import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
-import org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,7 +189,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         try {
             // prepare some classes
             prepareJasperClasses();
-            
+
             ioProvider = new SlingIOProvider(repository);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
@@ -301,7 +300,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             this.repoCLProvider = null;
         }
     }
-    
+
     private void prepareJasperClasses() {
         final String propName = "org.apache.sling.scripting.jsp.jasper.runtime.JspFactoryImpl.USE_POOL";
         final String propValue = System.getProperty(propName);
@@ -319,7 +318,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             }
         }
     }
-    
+
     // ---------- Internal -----------------------------------------------------
 
     private class JspScriptEngine extends AbstractSlingScriptEngine {
