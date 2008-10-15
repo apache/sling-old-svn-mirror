@@ -28,7 +28,7 @@
     }
 %>
 servlet10=<%= getServlet() %>
-resource10=<%= request.getAttribute( "org.apache.sling.api.include.resource" ) %>
+resource10=<%= request.getContextPath() + request.getAttribute( "org.apache.sling.api.include.resource" ) %>
 <% sling.include(resource.path, "replaceSelectors=sel3"); %>
 servlet11=<%= getServlet() %>
-resource11=<%= request.getAttribute( "org.apache.sling.api.include.resource" ) %>
+resource11=<%= request.getContextPath() + request.getAttribute( "org.apache.sling.api.include.resource" ) %>
