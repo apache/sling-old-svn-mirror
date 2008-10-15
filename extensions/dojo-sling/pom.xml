@@ -31,7 +31,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Dojo Data Exension</name>
+    <name>Sling - Dojo Data Extension</name>
     <description>
         This bundle provides support to look at the repository using
         Dojo.
