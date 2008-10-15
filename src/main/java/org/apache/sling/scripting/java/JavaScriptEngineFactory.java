@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="java.development" value="true"
  * @scr.property name="java.outputPath" value="/var/classes"
  * @scr.property name="java.modificationTestInterval" value="-1"
- * @scr.property name="java.classdebuginfo" value="truie"
+ * @scr.property name="java.classdebuginfo" value="true"
  */
 public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
