@@ -28,4 +28,4 @@
     }
 %>
 servlet20=<%= getServlet() %>
-resource20=<%= request.getAttribute( "org.apache.sling.api.include.resource" ) %>
+resource20=<%= request.getContextPath() + request.getAttribute( "org.apache.sling.api.include.resource" ) %>
