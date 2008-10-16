@@ -39,16 +39,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** OsgiController service
- *  
+ *
  *  @scr.service
- *  @scr.component 
+ *  @scr.component
  *      immediate="true"
  *      metatype="no"
- *  @scr.property 
- *      name="service.description" 
+ *  @scr.property
+ *      name="service.description"
  *      value="Sling jcrinstall OsgiController Service"
- *  @scr.property 
- *      name="service.vendor" 
+ *  @scr.property
+ *      name="service.vendor"
  *      value="The Apache Software Foundation"
 */
 public class OsgiControllerImpl implements OsgiController, Runnable, SynchronousBundleListener {
@@ -58,38 +58,38 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private boolean running;
     private long loopDelay;
-    
+
     public static final String STORAGE_FILENAME = "controller.storage";
-    
+
     /** @scr.reference */
     private ConfigurationAdmin configAdmin;
-    
+
     /** @scr.reference */
     private PackageAdmin packageAdmin;
-    
+
     /** Storage key: last modified as a Long */
     public static final String KEY_LAST_MODIFIED = "last.modified";
-    
+
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
-    
+
     protected void activate(ComponentContext context) throws IOException {
         processors = new LinkedList<OsgiResourceProcessor>();
         processors.add(new BundleResourceProcessor(context.getBundleContext(), packageAdmin));
         processors.add(new ConfigResourceProcessor(configAdmin));
-        
+
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
-        
+
         // start queue processing
         running = true;
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
         t.setDaemon(true);
         t.start();
     }
-    
+
     protected void deactivate(ComponentContext oldContext) {
         running = false;
-        
+
         if(storage != null) {
             try {
                 storage.saveToFile();
@@ -100,15 +100,15 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         storage = null;
         processors = null;
     }
-    
+
     public int installOrUpdate(String uri, long lastModified, InputStream data) throws IOException, JcrInstallException {
         int result = IGNORED;
         final OsgiResourceProcessor p = getProcessor(uri);
-        if(p != null) {
+        if (p != null) {
             try {
                 final Map<String, Object> map = storage.getMap(uri);
                 result = p.installOrUpdate(uri, map, data);
-                if(result != IGNORED) {
+                if (result != IGNORED) {
                     map.put(KEY_LAST_MODIFIED, new Long(lastModified));
                 }
                 storage.saveToFile();
@@ -120,7 +120,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         }
         return result;
     }
-    
+
     public void uninstall(String uri) throws JcrInstallException {
         final OsgiResourceProcessor p = getProcessor(uri);
         if(p != null) {
@@ -133,7 +133,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
             }
         }
     }
-    
+
     public Set<String> getInstalledUris() {
         return storage.getKeys();
     }
@@ -143,46 +143,46 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
      */
     public long getLastModified(String uri) {
         long result = LAST_MODIFIED_NOT_FOUND;
-        
+
         if(storage.contains(uri)) {
             final Map<String, Object> uriData = storage.getMap(uri);
-            final Long lastMod = (Long)uriData.get(KEY_LAST_MODIFIED); 
+            final Long lastMod = (Long)uriData.get(KEY_LAST_MODIFIED);
             if(lastMod != null) {
                 result = lastMod.longValue();
             }
         }
         return result;
     }
-    
+
     static String getResourceLocation(String uri) {
         return "jcrinstall://" + uri;
     }
-    
+
     /** Return the first processor that accepts given uri, null if not found */
     OsgiResourceProcessor getProcessor(String uri) {
         OsgiResourceProcessor result = null;
-        
+
         if(processors == null) {
             throw new IllegalStateException("Processors are not set");
         }
-        
+
         for(OsgiResourceProcessor p : processors) {
             if(p.canProcess(uri)) {
                 result = p;
                 break;
             }
         }
-        
+
         if(result == null) {
             log.debug("No processor found for resource {}", uri);
         }
-        
+
         return result;
     }
-    
+
     /** Schedule our next scan sooner if anything happens to bundles */
     public void bundleChanged(BundleEvent e) {
-        loopDelay = 0;
+        //loopDelay = 0;
     }
 
     /** Process our resource queues at regular intervals, more often if
@@ -198,7 +198,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
                 for(OsgiResourceProcessor p : processors) {
                     p.processResourceQueue();
                 }
-                
+
             } catch (Exception e) {
                 log.warn("Exception in run()", e);
             } finally {

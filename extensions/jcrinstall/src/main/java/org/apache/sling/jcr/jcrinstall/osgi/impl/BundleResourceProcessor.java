@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.jcrinstall.osgi.impl;
 
+import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
 
@@ -37,6 +38,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +55,6 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
     private final PackageAdmin packageAdmin;
     private final Map<Long, Bundle> pendingBundles;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final Object refreshLock = new Object();
 
     BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin) {
         this.ctx = ctx;
@@ -61,56 +62,80 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         pendingBundles = new HashMap<Long, Bundle>();
     }
 
-    public int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data) throws Exception {
+    /**
+     * @throws BundleException
+     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#installOrUpdate(java.lang.String, java.util.Map, java.io.InputStream)
+     */
+    public int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data)
+    throws BundleException, IOException {
         // Update if we already have a bundle id, else install
         Bundle b = null;
         boolean updated = false;
 
-        // check whether we know the bundle and it exists
-        final Long longId = (Long)attributes.get(KEY_BUNDLE_ID);
-        if(longId != null) {
-            b = ctx.getBundle(longId);
-        }
-
-        // either we don't know the bundle yet or it does not exist,
-        // so check whether the bundle can be found by its symbolic name
-        if (b == null) {
-            // ensure we can mark and reset to read the manifest
-            if (!data.markSupported()) {
-                data = new BufferedInputStream(data);
+        synchronized (pendingBundles) {
+            // check whether we know the bundle and it exists
+            final Long longId = (Long)attributes.get(KEY_BUNDLE_ID);
+            if (longId != null) {
+                b = ctx.getBundle(longId);
             }
-            b = getMatchingBundle(data);
-        }
 
-        if (b != null) {
-            b.update(data);
-            updated = true;
-        } else {
-            uri = OsgiControllerImpl.getResourceLocation(uri);
-            log.debug("No matching Bundle for uri {}, installing", uri);
-            b = ctx.installBundle(uri, data);
-        }
+            // either we don't know the bundle yet or it does not exist,
+            // so check whether the bundle can be found by its symbolic name
+            if (b == null) {
+                // ensure we can mark and reset to read the manifest
+                if (!data.markSupported()) {
+                    data = new BufferedInputStream(data);
+                }
+                final BundleInfo info = getMatchingBundle(data);
+                if ( info != null ) {
+                    final Version availableVersion = new Version((String)info.bundle.getHeaders().get(Constants.BUNDLE_VERSION));
+                    final Version newVersion = new Version(info.newVersion);
+                    if ( newVersion.compareTo(availableVersion) > 0 ) {
+                        b = info.bundle;
+                    } else {
+                        log.debug("Ignore update of bundle {} from {} as the installed version is equal or higher.", info.bundle.getSymbolicName(), uri);
+                        return IGNORED;
+                    }
+                }
+            }
 
-        // ensure the bundle id in the attributes, this may be overkill
-        // in simple update situations, but is required for installations
-        // and updates where there are no attributes yet
-        attributes.put(KEY_BUNDLE_ID, b.getBundleId());
+            if (b != null) {
+                b.update(data);
+                updated = true;
+                // wait a little bit after an update
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            } else {
+                uri = OsgiControllerImpl.getResourceLocation(uri);
+                log.debug("No matching Bundle for uri {}, installing", uri);
+                b = ctx.installBundle(uri, data);
+            }
 
-        synchronized(pendingBundles) {
+            // ensure the bundle id in the attributes, this may be overkill
+            // in simple update situations, but is required for installations
+            // and updates where there are no attributes yet
+            attributes.put(KEY_BUNDLE_ID, b.getBundleId());
+
             pendingBundles.put(b.getBundleId(), b);
         }
 
         return updated ? UPDATED : INSTALLED;
     }
 
+    /**
+     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#uninstall(java.lang.String, java.util.Map)
+     */
     public void uninstall(String uri, Map<String, Object> attributes) throws BundleException {
         final Long longId = (Long)attributes.get(KEY_BUNDLE_ID);
-        if(longId == null) {
-            log.debug("No {} in metadata, bundle cannot be uninstalled");
+        if (longId == null) {
+            log.debug("No bundle id in metadata for {}, bundle cannot be uninstalled.", uri);
         } else {
             final Bundle b = ctx.getBundle(longId);
-            if(b == null) {
-                log.debug("Bundle having id {} not found, cannot uninstall");
+            if (b == null) {
+                log.debug("Bundle having id {} not found, cannot uninstall", longId);
             } else {
                 synchronized(pendingBundles) {
                     pendingBundles.remove(b.getBundleId());
@@ -120,69 +145,76 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
         }
     }
 
+    /**
+     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#canProcess(java.lang.String)
+     */
     public boolean canProcess(String uri) {
         return uri.endsWith(BUNDLE_EXTENSION);
     }
 
+    /**
+     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#processResourceQueue()
+     */
     public void processResourceQueue() {
-
-        if(pendingBundles.isEmpty()) {
-            return;
-        }
-
-        final List<Long> toRemove = new LinkedList<Long>();
-        final List<Long> idList = new LinkedList<Long>();
         synchronized(pendingBundles) {
+            if (pendingBundles.isEmpty()) {
+                return;
+            }
+            final List<Long> toRemove = new LinkedList<Long>();
+            final List<Long> idList = new LinkedList<Long>();
+
             idList.addAll(pendingBundles.keySet());
-        }
 
-        for(Long id : idList) {
-            final Bundle bundle = ctx.getBundle(id);
-            if(bundle == null) {
-                log.debug("Bundle id {} disappeared (bundle removed from framework?), removed from pending bundles queue");
-                toRemove.add(id);
-                continue;
-            }
-            final int state = bundle.getState();
+            boolean doRefresh = false;
 
-            switch ( state ) {
-                case Bundle.ACTIVE :
-                    log.info("Bundle {} is active, removed from pending bundles queue", bundle.getLocation());
+            for(Long id : idList) {
+                final Bundle bundle = ctx.getBundle(id);
+                if(bundle == null) {
+                    log.debug("Bundle id {} disappeared (bundle removed from framework?), removed from pending bundles queue", id);
                     toRemove.add(id);
-                    break;
-                case Bundle.STARTING :
-                    log.info("Bundle {} is starting.", bundle.getLocation());
-                    break;
-                case Bundle.STOPPING :
-                    log.info("Bundle {} is stopping.", bundle.getLocation());
-                    break;
-                case Bundle.UNINSTALLED :
-                    log.info("Bundle {} is uninstalled, removed from pending bundles queue", bundle.getLocation());
-                    toRemove.add(id);
-                    break;
-                case Bundle.INSTALLED :
-                    log.debug("Bundle {} is installed but not resolved.", bundle.getLocation());
-                    if ( !packageAdmin.resolveBundles(new Bundle[] {bundle}) ) {
-                        log.debug("Bundle {} is installed, failed to resolve.", bundle.getLocation());
+                    continue;
+                }
+                final int state = bundle.getState();
+
+                switch ( state ) {
+                    case Bundle.ACTIVE :
+                        log.info("Bundle {} is active, removed from pending bundles queue", bundle.getLocation());
+                        toRemove.add(id);
                         break;
-                    }
-                    // fall through to RESOLVED to start the bundle
-                case Bundle.RESOLVED :
-                    log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
-                    try {
-                        bundle.start();
-                    } catch (BundleException e) {
-                        log.error("Exception during bundle start of Bundle " + bundle.getLocation(), e);
-                    }
-                    break;
+                    case Bundle.STARTING :
+                        log.info("Bundle {} is starting.", bundle.getLocation());
+                        break;
+                    case Bundle.STOPPING :
+                        log.info("Bundle {} is stopping.", bundle.getLocation());
+                        break;
+                    case Bundle.UNINSTALLED :
+                        log.info("Bundle {} is uninstalled, removed from pending bundles queue", bundle.getLocation());
+                        toRemove.add(id);
+                        doRefresh = true;
+                        break;
+                    case Bundle.INSTALLED :
+                        log.debug("Bundle {} is installed but not resolved.", bundle.getLocation());
+                        if ( !packageAdmin.resolveBundles(new Bundle[] {bundle}) ) {
+                            log.debug("Bundle {} is installed, failed to resolve.", bundle.getLocation());
+                            break;
+                        }
+                        // fall through to RESOLVED to start the bundle
+                    case Bundle.RESOLVED :
+                        log.info("Bundle {} is resolved, trying to start it.", bundle.getLocation());
+                        try {
+                            bundle.start();
+                        } catch (BundleException e) {
+                            log.error("Exception during bundle start of Bundle " + bundle.getLocation(), e);
+                        }
+                        doRefresh = true;
+                        break;
+                }
             }
-        }
 
-        synchronized(refreshLock) {
-            packageAdmin.refreshPackages(null);
-        }
+            if ( doRefresh ) {
+                packageAdmin.refreshPackages(null);
+            }
 
-        synchronized(pendingBundles) {
             pendingBundles.keySet().removeAll(toRemove);
         }
     }
@@ -210,7 +242,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
      *         with a symbolic name.
      * @throws IOException If an error occurrs reading from the input stream.
      */
-    private Bundle getMatchingBundle(InputStream data) throws IOException {
+    private BundleInfo getMatchingBundle(InputStream data) throws IOException {
         // allow 2KB, this should be enough for the manifest
         data.mark(2048);
 
@@ -237,7 +269,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
                     Bundle[] bundles = ctx.getBundles();
                     for (Bundle bundle : bundles) {
                         if (symbolicName.equals(bundle.getSymbolicName())) {
-                            return bundle;
+                            final BundleInfo info = new BundleInfo();
+                            info.bundle = bundle;
+                            info.newVersion = manifest.getMainAttributes().getValue(Constants.BUNDLE_VERSION);
+                            return info;
                         }
                     }
 
@@ -259,5 +294,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor {
 
         // fall back to no bundle found for update
         return null;
+    }
+
+    protected static final class BundleInfo {
+        public Bundle bundle;
+        public String newVersion;
     }
 }
