@@ -943,9 +943,18 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 }
             }
 
+            // thread is terminating due to "running" being set to false
+            log(LogService.LOG_INFO, "Repository Pinger stopping on request");
+
+        } catch (Throwable t) {
+            // try to log the cause for thread termination
+            log(LogService.LOG_ERROR, "Repository Pinger caught unexpected issue", t);
+            
         } finally {
+            
             // whatever goes on, make sure the repository is disposed of
             // at the end of the thread....
+            log(LogService.LOG_INFO, "Stopping repository on shutdown");
             stopRepository();
         }
     }
