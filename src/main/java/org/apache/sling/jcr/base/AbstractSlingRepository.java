@@ -622,6 +622,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // this component instance
         try {
             startRepository();
+            log(LogService.LOG_INFO, "Repository started successfully"); 
         } catch (Throwable t) {
             log(LogService.LOG_WARNING,
                 "activate: Unexpected problem starting repository", t);
