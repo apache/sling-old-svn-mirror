@@ -275,11 +275,13 @@ public class ResourceUtil {
      * {@link ValueMap} class as an argument. If the <code>adaptTo</code>
      * method returns a map, this map is returned. If the resource is not
      * adaptable to a value map, an empty value map is returned.
+     * If <code>null</code> is provided as the resource an empty map is
+     * returned as well.
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
      */
     public static ValueMap getValueMap(final Resource res) {
-        ValueMap map = res.adaptTo(ValueMap.class);
+        ValueMap map = (res == null ? null : res.adaptTo(ValueMap.class));
         if ( map == null ) {
             map = ValueMap.EMPTY;
         }
