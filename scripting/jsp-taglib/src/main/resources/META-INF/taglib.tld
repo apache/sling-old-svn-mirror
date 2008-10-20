@@ -114,6 +114,81 @@
 
     <tag>
         <description>
+            Forwards a request to a resource rendering the current page
+        </description>
+        <name>forward</name>
+        <tag-class>
+            org.apache.sling.scripting.jsp.taglib.ForwardTagHandler
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>
+                The resource object to forward the request to. Either
+                resource or path must be specified. If both are
+                specified, the resource takes precedences.
+            </description>
+            <name>resource</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>org.apache.sling.api.resource.Resource</type>
+        </attribute>
+        <attribute>
+            <description>
+                The path to the resource object to forward the request
+                to. If this path is relative it is appended to the path
+                of the current resource whose script is forwarding the
+                given resource. Either resource or path must be specified.
+                If both are specified, the resource takes precedences.
+            </description>
+            <name>path</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The resource type of a resource to forward. If the resource
+                to be forwarded is specified with the path attribute,
+                which cannot be resolved to a resource, the tag may
+                create a synthetic resource object out of the path and
+                this resource type. If the resource type is set the path
+                must be the exact path to a resource object. That is,
+                adding parameters, selectors and extensions to the path
+                is not supported if the resource type is set.
+            </description>
+            <name>resourceType</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                When dispatching, replace selectors by the value
+                provided by this option.
+            </description>
+            <name>replaceSelectors</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                When dispatching, add the value provided by this option to the selectors.
+            </description>
+            <name>addSelectors</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                When dispatching, replace the suffix by the value
+                provided by this option.
+            </description>
+            <name>replaceSuffix</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+
+    <tag>
+        <description>
             Defines regularly used scripting variables
         </description>
         <name>defineObjects</name>
