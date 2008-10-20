@@ -166,7 +166,7 @@ public class HtmlResponse {
     /**
      * Returns the location of the modification. this is the externalized form
      * of the current path.
-     * 
+     *
      * @return the location of the modification.
      */
     public String getLocation() {
@@ -180,7 +180,7 @@ public class HtmlResponse {
     /**
      * Returns the parent location of the modification. this is the externalized
      * form of the parent node of the current path.
-     * 
+     *
      * @return the location of the modification.
      */
     public String getParentLocation() {
@@ -193,7 +193,7 @@ public class HtmlResponse {
 
     /**
      * Sets the title of the response message
-     * 
+     *
      * @param title the title
      */
     public void setTitle(String title) {
@@ -202,7 +202,7 @@ public class HtmlResponse {
 
     /**
      * sets the response status code properties
-     * 
+     *
      * @param code the code
      * @param message the message
      */
@@ -227,7 +227,7 @@ public class HtmlResponse {
 
     /**
      * Returns any recorded error or <code>null</code>
-     * 
+     *
      * @return an error or <code>null</code>
      */
     public Throwable getError() {
@@ -250,7 +250,7 @@ public class HtmlResponse {
 
     /**
      * Records a 'modified' change
-     * 
+     *
      * @param path path of the item that was modified
      */
     public void onModified(String path) {
@@ -259,7 +259,7 @@ public class HtmlResponse {
 
     /**
      * Records a 'created' change
-     * 
+     *
      * @param path path of the item that was created
      */
     public void onCreated(String path) {
@@ -268,7 +268,7 @@ public class HtmlResponse {
 
     /**
      * Records a 'deleted' change
-     * 
+     *
      * @param path path of the item that was deleted
      */
     public void onDeleted(String path) {
@@ -281,7 +281,7 @@ public class HtmlResponse {
      * Records a 'moved' change. <p/> Note: the moved change only records the
      * basic move command. the implied changes on the moved properties and sub
      * nodes are not recorded.
-     * 
+     *
      * @param srcPath source path of the node that was moved
      * @param dstPath destination path of the node that was moved.
      */
@@ -293,7 +293,7 @@ public class HtmlResponse {
      * Records a 'copied' change. <p/> Note: the copy change only records the
      * basic copy command. the implied changes on the copied properties and sub
      * nodes are not recorded.
-     * 
+     *
      * @param srcPath source path of the node that was copied
      * @param dstPath destination path of the node that was copied.
      */
@@ -350,7 +350,7 @@ public class HtmlResponse {
 
     /**
      * Sets a generic response property with the given
-     * 
+     *
      * @param name name of the property
      * @param value value of the property
      */
@@ -385,7 +385,7 @@ public class HtmlResponse {
      * Writes the response to the given writer and replaces all ${var} patterns
      * by the value of the respective property. if the property is not defined
      * the pattern is not modified.
-     * 
+     *
      * @param response to send to
      * @param setStatus whether to set the status code on the response
      * @throws IOException if an i/o exception occurs
@@ -442,11 +442,7 @@ public class HtmlResponse {
                     if (c == '}') {
                         state = 0;
                         Object prop = properties.get(varBuffer.toString());
-                        if (prop == null) {
-                            out.write("${");
-                            out.write(varBuffer.toString());
-                            out.write("}");
-                        } else {
+                        if (prop != null) {
                             out.write(prop.toString());
                         }
                         varBuffer.setLength(0);
