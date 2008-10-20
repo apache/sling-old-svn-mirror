@@ -84,7 +84,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingMainServlet</code> TODO
- *
+ * 
  * @scr.component immediate="true" metatype="no"
  * @scr.property name="sling.root" value="/" private="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -92,7 +92,8 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
  *                cardinality="0..n" policy="dynamic"
  */
-public class SlingMainServlet extends GenericServlet implements ErrorHandler, HttpContext {
+public class SlingMainServlet extends GenericServlet implements ErrorHandler,
+        HttpContext {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
@@ -153,11 +154,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
     private SlingAuthenticator slingAuthenticator;
 
     private static final String INCLUDE_COUNTER = "Sling.ScriptHelper.include.counter";
+
     private static final int MAX_INCLUDE_RECURSION_LEVEL = 50;
 
     public static class InfiniteIncludeLoopException extends SlingException {
         InfiniteIncludeLoopException(String path) {
-            super("Infinite include loop (> " + MAX_INCLUDE_RECURSION_LEVEL + " levels) for path '" + path + "'");
+            super("Infinite include loop (> " + MAX_INCLUDE_RECURSION_LEVEL
+                + " levels) for path '" + path + "'");
         }
     }
 
@@ -169,10 +172,15 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         if (req instanceof HttpServletRequest
             && res instanceof HttpServletResponse) {
 
+            HttpServletRequest request = (HttpServletRequest) req;
+
+            // set the thread name according to the request
+            String threadName = setThreadName(request);
+
             try {
 
                 // real request handling for HTTP requests
-                service((HttpServletRequest) req, (HttpServletResponse) res);
+                service(request, (HttpServletResponse) res);
 
             } catch (IOException ioe) {
 
@@ -209,6 +217,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
                 // So here we just log
 
                 log.error("service: Uncaught Problem handling the request", t);
+
+            } finally {
+
+                // reset the thread name
+                if (threadName != null) {
+                    Thread.currentThread().setName(threadName);
+                }
             }
 
         } else {
@@ -259,7 +274,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             if (session == null) {
                 log.error("service: Cannot handle request: Missing JCR Session");
                 sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Missing JCR Session", null, servletRequest, servletResponse);
+                    "Missing JCR Session", null, servletRequest,
+                    servletResponse);
                 return;
             }
 
@@ -273,9 +289,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             if (filters != null) {
                 FilterChain processor = new RequestSlingFilterChain(this,
                     filters);
-                
-                request.getRequestProgressTracker().log("Applying request filters");
-                
+
+                request.getRequestProgressTracker().log(
+                    "Applying request filters");
+
                 processor.doFilter(request, response);
 
             } else {
@@ -376,13 +393,15 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         checkRecursionLevel(request, resolvedURL.getResourcePath());
 
         try {
-            // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel to continue
+            // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel
+            // to continue
             SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
             SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
 
             // get the request data (and btw check the correct type)
             RequestData requestData = RequestData.getRequestData(cRequest);
-            ContentData contentData = requestData.pushContent(resource, resolvedURL);
+            ContentData contentData = requestData.pushContent(resource,
+                resolvedURL);
 
             try {
                 // resolve the servlet
@@ -399,12 +418,13 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
     }
 
     /** Add a recursion counter to req and fail if it's too high */
-    protected void checkRecursionLevel(ServletRequest request, String info)  throws InfiniteIncludeLoopException {
+    protected void checkRecursionLevel(ServletRequest request, String info)
+            throws InfiniteIncludeLoopException {
         // Detect infinite loops
-        Integer recursionLevel = (Integer)request.getAttribute(INCLUDE_COUNTER);
-        if(recursionLevel == null) {
+        Integer recursionLevel = (Integer) request.getAttribute(INCLUDE_COUNTER);
+        if (recursionLevel == null) {
             recursionLevel = new Integer(1);
-        } else if(recursionLevel.intValue() > MAX_INCLUDE_RECURSION_LEVEL) {
+        } else if (recursionLevel.intValue() > MAX_INCLUDE_RECURSION_LEVEL) {
             throw new InfiniteIncludeLoopException(info);
         } else {
             recursionLevel = new Integer(recursionLevel.intValue() + 1);
@@ -412,15 +432,16 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         request.setAttribute(INCLUDE_COUNTER, recursionLevel);
     }
 
-    /** Decrease the recursion counter  */
+    /** Decrease the recursion counter */
     protected void decreaseRecursionLevel(ServletRequest request) {
         // this should never be null, but we better do a sanity check
-        final Integer recursionLevel = (Integer)request.getAttribute(INCLUDE_COUNTER);
-        if ( recursionLevel != null ) {
-            if ( recursionLevel == 1 ) {
+        final Integer recursionLevel = (Integer) request.getAttribute(INCLUDE_COUNTER);
+        if (recursionLevel != null) {
+            if (recursionLevel == 1) {
                 request.removeAttribute(INCLUDE_COUNTER);
             } else {
-                request.setAttribute(INCLUDE_COUNTER, new Integer(recursionLevel.intValue() -1));
+                request.setAttribute(INCLUDE_COUNTER, new Integer(
+                    recursionLevel.intValue() - 1));
             }
         }
     }
@@ -437,7 +458,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             FilterChain processor = new SlingComponentFilterChain(filters);
 
             request.getRequestProgressTracker().log("Applying inner filters");
-            
+
             processor.doFilter(request, response);
         } else {
             log.debug("service: No Resource level filters, calling servlet");
@@ -497,9 +518,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
             pw.println("<html><head><title>");
             pw.println(message);
             pw.println("</title></head><body><h1>");
-            if(throwable != null) {
+            if (throwable != null) {
                 pw.println(throwable.toString());
-            } else if(message != null) {
+            } else if (message != null) {
                 pw.println(message);
             } else {
                 pw.println("Internal error (no Exception to report)");
@@ -516,7 +537,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
                 pw.println("<pre>");
                 throwable.printStackTrace(pw);
                 pw.println("</pre>");
-                
+
                 RequestProgressTracker tracker = ((SlingHttpServletRequest) request).getRequestProgressTracker();
                 pw.println("<h3>Request Progress:</h3>");
                 pw.println("<pre>");
@@ -767,8 +788,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
         }
         return stringConfig;
     }
-    
-    //---------- HttpContext interface ----------------------------------------
+
+    // ---------- HttpContext interface ----------------------------------------
 
     public String getMimeType(String name) {
         MimeTypeService mtservice = mimeTypeService;
@@ -848,6 +869,35 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler, Ht
 
         // fall back to security failure and request termination
         return false;
+    }
+
+    /**
+     * Sets the name of the current thread to the IP address of the remote
+     * client with the current system time and the first request line consisting
+     * of the method, path and protocol.
+     * 
+     * @param request The request to extract the remote IP address, method,
+     *            request URL and protocol from.
+     * @return The name of the current thread before setting the new name.
+     */
+    private String setThreadName(HttpServletRequest request) {
+
+        // get the name of the current thread (to be returned)
+        Thread thread = Thread.currentThread();
+        String oldThreadName = thread.getName();
+
+        // construct and set the new thread name of the form:
+        // 127.0.0.1 [1224156108055] GET /system/console/config HTTP/1.1
+        StringBuffer buf = new StringBuffer();
+        buf.append(request.getRemoteAddr());
+        buf.append(" [").append(System.currentTimeMillis()).append("] ");
+        buf.append(request.getMethod()).append(' ');
+        buf.append(request.getRequestURI()).append(' ');
+        buf.append(request.getProtocol());
+        thread.setName(buf.toString());
+
+        // return the previous thread name
+        return oldThreadName;
     }
 
 }
