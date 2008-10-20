@@ -22,40 +22,22 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyContent;
+import javax.servlet.jsp.JspTagException;
 
 /**
- * The <code>IncludeTagHandler</code> implements the
- * <code>&lt;sling:include&gt;</code> custom tag.
+ * The <code>ForwardTagHandler</code> implements the
+ * <code>&lt;sling:forward&gt;</code> custom tag.
  */
-public class IncludeTagHandler extends AbstractDispatcherTagHandler {
-
-    /** flush argument */
-    private boolean flush = false;
+public class ForwardTagHandler extends AbstractDispatcherTagHandler {
 
     protected void dispatch(RequestDispatcher dispatcher,
             ServletRequest request, ServletResponse response)
-            throws IOException, ServletException {
-
-        // optionally flush
-        if (flush && !(pageContext.getOut() instanceof BodyContent)) {
-            // might throw an IOException of course
-            pageContext.getOut().flush();
+            throws IOException, ServletException, JspTagException {
+        try {
+            dispatcher.forward(request, response);
+        } catch (IllegalStateException ise) {
+            throw new JspTagException(ise);
         }
-
-        dispatcher.include(request, response);
-    }
-
-    public void setPageContext(PageContext pageContext) {
-        super.setPageContext(pageContext);
-
-        // init local fields, since tag might be reused
-        flush = false;
-    }
-
-    public void setFlush(boolean flush) {
-        this.flush = flush;
     }
 
 }
