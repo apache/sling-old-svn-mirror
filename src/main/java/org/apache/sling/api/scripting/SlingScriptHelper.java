@@ -53,7 +53,7 @@ public interface SlingScriptHelper {
     /**
      * Same as {@link #include(String,RequestDispatcherOptions)}, but using
      * empty options.
-     *
+     * 
      * @throws SlingIOException Wrapping a <code>IOException</code> thrown
      *             while handling the include.
      * @throws SlingServletException Wrapping a <code>ServletException</code>
@@ -65,7 +65,7 @@ public interface SlingScriptHelper {
      * Helper method to include the result of processing the request for the
      * given <code>path</code> and <code>requestDispatcherOptions</code>.
      * This method is intended to be implemented as follows:
-     *
+     * 
      * <pre>
      * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path,
      *     &quot;option:xyz&quot;);
@@ -73,13 +73,13 @@ public interface SlingScriptHelper {
      *     dispatcher.include(getRequest(), getResponse());
      * }
      * </pre>
-     *
+     * 
      * <p>
      * This method creates a <code>RequestDispatcherOptions</code> object by
      * calling the
      * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
      * constructor.
-     *
+     * 
      * @param path The path to the resource to include.
      * @param requestDispatcherOptions influence the rendering of the included
      *            Resource
@@ -96,7 +96,7 @@ public interface SlingScriptHelper {
      * Helper method to include the result of processing the request for the
      * given <code>path</code> and <code>options</code>. This method is
      * intended to be implemented as follows:
-     *
+     * 
      * <pre>
      * RequestDispatcherOptions opts = new RequestDispatcherOptions();
      * opts.put(&quot;option&quot;, &quot;xyz&quot;);
@@ -105,7 +105,7 @@ public interface SlingScriptHelper {
      *     dispatcher.include(getRequest(), getResponse());
      * }
      * </pre>
-     *
+     * 
      * @param path The path to the resource to include.
      * @param options influence the rendering of the included Resource
      * @throws SlingIOException Wrapping a <code>IOException</code> thrown
@@ -118,8 +118,33 @@ public interface SlingScriptHelper {
     void include(String path, RequestDispatcherOptions options);
 
     /**
+     * Helper method to forward the request to a Servlet or script for the given
+     * <code>path</code> and <code>options</code>. This method is intended
+     * to be implemented as follows:
+     * 
+     * <pre>
+     * RequestDispatcherOptions opts = new RequestDispatcherOptions();
+     * opts.put(&quot;option&quot;, &quot;xyz&quot;);
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path, opts);
+     * if (dispatcher != null) {
+     *     dispatcher.forward(getRequest(), getResponse());
+     * }
+     * </pre>
+     * 
+     * @param path The path to the resource to forward the request to.
+     * @param options influence the rendering of the forwarded Resource
+     * @throws SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the forward.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the forward.
+     * @throws IllegalStateException If the respoonse has already been committed
+     * @see RequestDispatcherOptions
+     */
+    void forward(String path, RequestDispatcherOptions options);
+
+    /**
      * Lookup a single service
-     *
+     * 
      * @param serviceType The type (interface) of the service.
      * @return The service instance, or null if the service is not available.
      */
@@ -127,7 +152,7 @@ public interface SlingScriptHelper {
 
     /**
      * Lookup one or several services
-     *
+     * 
      * @param serviceType The type (interface) of the service.
      * @param filter An optional filter (LDAP-like, see OSGi spec)
      * @return The services object or null.
@@ -138,8 +163,8 @@ public interface SlingScriptHelper {
             String filter);
 
     /**
-     * Dispose the helper.
-     * This method can be used to clean up the script helper after the script is run.
+     * Dispose the helper. This method can be used to clean up the script helper
+     * after the script is run.
      */
     void dispose();
 }
