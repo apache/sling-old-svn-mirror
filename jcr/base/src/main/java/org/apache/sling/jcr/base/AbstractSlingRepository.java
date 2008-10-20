@@ -262,6 +262,11 @@ public abstract class AbstractSlingRepository implements SlingRepository,
             // otherwise (any workspace) or if workspace creation fails
             // just forward the original exception
             throw nswe;
+            
+        } catch (RuntimeException re) {
+            // SLING-702: Jackrabbit throws IllegalStateException if the
+            // repository has already been shut down ...
+            throw new RepositoryException(re.getMessage(), re);
         }
     }
 
