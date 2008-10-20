@@ -62,6 +62,62 @@ public class SlingRequestDispatcher implements RequestDispatcher {
     public void include(ServletRequest request, ServletResponse sResponse)
             throws ServletException, IOException {
 
+        // TODO: set the javax.servlet.include.* attributes
+
+        try {
+
+            dispatch(request, sResponse);
+
+        } finally {
+
+            // TODO: reset the javax.servlet.include.* attributes
+
+        }
+
+    }
+
+    public void forward(ServletRequest request, ServletResponse response)
+            throws ServletException, IOException {
+
+        // fail forwarding if the response has already been committed
+        if (response.isCommitted()) {
+            throw new IllegalStateException("Response already committed");
+        }
+
+        // reset the response, will throw an IllegalStateException
+        // if already committed, which will not be the case because
+        // we already tested for this condition
+        response.reset();
+
+        // now just include as normal
+        dispatch(request, response);
+
+        // finally, we would have to ensure the response is committed
+        // and closed. Let's just flush the buffer and thus commit the
+        // response for now
+        response.flushBuffer();
+    }
+
+    private String getAbsolutePath(SlingHttpServletRequest request, String path) {
+        // path is already absolute
+        if (path.startsWith("/")) {
+            return path;
+        }
+
+        // get parent of current request
+        String uri = request.getResource().getPath();
+        int lastSlash = uri.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            uri = uri.substring(0, lastSlash);
+        }
+
+        // append relative path to parent
+        return uri + '/' + path;
+    }
+
+    private void dispatch(ServletRequest request,
+            ServletResponse sResponse) throws ServletException, IOException {
+
         /**
          * TODO: I have made some quick fixes in this method for SLING-221 and
          * SLING-222, but haven't had time to do a proper review. This method
@@ -123,45 +179,6 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             "Including resource {0} ({1})", resource, info);
         rd.getSlingMainServlet().includeContent(request, response, resource,
             info);
-    }
-
-    public void forward(ServletRequest request, ServletResponse response)
-            throws ServletException, IOException {
-
-        // fail forwarding if the response has already been committed
-        if (response.isCommitted()) {
-            throw new IllegalStateException("Response already committed");
-        }
-
-        // reset the response, will throw an IllegalStateException
-        // if already committed, which will not be the case because
-        // we already tested for this condition
-        response.reset();
-
-        // now just include as normal
-        include(request, response);
-
-        // finally, we would have to ensure the response is committed
-        // and closed. Let's just flush the buffer and thus commit the
-        // response for now
-        response.flushBuffer();
-    }
-
-    private String getAbsolutePath(SlingHttpServletRequest request, String path) {
-        // path is already absolute
-        if (path.startsWith("/")) {
-            return path;
-        }
-
-        // get parent of current request
-        String uri = request.getResource().getPath();
-        int lastSlash = uri.lastIndexOf('/');
-        if (lastSlash >= 0) {
-            uri = uri.substring(0, lastSlash);
-        }
-
-        // append relative path to parent
-        return uri + '/' + path;
     }
 
     private static class TypeOverwritingResourceWrapper extends ResourceWrapper {
