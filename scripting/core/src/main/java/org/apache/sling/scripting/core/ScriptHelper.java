@@ -119,10 +119,26 @@ public class ScriptHelper implements SlingScriptHelper {
     public void include(String path, RequestDispatcherOptions options) {
         final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
             path, options);
-
+        
         if (dispatcher != null) {
             try {
                 dispatcher.include(getRequest(), getResponse());
+            } catch (IOException ioe) {
+                throw new SlingIOException(ioe);
+            } catch (ServletException se) {
+                throw new SlingServletException(se);
+            }
+        }
+    }
+    
+    /** Forward the request to another resource, using specified options */
+    public void forward(String path, RequestDispatcherOptions options) {
+        final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
+            path, options);
+
+        if (dispatcher != null) {
+            try {
+                dispatcher.forward(getRequest(), getResponse());
             } catch (IOException ioe) {
                 throw new SlingIOException(ioe);
             } catch (ServletException se) {
