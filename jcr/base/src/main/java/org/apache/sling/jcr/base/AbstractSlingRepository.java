@@ -100,7 +100,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
      * The name of the configuration parameter containing the upper limit of the
      * currently idle sessions to keep in the pool (value is "pool.maxIdle").
      *
-     * @scr.property value="10" type="Integer"
+     * @scr.property value="0" type="Integer"
      */
     public static final String PROPERTY_MAX_IDLE_SESSIONS = "pool.maxIdle";
 
