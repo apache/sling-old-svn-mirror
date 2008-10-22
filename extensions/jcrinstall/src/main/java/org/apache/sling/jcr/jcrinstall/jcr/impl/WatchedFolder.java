@@ -158,10 +158,20 @@ class WatchedFolder implements EventListener {
         	    }
         	} else {
         		// a single failure must not block the whole thing (SLING-655)
+        	    InputStream is = null;
         		try {
-        			installOrUpdate(n.getPath(), dp.getInputStream(), dp.getLastModified());
+        		    is = dp.getInputStream();
+        			installOrUpdate(n.getPath(), is, dp.getLastModified());
         		} catch(JcrInstallException jie) {
         			log.warn("Failed to install resource " + n.getPath(), jie);
+        		} finally {
+        		    if(is != null) {
+        		        try {
+        		            is.close();
+        		        } catch(IOException ioe) {
+        		            log.warn("IOException while closing stream of node " + n.getPath(), ioe);
+        		        }
+        		    }
         		}
         	}
         }
