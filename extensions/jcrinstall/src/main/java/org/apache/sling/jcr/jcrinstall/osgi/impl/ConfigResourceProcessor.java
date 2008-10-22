@@ -54,7 +54,7 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     public int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data) throws Exception {
         
         // Load configuration properties
-        final Dictionary dict = loadDictionary(data);
+        final Dictionary dict = DictionaryReader.load(data);
         
         // Get pids from node name
         final ConfigurationPid pid = new ConfigurationPid(uri);
@@ -79,16 +79,6 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         return result;
     }
     
-    Dictionary<?,?> loadDictionary(InputStream data) throws IOException {
-        Dictionary<?,?> dict = null;
-        try {
-            dict = ConfigurationHandler.read(data);
-        } finally {
-            data.close();
-        }
-        return dict;
-    }
-
     public void processResourceQueue() throws Exception {
         // TODO might need to retry installing configs, as
         // we do for bundles
