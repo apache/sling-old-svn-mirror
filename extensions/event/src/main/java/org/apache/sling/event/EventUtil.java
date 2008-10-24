@@ -386,6 +386,8 @@ public abstract class EventUtil {
                     final Object value = ois.readObject();
                     properties.put(key, value);
                 }
+            } catch (java.io.InvalidClassException ice) {
+                throw new ClassNotFoundException("Found invalid class.", ice);
             } catch (IOException ioe) {
                 throw new RepositoryException("Unable to deserialize event properties.", ioe);
             }
