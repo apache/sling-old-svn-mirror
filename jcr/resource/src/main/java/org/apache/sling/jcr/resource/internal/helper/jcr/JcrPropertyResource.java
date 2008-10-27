@@ -65,7 +65,7 @@ public class JcrPropertyResource extends JcrItemResource {
 
         // the property itself
         if (type == Property.class || type == Item.class) {
-            return (AdapterType) property;
+            return (AdapterType) getProperty();
         }
 
         // the property value
@@ -94,6 +94,68 @@ public class JcrPropertyResource extends JcrItemResource {
 
             } else if (type == InputStream.class) {
                 return (AdapterType) getInputStream();
+
+            } else if ( type == String[].class ) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    final Value[] values = getProperty().getValues();
+                    final String[] result = new String[values.length];
+                    for(int i=0; i<values.length; i++) {
+                        result[i] = values[i].getString();
+                    }
+                    return (AdapterType)result;
+                }
+                return (AdapterType)new String[] {getProperty().getString()};
+
+            } else if (type == Boolean[].class) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    final Value[] values = getProperty().getValues();
+                    final Boolean[] result = new Boolean[values.length];
+                    for(int i=0; i<values.length; i++) {
+                        result[i] = values[i].getBoolean();
+                    }
+                    return (AdapterType)result;
+                }
+                return (AdapterType)new Boolean[] {getProperty().getBoolean()};
+
+            } else if (type == Long[].class) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    final Value[] values = getProperty().getValues();
+                    final Long[] result = new Long[values.length];
+                    for(int i=0; i<values.length; i++) {
+                        result[i] = values[i].getLong();
+                    }
+                    return (AdapterType)result;
+                }
+                return (AdapterType)new Long[] {getProperty().getLong()};
+
+            } else if (type == Double[].class) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    final Value[] values = getProperty().getValues();
+                    final Double[] result = new Double[values.length];
+                    for(int i=0; i<values.length; i++) {
+                        result[i] = values[i].getDouble();
+                    }
+                    return (AdapterType)result;
+                }
+                return (AdapterType)new Double[] {getProperty().getDouble()};
+
+            } else if (type == Calendar[].class) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    final Value[] values = getProperty().getValues();
+                    final Calendar[] result = new Calendar[values.length];
+                    for(int i=0; i<values.length; i++) {
+                        result[i] = values[i].getDate();
+                    }
+                    return (AdapterType)result;
+                }
+                return (AdapterType)new Calendar[] {getProperty().getDate()};
+
+            } else if (type == Value[].class) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    return (AdapterType)getProperty().getValues();
+                }
+                return (AdapterType)new Value[] {getProperty().getValue()};
+
             }
 
         } catch (ValueFormatException vfe) {
