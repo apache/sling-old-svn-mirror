@@ -359,7 +359,7 @@ public abstract class EventUtil {
                     oos.close();
                     node.setProperty(binPropertyName, new ByteArrayInputStream(baos.toByteArray()));
                 } catch (IOException ioe) {
-                    throw new RepositoryException("Unable to serialize properties.", ioe);
+                    throw new RepositoryException("Unable to serialize properties " + properties, ioe);
                 }
             }
         }
@@ -545,5 +545,32 @@ public abstract class EventUtil {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Improved toString method for an Event.
+     * This method prints out the event topic and all of the properties.
+     */
+    public static String toString(final Event e) {
+        if ( e == null ) {
+            return "<null>";
+        }
+        final StringBuffer buffer =new StringBuffer(e.getClass().getName());
+        buffer.append(" [topic=");
+        buffer.append(e.getTopic());
+        buffer.append(", properties=");
+        final String[] names = e.getPropertyNames();
+        if ( names != null ) {
+            for(int i=0;i<names.length;i++) {
+                if ( i>0) {
+                    buffer.append(",");
+                }
+                buffer.append(names[i]);
+                buffer.append('=');
+                buffer.append(e.getProperty(names[i]));
+            }
+        }
+        buffer.append("]");
+        return buffer.toString();
     }
 }

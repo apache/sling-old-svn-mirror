@@ -265,7 +265,7 @@ public class JobEventHandler
                         info.nodePath = eventNode.getPath();
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job '" + nodePath + "' to repository.", re);
+                        this.logger.error("Exception during writing new job '" + EventUtil.toString(event) + "' to repository at " + nodePath, re);
                     }
                 } else {
                     try {
@@ -302,7 +302,7 @@ public class JobEventHandler
                         }
                     } catch (RepositoryException re ) {
                         // something went wrong, so let's log it
-                        this.logger.error("Exception during writing new job '" + nodePath + "' to repository.", re);
+                        this.logger.error("Exception during writing new job '" + event + "' to repository at " + nodePath, re);
                     }
                 }
                 // if we were able to write the event into the repository
