@@ -312,45 +312,53 @@ public class QuartzScheduler implements Scheduler {
     public void removeJob(String name) throws NoSuchElementException {
         try {
             this.scheduler.deleteJob(name, DEFAULT_QUARTZ_JOB_GROUP);
+            this.logger.debug("Unscheduling job with name {}", name);
         } catch (final SchedulerException se) {
             throw new NoSuchElementException(se.getMessage());
         }
     }
 
-    protected void register(String type, ServiceReference ref)
+    /**
+     * Create unique identifier
+     * @param type
+     * @param ref
+     * @throws Exception
+     */
+    private String getServiceIdentifier(final ServiceReference ref) {
+        String name = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_NAME);
+        if ( name == null ) {
+            name = (String)ref.getProperty(Constants.SERVICE_PID);
+            if ( name == null ) {
+                name = "Registered Service";
+            }
+        }
+        // now append service id to create a unique identifer
+        name = name + "." + ref.getProperty(Constants.SERVICE_ID);
+        return name;
+    }
+
+    private void register(String type, ServiceReference ref)
     throws Exception {
         final Object job = this.context.locateService(type, ref);
         if ( ref != null ) {
             this.checkJob(job);
-            String name = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_NAME);
-            if ( name == null ) {
-                name = (String)ref.getProperty(Constants.SERVICE_PID);
-            }
-            if ( name != null ) {
-                final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
-                final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
-                if ( expression != null ) {
-                    this.addJob(name, job, null, expression, (concurrent != null ? concurrent : true));
-                } else {
-                    final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
-                    if ( period != null ) {
-                        this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
-                    }
-                }
+            final String name = getServiceIdentifier(ref);
+            final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
+            final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
+            if ( expression != null ) {
+                this.addJob(name, job, null, expression, (concurrent != null ? concurrent : true));
             } else {
-                throw new Exception("Job service must either have a PID or a configured property 'scheduler.name'.");
+                final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
+                if ( period != null ) {
+                    this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
+                }
             }
         }
     }
 
-    protected void unregister(ServiceReference ref) {
-        String name = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_NAME);
-        if ( name == null ) {
-            name = (String)ref.getProperty(Constants.SERVICE_PID);
-        }
-        if ( name != null ) {
-            this.removeJob(name);
-        }
+    private void unregister(ServiceReference ref) {
+        final String name = getServiceIdentifier(ref);
+        this.removeJob(name);
     }
 
     /**
