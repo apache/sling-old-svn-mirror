@@ -51,6 +51,7 @@ import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -70,7 +71,7 @@ import org.osgi.service.event.EventAdmin;
  * We schedule this event handler to run in the background and clean up
  * obsolete events.
  * @scr.service interface="java.lang.Runnable"
- * @scr.property name="scheduler.period" value="600" type="Long"
+ * @scr.property name="scheduler.period" value="300" type="Long" label="%jobscheduler.period.name" description="%jobscheduler.period.description"
  * @scr.property name="scheduler.concurrent" value="false" type="Boolean" private="true"
  */
 public class JobEventHandler
@@ -95,11 +96,20 @@ public class JobEventHandler
     /** @scr.property valueRef="DEFAULT_MAX_JOB_RETRIES" */
     private static final String CONFIG_PROPERTY_MAX_JOB_RETRIES = "max.job.retries";
 
+    /** Default number of seconds to wait for an ack. */
+    private static final long DEFAULT_WAIT_FOR_ACK = 90; // by default we wait 90 secs
+
+    /** @scr.property valueRef="DEFAULT_WAIT_FOR_ACK" */
+    private static final String CONFIG_PROPERTY_WAIT_FOR_ACK = "wait.for.ack";
+
     /** We check every 30 secs by default. */
     private long sleepTime;
 
     /** How often should a job be retried by default. */
     private int maxJobRetries;
+
+    /** How long do we wait for an ack (in ms) */
+    private long waitForAckMs;
 
     /** Background session. */
     private Session backgroundSession;
@@ -110,10 +120,10 @@ public class JobEventHandler
     /** List of deleted jobs. */
     private Set<String>deletedJobs = new HashSet<String>();
 
-    /** Default clean up time is 10 minutes. */
-    private static final int DEFAULT_CLEANUP_PERIOD = 10;
+    /** Default clean up time is 5 minutes. */
+    private static final int DEFAULT_CLEANUP_PERIOD = 5;
 
-    /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" */
+    /** @scr.property valueRef="DEFAULT_CLEANUP_PERIOD" type="Integer" label="%jobcleanup.period.name" description="%jobcleanup.period.description" */
     private static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** We remove everything which is older than 5 min by default. */
@@ -124,6 +134,9 @@ public class JobEventHandler
 
     /** Our component context. */
     private ComponentContext componentContext;
+
+    /** The map of events we're currently processing. */
+    private final Map<String, StartedJobInfo> processingEventsList = new HashMap<String, StartedJobInfo>();
 
     public static ThreadPool JOB_THREAD_POOL;
 
@@ -139,6 +152,7 @@ public class JobEventHandler
         this.cleanupPeriod = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_CLEANUP_PERIOD), DEFAULT_CLEANUP_PERIOD);
         this.sleepTime = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_SLEEP_TIME), DEFAULT_SLEEP_TIME);
         this.maxJobRetries = OsgiUtil.toInteger(props.get(CONFIG_PROPERTY_MAX_JOB_RETRIES), DEFAULT_MAX_JOB_RETRIES);
+        this.waitForAckMs = OsgiUtil.toLong(props.get(CONFIG_PROPERTY_WAIT_FOR_ACK), DEFAULT_WAIT_FOR_ACK) * 1000;
         this.componentContext = context;
         super.activate(context);
         JOB_THREAD_POOL = this.threadPool;
@@ -199,37 +213,63 @@ public class JobEventHandler
      * @see java.lang.Runnable#run()
      */
     public void run() {
-        if ( this.cleanupPeriod > 0 && this.running ) {
-            this.logger.debug("Cleaning up repository, removing all finished jobs older than {} minutes.", this.cleanupPeriod);
-
-            final String queryString = this.getCleanUpQueryString();
-            // we create an own session for concurrency issues
-            Session s = null;
-            try {
-                s = this.createSession();
-                final Node parentNode = (Node)s.getItem(this.repositoryPath);
-                logger.debug("Executing query {}", queryString);
-                final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
-                final NodeIterator iter = q.execute().getNodes();
-                int count = 0;
-                while ( iter.hasNext() ) {
-                    final Node eventNode = iter.nextNode();
-                    eventNode.remove();
-                    count++;
+        if ( this.running ) {
+            // check for jobs that were started but never got an aknowledge
+            final long tooOld = System.currentTimeMillis() - this.waitForAckMs;
+            // to keep the synchronized block as fast as possible we just store the
+            // jobs to be removed in a new list and process this list afterwards
+            final List<StartedJobInfo> restartJobs = new ArrayList<StartedJobInfo>();
+            synchronized ( this.processingEventsList ) {
+                final Iterator<Map.Entry<String, StartedJobInfo>> i = this.processingEventsList.entrySet().iterator();
+                while ( i.hasNext() ) {
+                    final Map.Entry<String, StartedJobInfo> entry = i.next();
+                    if ( entry.getValue().started <= tooOld ) {
+                        restartJobs.add(entry.getValue());
+                        i.remove();
+                    }
                 }
-                parentNode.save();
-                logger.debug("Removed {} entries from the repository.", count);
+            }
+            final Iterator<StartedJobInfo> jobIter = restartJobs.iterator();
+            while ( jobIter.hasNext() ) {
+                final StartedJobInfo info = jobIter.next();
+                this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", info.event, info.nodePath);
+                this.finishedJob(info.event, info.nodePath, true);
+            }
 
-            } catch (RepositoryException e) {
-                // in the case of an error, we just log this as a warning
-                this.logger.warn("Exception during repository cleanup.", e);
-            } finally {
-                if ( s != null ) {
-                    s.logout();
+            // remove obsolete jobs from the repository
+            if ( this.cleanupPeriod > 0 ) {
+                this.logger.debug("Cleaning up repository, removing all finished jobs older than {} minutes.", this.cleanupPeriod);
+
+                final String queryString = this.getCleanUpQueryString();
+                // we create an own session for concurrency issues
+                Session s = null;
+                try {
+                    s = this.createSession();
+                    final Node parentNode = (Node)s.getItem(this.repositoryPath);
+                    logger.debug("Executing query {}", queryString);
+                    final Query q = s.getWorkspace().getQueryManager().createQuery(queryString, Query.XPATH);
+                    final NodeIterator iter = q.execute().getNodes();
+                    int count = 0;
+                    while ( iter.hasNext() ) {
+                        final Node eventNode = iter.nextNode();
+                        eventNode.remove();
+                        count++;
+                    }
+                    parentNode.save();
+                    logger.debug("Removed {} entries from the repository.", count);
+
+                } catch (RepositoryException e) {
+                    // in the case of an error, we just log this as a warning
+                    this.logger.warn("Exception during repository cleanup.", e);
+                } finally {
+                    if ( s != null ) {
+                        s.logout();
+                    }
                 }
             }
         }
     }
+
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#processWriteQueue()
      */
@@ -343,10 +383,10 @@ public class JobEventHandler
         if ( this.running ) {
             this.loadJobs();
         } else {
-            logger.info("Deactivating component due to errors.");
-            // deactivate
             final ComponentContext ctx = this.componentContext;
+            // deactivate
             if ( ctx != null ) {
+                logger.info("Deactivating component {} due to errors during startup.", ctx.getProperties().get(Constants.SERVICE_ID));
                 final String name = (String) componentContext.getProperties().get(
                     ComponentConstants.COMPONENT_NAME);
                 ctx.disableComponent(name);
@@ -736,11 +776,18 @@ public class JobEventHandler
         final String jobTopic = (String)event.getProperty(EventUtil.PROPERTY_JOB_TOPIC);
         boolean unlock = true;
         try {
-            final Event jobEvent = this.getJobEvent(event, eventNode.getPath());
+            final String nodePath = eventNode.getPath();
+            final Event jobEvent = this.getJobEvent(event, nodePath);
             eventNode.setProperty(EventHelper.NODE_PROPERTY_PROCESSOR, this.applicationId);
             eventNode.save();
             final EventAdmin localEA = this.eventAdmin;
             if ( localEA != null ) {
+                final StartedJobInfo jobInfo = new StartedJobInfo(jobEvent, nodePath, System.currentTimeMillis());
+                // let's add the event to our processing list
+                synchronized ( this.processingEventsList ) {
+                    this.processingEventsList.put(nodePath, jobInfo);
+                }
+
                 // we need async delivery, otherwise we might create a deadlock
                 // as this method runs inside a synchronized block and the finishedJob
                 // method as well!
@@ -931,11 +978,30 @@ public class JobEventHandler
     }
 
     /**
+     * @see org.apache.sling.event.EventUtil.JobStatusNotifier#sendAcknowledge(org.osgi.service.event.Event, java.lang.String)
+     */
+    public boolean sendAcknowledge(Event job, String eventNodePath) {
+        synchronized ( this.processingEventsList ) {
+            // if the event is still in the processing list, we confirm the ack
+            final Object ack = this.processingEventsList.remove(eventNodePath);
+            return ack != null;
+        }
+
+    }
+
+    /**
      * This is a notification from the component which processed the job.
      *
      * @see org.apache.sling.event.EventUtil.JobStatusNotifier#finishedJob(org.osgi.service.event.Event, String, boolean)
      */
     public boolean finishedJob(Event job, String eventNodePath, boolean shouldReschedule) {
+        // let's remove the event from our processing list
+        // this is just a sanity check, as usually the job should have been
+        // removed during sendAcknowledge.
+        synchronized ( this.processingEventsList ) {
+            this.processingEventsList.remove(eventNodePath);
+        }
+
         boolean reschedule = shouldReschedule;
         if ( shouldReschedule ) {
             // check if we exceeded the number of retries
@@ -1309,6 +1375,18 @@ public class JobEventHandler
 
         public Object getLock() {
             return lock;
+        }
+    }
+
+    private static final class StartedJobInfo {
+        public final Event event;
+        public final String nodePath;
+        public final long  started;
+
+        public StartedJobInfo(final Event e, final String path, final long started) {
+            this.event = e;
+            this.nodePath = path;
+            this.started = started;
         }
     }
 }

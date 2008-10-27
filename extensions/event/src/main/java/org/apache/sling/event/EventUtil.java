@@ -190,39 +190,50 @@ public abstract class EventUtil {
     public static boolean isJobEvent(Event event) {
         return event.getProperty(PROPERTY_JOB_TOPIC) != null;
     }
+
     /**
-     * Notify a finished job.
+     * Check if this a job event and return the notifier context.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
-    public static void finishedJob(Event job) {
+    private static JobStatusNotifier.NotifierContext getNotifierContext(final Event job) {
         // check if this is a job event
         if ( !isJobEvent(job) ) {
-            return;
+            return null;
         }
         final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
         if ( ctx == null ) {
-            throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
+            throw new IllegalArgumentException("JobStatusNotifier context is not available in event properties.");
         }
-        ctx.notifier.finishedJob(job, ctx.eventNodePath, false);
+        return ctx;
+    }
+
+    /**
+     * Notify a finished job.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
+     */
+    public static void finishedJob(Event job) {
+        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        if ( ctx != null ) {
+            ctx.notifier.finishedJob(job, ctx.eventNodePath, false);
+        }
     }
 
     /**
      * Notify a failed job.
      * @return <code>true</code> if the job has been rescheduled, <code>false</code> otherwise.
+     * @throws IllegalArgumentException If the event is a job event but does not have a notifier context.
      */
     public static boolean rescheduleJob(Event job) {
-        // check if this is a job event
-        if ( !isJobEvent(job) ) {
-            return false;
+        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        if ( ctx != null ) {
+           return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);
         }
-        final JobStatusNotifier.NotifierContext ctx = (NotifierContext) job.getProperty(JobStatusNotifier.CONTEXT_PROPERTY_NAME);
-        if ( ctx == null ) {
-            throw new NullPointerException("JobStatusNotifier context is not available in event properties.");
-        }
-        return ctx.notifier.finishedJob(job, ctx.eventNodePath, true);
+        return false;
     }
 
     /**
      * Process a job in the background and notify its success.
+     * This method also sends an acknowledge message to the job event handler.
      */
     public static void processJob(final Event job, final JobProcessor processor) {
         final Runnable task = new Runnable() {
@@ -232,17 +243,31 @@ public abstract class EventUtil {
              */
             public void run() {
                 boolean result = false;
+                boolean notifyResult = true;
                 try {
+                    // first check for a notifier context to send an acknowledge
+                    final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+                    if ( ctx != null ) {
+                        if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
+                            // if we don't get an ack, someone else is already processing this job.
+                            // we process but do not notify the job event handler.
+                            LoggerFactory.getLogger(EventUtil.class).info("Someone else is already processing job {}.", job);
+                            notifyResult = false;
+                        }
+                    }
+
                     result = processor.process(job);
                 } catch (Throwable t) {
-                    LoggerFactory.getLogger(EventUtil.class).error("Unhandled error occured in job processor " + t.getMessage(), t);
+                    LoggerFactory.getLogger(EventUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
                     // we don't reschedule if an exception occurs
                     result = true;
                 } finally {
-                    if ( result ) {
-                        EventUtil.finishedJob(job);
-                    } else {
-                        EventUtil.rescheduleJob(job);
+                    if ( notifyResult ) {
+                        if ( result ) {
+                            EventUtil.finishedJob(job);
+                        } else {
+                            EventUtil.rescheduleJob(job);
+                        }
                     }
                 }
             }
@@ -275,6 +300,15 @@ public abstract class EventUtil {
                 this.eventNodePath = path;
             }
         }
+
+        /**
+         * Send an acknowledge message that someone is processing the job.
+         * @param job The job.
+         * @param eventNodePath The storage node in the repository.
+         * @return <code>true</code> if the ack is ok, <code>false</code> otherwise (e.g. if
+         *   someone else already send an ack for this job.
+         */
+        boolean sendAcknowledge(Event job, String eventNodePath);
 
         /**
          * Notify that the job is finished.
