@@ -50,4 +50,9 @@ public interface OsgiResourceProcessor {
      *  to start outstanding bundles.
      */
     void processResourceQueue() throws Exception;
+    
+    /**
+     * Called to cleanup the resource processor when it is not needed anymore.
+     */
+    void dispose();
 }
