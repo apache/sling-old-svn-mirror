@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -41,6 +40,7 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     public static final String CONFIG_EXTENSION = ".cfg";
     private final ConfigurationAdmin configurationAdmin;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final DictionaryReader reader = new DictionaryReader();
     
     ConfigResourceProcessor(ConfigurationAdmin ca) {
         configurationAdmin = ca;
@@ -54,7 +54,7 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     public int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data) throws Exception {
         
         // Load configuration properties
-        final Dictionary dict = DictionaryReader.load(data);
+        final Dictionary dict = reader.load(data);
         
         // Get pids from node name
         final ConfigurationPid pid = new ConfigurationPid(uri);
