@@ -46,6 +46,10 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         configurationAdmin = ca;
     }
     
+    public void dispose() {
+        // nothing to do
+    }
+    
     public boolean canProcess(String uri) {
         return uri.endsWith(CONFIG_EXTENSION);
     }

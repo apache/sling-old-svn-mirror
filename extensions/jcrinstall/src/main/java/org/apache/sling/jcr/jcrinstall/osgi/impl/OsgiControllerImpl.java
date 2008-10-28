@@ -30,7 +30,12 @@ import java.util.Set;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -79,7 +84,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         processors.add(new ConfigResourceProcessor(configAdmin));
 
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
-
+        
         // start queue processing
         running = true;
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
@@ -97,10 +102,17 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
                 log.warn("IOException in Storage.saveToFile()", ioe);
             }
         }
+        
+        if (processors != null) {
+            for (OsgiResourceProcessor processor : processors) {
+                processor.dispose();
+            }
+        }
+        
         storage = null;
         processors = null;
     }
-
+    
     public int installOrUpdate(String uri, long lastModified, InputStream data) throws IOException, JcrInstallException {
         int result = IGNORED;
         final OsgiResourceProcessor p = getProcessor(uri);
@@ -198,7 +210,6 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
                 for(OsgiResourceProcessor p : processors) {
                     p.processResourceQueue();
                 }
-
             } catch (Exception e) {
                 log.warn("Exception in run()", e);
             } finally {
