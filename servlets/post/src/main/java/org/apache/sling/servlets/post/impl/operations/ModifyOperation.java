@@ -28,11 +28,11 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
@@ -127,7 +127,8 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
             // cut off any selectors/extension from the suffix
             int dotPos = suffix.indexOf('.');
-            if (dotPos > 0) {
+            if ((dotPos > 0)
+                && (!(currentResource instanceof NonExistingResource))) {
                 suffix = suffix.substring(0, dotPos);
             }
 
