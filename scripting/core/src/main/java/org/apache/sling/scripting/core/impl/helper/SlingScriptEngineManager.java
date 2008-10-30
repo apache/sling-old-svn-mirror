@@ -19,17 +19,37 @@
 package org.apache.sling.scripting.core.impl.helper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
 public class SlingScriptEngineManager extends ScriptEngineManager {
 
-    List<ScriptEngineFactory> factories = new ArrayList<ScriptEngineFactory>();
-
+    private final List<ScriptEngineFactory> factories = new ArrayList<ScriptEngineFactory>();
+    
     public SlingScriptEngineManager(ClassLoader classLoader) {
         super(classLoader);
+    }
+    
+    public SlingScriptEngineManager() {
+        super();
+    }
+
+    @Override
+    public List<ScriptEngineFactory> getEngineFactories() {
+        @SuppressWarnings("unchecked")
+        List<ScriptEngineFactory> baseFactories = super.getEngineFactories();
+        
+        List<ScriptEngineFactory> result = new ArrayList<ScriptEngineFactory>();
+        result.addAll(factories);
+        result.addAll(baseFactories);
+        return result;
     }
 
     public void registerScriptEngineFactory(ScriptEngineFactory factory) {
@@ -46,11 +66,6 @@ public class SlingScriptEngineManager extends ScriptEngineManager {
         }
 
         factories.add(factory);
-    }
-
-    @Override
-    public List<ScriptEngineFactory> getEngineFactories() {
-        return factories;
     }
 
 }
