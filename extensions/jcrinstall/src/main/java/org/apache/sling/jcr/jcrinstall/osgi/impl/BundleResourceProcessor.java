@@ -28,9 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -280,7 +278,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
         JarInputStream jis = null;
         try {
-            // we cose the JarInputStream at the end, so wrap the actual
+            // we close the JarInputStream at the end, so wrap the actual
             // input stream to not propagate this to the actual input
             // stream, because we still need it
             InputStream nonClosing = new FilterInputStream(data) {
@@ -348,7 +346,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * Starts all bundles whose bundle ID is contained in the
      * <code>bundleCollection</code>. If a bundle fails to start, its bundle
      * ID is added to the list of active bundles again for the bundle to
-     * bestarted next time the packages are refreshed or the resource queue is
+     * be started next time the packages are refreshed or the resource queue is
      * processed.
      * 
      * @param bundleIdCollection The IDs of bundles to be started.

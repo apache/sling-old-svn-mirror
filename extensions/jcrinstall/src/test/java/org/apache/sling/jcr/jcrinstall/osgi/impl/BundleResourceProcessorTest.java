@@ -29,14 +29,15 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Test the BundleResourceProcessor */
@@ -69,8 +70,6 @@ public class BundleResourceProcessorTest {
         final OsgiControllerImpl c = new OsgiControllerImpl();
         final BundleContext bc = mockery.mock(BundleContext.class);
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
-        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
-        Utilities.setProcessors(c, p);
         final TestStorage s = new TestStorage(Utilities.getTestFile());
         Utilities.setStorage(c, s);
         final Bundle b = mockery.mock(Bundle.class);
@@ -86,6 +85,7 @@ public class BundleResourceProcessorTest {
             allowing(pa).resolveBundles(null);
             allowing(b).getBundleId() ;
             will(returnValue(bundleId));
+            allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
 
             one(bc).installBundle(OsgiControllerImpl.getResourceLocation(uri), data);
             inSequence(sequence);
@@ -95,6 +95,9 @@ public class BundleResourceProcessorTest {
             inSequence(sequence);
             will(returnValue(b));
 
+            one(b).stop();
+            inSequence(sequence);
+            
             one(b).update(data);
             inSequence(sequence);
 
@@ -103,6 +106,8 @@ public class BundleResourceProcessorTest {
         }});
 
         // Do the calls and check some stuff on the way
+        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
+        Utilities.setProcessors(c, p);
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
 
         assertEquals("First install returns INSTALLED", INSTALLED, c.installOrUpdate(uri, lastModified, data));
@@ -128,67 +133,4 @@ public class BundleResourceProcessorTest {
         // And verify expectations
         mockery.assertIsSatisfied();
     }
-
-    @org.junit.Test public void testBundleProcessingQueue() throws Exception {
-
-        // Fill the pending bundles queue with one bundle in each of the
-        // possible states, process the queue and verify results
-        final PackageAdmin pa = mockery.mock(PackageAdmin.class);
-        final BundleContext bc = mockery.mock(BundleContext.class);
-        final Bundle [] b = new Bundle[6];
-        for(int i = 0; i < b.length; i++) {
-            b[i] = mockery.mock(Bundle.class);
-        };
-
-        mockery.checking(new Expectations() {{
-            allowing(pa).refreshPackages(null);
-            allowing(pa).resolveBundles(with(any(Bundle[].class)));
-
-            allowing(bc).getBundle(0L); will(returnValue(b[0]));
-            allowing(bc).getBundle(1L); will(returnValue(b[1]));
-            allowing(bc).getBundle(2L); will(returnValue(b[2]));
-            allowing(bc).getBundle(3L); will(returnValue(b[3]));
-            allowing(bc).getBundle(4L); will(returnValue(b[4]));
-            allowing(bc).getBundle(5L); will(returnValue(b[5]));
-
-            allowing(b[0]).getBundleId(); will(returnValue(0L));
-            allowing(b[1]).getBundleId(); will(returnValue(1L));
-            allowing(b[2]).getBundleId(); will(returnValue(2L));
-            allowing(b[3]).getBundleId(); will(returnValue(3L));
-            allowing(b[4]).getBundleId(); will(returnValue(4L));
-            allowing(b[5]).getBundleId(); will(returnValue(5L));
-
-            allowing(b[0]).getState(); will(returnValue(Bundle.ACTIVE));
-            allowing(b[1]).getState(); will(returnValue(Bundle.STARTING));
-            allowing(b[2]).getState(); will(returnValue(Bundle.STOPPING));
-            allowing(b[3]).getState(); will(returnValue(Bundle.UNINSTALLED));
-            allowing(b[4]).getState(); will(returnValue(Bundle.INSTALLED));
-            allowing(b[5]).getState(); will(returnValue(Bundle.RESOLVED));
-
-            allowing(b[0]).getLocation();
-            allowing(b[1]).getLocation();
-            allowing(b[2]).getLocation();
-            allowing(b[3]).getLocation();
-            allowing(b[4]).getLocation();
-            allowing(b[5]).getLocation();
-
-            one(b[5]).start();
-        }});
-
-        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
-        final Map<Long, Bundle> pendingBundles = new HashMap<Long, Bundle>();
-        Utilities.setField(p, "pendingBundles", pendingBundles);
-
-        for(Bundle bu : b) {
-            pendingBundles.put(new Long(bu.getBundleId()), bu);
-        }
-        p.processResourceQueue();
-
-        assertEquals("Only 4 bundles must be left in queue", 4, pendingBundles.size());
-        assertTrue("STARTING bundle must be left in queue", pendingBundles.containsKey(b[1].getBundleId()));
-        assertTrue("STOPPING bundle must be left in queue", pendingBundles.containsKey(b[2].getBundleId()));
-        assertTrue("INSTALLED bundle must be left in queue", pendingBundles.containsKey(b[4].getBundleId()));
-        assertTrue("RESOLVED bundle must be left in queue", pendingBundles.containsKey(b[5].getBundleId()));
-    }
-
 }
