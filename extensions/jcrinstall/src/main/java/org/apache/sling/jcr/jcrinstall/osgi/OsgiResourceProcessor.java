@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.osgi;
 
-import java.io.InputStream;
 import java.util.Map;
 
 
@@ -34,10 +33,10 @@ public interface OsgiResourceProcessor {
      *  @param uri Unique identifier for the resource
      *  @param attributes metadata stored by the OsgiController, can be used to
      *      store additional information
-     *  @param data resource contents
+     *  @param data The data to install
      *  @return one of the {@link InstallResultCode} result codes. 
      */
-    int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data) throws Exception;
+    int installOrUpdate(String uri, Map<String, Object> attributes, InstallableData data) throws Exception;
     
     /** Uninstall the resource that was installed via given uri
      *  @param uri Unique identifier for the resource

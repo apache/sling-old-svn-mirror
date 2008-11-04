@@ -25,13 +25,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.List;
 
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
@@ -75,8 +73,8 @@ public class BundleResourceProcessorTest {
         final Bundle b = mockery.mock(Bundle.class);
         final long bundleId = 1234;
         final String uri = "/test/bundle.jar";
-        final InputStream data = new ByteArrayInputStream(uri.getBytes());
-        long lastModified = System.currentTimeMillis();
+        final MockInstallableData data = new MockInstallableData(uri);
+        final InputStream is = data.adaptTo(InputStream.class);
 
         // We'll try installing a bundle, re-installing to cause
         // it to be updated, and removing
@@ -87,7 +85,7 @@ public class BundleResourceProcessorTest {
             will(returnValue(bundleId));
             allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
 
-            one(bc).installBundle(OsgiControllerImpl.getResourceLocation(uri), data);
+            one(bc).installBundle(OsgiControllerImpl.getResourceLocation(uri), is);
             inSequence(sequence);
             will(returnValue(b));
 
@@ -98,7 +96,7 @@ public class BundleResourceProcessorTest {
             one(b).stop();
             inSequence(sequence);
             
-            one(b).update(data);
+            one(b).update(is);
             inSequence(sequence);
 
             one(b).uninstall();
@@ -110,25 +108,25 @@ public class BundleResourceProcessorTest {
         Utilities.setProcessors(c, p);
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
 
-        assertEquals("First install returns INSTALLED", INSTALLED, c.installOrUpdate(uri, lastModified, data));
+        assertEquals("First install returns INSTALLED", INSTALLED, c.installOrUpdate(uri, data));
         assertTrue("After install, uri must be in list", c.getInstalledUris().contains(uri));
-        assertEquals("LastModified must have been stored", lastModified, c.getLastModified(uri));
+        assertEquals("Digest must have been stored", data.getDigest(), c.getDigest(uri));
         assertEquals("Storage data has been saved during install", 1, s.saveCounter);
 
-        lastModified = System.currentTimeMillis();
-        assertEquals("Second install returns UPDATED", UPDATED, c.installOrUpdate(uri, lastModified, data));
+        data.setDigest("digest is now different");
+        assertEquals("Second install returns UPDATED", UPDATED, c.installOrUpdate(uri, data));
         assertTrue("After update, uri must be in list", c.getInstalledUris().contains(uri));
-        assertEquals("LastModified must have been updated", lastModified, c.getLastModified(uri));
+        assertEquals("Digest must have been updated", data.getDigest(), c.getDigest(uri));
         assertEquals("Storage data has been saved during update", 2, s.saveCounter);
 
         c.uninstall(uri);
         assertFalse("After uninstall, uri must not be in list", c.getInstalledUris().contains(uri));
-        assertEquals("LastModified must be gone", -1, c.getLastModified(uri));
+        assertEquals("Digest must be gone", null, c.getDigest(uri));
         assertFalse("After getLastModified, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("Storage data has been saved during uninstall", 3, s.saveCounter);
 
         final String nonJarUri = "no_jar_extension";
-        assertEquals(nonJarUri + " must be ignored", c.installOrUpdate("", lastModified, data), IGNORED);
+        assertEquals(nonJarUri + " must be ignored", c.installOrUpdate("", data), IGNORED);
 
         // And verify expectations
         mockery.assertIsSatisfied();

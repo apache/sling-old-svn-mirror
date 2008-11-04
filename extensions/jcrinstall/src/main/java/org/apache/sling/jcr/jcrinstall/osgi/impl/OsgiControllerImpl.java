@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
@@ -72,8 +73,8 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     /** @scr.reference */
     private PackageAdmin packageAdmin;
 
-    /** Storage key: last modified as a Long */
-    public static final String KEY_LAST_MODIFIED = "last.modified";
+    /** Storage key: digest of an InstallableData */
+    public static final String KEY_DIGEST = "data.digest";
 
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
@@ -113,7 +114,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         processors = null;
     }
     
-    public int installOrUpdate(String uri, long lastModified, InputStream data) throws IOException, JcrInstallException {
+    public int installOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
         int result = IGNORED;
         final OsgiResourceProcessor p = getProcessor(uri);
         if (p != null) {
@@ -121,7 +122,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
                 final Map<String, Object> map = storage.getMap(uri);
                 result = p.installOrUpdate(uri, map, data);
                 if (result != IGNORED) {
-                    map.put(KEY_LAST_MODIFIED, new Long(lastModified));
+                    map.put(KEY_DIGEST, data.getDigest());
                 }
                 storage.saveToFile();
             } catch(IOException ioe) {
@@ -151,17 +152,14 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     }
 
     /** {@inheritDoc}
-     *  @return LAST_MODIFIED_NOT_FOUND if uri not found
+     *  @return null if uri not found
      */
-    public long getLastModified(String uri) {
-        long result = LAST_MODIFIED_NOT_FOUND;
+    public String getDigest(String uri) {
+        String result = null;
 
         if(storage.contains(uri)) {
             final Map<String, Object> uriData = storage.getMap(uri);
-            final Long lastMod = (Long)uriData.get(KEY_LAST_MODIFIED);
-            if(lastMod != null) {
-                result = lastMod.longValue();
-            }
+            result = (String)uriData.get(KEY_DIGEST);
         }
         return result;
     }

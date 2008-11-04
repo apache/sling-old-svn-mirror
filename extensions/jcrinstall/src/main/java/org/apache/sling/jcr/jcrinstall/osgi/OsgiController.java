@@ -19,7 +19,6 @@
 package org.apache.sling.jcr.jcrinstall.osgi;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 
 /** jcrinstall component that installs/updates/removes 
@@ -30,14 +29,12 @@ public interface OsgiController {
     
     /** Install or update supplied resource 
      *  @param uri Unique identifier for the resource
-     *  @param lastModified if the resource is installed, this is stored
-     *      and can be retrieved using getLastModified().
-     *  @param data resource contents
+     *  @param data The data to install
      *  @return one of the {@link InstallResultCode} result codes. 
      */
-    int installOrUpdate(String uri, long lastModified, InputStream data) throws IOException, JcrInstallException;
+    int installOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
     
-    /** Uninstall the resource that was installed via given uri
+    /** Uninstall the data that was installed via given uri
      *  @param uri Unique identifier for the resource
      *  @param attributes metadata stored by the OsgiController, will be
      *      removed after calling this method
@@ -53,5 +50,5 @@ public interface OsgiController {
      *  to by that uri was installed.
      *  @return -1 if we don't have info for given uri
      */
-    long getLastModified(String uri);
+    String getDigest(String uri);
 }

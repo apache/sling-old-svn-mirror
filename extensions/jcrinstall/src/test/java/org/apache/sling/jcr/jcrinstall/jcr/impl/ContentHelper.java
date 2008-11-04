@@ -25,6 +25,8 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.jcr.jcrinstall.osgi.impl.MockInstallableData;
+
 class ContentHelper {
     public static final String NT_FOLDER = "nt:folder";
     public static final String NT_FILE = "nt:file";
@@ -82,6 +84,10 @@ class ContentHelper {
             }
         }
         session.save();
+    }
+    
+    void createOrUpdateFile(String path, MockInstallableData d) throws RepositoryException {
+    	createOrUpdateFile(path, d.adaptTo(InputStream.class), d.getLastModified());
     }
     
     void createOrUpdateFile(String path, InputStream data, long lastModified) throws RepositoryException {

@@ -23,11 +23,13 @@ import java.io.InputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+
 /** Provides data (InputStream, last modified data) about
  * 	JCR nodes which are files.
  * 	TODO: Yes, this should be a generic JCR utility.
  */
-class FileDataProvider {
+class FileDataProvider implements InstallableData {
     /**
      * The relative path of the data and last modified date of an nt:file node
      */
@@ -37,13 +39,13 @@ class FileDataProvider {
     public static final String JCR_CONTENT_LAST_MODIFIED = JCR_CONTENT + "/" + JCR_LAST_MODIFIED;
     
     private final InputStream inputStream;
-    private final long lastModified;
+    private final String digest;
     
 	FileDataProvider(Node n) throws RepositoryException {
         if (n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
-        	lastModified = n.getProperty(JCR_CONTENT_LAST_MODIFIED).getDate().getTimeInMillis();
+        	digest = String.valueOf(n.getProperty(JCR_CONTENT_LAST_MODIFIED).getDate().getTimeInMillis());
         } else {
-        	lastModified = -1;
+        	digest = null;
 	    }
 	    
         if(n.hasProperty(JCR_CONTENT_DATA)) {
@@ -54,14 +56,22 @@ class FileDataProvider {
 	}
 	
 	boolean isFile() {
-		return inputStream != null && lastModified != -1;
+		return inputStream != null && digest != null;
 	}
 
 	InputStream getInputStream() {
 		return inputStream;
 	}
 
-	long getLastModified() {
-		return lastModified;
+    @SuppressWarnings("unchecked")
+	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+		if(type.equals(InputStream.class)) {
+			return (AdapterType)inputStream;
+		}
+		return null;
+	}
+
+	public String getDigest() {
+		return digest;
 	}
 }
