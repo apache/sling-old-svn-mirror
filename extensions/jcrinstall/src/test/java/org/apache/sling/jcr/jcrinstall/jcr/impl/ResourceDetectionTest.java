@@ -31,13 +31,13 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgi.impl.MockInstallableData;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentContext;
 
 /** Test that added/updated/removed resources are
  * 	correctly translated to OsgiController calls.
@@ -85,8 +85,8 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         final String dummyJar = "/libs/foo/bar/install/dummy.jar";
         final InputStream data = new ByteArrayInputStream(dummyJar.getBytes());
-        final long lastModifiedA = System.currentTimeMillis();
-        final long lastModifiedB = lastModifiedA + 1;
+        final MockInstallableData da = new MockInstallableData("a");
+        final MockInstallableData db = new MockInstallableData("b");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
         
@@ -95,23 +95,23 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             
-            one(c).getLastModified("phase1"); 
+            one(c).getDigest("phase1"); 
             inSequence(sequence);
-            one(c).getLastModified(dummyJar); will(returnValue(-1L));
+            one(c).getDigest(dummyJar); will(returnValue(null));
             inSequence(sequence);
-            one(c).installOrUpdate(with(equal(dummyJar)), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            inSequence(sequence);
-            
-            one(c).getLastModified("phase2"); 
-            inSequence(sequence);
-            one(c).getLastModified(dummyJar); will(returnValue(lastModifiedA));
+            one(c).installOrUpdate(with(equal(dummyJar)), with(any(InstallableData.class)));
             inSequence(sequence);
             
-            one(c).getLastModified("phase3"); 
+            one(c).getDigest("phase2"); 
             inSequence(sequence);
-            one(c).getLastModified(dummyJar); will(returnValue(lastModifiedA));
+            one(c).getDigest(dummyJar); will(returnValue(da.getDigest()));
             inSequence(sequence);
-            one(c).installOrUpdate(with(equal(dummyJar)), with(equal(lastModifiedB)), with(any(InputStream.class)));
+            
+            one(c).getDigest("phase3"); 
+            inSequence(sequence);
+            one(c).getDigest(dummyJar); will(returnValue(da.getDigest()));
+            inSequence(sequence);
+            one(c).installOrUpdate(with(equal(dummyJar)), with(any(InstallableData.class)));
             inSequence(sequence);
         }});
         
@@ -119,21 +119,21 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         ro.activate(null);
         
         // Add two files, run one cycle must install the bundles
-        c.getLastModified("phase1");
-        contentHelper.createOrUpdateFile(dummyJar, data, lastModifiedA);
+        c.getDigest("phase1");
+        contentHelper.createOrUpdateFile(dummyJar, da);
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
         installedUri.add(dummyJar);
         
         // Updating with the same timestamp must not call install again
-        c.getLastModified("phase2");
-        contentHelper.createOrUpdateFile(dummyJar, data, lastModifiedA);
+        c.getDigest("phase2");
+        contentHelper.createOrUpdateFile(dummyJar, da);
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
         
         // Updating with a new timestamp must call install again
-        c.getLastModified("phase3");
-        contentHelper.createOrUpdateFile(dummyJar, data, lastModifiedB);
+        c.getDigest("phase3");
+        contentHelper.createOrUpdateFile(dummyJar, db);
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
         
@@ -149,17 +149,17 @@ public class ResourceDetectionTest extends RepositoryTestBase {
                 "/libs/foo/bar/install/dummy.dp"
         };
         final InputStream data = new ByteArrayInputStream("hello".getBytes());
-        final long lastModifiedA = System.currentTimeMillis();
+        final MockInstallableData da = new MockInstallableData("a");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
         
         // Define the whole sequence of calls to OsgiController,
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
@@ -167,7 +167,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Add files, run one cycle must install the bundles
         for(String file : resources) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
@@ -191,26 +191,26 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         };
         
         final InputStream data = new ByteArrayInputStream("hello".getBytes());
-        final long lastModifiedA = System.currentTimeMillis();
+        final MockInstallableData da = new MockInstallableData("a");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
         
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         ro.activate(null);
         
         for(String file : resources) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         for(String file : ignored) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         eventHelper.waitForEvents(5000L);
         
@@ -231,7 +231,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).uninstall("/libs/foo/bar/install/dummy.jar");
             one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
             one(c).uninstall("/libs/watchfolder-is-gone/install/gone.cfg");
@@ -255,7 +255,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
             inSequence(sequence);
             one(c).uninstall("/libs/foo/bar/install/dummy.dp");
@@ -281,18 +281,18 @@ public class ResourceDetectionTest extends RepositoryTestBase {
                 "/libs/foo/bar/install/dummy.dp"
         };
         final InputStream data = new ByteArrayInputStream("hello".getBytes());
-        final long lastModifiedA = System.currentTimeMillis();
+        final MockInstallableData da = new MockInstallableData("a");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
         
         // Define the whole sequence of calls to OsgiController,
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
             will(throwException(new JcrInstallException("Fake BundleException for testing")));
-            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
@@ -300,7 +300,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Add files, run one cycle must install the bundles
         for(String file : resources) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
@@ -321,11 +321,10 @@ public class ResourceDetectionTest extends RepositoryTestBase {
                 "/libs/foo/wii/install/more.cfg",
         };
         
-        final InputStream data = new ByteArrayInputStream("hello".getBytes());
-        final long lastModifiedA = System.currentTimeMillis();
+        final MockInstallableData da = new MockInstallableData("a");
 
         for(String file : resources) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         
         final Set<String> installedUri = new HashSet<String>();
@@ -335,9 +334,9 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         // Test with first regexp
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[2])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
+            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final MockRepositoryObserver ro = new MockRepositoryObserver(repo, c, serviceDataFile);
@@ -346,7 +345,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         ro.activate(null);
         ro.handleInitialUninstalls();
         for(String file : resources) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();
@@ -357,18 +356,18 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         // Test with a different regexp, install.A resources must be uninstalled
         mockery.checking(new Expectations() {{
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getLastModified(with(any(String.class))); will(returnValue(-1L)); 
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).uninstall(resources[0]);
             one(c).uninstall(resources[2]);
-            one(c).installOrUpdate(with(equal(resources[1])), with(equal(lastModifiedA)), with(any(InputStream.class)));
-            one(c).installOrUpdate(with(equal(resources[3])), with(equal(lastModifiedA)), with(any(InputStream.class)));
+            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).installOrUpdate(with(equal(resources[3])), with(any(InstallableData.class)));
         }});
         
         props.setProperty(RepositoryObserver.FOLDER_NAME_REGEXP_PROPERTY, ".*foo/wii/install$");
         ro.activate(null);
         ro.handleInitialUninstalls();
         for(String file : resources) {
-            contentHelper.createOrUpdateFile(file, data, lastModifiedA);
+            contentHelper.createOrUpdateFile(file, da);
         }
         eventHelper.waitForEvents(5000L);
         ro.runOneCycle();

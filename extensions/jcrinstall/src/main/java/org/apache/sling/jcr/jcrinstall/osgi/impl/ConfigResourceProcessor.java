@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -55,10 +57,22 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    public int installOrUpdate(String uri, Map<String, Object> attributes, InputStream data) throws Exception {
+    public int installOrUpdate(String uri, Map<String, Object> attributes, 
+    		InstallableData installableData) throws Exception {
         
-        // Load configuration properties
-        final Dictionary dict = reader.load(data);
+    	// Convert data to a configuration Dictionary
+    	Dictionary dict = installableData.adaptTo(Dictionary.class);
+    	if(dict == null) {
+	    	InputStream data = installableData.adaptTo(InputStream.class);
+	    	if(data == null) {
+	    		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
+	    	}
+	    	dict = reader.load(data);
+    	}
+    	
+    	if(dict == null) {
+    		throw new JcrInstallException("Null Dictionary for uri=" + uri);
+    	}
         
         // Get pids from node name
         final ConfigurationPid pid = new ConfigurationPid(uri);

@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -126,7 +127,13 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      *      java.util.Map, java.io.InputStream)
      */
     public int installOrUpdate(String uri, Map<String, Object> attributes,
-            InputStream data) throws BundleException, IOException {
+            InstallableData installableData) throws BundleException, IOException {
+    	
+    	InputStream data = installableData.adaptTo(InputStream.class);
+    	if(data == null) {
+    		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
+    	}
+    	
         // Update if we already have a bundle id, else install
         Bundle b = null;
         boolean updated = false;

@@ -158,20 +158,10 @@ class WatchedFolder implements EventListener {
         	    }
         	} else {
         		// a single failure must not block the whole thing (SLING-655)
-        	    InputStream is = null;
         		try {
-        		    is = dp.getInputStream();
-        			installOrUpdate(n.getPath(), is, dp.getLastModified());
+        			installOrUpdate(n.getPath(), dp);
         		} catch(JcrInstallException jie) {
         			log.warn("Failed to install resource " + n.getPath(), jie);
-        		} finally {
-        		    if(is != null) {
-        		        try {
-        		            is.close();
-        		        } catch(IOException ioe) {
-        		            log.warn("IOException while closing stream of node " + n.getPath(), ioe);
-        		        }
-        		    }
         		}
         	}
         }
@@ -196,14 +186,14 @@ class WatchedFolder implements EventListener {
     }
     
     /** Install or update the given resource, as needed */ 
-    protected void installOrUpdate(String path, InputStream data, Long lastModified) throws IOException, JcrInstallException {
-    	final long currentLastModified = controller.getLastModified(path);
-    	if(currentLastModified == -1) {
+    protected void installOrUpdate(String path, FileDataProvider fdp) throws IOException, JcrInstallException {
+    	final String digest = controller.getDigest(path);
+    	if(digest == null) {
     		log.info("Resource {} was not installed yet, installing in OsgiController", path);
-    		controller.installOrUpdate(path, lastModified, data);
-    	} else if(currentLastModified < lastModified) {
+    		controller.installOrUpdate(path, fdp);
+    	} else if(!digest.equals(fdp.getDigest())) {
     		log.info("Resource {} has been updated, updating in OsgiController", path);
-    		controller.installOrUpdate(path, lastModified, data);
+    		controller.installOrUpdate(path, fdp);
     	} else {
     		log.info("Resource {} not modified, ignoring", path);
     	}
