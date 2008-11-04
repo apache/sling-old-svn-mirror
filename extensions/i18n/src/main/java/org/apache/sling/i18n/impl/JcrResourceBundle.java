@@ -30,6 +30,7 @@ import java.util.ResourceBundle;
 import javax.jcr.query.Query;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 
 public class JcrResourceBundle extends ResourceBundle {
 
@@ -121,6 +122,10 @@ public class JcrResourceBundle extends ResourceBundle {
                 String jcrPath = (String) row.get(JCR_PATH);
                 String key = (String) row.get(PROP_KEY);
 
+                if (key == null) {
+                    key = ResourceUtil.getName(jcrPath);
+                }
+                
                 Map<String, Object> dst = rest;
                 for (int i = 0; i < path.length; i++) {
                     if (jcrPath.startsWith(path[i])) {
