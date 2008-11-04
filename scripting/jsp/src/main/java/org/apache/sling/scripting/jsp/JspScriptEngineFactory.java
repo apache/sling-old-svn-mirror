@@ -232,7 +232,13 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         }
 
         if (jspRuntimeContext != null) {
-            jspRuntimeContext.destroy();
+            try {
+                jspRuntimeContext.destroy();
+            } catch (NullPointerException npe) {
+                // SLING-530, might be thrown on system shutdown in a servlet
+                // container when using the Equinox servlet container bridge
+                log.debug("deactivate: ServletContext might already be unavailable", npe);
+            }
             jspRuntimeContext = null;
         }
 
@@ -251,7 +257,9 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
         try {
             slingServletContext.removeAttribute(JspApplicationContextImpl.class.getName());
         } catch (NullPointerException npe) {
-            log.error("deactivate: Caught NullPointerException ! Just logging", npe);
+            // SLING-530, might be thrown on system shutdown in a servlet
+            // container when using the Equinox servlet container bridge
+            log.debug("deactivate: ServletContext might already be unavailable", npe);
         }
     }
 
