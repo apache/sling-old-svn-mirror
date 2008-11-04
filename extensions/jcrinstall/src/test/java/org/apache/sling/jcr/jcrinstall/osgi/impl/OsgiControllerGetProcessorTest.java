@@ -35,8 +35,8 @@ public class OsgiControllerGetProcessorTest {
     @org.junit.Test public void testNoProcessors() throws Exception {
         final OsgiControllerImpl c = new OsgiControllerImpl();
         Utilities.setProcessors(c);
-        assertNull("Controller must return null processor for null uri", c.getProcessor(null));
-        assertNull("Controller must return null processor for TEST uri", c.getProcessor("TEST"));
+        assertNull("Controller must return null processor for null uri", c.getProcessor(null, null));
+        assertNull("Controller must return null processor for TEST uri", c.getProcessor("TEST", null));
     }
     
     @org.junit.Test public void testTwoProcessors() throws Exception {
@@ -46,13 +46,13 @@ public class OsgiControllerGetProcessorTest {
         Utilities.setProcessors(c, p1, p2);
         
         mockery.checking(new Expectations() {{
-            allowing(p1).canProcess("foo") ; will(returnValue(true));
-            allowing(p1).canProcess("bar") ; will(returnValue(false));
-            allowing(p2).canProcess("foo") ; will(returnValue(false));
-            allowing(p2).canProcess("bar") ; will(returnValue(true));
+            allowing(p1).canProcess("foo", null) ; will(returnValue(true));
+            allowing(p1).canProcess("bar", null) ; will(returnValue(false));
+            allowing(p2).canProcess("foo", null) ; will(returnValue(false));
+            allowing(p2).canProcess("bar", null) ; will(returnValue(true));
         }});
         
-        assertEquals("foo extension must return processor p1", p1, c.getProcessor("foo"));
-        assertEquals("bar extension must return processor p2", p2, c.getProcessor("bar"));
+        assertEquals("foo extension must return processor p1", p1, c.getProcessor("foo", null));
+        assertEquals("bar extension must return processor p2", p2, c.getProcessor("bar", null));
     }
 }

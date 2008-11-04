@@ -52,8 +52,9 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         // nothing to do
     }
     
-    public boolean canProcess(String uri) {
-        return uri.endsWith(CONFIG_EXTENSION);
+    public boolean canProcess(String uri, InstallableData data) {
+    	final boolean isDict = data == null ? false : data.adaptTo(Dictionary.class) != null; 
+        return uri.endsWith(CONFIG_EXTENSION) || isDict;
     }
 
     @SuppressWarnings("unchecked")
@@ -67,7 +68,13 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
 	    	if(data == null) {
 	    		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
 	    	}
-	    	dict = reader.load(data);
+	    	try {
+	    		dict = reader.load(data);
+	    	} finally {
+	    		if(data != null) {
+	    			data.close();
+	    		}
+	    	}
     	}
     	
     	if(dict == null) {

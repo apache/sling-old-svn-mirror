@@ -98,14 +98,15 @@ class ContentHelper {
             f = session.getRootNode().getNode(relPath);
             res = f.getNode(JCR_CONTENT);
         } else {
-            f = session.getRootNode().addNode(relPath);
-            res = f.addNode(JCR_CONTENT);
+            f = session.getRootNode().addNode(relPath,NT_FILE);
+            res = f.addNode(JCR_CONTENT,NT_RESOURCE);
         }
         
         final Calendar c = Calendar.getInstance();
         c.setTimeInMillis(lastModified);
         res.setProperty(JCR_LASTMODIFIED, c);
         res.setProperty(JCR_DATA, data);
+        res.setProperty(JCR_MIMETYPE, "");
         
         f.getParent().save();
     }
