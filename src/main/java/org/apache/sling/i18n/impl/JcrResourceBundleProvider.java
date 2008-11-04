@@ -353,7 +353,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                 Session s = null;
                 try {
                     if (repoCredentials == null) {
-                        s = repo.login();
+                        s = repo.loginAdministrative(null);
                     } else {
                         s = repo.login(repoCredentials);
                     }
