@@ -135,49 +135,57 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     	}
     	
         // Update if we already have a bundle id, else install
-        Bundle b = null;
-        boolean updated = false;
+		Bundle b;
+		boolean updated;
+		try {
+			b = null;
+			updated = false;
 
-        // check whether we know the bundle and it exists
-        final Long longId = (Long) attributes.get(KEY_BUNDLE_ID);
-        if (longId != null) {
-            b = ctx.getBundle(longId);
-        }
+			// check whether we know the bundle and it exists
+			final Long longId = (Long) attributes.get(KEY_BUNDLE_ID);
+			if (longId != null) {
+			    b = ctx.getBundle(longId);
+			}
 
-        // either we don't know the bundle yet or it does not exist,
-        // so check whether the bundle can be found by its symbolic name
-        if (b == null) {
-            // ensure we can mark and reset to read the manifest
-            if (!data.markSupported()) {
-                data = new BufferedInputStream(data);
-            }
-            final BundleInfo info = getMatchingBundle(data);
-            if (info != null) {
-                final Version availableVersion = new Version(
-                    (String) info.bundle.getHeaders().get(
-                        Constants.BUNDLE_VERSION));
-                final Version newVersion = new Version(info.newVersion);
-                if (newVersion.compareTo(availableVersion) > 0) {
-                    b = info.bundle;
-                } else {
-                    log.debug(
-                        "Ignore update of bundle {} from {} as the installed version is equal or higher.",
-                        info.bundle.getSymbolicName(), uri);
-                    return IGNORED;
-                }
-            }
-        }
+			// either we don't know the bundle yet or it does not exist,
+			// so check whether the bundle can be found by its symbolic name
+			if (b == null) {
+			    // ensure we can mark and reset to read the manifest
+			    if (!data.markSupported()) {
+			        data = new BufferedInputStream(data);
+			    }
+			    final BundleInfo info = getMatchingBundle(data);
+			    if (info != null) {
+			        final Version availableVersion = new Version(
+			            (String) info.bundle.getHeaders().get(
+			                Constants.BUNDLE_VERSION));
+			        final Version newVersion = new Version(info.newVersion);
+			        if (newVersion.compareTo(availableVersion) > 0) {
+			            b = info.bundle;
+			        } else {
+			            log.debug(
+			                "Ignore update of bundle {} from {} as the installed version is equal or higher.",
+			                info.bundle.getSymbolicName(), uri);
+			            return IGNORED;
+			        }
+			    }
+			}
 
-        if (b != null) {
-            b.stop();
-            b.update(data);
-            updated = true;
-            needsRefresh = true;
-        } else {
-            uri = OsgiControllerImpl.getResourceLocation(uri);
-            log.debug("No matching Bundle for uri {}, installing", uri);
-            b = ctx.installBundle(uri, data);
-        }
+			if (b != null) {
+			    b.stop();
+			    b.update(data);
+			    updated = true;
+			    needsRefresh = true;
+			} else {
+			    uri = OsgiControllerImpl.getResourceLocation(uri);
+			    log.debug("No matching Bundle for uri {}, installing", uri);
+			    b = ctx.installBundle(uri, data);
+			}
+		} finally {
+			if(data != null) {
+				data.close();
+			}
+		}
 
         // ensure the bundle id in the attributes, this may be overkill
         // in simple update situations, but is required for installations
@@ -220,7 +228,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     /**
      * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#canProcess(java.lang.String)
      */
-    public boolean canProcess(String uri) {
+    public boolean canProcess(String uri, InstallableData data) {
         return uri.endsWith(BUNDLE_EXTENSION);
     }
 

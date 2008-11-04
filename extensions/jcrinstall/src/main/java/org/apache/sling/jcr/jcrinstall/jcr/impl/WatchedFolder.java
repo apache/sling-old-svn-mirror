@@ -19,7 +19,7 @@
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Collection;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -32,6 +32,8 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.slf4j.Logger;
@@ -46,8 +48,7 @@ class WatchedFolder implements EventListener {
     private final OsgiController controller;
     private long nextScan;
     private final Session session;
-    private final RegexpFilter filenameFilter;
-    protected static final Logger log = LoggerFactory.getLogger(WatchedFolder.class);
+    protected final Logger log = LoggerFactory.getLogger(getClass());
     
     /**
      * After receiving JCR events, we wait for this many msec before
@@ -59,8 +60,8 @@ class WatchedFolder implements EventListener {
             RegexpFilter filenameFilter, long scanDelayMsec) throws RepositoryException {
         this.path = path;
         this.controller = ctrl;
-        this.filenameFilter = filenameFilter;
         this.scanDelayMsec = scanDelayMsec;
+        
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         
         // observe any changes in our folder (and under it, as changes to properties
@@ -119,15 +120,15 @@ class WatchedFolder implements EventListener {
      * 	If our timer allows it, scan our folder Node for updates
      * 	and deletes.
      */
-    void scanIfNeeded() throws Exception {
+    void scanIfNeeded(Collection<NodeConverter> converters) throws Exception {
         if (nextScan != -1 && System.currentTimeMillis() > nextScan) {
             nextScan = -1;
-            scan();
+            scan(converters);
         }
     }
     
     /** Scan our folder and inform OsgiController of any changes */
-    protected void scan() throws Exception {
+    protected void scan(Collection<NodeConverter> converters) throws Exception {
         log.debug("Scanning {}", path);
         
         checkDeletions(controller.getInstalledUris());
@@ -145,23 +146,21 @@ class WatchedFolder implements EventListener {
         	return;
         }
         
-        // Check adds and updates, for all child nodes that are files
+        // Check adds and updates, for all child nodes for which we have a NodeConverter
         final NodeIterator it = folder.getNodes();
         while(it.hasNext()) {
         	final Node n = it.nextNode();
-        	final FileDataProvider dp = new FileDataProvider(n);
-        	if(!dp.isFile()) {
-        		log.debug("Node {} does not seem to be a file, ignored", n.getPath());
-        	} else if(!filenameFilter.accept(n.getName())) {
-        	    if(log.isDebugEnabled()) {
-                    log.debug("Node " + n.getPath() + " with name " + n.getName() + " ignored due to " + filenameFilter);
-        	    }
-        	} else {
-        		// a single failure must not block the whole thing (SLING-655)
-        		try {
-        			installOrUpdate(n.getPath(), dp);
-        		} catch(JcrInstallException jie) {
-        			log.warn("Failed to install resource " + n.getPath(), jie);
+        	for(NodeConverter nc : converters) {
+        		final InstallableData d = nc.convertNode(n);
+        		if(d != null) {
+        			log.debug("Installing or updating {}", d);
+            		// a single failure must not block the whole thing (SLING-655)
+            		try {
+            			installOrUpdate(n.getPath(), d);
+            		} catch(JcrInstallException jie) {
+            			log.warn("Failed to install resource " + n.getPath(), jie);
+            		}
+            		break;
         		}
         	}
         }
@@ -186,7 +185,7 @@ class WatchedFolder implements EventListener {
     }
     
     /** Install or update the given resource, as needed */ 
-    protected void installOrUpdate(String path, FileDataProvider fdp) throws IOException, JcrInstallException {
+    protected void installOrUpdate(String path, InstallableData fdp) throws IOException, JcrInstallException {
     	final String digest = controller.getDigest(path);
     	if(digest == null) {
     		log.info("Resource {} was not installed yet, installing in OsgiController", path);

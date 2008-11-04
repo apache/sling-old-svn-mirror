@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,11 +39,10 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,14 +80,15 @@ public class RepositoryObserver implements Runnable, BundleListener {
     private File serviceDataFile;
     private long lastBundleEvent;
     
+    private final List<NodeConverter> converters = new ArrayList<NodeConverter>();
+    
     private List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
     
     /** Default set of root folders to watch */
     public static String[] DEFAULT_ROOTS = {"/libs", "/apps"};
     
-    /** Default regexp for watched folders and filenames */
+    /** Default regexp for watched folders */
     public static final String DEFAULT_FOLDER_NAME_REGEXP = ".*/install$";
-    public static final String DEFAULT_FILENAME_REGEXP = "[a-zA-Z0-9].*\\.[a-zA-Z][a-zA-Z][a-zA-Z]?";
     
     /** ComponentContext property that overrides the folder name regepx */
     public static final String FOLDER_NAME_REGEXP_PROPERTY = "sling.jcrinstall.folder.name.regexp";
@@ -111,8 +112,14 @@ public class RepositoryObserver implements Runnable, BundleListener {
         lastBundleEvent = System.currentTimeMillis();
         
     	// TODO make this more configurable?
-    	final String [] roots = DEFAULT_ROOTS; 
-    	filenameFilter = new RegexpFilter(DEFAULT_FILENAME_REGEXP);
+    	final String [] roots = DEFAULT_ROOTS;
+
+    	/** NodeConverters setup
+         *	Using services and a whiteboard pattern for these would be nice,
+         * 	but that could be problematic at startup due to async loading
+         */
+    	converters.add(new FileNodeConverter());
+    	converters.add(new ConfigNodeConverter());
     	
     	String folderNameRegexp = getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp == null) {
@@ -345,10 +352,11 @@ public class RepositoryObserver implements Runnable, BundleListener {
     
     /** Let our WatchedFolders run their scanning cycles */ 
     void runOneCycle() throws Exception {
+    	boolean forceScan = false;
         addNewWatchedFolders();
     	for(WatchedFolder wf : folders) {
-    		wf.scanIfNeeded();
-    	}
+    		wf.scanIfNeeded(converters);
+        }
     }
     
     Properties loadProperties(File f) {

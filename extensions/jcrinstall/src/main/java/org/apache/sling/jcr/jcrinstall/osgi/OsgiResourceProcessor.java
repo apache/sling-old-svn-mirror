@@ -26,8 +26,8 @@ import java.util.Map;
  */
 public interface OsgiResourceProcessor {
     
-    /** True if this processor can process the given uri */
-    boolean canProcess(String uri);
+    /** True if this processor can process the given data */
+    boolean canProcess(String uri, InstallableData data);
     
     /** Install or update supplied resource 
      *  @param uri Unique identifier for the resource

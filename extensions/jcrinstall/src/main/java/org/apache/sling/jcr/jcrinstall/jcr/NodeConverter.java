@@ -16,31 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.jcr;
 
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
+import javax.jcr.Node;
 
-/** Simple regexp-based filter for folder and file names */ 
-class RegexpFilter {
-    private final Pattern pattern;
-    private final String regexp;
-    
-    RegexpFilter(String regexp) throws PatternSyntaxException {
-        this.regexp = regexp;
-        pattern = Pattern.compile(regexp);
-    }
-    
-    boolean accept(String path) {
-        return pattern.matcher(path).matches();
-    }
-    
-    @Override 
-    public String toString() {
-    	return getClass().getSimpleName() + " (" + regexp + ")";
-    }
-    
-    String getRegexp() {
-        return regexp;
-    }
+import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+
+/** Convert a Node to InstallableData */
+public interface NodeConverter {
+	InstallableData convertNode(Node n) throws Exception;
 }

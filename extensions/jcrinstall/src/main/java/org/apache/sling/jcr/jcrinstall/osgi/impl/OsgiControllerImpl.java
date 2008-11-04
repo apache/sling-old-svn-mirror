@@ -21,7 +21,6 @@ package org.apache.sling.jcr.jcrinstall.osgi.impl;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -31,12 +30,7 @@ import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -116,7 +110,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     
     public int installOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
         int result = IGNORED;
-        final OsgiResourceProcessor p = getProcessor(uri);
+        final OsgiResourceProcessor p = getProcessor(uri, data);
         if (p != null) {
             try {
                 final Map<String, Object> map = storage.getMap(uri);
@@ -128,21 +122,21 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
             } catch(IOException ioe) {
                 throw ioe;
             } catch(Exception e) {
-                throw new JcrInstallException("Exception in installOrUpdate", e);
+                throw new JcrInstallException("Exception in installOrUpdate (" + uri + ")", e);
             }
         }
         return result;
     }
 
     public void uninstall(String uri) throws JcrInstallException {
-        final OsgiResourceProcessor p = getProcessor(uri);
+        final OsgiResourceProcessor p = getProcessor(uri, null);
         if(p != null) {
             try {
                 p.uninstall(uri, storage.getMap(uri));
                 storage.remove(uri);
                 storage.saveToFile();
             } catch(Exception e) {
-                throw new JcrInstallException("Exception in uninstall", e);
+                throw new JcrInstallException("Exception in uninstall (" + uri + ")", e);
             }
         }
     }
@@ -169,7 +163,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     }
 
     /** Return the first processor that accepts given uri, null if not found */
-    OsgiResourceProcessor getProcessor(String uri) {
+    OsgiResourceProcessor getProcessor(String uri, InstallableData data) {
         OsgiResourceProcessor result = null;
 
         if(processors == null) {
@@ -177,7 +171,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         }
 
         for(OsgiResourceProcessor p : processors) {
-            if(p.canProcess(uri)) {
+            if(p.canProcess(uri, data)) {
                 result = p;
                 break;
             }
