@@ -362,9 +362,18 @@ public class SlingAuthenticator implements ManagedService {
 
     private AuthenticationInfo getAuthenticationInfo(
             HttpServletRequest request, HttpServletResponse response) {
+
+        // Get the path used to select the authenticator, if the SlingServlet
+        // itself has been requested without any more info, this will be null
+        // and we assume the root (SLING-722)
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.length() == 0) {
+            pathInfo = "/";
+        }
+        
         AuthenticationHandlerInfo[] local = getAuthenticationHandlers();
         for (int i = 0; i < local.length; i++) {
-            if ( request.getPathInfo().startsWith(local[i].path) ) {
+            if ( pathInfo.startsWith(local[i].path) ) {
                 final AuthenticationInfo authInfo = local[i].handler.authenticate(request,
                     response);
                 if (authInfo != null) {
