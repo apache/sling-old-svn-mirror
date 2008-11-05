@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
@@ -67,6 +69,14 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         eventHelper = new EventHelper(session);
         contentHelper = new ContentHelper(session);
         contentHelper.cleanupContent();
+        
+        // Need the sling namespace for testing
+        final NamespaceRegistry r = session.getWorkspace().getNamespaceRegistry();
+        try {
+        	r.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
+        } catch(RepositoryException ignore) {
+        	// don't fail if already registered
+        }
         
         mockery = new Mockery();
         sequence = mockery.sequence(getClass().getSimpleName());

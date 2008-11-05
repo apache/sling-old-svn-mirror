@@ -60,7 +60,9 @@
             	org.apache.sling.jcr.jcrinstall.jcr
             </Export-Package>
             <Private-Package>org.apache.sling.jcr.jcrinstall.*</Private-Package>
-          </instructions>
+			<Sling-Nodetypes>SLING-INF/nodetypes/osgiconfig.cnd</Sling-Nodetypes>
+			<Sling-Namespaces>sling=http://sling.apache.org/jcr/sling/1.0</Sling-Namespaces>
+		  </instructions>
         </configuration>
       </plugin>
     </plugins>
