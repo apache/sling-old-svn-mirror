@@ -27,15 +27,19 @@ class ConfigurationPid {
     private final String factoryPid;
 
     public ConfigurationPid(String path) {
-        // cut off path and extension
+        // cut off path
         String pid = path;
         final int lastSlash = path.lastIndexOf('/');
         if(lastSlash >= 0) {
             pid = path.substring(lastSlash + 1);
         }
-        final int lastDot = pid.lastIndexOf('.');
-        if(lastDot >= 0) {
-            pid = pid.substring(0, lastDot);
+        
+        // cut off extension if it's .cfg
+        if(pid.endsWith(ConfigResourceProcessor.CONFIG_EXTENSION)) {
+            final int lastDot = pid.lastIndexOf('.');
+            if(lastDot >= 0) {
+                pid = pid.substring(0, lastDot);
+            }
         }
 
         // split pid and factory pid alias

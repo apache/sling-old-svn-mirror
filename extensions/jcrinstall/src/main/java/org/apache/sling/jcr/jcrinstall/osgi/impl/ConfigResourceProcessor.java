@@ -113,7 +113,7 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         final ConfigurationPid pid = new ConfigurationPid(uri);
         final Configuration cfg = getConfiguration(pid, false);
         if(cfg == null) {
-            log.debug("Config {} deleted but {} not found, ignoring", uri, pid);
+            log.debug("Cannot delete config {}, pid {} not found, ignored", uri, pid);
         } else {
             log.info("Deleting config {} (uri = {})", pid, uri);
             cfg.delete();
