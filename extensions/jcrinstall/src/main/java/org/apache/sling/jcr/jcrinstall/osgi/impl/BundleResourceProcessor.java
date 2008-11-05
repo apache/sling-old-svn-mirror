@@ -208,7 +208,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
         final Long longId = (Long) attributes.get(KEY_BUNDLE_ID);
         if (longId == null) {
             log.debug(
-                "No bundle id in metadata for {}, bundle cannot be uninstalled.",
+                "Bundle {} cannot be uninstalled, bundle id not found, ignored",
                 uri);
         } else {
             final Bundle b = ctx.getBundle(longId);

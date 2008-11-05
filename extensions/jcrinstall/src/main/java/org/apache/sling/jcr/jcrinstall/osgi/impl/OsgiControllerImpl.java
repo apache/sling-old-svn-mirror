@@ -129,15 +129,18 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     }
 
     public void uninstall(String uri) throws JcrInstallException {
-        final OsgiResourceProcessor p = getProcessor(uri, null);
-        if(p != null) {
-            try {
-                p.uninstall(uri, storage.getMap(uri));
-                storage.remove(uri);
-                storage.saveToFile();
-            } catch(Exception e) {
-                throw new JcrInstallException("Exception in uninstall (" + uri + ")", e);
-            }
+        try {
+	        // let each processor try to uninstall, one of them
+        	// should know how that handle uri
+	    	for(OsgiResourceProcessor p : this.processors) {
+	                p.uninstall(uri, storage.getMap(uri));
+	    	}
+	    	
+	        storage.remove(uri);
+	        storage.saveToFile();
+	        
+        } catch(Exception e) {
+            throw new JcrInstallException("Exception in uninstall (" + uri + ")", e);
         }
     }
 
