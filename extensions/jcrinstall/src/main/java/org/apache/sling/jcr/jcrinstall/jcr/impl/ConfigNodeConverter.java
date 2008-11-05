@@ -44,6 +44,8 @@ class ConfigNodeConverter implements NodeConverter {
 	
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
+	public static final String CONFIG_NODE_TYPE = "sling:OsgiConfig";
+	
 	/**	TODO making this dynamic and optional would be better, but
 	 * 	that would probably create issues at startup 
 	 * 	@scr.reference 
@@ -55,12 +57,14 @@ class ConfigNodeConverter implements NodeConverter {
 	 */
 	public InstallableData convertNode(Node n) throws Exception {
 		InstallableData result = null;
-		
-		// TODO use a mixin to identify these nodes?
-		if(n.isNodeType("nt:unstructured")) {
+
+		// We only consider CONFIG_NODE_TYPE nodes
+		if(n.isNodeType(CONFIG_NODE_TYPE)) {
 			final Dictionary<String, Object> config = load(n);
 			result = new ConfigInstallableData(config);
 			log.debug("Converted node {} to {}", n.getPath(), result);
+		} else {
+			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());
 		}
 		return result;
 	}
