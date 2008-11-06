@@ -20,4 +20,4 @@
 <sling = 'http://sling.apache.org/jcr/sling/1.0'>
 
 // A jcrinstall configuration node
-[sling:OsgiConfig] > nt:unstructured
+[sling:OsgiConfig] > nt:unstructured, nt:hierarchyNode
