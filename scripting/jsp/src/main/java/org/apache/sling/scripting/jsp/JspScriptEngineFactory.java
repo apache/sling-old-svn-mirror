@@ -190,7 +190,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             // prepare some classes
             prepareJasperClasses();
 
-            ioProvider = new SlingIOProvider(repository);
+            ioProvider = new SlingIOProvider(repository, slingServletContext);
 
             tldLocationsCache = new SlingTldLocationsCache(slingServletContext,
                 componentContext.getBundleContext());
