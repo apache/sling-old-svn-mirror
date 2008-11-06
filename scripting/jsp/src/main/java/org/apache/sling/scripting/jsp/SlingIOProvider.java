@@ -32,6 +32,7 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.ServletContext;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
@@ -52,15 +53,19 @@ class SlingIOProvider implements IOProvider {
 
     private final SlingRepository repository;
 
-    private ThreadLocal<ResourceResolver> requestResourceResolver;
+    private final ThreadLocal<ResourceResolver> requestResourceResolver;
 
     // private session for write access
-    private ThreadLocal<Session> privateSession;
+    private final ThreadLocal<Session> privateSession;
+    
+    // used to find out about the mime type for created files
+    private final ServletContext servletContext;
 
-    SlingIOProvider(SlingRepository repository) {
+    SlingIOProvider(SlingRepository repository, ServletContext servletContext) {
         this.repository = repository;
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
         this.privateSession = new ThreadLocal<Session>();
+        this.servletContext = servletContext;
     }
 
     void setRequestResourceResolver(ResourceResolver resolver) {
@@ -80,6 +85,10 @@ class SlingIOProvider implements IOProvider {
         }
     }
 
+    ServletContext getServletContext() {
+        return servletContext;
+    }
+    
     // ---------- IOProvider interface -----------------------------------------
 
     /**
@@ -377,12 +386,17 @@ class SlingIOProvider implements IOProvider {
                     contentNode = fileNode.addNode("jcr:content", "nt:resource");
                 }
 
+                String mimeType = repositoryOutputProvider.getServletContext().getMimeType(
+                    fileName);
+                if (mimeType == null) {
+                    mimeType = "application/octet-stream";
+                }
+                
                 contentNode.setProperty("jcr:lastModified",
                     System.currentTimeMillis());
                 contentNode.setProperty("jcr:data", new ByteArrayInputStream(
                     buf, 0, size()));
-                contentNode.setProperty("jcr:mimeType",
-                    "application/octet-stream");
+                contentNode.setProperty("jcr:mimeType", mimeType);
 
                 parentNode.save();
             } catch (RepositoryException re) {
