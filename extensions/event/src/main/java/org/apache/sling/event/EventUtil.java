@@ -388,7 +388,11 @@ public abstract class EventUtil {
                     oos.writeInt(propsAsBlob.size());
                     for(final String propName : propsAsBlob) {
                         oos.writeObject(propName);
-                        oos.writeObject(properties.get(propName));
+                        try {
+                            oos.writeObject(properties.get(propName));
+                        } catch (IOException ioe) {
+                            throw new RepositoryException("Unable to serialize property " + propName, ioe);
+                        }
                     }
                     oos.close();
                     node.setProperty(binPropertyName, new ByteArrayInputStream(baos.toByteArray()));
