@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -35,7 +36,7 @@ import org.osgi.service.event.Event;
  */
 public class EventPropertiesMap
     extends Dictionary<String, Object>
-    implements Map<String, Object> {
+    implements Map<String, Object>, Serializable {
 
     private final Map<String, Object> delegatee;
 
