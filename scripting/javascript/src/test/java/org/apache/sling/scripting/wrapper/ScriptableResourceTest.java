@@ -19,12 +19,16 @@
 package org.apache.sling.scripting.wrapper;
 
 import javax.jcr.Item;
+import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.testing.sling.MockResourceResolver;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
 import org.mozilla.javascript.Undefined;
@@ -34,11 +38,25 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
 
     private Node node;
 
+    private static final ResourceResolver RESOURCE_RESOLVER = new MockResourceResolver();
+
+    private static final String RESOURCE_TYPE = "testWrappedResourceType";
+
+    private static final String RESOURCE_SUPER_TYPE = "testWrappedResourceSuperType";
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
         node = getNewNode();
+
+        try {
+            node.getSession().getWorkspace().getNamespaceRegistry().registerNamespace(
+                SlingConstants.NAMESPACE_PREFIX,
+                JcrResourceConstants.SLING_NAMESPACE_URI);
+        } catch (NamespaceException ne) {
+            // don't care, might happen if already registered
+        }
     }
 
     public void testDefaultValuePath() throws Exception {
@@ -50,6 +68,67 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             data));
         assertEquals(node.getPath(), script.eval("resource.path", data));
         assertEquals(node.getPath(), script.eval("resource.getPath()", data));
+    }
+
+    public void testResourceType() throws Exception {
+        // set resource and resource super type
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
+            RESOURCE_TYPE);
+        node.setProperty(
+            JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY,
+            RESOURCE_SUPER_TYPE);
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        // the resourceType of the resource
+        assertEquals(RESOURCE_TYPE, script.eval("resource.type", data));
+        assertEquals(RESOURCE_TYPE, script.eval("resource.resourceType", data));
+        assertEquals(RESOURCE_TYPE, script.eval("resource.getResourceType()",
+            data));
+    }
+
+    public void testResourceSuperType() throws Exception {
+        // set resource and resource super type
+        node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
+            RESOURCE_TYPE);
+        node.setProperty(
+            JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY,
+            RESOURCE_SUPER_TYPE);
+
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        // the resourceType of the resource
+        assertEquals(RESOURCE_SUPER_TYPE, script.eval(
+            "resource.resourceSuperType", data));
+        assertEquals(RESOURCE_SUPER_TYPE, script.eval(
+            "resource.getResourceSuperType()", data));
+    }
+
+    public void testResourceMetadata() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        // official API
+        assertResourceMetaData(script.eval("resource.resourceMetadata", data));
+        assertResourceMetaData(script.eval("resource.getResourceMetadata()",
+            data));
+
+        // deprecated mappings
+        assertResourceMetaData(script.eval("resource.meta", data));
+        assertResourceMetaData(script.eval("resource.getMetadata()", data));
+    }
+
+    public void testResourceResolver() throws Exception {
+        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
+        data.put("resource", new TestResource(node));
+
+        // official API
+        assertEquals(RESOURCE_RESOLVER, script.eval(
+            "resource.resourceResolver", data));
+        assertEquals(RESOURCE_RESOLVER, script.eval(
+            "resource.getResourceResolver()", data));
     }
 
     public void testAdaptToNode() throws Exception {
@@ -77,16 +156,6 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         assertEquals(Undefined.instance, script.eval(
             "resource.adaptTo(Packages.java.util.Date)", data));
     }
-    
-    public void testResourceWrapperClass() throws Exception {
-        final ScriptEngineHelper.Data data = new ScriptEngineHelper.Data();
-        data.put("resource", new TestResource(node));
-        
-        assertEquals(
-                "org.apache.sling.scripting.javascript.wrapper.ScriptableResource", 
-                script.eval("resource.javascriptWrapperClass.getName()", data)
-        );
-    }
 
     private void assertEquals(Node expected, Object actual) {
         while (actual instanceof Wrapper) {
@@ -96,20 +165,26 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         super.assertEquals(expected, actual);
     }
 
+    private void assertResourceMetaData(Object metaData) throws Exception {
+        if (metaData instanceof ResourceMetadata) {
+            ResourceMetadata rm = (ResourceMetadata) metaData;
+            rm.getResolutionPath().equals(node.getPath());
+        } else {
+            fail("Expected ResourceMetadata, got " + metaData);
+        }
+    }
+
     private static class TestResource implements Resource {
 
         private final Node node;
 
         private final String path;
 
-        private final String resourceType;
-
         private final ResourceMetadata metadata;
 
         TestResource(Node node) throws RepositoryException {
             this.node = node;
             this.path = node.getPath();
-            this.resourceType = node.getPrimaryNodeType().getName();
             this.metadata = new ResourceMetadata();
             this.metadata.setResolutionPath(this.path);
         }
@@ -123,16 +198,15 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         }
 
         public ResourceResolver getResourceResolver() {
-            // none, don't care
-            return null;
+            return RESOURCE_RESOLVER;
         }
 
         public String getResourceType() {
-            return resourceType;
+            return RESOURCE_TYPE;
         }
 
         public String getResourceSuperType() {
-            return null;
+            return RESOURCE_SUPER_TYPE;
         }
 
         @SuppressWarnings("unchecked")
