@@ -31,10 +31,12 @@ import org.mozilla.javascript.Wrapper;
  * data [Item] getItem(); [Item] item [String] getResourceType(); [String] type
  * [String] getPath(); [String] path
  */
-public class ScriptableResource extends ScriptableObject implements SlingWrapper {
+public class ScriptableResource extends ScriptableObject implements
+        SlingWrapper {
 
     public static final String CLASSNAME = "Resource";
-    public static final Class<?> [] WRAPPED_CLASSES = { Resource.class };
+
+    public static final Class<?>[] WRAPPED_CLASSES = { Resource.class };
 
     private Resource resource;
 
@@ -49,51 +51,143 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         this.resource = (Resource) res;
     }
 
-    public Class<?> [] getWrappedClasses() {
-        return WRAPPED_CLASSES;
-    }
-
-    @Override
-    public String getClassName() {
-        return CLASSNAME;
-    }
-
-    public Object jsFunction_getObject() {
-        return toJS(resource.adaptTo(Object.class));
-    }
-
-    public String jsFunction_getResourceType() {
-        return resource.getResourceType();
-    }
-
-    public String jsGet_type() {
-        return this.jsFunction_getResourceType();
-    }
-
-    public String jsFunction_getPath() {
-        return resource.getPath();
-    }
-
+    /**
+     * Mapps getPath() method as path property.
+     */
     public String jsGet_path() {
         return this.jsFunction_getPath();
     }
 
+    /**
+     * Mapps getPath() method as getPath() method.
+     */
+    public String jsFunction_getPath() {
+        return resource.getPath();
+    }
+
+    /**
+     * Maps getResourceType() to type property. This property is deprecated
+     * since it does not correctly map the getResourceType() method name to a
+     * property.
+     * 
+     * @deprecated since 2.1.0 because it maps the method name incorrectly.
+     */
+    public String jsGet_type() {
+        return this.jsFunction_getResourceType();
+    }
+
+    /**
+     * Maps getResourceType() to resourceType property.
+     */
+    public String jsGet_resourceType() {
+        return this.jsFunction_getResourceType();
+    }
+
+    /**
+     * Maps getResourceType() to the getResourceType() method.
+     */
+    public String jsFunction_getResourceType() {
+        return resource.getResourceType();
+    }
+
+    /**
+     * Maps getResourceSuperType() to resourceSuperType property.
+     */
+    public String jsGet_resourceSuperType() {
+        return this.jsFunction_getResourceSuperType();
+    }
+
+    /**
+     * Maps getResourceSuperType() to the getResourceSuperType() method.
+     */
+    public String jsFunction_getResourceSuperType() {
+        return resource.getResourceSuperType();
+    }
+
+    /**
+     * Maps getResourceMetadata() to meta property. This property is deprecated
+     * since it does not correctly map the getResourceType() method name to a
+     * property.
+     * 
+     * @deprecated since 2.1.0 because it maps the method name incorrectly.
+     */
+    public Object jsGet_meta() {
+        return jsFunction_getResourceMetadata();
+    }
+
+    /**
+     * Maps getResourceMetadata() to resourceMetadata property.
+     */
+    public Object jsGet_resourceMetadata() {
+        return jsFunction_getResourceMetadata();
+    }
+
+    /**
+     * Maps getResourceMetadata() to getMetadata() method. This method is
+     * deprecated since it has the wrong name to support the
+     * getResourceMetadata() method.
+     * 
+     * @deprecated since 2.1.0 because the method is named incorrectly.
+     */
     public Object jsFunction_getMetadata() {
+        return jsFunction_getResourceMetadata();
+    }
+
+    /**
+     * Maps getResourceMetadata() to getResourceMetadata method.
+     */
+    public Object jsFunction_getResourceMetadata() {
         return toJS(resource.getResourceMetadata());
     }
 
-    public Object jsGet_meta() {
-        return jsFunction_getMetadata();
-    }
-
+    /**
+     * Maps getResourceResolver() to resourceResolver property.
+     */
     public Object jsFunction_getResourceResolver() {
         return toJS(resource.getResourceResolver());
     }
 
+    /**
+     * Maps getResourceResolver() to getResourceResolver method.
+     */
     public Object jsGet_resourceResolver() {
         return jsFunction_getResourceResolver();
     }
 
+    /**
+     * Helper method to easily retrieve the default adapted object of the
+     * resource. In case of Object Content Mapping support, this method will
+     * return the correctly mapped content object for this resource.
+     * <p>
+     * Calling this method is equivalent to calling the adaptTo method with the
+     * argument "java.lang.Object".
+     */
+    public Object jsFunction_getObject() {
+        return toJS(resource.adaptTo(Object.class));
+    }
+
+    /**
+     * Implements the adaptTo() method for JavaScript scripts. This method takes
+     * either a java.lang.Class object or a String containing the fully
+     * qualified name of the class to adapt to.
+     * <p>
+     * Supporting String as an argument to this method allows for much easier
+     * use in JavaScript since instead of for example writing
+     * <i>"javax.jcr.Node"</i> instead of the much clumsier
+     * <i>Packages.javax.jcr.Node</i>.
+     * 
+     * @param cx The current Rhino context
+     * @param thisObj The ScriptableResource object in which the method is
+     *            called.
+     * @param args The argument vector. Only the first argument is used which is
+     *            expected to be a Class object or a String. If no argument is
+     *            supplied or it has the wrong type, this method just returns
+     *            <code>null</code>.
+     * @param funObj The object representing the JavaScript adaptTo function.
+     * @return The object to which the resource adapts or <code>null</code> if
+     *         the resource does not adapt to the required type or if the
+     *         argument is of the wrong type or missing.
+     */
     public static Object jsFunction_adaptTo(Context cx, Scriptable thisObj,
             Object[] args, Function funObj) {
 
@@ -133,10 +227,13 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         return Undefined.instance;
     }
 
-    public Class<?> jsGet_javascriptWrapperClass() {
-        return getClass();
+    // --------- ScriptableObject API
+
+    @Override
+    public String getClassName() {
+        return CLASSNAME;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
@@ -147,6 +244,12 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         this.resource = entry;
     }
 
+    // ---------- SlingWrapper API
+
+    public Class<?>[] getWrappedClasses() {
+        return WRAPPED_CLASSES;
+    }
+
     // ---------- Wrapper interface --------------------------------------------
 
     // returns the wrapped resource
@@ -154,7 +257,7 @@ public class ScriptableResource extends ScriptableObject implements SlingWrapper
         return resource;
     }
 
-    //---------- Internal helper ----------------------------------------------
+    // ---------- Internal helper ----------------------------------------------
 
     private Object toJS(Object javaObject) {
         if (javaObject == null) {
