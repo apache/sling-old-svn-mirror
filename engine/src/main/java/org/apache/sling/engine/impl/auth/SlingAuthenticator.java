@@ -217,7 +217,7 @@ public class SlingAuthenticator implements ManagedService {
             try {
                 log.debug("authenticate: credentials, trying to get a session");
                 Session session = getRepository().login(
-                    authInfo.getCredentials(), null);
+                    authInfo.getCredentials(), authInfo.getWorkspaceName());
 
                 // handle impersonation
                 session = handleImpersonation(req, res, session);

@@ -40,24 +40,48 @@ public class AuthenticationInfo {
     /** The <code>javax.jcr.Credentials</code> extracted from the request */
     private final Credentials credentials;
 
+    /**
+     * The name of the workspace this user is wishing to login,
+     * <code>null</code> means the default workspace.
+     */
+    private final String workspaceName;
+
     /** Creates an empty instance, used for the {@link #DOING_AUTH} constants */
     private AuthenticationInfo() {
-        authType = null;
-        credentials = null;
+        this(null, null, null);
     }
 
     /**
      * Creates an instance of this class with the given authentication type and
-     * credentials.
-     *
+     * credentials connecting to the default workspace as if the
+     * {@link #AuthenticationInfo(String, Credentials, String)} method would be
+     * called with a <code>null</code> workspace name.
+     * 
      * @param authType The authentication type, must not be <code>null</code>.
      * @param credentials The credentials, must not be <code>null</code>.
      * @see #getAuthType()
      * @see #getCredentials()
      */
     public AuthenticationInfo(String authType, Credentials credentials) {
+        this(authType, credentials, null);
+    }
+
+    /**
+     * Creates an instance of this class with the given authentication type and
+     * credentials.
+     * 
+     * @param authType The authentication type, must not be <code>null</code>.
+     * @param credentials The credentials, must not be <code>null</code>.
+     * @param workspaceName The name of the workspace to connect to, may be
+     *            <code>null</code> to connect to the default workspace.
+     * @see #getAuthType()
+     * @see #getCredentials()
+     */
+    public AuthenticationInfo(String authType, Credentials credentials,
+            String workspaceName) {
         this.authType = authType;
         this.credentials = credentials;
+        this.workspaceName = workspaceName;
     }
 
     /**
@@ -80,4 +104,12 @@ public class AuthenticationInfo {
         return credentials;
     }
 
+    /**
+     * Returns the name of the workspace the user contained in this instance
+     * wishes to connect to. This may be <code>null</code>, in which case the
+     * user is connected to the default workspace.
+     */
+    public String getWorkspaceName() {
+        return workspaceName;
+    }
 }
