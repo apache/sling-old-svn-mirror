@@ -284,10 +284,19 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     }
 
     public void setContentType(String type) {
+        // SLING-726 No handling required since this seems to be correct
         this.registerHeader(HEADER_CONTENT_TYPE, type, false);
         super.setContentType(type);
     }
 
+    @Override
+    public void setCharacterEncoding(String charset) {
+        // SLING-726 Ignore call if getWriter() has been called
+        if (writer == null) {
+            super.setCharacterEncoding(charset);
+        }
+    }
+    
     public void setDateHeader(String name, long date) {
         this.registerHeader(name, toDateString(date), false);
         super.setDateHeader(name, date);
