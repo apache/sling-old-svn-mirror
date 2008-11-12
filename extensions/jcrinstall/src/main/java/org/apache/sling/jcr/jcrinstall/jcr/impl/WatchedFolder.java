@@ -207,10 +207,10 @@ class WatchedFolder implements EventListener {
         // be re-installed
         if(count > 0 && roRules!=null) {
             for(String str : roRules.getLowerPriorityResources(path)) {
-                rescanFoldersForPath(path, "Scheduling scan of lower priority {} folder after deletes in {} folder");
+                rescanFoldersForPath(str, "Scheduling scan of lower priority {} folder after deletes in {} folder");
             }
             for(String str : roRules.getHigherPriorityResources(path)) {
-                rescanFoldersForPath(path, "Scheduling scan of higher priority {} folder after deletes in {} folder");
+                rescanFoldersForPath(str, "Scheduling scan of higher priority {} folder after deletes in {} folder");
             }
         }
     }
@@ -218,7 +218,7 @@ class WatchedFolder implements EventListener {
     private void rescanFoldersForPath(String pathToScan, String logFormat) {
         for(WatchedFolder wf : allFolders) {
             if(pathToScan.equals(wf.path)) {
-                log.info(logFormat, wf.path, path);
+                log.info(logFormat, wf.path, pathToScan);
                 wf.scheduleScan();
             }
         }
