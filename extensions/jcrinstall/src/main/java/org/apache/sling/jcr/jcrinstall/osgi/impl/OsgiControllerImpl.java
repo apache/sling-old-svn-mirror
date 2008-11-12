@@ -30,6 +30,7 @@ import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
+import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -58,6 +59,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private boolean running;
     private long loopDelay;
+    private ResourceOverrideRules roRules;
 
     public static final String STORAGE_FILENAME = "controller.storage";
 
@@ -110,6 +112,30 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     
     public int installOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
         int result = IGNORED;
+        
+        // If a corresponding higher priority resource is already installed, ignore this one
+        if(roRules != null) {
+            for(String r : roRules.getHigherPriorityResources(uri)) {
+                if(storage.contains(r)) {
+                    log.info("Resource {} ignored, overridden by {} which has higher priority",
+                            uri, r);
+                    return IGNORED;
+                }
+            }
+        }
+        
+        // If a corresponding lower priority resource is installed, uninstall it first
+        if(roRules != null) {
+            for(String r : roRules.getLowerPriorityResources(uri)) {
+                if(storage.contains(r)) {
+                    log.info("Resource {} overrides {}, uninstalling the latter",
+                            uri, r);
+                    uninstall(uri);
+                }
+            }
+        }
+        
+        // let suitable OsgiResourceProcessor process install
         final OsgiResourceProcessor p = getProcessor(uri, data);
         if (p != null) {
             try {
@@ -217,5 +243,9 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         }
 
         log.info("{} thread {} ends", getClass().getSimpleName(), Thread.currentThread().getName());
+    }
+    
+    public void setResourceOverrideRules(ResourceOverrideRules r) {
+        roRules = r;
     }
 }

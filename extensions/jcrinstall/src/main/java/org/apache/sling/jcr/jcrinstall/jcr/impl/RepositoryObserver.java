@@ -41,6 +41,7 @@ import javax.jcr.observation.Event;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.service.component.ComponentContext;
@@ -68,6 +69,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
     protected Set<WatchedFolder> folders;
     private RegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
+    private ResourceOverrideRules roRules;
     private boolean running;
     
     /** @scr.reference */
@@ -111,8 +113,13 @@ public class RepositoryObserver implements Runnable, BundleListener {
         }
         lastBundleEvent = System.currentTimeMillis();
         
-    	// TODO make this more configurable?
+    	// TODO make this more configurable (in sync with ResourceOverrideRulesImpl)
     	final String [] roots = DEFAULT_ROOTS;
+        final String [] main = { "/libs/" };
+        final String [] override = { "/apps/" };
+    	
+        roRules = new ResourceOverrideRulesImpl(main, override);
+    	osgiController.setResourceOverrideRules(roRules);
 
     	/** NodeConverters setup
          *	Using services and a whiteboard pattern for these would be nice,
@@ -202,7 +209,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
     		final Set<String> paths = w.getAndClearPaths();
     		if(paths != null) {
     			for(String path : paths) {
-    				folders.add(new WatchedFolder(repository, path, osgiController, filenameFilter, scanDelayMsec));
+    				folders.add(new WatchedFolder(repository, path, osgiController, filenameFilter, scanDelayMsec, roRules));
     			}
     		}
     	}
@@ -239,7 +246,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
     void findWatchedFolders(Node n, Set<WatchedFolder> setToUpdate) throws RepositoryException 
     {
         if (folderNameFilter.accept(n.getPath())) {
-            setToUpdate.add(new WatchedFolder(repository, n.getPath(), osgiController, filenameFilter, scanDelayMsec));
+            setToUpdate.add(new WatchedFolder(repository, n.getPath(), osgiController, filenameFilter, scanDelayMsec, roRules));
         }
         final NodeIterator it = n.getNodes();
         while (it.hasNext()) {
@@ -294,7 +301,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
         // on / and use it to check for any deletions, even 
         // if the corresponding WatchFolders are gone
         try {
-            final WatchedFolder rootWf = new WatchedFolder(repository, "/", osgiController, filenameFilter, 0L);
+            final WatchedFolder rootWf = new WatchedFolder(repository, "/", osgiController, filenameFilter, 0L, null);
             rootWf.checkDeletions(osgiController.getInstalledUris());
         } catch(Exception e) {
             log.warn("Exception in root WatchFolder.checkDeletions call", e);

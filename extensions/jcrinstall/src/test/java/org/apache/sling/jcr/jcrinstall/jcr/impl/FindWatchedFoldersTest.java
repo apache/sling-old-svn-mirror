@@ -26,6 +26,7 @@ import javax.jcr.Session;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 
@@ -60,6 +61,7 @@ public class FindWatchedFoldersTest extends RepositoryTestBase {
         osgiController = mockery.mock(OsgiController.class);
         final Set<String> installedUri = new HashSet<String>();
         mockery.checking(new Expectations() {{
+            allowing(osgiController).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(osgiController).getInstalledUris(); will(returnValue(installedUri));
         }});
     }

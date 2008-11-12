@@ -19,7 +19,9 @@
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -36,6 +38,7 @@ import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +51,10 @@ class WatchedFolder implements EventListener {
     private final OsgiController controller;
     private long nextScan;
     private final Session session;
+    private final ResourceOverrideRules roRules;
     protected final Logger log = LoggerFactory.getLogger(getClass());
+    
+    private static List<WatchedFolder> allFolders = new ArrayList<WatchedFolder>();
     
     /**
      * After receiving JCR events, we wait for this many msec before
@@ -57,10 +63,11 @@ class WatchedFolder implements EventListener {
     private final long scanDelayMsec;
 
     WatchedFolder(SlingRepository repository, String path, OsgiController ctrl, 
-            RegexpFilter filenameFilter, long scanDelayMsec) throws RepositoryException {
+            RegexpFilter filenameFilter, long scanDelayMsec, ResourceOverrideRules ror) throws RepositoryException {
         this.path = path;
         this.controller = ctrl;
         this.scanDelayMsec = scanDelayMsec;
+        this.roRules = ror;
         
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
         
@@ -72,11 +79,17 @@ class WatchedFolder implements EventListener {
         final boolean noLocal = true;
         session.getWorkspace().getObservationManager().addEventListener(this, eventTypes, path,
                 isDeep, null, null, noLocal);
-        
+
+        synchronized(allFolders) {
+            allFolders.add(this);
+        }
         log.info("Watching folder " + path);
     }
     
     void cleanup() {
+        synchronized(allFolders) {
+            allFolders.remove(this);
+        }
     	try {
 	    	session.getWorkspace().getObservationManager().removeEventListener(this);
 	    	session.logout();
@@ -113,6 +126,11 @@ class WatchedFolder implements EventListener {
      * 	a bit before processing event bursts.
      */
     public void onEvent(EventIterator it) {
+        scheduleScan();
+    }
+    
+    /** Trigger a scan, after the usual delay */
+    void scheduleScan() {
         nextScan = System.currentTimeMillis() + scanDelayMsec;
     }
     
@@ -169,9 +187,11 @@ class WatchedFolder implements EventListener {
     /** Check for deleted resources and uninstall them */
     void checkDeletions(Set<String> installedUri) throws Exception {
         // Check deletions
+        int count = 0;
         for(String uri : installedUri) {
             if(uri.startsWith(path)) {
                 if(!session.itemExists(uri)) {
+                    count++;
                     log.info("Resource {} has been deleted, uninstalling", uri);
             		// a single failure must not block the whole thing (SLING-655)
                     try {
@@ -180,6 +200,26 @@ class WatchedFolder implements EventListener {
                     	log.warn("Failed to uninstall " + uri, jie);
                     }
                 }
+            }
+        }
+
+        // If any deletions, resources in lower/higher priority folders might need to
+        // be re-installed
+        if(count > 0 && roRules!=null) {
+            for(String str : roRules.getLowerPriorityResources(path)) {
+                rescanFoldersForPath(path, "Scheduling scan of lower priority {} folder after deletes in {} folder");
+            }
+            for(String str : roRules.getHigherPriorityResources(path)) {
+                rescanFoldersForPath(path, "Scheduling scan of higher priority {} folder after deletes in {} folder");
+            }
+        }
+    }
+    
+    private void rescanFoldersForPath(String pathToScan, String logFormat) {
+        for(WatchedFolder wf : allFolders) {
+            if(pathToScan.equals(wf.path)) {
+                log.info(logFormat, wf.path, path);
+                wf.scheduleScan();
             }
         }
     }

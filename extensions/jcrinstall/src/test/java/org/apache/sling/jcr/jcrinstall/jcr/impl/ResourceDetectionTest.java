@@ -36,6 +36,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
 import org.apache.sling.jcr.jcrinstall.osgi.impl.MockInstallableData;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -103,6 +104,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         // Define the whole sequence of calls to OsgiController,
         // Using getLastModified calls to mark the test phases
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             
             one(c).getDigest("phase1"); 
@@ -165,6 +167,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Define the whole sequence of calls to OsgiController,
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
@@ -206,6 +209,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final OsgiController c = mockery.mock(OsgiController.class);
         
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
@@ -240,6 +244,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).uninstall("/libs/foo/bar/install/dummy.jar");
@@ -264,6 +269,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
@@ -297,6 +303,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Define the whole sequence of calls to OsgiController,
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
@@ -343,6 +350,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Test with first regexp
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
@@ -365,6 +373,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Test with a different regexp, install.A resources must be uninstalled
         mockery.checking(new Expectations() {{
+            allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
             one(c).uninstall(resources[0]);
