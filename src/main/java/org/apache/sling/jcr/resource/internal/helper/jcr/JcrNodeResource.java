@@ -58,7 +58,7 @@ public class JcrNodeResource extends JcrItemResource {
 
     private final String resourceType;
 
-    JcrNodeResource(ResourceResolver resourceResolver, Node node,
+    public JcrNodeResource(ResourceResolver resourceResolver, Node node,
             JcrResourceTypeProvider[] resourceTypeProviders)
             throws RepositoryException {
         super(resourceResolver, node.getPath(), resourceTypeProviders);
