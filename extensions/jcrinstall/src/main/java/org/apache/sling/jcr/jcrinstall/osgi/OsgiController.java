@@ -51,4 +51,7 @@ public interface OsgiController {
      *  @return -1 if we don't have info for given uri
      */
     String getDigest(String uri);
+    
+    /** Optionally set ResourceOverrideRules */
+    void setResourceOverrideRules(ResourceOverrideRules r);
 }
