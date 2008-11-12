@@ -155,6 +155,17 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     }
 
     public void uninstall(String uri) throws JcrInstallException {
+        // If a corresponding higher priority resource is installed, ignore this request
+        if(roRules != null) {
+            for(String r : roRules.getHigherPriorityResources(uri)) {
+                if(storage.contains(r)) {
+                    log.info("Resource {} won't be uninstalled, overridden by {} which has higher priority",
+                            uri, r);
+                    return;
+                }
+            }
+        }
+        
         try {
 	        // let each processor try to uninstall, one of them
         	// should know how that handle uri
