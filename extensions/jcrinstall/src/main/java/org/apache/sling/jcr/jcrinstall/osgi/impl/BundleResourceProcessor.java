@@ -382,13 +382,18 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 try {
                     bundle.start();
                 } catch (BundleException be) {
-                    log.error("Failed starting Bundle {}/{}",
-                        bundle.getSymbolicName(), bundle.getBundleId());
+                    log.error("Failed to start Bundle " 
+                        + bundle.getSymbolicName() + "/" + bundle.getBundleId()
+                        + ", rescheduling for start"
+                        ,be);
 
                     // add the failed bundle to the activeBundles list
-                    // to start them after the next refresh
+                    // to start, and trigger a refresh - the exception might
+                    // be caused by a missing dependency that is in the queue,
+                    // so we want to refresh even if no new bundles were added
                     synchronized (activeBundles) {
                         activeBundles.add(bundleId);
+                        needsRefresh = true;
                     }
                 }
             }
