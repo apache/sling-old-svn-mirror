@@ -19,69 +19,101 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>sling</artifactId>
-    <version>4-incubator-SNAPSHOT</version>
-    <relativePath> ../../sling/parent/</relativePath>
-  </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>4-incubator-SNAPSHOT</version>
+        <relativePath>../../sling/parent/</relativePath>
+    </parent>
 
-  <artifactId>org.apache.sling.runmode</artifactId>
-  <version>2.0.3-incubator-SNAPSHOT</version>
-  <packaging>bundle</packaging>
+    <artifactId>org.apache.sling.runmode</artifactId>
+    <version>2.0.3-incubator-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
-  <name>Sling - RunMode service</name>
-  <description> 
-    Used to enable/disable sets of components
-    based on a list of "run mode" strings.
-  </description>
-  
-  <scm>
-    <connection> scm:svn:http://svn.apache.org/repos/asf/incubator/sling/whiteboard/runmode</connection>
-    <developerConnection> scm:svn:https://svn.apache.org/repos/asf/incubator/sling/whiteboard/runmode</developerConnection>
-    <url> http://svn.apache.org/viewvc/incubator/sling/whiteboard/runmode</url>
-  </scm>
-  
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-scr-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Export-Package>
-              org.apache.sling.runmode,
-              !org.apache.sling.runmode.impl
-            </Export-Package>
-            <Private-Package>org.apache.sling.runmode.impl.*</Private-Package>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.osgi.core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-  </dependencies>
+    <name>Sling - RunMode service</name>
+    <description>
+        Used to enable/disable sets of components based on a list of
+        "run mode" strings.
+    </description>
+
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/whiteboard/runmode
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/whiteboard/runmode
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/whiteboard/runmode
+        </url>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.apache.sling.runmode,
+                            !org.apache.sling.runmode.impl
+                        </Export-Package>
+                        <Private-Package>
+                            org.apache.sling.runmode.impl.*
+                        </Private-Package>
+                        <Import-Package>
+                            javax.servlet.*;
+                            org.apache.felix.shell;
+                            org.apache.felix.webconsole;
+                            resolution:=optional, *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <!-- Shell and WebConsole integration -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.shell</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+    </dependencies>
 </project>
