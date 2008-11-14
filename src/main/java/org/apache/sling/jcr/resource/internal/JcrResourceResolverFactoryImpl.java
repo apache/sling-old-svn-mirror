@@ -241,6 +241,17 @@ public class JcrResourceResolverFactoryImpl
         return backPatterns;
     }
 
+    /**
+     * Getter for rootProviderEntry, making it easier to extend
+     * JcrResourceResolverFactoryImpl. See <a
+     * href="https://issues.apache.org/jira/browse/SLING-730">SLING-730</a>
+     * 
+     * @return Our rootProviderEntry
+     */
+    protected ResourceProviderEntry getRootProviderEntry() {
+        return rootProviderEntry;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
