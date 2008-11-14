@@ -115,6 +115,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
+        	log.debug("FrameworkEvent.PACKAGES_REFRESHED");
             startBundles();
         }
     }
@@ -242,7 +243,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      */
     public void processResourceQueue() {
         if (needsRefresh) {
-            
+        	
             // reset the flag
             needsRefresh = false;
             
@@ -255,11 +256,14 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 }
             }
 
+        	log.debug("Processing resource queue in REFRESH mode, {} active bundles found, refreshing packages", 
+        			activeBundles.size());
+        	
             // refresh now
             packageAdmin.refreshPackages(null);
             
         } else {
-            
+        	log.debug("Processing resource queue in START mode");
             startBundles();
         }
     }
@@ -353,8 +357,8 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * all bundles, which have been freshly installed.
      */
     private void startBundles() {
-        startBundles(activeBundles);
-        startBundles(installedBundles);
+        startBundles(activeBundles, "active");
+        startBundles(installedBundles, "installed");
     }
     
     /**
@@ -366,7 +370,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * 
      * @param bundleIdCollection The IDs of bundles to be started.
      */
-    private void startBundles(Collection<Long> bundleIdCollection) {
+    private void startBundles(Collection<Long> bundleIdCollection, String collectionName) {
+    	log.debug("startBundles({}): {} bundles to process", 
+    			collectionName, bundleIdCollection.size());
+    	
         // get the bundle ids and remove them from the collection
         Long[] bundleIds;
         synchronized (bundleIdCollection) {
