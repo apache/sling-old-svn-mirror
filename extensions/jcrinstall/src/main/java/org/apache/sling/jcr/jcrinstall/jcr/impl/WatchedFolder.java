@@ -195,7 +195,7 @@ class WatchedFolder implements EventListener {
                     log.info("Resource {} has been deleted, uninstalling", uri);
             		// a single failure must not block the whole thing (SLING-655)
                     try {
-                    	controller.uninstall(uri);
+                    	controller.scheduleUninstall(uri);
                     } catch(JcrInstallException jie) {
                     	log.warn("Failed to uninstall " + uri, jie);
                     }
@@ -229,10 +229,10 @@ class WatchedFolder implements EventListener {
     	final String digest = controller.getDigest(path);
     	if(digest == null) {
     		log.info("Resource {} was not installed yet, installing in OsgiController", path);
-    		controller.installOrUpdate(path, fdp);
+    		controller.scheduleInstallOrUpdate(path, fdp);
     	} else if(!digest.equals(fdp.getDigest())) {
     		log.info("Resource {} has been updated, updating in OsgiController", path);
-    		controller.installOrUpdate(path, fdp);
+    		controller.scheduleInstallOrUpdate(path, fdp);
     	} else {
     		log.info("Resource {} not modified, ignoring", path);
     	}

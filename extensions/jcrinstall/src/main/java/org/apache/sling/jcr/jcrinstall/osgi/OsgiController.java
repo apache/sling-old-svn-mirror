@@ -27,19 +27,19 @@ import java.util.Set;
  */
 public interface OsgiController {
     
-    /** Install or update supplied resource 
+    /** Schedule installation or update of supplied resource 
      *  @param uri Unique identifier for the resource
      *  @param data The data to install
      *  @return one of the {@link InstallResultCode} result codes. 
      */
-    int installOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
+    int scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
     
-    /** Uninstall the data that was installed via given uri
+    /** Schedule uninstallation of resource that was installed via given uri
      *  @param uri Unique identifier for the resource
      *  @param attributes metadata stored by the OsgiController, will be
      *      removed after calling this method
      */
-    void uninstall(String uri) throws JcrInstallException;
+    void scheduleUninstall(String uri) throws JcrInstallException;
     
     /** Return the list of uri for resources that have been installed 
      *  by this controller.
@@ -54,4 +54,7 @@ public interface OsgiController {
     
     /** Optionally set ResourceOverrideRules */
     void setResourceOverrideRules(ResourceOverrideRules r);
+    
+    /** Do the actual installs/uninistalls which were scheduled by the other methods */
+    void executeScheduledOperations() throws Exception;
 }

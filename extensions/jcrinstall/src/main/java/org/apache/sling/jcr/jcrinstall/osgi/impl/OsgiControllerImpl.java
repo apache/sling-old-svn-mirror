@@ -52,13 +52,11 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
 */
-public class OsgiControllerImpl implements OsgiController, Runnable, SynchronousBundleListener {
+public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener {
 
     private Storage storage;
     private List<OsgiResourceProcessor> processors;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private boolean running;
-    private long loopDelay;
     private ResourceOverrideRules roRules;
 
     public static final String STORAGE_FILENAME = "controller.storage";
@@ -76,22 +74,17 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
 
     protected void activate(ComponentContext context) throws IOException {
+    	
+    	// Note that, in executeScheduledOperations(),
+    	// processors are called in the order of this list
         processors = new LinkedList<OsgiResourceProcessor>();
         processors.add(new BundleResourceProcessor(context.getBundleContext(), packageAdmin));
         processors.add(new ConfigResourceProcessor(configAdmin));
 
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
-        
-        // start queue processing
-        running = true;
-        final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
-        t.setDaemon(true);
-        t.start();
     }
 
     protected void deactivate(ComponentContext oldContext) {
-        running = false;
-
         if(storage != null) {
             try {
                 storage.saveToFile();
@@ -110,7 +103,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         processors = null;
     }
     
-    public int installOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
+    public int scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
         int result = IGNORED;
         
         // If a corresponding higher priority resource is already installed, ignore this one
@@ -130,7 +123,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
                 if(storage.contains(r)) {
                     log.info("Resource {} overrides {}, uninstalling the latter",
                             uri, r);
-                    uninstall(uri);
+                    scheduleUninstall(uri);
                 }
             }
         }
@@ -154,7 +147,7 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         return result;
     }
 
-    public void uninstall(String uri) throws JcrInstallException {
+    public void scheduleUninstall(String uri) throws JcrInstallException {
         // If a corresponding higher priority resource is installed, ignore this request
         if(roRules != null) {
             for(String r : roRules.getHigherPriorityResources(uri)) {
@@ -229,34 +222,14 @@ public class OsgiControllerImpl implements OsgiController, Runnable, Synchronous
         //loopDelay = 0;
     }
 
-    /** Process our resource queues at regular intervals, more often if
-     *  we received bundle events since the last processing
-     */
-    public void run() {
-        log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
-
-        // We could use the scheduler service but that makes things harder to test
-        while (running) {
-            loopDelay = 1000;
-            try {
-                for(OsgiResourceProcessor p : processors) {
-                    p.processResourceQueue();
-                }
-            } catch (Exception e) {
-                log.warn("Exception in run()", e);
-            } finally {
-                try {
-                    Thread.sleep(loopDelay);
-                } catch (InterruptedException ignore) {
-                    // ignore
-                }
-            }
+    /** {@inheritDoc} */
+    public void executeScheduledOperations() throws Exception {
+        for(OsgiResourceProcessor p : processors) {
+            p.processResourceQueue();
         }
+	}
 
-        log.info("{} thread {} ends", getClass().getSimpleName(), Thread.currentThread().getName());
-    }
-    
-    public void setResourceOverrideRules(ResourceOverrideRules r) {
+	public void setResourceOverrideRules(ResourceOverrideRules r) {
         roRules = r;
     }
 }

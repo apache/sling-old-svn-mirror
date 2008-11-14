@@ -284,7 +284,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
                             final Node parent = n.getParent();
                             if(!folderNameFilter.accept(parent.getPath())) {
                                 log.info("Uninstalling resource {}, folder name not accepted by current filter", uri);
-                                osgiController.uninstall(uri);
+                                osgiController.scheduleUninstall(uri);
                             }
                         }
                     }
@@ -359,11 +359,16 @@ public class RepositoryObserver implements Runnable, BundleListener {
     
     /** Let our WatchedFolders run their scanning cycles */ 
     void runOneCycle() throws Exception {
-    	boolean forceScan = false;
+    	
+    	// Add any new watched folders, and scan those who need it 
         addNewWatchedFolders();
     	for(WatchedFolder wf : folders) {
     		wf.scanIfNeeded(converters);
         }
+    	
+    	// And then let the OsgiController install/remove
+    	// resources that we detected
+    	osgiController.executeScheduledOperations();
     }
     
     Properties loadProperties(File f) {
