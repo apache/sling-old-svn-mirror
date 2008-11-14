@@ -394,13 +394,9 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                         + ", rescheduling for start"
                         ,be);
 
-                    // add the failed bundle to the activeBundles list
-                    // to start, and trigger a refresh - the exception might
-                    // be caused by a missing dependency that is in the queue,
-                    // so we want to refresh even if no new bundles were added
+                    // re-add the failed bundle to the activeBundles list
                     synchronized (activeBundles) {
                         activeBundles.add(bundleId);
-                        needsRefresh = true;
                     }
                 }
             }
