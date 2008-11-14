@@ -104,6 +104,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         // Define the whole sequence of calls to OsgiController,
         // Using getLastModified calls to mark the test phases
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             
@@ -111,7 +112,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             inSequence(sequence);
             one(c).getDigest(dummyJar); will(returnValue(null));
             inSequence(sequence);
-            one(c).installOrUpdate(with(equal(dummyJar)), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(dummyJar)), with(any(InstallableData.class)));
             inSequence(sequence);
             
             one(c).getDigest("phase2"); 
@@ -123,7 +124,7 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             inSequence(sequence);
             one(c).getDigest(dummyJar); will(returnValue(da.getDigest()));
             inSequence(sequence);
-            one(c).installOrUpdate(with(equal(dummyJar)), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(dummyJar)), with(any(InstallableData.class)));
             inSequence(sequence);
         }});
         
@@ -167,12 +168,13 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Define the whole sequence of calls to OsgiController,
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
@@ -209,12 +211,13 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final OsgiController c = mockery.mock(OsgiController.class);
         
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
@@ -244,12 +247,13 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).uninstall("/libs/foo/bar/install/dummy.jar");
-            one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
-            one(c).uninstall("/libs/watchfolder-is-gone/install/gone.cfg");
+            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.jar");
+            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.cfg");
+            one(c).scheduleUninstall("/libs/watchfolder-is-gone/install/gone.cfg");
         }});
         
         ro.activate(null);
@@ -269,15 +273,16 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).uninstall("/libs/foo/bar/install/dummy.cfg");
+            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.cfg");
             inSequence(sequence);
-            one(c).uninstall("/libs/foo/bar/install/dummy.dp");
+            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.dp");
             inSequence(sequence);
             will(throwException(new JcrInstallException("Fake BundleException for testing")));
-            one(c).uninstall("/libs/foo/bar/install/dummy.jar");
+            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.jar");
             inSequence(sequence);
         }});
         
@@ -303,13 +308,14 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Define the whole sequence of calls to OsgiController,
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
             will(throwException(new JcrInstallException("Fake BundleException for testing")));
-            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
@@ -350,11 +356,12 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Test with first regexp
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).installOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final MockRepositoryObserver ro = new MockRepositoryObserver(repo, c, serviceDataFile);
@@ -373,13 +380,14 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         
         // Test with a different regexp, install.A resources must be uninstalled
         mockery.checking(new Expectations() {{
+        	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).uninstall(resources[0]);
-            one(c).uninstall(resources[2]);
-            one(c).installOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
-            one(c).installOrUpdate(with(equal(resources[3])), with(any(InstallableData.class)));
+            one(c).scheduleUninstall(resources[0]);
+            one(c).scheduleUninstall(resources[2]);
+            one(c).scheduleInstallOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            one(c).scheduleInstallOrUpdate(with(equal(resources[3])), with(any(InstallableData.class)));
         }});
         
         props.setProperty(RepositoryObserver.FOLDER_NAME_REGEXP_PROPERTY, ".*foo/wii/install$");

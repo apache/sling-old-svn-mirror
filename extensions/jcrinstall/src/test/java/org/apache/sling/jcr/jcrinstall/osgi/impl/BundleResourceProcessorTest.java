@@ -108,25 +108,25 @@ public class BundleResourceProcessorTest {
         Utilities.setProcessors(c, p);
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
 
-        assertEquals("First install returns INSTALLED", INSTALLED, c.installOrUpdate(uri, data));
+        assertEquals("First install returns INSTALLED", INSTALLED, c.scheduleInstallOrUpdate(uri, data));
         assertTrue("After install, uri must be in list", c.getInstalledUris().contains(uri));
         assertEquals("Digest must have been stored", data.getDigest(), c.getDigest(uri));
         assertEquals("Storage data has been saved during install", 1, s.saveCounter);
 
         data.setDigest("digest is now different");
-        assertEquals("Second install returns UPDATED", UPDATED, c.installOrUpdate(uri, data));
+        assertEquals("Second install returns UPDATED", UPDATED, c.scheduleInstallOrUpdate(uri, data));
         assertTrue("After update, uri must be in list", c.getInstalledUris().contains(uri));
         assertEquals("Digest must have been updated", data.getDigest(), c.getDigest(uri));
         assertEquals("Storage data has been saved during update", 2, s.saveCounter);
 
-        c.uninstall(uri);
+        c.scheduleUninstall(uri);
         assertFalse("After uninstall, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("Digest must be gone", null, c.getDigest(uri));
         assertFalse("After getLastModified, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("Storage data has been saved during uninstall", 3, s.saveCounter);
 
         final String nonJarUri = "no_jar_extension";
-        assertEquals(nonJarUri + " must be ignored", c.installOrUpdate("", data), IGNORED);
+        assertEquals(nonJarUri + " must be ignored", c.scheduleInstallOrUpdate("", data), IGNORED);
 
         // And verify expectations
         mockery.assertIsSatisfied();
