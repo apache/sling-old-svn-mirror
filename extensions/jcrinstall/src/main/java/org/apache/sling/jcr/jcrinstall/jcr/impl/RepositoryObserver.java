@@ -30,6 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -66,7 +68,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RepositoryObserver implements Runnable, BundleListener {
 
-    protected Set<WatchedFolder> folders;
+    protected SortedSet<WatchedFolder> folders;
     private RegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
     private ResourceOverrideRules roRules;
@@ -151,7 +153,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
         }
         
         // Find folders to watch
-        folders = new HashSet<WatchedFolder>();
+        folders = new TreeSet<WatchedFolder>();
         for(String root : roots) {
             folders.addAll(findWatchedFolders(root));
         }

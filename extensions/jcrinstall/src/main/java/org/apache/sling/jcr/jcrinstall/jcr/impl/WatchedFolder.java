@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *  to it (non-recursively) and sending the appropriate messages
  *  to the OsgiController service.
  */
-class WatchedFolder implements EventListener {
+class WatchedFolder implements EventListener, Comparable<Object> {
     private final String path;
     private final OsgiController controller;
     private long nextScan;
@@ -112,8 +112,16 @@ class WatchedFolder implements EventListener {
         final WatchedFolder other = (WatchedFolder) obj;
         return path.equals(other.path);
     }
+    
+    public int compareTo(Object obj) {
+        if (!(obj instanceof WatchedFolder)) {
+            return 1;
+        }
+        final WatchedFolder other = (WatchedFolder) obj;
+		return path.compareTo(other.path);
+	}
 
-    @Override
+	@Override
     public int hashCode() {
         return path.hashCode();
     }
