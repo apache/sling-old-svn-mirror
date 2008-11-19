@@ -18,6 +18,7 @@ package org.apache.sling.launcher.webapp;
 
 import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -122,7 +123,7 @@ public class SlingServlet extends GenericServlet {
      * The name of the configuration property defining the obr repository.
      */
     private static final String OBR_REPOSITORY_URL = "obr.repository.url";
-
+    
     /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
@@ -284,18 +285,37 @@ public class SlingServlet extends GenericServlet {
         // assume that this location is inside the webapp and create the correct
         // full url
         final String repoLocation = props.get(OBR_REPOSITORY_URL);
-        if (repoLocation != null && repoLocation.indexOf(":/") < 1
-            && repoLocation.startsWith("/")) {
-            try {
-                final URL url = getServletContext().getResource(repoLocation);
-                // only if we get back a resource url, we update it
-                if (url != null) {
-                    props.put(OBR_REPOSITORY_URL, url.toExternalForm());
-                }
-            } catch (MalformedURLException e) {
-                // if an exception occurs, we ignore it
-            }
+        if (insideWebapp(repoLocation)) {
+        	final URL url = getUrl(repoLocation);
+        	// only if we get back a resource url, we update it
+        	if (url != null)
+        		props.put(OBR_REPOSITORY_URL, url.toExternalForm());
         }
+        
+        // idem to jcr repo home
+        final String jcrRepoHome = props.get(Sling.JCR_REPO_HOME);
+        if (insideWebapp(jcrRepoHome)) {
+        	// ensure exists
+        	final URL webroot = getUrl("/");
+        	File jcrRepoHomeDir = new File(webroot.getPath() + jcrRepoHome);
+        	if (!jcrRepoHomeDir.isDirectory())
+                 jcrRepoHomeDir.mkdirs();
+           
+        	final URL url = getUrl(jcrRepoHome);
+        	// only if we get back a resource url, we update it
+        	if (url != null)
+        		props.put(Sling.JCR_REPO_HOME, url.getPath());
+        }
+        
+        // idem to jcr repo config file
+        final String jcrRepoConfigFile = props.get(Sling.JCR_REPO_CONFIG_FILE_URL);
+        if (insideWebapp(jcrRepoConfigFile)) {
+        	final URL url = getUrl(jcrRepoConfigFile);
+        	// only if we get back a resource url, we update it
+        	if (url != null)
+        		props.put(Sling.JCR_REPO_CONFIG_FILE_URL, url.toExternalForm());
+        }
+        
         return props;
     }
 
@@ -315,6 +335,21 @@ public class SlingServlet extends GenericServlet {
                 }
             }
             props.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
+        }
+    }
+    
+    private boolean insideWebapp(String path) {
+    	if (path != null && path.indexOf(":/") < 1 && path.startsWith("/"))
+    		return true;
+    	else
+    		return false;
+    }
+    
+    private URL getUrl(String path) {
+    	try {
+    		return getServletContext().getResource(path);
+    	} catch (MalformedURLException e) {
+    		return null;
         }
     }
 
