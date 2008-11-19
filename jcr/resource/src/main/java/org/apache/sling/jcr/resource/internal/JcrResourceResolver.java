@@ -362,6 +362,8 @@ public class JcrResourceResolver extends SlingAdaptable implements
      * @return
      */
     private Resource searchVanityPath(String path) {
+        // sling:VanityPath (uppercase V) is the mixin name
+        // sling:vanityPath (lowercase) is the property name 
         final String queryString = "SELECT * FROM sling:VanityPath where sling:vanityPath ='" + path +
             "' ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = this.findResources(queryString, Query.SQL);
