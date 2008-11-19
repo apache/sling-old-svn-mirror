@@ -29,6 +29,36 @@
         <servlet-class>
             org.apache.sling.launcher.webapp.SlingServlet
         </servlet-class>
+        <!--
+        	The name of the JCR repository.
+        	Default is "jackrabbit".
+        -->  
+        <!--  
+        <init-param>
+        	<param-name>sling.repository.name</param-name>
+        	<param-value></param-value>
+        </init-param>
+        -->
+        <!--
+        	The JCR repository home directory.
+        	Default is sling.home/sling.repository.name.
+        -->  
+        <!--
+        <init-param>
+        	<param-name>sling.repository.home</param-name>
+        	<param-value></param-value>
+        </init-param>
+        -->
+        <!--
+        	The JCR repository url config file (repository.xml).
+        	Default is repository.xml in bundle Embedded JCR Repository.
+        -->
+        <!--  
+        <init-param>
+        	<param-name>sling.repository.config.file.url</param-name>
+        	<param-value></param-value>
+        </init-param>
+        -->
         <load-on-startup>100</load-on-startup>
     </servlet>
 
