@@ -18,6 +18,8 @@ package org.apache.sling.jcr.jackrabbit.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Hashtable;
 
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
@@ -65,7 +67,11 @@ public class Activator implements BundleActivator, ServiceListener {
     private String slingContext;
 
     protected String getRepositoryName() {
-        return "jackrabbit";
+    	String repoName = bundleContext.getProperty("sling.repository.name");
+    	if (repoName != null)
+    		return repoName; // the repository name is set
+    	else
+    		return "jackrabbit";
     }
 
     public void start(BundleContext context) {
@@ -167,28 +173,11 @@ public class Activator implements BundleActivator, ServiceListener {
     }
     
     private void initDefaultConfig(Hashtable<String, String> props, BundleContext bundleContext) throws IOException {
-        File homeDir;
-        String slingHomePath = bundleContext.getProperty("sling.home");
-        if (slingHomePath != null) {
-            homeDir = new File(slingHomePath, getRepositoryName());
-        } else {
-            homeDir = new File(getRepositoryName());
-        }
-
-        // make sure jackrabbit home exists
-        log.info("Creating default config for Jackrabbit in " + homeDir);
-        if (!homeDir.isDirectory()) {
-            if (!homeDir.mkdirs()) {
-                log.info("verifyConfiguration: Cannot create Jackrabbit home "
-                    + homeDir + ", failed creating default configuration");
-                return;
-            }
-        }
-
-        // ensure the configuration file (inside the home Dir !)
-        File configFile = new File(homeDir, "repository.xml");
-        SlingServerRepository.copyFile(bundleContext.getBundle(),
-            "repository.xml", configFile);
+        File homeDir = getHomeDir(bundleContext);
+        if (homeDir == null)
+        	return;
+       
+        File configFile = getConfigFile(bundleContext, homeDir);
 
         // default config values
         props.put(SLING_CONTEXT, slingContext);
@@ -199,4 +188,58 @@ public class Activator implements BundleActivator, ServiceListener {
         props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
             this.getRepositoryName());
     }
+    
+    private File getHomeDir(BundleContext bundleContext) throws IOException {
+    	File homeDir;
+    	
+    	String repoHomePath = bundleContext.getProperty("sling.repository.home");
+    	String slingHomePath = bundleContext.getProperty("sling.home");
+    	
+    	if (repoHomePath != null) {     		
+         	homeDir = new File(repoHomePath, getRepositoryName());
+        } else if (slingHomePath != null) {
+    		homeDir = new File(slingHomePath, getRepositoryName());
+    	} else {
+    		homeDir = new File(getRepositoryName());
+    	} 
+    	
+    	// make sure jackrabbit home exists
+        log.info("Creating default config for Jackrabbit in " + homeDir);
+        if (!homeDir.isDirectory()) {
+            if (!homeDir.mkdirs()) {
+                log.info("verifyConfiguration: Cannot create Jackrabbit home "
+                    + homeDir + ", failed creating default configuration");
+                return null;
+            }
+        }	
+    	
+    	return homeDir;
+    }
+    
+    private File getConfigFile(BundleContext bundleContext, File homeDir) throws IOException {
+    	File configFile;
+    	
+    	String repoConfigFileUrl = bundleContext.getProperty("sling.repository.config.file.url");
+    	if (repoConfigFileUrl != null) {
+    		// the repository config file is set
+    		URL configFileUrl = null;
+			try {
+				configFileUrl = new URL(repoConfigFileUrl);
+			} catch (MalformedURLException e) {
+				// this not an url, trying with "file:"
+				configFileUrl = new URL("file://" + repoConfigFileUrl);
+			}
+    		
+    		// local support only
+    		configFile = new File(configFileUrl.getFile());
+    		if (configFile.canRead())
+    			return configFile;
+    	}
+    	
+        // ensure the configuration file (inside the home Dir !)
+        configFile = new File(homeDir, "repository.xml");
+        SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
+    	return configFile;
+    }
+    
 }
