@@ -109,6 +109,28 @@ public class Sling implements BundleActivator {
      * @see #SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
+    
+    /**
+     * The name of the configuration property defining the JCR home directory
+     * (value is "sling.repository.home").
+     * <p>
+     * The value of this property could be set as a system property, init-param in
+     * web.xml or property in sling.properties.
+     * <p>
+     * Default value to #SLING_HOME/repository_name
+     */
+    public static final String JCR_REPO_HOME = "sling.repository.home";
+    
+    /**
+     * The name of the configuration property defining the URL of an existing
+     * repository config file (repository.xml).
+     * <p>
+     * The value of this property could be set as a system property, init-param in
+     * web.xml or property in sling.properties.
+     * <p>
+     * Default value to #SLING_HOME/repository_name/repository.xml
+     */
+    public static final String JCR_REPO_CONFIG_FILE_URL = "sling.repository.config.file.url";
 
     /**
      * The name of the configuration property defining a properties file
@@ -172,7 +194,7 @@ public class Sling implements BundleActivator {
      */
     public Sling(Logger logger, ResourceProvider resourceProvider,
             Map<String, String> propOverwrite) throws BundleException {
-
+    	
         this.logger = logger;
         this.resourceProvider = resourceProvider;
 
