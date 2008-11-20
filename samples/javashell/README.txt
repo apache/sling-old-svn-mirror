@@ -2,6 +2,15 @@
 Sling javashell sample
 ----------------------
 
+-------------------------------------------------------------------
+SECURITY WARNING:
+javashell lets user execute arbitrary code with NO LIMITS, and
+is only meant as a teaching/demo tool. Use at your own risk, or
+do not use if you don't understand the issues.
+
+Just try "System.exit(0)" if you don't know what this means ;-)
+-------------------------------------------------------------------
+
 This sample application executes java code entered in an HTML form,
 by generating and compiling java servlets on the fly.
 
