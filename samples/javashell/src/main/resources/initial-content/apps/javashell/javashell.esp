@@ -1,0 +1,100 @@
+<% /*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+*/ %>
+
+<%
+// TODO - this code really belongs to a java service that
+// would generate and serve the servlet code
+var title = "javashell: " + currentNode.title;
+var servletFolderName = "servlets";
+function trim(str) {
+  return str.replace(/^\s+|\s+$/g, '') ;
+}
+
+// Unique ID for the servlet that we're creating
+var servlet = {};
+servlet.id = "servlet" + Packages.java.lang.System.currentTimeMillis() + Math.floor(Math.random() * 999999999);
+servlet.pkg = "apps.javashell." + servletFolderName;
+
+// Get code-template node
+var nodeClass = Packages.javax.jcr.Node;
+var scriptNode = sling.getScript().getScriptResource().adaptTo(nodeClass);
+var scriptFolderNode = scriptNode.getParent();
+var codeTemplate = scriptFolderNode.getNode("code-templates");
+
+// Inject currentNode.code into code template
+servlet.info =  "// code template is at " + codeTemplate.getPath() + "/code";
+servlet.code = servlet.info + codeTemplate.getProperty("code").getString();
+servlet.code = servlet.code.replace("_SERVLET_PACKAGE_", servlet.pkg);
+servlet.code = servlet.code.replace("_SERVLET_CLASS_", servlet.id);
+servlet.code = servlet.code.replace("// _USER_CODE_", currentNode.code + "");
+
+// Save servlet.java code
+var servletFolder;
+if(scriptFolderNode.hasNode(servletFolderName)) {
+	servletFolder = scriptFolderNode.getNode(servletFolderName);
+} else {
+	servletFolder = scriptFolderNode.addNode(servletFolderName, "nt:unstructured");
+}	
+var servletNodeName = servlet.id + ".java";
+var fileNode = servletFolder.addNode(servletNodeName,"nt:file");
+var contentNode = fileNode.addNode("jcr:content", "nt:unstructured");
+var codeStream = new Packages.java.io.ByteArrayInputStream(new java.lang.String(servlet.code).getBytes());
+contentNode.setProperty("jcr:data", codeStream);
+contentNode.setProperty("jcr:mimeType", "text/plain");
+contentNode.setProperty("jcr:lastModified", java.util.Calendar.getInstance());
+scriptFolderNode.save();
+%>
+
+<html>
+<head>
+  <title><%= title %></title>
+  <link rel="stylesheet" type="text/css" href="/apps/javashell/javashell.css"/>
+</head>
+<body>
+
+<div class="title">
+  <div class="logo">
+    <a href="http://incubator.apache.org/sling">
+      <img border="0" src="/apps/javashell/sling-logo.png"/>
+    </a>
+  </div>
+</div>
+
+<div class="menu">
+  <ul>
+    <li>
+      <b><a href="<%= currentNode.getPath() %>.edit.html">Edit script</a></b>
+    </li>
+    <li>
+      <b><a href="<%= currentNode.getParent().getPath() %>/*.edit.html">Create new script</a></b>
+    </li>
+    <% load("siblings.esp"); %>
+  </ul>
+</div>                  
+  
+<div class="main">
+	<h1><%= title %></h1>
+	<pre><%= trim(currentNode.code) %></pre>
+	<p class="note">The <a href="<%= fileNode.getPath() %>">complete source code</a> of the generated servlet is available.</p> 
+	
+	<h2>Result of execution</h2>
+	<pre><% sling.include(currentNode.getPath(), "replaceSelectors=" + servlet.id + ", forceResourceType=javashell/" + servletFolderName); %></pre> 
+</div>
+</body>
+</html>
