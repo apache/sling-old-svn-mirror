@@ -247,5 +247,75 @@ while(it.hasNext()) {
     </sv:property>
   </sv:node>
 
+  <sv:node sv:name="observation">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name">
+      <sv:value>nt:unstructured</sv:value>
+    </sv:property>
+    <sv:property sv:name="code" sv:type="String">
+      <sv:value>
+final ObservationManager m = session.getWorkspace().getObservationManager();
+
+// Creating an active EventListener is a bit involved here as
+// this code snippet runs in the javashell servlet's doGet()
+// method and so needs a separate Thread to display events. In
+// real life you'd just add the EventListener interface and 
+// onEvent() method to the appropriate class.
+class Observer extends Thread implements EventListener {
+  int eventsToDisplay = 20;
+  String eventsPath = "/";
+  int eventTypes = Event.NODE_ADDED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED;
+
+  /** Called by JCR when a Repository event occurs according to
+   *  filters specified in the ObservationManager.addEventListener() call
+   */
+  public void onEvent(EventIterator events) {
+    while(events.hasNext()) {
+      eventsToDisplay--;
+      try {
+        Event e = events.nextEvent();
+        out.println("Event type " + e.getType() + " at " + e.getPath());
+      } catch(Exception e) {
+        e.printStackTrace(out);
+      }
+    }
+  }
+
+  public void run() {
+    try {
+      // Setup this class as en EventListener
+      m.addEventListener(this, eventTypes, eventsPath, true, null, null, true);
+      out.println("Will display at least " + eventsToDisplay + " Events...");
+      while(eventsToDisplay > 0) {
+        Thread.sleep(1000L);
+      }
+    } catch(Exception e) {
+      e.printStackTrace(out);
+    } finally {
+      try {
+        m.removeEventListener(this);
+      } catch(Exception e) {
+        e.printStackTrace(out);
+      }
+    }
+  }
+};
+
+// Create the observer thread and start it
+out.println("Starting EventListener thread");
+out.println("Please make some changes to the repository: drop files via WebDAV, run a JCR sample in "
+  + "another browser window, etc.");
+Observer o = new Observer();
+o.setDaemon(true); o.start(); o.join();
+out.println("EventListener thread ended");
+</sv:value>
+    </sv:property>
+    <sv:property sv:name="sling:resourceType" sv:type="String">
+      <sv:value>javashell</sv:value>
+    </sv:property>
+    <sv:property sv:name="title" sv:type="String">
+      <sv:value>Observation</sv:value>
+    </sv:property>
+  </sv:node>
+
 </sv:node><sv:node sv:name="testroot"><sv:property sv:name="jcr:primaryType" sv:type="Name"><sv:value>nt:unstructured</sv:value></sv:property><sv:property sv:name="jcr:mixinTypes" sv:type="Name"><sv:value>mix:lockable</sv:value></sv:property></sv:node>
 </sv:node>
