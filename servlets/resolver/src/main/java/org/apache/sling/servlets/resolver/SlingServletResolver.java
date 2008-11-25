@@ -529,15 +529,16 @@ public class SlingServletResolver implements ServletResolver,
 
     protected void deactivate(ComponentContext context) {
 
-        // destroy all active servlets
+        // Copy the list of servlets first, to minimize the need for synchronization
         Collection<ServiceReference> refs;
         synchronized (this) {
             refs = new ArrayList<ServiceReference>(servletsByReference.keySet());
-            // destroy all servlets
-            destroyAllServlets(refs);
-            this.context = null;
-            this.servletResourceProviderFactory = null;
         }
+        
+        // destroy all servlets
+        destroyAllServlets(refs);
+        this.context = null;
+        this.servletResourceProviderFactory = null;
     }
 
     protected synchronized void bindServlet(ServiceReference reference) {
