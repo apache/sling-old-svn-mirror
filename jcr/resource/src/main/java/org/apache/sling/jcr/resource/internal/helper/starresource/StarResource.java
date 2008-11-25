@@ -51,8 +51,7 @@ public class StarResource extends SyntheticResource {
 
     /** True if a StarResource should be used for the given request, if
      *  a real Resource was not found */
-    public static boolean appliesTo(HttpServletRequest request) {
-        String path = request.getPathInfo();
+    public static boolean appliesTo(String path) {
         return path.contains(SLASH_STAR) || path.endsWith(SLASH_STAR);
     }
 

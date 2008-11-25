@@ -85,6 +85,16 @@ public class JcrResourceResolverFactoryImpl
     }
 
     /**
+     * @scr.property values.1="/apps" values.2="/libs"
+     */
+    public static final String PROP_PATH = "resource.resolver.searchpath";
+
+    /**
+     * @scr.property value="true" type="Boolean"
+     */
+    private static final String PROP_USE_NEW_RESOLVER = "resource.resolver.new";
+
+    /**
      * @scr.property value="true" type="Boolean"
      */
     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
@@ -108,11 +118,6 @@ public class JcrResourceResolverFactoryImpl
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
     /**
-     * @scr.property values.1="/apps" values.2="/libs"
-     */
-    public static final String PROP_PATH = "resource.resolver.searchpath";
-
-    /**
      * These regexps are executing during the resource resolving phase
      * before the mappings are applied.
      * @scr.property values.1="/_([^/]+?)_|/$1:"
@@ -125,7 +130,6 @@ public class JcrResourceResolverFactoryImpl
      * @scr.property values.1="/([^/]+?):([^/]+)|/_$1_$2"
      */
     private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
-
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -174,7 +178,16 @@ public class JcrResourceResolverFactoryImpl
     private String[] searchPath;
 
     private ResourceProviderEntry rootProviderEntry;
-
+    
+    /**
+     * Temporary field to select which JcrResourceResolver implementation to
+     * use.
+     * 
+     * @see #PROP_USE_NEW_RESOLVER
+     * @see #getResourceResolver(Session)
+     */
+    private boolean useNewResourceResolver;
+    
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
     }
@@ -188,6 +201,11 @@ public class JcrResourceResolverFactoryImpl
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry, getJcrResourceTypeProvider());
+
+        if (useNewResourceResolver) {
+            return new JcrResourceResolver2(sessionRoot, this);
+        }
+        
         return new JcrResourceResolver(sessionRoot, this);
     }
 
@@ -260,6 +278,20 @@ public class JcrResourceResolverFactoryImpl
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
+        // BEGIN Temporary solution to select old and new JcrResourceResolver
+        // select new or old resource resolver
+        String propNewRes = componentContext.getBundleContext().getProperty(
+            PROP_USE_NEW_RESOLVER);
+        boolean flagNewRes = !"false".equalsIgnoreCase(propNewRes);
+        useNewResourceResolver = OsgiUtil.toBoolean(properties.get(PROP_USE_NEW_RESOLVER), flagNewRes);
+        if (useNewResourceResolver) {
+            log.info("activate: Using new JCR ResourceResolver with extended Mapping");
+        } else {
+            log.info("activate: Using old JCR ResourceResolver");
+        }
+        // END Temporary solution to select old and new JcrResourceResolver
+        
+        
         BidiMap virtuals = new TreeBidiMap();
         String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
         for (int i = 0; virtualList != null && i < virtualList.length; i++) {
