@@ -39,30 +39,39 @@ import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
+import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 
-public class JcrResourceResolverTest extends RepositoryTestBase {
+public class JcrResourceResolver2Test extends RepositoryTestBase {
 
     private String rootPath;
 
     private Node rootNode;
+
+    private Node mapRoot;
+
+    private JcrResourceResolverFactoryImpl resFac;
 
     private ResourceResolver resResolver;
 
     protected void setUp() throws Exception {
         super.setUp();
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
-            this.getClass().getResourceAsStream("/SLING-INF/nodetypes/folder.cnd")));
+            this.getClass().getResourceAsStream(
+                "/SLING-INF/nodetypes/folder.cnd")));
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
-            this.getClass().getResourceAsStream("/SLING-INF/nodetypes/resource.cnd")));
+            this.getClass().getResourceAsStream(
+                "/SLING-INF/nodetypes/resource.cnd")));
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
-                this.getClass().getResourceAsStream("/SLING-INF/nodetypes/vanitypath.cnd")));
+            this.getClass().getResourceAsStream(
+                "/SLING-INF/nodetypes/vanitypath.cnd")));
 
-        JcrResourceResolverFactoryImpl resFac = new JcrResourceResolverFactoryImpl();
+        resFac = new JcrResourceResolverFactoryImpl();
 
         Field repoField = resFac.getClass().getDeclaredField("repository");
         repoField.setAccessible(true);
@@ -74,12 +83,13 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         Field patternsField = resFac.getClass().getDeclaredField("patterns");
         patternsField.setAccessible(true);
-        patternsField.set(resFac, new JcrResourceResolverFactoryImpl.ResourcePattern[0]);
+        patternsField.set(resFac,
+            new JcrResourceResolverFactoryImpl.ResourcePattern[0]);
 
-        // ensure using JcrResourceResolver
+        // ensure using JcrResourceResolver2
         Field unrrField = resFac.getClass().getDeclaredField("useNewResourceResolver");
         unrrField.setAccessible(true);
-        unrrField.set(resFac, false);
+        unrrField.set(resFac, true);
 
         try {
             NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
@@ -89,20 +99,35 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             // don't care for now
         }
 
-        resResolver = resFac.getResourceResolver(session);
-
+        // test data
         rootPath = "/test" + System.currentTimeMillis();
         rootNode = getSession().getRootNode().addNode(rootPath.substring(1),
             "nt:unstructured");
+
+        // test mappings
+        mapRoot = getSession().getRootNode().addNode("etc", "nt:unstructured");
+        Node map = mapRoot.addNode("map", "nt:unstructured");
+        Node https = map.addNode("https", "nt:unstructured");
+        https.addNode("localhost.443", "nt:unstructured");
+        Node http = map.addNode("http", "nt:unstructured");
+        http.addNode("localhost.80", "nt:unstructured");
+
         session.save();
+
+        resResolver = resFac.getResourceResolver(session);
     }
 
     @Override
     protected void tearDown() throws Exception {
         if (rootNode != null) {
             rootNode.remove();
-            session.save();
         }
+
+        if (mapRoot != null) {
+            mapRoot.remove();
+        }
+
+        session.save();
     }
 
     public void testGetResource() throws Exception {
@@ -125,7 +150,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     public void testResolveResource() throws Exception {
         // existing resource
         Resource res = resResolver.resolve(new ResourceResolverTestRequest(
-            rootPath));
+            rootPath), rootPath);
         assertNotNull(res);
         assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -136,7 +161,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // missing resource below root should resolve "missing resource"
         String path = rootPath + "/missing";
-        res = resResolver.resolve(new ResourceResolverTestRequest(path));
+        res = resResolver.resolve(new ResourceResolverTestRequest(path), path);
         assertNotNull(res);
         assertEquals(path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
@@ -145,7 +170,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // root with selectors/ext should resolve root
         path = rootPath + ".print.a4.html";
-        res = resResolver.resolve(new ResourceResolverTestRequest(path));
+        res = resResolver.resolve(new ResourceResolverTestRequest(path), path);
         assertNotNull(res);
         assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -156,11 +181,158 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         // missing resource should return NON_EXISTING Resource
         path = rootPath + System.currentTimeMillis();
-        res = resResolver.resolve(new ResourceResolverTestRequest(path));
+        res = resResolver.resolve(new ResourceResolverTestRequest(path), path);
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
         assertEquals(path, res.getPath());
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+    }
+
+    public void testResolveResourceExternalRedirect() throws Exception {
+        HttpServletRequest request = new ResourceResolverTestRequest(rootPath) {
+            @Override
+            public String getScheme() {
+                return "https";
+            }
+
+            @Override
+            public String getServerName() {
+                return "localhost";
+            }
+
+            @Override
+            public int getServerPort() {
+                return -1;
+            }
+        };
+
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+        localhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_EXTERNAL,
+            "http://localhost");
+        session.save();
+        resResolver = resFac.getResourceResolver(session);
+
+        Resource res = resResolver.resolve(request, rootPath);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertTrue(res instanceof RedirectResource);
+        assertNotNull(res.adaptTo(ValueMap.class));
+        assertEquals("http://localhost" + rootPath,
+            res.adaptTo(ValueMap.class).get("sling:target", String.class));
+    }
+
+    public void testResolveResourceInternalRedirectUrl() throws Exception {
+        HttpServletRequest request = new ResourceResolverTestRequest(rootPath) {
+            @Override
+            public String getScheme() {
+                return "https";
+            }
+
+            @Override
+            public String getServerName() {
+                return "localhost";
+            }
+
+            @Override
+            public int getServerPort() {
+                return -1;
+            }
+        };
+
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+        localhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+            "http://localhost");
+        session.save();
+        resResolver = resFac.getResourceResolver(session);
+
+        Resource res = resResolver.resolve(request, rootPath);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+            res.getResourceType());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+    }
+
+    public void testResolveResourceInternalRedirectPath() throws Exception {
+        HttpServletRequest request = new ResourceResolverTestRequest(rootPath) {
+            @Override
+            public String getScheme() {
+                return "https";
+            }
+
+            @Override
+            public String getServerName() {
+                return "localhost";
+            }
+
+            @Override
+            public int getServerPort() {
+                return -1;
+            }
+        };
+
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+        Node toContent = localhost443.addNode("_playground_designground_",
+            "nt:unstructured");
+        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
+            "(playground|designground)");
+        toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+            "/content/$1");
+        session.save();
+        resResolver = resFac.getResourceResolver(session);
+
+        Resource res = resResolver.resolve(request, "/playground.html");
+        assertNotNull(res);
+        assertEquals("/content/playground.html", res.getPath());
+
+        res = resResolver.resolve(request, "/playground/en.html");
+        assertNotNull(res);
+        assertEquals("/content/playground/en.html", res.getPath());
+
+        res = resResolver.resolve(request, "/libs/nt/folder.html");
+        assertNotNull(res);
+        assertEquals("/libs/nt/folder.html", res.getPath());
+    }
+
+    public void testResolveResourceAlias() throws Exception {
+        // define an alias for the rootPath
+        String alias = "testAlias";
+        rootNode.setProperty(JcrResourceResolver2.PROP_ALIAS, alias);
+        session.save();
+
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+            + "/" + alias + ".print.html");
+        
+        HttpServletRequest request = new ResourceResolverTestRequest(path);
+        Resource res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+            res.getResourceType());
+        
+        assertEquals(".print.html",
+            res.getResourceMetadata().getResolutionPathInfo());
+        
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+            + "/" + alias + ".print.html/suffix.pdf");
+
+        request = new ResourceResolverTestRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+            res.getResourceType());
+        
+        assertEquals(".print.html/suffix.pdf",
+            res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
     }
 
     public void testGetDoesNotGoUp() throws Exception {
@@ -168,16 +340,16 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         final String path = rootPath + "/nothing";
 
         {
-            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
-                path, "POST"));
+            final Resource res = resResolver.resolve(
+                new ResourceResolverTestRequest(path, "POST"), path);
             assertNotNull(res);
             assertEquals("POST request resolution does not go up the path",
                 Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
         }
 
         {
-            final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
-                path, "GET"));
+            final Resource res = resResolver.resolve(
+                new ResourceResolverTestRequest(path, "GET"), path);
             assertNotNull(res);
             assertEquals("GET request resolution does not go up the path",
                 Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
@@ -186,8 +358,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
     public void testGetRemovesExtensionInResolution() throws Exception {
         final String path = rootPath + ".whatever";
-        final Resource res = resResolver.resolve(new ResourceResolverTestRequest(
-            path, "GET"));
+        final Resource res = resResolver.resolve(
+            new ResourceResolverTestRequest(path, "GET"), path);
         assertNotNull(res);
         assertEquals(rootPath, res.getPath());
         assertEquals(rootNode.getPrimaryNodeType().getName(),
@@ -203,7 +375,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     }
 
     public void testStarResourceExtension() throws Exception {
-        final String path = rootPath + "/" + System.currentTimeMillis() + "/*.html";
+        final String path = rootPath + "/" + System.currentTimeMillis()
+            + "/*.html";
         testStarResourceHelper(path, "GET");
         testStarResourceHelper(path, "POST");
         testStarResourceHelper(path, "PUT");
@@ -211,7 +384,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     }
 
     public void testStarResourceSelectorExtension() throws Exception {
-        final String path = rootPath + "/" + System.currentTimeMillis() + "/*.print.a4.html";
+        final String path = rootPath + "/" + System.currentTimeMillis()
+            + "/*.print.a4.html";
         testStarResourceHelper(path, "GET");
         testStarResourceHelper(path, "POST");
         testStarResourceHelper(path, "PUT");
@@ -219,37 +393,38 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     }
 
     public void testSlingFolder() throws Exception {
-        
+
         // create a folder
         String folderPath = "folder";
         Node folder = rootNode.addNode(folderPath, "sling:Folder");
         rootNode.save();
-        
+
         // test default child node type
         Node child = folder.addNode("child0");
         folder.save();
         assertEquals("sling:Folder", child.getPrimaryNodeType().getName());
-        
+
         // test explicit sling:Folder child
         child = folder.addNode("child1", "sling:Folder");
         folder.save();
         assertEquals("sling:Folder", child.getPrimaryNodeType().getName());
-        
+
         // test explicit nt:folder child
         child = folder.addNode("child2", "nt:folder");
         folder.save();
         assertEquals("nt:folder", child.getPrimaryNodeType().getName());
-        
+
         // test any child node -- use nt:unstructured here
         child = folder.addNode("child3", "nt:unstructured");
         folder.save();
         assertEquals("nt:unstructured", child.getPrimaryNodeType().getName());
     }
-    
-    //---------- internal
-    
+
+    // ---------- internal
+
     private void testStarResourceHelper(final String path, final String method) {
-        final Resource res = resResolver.resolve(new ResourceResolverTestRequest(path, method));
+        final Resource res = resResolver.resolve(
+            new ResourceResolverTestRequest(path, method), path);
         assertNotNull(res);
         assertTrue(ResourceUtil.isStarResource(res));
         assertEquals(StarResource.class.getName(), res.getClass().getName());
@@ -365,15 +540,15 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         }
 
         public String getScheme() {
-            return null;
+            return "http";
         }
 
         public String getServerName() {
-            return null;
+            return "localhost";
         }
 
         public int getServerPort() {
-            return 0;
+            return -1;
         }
 
         public boolean isSecure() {
