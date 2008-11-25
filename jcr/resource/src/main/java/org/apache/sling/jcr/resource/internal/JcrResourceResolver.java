@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -41,10 +40,10 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl.ResourcePattern;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
+import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
@@ -78,20 +77,25 @@ public class JcrResourceResolver extends SlingAdaptable implements
     // ---------- ResourceResolver interface ----------------------------------
 
     public Resource resolve(HttpServletRequest request) throws SlingException {
-        String pathInfo = request.getPathInfo();
+        return resolve(request, request.getPathInfo());
+    }
+
+    public Resource resolve(HttpServletRequest request, String absPath)
+            throws SlingException {
 
         // servlet directly address, so there is no path info, use "/" then
-        if (pathInfo == null) {
-            pathInfo = "/";
+        if (absPath == null) {
+            absPath = "/";
         }
 
-        Resource result = resolve(pathInfo);
+        Resource result = resolve(absPath);
 
         if (result == null) {
-            if(StarResource.appliesTo(request)) {
-                result = new StarResource(this, pathInfo, rootProvider.getResourceTypeProviders());
+            if (StarResource.appliesTo(absPath)) {
+                result = new StarResource(this, absPath,
+                    rootProvider.getResourceTypeProviders());
             } else {
-                result = new NonExistingResource(this, pathInfo);
+                result = new NonExistingResource(this, absPath);
             }
         }
 
@@ -153,6 +157,16 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return href;
     }
 
+    public String map(HttpServletRequest request, String resourcePath) {
+        // apply normal reverse mapping first
+        String mappedPath = map(resourcePath);
+        
+        // apply additional mapping based on the request
+        
+        // return the final URL
+        return mappedPath;
+    }
+    
     public Resource getResource(String path) {
 
         // if the path is absolute, normalize . and .. segements and get res
@@ -260,7 +274,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     // ---------- implementation helper ----------------------------------------
 
-    public Session getSession() {
+    private Session getSession() {
         return rootProvider.getSession();
     }
 
@@ -379,7 +393,7 @@ public class JcrResourceResolver extends SlingAdaptable implements
                 rsrc = ResourceUtil.getParent(rsrc);
             }
             if ( needsWrapper ) {
-                rsrc = new RedirectResource(rsrc, path, rsrc.getPath());
+                rsrc = new RedirectResource(this, path, rsrc.getPath());
             }
             return rsrc;
         }
@@ -425,69 +439,5 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
         log.debug("Cannot resolve path '{}' to a resource", path);
         return null;
-    }
-
-    private static final class RedirectResource implements Resource {
-
-        final Resource resource;
-
-        final String target;
-
-        final String path;
-
-        public RedirectResource(final Resource rsrc,
-                                final String path,
-                                final String target) {
-            this.resource = rsrc;
-            this.path = path;
-            this.target = target;
-        }
-
-        /**
-         * @see org.apache.sling.api.resource.Resource#getPath()
-         */
-        public String getPath() {
-            return this.path;
-        }
-
-        /**
-         * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
-         */
-        public ResourceMetadata getResourceMetadata() {
-            return this.resource.getResourceMetadata();
-        }
-
-        /**
-         * @see org.apache.sling.api.resource.Resource#getResourceResolver()
-         */
-        public ResourceResolver getResourceResolver() {
-            return this.resource.getResourceResolver();
-        }
-
-        /**
-         * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
-         */
-        public String getResourceSuperType() {
-            return null;
-        }
-
-        /**
-         * @see org.apache.sling.api.resource.Resource#getResourceType()
-         */
-        public String getResourceType() {
-            return "sling:redirect";
-        }
-
-        /**
-         * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
-         */
-        @SuppressWarnings("unchecked")
-        public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-            if ( type == ValueMap.class ) {
-                return (AdapterType) new ValueMapDecorator(Collections.singletonMap("sling:target", (Object)this.target));
-            }
-            return null;
-        }
-
     }
 }

@@ -74,12 +74,20 @@ public class MockResourceResolver implements ResourceResolver {
     public String map(String resourcePath) {
         return null;
     }
+    
+    public String map(HttpServletRequest request, String resourcePath) {
+        return null;
+    }
 
     public Iterator<Map<String, Object>> queryResources(String query,
             String language) {
         return null;
     }
 
+    public Resource resolve(HttpServletRequest request, String absPath) {
+        return null;
+    }
+    
     public Resource resolve(HttpServletRequest request) {
         return null;
     }

@@ -209,6 +209,10 @@ public class ResourceProviderEntryTest extends TestCase {
             return null;
         }
 
+        public String map(HttpServletRequest request, String resourcePath) {
+            return null;
+        }
+        
         public String map(String resourcePath) {
             return null;
         }
@@ -218,6 +222,10 @@ public class ResourceProviderEntryTest extends TestCase {
             return null;
         }
 
+        public Resource resolve(HttpServletRequest request, String absPath) {
+            return null;
+        }
+        
         public Resource resolve(HttpServletRequest request) {
             return null;
         }
