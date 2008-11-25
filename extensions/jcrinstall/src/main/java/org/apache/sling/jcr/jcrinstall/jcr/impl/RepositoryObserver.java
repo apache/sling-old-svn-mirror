@@ -266,8 +266,8 @@ public class RepositoryObserver implements Runnable, BundleListener {
         return path;
     }
     
-    /** Uninstall resources as needed when starting up */
-    void handleInitialUninstalls() {
+    /** Uninstall resources as needed when starting up */ 
+    void handleInitialUninstalls() throws Exception {
         // If regexp has changed, uninstall resources left in folders 
         // that don't match the new regexp
         // TODO this happens right after activate() is called on this service,
@@ -308,7 +308,9 @@ public class RepositoryObserver implements Runnable, BundleListener {
         } catch(Exception e) {
             log.warn("Exception in root WatchFolder.checkDeletions call", e);
         }
-
+        
+        // Let the OSGi controller execute the uninstalls
+        osgiController.executeScheduledOperations();
     }
     
     /**
@@ -335,11 +337,15 @@ public class RepositoryObserver implements Runnable, BundleListener {
         }
         log.info("No bundle events in the last {} msec, starting processing", bundleEventDelayMsec);
 
-        handleInitialUninstalls();
         
         // We could use the scheduler service but that makes things harder to test
+        boolean firstCycle = true;
         while (running) {
             try {
+            	if(firstCycle) {
+            		handleInitialUninstalls();
+            		firstCycle = false;
+            	}
                 runOneCycle();
             } catch (IllegalArgumentException ie) {
                 log.warn("IllegalArgumentException  in " + getClass().getSimpleName(), ie);
