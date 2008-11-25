@@ -340,6 +340,12 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
             SlingScriptHelper scriptHelper = (SlingScriptHelper) props.get(SLING);
             if (scriptHelper != null) {
+                
+                // set the current class loader as the thread context loader for
+                // the compilation and execution of the JSP script
+                ClassLoader old = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(jspClassLoader);
+
                 try {
                     callJsp(props, scriptHelper);
                 } catch (SlingServletException e) {
@@ -359,10 +365,20 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                             }
                         }
                     }
+                    
                     // fallback to standard behaviour
                     throw new BetterScriptException(e.getMessage(), e);
+                    
                 } catch (Exception e) {
+                    
                     throw new BetterScriptException(e.getMessage(), e);
+                    
+                } finally {
+                    
+                    // make sure the context loader is reset after setting up the
+                    // JSP runtime context
+                    Thread.currentThread().setContextClassLoader(old);
+
                 }
             }
             return null;
