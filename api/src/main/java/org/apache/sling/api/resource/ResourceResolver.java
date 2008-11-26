@@ -39,7 +39,9 @@ import org.apache.sling.api.adapter.Adaptable;
 public interface ResourceResolver extends Adaptable {
 
     /**
-     * Resolves the resource from the given <code>HttpServletRequest</code>.
+     * Resolves the resource from the given <code>absPath</code> optionally
+     * taking <code>HttpServletRequest</code> into account, such as the
+     * value of the <code>Host</code> request header.
      * <p>
      * If the request cannot be resolved to an existing resource, a
      * {@link Resource} object is returned whose
@@ -55,6 +57,35 @@ public interface ResourceResolver extends Adaptable {
      * @throws org.apache.sling.api.SlingException A subclass of this exception
      *             is thrown if the resource to which the request maps cannot be
      *             retrieved.
+     * @since 2.0.4
+     */
+    Resource resolve(HttpServletRequest request, String absPath);
+
+    /**
+     * Resolves the resource from the given <code>HttpServletRequest</code>.
+     * <p>
+     * If the request cannot be resolved to an existing resource, a
+     * {@link Resource} object is returned whose
+     * {@link Resource#getResourceType() resource type} is set to
+     * {@link Resource#RESOURCE_TYPE_NON_EXISTING} and the
+     * {@link Resource#getPath() resource path} set to the request URI.
+     * {@link Resource#adaptTo(Class) object} returns <code>null</code> for
+     * all classes.
+     * <p>
+     * This method is deprecated as of API version 2.0.4 and should not be used
+     * anymore. Implementations are expected to implement this method calling
+     * the {@link #resolve(HttpServletRequest, String)} where the
+     * <code>absPath</code> argument is the result of calling the
+     * <code>getPathInfo()</code> on the <code>request</code> object.
+     * 
+     * @param request The http servlet request object used to resolve the
+     *            resource for.
+     * @return The {@link Resource} for the request.
+     * @throws org.apache.sling.api.SlingException A subclass of this exception
+     *             is thrown if the resource to which the request maps cannot be
+     *             retrieved.
+     * @deprecated as of 2.0.4, use {@link #resolve(HttpServletRequest, String)}
+     *             instead.
      */
     Resource resolve(HttpServletRequest request);
 
@@ -83,9 +114,9 @@ public interface ResourceResolver extends Adaptable {
 
     /**
      * Returns a path mapped from the (resource) path applying the reverse
-     * mapping used by the {@link #resolve(HttpServletRequest)} and
-     * {@link #resolve(String)} such that when the path is given to the
-     * {@link #resolve(String)} method the same resource is returned.
+     * mapping used by the {@link #resolve(String)} such that when the path is
+     * given to the {@link #resolve(String)} method the same resource is
+     * returned.
      * <p>
      * Note, that technically the <code>resourcePath</code> need not refer to
      * an existing resource. This method just applies the mappings and returns
@@ -93,11 +124,41 @@ public interface ResourceResolver extends Adaptable {
      * an existing resource roundtripping may of course not work and calling
      * {@link #resolve(String)} with the path returned may return
      * <code>null</code>.
+     * <p>
+     * This method is intended as the reverse operation of the
+     * {@link #resolve(String)} method.
      * 
      * @param resourcePath The path for which to return a mapped path.
      * @return The mapped path.
      */
     String map(String resourcePath);
+
+    /**
+     * Returns an URL mapped from the (resource) path applying the reverse
+     * mapping used by the {@link #resolve(HttpServletRequest, String)} such
+     * that when the path is given to the
+     * {@link #resolve(HttpServletRequest, String)} method the same resource is
+     * returned.
+     * <p>
+     * Note, that technically the <code>resourcePath</code> need not refer to
+     * an existing resource. This method just applies the mappings and returns
+     * the resulting string. If the <code>resourcePath</code> does not address
+     * an existing resource roundtripping may of course not work and calling
+     * {@link #resolve(HttpServletRequest, String)} with the path returned may
+     * return <code>null</code>.
+     * <p>
+     * This method is intended as the reverse operation of the
+     * {@link #resolve(HttpServletRequest, String)} method. As such the URL
+     * returned is expected to be an absolute URL including scheme, host, any
+     * servlet context path and the actual path used to resolve the resource.
+     * 
+     * @param request The http servlet request object which may be used to apply
+     *            more mapping functionality.
+     * @param resourcePath The path for which to return a mapped path.
+     * @return The mapped URL.
+     * @since 2.0.4
+     */
+    String map(HttpServletRequest request, String resourcePath);
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
