@@ -66,6 +66,9 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
                 "/SLING-INF/nodetypes/folder.cnd")));
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
             this.getClass().getResourceAsStream(
+                "/SLING-INF/nodetypes/mapping.cnd")));
+        assertTrue(RepositoryUtil.registerNodeType(getSession(),
+            this.getClass().getResourceAsStream(
                 "/SLING-INF/nodetypes/resource.cnd")));
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
             this.getClass().getResourceAsStream(
@@ -76,15 +79,6 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         Field repoField = resFac.getClass().getDeclaredField("repository");
         repoField.setAccessible(true);
         repoField.set(resFac, getRepository());
-
-        Field mappingsField = resFac.getClass().getDeclaredField("mappings");
-        mappingsField.setAccessible(true);
-        mappingsField.set(resFac, new Mapping[] { Mapping.DIRECT });
-
-        Field patternsField = resFac.getClass().getDeclaredField("patterns");
-        patternsField.setAccessible(true);
-        patternsField.set(resFac,
-            new JcrResourceResolverFactoryImpl.ResourcePattern[0]);
 
         // ensure using JcrResourceResolver2
         Field unrrField = resFac.getClass().getDeclaredField("useNewResourceResolver");
@@ -105,12 +99,12 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             "nt:unstructured");
 
         // test mappings
-        mapRoot = getSession().getRootNode().addNode("etc", "nt:unstructured");
-        Node map = mapRoot.addNode("map", "nt:unstructured");
-        Node https = map.addNode("https", "nt:unstructured");
-        https.addNode("localhost.443", "nt:unstructured");
-        Node http = map.addNode("http", "nt:unstructured");
-        http.addNode("localhost.80", "nt:unstructured");
+        mapRoot = getSession().getRootNode().addNode("etc", "nt:folder");
+        Node map = mapRoot.addNode("map", "sling:Mapping");
+        Node https = map.addNode("https", "sling:Mapping");
+        https.addNode("localhost.443", "sling:Mapping");
+        Node http = map.addNode("http", "sling:Mapping");
+        http.addNode("localhost.80", "sling:Mapping");
 
         session.save();
 
@@ -275,7 +269,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("_playground_designground_",
-            "nt:unstructured");
+            "sling:Mapping");
         toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
             "(playground|designground)");
         toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
@@ -300,6 +294,46 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         // define an alias for the rootPath
         String alias = "testAlias";
         rootNode.setProperty(JcrResourceResolver2.PROP_ALIAS, alias);
+        session.save();
+        
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+            + "/" + alias + ".print.html");
+        
+        HttpServletRequest request = new ResourceResolverTestRequest(path);
+        Resource res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+            res.getResourceType());
+        
+        assertEquals(".print.html",
+            res.getResourceMetadata().getResolutionPathInfo());
+        
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+            + "/" + alias + ".print.html/suffix.pdf");
+        
+        request = new ResourceResolverTestRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+            res.getResourceType());
+        
+        assertEquals(".print.html/suffix.pdf",
+            res.getResourceMetadata().getResolutionPathInfo());
+        
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+    }
+    
+    public void testResolveResourceAliasJcrContent() throws Exception {
+        // define an alias for the rootPath in the jcr:content child node
+        String alias = "testAlias";
+        Node content = rootNode.addNode("jcr:content", "nt:unstructured");
+        content.setProperty(JcrResourceResolver2.PROP_ALIAS, alias);
         session.save();
 
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
