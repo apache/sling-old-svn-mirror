@@ -59,9 +59,9 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private static final String MAP_ROOT = "/etc/map";
 
-    public static final String PROP_REG_EXP = "sling:regexp";
+    public static final String PROP_REG_EXP = "sling:match";
 
-    public static final String PROP_REDIRECT_INTERNAL = "sling:alias";
+    public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
 
     public static final String PROP_ALIAS = "sling:alias";
 
@@ -518,9 +518,20 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     }
 
     private String getProperty(Resource res, String propName) {
+        
+        // check the property in the resource itself
         ValueMap props = res.adaptTo(ValueMap.class);
         if (props != null) {
-            return props.get(propName, String.class);
+            String prop = props.get(propName, String.class);
+            if (prop != null) {
+                return prop;
+            }
+        }
+        
+        // otherwise, check it in the jcr:content child resource
+        res = getResource(res, "jcr:content");
+        if (res != null) {
+            return getProperty(res, propName);
         }
 
         return null;
