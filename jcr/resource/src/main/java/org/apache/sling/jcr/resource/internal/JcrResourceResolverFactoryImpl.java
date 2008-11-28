@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  * descriptors provided by bundles.
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
- *
+ * 
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  * @scr.property name="service.description"
@@ -69,14 +69,14 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="JcrResourceTypeProvider"
  *                interface="org.apache.sling.jcr.resource.JcrResourceTypeProvider"
  *                cardinality="0..n" policy="dynamic"
-
  */
-public class JcrResourceResolverFactoryImpl
-    implements JcrResourceResolverFactory {
+public class JcrResourceResolverFactoryImpl implements
+        JcrResourceResolverFactory {
 
     public final static class ResourcePattern {
         public final Pattern pattern;
-        public final String  replacement;
+
+        public final String replacement;
 
         public ResourcePattern(final Pattern p, final String r) {
             this.pattern = p;
@@ -104,7 +104,7 @@ public class JcrResourceResolverFactoryImpl
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
-     *
+     * 
      * @scr.property values.1="/-/"
      */
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
@@ -118,8 +118,9 @@ public class JcrResourceResolverFactoryImpl
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
     /**
-     * These regexps are executing during the resource resolving phase
-     * before the mappings are applied.
+     * These regexps are executing during the resource resolving phase before
+     * the mappings are applied.
+     * 
      * @scr.property values.1="/_([^/]+?)_|/$1:"
      */
     private static final String PROP_REGEXPS = "resource.resolver.regexps";
@@ -127,21 +128,47 @@ public class JcrResourceResolverFactoryImpl
     /**
      * These regexps are executed during a map operation as the back conversion
      * of the {@link #PROP_REGEXPS}
+     * 
      * @scr.property values.1="/([^/]+?):([^/]+)|/_$1_$2"
      */
     private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
+
+    /**
+     * Defines whether namespace prefixes of resource names inside the path
+     * (e.g. <code>jcr:</code> in <code>/home/path/jcr:content</code>) are
+     * mangled or not.
+     * <p>
+     * Mangling means the any namespace prefix contained in the path is replaced
+     * as per the generic substitution pattern <code>/([^:]+):/_$1_/</code>
+     * when calling the <code>map</code> method of the resource resolver.
+     * Likewise the <code>resolve</code> methods will unmangle such namespace
+     * prefixes according to the substituation pattern
+     * <code>/_([^_]+)_/$1:/</code>.
+     * <p>
+     * This feature is provided since there may be systems out there in the wild
+     * which cannot cope with URLs containing colons, even though they are
+     * perfectly valid characters in the path part of URI references with a
+     * scheme.
+     * <p>
+     * The default value of this property if no configuration is provided is
+     * <code>false</code>.
+     * 
+     * @scr.property value="false" type="Boolean"
+     */
+    private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The JCR Repository we access to resolve resources
-     *
+     * 
      * @scr.reference
      */
     private SlingRepository repository;
 
-    /** The (optional) resource type providers.
+    /**
+     * The (optional) resource type providers.
      */
     protected final List<JcrResourceTypeProviderEntry> jcrResourceTypeProviders = new ArrayList<JcrResourceTypeProviderEntry>();
 
@@ -178,7 +205,7 @@ public class JcrResourceResolverFactoryImpl
     private String[] searchPath;
 
     private ResourceProviderEntry rootProviderEntry;
-    
+
     /**
      * Temporary field to select which JcrResourceResolver implementation to
      * use.
@@ -187,6 +214,9 @@ public class JcrResourceResolverFactoryImpl
      * @see #getResourceResolver(Session)
      */
     private boolean useNewResourceResolver;
+
+    // whether to mangle paths with namespaces or not
+    private boolean mangleNamespacePrefixes;
     
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
@@ -205,18 +235,18 @@ public class JcrResourceResolverFactoryImpl
         if (useNewResourceResolver) {
             return new JcrResourceResolver2(sessionRoot, this);
         }
-        
+
         return new JcrResourceResolver(sessionRoot, this);
     }
 
     protected JcrResourceTypeProvider[] getJcrResourceTypeProvider() {
         JcrResourceTypeProvider[] providers = null;
-        synchronized ( this.jcrResourceTypeProviders ) {
-            if ( this.jcrResourceTypeProviders.size() > 0 ) {
+        synchronized (this.jcrResourceTypeProviders) {
+            if (this.jcrResourceTypeProviders.size() > 0) {
                 providers = new JcrResourceTypeProvider[this.jcrResourceTypeProviders.size()];
                 int index = 0;
                 final Iterator<JcrResourceTypeProviderEntry> i = this.jcrResourceTypeProviders.iterator();
-                while ( i.hasNext() ) {
+                while (i.hasNext()) {
                     providers[index] = i.next().provider;
                 }
             }
@@ -243,6 +273,10 @@ public class JcrResourceResolverFactoryImpl
                 : null;
     }
 
+    BidiMap getVirtualURLMap() {
+        return virtualURLMap;
+    }
+
     Mapping[] getMappings() {
         return mappings;
     }
@@ -259,6 +293,10 @@ public class JcrResourceResolverFactoryImpl
         return backPatterns;
     }
 
+    boolean isMangleNamespacePrefixes() {
+        return mangleNamespacePrefixes;
+        
+    }
     /**
      * Getter for rootProviderEntry, making it easier to extend
      * JcrResourceResolverFactoryImpl. See <a
@@ -283,15 +321,15 @@ public class JcrResourceResolverFactoryImpl
         String propNewRes = componentContext.getBundleContext().getProperty(
             PROP_USE_NEW_RESOLVER);
         boolean flagNewRes = !"false".equalsIgnoreCase(propNewRes);
-        useNewResourceResolver = OsgiUtil.toBoolean(properties.get(PROP_USE_NEW_RESOLVER), flagNewRes);
+        useNewResourceResolver = OsgiUtil.toBoolean(
+            properties.get(PROP_USE_NEW_RESOLVER), flagNewRes);
         if (useNewResourceResolver) {
             log.info("activate: Using new JCR ResourceResolver with extended Mapping");
         } else {
             log.info("activate: Using old JCR ResourceResolver");
         }
         // END Temporary solution to select old and new JcrResourceResolver
-        
-        
+
         BidiMap virtuals = new TreeBidiMap();
         String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
         for (int i = 0; virtualList != null && i < virtualList.length; i++) {
@@ -341,6 +379,10 @@ public class JcrResourceResolverFactoryImpl
             searchPath = new String[] { "/" };
         }
 
+        // namespace mangling
+        mangleNamespacePrefixes = OsgiUtil.toBoolean(
+            properties.get(PROP_MANGLE_NAMESPACES), false);
+
         // bind resource providers not bound yet
         for (ServiceReference reference : delayedResourceProviders) {
             bindResourceProvider(reference);
@@ -352,10 +394,10 @@ public class JcrResourceResolverFactoryImpl
     private ResourcePattern[] getResourcePatterns(String[] patternList) {
         // regexps
         List<ResourcePattern> patterns = new ArrayList<ResourcePattern>();
-        if ( patternList != null ) {
-            for(final String p : patternList) {
+        if (patternList != null) {
+            for (final String p : patternList) {
                 int pos = p.lastIndexOf('|');
-                if ( pos == -1 ) {
+                if (pos == -1) {
                     log.error("Invalid regexp: {}", p);
                 } else {
                     final String replString = p.substring(pos + 1);
@@ -368,8 +410,8 @@ public class JcrResourceResolverFactoryImpl
     }
 
     protected void processDelayedJcrResourceTypeProviders() {
-        synchronized ( this.jcrResourceTypeProviders ) {
-            for(ServiceReference reference : delayedJcrResourceTypeProviders ) {
+        synchronized (this.jcrResourceTypeProviders) {
+            for (ServiceReference reference : delayedJcrResourceTypeProviders) {
                 this.addJcrResourceTypeProvider(reference);
             }
             delayedJcrResourceTypeProviders.clear();
@@ -377,32 +419,34 @@ public class JcrResourceResolverFactoryImpl
     }
 
     protected void addJcrResourceTypeProvider(final ServiceReference reference) {
-        final Long id = (Long)reference.getProperty(Constants.SERVICE_ID);
+        final Long id = (Long) reference.getProperty(Constants.SERVICE_ID);
         long ranking = -1;
-        if ( reference.getProperty(Constants.SERVICE_RANKING) != null ) {
-            ranking = (Long)reference.getProperty(Constants.SERVICE_RANKING);
+        if (reference.getProperty(Constants.SERVICE_RANKING) != null) {
+            ranking = (Long) reference.getProperty(Constants.SERVICE_RANKING);
         }
         this.jcrResourceTypeProviders.add(new JcrResourceTypeProviderEntry(id,
-                 ranking,
-                 (JcrResourceTypeProvider)this.componentContext.locateService("JcrResourceTypeProvider", reference)));
-        Collections.sort(this.jcrResourceTypeProviders, new Comparator<JcrResourceTypeProviderEntry>() {
+            ranking,
+            (JcrResourceTypeProvider) this.componentContext.locateService(
+                "JcrResourceTypeProvider", reference)));
+        Collections.sort(this.jcrResourceTypeProviders,
+            new Comparator<JcrResourceTypeProviderEntry>() {
 
-            public int compare(JcrResourceTypeProviderEntry o1,
-                               JcrResourceTypeProviderEntry o2) {
-                if ( o1.ranking < o2.ranking ) {
-                    return 1;
-                } else if ( o1.ranking > o2.ranking ) {
-                    return -1;
-                } else {
-                    if ( o1.serviceId < o2.serviceId ) {
-                        return -1;
-                    } else if ( o1.serviceId > o2.serviceId ) {
+                public int compare(JcrResourceTypeProviderEntry o1,
+                        JcrResourceTypeProviderEntry o2) {
+                    if (o1.ranking < o2.ranking) {
                         return 1;
+                    } else if (o1.ranking > o2.ranking) {
+                        return -1;
+                    } else {
+                        if (o1.serviceId < o2.serviceId) {
+                            return -1;
+                        } else if (o1.serviceId > o2.serviceId) {
+                            return 1;
+                        }
                     }
+                    return 0;
                 }
-                return 0;
-            }
-        });
+            });
 
     }
 
@@ -460,7 +504,7 @@ public class JcrResourceResolverFactoryImpl
     }
 
     protected void bindJcrResourceTypeProvider(ServiceReference reference) {
-        synchronized ( this.jcrResourceTypeProviders ) {
+        synchronized (this.jcrResourceTypeProviders) {
             if (componentContext == null) {
                 delayedJcrResourceTypeProviders.add(reference);
             } else {
@@ -470,13 +514,13 @@ public class JcrResourceResolverFactoryImpl
     }
 
     protected void unbindJcrResourceTypeProvider(ServiceReference reference) {
-        synchronized ( this.jcrResourceTypeProviders ) {
+        synchronized (this.jcrResourceTypeProviders) {
             delayedJcrResourceTypeProviders.remove(reference);
-            final long id = (Long)reference.getProperty(Constants.SERVICE_ID);
+            final long id = (Long) reference.getProperty(Constants.SERVICE_ID);
             final Iterator<JcrResourceTypeProviderEntry> i = this.jcrResourceTypeProviders.iterator();
-            while ( i.hasNext() ) {
+            while (i.hasNext()) {
                 final JcrResourceTypeProviderEntry current = i.next();
-                if ( current.serviceId == id ) {
+                if (current.serviceId == id) {
                     i.remove();
                 }
             }
@@ -492,12 +536,13 @@ public class JcrResourceResolverFactoryImpl
 
     protected static final class JcrResourceTypeProviderEntry {
         final long serviceId;
+
         final long ranking;
+
         final JcrResourceTypeProvider provider;
 
-        public JcrResourceTypeProviderEntry(final long id,
-                                            final long ranking,
-                                            final JcrResourceTypeProvider p) {
+        public JcrResourceTypeProviderEntry(final long id, final long ranking,
+                final JcrResourceTypeProvider p) {
             this.serviceId = id;
             this.ranking = ranking;
             this.provider = p;

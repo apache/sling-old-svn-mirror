@@ -165,6 +165,16 @@ public class Mapping {
             + handle.substring(this.fromLength) : null;
     }
 
+    // TODO: temporary
+    public String getFrom() {
+        return from;
+    }
+    
+    // TODO: temporary
+    public String getTo() {
+        return to;
+    }
+    
     /**
      * Checks, if this mapping is defined for inbound mapping.
      *
