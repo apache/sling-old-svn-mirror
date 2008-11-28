@@ -67,9 +67,9 @@
 
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/folder.cnd,
-                            SLING-INF/nodetypes/mapping.cnd,
                             SLING-INF/nodetypes/resource.cnd,
-                            SLING-INF/nodetypes/vanitypath.cnd
+                            SLING-INF/nodetypes/vanitypath.cnd,
+                            SLING-INF/nodetypes/mapping.cnd
                         </Sling-Nodetypes>
 
                     </instructions>

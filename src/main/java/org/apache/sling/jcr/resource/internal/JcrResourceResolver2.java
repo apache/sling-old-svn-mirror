@@ -21,11 +21,17 @@ package org.apache.sling.jcr.resource.internal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -34,6 +40,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
@@ -46,6 +53,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
+import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
@@ -57,6 +65,20 @@ import org.slf4j.LoggerFactory;
 public class JcrResourceResolver2 extends SlingAdaptable implements
         ResourceResolver {
 
+    private static final String MANGLE_NAMESPACE_IN_SUFFIX = "_";
+
+    private static final String MANGLE_NAMESPACE_IN_PREFIX = "/_";
+
+    private static final String MANGLE_NAMESPACE_IN = "/_([^_]+)_";
+
+    private static final String MANGLE_NAMESPACE_OUT_SUFFIX = ":";
+
+    private static final String MANGLE_NAMESPACE_OUT_PREFIX = "/";
+
+    private static final String MANGLE_NAMESPACE_OUT = "/([^:]+):";
+
+    private static final String ANY_SCHEME_HOST = ".*/.*";
+
     private static final String MAP_ROOT = "/etc/map";
 
     public static final String PROP_REG_EXP = "sling:match";
@@ -66,6 +88,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     public static final String PROP_ALIAS = "sling:alias";
 
     public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
+    
+    public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -75,6 +99,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     private final JcrResourceResolverFactoryImpl factory;
 
     private final List<MapEntry> maps;
+    
+    private Set<String> namespaces;
 
     public JcrResourceResolver2(JcrResourceProviderEntry rootProvider,
             JcrResourceResolverFactoryImpl factory) {
@@ -93,8 +119,11 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             absPath = "/";
         }
 
+        // check for special namespace prefix treatment
+        absPath = unmangleNamespaces(absPath);
+        
         // Assume http://localhost:80 if request is null
-        String realPath = absPath;
+        String[] realPathList = { absPath };
         String requestPath;
         if (request != null) {
             requestPath = getMapPath(request.getScheme(),
@@ -111,7 +140,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         // TODO: might do better to be able to log the loop and help the user
         for (int i = 0; i < 100; i++) {
 
-            String mappedPath = null;
+            String[] mappedPath = null;
             for (MapEntry mapEntry : maps) {
                 mappedPath = mapEntry.replace(requestPath);
                 if (mappedPath != null) {
@@ -127,7 +156,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
                     // external redirect
                     log.debug("resolve: Returning external redirect");
-                    return new RedirectResource(this, absPath, mappedPath);
+                    return new RedirectResource(this, absPath, mappedPath[0]);
                 }
             }
 
@@ -141,19 +170,19 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             }
 
             // if the mapped path is not an URL, use this path to continue
-            if (!mappedPath.contains("://")) {
+            if (!mappedPath[0].contains("://")) {
                 log.debug("resolve: Mapped path is for resource tree");
-                realPath = mappedPath;
+                realPathList = mappedPath;
                 break;
             }
 
             // otherwise the mapped path is an URI and we have to try to
             // resolve that URI now, using the URI's path as the real path
             try {
-                URI uri = new URI(mappedPath);
+                URI uri = new URI(mappedPath[0]);
                 requestPath = getMapPath(uri.getScheme(), uri.getHost(),
                     uri.getPort(), uri.getPath());
-                realPath = uri.getPath();
+                realPathList = new String[] { uri.getPath() };
 
                 log.debug(
                     "resolve: Mapped path is an URL, using new request path {}",
@@ -168,36 +197,43 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         // this path may be absolute or relative, in which case we try
         // to resolve it against the search path
 
-        // first check whether the requested resource is a StarResource
-        if (StarResource.appliesTo(realPath)) {
-
-            log.debug("resolve: Mapped path {} is a Star Resource", realPath);
-            return new StarResource(this, ensureAbsPath(realPath),
-                factory.getJcrResourceTypeProvider());
-        }
-
         Resource res = null;
-        if (realPath.startsWith("/")) {
+        for (int i = 0; res == null && i < realPathList.length; i++) {
+            String realPath = realPathList[i];
 
-            // let's check it with a direct access first
-            log.debug("resolve: Try absolute mapped path");
-            res = resolveInternal(realPath);
+            // first check whether the requested resource is a StarResource
+            if (StarResource.appliesTo(realPath)) {
 
-        } else {
+                log.debug("resolve: Mapped path {} is a Star Resource",
+                    realPath);
+                res = new StarResource(this, ensureAbsPath(realPath),
+                    factory.getJcrResourceTypeProvider());
 
-            String[] searchPath = getSearchPath();
-            for (int i = 0; res == null && i < searchPath.length; i++) {
-                log.debug(
-                    "resolve: Try relative mapped path with search path entry {}",
-                    searchPath[i]);
-                res = resolveInternal(searchPath[i] + realPath);
+            } else
+
+            if (realPath.startsWith("/")) {
+
+                // let's check it with a direct access first
+                log.debug("resolve: Try absolute mapped path");
+                res = resolveInternal(realPath);
+
+            } else {
+
+                String[] searchPath = getSearchPath();
+                for (int spi = 0; res == null && spi < searchPath.length; spi++) {
+                    log.debug(
+                        "resolve: Try relative mapped path with search path entry {}",
+                        searchPath[spi]);
+                    res = resolveInternal(searchPath[spi] + realPath);
+                }
+
             }
 
         }
-
+        
         if (res == null) {
-            log.debug("resolve: Resource {} does not exist", realPath);
-            res = new NonExistingResource(this, ensureAbsPath(realPath));
+            log.debug("resolve: Resource {} does not exist", realPathList[0]);
+            res = new NonExistingResource(this, ensureAbsPath(realPathList[0]));
         } else {
             log.debug("resolve: Found resource {}", res);
         }
@@ -216,23 +252,30 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     // trivial implementation not taking into account any mappings in
     // the content
     public String map(String resourcePath) {
-        return resourcePath;
+        return map(null, resourcePath);
     }
 
     // trivial implementation not taking into account any mappings in
     // the content and in /etc/map
     public String map(HttpServletRequest request, String resourcePath) {
+        
         StringBuilder sb = new StringBuilder();
-        sb.append(request.getScheme()).append("://");
-        sb.append(request.getServerName());
-        if (request.getServerPort() > 0) {
-            sb.append(':').append(request.getServerPort());
+        
+        if (request != null) {
+            sb.append(request.getScheme()).append("://");
+            sb.append(request.getServerName());
+            if (request.getServerPort() > 0) {
+                sb.append(':').append(request.getServerPort());
+            }
+            if (request.getContextPath() != null
+                && request.getContextPath().length() > 0) {
+                sb.append(request.getContextPath());
+            }
         }
-        if (request.getContextPath() != null
-            && request.getContextPath().length() > 0) {
-            sb.append(request.getContextPath());
-        }
-        sb.append(resourcePath);
+
+        // mangle the namespaces
+        sb.append(mangleNamespaces(resourcePath));
+        
         return sb.toString();
     }
 
@@ -358,6 +401,23 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
      */
     private Session getSession() {
         return rootProvider.getSession();
+    }
+    
+    private Set<String> getNamespaces() {
+        if (namespaces == null) {
+            
+            // get the current set of namespaces, we cache throughout our
+            // life time..
+            String[] namespaceList;
+            try {
+                namespaceList = getSession().getNamespacePrefixes();
+            } catch (RepositoryException re) {
+                namespaceList = new String[0];
+            }
+
+            namespaces = new HashSet<String>(Arrays.asList(namespaceList));
+        }
+        return namespaces;
     }
 
     /**
@@ -562,6 +622,9 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             gather(entries, res, "");
         }
 
+        // backwards-compatibility: read current configuration
+        gatherConfiguration(entries);
+        
         // backwards-compatible sling:vanityPath stuff
         gatherVanityPaths(entries);
         
@@ -605,7 +668,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             // what is stored in the sling:vanityPath property
             Object pVanityPath = row.get("sling:vanityPath");
             if (pVanityPath != null) {
-                String url = ".*/.*" + String.valueOf(pVanityPath);
+                String url = ANY_SCHEME_HOST + String.valueOf(pVanityPath);
 
                 // redirect target is the node providing the sling:vanityPath
                 // property (or its parent if the node is called jcr:content)
@@ -616,14 +679,86 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
                 // whether the target is attained by a 302/FOUND or by an
                 // internal redirect is defined by the sling:redirect property
-                boolean internal = true;
-                if (row.containsKey("sling:redirect")) {
-                    internal = !Boolean.valueOf(String.valueOf(row.get("sling:redirect")));
+                int status = -1;
+                if (row.containsKey("sling:redirect")
+                    && Boolean.valueOf(String.valueOf(row.get("sling:redirect")))) {
+                    status = HttpServletResponse.SC_FOUND;
                 }
 
-                entries.add(new MapEntry(url, redirect, internal));
+                entries.add(new MapEntry(url, redirect, status));
+            }
+        }
+    }
+    
+    private void gatherConfiguration(List<MapEntry> entries) {
+        // virtual uris
+        Map<?, ?> virtuals = factory.getVirtualURLMap();
+        if (virtuals != null) {
+            for (Entry<?, ?> virtualEntry : virtuals.entrySet()) {
+                String url = ANY_SCHEME_HOST + virtualEntry.getKey();
+                String redirect = (String) virtualEntry.getValue();
+                entries.add(new MapEntry(url, redirect, -1));
+            }
+        }
+        
+        // URL Mappings
+        Mapping[] mappings = factory.getMappings();
+        if (mappings != null) {
+            Map<String, List<String>> map = new HashMap<String, List<String>>();
+            for (Mapping mapping : mappings) {
+                if (mapping.mapsInbound()) {
+                    String url = mapping.getFrom();
+                    String alias = mapping.getTo();
+                    if (url.length() > 0) {
+                        List<String> aliasList = map.get(url);
+                        if (aliasList == null) {
+                            aliasList = new ArrayList<String>();
+                            map.put(url, aliasList);
+                        }
+                        aliasList.add(alias);
+                    }
+                }
+            }
+            for (Entry<String, List<String>> entry : map.entrySet()) {
+                entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(),
+                    entry.getValue().toArray(new String[0]), -1));
             }
         }
     }
 
+    private String mangleNamespaces(String absPath) {
+        if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
+            Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
+            Matcher m = p.matcher(absPath);
+            StringBuffer buf = new StringBuffer();
+            while (m.find()) {
+                String replacement = MANGLE_NAMESPACE_IN_PREFIX + m.group(1) + MANGLE_NAMESPACE_IN_SUFFIX;
+                m.appendReplacement(buf, replacement);
+            }
+            m.appendTail(buf);
+            absPath = buf.toString();
+        }
+        
+        return absPath;
+    }
+
+    private String unmangleNamespaces(String absPath) {
+        if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_IN_PREFIX)) {
+            Set<String> namespaces = getNamespaces();
+            Pattern p = Pattern.compile(MANGLE_NAMESPACE_IN);
+            Matcher m = p.matcher(absPath);
+            StringBuffer buf = new StringBuffer();
+            while (m.find()) {
+                String namespace = m.group(1);
+                if (namespaces.contains(namespace)) {
+                    String replacement = MANGLE_NAMESPACE_OUT_PREFIX + namespace + MANGLE_NAMESPACE_OUT_SUFFIX;
+                    m.appendReplacement(buf, replacement);
+                }
+            }
+            m.appendTail(buf);
+            absPath = buf.toString();
+        }
+        
+        return absPath;
+    }
 }
