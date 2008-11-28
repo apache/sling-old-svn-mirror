@@ -35,9 +35,9 @@ public class MapEntry {
 
     private final Pattern urlPattern;
 
-    private final String redirect;
+    private final String[] redirect;
 
-    private final boolean isInternal;
+    private final int status;
 
     public static MapEntry create(String url, Resource resource) {
         ValueMap props = resource.adaptTo(ValueMap.class);
@@ -45,23 +45,29 @@ public class MapEntry {
             String redirect = props.get(
                 JcrResourceResolver2.PROP_REDIRECT_EXTERNAL, String.class);
             if (redirect != null) {
-                return new MapEntry(url, redirect, false);
+                int status = props.get(
+                    JcrResourceResolver2.PROP_REDIRECT_EXTERNAL_STATUS, 302);
+                return new MapEntry(url, redirect, status);
             }
             
-            redirect = props.get(
-                JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String.class);
-            if (redirect != null) {
-                return new MapEntry(url, redirect, true);
+            String[] internalRedirect = props.get(
+                JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
+            if (internalRedirect != null) {
+                return new MapEntry(url, internalRedirect, -1);
             }
         }
 
         return null;
     }
 
-    public MapEntry(String url, String redirect, boolean isInternal) {
+    public MapEntry(String url, String redirect, int status) {
+        this(url, new String[]{ redirect }, status);
+    }
+    
+    public MapEntry(String url, String[] redirect, int status) {
         this.urlPattern = Pattern.compile(url);
         this.redirect = redirect;
-        this.isInternal = isInternal;
+        this.status = status;
     }
 
     public Matcher getMatcher(String value) {
@@ -69,23 +75,32 @@ public class MapEntry {
     }
     
     // Returns the replacement or null if the value does not match
-    public String replace(String value) {
+    public String[] replace(String value) {
         Matcher m = urlPattern.matcher(value);
         if (m.find()) {
+            String[] redirects = getRedirect();
+            String[] results = new String[redirects.length];
             StringBuffer buf = new StringBuffer();
-            m.appendReplacement(buf, getRedirect());
-            m.appendTail(buf);
-            return buf.toString();
+            for (int i=0; i < redirects.length; i++) {
+                m.appendReplacement(buf, redirects[i]);
+                m.appendTail(buf);
+                results[i] = buf.toString();
+            }
+            return results;
         }
      
         return null;
     }
 
-    public String getRedirect() {
+    public String[] getRedirect() {
         return redirect;
     }
 
     public boolean isInternal() {
-        return isInternal;
+        return getStatus() < 0;
+    }
+    
+    public int getStatus() {
+        return status;
     }
 }

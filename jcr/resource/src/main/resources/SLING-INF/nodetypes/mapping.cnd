@@ -43,11 +43,15 @@
     // segment, thus it should not contain any slashes 
   - sling:match (string)
   
-    // Location header value for 302/FOUND response
+    // Location header value for response
   - sling:redirect (string)
+  
+    // status code for redirect, defaults to 302 if not defined
+  - sling:status (long)
   
     // internal redirect for further processing
   - sling:internalRedirect (string)
+  - sling:internalRedirect (string) multiple
 
 
 //-----------------------------------------------------------------------------
