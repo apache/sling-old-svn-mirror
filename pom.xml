@@ -121,6 +121,7 @@
         <module>samples/path-based-rtp</module>
         <module>samples/webloader/service</module>
         <module>samples/webloader/ui</module>
+        <module>samples/espblog</module>
 
         <!-- Launchpad -->
         <module>launchpad/base</module>
