@@ -151,11 +151,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			// either we don't know the bundle yet or it does not exist,
 			// so check whether the bundle can be found by its symbolic name
 			if (b == null) {
-			    // ensure we can mark and reset to read the manifest
-			    if (!data.markSupported()) {
-			        data = new BufferedInputStream(data);
-			    }
-			    final BundleInfo info = getMatchingBundle(data);
+			    final BundleInfo info = getMatchingBundle(installableData);
 			    if (info != null) {
 			        final Version availableVersion = new Version(
 			            (String) info.bundle.getHeaders().get(
@@ -183,8 +179,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			    b = ctx.installBundle(uri, data);
 			}
 		} finally {
-			if(data != null) {
+		    // data is never null here
+		    try {
 				data.close();
+			} catch (IOException ioe) {
 			}
 		}
 
@@ -270,44 +268,34 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
     /**
      * Returns a bundle with the same symbolic name as the bundle provided in
-     * the input stream. If the input stream has no manifest file or the
+     * the installable data. If the installable data has no manifest file or the
      * manifest file does not have a <code>Bundle-SymbolicName</code> header,
      * this method returns <code>null</code>. <code>null</code> is also
      * returned if no bundle with the same symbolic name as provided by the
      * input stream is currently installed.
      * <p>
-     * This method reads from the input stream and uses the
-     * <code>InputStream.mark</code> and <code>InputStream.reset</code>
-     * methods to reset the stream to where it started reading. The caller must
-     * make sure, the input stream supports the marking as reported by
-     * <code>InputStream.markSupported</code>.
+     * This method gets its own input stream from the installable data object
+     * and closes it after haing read the manifest file.
      * 
-     * @param data The mark supporting <code>InputStream</code> providing the
-     *            bundle whose symbolic name is to be matched against installed
-     *            bundles.
+     * @param installableData The installable data providing the bundle jar file
+     *            from the input stream.
      * @return The installed bundle with the same symbolic name as the bundle
      *         provided by the input stream or <code>null</code> if no such
      *         bundle exists or if the input stream does not provide a manifest
      *         with a symbolic name.
      * @throws IOException If an error occurrs reading from the input stream.
      */
-    private BundleInfo getMatchingBundle(InputStream data) throws IOException {
-        // allow 2KB, this should be enough for the manifest
-        data.mark(2048);
+    private BundleInfo getMatchingBundle(InstallableData installableData) throws IOException {
 
+        // open the stream to read the bundle manifest from
+        InputStream ins = installableData.adaptTo(InputStream.class);
+        if (ins == null) {
+        	return null;
+       	}
+       	
         JarInputStream jis = null;
         try {
-            // we close the JarInputStream at the end, so wrap the actual
-            // input stream to not propagate this to the actual input
-            // stream, because we still need it
-            InputStream nonClosing = new FilterInputStream(data) {
-                @Override
-                public void close() {
-                    // don't really close
-                }
-            };
-
-            jis = new JarInputStream(nonClosing);
+            jis = new JarInputStream(ins);
             Manifest manifest = jis.getManifest();
             if (manifest != null) {
 
@@ -331,15 +319,22 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
         } finally {
 
+            // close the jar stream or the inputstream, if the jar
+            // stream is set, we don't need to close the input stream
+            // since closing the jar stream closes the input stream
             if (jis != null) {
                 try {
                     jis.close();
                 } catch (IOException ignore) {
                 }
+            } else {
+                // ins is never null here
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                }
             }
 
-            // reset the input to where we started
-            data.reset();
         }
 
         // fall back to no bundle found for update
