@@ -44,26 +44,27 @@ final class WeightedResource extends ResourceWrapper implements
         Comparable<WeightedResource> {
 
     /**
-     * Weight value assigned to an instance just bearing request method name.
+     * Weight value assigned to an instance just bearing request method name
+     * (value is 0).
      */
     static final int WEIGHT_NONE = 0;
 
     /**
      * Weight value assigned to an instance if the the resource name neither
      * contains the parent resource name as a prefix, nor the request method
-     * name nor the request extension.
+     * name nor the request extension (value is -1).
      */
     static final int WEIGHT_LAST_RESSORT = -1;
 
     /**
      * Weight value added to method/prefix weight if the resource name contains
-     * the the name of the parent resource as its prefix.
+     * the the name of the parent resource as its prefix (value is 1).
      */
     static final int WEIGHT_PREFIX = 1;
 
     /**
      * Weight value added to method/prefix weight if the resource name contains
-     * the request extension.
+     * the request extension (value is 2).
      */
     static final int WEIGHT_EXTENSION = 2;
 

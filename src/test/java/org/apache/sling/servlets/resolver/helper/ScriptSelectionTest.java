@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.servlets.resolver.helper.ResourceCollector;
 
 /** Various tests that explain and demonstrate how scripts are 
  *  selected. See the assertScript methods for how to interpret
@@ -36,9 +35,15 @@ public class ScriptSelectionTest extends HelperTestBase {
             "/apps/foo/bar/html.esp",
             "/apps/foo/bar/POST.esp",
             "/apps/foo/bar/print.esp",
+            "/apps/foo/bar/print",
             "/apps/foo/bar/print/POST.esp",
             "/apps/foo/bar/xml.esp",
-            "/apps/foo/bar/print.xml.esp"
+            "/apps/foo/bar/print.xml.esp",
+            "/apps/foo/bar/print/DELETE.esp",
+            "/apps/foo/bar/DELETE.esp",
+            "/apps/foo/bar/SPURIOUS.esp",
+            "/apps/foo/bar/UNKNOWN.esp"
+
     };
     
     /** Given a list of available scripts and the request method, selectors 
@@ -131,6 +136,7 @@ public class ScriptSelectionTest extends HelperTestBase {
     
     public void testMultipleSelectorsA() {
         final String [] scripts = {
+                "/apps/foo/bar/print",
                 "/apps/foo/bar/print/a4.esp",
                 "/apps/foo/bar/print.a4.esp",
                 "/apps/foo/bar/html.print.a4.esp",
@@ -177,6 +183,7 @@ public class ScriptSelectionTest extends HelperTestBase {
                 "/apps/foo/bar/print.esp",
                 "/apps/foo/bar/a4.esp",
                 "/apps/foo/bar/bar.a4.esp",
+                "/apps/foo/bar/print",
                 "/apps/foo/bar/print/a4.esp",
                 "/apps/foo/bar/html.esp"
             };
@@ -225,7 +232,17 @@ public class ScriptSelectionTest extends HelperTestBase {
     }
     
     public void testHtmlPostSelectors() {
-        assertScript("POST", "print.a4", "html", SET_A, "/apps/foo/bar/POST.esp");
+        assertScript("POST", "print.a4", "html", SET_A, "/apps/foo/bar/print/POST.esp");
+        assertScript("POST", "print", "html", SET_A, "/apps/foo/bar/print/POST.esp");
+        assertScript("POST", "a4.print", "html", SET_A, "/apps/foo/bar/POST.esp");
+        assertScript("POST", null, "html", SET_A, "/apps/foo/bar/POST.esp");
+    }
+    
+    public void testHtmlMethodSelectors() {
+        assertScript("DELETE", "print.a4", "html", SET_A, "/apps/foo/bar/print/DELETE.esp");
+        assertScript("SPURIOUS", "print", "html", SET_A, "/apps/foo/bar/SPURIOUS.esp");
+        assertScript("UNKNOWN", "a4.print", "html", SET_A, "/apps/foo/bar/UNKNOWN.esp");
+        assertScript("UNKNOWN", null, "html", SET_A, "/apps/foo/bar/UNKNOWN.esp");
     }
     
     public void testHtmlPostSelectorsAreIgnored() {
