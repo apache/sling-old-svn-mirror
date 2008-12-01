@@ -384,7 +384,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 try {
                     bundle.start();
                 } catch (BundleException be) {
-                    log.error("Failed to start Bundle " 
+                    log.info("Failed to start Bundle " 
                         + bundle.getSymbolicName() + "/" + bundle.getBundleId()
                         + ", rescheduling for start"
                         ,be);
