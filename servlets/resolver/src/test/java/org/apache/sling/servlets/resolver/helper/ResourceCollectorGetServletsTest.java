@@ -48,9 +48,11 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print/a4.esp", // 5
                 "/print.html.esp", // 6
                 "/print/a4.html.esp", // 7
+                "/print", // resource to enable walking the tree
+                "/print", // resource to enable walking the tree
         };
         
-        int[] baseIdxs = { 0, 1, 1, 0, 0, 1, 0, 1 };
+        int[] baseIdxs = { 0, 1, 1, 0, 0, 1, 0, 1, 0, 1 };
         int[] indices  = { 7, 5, 6, 4, 2, 3, 0, 1 };
         
         effectiveTest(names, baseIdxs, indices);
@@ -65,9 +67,11 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print/other.esp", // 5
                 "/print.html.esp", // 6
                 "/print/a4.html.esp", // 7
+                "/print", // resource to enable walking the tree
+                "/print", // resource to enable walking the tree
         };
         
-        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
+        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
         int[] indices = { 7, 6, 3, 2, 0, 1 };
         
         effectiveTest(names, baseIdxs, indices);
@@ -83,9 +87,11 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print.other.esp", // 6
                 "/print.html.esp", // 7
                 "/print/a4.html.esp", // 8
+                "/print", // resource to enable walking the tree
+                "/print", // resource to enable walking the tree
         };
         
-        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
+        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
         int[] indices = { 8, 7, 2, 3, 0, 1 };
         
         effectiveTest(names, baseIdxs, indices);
@@ -102,9 +108,11 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print.other.esp", // 7
                 "/print.html.esp", // 8
                 "/print/a4.html.esp", // 9
+                "/print", // resource to enable walking the tree
+                "/print", // resource to enable walking the tree
         };
         
-        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
+        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
         int[] indices = { 9, 8, 3, 4, 1, 2, 0 };
         
         effectiveTest(names, baseIdxs, indices);
@@ -122,9 +130,11 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print.other.esp", // 8
                 "/print.html.esp", // 9
                 "/print/a4.html.esp", // 10
+                "/print", // resource to enable walking the tree
+                "/print", // resource to enable walking the tree
         };
         
-        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0 };
+        int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1 };
         int[] indices = { 10, 9, 3, 4, 1, 2, 0 };
         
         effectiveTest(names, baseIdxs, indices);

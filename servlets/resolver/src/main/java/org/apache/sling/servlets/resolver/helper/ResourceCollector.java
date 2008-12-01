@@ -25,12 +25,15 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ResourceCollector</code> class provides a single public method -
@@ -40,12 +43,40 @@ import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactor
  */
 public class ResourceCollector {
 
+    /**
+     * The special value returned by
+     * {@link #calculatePrefixMethodWeight(Resource, String, boolean)} if the
+     * resource is not suitable to handle the request according to the location
+     * prefix, request selectors and request extension (value is
+     * <code>Integer.MIN_VALUE</code>).
+     */
+    protected static final int WEIGHT_NO_MATCH = Integer.MIN_VALUE;
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     // the request method name used to indicate the script name
     private final String methodName;
 
     // the most generic resource type to use. This may be null in which
     // case the default servlet name will be used as the base name
     private final String baseResourceType;
+
+    // the request selectors as a string converted to a realtive path or
+    // null if the request has no selectors
+    private final String[] requestSelectors;
+
+    // the number of request selectors of the request or 0 if none
+    private final int numRequestSelectors;
+
+    // the request extension or null if the request has no extension
+    private final String extension;
+
+    // request is GET or HEAD
+    private final boolean isGet;
+
+    // request is GET or HEAD and extension is html
+    private final boolean isHtml;
 
     /**
      * Creates a <code>ResourceCollector</code> for the given
@@ -61,12 +92,7 @@ public class ResourceCollector {
      *         suitable for handling the <code>request</code>.
      */
     public static ResourceCollector create(SlingHttpServletRequest request) {
-        if (HttpConstants.METHOD_GET.equals(request.getMethod())
-            || HttpConstants.METHOD_HEAD.equals(request.getMethod())) {
-            return new ResourceCollectorGet(request);
-        }
-
-        return new ResourceCollector(request.getMethod(), null);
+        return new ResourceCollector(request);
     }
 
     /**
@@ -84,6 +110,37 @@ public class ResourceCollector {
     public ResourceCollector(String methodName, String baseResourceType) {
         this.methodName = methodName;
         this.baseResourceType = baseResourceType;
+        this.requestSelectors = new String[0];
+        this.numRequestSelectors = 0;
+        this.extension = null;
+        this.isGet = false;
+        this.isHtml = false;
+    }
+
+    /**
+     * Creates a <code>ResourceCollector</code> finding servlets and scripts
+     * for the given <code>methodName</code>.
+     * 
+     * @param methodName The <code>methodName</code> used to find scripts for.
+     *            This must not be <code>null</code>.
+     * @param baseResourceType The basic resource type to use as a final
+     *            resource super type. If this is <code>null</code> the
+     *            default value
+     *            {@link org.apache.sling.servlets.resolver.ServletResolverConstants#DEFAULT_SERVLET_NAME}
+     *            is assumed.
+     */
+    private ResourceCollector(SlingHttpServletRequest request) {
+        this.methodName = request.getMethod();
+        this.baseResourceType = null;
+
+        RequestPathInfo requestpaInfo = request.getRequestPathInfo();
+
+        requestSelectors = requestpaInfo.getSelectors();
+        numRequestSelectors = requestSelectors.length;
+        extension = request.getRequestPathInfo().getExtension();
+
+        isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
+        isHtml = isGet && "html".equals(extension);
     }
 
     public final Collection<Resource> getServlets(Resource resource) {
@@ -92,7 +149,7 @@ public class ResourceCollector {
 
         ResourceResolver resolver = resource.getResourceResolver();
         Iterator<String> locations = new LocationIterator(resource,
-            getBaseResourceType());
+            baseResourceType);
         while (locations.hasNext()) {
             String location = locations.next();
 
@@ -106,35 +163,82 @@ public class ResourceCollector {
         return resources;
     }
 
-    /**
-     * Returns all resources inside the <code>location</code> whose base name
-     * equals the {@link #getMethodName()} and which just have a single
-     * extension after the base name. In addition, the special resource at
-     * <code>location.getPath + ".servlet"</code> is checked to find servlets
-     * which are registered with no specific method name.
-     * 
-     * @param resources The collection into which any resources found are added.
-     * @param location The location in the resource tree where the servlets and
-     *            scripts are to be found.
-     */
     protected void getWeightedResources(Set<Resource> resources,
             Resource location) {
 
-        // now list the children and check them
-        Iterator<Resource> children = location.getResourceResolver().listChildren(
-            location);
-        while (children.hasNext()) {
-            Resource child = children.next();
+        ResourceResolver resolver = location.getResourceResolver();
+        Resource current = location;
+        String parentName = ResourceUtil.getName(current);
 
-            String name = ResourceUtil.getName(child.getPath());
-            String[] parts = name.split("\\.");
+        int selIdx = 0;
+        String selector;
+        do {
+            selector = (selIdx < numRequestSelectors)
+                    ? requestSelectors[selIdx]
+                    : null;
 
-            // require method name plus script extension
-            if (parts.length == 2 && getMethodName().equals(parts[0])) {
-                addWeightedResource(resources, child, 0,
-                    WeightedResource.WEIGHT_NONE);
+            Iterator<Resource> children = resolver.listChildren(current);
+            while (children.hasNext()) {
+                Resource child = children.next();
+
+                String scriptName = ResourceUtil.getName(child);
+                int lastDot = scriptName.lastIndexOf('.');
+                if (lastDot < 0) {
+                    // no extension in the name, this is not a script
+                    continue;
+                }
+
+                scriptName = scriptName.substring(0, lastDot);
+
+                if (isGet) {
+
+                    if (selector != null
+                        && scriptName.equals(selector + "." + extension)) {
+                        addWeightedResource(resources, child, selIdx + 1,
+                            WeightedResource.WEIGHT_EXTENSION);
+                        continue;
+                    }
+
+                    if (scriptName.equals(parentName + "." + extension)) {
+                        addWeightedResource(resources, child, selIdx,
+                            WeightedResource.WEIGHT_EXTENSION
+                                + WeightedResource.WEIGHT_PREFIX);
+                        continue;
+                    }
+
+                    if (scriptName.equals(extension)) {
+                        addWeightedResource(resources, child, selIdx,
+                            WeightedResource.WEIGHT_EXTENSION);
+                        continue;
+                    }
+
+                    if (isHtml) {
+                        if (selector != null && scriptName.equals(selector)) {
+                            addWeightedResource(resources, child, selIdx + 1,
+                                WeightedResource.WEIGHT_NONE);
+                            continue;
+                        }
+                        if (scriptName.equals(parentName)) {
+                            addWeightedResource(resources, child, selIdx,
+                                WeightedResource.WEIGHT_PREFIX);
+                            continue;
+                        }
+                    }
+                }
+
+                if (scriptName.equals(methodName)) {
+                    addWeightedResource(resources, child, selIdx,
+                        WeightedResource.WEIGHT_NONE);
+                    continue;
+                }
             }
-        }
+
+            if (selector != null) {
+                current = resolver.getResource(current, selector);
+                parentName = selector;
+                selIdx++;
+            }
+        } while (selector != null && current != null);
 
         // special treatment for servlets registered with neither a method
         // name nor extensions and selectors
@@ -145,20 +249,6 @@ public class ResourceCollector {
             addWeightedResource(resources, location, 0,
                 WeightedResource.WEIGHT_LAST_RESSORT);
         }
-    }
-
-    /**
-     * Returns the basic resource type assigned to this instance
-     */
-    public final String getBaseResourceType() {
-        return baseResourceType;
-    }
-
-    /**
-     * Returns the method name assigned to this instance
-     */
-    public final String getMethodName() {
-        return methodName;
     }
 
     /**
