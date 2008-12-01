@@ -21,6 +21,7 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 import java.io.InputStream;
 
 import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
@@ -37,7 +38,7 @@ class FileInstallableData implements InstallableData {
     public static final String JCR_LAST_MODIFIED = "jcr:lastModified";
     public static final String JCR_CONTENT_LAST_MODIFIED = JCR_CONTENT + "/" + JCR_LAST_MODIFIED;
     
-    private final InputStream inputStream;
+    private final Property dataProperty;
     private final String digest;
     private final String path;
     
@@ -55,20 +56,22 @@ class FileInstallableData implements InstallableData {
 	    }
 	    
         if(n.hasProperty(JCR_CONTENT_DATA)) {
-        	inputStream = n.getProperty(JCR_CONTENT_DATA).getStream();
+        	dataProperty = n.getProperty(JCR_CONTENT_DATA);
         } else {
-        	inputStream = null;
+        	dataProperty = null;
         }
 	}
 	
-	InputStream getInputStream() {
-		return inputStream;
-	}
-
     @SuppressWarnings("unchecked")
 	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 		if(type.equals(InputStream.class)) {
-			return (AdapterType)inputStream;
+			if (dataProperty != null) {
+			    try {
+			        return (AdapterType) dataProperty.getStream();
+			    } catch (RepositoryException re) {
+			        // might log
+			    }
+			}
 		}
 		return null;
 	}
