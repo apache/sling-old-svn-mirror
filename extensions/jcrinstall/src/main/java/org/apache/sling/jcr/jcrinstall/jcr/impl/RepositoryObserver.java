@@ -19,11 +19,6 @@
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -72,6 +67,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
     private RegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
     private ResourceOverrideRules roRules;
+    private final PropertiesUtil propertiesUtil = new PropertiesUtil();
     private boolean running;
     
     /** @scr.reference */
@@ -272,7 +268,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
         // that don't match the new regexp
         // TODO this happens right after activate() is called on this service,
         // might conflict with ongoing SCR activities?
-        final Properties props = loadProperties(serviceDataFile);
+        final Properties props = propertiesUtil.loadProperties(serviceDataFile);
         final String oldRegexp = props.getProperty(DATA_LAST_FOLDER_REGEXP);
         if(oldRegexp != null && !oldRegexp.equals(folderNameFilter.getRegexp())) {
             log.info("Folder name regexp has changed, uninstalling non-applicable resources ( {} -> {} )", 
@@ -296,7 +292,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
             }
         }
         props.setProperty(DATA_LAST_FOLDER_REGEXP, folderNameFilter.getRegexp());
-        saveProperties(props, serviceDataFile);
+        propertiesUtil.saveProperties(props, serviceDataFile);
         
         // Check if any deletions happened while this
         // service was inactive: create a fake WatchFolder 
@@ -379,46 +375,6 @@ public class RepositoryObserver implements Runnable, BundleListener {
     	osgiController.executeScheduledOperations();
     }
     
-    Properties loadProperties(File f) {
-        final Properties props = new Properties();
-        if(f.exists()) {
-            InputStream is = null;
-            try {
-                is = new FileInputStream(f);
-                props.load(is);
-            } catch(IOException ioe) {
-                log.warn("Error reading " + f.getName(), ioe);
-            } finally {
-                if(is!=null) {
-                    try {
-                        is.close();
-                    } catch(IOException ignore) {
-                        
-                    }
-                }
-            }
-        }
-        return props;
-    }
-    
-    void saveProperties(Properties props, File f) {
-        OutputStream os = null;
-        try {
-            os = new FileOutputStream(f);
-            props.store(os, getClass().getSimpleName());
-        } catch(IOException ioe) {
-            log.warn("Error saving " + f.getName(), ioe);
-        } finally {
-            if(os!=null) {
-                try {
-                    os.close();
-                } catch(IOException ignore) {
-                    
-                }
-            }
-        }
-    }
-
     public void bundleChanged(BundleEvent event) {
         lastBundleEvent = System.currentTimeMillis();
     }
