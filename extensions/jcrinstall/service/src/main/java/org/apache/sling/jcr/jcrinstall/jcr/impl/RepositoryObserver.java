@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,13 +35,19 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
@@ -56,14 +63,17 @@ import org.slf4j.LoggerFactory;
  *  label="%jcrinstall.name" 
  *  description="%jcrinstall.description"
  *  immediate="true"
+ *  @scr.service
  *  @scr.property 
  *      name="service.description" 
  *      value="Sling jcrinstall OsgiController Service"
  *  @scr.property 
  *      name="service.vendor" 
  *      value="The Apache Software Foundation"
+ * @scr.property name="sling.servlet.paths" value="/system/sling/jcrinstall"
  */
-public class RepositoryObserver implements Runnable, FrameworkListener {
+@SuppressWarnings("serial")
+public class RepositoryObserver extends SlingAllMethodsServlet implements Runnable, FrameworkListener {
 
     private final SortedSet<WatchedFolder> folders = new TreeSet<WatchedFolder>();
     private RegexpFilter folderNameFilter;
@@ -73,6 +83,8 @@ public class RepositoryObserver implements Runnable, FrameworkListener {
     private final PropertiesUtil propertiesUtil = new PropertiesUtil();
     private boolean observationCycleActive;
     private boolean activated;
+    
+    public static final String POST_ENABLE_PARAM = "enabled";
     
     /** @scr.reference */
     protected OsgiController osgiController;
@@ -496,5 +508,58 @@ public class RepositoryObserver implements Runnable, FrameworkListener {
     
     protected Set<WatchedFolder> getWatchedFolders() {
         return folders;
+    }
+
+    /** A POST can be used to deactivate/reactivate this, simulating a disappearing SlingRepository.
+     *  Used for integration testing.
+     */
+    @Override
+    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+    throws ServletException, IOException {
+        final String enable = request.getParameter(POST_ENABLE_PARAM);
+        if(enable != null) {
+            if(Boolean.parseBoolean(enable)) {
+                log.info("Processing POST with {}=true, attempting to bind SlingRepository", POST_ENABLE_PARAM);
+                if(repository != null) {
+                    response.sendError(HttpServletResponse.SC_CONFLICT, "Already enabled");
+                    return;
+                }
+                if(componentContext == null) {
+                    response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, "No ComponentContext, cannot enable service");
+                    return;
+                }
+                final ServiceReference ref = componentContext.getBundleContext().getServiceReference(SlingRepository.class.getName());
+                if(ref == null) {
+                    response.sendError(HttpServletResponse.SC_EXPECTATION_FAILED, "No SlingRepository ServiceReference available");
+                    return;
+                }
+                
+                final SlingRepository r = (SlingRepository)componentContext.getBundleContext().getService(ref);
+                bindSlingRepository(r);
+                
+            } else {
+                log.info("Processing POST with {}=false, attempting to unbind SlingRepository", POST_ENABLE_PARAM);
+                if(repository == null) {
+                    response.sendError(HttpServletResponse.SC_CONFLICT, "Not currently enabled, cannot disable");
+                    return;
+                }
+                unbindSlingRepository(repository);
+            }
+        } else {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Use '" + POST_ENABLE_PARAM + "' parameter to enable/disable the RepositoryObserver");
+            return;
+        }
+        
+        doGet(request, response);
+    }
+
+    @Override
+    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+    throws ServletException, IOException 
+    {
+        final String status = repository != null ? "enabled" : "disabled";
+        response.setContentType("text/plain");
+        response.getWriter().write(getClass().getSimpleName() + " is " + status);
     }
 }
