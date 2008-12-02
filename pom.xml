@@ -38,9 +38,15 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/app</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/app</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/app</url>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/app
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/app
+        </developerConnection>
+        <url>
+            http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/app
+        </url>
     </scm>
 
     <build>
@@ -51,36 +57,409 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>2.0-alpha-4</version>
                 <executions>
+
+                    <!-- level 1 bundles -->
                     <execution>
-                        <id>copy-core-bundles</id>
+                        <id>copy-level-1-bundles</id>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>
-                                org.apache.sling.commons.log
-                            </includeArtifactIds>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.commons.log
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                            </artifactItems>
+
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
-                                ${project.build.outputDirectory}/resources/corebundles
+                                ${project.build.outputDirectory}/resources/1
                             </outputDirectory>
                         </configuration>
                     </execution>
+
+                    <!-- level 5 bundles -->
                     <execution>
-                        <id>copy-base-bundles</id>
+                        <id>copy-level-5-bundles</id>
                         <goals>
-                            <goal>copy-dependencies</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <excludeArtifactIds>
-                                org.apache.felix.framework,org.osgi.core,org.osgi.compendium,servlet-api,org.apache.sling.commons.log,org.apache.sling.launchpad.base
-                            </excludeArtifactIds>
+
+                            <!-- the web based OSGi framework console -->
+                            <artifactItems>
+                                <!-- HttpService implementation: embedded Jetty -->
+                                <artifactItem>
+                                    <groupId>org.ops4j.pax.web</groupId>
+                                    <artifactId>
+                                        pax-web-service
+                                    </artifactId>
+                                </artifactItem>
+
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>
+                                        org.apache.felix.webconsole
+                                    </artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.commons.json
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>
+                                        org.apache.felix.bundlerepository
+                                    </artifactId>
+                                </artifactItem>
+                            </artifactItems>
+
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
-                                ${project.build.outputDirectory}/resources/bundles
+                                ${project.build.outputDirectory}/resources/5
                             </outputDirectory>
                         </configuration>
                     </execution>
+
+                    <!-- level 10 bundles -->
+                    <execution>
+                        <id>copy-level-10-bundles</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>
+                                        org.apache.felix.eventadmin
+                                    </artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>
+                                        org.apache.felix.scr
+                                    </artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>
+                                        org.apache.felix.configadmin
+                                    </artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.felix</groupId>
+                                    <artifactId>
+                                        org.apache.felix.metatype
+                                    </artifactId>
+                                </artifactItem>
+                            </artifactItems>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}/resources/10
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+
+                    <!-- level 15 JCR bundles -->
+                    <execution>
+                        <id>copy-level-15-bundles</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+
+                                <!-- JCR oriented bundles -->
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.api
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.base
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.jackrabbit.api
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.jackrabbit.server
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>
+                                        org.apache.jackrabbit
+                                    </groupId>
+                                    <artifactId>
+                                        jackrabbit-jcr-commons
+                                    </artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.webdav
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <!--
+                                    Commons Dependencies
+                                -->
+                                <artifactItem>
+                                    <groupId>commons-io</groupId>
+                                    <artifactId>commons-io</artifactId>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>
+                                        commons-collections
+                                    </groupId>
+                                    <artifactId>
+                                        commons-collections
+                                    </artifactId>
+                                </artifactItem>
+                            </artifactItems>
+
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}/resources/15
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+
+                    <!-- remaining bundles -->
+                    <execution>
+                        <id>copy-remaining-bundles</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <!--
+                                Finally all the Sling bundles not yet included in the
+                                base sling-app
+                            -->
+                            <artifactItems>
+
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.api
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.engine
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.httpauth
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.adapter
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.servlets.resolver
+                                    </artifactId>
+                                    <version>
+                                        2.0.5-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.servlets.get
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.servlets.post
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.samples.path-based.rtp
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.commons.osgi
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.commons.mime
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.contentloader
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.resource
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.ocm
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.jcr.classloader
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.bundleresource.impl
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+
+                                <!-- Launchpad initial content -->
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.launchpad.content
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+
+                                <!-- scripting -->
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.scripting.api
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.scripting.core
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.scripting.javascript
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.scripting.jsp
+                                    </artifactId>
+                                    <version>
+                                        2.0.3-incubator-SNAPSHOT
+                                    </version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.scripting.jsp.taglib
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.extensions.apt.servlet
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>
+                                        org.apache.sling.extensions.apt.parser
+                                    </artifactId>
+                                    <version>2.0.2-incubator</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}/resources/0
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+
                     <execution>
                         <id>inline-osgi-bundles</id>
                         <goals>
@@ -100,8 +479,7 @@
                                 org/osgi/service/packageadmin/**,
                                 org/osgi/service/startlevel/**,
                                 org/osgi/service/url/**,
-                                org/osgi/util/tracker/**,
-                                META-INF/**
+                                org/osgi/util/tracker/**, META-INF/**
                             </excludes>
                         </configuration>
                     </execution>
@@ -144,7 +522,9 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/bin.xml</descriptor>
+                        <descriptor>
+                            src/main/assembly/bin.xml
+                        </descriptor>
                     </descriptors>
                 </configuration>
             </plugin>
@@ -156,7 +536,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                  <!-- No javadocs -->
+                    <!-- No javadocs -->
                     <excludePackageNames>
                         org.apache.sling
                     </excludePackageNames>
@@ -203,260 +583,6 @@
             <artifactId>org.apache.sling.launchpad.base</artifactId>
             <version>2.0.3-incubator-SNAPSHOT</version>
         </dependency>
-
-        <!-- the most important bundle after the framework: logging -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.log</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- the web based OSGi framework console -->
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.webconsole</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.json</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Apache Felix framework bundles -->
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.bundlerepository</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.eventadmin</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.configadmin</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.metatype</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- HttpService implementation: embedded Jetty -->
-        <dependency>
-            <groupId>org.ops4j.pax.web</groupId>
-            <artifactId>pax-web-service</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!--
-            Finally all the Sling bundles not yet included in the
-            base sling-app
-        -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.engine</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.httpauth</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.adapter</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.resolver</artifactId>
-            <version>2.0.5-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.get</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.post</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.samples.path-based.rtp</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.osgi</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.mime</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- JCR oriented bundles -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.base</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.contentloader</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.ocm</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.jackrabbit.api</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.webdav</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.classloader</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.bundleresource.impl</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Launchpad initial content -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.content</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- scripting -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.api</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.core</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.javascript</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.jsp</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.jsp.taglib</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.apt.servlet</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.apt.parser</artifactId>
-            <version>2.0.2-incubator</version>
-            <optional>true</optional>
-        </dependency>
-
-        <!--
-            Commons Dependencies
-        -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <optional>true</optional>
-        </dependency>
-
     </dependencies>
 
     <profiles>
