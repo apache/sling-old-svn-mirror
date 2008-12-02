@@ -15,12 +15,17 @@ import org.slf4j.LoggerFactory;
     
     private final RegexpFilter filenameFilter = new RegexpFilter(FILENAME_REGEXP);
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final int bundleStartLevel;
+    
+    public FileNodeConverter(int bundleStartLevel) {
+        this.bundleStartLevel = bundleStartLevel;
+    }
     
 	public InstallableData convertNode(Node n) throws RepositoryException {
 		InstallableData result = null;
 		if(n.hasProperty(FileInstallableData.JCR_CONTENT_DATA) && n.hasProperty(FileInstallableData.JCR_CONTENT_LAST_MODIFIED)) {
 			if(filenameFilter.accept(n.getName())) {
-				result = new FileInstallableData(n);
+				result = new FileInstallableData(n, bundleStartLevel);
 			} else {
 				log.debug("Node {} ignored due to {}", n.getPath(), filenameFilter);
 			}

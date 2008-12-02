@@ -41,14 +41,16 @@ class FileInstallableData implements InstallableData {
     private final Property dataProperty;
     private final String digest;
     private final String path;
+    private final int bundleStartLevel;
     
     @Override
     public String toString() {
     	return getClass().getSimpleName() + ": " + path;
     }
     
-	FileInstallableData(Node n) throws RepositoryException {
+	FileInstallableData(Node n, int bundleStartLevel) throws RepositoryException {
 		this.path = n.getPath();
+		this.bundleStartLevel = bundleStartLevel;
         if (n.hasProperty(JCR_CONTENT_LAST_MODIFIED)) {
         	digest = String.valueOf(n.getProperty(JCR_CONTENT_LAST_MODIFIED).getDate().getTimeInMillis());
         } else {
@@ -78,5 +80,9 @@ class FileInstallableData implements InstallableData {
 
 	public String getDigest() {
 		return digest;
+	}
+	
+	public int getBundleStartLevel() {
+	    return bundleStartLevel;
 	}
 }

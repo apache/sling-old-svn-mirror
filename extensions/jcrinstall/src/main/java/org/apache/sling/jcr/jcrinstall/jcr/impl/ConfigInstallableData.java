@@ -67,4 +67,9 @@ class ConfigInstallableData implements InstallableData {
 		final BigInteger bigInt = new BigInteger(1, d.digest());
 		return new String(bigInt.toString(16));
 	}
+
+	/** Not applicable for config nodes, return 0 */
+	public int getBundleStartLevel() {
+	    return 0;
+	}
 }

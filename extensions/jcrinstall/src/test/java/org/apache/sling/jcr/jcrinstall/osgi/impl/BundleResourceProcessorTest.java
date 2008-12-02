@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.jcr.impl.MockStartLevel;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
@@ -37,6 +37,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 
 /** Test the BundleResourceProcessor */
 public class BundleResourceProcessorTest {
@@ -104,7 +105,7 @@ public class BundleResourceProcessorTest {
         }});
 
         // Do the calls and check some stuff on the way
-        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
+        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa, new MockStartLevel());
         Utilities.setProcessors(c, p);
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
 

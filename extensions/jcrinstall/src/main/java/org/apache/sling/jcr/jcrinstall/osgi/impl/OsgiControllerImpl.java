@@ -36,6 +36,7 @@ import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +68,9 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     /** @scr.reference */
     private PackageAdmin packageAdmin;
 
+    /** @scr.reference */
+    protected StartLevel startLevel;
+    
     /** Storage key: digest of an InstallableData */
     public static final String KEY_DIGEST = "data.digest";
 
@@ -78,7 +82,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     	// Note that, in executeScheduledOperations(),
     	// processors are called in the order of this list
         processors = new LinkedList<OsgiResourceProcessor>();
-        processors.add(new BundleResourceProcessor(context.getBundleContext(), packageAdmin));
+        processors.add(new BundleResourceProcessor(context.getBundleContext(), packageAdmin, startLevel));
         processors.add(new ConfigResourceProcessor(configAdmin));
 
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));

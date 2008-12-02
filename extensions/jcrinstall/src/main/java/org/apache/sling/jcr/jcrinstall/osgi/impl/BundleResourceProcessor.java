@@ -22,8 +22,6 @@ import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
 
-import java.io.BufferedInputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -45,6 +43,7 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,8 +57,8 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     public static final String KEY_BUNDLE_ID = "bundle.id";
 
     private final BundleContext ctx;
-
     private final PackageAdmin packageAdmin;
+    private final StartLevel startLevel;
 
     /**
      * All bundles which were active before {@link #processResourceQueue()}
@@ -89,9 +88,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin) {
+    BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin, StartLevel startLevel) {
         this.ctx = ctx;
         this.packageAdmin = packageAdmin;
+        this.startLevel = startLevel;
         this.activeBundles = new HashSet<Long>();
         this.installedBundles = new ArrayList<Long>();
 
@@ -175,8 +175,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			    needsRefresh = true;
 			} else {
 			    uri = OsgiControllerImpl.getResourceLocation(uri);
-			    log.debug("No matching Bundle for uri {}, installing", uri);
+			    final int level = installableData.getBundleStartLevel();
+			    log.debug("No matching Bundle for uri {}, installing with start level {}", uri, level);
 			    b = ctx.installBundle(uri, data);
+			    startLevel.setBundleStartLevel(b, level);
 			}
 		} finally {
 		    // data is never null here
@@ -261,7 +263,6 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
             packageAdmin.refreshPackages(null);
             
         } else {
-        	log.debug("Processing resource queue in START mode");
             startBundles();
         }
     }
@@ -366,8 +367,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * @param bundleIdCollection The IDs of bundles to be started.
      */
     private void startBundles(Collection<Long> bundleIdCollection, String collectionName) {
-    	log.debug("startBundles({}): {} bundles to process", 
-    			collectionName, bundleIdCollection.size());
+        if(bundleIdCollection.size() > 0) {
+        	log.debug("startBundles({}): {} bundles to process", 
+        			collectionName, bundleIdCollection.size());
+        }
     	
         // get the bundle ids and remove them from the collection
         Long[] bundleIds;

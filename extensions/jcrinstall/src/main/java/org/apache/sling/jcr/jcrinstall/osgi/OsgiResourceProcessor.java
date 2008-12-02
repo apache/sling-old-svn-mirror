@@ -38,7 +38,8 @@ public interface OsgiResourceProcessor {
      */
     int installOrUpdate(String uri, Map<String, Object> attributes, InstallableData data) throws Exception;
     
-    /** Uninstall the resource that was installed via given uri
+    /** Uninstall the resource that was installed via given uri. Calling this with an uri
+     *  that is not installed is not an error.
      *  @param uri Unique identifier for the resource
      *  @param attributes metadata stored by the OsgiController, will be
      *      removed after calling this method

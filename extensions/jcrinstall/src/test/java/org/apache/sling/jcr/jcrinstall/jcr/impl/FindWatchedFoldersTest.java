@@ -63,6 +63,7 @@ public class FindWatchedFoldersTest extends RepositoryTestBase {
         mockery.checking(new Expectations() {{
             allowing(osgiController).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(osgiController).getInstalledUris(); will(returnValue(installedUri));
+            allowing(osgiController).executeScheduledOperations();
         }});
     }
     

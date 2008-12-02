@@ -32,4 +32,9 @@ public interface InstallableData {
 	/** Adapt the underlying data to the provided type.
 	 *	@return null if cannot be adapted */
 	<AdapterType> AdapterType adaptTo(Class<AdapterType> type);
+	
+	/** If data to install is a Bundle, this is the start level
+	 *  to use when installing it.
+	 */
+	int getBundleStartLevel();
 }
