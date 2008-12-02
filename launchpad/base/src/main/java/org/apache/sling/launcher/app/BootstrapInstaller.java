@@ -60,16 +60,22 @@ class BootstrapInstaller implements BundleActivator {
     public static final String SCHEME = "slinginstall:";
 
     /**
+     * The location the core Bundles (value is "resources"). These
+     * bundles are installed first.
+     */
+    public static final String PATH_BUNDLE_ROOT = "resources";
+    
+    /**
      * The location the core Bundles (value is "resources/corebundles"). These
      * bundles are installed first.
      */
-    public static final String PATH_CORE_BUNDLES = "resources/corebundles";
+    public static final String PATH_CORE_BUNDLES = "corebundles";
 
     /**
      * The location the additional Bundles (value is "resources/bundles"). These
      * Bundles are installed after the {@link #PATH_CORE_BUNDLES core Bundles}.
      */
-    public static final String PATH_BUNDLES = "resources/bundles";
+    public static final String PATH_BUNDLES = "bundles";
 
     /**
      * The {@link Logger} use for logging messages during installation and
@@ -100,31 +106,7 @@ class BootstrapInstaller implements BundleActivator {
      * This installation stuff is only performed during the first startup!
      */
     public void start(BundleContext context) throws Exception {
-        boolean alreadyInstalled = false;
-        final File dataFile = context.getDataFile(DATA_FILE);
-        if ( dataFile != null && dataFile.exists() ) {
-            try {
-                final FileInputStream fis = new FileInputStream(dataFile);
-                try {
-                    final ObjectInputStream ois = new ObjectInputStream(fis);
-                    try {
-                        alreadyInstalled = ois.readBoolean();
-                    } finally {
-                        try {
-                            ois.close();
-                        } catch (IOException ignore) {}
-                    }
-                } finally {
-                    try {
-                        fis.close();
-                    } catch (IOException ignore) {}
-                }
-            } catch (IOException ioe) {
-                logger.log(Logger.LOG_ERROR, "IOException during reading of installed flag.", ioe);
-            }
-        }
-
-        if ( !alreadyInstalled ) {
+        if (!isAlreadyInstalled(context)) {
             // register deployment package support
             final DeploymentPackageInstaller dpi =
                 new DeploymentPackageInstaller(context, logger, resourceProvider);
@@ -139,33 +121,43 @@ class BootstrapInstaller implements BundleActivator {
                 byLocation.put(bundles[i].getLocation(), bundles[i]);
             }
 
+            // the start level service to set the initial start level
+            ServiceReference ref = context.getServiceReference(StartLevel.class.getName());
+            StartLevel startLevelService = (ref != null)
+                    ? (StartLevel) context.getService(ref)
+                    : null;
+
             // install bundles
             List<Bundle> installed = new LinkedList<Bundle>();
-            installBundles(context, byLocation, PATH_CORE_BUNDLES, installed);
-            installBundles(context, byLocation, PATH_BUNDLES, installed);
 
-            try {
-                final FileOutputStream fos = new FileOutputStream(dataFile);
-                try {
-                    final ObjectOutputStream oos = new ObjectOutputStream(fos);
-                    try {
-                        oos.writeBoolean(true);
-                    } finally {
-                        try {
-                            oos.close();
-                        } catch (IOException ignore) {}
+            Iterator<String> res = resourceProvider.getChildren(PATH_BUNDLE_ROOT);
+            while (res.hasNext()) {
+                String path = res.next();
+                // only consider folders
+                if (path.endsWith("/")) {
+                    
+                    // cut off trailing slash
+                    path = path.substring(0, path.length()-1);
+
+                    // calculate the startlevel of bundles contained
+                    int startLevel = getStartLevel(path);
+                    if (startLevel >= 0) {
+                        installBundles(context, byLocation, path, installed,
+                            startLevelService, startLevel);
                     }
-                } finally {
-                    try {
-                        fos.close();
-                    } catch (IOException ignore) {}
                 }
-            } catch (IOException ioe) {
-                logger.log(Logger.LOG_ERROR, "IOException during writing of installed flag.", ioe);
+            }
+
+            // release the start level service
+            if (ref != null) {
+                context.ungetService(ref);
             }
 
             // set start levels on the bundles and start them
-            startBundles(context, installed);
+            startBundles(installed);
+            
+            // mark everything installed
+            markInstalled(context);
         }
     }
 
@@ -189,7 +181,7 @@ class BootstrapInstaller implements BundleActivator {
      */
     private void installBundles(BundleContext context,
             Map<String, Bundle> currentBundles, String parent,
-            List<Bundle> installed) {
+            List<Bundle> installed, StartLevel startLevelService, int startLevel) {
 
         Iterator<String> res = resourceProvider.getChildren(parent);
         while (res.hasNext()) {
@@ -223,6 +215,11 @@ class BootstrapInstaller implements BundleActivator {
                         + location + " failed", be);
                     continue;
                 }
+                
+                // optionally set the start level
+                if (startLevel > 0) {
+                    startLevelService.setBundleStartLevel(newBundle, startLevel);
+                }
 
                 // finally add the bundle to the list for later start
                 installed.add(newBundle);
@@ -235,21 +232,10 @@ class BootstrapInstaller implements BundleActivator {
      * provides an active <code>StartLevel</code> service, the start levels of
      * the Bundles is first set to <em>1</em>.
      */
-    private void startBundles(BundleContext context, List<Bundle> bundles) {
-
-        // the start level service to set the initial start level
-        ServiceReference ref = context.getServiceReference(StartLevel.class.getName());
-        StartLevel startLevel = (ref != null)
-                ? (StartLevel) context.getService(ref)
-                : null;
+    private void startBundles(List<Bundle> bundles) {
 
         // start all bundles
         for (Bundle bundle : bundles) {
-
-            if (startLevel != null) {
-                startLevel.setBundleStartLevel(bundle, 1);
-            }
-
             try {
                 bundle.start();
             } catch (BundleException be) {
@@ -258,10 +244,77 @@ class BootstrapInstaller implements BundleActivator {
             }
         }
 
-        // release the start level service
-        if (ref != null) {
-            context.ungetService(ref);
-        }
     }
 
+    private int getStartLevel(String path) {
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        
+        // core bundles are installed at start level 1
+        if (PATH_CORE_BUNDLES.equals(name)) {
+            return 1;
+        }
+        
+        // bundles in the default location are started at the defualt
+        // framework start level
+        if (PATH_BUNDLES.equals(name)) {
+            return 0;
+        }
+        
+        // otherwise the name is the start level
+        try {
+            int level = Integer.parseInt(name);
+            if (level >= 0) {
+                return level;
+            }
+            
+            logger.log(Logger.LOG_ERROR, "Illegal Runlevel for " + path
+                + ", ignoring");
+        } catch (NumberFormatException nfe) {
+            logger.log(Logger.LOG_INFO, "Folder " + path
+                + " does not denote start level, ignoring");
+        }
+        
+        // no valid start level, ignore this location
+        return -1;
+    }
+    
+    private boolean isAlreadyInstalled(BundleContext context) {
+        final File dataFile = context.getDataFile(DATA_FILE);
+        if ( dataFile != null && dataFile.exists() ) {
+            try {
+                final FileInputStream fis = new FileInputStream(dataFile);
+                try {
+                    // only care for the first few bytes
+                    byte[] bytes = new byte[10];
+                    int len = fis.read(bytes);
+                    return Boolean.parseBoolean(new String(bytes, 0, len));
+                } finally {
+                    try {
+                        fis.close();
+                    } catch (IOException ignore) {}
+                }
+            } catch (IOException ioe) {
+                logger.log(Logger.LOG_ERROR, "IOException during reading of installed flag.", ioe);
+            }
+        }
+        
+        // fallback assuming not installed yet
+        return false;
+    }
+    
+    private void markInstalled(BundleContext context) {
+        final File dataFile = context.getDataFile(DATA_FILE);
+        try {
+            final FileOutputStream fos = new FileOutputStream(dataFile);
+            try {
+                fos.write("true".getBytes());
+            } finally {
+                try {
+                    fos.close();
+                } catch (IOException ignore) {}
+            }
+        } catch (IOException ioe) {
+            logger.log(Logger.LOG_ERROR, "IOException during writing of installed flag.", ioe);
+        }
+    }
 }
