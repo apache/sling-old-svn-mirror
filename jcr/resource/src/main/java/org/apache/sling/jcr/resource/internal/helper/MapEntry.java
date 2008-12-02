@@ -80,11 +80,8 @@ public class MapEntry {
         if (m.find()) {
             String[] redirects = getRedirect();
             String[] results = new String[redirects.length];
-            StringBuffer buf = new StringBuffer();
             for (int i=0; i < redirects.length; i++) {
-                m.appendReplacement(buf, redirects[i]);
-                m.appendTail(buf);
-                results[i] = buf.toString();
+                results[i] = m.replaceFirst(redirects[i]);
             }
             return results;
         }
