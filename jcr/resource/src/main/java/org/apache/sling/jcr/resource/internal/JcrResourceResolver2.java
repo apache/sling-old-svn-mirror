@@ -77,7 +77,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private static final String MANGLE_NAMESPACE_OUT = "/([^:]+):";
 
-    private static final String ANY_SCHEME_HOST = ".*/.*";
+    private static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
 
     private static final String MAP_ROOT = "/etc/map";
 
@@ -695,9 +695,14 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         Map<?, ?> virtuals = factory.getVirtualURLMap();
         if (virtuals != null) {
             for (Entry<?, ?> virtualEntry : virtuals.entrySet()) {
-                String url = ANY_SCHEME_HOST + virtualEntry.getKey();
-                String redirect = (String) virtualEntry.getValue();
-                entries.add(new MapEntry(url, redirect, -1));
+                String extPath = (String) virtualEntry.getKey();
+                String intPath = (String) virtualEntry.getValue();
+                if (!extPath.equals(intPath)) {
+                    // this regular expression must match the whole URL !!
+                    String url = "^" + ANY_SCHEME_HOST + extPath + "$";
+                    String redirect = intPath;
+                    entries.add(new MapEntry(url, redirect, -1));
+                }
             }
         }
         
@@ -707,8 +712,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             Map<String, List<String>> map = new HashMap<String, List<String>>();
             for (Mapping mapping : mappings) {
                 if (mapping.mapsInbound()) {
-                    String url = mapping.getFrom();
-                    String alias = mapping.getTo();
+                    String url = mapping.getTo();
+                    String alias = mapping.getFrom();
                     if (url.length() > 0) {
                         List<String> aliasList = map.get(url);
                         if (aliasList == null) {
