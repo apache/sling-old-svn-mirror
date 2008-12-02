@@ -250,10 +250,14 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
-            allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.jar");
-            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.cfg");
-            one(c).scheduleUninstall("/libs/watchfolder-is-gone/install/gone.cfg");
+            allowing(c).getDigest(with(any(String.class))); will(returnValue(null));
+            
+            // scheduleUninstall might be called multiple times for the same resource
+            // during the initial deletion analysis - the OsgiController needs to accept
+            // such multiple calls
+            atLeast(1).of(c).scheduleUninstall("/libs/foo/bar/install/dummy.jar");
+            atLeast(1).of(c).scheduleUninstall("/libs/foo/bar/install/dummy.cfg");
+            atLeast(1).of(c).scheduleUninstall("/libs/watchfolder-is-gone/install/gone.cfg");
         }});
         
         ro.activate(null);
@@ -272,17 +276,18 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         final OsgiController c = mockery.mock(OsgiController.class);
         final RepositoryObserver ro = new MockRepositoryObserver(repo, c);
         
+        // See testInitialDeletions() about multiple scheduleUninstall calls
         mockery.checking(new Expectations() {{
         	allowing(c).executeScheduledOperations();
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.cfg");
+            atLeast(1).of(c).scheduleUninstall("/libs/foo/bar/install/dummy.cfg");
             inSequence(sequence);
-            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.dp");
+            atLeast(1).of(c).scheduleUninstall("/libs/foo/bar/install/dummy.dp");
             inSequence(sequence);
             will(throwException(new JcrInstallException("Fake BundleException for testing")));
-            one(c).scheduleUninstall("/libs/foo/bar/install/dummy.jar");
+            atLeast(1).of(c).scheduleUninstall("/libs/foo/bar/install/dummy.jar");
             inSequence(sequence);
         }});
         
@@ -360,8 +365,8 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).scheduleInstallOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
-            one(c).scheduleInstallOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
+            atLeast(1).of(c).scheduleInstallOrUpdate(with(equal(resources[0])), with(any(InstallableData.class)));
+            atLeast(1).of(c).scheduleInstallOrUpdate(with(equal(resources[2])), with(any(InstallableData.class)));
         }});
         
         final MockRepositoryObserver ro = new MockRepositoryObserver(repo, c, serviceDataFile);
@@ -384,10 +389,10 @@ public class ResourceDetectionTest extends RepositoryTestBase {
             allowing(c).setResourceOverrideRules(with(any(ResourceOverrideRules.class)));
             allowing(c).getInstalledUris(); will(returnValue(installedUri));
             allowing(c).getDigest(with(any(String.class))); will(returnValue(null)); 
-            one(c).scheduleUninstall(resources[0]);
-            one(c).scheduleUninstall(resources[2]);
-            one(c).scheduleInstallOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
-            one(c).scheduleInstallOrUpdate(with(equal(resources[3])), with(any(InstallableData.class)));
+            atLeast(1).of(c).scheduleUninstall(resources[0]);
+            atLeast(1).of(c).scheduleUninstall(resources[2]);
+            atLeast(1).of(c).scheduleInstallOrUpdate(with(equal(resources[1])), with(any(InstallableData.class)));
+            atLeast(1).of(c).scheduleInstallOrUpdate(with(equal(resources[3])), with(any(InstallableData.class)));
         }});
         
         props.setProperty(RepositoryObserver.FOLDER_NAME_REGEXP_PROPERTY, ".*foo/wii/install$");

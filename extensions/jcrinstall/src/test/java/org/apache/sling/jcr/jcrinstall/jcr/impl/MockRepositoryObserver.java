@@ -21,7 +21,6 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
@@ -43,19 +42,16 @@ public class MockRepositoryObserver extends RepositoryObserver {
         osgiController = c;
         scanDelayMsec = 0;
         this.serviceDataFile = serviceDataFile;
+        startLevel = new MockStartLevel();
     }
     
     public void run() {
         // Do not run the observation cycle - we do that ourselves in testing
     }
     
-    Set<WatchedFolder> getWatchedFolders() {
-        return folders;
-    }
-    
     boolean folderIsWatched(String path) throws Exception {
         boolean result = false;
-        for(WatchedFolder wf : folders) {
+        for(WatchedFolder wf : getWatchedFolders()) {
             if(wf.getPath().equals("/" + path)) {
                 result = true;
                 break;

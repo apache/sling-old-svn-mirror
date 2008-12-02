@@ -52,4 +52,8 @@ public class MockInstallableData implements InstallableData {
 	public String getDigest() {
 		return digest;
 	}
+
+    public int getBundleStartLevel() {
+        return 0;
+    }
 }

@@ -39,9 +39,10 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,9 +52,10 @@ import org.slf4j.LoggerFactory;
  *  
  *  Calls the OsgiController to install/remove resources.
  *   
- *  @scr.component 
- *      immediate="true"
- *      metatype="no"
+ * @scr.component 
+ *  label="%jcrinstall.name" 
+ *  description="%jcrinstall.description"
+ *  immediate="true"
  *  @scr.property 
  *      name="service.description" 
  *      value="Sling jcrinstall OsgiController Service"
@@ -61,28 +63,38 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor" 
  *      value="The Apache Software Foundation"
  */
-public class RepositoryObserver implements Runnable, BundleListener {
+public class RepositoryObserver implements Runnable, FrameworkListener {
 
-    protected SortedSet<WatchedFolder> folders;
+    private final SortedSet<WatchedFolder> folders = new TreeSet<WatchedFolder>();
     private RegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
     private ResourceOverrideRules roRules;
+    private ComponentContext componentContext;
     private final PropertiesUtil propertiesUtil = new PropertiesUtil();
-    private boolean running;
+    private boolean observationCycleActive;
+    private boolean activated;
     
     /** @scr.reference */
     protected OsgiController osgiController;
     
-    /** @scr.reference */
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
     protected SlingRepository repository;
     
+    /** @scr.reference */
+    protected StartLevel startLevel;
+    
+    /** @scr.property type="Integer" valueRef="DEFAULT_BUNDLES_START_LEVEL" */
+    private static final String BUNDLES_START_LEVEL__PROPERTY = "bundles.startlevel";
+    private static final int DEFAULT_BUNDLES_START_LEVEL = 30;
+    private int installedBundlesStartLevel = DEFAULT_BUNDLES_START_LEVEL;
+
     private Session session;
     private File serviceDataFile;
-    private long lastBundleEvent;
+    private int startLevelToSetAtStartup;
     
     private final List<NodeConverter> converters = new ArrayList<NodeConverter>();
     
-    private List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
+    private final List<WatchedFolderCreationListener> listeners = new LinkedList<WatchedFolderCreationListener>();
     
     /** Default set of root folders to watch */
     public static String[] DEFAULT_ROOTS = {"/libs", "/apps"};
@@ -104,12 +116,56 @@ public class RepositoryObserver implements Runnable, BundleListener {
     /** Upon activation, find folders to watch under our roots, and observe those
      *  roots to detect new folders to watch.
      */
-    protected void activate(ComponentContext context) throws RepositoryException {
-    	
-        if(context!=null) {
-            context.getBundleContext().addBundleListener(this);
+    protected void activate(ComponentContext context) throws Exception {
+        componentContext = context;
+
+        // Context can be null in automated tests, to make them simpler
+        if(context != null) {
+            context.getBundleContext().addFrameworkListener(this);
         }
-        lastBundleEvent = System.currentTimeMillis();
+        
+        // Read config
+        if(context != null) {
+            final Object prop = context.getProperties().get(BUNDLES_START_LEVEL__PROPERTY);
+            if(prop != null && prop instanceof Number) {
+                installedBundlesStartLevel = ((Number)prop).intValue();
+                log.info("Start level for installed bundles set to {} by {} property", installedBundlesStartLevel, BUNDLES_START_LEVEL__PROPERTY);
+            } else {
+                installedBundlesStartLevel = DEFAULT_BUNDLES_START_LEVEL;
+                log.info("Start level for installed bundles set to default value {}", installedBundlesStartLevel);
+            }
+        }
+
+        // Check start levels
+        if(context != null) {
+            final int myLevel = startLevel.getBundleStartLevel(context.getBundleContext().getBundle());
+            if(installedBundlesStartLevel < myLevel) {
+                // Running at a lower start level than the bundles that we install
+                // allows us to stop them if the repository goes away (SLING-747)
+                log.warn(
+                        "The configured start level for bundles installed by jcrinstall ({})"
+                        + " should be higher than the jcrinstall start level ({})",
+                        installedBundlesStartLevel, myLevel
+                );
+            }
+        }
+        
+        // Call startup() if we already have a repository, else that will be called
+        // by the bind method
+        if(repository != null) {
+            log.debug("activate()");
+            startup();
+        } else {
+            log.debug("activate() - Repository not available, cannot install bundles yet");
+        }
+        
+        activated = true;
+    }
+    	
+    /** Called at activation time, or when repository becomes available again
+     *  after going away. */
+    protected void startup() throws Exception {
+        log.debug("startup()");
         
     	// TODO make this more configurable (in sync with ResourceOverrideRulesImpl)
     	final String [] roots = DEFAULT_ROOTS;
@@ -123,10 +179,10 @@ public class RepositoryObserver implements Runnable, BundleListener {
          *	Using services and a whiteboard pattern for these would be nice,
          * 	but that could be problematic at startup due to async loading
          */
-    	converters.add(new FileNodeConverter());
+    	converters.add(new FileNodeConverter(installedBundlesStartLevel));
     	converters.add(new ConfigNodeConverter());
     	
-    	String folderNameRegexp = getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
+    	String folderNameRegexp = getPropertyValue(componentContext, FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp == null) {
     	    folderNameRegexp = DEFAULT_FOLDER_NAME_REGEXP;
             log.info("Using default folder name regexp '{}'", DEFAULT_FOLDER_NAME_REGEXP);
@@ -134,7 +190,7 @@ public class RepositoryObserver implements Runnable, BundleListener {
             log.info("Using folder name regexp '{}' from context property '{}'", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
         folderNameFilter = new RegexpFilter(folderNameRegexp);
-        serviceDataFile = getServiceDataFile(context);
+        serviceDataFile = getServiceDataFile(componentContext);
         
         // Listen for any new WatchedFolders created after activation
         session = repository.loginAdministrative(repository.getDefaultWorkspace());
@@ -149,13 +205,24 @@ public class RepositoryObserver implements Runnable, BundleListener {
         }
         
         // Find folders to watch
-        folders = new TreeSet<WatchedFolder>();
         for(String root : roots) {
             folders.addAll(findWatchedFolders(root));
         }
         
+        // Handle initial uninstalls and installs
+        observationCycleActive = true;
+        final int myStartLevel = startLevel.getStartLevel();
+        handleInitialUninstalls();
+        runOneCycle();
+        
+        // Restore start level if we brought it down due to the repository going away
+        if(startLevelToSetAtStartup > 0 && startLevelToSetAtStartup != myStartLevel) {
+            log.info("startup(): resetting start level to {}", startLevelToSetAtStartup);
+            startLevel.setStartLevel(startLevelToSetAtStartup);
+            startLevelToSetAtStartup = 0;
+        }
+        
         // start queue processing
-        running = true;
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
         t.setDaemon(true);
         t.start();
@@ -175,11 +242,22 @@ public class RepositoryObserver implements Runnable, BundleListener {
     }
     
     protected void deactivate(ComponentContext context) {
-    	
-        running = false;
+        log.debug("deactivate()");
+        shutdown();
+        if(context != null) {
+            context.getBundleContext().removeFrameworkListener(this);
+        }
+        activated = false;
+        componentContext = null;
+        startLevelToSetAtStartup = 0;
+    }
+    
+    /** Called at deactivation time, or when repository stops being available */
+    protected void shutdown() {
+        log.debug("shutdown()");
         
-        context.getBundleContext().removeBundleListener(this);
-
+        observationCycleActive = false;
+        
     	for(WatchedFolder f : folders) {
     		f.cleanup();
     	}
@@ -199,6 +277,15 @@ public class RepositoryObserver implements Runnable, BundleListener {
     	
     	listeners.clear();
         folders.clear();
+        
+        if(componentContext != null) {
+            final int currentStartLevel = startLevel.getStartLevel();
+            final int myStartLevel = startLevel.getBundleStartLevel(componentContext.getBundleContext().getBundle());
+            if(currentStartLevel > myStartLevel) {
+                log.info("shutdown(): changing start level from {} to the jcrinstall start level of {}", currentStartLevel, myStartLevel);
+                startLevel.setStartLevel(myStartLevel);
+            }
+        }
     }
     
     /** Add WatchedFolders that have been discovered by our WatchedFolderCreationListeners, if any */
@@ -315,34 +402,28 @@ public class RepositoryObserver implements Runnable, BundleListener {
     public void run() {
         log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
         
-        // Wait some time after receiving our last bundle event, to
-        // avoid uninstalling stuff while components might be starting
-        final long bundleEventDelayMsec = 1000;
-        boolean logged = false;
-        while(System.currentTimeMillis() - lastBundleEvent < bundleEventDelayMsec) {
-            if(!logged) {
-                log.info("Bundle events were detected in the last {} msec, waiting...", bundleEventDelayMsec);
-            }
-            logged = true;
-            
-            try {
-                Thread.sleep(100);
-            } catch(InterruptedException ignore) {
-                // ignore
-            }
-        }
-        log.info("No bundle events in the last {} msec, starting processing", bundleEventDelayMsec);
-
-        
         // We could use the scheduler service but that makes things harder to test
-        boolean firstCycle = true;
-        while (running) {
+        boolean scanning = false;
+        boolean oldScanning = !scanning;
+        
+        while (observationCycleActive) {
             try {
-            	if(firstCycle) {
-            		handleInitialUninstalls();
-            		firstCycle = false;
-            	}
-                runOneCycle();
+                final int currentLevel = startLevel.getStartLevel(); 
+                scanning = currentLevel >= installedBundlesStartLevel;
+                if(scanning != oldScanning) {
+                    if(scanning) {
+                        log.info("Scanning enabled, current start level ({}) equals or above {} (start level of installed bundles)", 
+                                currentLevel, installedBundlesStartLevel);
+                    } else {
+                        log.info("Scanning disabled, current start level ({}) is below {} (start level of installed bundles)", 
+                                currentLevel, installedBundlesStartLevel);
+                    }
+                    oldScanning = scanning;
+                }
+                
+                if(scanning) {
+                    runOneCycle();
+                }
             } catch (IllegalArgumentException ie) {
                 log.warn("IllegalArgumentException  in " + getClass().getSimpleName(), ie);
             } catch (RepositoryException re) {
@@ -367,6 +448,9 @@ public class RepositoryObserver implements Runnable, BundleListener {
     	// Add any new watched folders, and scan those who need it 
         addNewWatchedFolders();
     	for(WatchedFolder wf : folders) {
+    	    if(!observationCycleActive) {
+    	        break;
+    	    }
     		wf.scanIfNeeded(converters);
         }
     	
@@ -374,8 +458,43 @@ public class RepositoryObserver implements Runnable, BundleListener {
     	// resources that we detected
     	osgiController.executeScheduledOperations();
     }
+
+    /** Called when a SlingRepository becomes available, either at activation time
+     *  or later, if the repository had disappeared since activated.
+     */
+    protected void bindSlingRepository(SlingRepository r) {
+        repository = r;
+        if(activated) {
+            log.debug("bindSlingRepository()");
+            try {
+                startup();
+            } catch(Exception e) {
+                log.error("Exception in bindSlingRepository/startup", e);
+            }
+        } else {
+            log.debug("bindSlingRepository() but not activated yet, startup() not called");
+        }
+    }
+
+    /** Called when a SlingRepository becomes unavailable, either at deactivation time
+     *  or because the repository became unavailable. 
+     */
+    protected void unbindSlingRepository(SlingRepository r) {
+        // Store current start level: shutdown() will bring it down and we want
+        // to go back to it if repository comes back
+        startLevelToSetAtStartup = startLevel.getStartLevel();
+        log.debug("unbindSlingRepository() called at start level {}", startLevelToSetAtStartup);
+        shutdown();
+        repository = null;
+    }
+
+    public void frameworkEvent(FrameworkEvent e) {
+        if(e.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
+            log.info("FrameworkEvent.STARTLEVEL_CHANGED, start level={}", startLevel.getStartLevel());
+        }
+    }  
     
-    public void bundleChanged(BundleEvent event) {
-        lastBundleEvent = System.currentTimeMillis();
+    protected Set<WatchedFolder> getWatchedFolders() {
+        return folders;
     }
 }

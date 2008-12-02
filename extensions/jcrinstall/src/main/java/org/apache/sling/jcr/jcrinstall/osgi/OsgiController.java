@@ -34,7 +34,9 @@ public interface OsgiController {
      */
     int scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
     
-    /** Schedule uninstallation of resource that was installed via given uri
+    /** Schedule uninstallation of resource that was installed via given uri.
+     *  Might be called several times for the same URI - needless calls should
+     *  be ignored.
      *  @param uri Unique identifier for the resource
      *  @param attributes metadata stored by the OsgiController, will be
      *      removed after calling this method
