@@ -49,7 +49,7 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
 
         URL url = this.classLoader.getResource(path);
         if (url != null) {
-            Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+$");
+            Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+/?$");
 
             children = new ArrayList<String>();
             try {
