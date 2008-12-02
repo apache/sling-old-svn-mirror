@@ -143,14 +143,17 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <!-- Copy bundles that must be initially installed to WEB-INF/resources/bundles -->
+                        <!-- 
+                        	Copy bundles that must be initially installed to WEB-INF/resources/N
+                        	where N = start level of those bundles
+                        -->
                         <id>copy-bundles-dependencies</id>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/bundles
+                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/20
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeGroupIds>
@@ -191,21 +194,21 @@
                                     org/apache/sling/launcher/app/main/**
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.sling**
+                                    resources/*/org.apache.sling**
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.http.jetty*.jar
+                                    resources/*/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/pax-web-service*.jar
+                                    resources/*/pax-web-service*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.commons.servlet-api*.jar
+                                    resources/*/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
                             <includes>
                                 <include>org/**</include>
-                                <include>resources/bundles/org.apache.felix**</include>
+                                <include>resources/*/org.apache.felix**</include>
                             </includes>
                         </resource>
                         <!-- the configuration resources, but no Sling bundles -->
@@ -222,19 +225,19 @@
                             </includes>
                             <excludes>
                                 <exclude>
-                                    resources/bundles/org.apache.sling**
+                                    resources/*/org.apache.sling**
                                 </exclude>
                                 <exclude>
                                     resources/corebundles/org.apache.sling**
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.http.jetty*.jar
+                                    resources/*/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/pax-web-service*.jar
+                                    resources/*/pax-web-service*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.commons.servlet-api*.jar
+                                    resources/*/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
                         </resource>
