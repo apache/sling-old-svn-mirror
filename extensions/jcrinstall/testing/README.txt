@@ -1,0 +1,69 @@
+Apache Sling Jcrinstall Testing module
+
+This module builds a Sling webapp using bundles from the trunk, and
+runs integration tests for the jcrinstall module.
+
+The web container setup and pom.xml are very similar to the 
+launchpad/testing setup. 
+
+Disclaimer
+==========
+Apache Sling is an effort undergoing incubation at The Apache Software Foundation (ASF),
+sponsored by the Apache Jackrabbit PMC. Incubation is required of all newly accepted
+projects until a further review indicates that the infrastructure, communications,
+and decision making process have stabilized in a manner consistent with other
+successful ASF projects. While incubation status is not necessarily a reflection of
+the completeness or stability of the code, it does indicate that the project has yet
+to be fully endorsed by the ASF.
+
+Getting Started
+===============
+
+This component uses a Maven 2 (http://maven.apache.org/) build
+environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
+2.0.7 or later. We recommend to use the latest Maven version.
+
+If you have Maven 2 installed, you can compile and
+package the jar using the following command:
+
+    mvn package
+
+See the Maven 2 documentation for other build features.
+
+The latest source code for this component is available in the
+Subversion (http://subversion.tigris.org/) source repository of
+the Apache Software Foundation. If you have Subversion installed,
+you can checkout the latest source using the following command:
+
+    svn checkout http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/webapp
+
+See the Subversion documentation for other source control features.
+
+Integration tests
+-----------------
+This module provides a number of integration tests, that run automatically when
+doing a full build, and test Sling via its client HTTP interfaces.
+
+These tests can also be run against another instance of Sling, for example to
+test it in another web container than the embedded Jetty that is used during the
+Maven build.
+
+See pom.xml for the parameters that control these integration tests. Here's an
+example of running them against a Sling instance running on host xyzzy, port 1234,
+with the Sling webapp mounted under /foo:
+
+   mvn -o -s /dev/null test \
+    -Dhttp.port=1234 \
+    -Dtest.host=xyzzy \
+    -Dhttp.base.path=foo \
+    -Dwebdav.workspace.path=foo/dav/default \
+    -Dtest=**/integrationtest/**/*Test.java
+
+The  -s /dev/null parameter disables all your local Maven settings, to make sure
+they don't interfere. Feel free to remove that if you know what you're doing.
+
+To run a single test, other values can be used for the "-Dtest" parameter.
+
+This is very useful during development: you can leave a Sling webapp instance
+running, update bundles in it using the mvn autoInstallBundle profile, and run
+specific integration tests quickly from another terminal.

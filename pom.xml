@@ -113,7 +113,7 @@
         <module>extensions/httpauth</module>
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
-        <module>extensions/jcrinstall</module>
+        <module>extensions/jcrinstall/service</module>
         <module>extensions/runmode</module>
 
         <!-- Samples -->
@@ -152,15 +152,15 @@
     <profiles>
         <profile>
 	        <!--
-	          Allow the launchpad testing build to be excluded, as the integration
-                  tests are relatively slow.
+	          Allow the integration tests to be excluded, as they might be slow
 	        -->
-            <id>launchpadTesting</id>
+            <id>integrationTests</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
                 <module>launchpad/testing</module>
+                <module>extensions/jcrinstall/testing</module>
             </modules>
         </profile>
         <profile>
