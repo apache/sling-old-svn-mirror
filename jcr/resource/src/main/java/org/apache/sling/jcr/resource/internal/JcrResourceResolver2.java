@@ -622,11 +622,11 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             gather(entries, res, "");
         }
 
-        // backwards-compatibility: read current configuration
-        gatherConfiguration(entries);
-        
         // backwards-compatible sling:vanityPath stuff
         gatherVanityPaths(entries);
+        
+        // backwards-compatibility: read current configuration
+        gatherConfiguration(entries);
         
         return entries;
     }
@@ -668,7 +668,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             // what is stored in the sling:vanityPath property
             Object pVanityPath = row.get("sling:vanityPath");
             if (pVanityPath != null) {
-                String url = ANY_SCHEME_HOST + String.valueOf(pVanityPath);
+                String url = "^" + ANY_SCHEME_HOST + String.valueOf(pVanityPath);
 
                 // redirect target is the node providing the sling:vanityPath
                 // property (or its parent if the node is called jcr:content)
@@ -676,7 +676,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 if (ResourceUtil.getName(redirect).equals("jcr:content")) {
                     redirect = ResourceUtil.getParent(redirect);
                 }
-
+                
                 // whether the target is attained by a 302/FOUND or by an
                 // internal redirect is defined by the sling:redirect property
                 int status = -1;
@@ -685,7 +685,11 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                     status = HttpServletResponse.SC_FOUND;
                 }
 
-                entries.add(new MapEntry(url, redirect, status));
+                // 1. entry with exact match
+                entries.add(new MapEntry(url + "$", redirect + ".html", status));
+
+                // 2. entry with match supporting selectors and extension
+                entries.add(new MapEntry(url + "(\\..*)", redirect + "$1", status));
             }
         }
     }
