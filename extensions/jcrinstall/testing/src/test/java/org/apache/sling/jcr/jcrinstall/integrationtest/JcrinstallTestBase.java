@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.jcr.jcrinstall.integrationtest.util.BundleCloner;
 import org.osgi.framework.Bundle;
@@ -61,9 +62,19 @@ public class JcrinstallTestBase extends HttpTestBase {
 		super.setUp();
 		scaleFactor = requireIntProperty(SCALE_FACTOR_PROP);
 		defaultBundlesTimeout = requireIntProperty(DEFAULT_TIMEOUT_PROP);
+		enableJcrinstallService(true);
     }
     
-    protected int requireIntProperty(String systemPropertyKey) throws Exception {
+    @Override
+	protected void tearDown() throws Exception {
+		// TODO Auto-generated method stub
+		super.tearDown();
+		enableJcrinstallService(true);
+	}
+
+
+
+	protected int requireIntProperty(String systemPropertyKey) throws Exception {
     	final String s = System.getProperty(systemPropertyKey);
     	if(s == null) {
     		throw new Exception("Missing system property '" + systemPropertyKey + "'");
@@ -77,15 +88,29 @@ public class JcrinstallTestBase extends HttpTestBase {
     	final long start = System.currentTimeMillis();
     	final long timeout = start + timeoutSeconds * 1000L;
     	int count = 0;
+    	int lastCount = -1;
     	while(System.currentTimeMillis() < timeout) {
     		count = getActiveBundlesCount();
-    		if(count == expectedCount) {
+    		if(count != lastCount) {
+    			// continue until the count is stable for at least one second
+    			lastCount = count;
+        		sleep(1000);
+    			continue;
+    		} else if(count == expectedCount) {
     			return;
     		}
+    		sleep(500);
     	}
     	final long delta = System.currentTimeMillis() - start;
     	fail(message + ": expected " + expectedCount + " active bundles, found " + count
     			+ " after waiting " + delta / 1000.0 + " seconds");
+    }
+    
+    protected void sleep(long millis) {
+    	try {
+    		Thread.sleep(millis);
+    	} catch(InterruptedException ignore) {
+    	}
     }
     
     protected int getActiveBundlesCount() throws IOException {
@@ -96,6 +121,22 @@ public class JcrinstallTestBase extends HttpTestBase {
     		result = Integer.valueOf(props.getProperty(key));
     	}
     	return result;
+    }
+    
+    protected boolean getJcrinstallServiceEnabled() throws IOException {
+    	final Properties props = getJcrInstallProperties();
+    	return "true".equals(props.get("jcrinstall.enabled"));
+    }
+    
+    protected void enableJcrinstallService(boolean enable) throws IOException {
+    	if(enable != getJcrinstallServiceEnabled()) {
+            final PostMethod post = new PostMethod(HTTP_BASE_URL + JCRINSTALL_STATUS_PATH);
+            post.setFollowRedirects(false);
+            post.addParameter("enabled", String.valueOf(enable));
+            final int status = httpClient.executeMethod(post);
+            assertEquals("Expected status 200 in enableJcrinstallService", 200, status);
+            assertEquals("Expected jcrinstall.enabled to be " + enable, enable, getJcrinstallServiceEnabled());
+    	}
     }
     
     /** Return the Properties found at /system/sling/jcrinstall */ 
