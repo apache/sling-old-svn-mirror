@@ -21,9 +21,11 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
@@ -45,6 +47,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
@@ -554,12 +557,32 @@ public class RepositoryObserver extends SlingAllMethodsServlet implements Runnab
         doGet(request, response);
     }
 
+    /** Report on the jcrinstall enabled/disabled status, number of bundles in each state, etc. */ 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
     throws ServletException, IOException 
     {
-        final String status = repository != null ? "enabled" : "disabled";
+    	final Properties props = new Properties();
+    	
+    	if(componentContext != null) {
+    		// report on how many bundles we have in the different states
+    		final Map<Integer, Integer> states = new HashMap<Integer, Integer>();
+    		for(Bundle b : componentContext.getBundleContext().getBundles()) {
+    			final Integer s = new Integer(b.getState());
+    			Integer i = states.get(s);
+    			i = i == null ? new Integer(1) : new Integer(i.intValue() + 1);
+    			states.put(s, i);
+    		}
+    		
+    		for(Map.Entry<Integer, Integer> e : states.entrySet()) {
+    			props.put("bundles.in.state." + e.getKey().toString(), e.getValue().toString());
+    		}
+    	}
+  
+    	props.put("osgi.start.level", String.valueOf(startLevel.getStartLevel()));
+    	props.put("jcrinstall.enabled", new Boolean(repository != null).toString());
+        
         response.setContentType("text/plain");
-        response.getWriter().write(getClass().getSimpleName() + " is " + status);
+        props.store(response.getOutputStream(), "jcrinstall status");
     }
-}
+ }

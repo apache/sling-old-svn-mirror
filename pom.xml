@@ -21,17 +21,17 @@
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.apache.sling</groupId>
-    <artifactId>sling</artifactId>
-    <version>4-incubator-SNAPSHOT</version>
-    <relativePath>../../../parent/</relativePath>
+	<groupId>org.apache.sling</groupId>
+	<artifactId>org.apache.sling.jcr.jcrinstall.parent</artifactId>
+	<version>2.0.3-incubator-SNAPSHOT</version>
+	<relativePath>../</relativePath>
   </parent>
 
   <artifactId>org.apache.sling.jcr.jcrinstall</artifactId>
   <version>2.0.3-incubator-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Sling - JCR OSGi Installer</name>
+  <name>Sling - JCR OSGi Installer Service</name>
   <description> 
     Loads OSGi bundles, deployment packages and configs from
     configurable locations in the JCR repository.
