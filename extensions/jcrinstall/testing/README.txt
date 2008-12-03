@@ -67,3 +67,15 @@ To run a single test, other values can be used for the "-Dtest" parameter.
 This is very useful during development: you can leave a Sling webapp instance
 running, update bundles in it using the mvn autoInstallBundle profile, and run
 specific integration tests quickly from another terminal.
+
+Test parameters
+---------------
+The following values can be used to test with various quantities of test bundles.
+Default values are defined in pom.xml.
+
+  -Dsling.test.scale.factor=1
+  -Dsling.test.bundles.wait.seconds=20
+  
+ Increasing the scale factor causes the tests to run with corresponding more bundles,
+ and the wait time must be adjusted accordingly, to leave enough time for the framework
+ to start the bundles installed during tests.
