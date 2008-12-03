@@ -113,7 +113,7 @@
         <module>extensions/httpauth</module>
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
-        <module>extensions/jcrinstall/service</module>
+        <module>extensions/jcrinstall</module>
         <module>extensions/runmode</module>
 
         <!-- Samples -->
@@ -160,7 +160,6 @@
             </activation>
             <modules>
                 <module>launchpad/testing</module>
-                <module>extensions/jcrinstall/testing</module>
             </modules>
         </profile>
         <profile>
