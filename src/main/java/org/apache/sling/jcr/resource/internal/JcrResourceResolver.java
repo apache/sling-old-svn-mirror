@@ -76,12 +76,11 @@ public class JcrResourceResolver extends SlingAdaptable implements
 
     // ---------- ResourceResolver interface ----------------------------------
 
-    public Resource resolve(HttpServletRequest request) throws SlingException {
+    public Resource resolve(HttpServletRequest request) {
         return resolve(request, request.getPathInfo());
     }
 
-    public Resource resolve(HttpServletRequest request, String absPath)
-            throws SlingException {
+    public Resource resolve(HttpServletRequest request, String absPath) {
 
         // servlet directly address, so there is no path info, use "/" then
         if (absPath == null) {
@@ -102,8 +101,16 @@ public class JcrResourceResolver extends SlingAdaptable implements
         return result;
     }
 
-    public Resource resolve(String uri) throws SlingException {
+    public Resource resolve(String uri) {
 
+        // check argument
+        if (uri == null) {
+            throw new NullPointerException("uri");
+        } else if (!uri.startsWith("/")) {
+            log.info("resolve: Cannot resolve relative URI {}", uri);
+            return null;
+        }
+        
         // resolve virtual uri
         String realUrl = factory.virtualToRealUri(uri);
         if (realUrl != null) {
