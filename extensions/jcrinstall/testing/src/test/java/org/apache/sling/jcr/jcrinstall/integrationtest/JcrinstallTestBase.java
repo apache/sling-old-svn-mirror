@@ -31,14 +31,15 @@ import org.osgi.framework.Bundle;
 /** Base class for jcrinstall test cases */
 public class JcrinstallTestBase extends HttpTestBase {
 	
-	public static final int DEFAULT_BUNDLES_TIMEOUT = 10;
 	public static final String JCRINSTALL_STATUS_PATH = "/system/sling/jcrinstall";
 	public static final String DEFAULT_INSTALL_PATH = "/libs/jcrinstall/testing/install";
 	public static final String DEFAULT_BUNDLE_NAME_PATTERN = "observer";
 	private static long bundleCounter = System.currentTimeMillis();
 	private static Set<String> installedClones;
 	public static final String SCALE_FACTOR_PROP = "sling.test.scale.factor";
-	protected final int scaleFactor = Integer.getInteger(SCALE_FACTOR_PROP);
+	public static final String DEFAULT_TIMEOUT_PROP = "sling.test.bundles.wait.seconds";
+	protected int scaleFactor;
+	protected int defaultBundlesTimeout;
 	
     private class ShutdownThread extends Thread {
         @Override
@@ -58,16 +59,23 @@ public class JcrinstallTestBase extends HttpTestBase {
     @Override
 	protected void setUp() throws Exception {
 		super.setUp();
-		
-		if(scaleFactor < 1) {
-			throw new IllegalArgumentException("scaleFactor < 1, " + SCALE_FACTOR_PROP + " system property missing?");
-		}
+		scaleFactor = requireIntProperty(SCALE_FACTOR_PROP);
+		defaultBundlesTimeout = requireIntProperty(DEFAULT_TIMEOUT_PROP);
+    }
+    
+    protected int requireIntProperty(String systemPropertyKey) throws Exception {
+    	final String s = System.getProperty(systemPropertyKey);
+    	if(s == null) {
+    		throw new Exception("Missing system property '" + systemPropertyKey + "'");
+    	}
+    	return Integer.valueOf(s);
     }
     
     /** Fail test if active bundles count is not expectedCount, after 
      * 	at most timeoutSeconds */
     protected void assertActiveBundleCount(String message, int expectedCount, int timeoutSeconds) throws IOException {
-    	final long timeout = System.currentTimeMillis() + timeoutSeconds * 1000L;
+    	final long start = System.currentTimeMillis();
+    	final long timeout = start + timeoutSeconds * 1000L;
     	int count = 0;
     	while(System.currentTimeMillis() < timeout) {
     		count = getActiveBundlesCount();
@@ -75,7 +83,9 @@ public class JcrinstallTestBase extends HttpTestBase {
     			return;
     		}
     	}
-    	fail(message + ": expected " + expectedCount + " active bundles, found " + count);
+    	final long delta = System.currentTimeMillis() - start;
+    	fail(message + ": expected " + expectedCount + " active bundles, found " + count
+    			+ " after waiting " + delta / 1000.0 + " seconds");
     }
     
     protected int getActiveBundlesCount() throws IOException {

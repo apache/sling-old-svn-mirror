@@ -84,7 +84,10 @@
         <sling.testbundles.path>${project.build.directory}/testbundles</sling.testbundles.path>
         
         <!-- Can be used to run tests with more or less bundles -->
-        <sling.test.scale.factor>10</sling.test.scale.factor>
+        <sling.test.scale.factor>1</sling.test.scale.factor>
+        
+        <!--  How long to wait for the expected number of bundles to be active, in tests -->
+        <sling.test.bundles.wait.seconds>20</sling.test.bundles.wait.seconds>
     </properties>
 
     <build>
@@ -327,6 +330,10 @@
                             <name>sling.test.scale.factor</name>
                             <value>${sling.test.scale.factor}</value>
                         </property>
+                        <property>
+                            <name>sling.test.bundles.wait.seconds</name>
+                            <value>${sling.test.bundles.wait.seconds}</value>
+                        </property>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -412,6 +419,18 @@
                                                 http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
                                             </value>
                                         </property>
+				                        <property>
+				                            <name>sling.testbundles.path</name>
+				                            <value>${sling.testbundles.path}</value>
+				                        </property>
+				                        <property>
+				                            <name>sling.test.scale.factor</name>
+				                            <value>${sling.test.scale.factor}</value>
+				                        </property>
+				                        <property>
+				                            <name>sling.test.bundles.wait.seconds</name>
+				                            <value>${sling.test.bundles.wait.seconds}</value>
+				                        </property>
                                     </systemProperties>
                                 </configuration>
                             </execution>
