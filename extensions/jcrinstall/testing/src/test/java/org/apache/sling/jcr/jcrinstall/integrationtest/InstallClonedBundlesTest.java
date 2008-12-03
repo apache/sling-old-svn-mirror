@@ -16,26 +16,29 @@
  */
 package org.apache.sling.jcr.jcrinstall.integrationtest;
 
-import org.apache.commons.httpclient.methods.GetMethod;
+import java.util.LinkedList;
+import java.util.List;
 
-/** Ping the Sling server to verify that our integration test
- *  setup is ok.
- */
-public class HttpPingTest extends JcrinstallTestBase {
-    
-    public void testWebServerRoot() throws Exception
-    {
-        // by default, the Launchpad default servlet redirects / to index.html
-        final String url = HTTP_BASE_URL + "/";
-        final GetMethod get = new GetMethod(url);
-        get.setFollowRedirects(false);
-        final int status = httpClient.executeMethod(get);
-        assertEquals("Status must be 200 for " + url, 200, status);
-    }
-    
-    public void test404() throws Exception
-    {
-        assertHttpStatus(HTTP_BASE_URL + "/someNonExistentUrl", 404);
-    }
-    
+/** Try installing some cloned bundles */
+public class InstallClonedBundlesTest extends JcrinstallTestBase {
+	
+	public void testInstallAndRemoveBundles() throws Exception {
+		final int activeBeforeTest = getActiveBundlesCount();
+		final List<String> installed = new LinkedList<String>();
+		
+		final int nBundles = 10 * scaleFactor;
+		for(int i=0 ; i < nBundles; i++) {
+			installed.add(installClonedBundle(null, null));
+		}
+		
+		assertActiveBundleCount("after adding bundles", 
+				activeBeforeTest + nBundles, DEFAULT_BUNDLES_TIMEOUT);
+		
+		for(String path : installed) {
+			removeClonedBundle(path);
+		}
+		
+		assertActiveBundleCount("after removing added bundles", 
+				activeBeforeTest, DEFAULT_BUNDLES_TIMEOUT);
+	}
 }
