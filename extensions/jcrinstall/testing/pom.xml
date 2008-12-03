@@ -20,12 +20,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
-        <version>4-incubator-SNAPSHOT</version>
-        <relativePath>../../../parent/</relativePath>
-    </parent>
+	<parent>
+	  <groupId>org.apache.sling</groupId>
+	  <artifactId>org.apache.sling.jcr.jcrinstall.parent</artifactId>
+	  <version>2.0.3-incubator-SNAPSHOT</version>
+	  <relativePath>../</relativePath>
+	</parent>
 
     <artifactId>org.apache.sling.jcr.jcrinstall.testing</artifactId>
     <packaging>war</packaging>
@@ -79,6 +79,12 @@
             started. Useful to manually test the integration testing webapp.
         -->
         <integration.test.wait>false</integration.test.wait>
+        
+        <!-- Where to copy our test bundles -->
+        <sling.testbundles.path>${project.build.directory}/testbundles</sling.testbundles.path>
+        
+        <!-- Can be used to run tests with more or less bundles -->
+        <sling.test.scale.factor>10</sling.test.scale.factor>
     </properties>
 
     <build>
@@ -166,6 +172,30 @@
                               -->
                               org.apache.sling.launchpad.app,org.apache.sling.launchpad.base
                             </excludeArtifactIds>
+                            <includeScope>
+                                provided
+                            </includeScope>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- 
+                            Copy test bundles, test cases will create multiple instances of them
+                        -->
+                        <id>copy-testbundles</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${sling.testbundles.path}
+                            </outputDirectory>
+                            <excludeTransitive>true</excludeTransitive>
+                            <includeGroupIds>
+                                org.apache.sling
+                            </includeGroupIds>
+                            <includeArtifactIds>
+                                org.apache.sling.jcr.jcrinstall.testbundles.observer
+                            </includeArtifactIds>
                             <includeScope>
                                 provided
                             </includeScope>
@@ -288,6 +318,14 @@
                             <value>
                                 http://${test.host}:${http.port}/${webdav.workspace.path}
                             </value>
+                        </property>
+                        <property>
+                            <name>sling.testbundles.path</name>
+                            <value>${sling.testbundles.path}</value>
+                        </property>
+                        <property>
+                            <name>sling.test.scale.factor</name>
+                            <value>${sling.test.scale.factor}</value>
                         </property>
                     </systemProperties>
                 </configuration>
@@ -657,7 +695,19 @@
             <artifactId>jcl-over-slf4j</artifactId>
             <scope>test</scope>
         </dependency>
-
+		<dependency>
+			<groupId>biz.aQute</groupId>
+			<artifactId>bnd</artifactId>
+			<version>0.0.169</version>
+            <scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.jcr.jcrinstall.testbundles.observer</artifactId>
+			<version>2.0.3-incubator-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+		
         <!-- The servlet container will have to provide these API classes -->
         <dependency>
             <groupId>javax.servlet</groupId>
