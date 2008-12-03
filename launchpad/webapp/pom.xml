@@ -139,7 +139,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/bundles
+                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/0
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeGroupIds>
@@ -175,13 +175,13 @@
                                     org/apache/sling/launcher/app/main/**
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.http.jetty*.jar
+                                    resources/5/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/pax-web-service*.jar
+                                    resources/5/pax-web-service*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.commons.servlet-api*.jar
+                                    resources/5/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
                             <includes>
@@ -202,13 +202,13 @@
                             </includes>
                             <excludes>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.http.jetty*.jar
+                                    resources/5/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/pax-web-service*.jar
+                                    resources/5/pax-web-service*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/bundles/org.apache.felix.commons.servlet-api*.jar
+                                    resources/5/org.apache.felix.commons.servlet-api*.jar
                                 </exclude>
                             </excludes>
                         </resource>
