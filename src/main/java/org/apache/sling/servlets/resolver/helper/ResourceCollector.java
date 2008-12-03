@@ -226,6 +226,13 @@ public class ResourceCollector {
                     }
                 }
 
+                if (selector != null
+                    && scriptName.equals(selector + "." + methodName)) {
+                    addWeightedResource(resources, child, selIdx + 1,
+                        WeightedResource.WEIGHT_NONE);
+                    continue;
+                }
+                
                 if (scriptName.equals(methodName)) {
                     addWeightedResource(resources, child, selIdx,
                         WeightedResource.WEIGHT_NONE);
