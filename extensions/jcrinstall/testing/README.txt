@@ -42,7 +42,8 @@ See the Subversion documentation for other source control features.
 Integration tests
 -----------------
 This module provides a number of integration tests, that run automatically when
-doing a full build, and test Sling via its client HTTP interfaces.
+doing a full build, and test jcrinstall by copying bundles into the repository,
+and communicating with jcrinstall with its servlet interface.
 
 These tests can also be run against another instance of Sling, for example to
 test it in another web container than the embedded Jetty that is used during the
