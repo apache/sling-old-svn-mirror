@@ -112,141 +112,28 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     // ---------- resolving resources
 
-    public Resource resolve(HttpServletRequest request, String absPath) {
-
-        // Assume root if absPath is null
-        if (absPath == null) {
-            absPath = "/";
-        }
-
-        // check for special namespace prefix treatment
-        absPath = unmangleNamespaces(absPath);
-        
-        // Assume http://localhost:80 if request is null
-        String[] realPathList = { absPath };
-        String requestPath;
-        if (request != null) {
-            requestPath = getMapPath(request.getScheme(),
-                request.getServerName(), request.getServerPort(), absPath);
-        } else {
-            requestPath = getMapPath("http", "localhost", 80, absPath);
-        }
-
-        log.debug("resolve: Resolving request path {}", requestPath);
-
-        // loop while finding internal or external redirect into the
-        // content out of the virtual host mapping tree
-        // the counter is to ensure we are not caught in an endless loop here
-        // TODO: might do better to be able to log the loop and help the user
-        for (int i = 0; i < 100; i++) {
-
-            String[] mappedPath = null;
-            for (MapEntry mapEntry : maps) {
-                mappedPath = mapEntry.replace(requestPath);
-                if (mappedPath != null) {
-                    log.debug(
-                        "resolve: MapEntry {} matches, mapped path is {}",
-                        mapEntry, mappedPath);
-
-                    if (mapEntry.isInternal()) {
-                        // internal redirect
-                        log.debug("resolve: Redirecting internally");
-                        break;
-                    }
-
-                    // external redirect
-                    log.debug("resolve: Returning external redirect");
-                    return new RedirectResource(this, absPath, mappedPath[0]);
-                }
-            }
-
-            // if there is no virtual host based path mapping, abort
-            // and use the original realPath
-            if (mappedPath == null) {
-                log.debug(
-                    "resolve: Request path {} does not match any MapEntry",
-                    requestPath);
-                break;
-            }
-
-            // if the mapped path is not an URL, use this path to continue
-            if (!mappedPath[0].contains("://")) {
-                log.debug("resolve: Mapped path is for resource tree");
-                realPathList = mappedPath;
-                break;
-            }
-
-            // otherwise the mapped path is an URI and we have to try to
-            // resolve that URI now, using the URI's path as the real path
-            try {
-                URI uri = new URI(mappedPath[0]);
-                requestPath = getMapPath(uri.getScheme(), uri.getHost(),
-                    uri.getPort(), uri.getPath());
-                realPathList = new String[] { uri.getPath() };
-
-                log.debug(
-                    "resolve: Mapped path is an URL, using new request path {}",
-                    requestPath);
-            } catch (URISyntaxException use) {
-                // TODO: log and fail
-                throw new ResourceNotFoundException(absPath);
-            }
-        }
-
-        // now we have the real path resolved from virtual host mapping
-        // this path may be absolute or relative, in which case we try
-        // to resolve it against the search path
-
-        Resource res = null;
-        for (int i = 0; res == null && i < realPathList.length; i++) {
-            String realPath = realPathList[i];
-
-            // first check whether the requested resource is a StarResource
-            if (StarResource.appliesTo(realPath)) {
-
-                log.debug("resolve: Mapped path {} is a Star Resource",
-                    realPath);
-                res = new StarResource(this, ensureAbsPath(realPath),
-                    factory.getJcrResourceTypeProvider());
-
-            } else
-
-            if (realPath.startsWith("/")) {
-
-                // let's check it with a direct access first
-                log.debug("resolve: Try absolute mapped path");
-                res = resolveInternal(realPath);
-
-            } else {
-
-                String[] searchPath = getSearchPath();
-                for (int spi = 0; res == null && spi < searchPath.length; spi++) {
-                    log.debug(
-                        "resolve: Try relative mapped path with search path entry {}",
-                        searchPath[spi]);
-                    res = resolveInternal(searchPath[spi] + realPath);
-                }
-
-            }
-
-        }
-        
-        if (res == null) {
-            log.debug("resolve: Resource {} does not exist", realPathList[0]);
-            res = new NonExistingResource(this, ensureAbsPath(realPathList[0]));
-        } else {
-            log.debug("resolve: Found resource {}", res);
-        }
-
-        return res;
-    }
-
     public Resource resolve(HttpServletRequest request) {
+        // throws NPE if request is null as required
         return resolve(request, request.getPathInfo());
     }
 
+    public Resource resolve(HttpServletRequest request, String absPath) {
+        // make sure abspath is not null and is absolute
+        if (absPath == null) {
+            absPath = "/";
+        } else if (!absPath.startsWith("/")) {
+            absPath = "/" + absPath;
+        }
+
+        return resolveInternal(request, absPath, true);
+    }
+    
     public Resource resolve(String absPath) {
-        return resolve(null, absPath);
+        if (absPath == null) {
+            throw new NullPointerException("absPath");
+        }
+        
+        return resolveInternal(null, absPath, false);
     }
 
     // trivial implementation not taking into account any mappings in
@@ -418,6 +305,139 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             namespaces = new HashSet<String>(Arrays.asList(namespaceList));
         }
         return namespaces;
+    }
+
+    // expect absPath to be non-null and absolute
+    public Resource resolveInternal(HttpServletRequest request, String absPath,
+            boolean requireResource) {
+
+        // check for special namespace prefix treatment
+        absPath = unmangleNamespaces(absPath);
+        
+        // Assume http://localhost:80 if request is null
+        String[] realPathList = { absPath };
+        String requestPath;
+        if (request != null) {
+            requestPath = getMapPath(request.getScheme(),
+                request.getServerName(), request.getServerPort(), absPath);
+        } else {
+            requestPath = getMapPath("http", "localhost", 80, absPath);
+        }
+
+        log.debug("resolve: Resolving request path {}", requestPath);
+
+        // loop while finding internal or external redirect into the
+        // content out of the virtual host mapping tree
+        // the counter is to ensure we are not caught in an endless loop here
+        // TODO: might do better to be able to log the loop and help the user
+        for (int i = 0; i < 100; i++) {
+
+            String[] mappedPath = null;
+            for (MapEntry mapEntry : maps) {
+                mappedPath = mapEntry.replace(requestPath);
+                if (mappedPath != null) {
+                    log.debug(
+                        "resolve: MapEntry {} matches, mapped path is {}",
+                        mapEntry, mappedPath);
+
+                    if (mapEntry.isInternal()) {
+                        // internal redirect
+                        log.debug("resolve: Redirecting internally");
+                        break;
+                    }
+
+                    // external redirect
+                    log.debug("resolve: Returning external redirect");
+                    return new RedirectResource(this, absPath, mappedPath[0]);
+                }
+            }
+
+            // if there is no virtual host based path mapping, abort
+            // and use the original realPath
+            if (mappedPath == null) {
+                log.debug(
+                    "resolve: Request path {} does not match any MapEntry",
+                    requestPath);
+                break;
+            }
+
+            // if the mapped path is not an URL, use this path to continue
+            if (!mappedPath[0].contains("://")) {
+                log.debug("resolve: Mapped path is for resource tree");
+                realPathList = mappedPath;
+                break;
+            }
+
+            // otherwise the mapped path is an URI and we have to try to
+            // resolve that URI now, using the URI's path as the real path
+            try {
+                URI uri = new URI(mappedPath[0]);
+                requestPath = getMapPath(uri.getScheme(), uri.getHost(),
+                    uri.getPort(), uri.getPath());
+                realPathList = new String[] { uri.getPath() };
+
+                log.debug(
+                    "resolve: Mapped path is an URL, using new request path {}",
+                    requestPath);
+            } catch (URISyntaxException use) {
+                // TODO: log and fail
+                throw new ResourceNotFoundException(absPath);
+            }
+        }
+
+        // now we have the real path resolved from virtual host mapping
+        // this path may be absolute or relative, in which case we try
+        // to resolve it against the search path
+
+        Resource res = null;
+        for (int i = 0; res == null && i < realPathList.length; i++) {
+            String realPath = realPathList[i];
+
+            // first check whether the requested resource is a StarResource
+            if (StarResource.appliesTo(realPath)) {
+
+                log.debug("resolve: Mapped path {} is a Star Resource",
+                    realPath);
+                res = new StarResource(this, ensureAbsPath(realPath),
+                    factory.getJcrResourceTypeProvider());
+
+            } else
+
+            if (realPath.startsWith("/")) {
+
+                // let's check it with a direct access first
+                log.debug("resolve: Try absolute mapped path");
+                res = resolveInternal(realPath);
+
+            } else {
+
+                String[] searchPath = getSearchPath();
+                for (int spi = 0; res == null && spi < searchPath.length; spi++) {
+                    log.debug(
+                        "resolve: Try relative mapped path with search path entry {}",
+                        searchPath[spi]);
+                    res = resolveInternal(searchPath[spi] + realPath);
+                }
+
+            }
+
+        }
+        
+        if (res == null) {
+            if (requireResource) {
+                log.debug(
+                    "resolve: Path {} does not resolve, returning NonExistingResource at {}",
+                    absPath, realPathList[0]);
+                res = new NonExistingResource(this,
+                    ensureAbsPath(realPathList[0]));
+            } else {
+                log.debug("resolve: No Resource for {}", absPath);
+            }
+        } else {
+            log.debug("resolve: Path {} resolves to Resource {}", absPath, res);
+        }
+
+        return res;
     }
 
     /**
