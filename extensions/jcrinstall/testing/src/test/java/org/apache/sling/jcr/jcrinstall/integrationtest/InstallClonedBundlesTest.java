@@ -32,13 +32,13 @@ public class InstallClonedBundlesTest extends JcrinstallTestBase {
 		}
 		
 		assertActiveBundleCount("after adding bundles", 
-				activeBeforeTest + nBundles, DEFAULT_BUNDLES_TIMEOUT);
+				activeBeforeTest + nBundles, defaultBundlesTimeout);
 		
 		for(String path : installed) {
 			removeClonedBundle(path);
 		}
 		
 		assertActiveBundleCount("after removing added bundles", 
-				activeBeforeTest, DEFAULT_BUNDLES_TIMEOUT);
+				activeBeforeTest, defaultBundlesTimeout);
 	}
 }
