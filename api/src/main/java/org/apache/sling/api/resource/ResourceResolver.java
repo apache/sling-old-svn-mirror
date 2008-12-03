@@ -40,23 +40,34 @@ public interface ResourceResolver extends Adaptable {
 
     /**
      * Resolves the resource from the given <code>absPath</code> optionally
-     * taking <code>HttpServletRequest</code> into account, such as the
-     * value of the <code>Host</code> request header.
+     * taking <code>HttpServletRequest</code> into account, such as the value
+     * of the <code>Host</code> request header.
      * <p>
-     * If the request cannot be resolved to an existing resource, a
-     * {@link Resource} object is returned whose
-     * {@link Resource#getResourceType() resource type} is set to
-     * {@link Resource#RESOURCE_TYPE_NON_EXISTING} and the
-     * {@link Resource#getPath() resource path} set to the request URI.
-     * {@link Resource#adaptTo(Class) object} returns <code>null</code> for
-     * all classes.
+     * If the <code>absPath</code> cannot be resolved to an existing resource
+     * this method returns a {@link NonExistingResource}. This method is
+     * intended to apply the same algorithm to the absolute path as is used by
+     * the {@link #resolve(HttpServletRequest, String)} method except for cases
+     * where the latter uses request property such as request headers or request
+     * parameters to resolve a resource.
+     * <p>
+     * The difference between this method and the {@link #resolve(String)}
+     * method is, that this method may take request properties like the scheme,
+     * the host header or request parameters into account to resolve the
+     * resource.
      * 
-     * @param request The http servlet request object used to resolve the
-     *            resource for.
-     * @return The {@link Resource} for the request.
-     * @throws org.apache.sling.api.SlingException A subclass of this exception
-     *             is thrown if the resource to which the request maps cannot be
-     *             retrieved.
+     * @param request The http servlet request object providing more hints at
+     *            how to resolve the <code>absPath</code>. This parameter may
+     *            be <code>null</code> in which case the implementation should
+     *            use reasonable defaults.
+     * @param absPath The absolute path to be resolved to a resource. If this
+     *            parameter is <code>null</code>, it is assumed to address
+     *            the root of the resource tree. If the path is relative it is
+     *            assumed relative to the root, that is a slash is prepended to
+     *            the path before resolving it.
+     * @return The {@link Resource} addressed by the <code>absPath</code> or a
+     *         {@link NonExistingResource} if no such resource can be resolved.
+     * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
+     *             thrown if an error occurrs trying to resolve the resource.
      * @since 2.0.4
      */
     Resource resolve(HttpServletRequest request, String absPath);
@@ -64,13 +75,12 @@ public interface ResourceResolver extends Adaptable {
     /**
      * Resolves the resource from the given <code>HttpServletRequest</code>.
      * <p>
-     * If the request cannot be resolved to an existing resource, a
-     * {@link Resource} object is returned whose
-     * {@link Resource#getResourceType() resource type} is set to
-     * {@link Resource#RESOURCE_TYPE_NON_EXISTING} and the
-     * {@link Resource#getPath() resource path} set to the request URI.
-     * {@link Resource#adaptTo(Class) object} returns <code>null</code> for
-     * all classes.
+     * If the request cannot be resolved to an existing resource this method
+     * returns a {@link NonExistingResource}. This method is intended to apply
+     * the same algorithm to the absolute path as is used by the
+     * {@link #resolve(HttpServletRequest, String)} method except for cases
+     * where the latter uses request property such as request headers or request
+     * parameters to resolve a resource.
      * <p>
      * This method is deprecated as of API version 2.0.4 and should not be used
      * anymore. Implementations are expected to implement this method calling
@@ -79,11 +89,14 @@ public interface ResourceResolver extends Adaptable {
      * <code>getPathInfo()</code> on the <code>request</code> object.
      * 
      * @param request The http servlet request object used to resolve the
-     *            resource for.
-     * @return The {@link Resource} for the request.
-     * @throws org.apache.sling.api.SlingException A subclass of this exception
-     *             is thrown if the resource to which the request maps cannot be
-     *             retrieved.
+     *            resource for. This must not be <code>null</code>.
+     * @return The {@link Resource} addressed by
+     *         <code>HttpServletRequest.getPathInfo()</code> or a
+     *         {@link NonExistingResource} if no such resource can be resolved.
+     * @throws NullPointerException If <code>request</code> is
+     *             <code>null</code>.
+     * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
+     *             thrown if an error occurrs trying to resolve the resource.
      * @deprecated as of 2.0.4, use {@link #resolve(HttpServletRequest, String)}
      *             instead.
      */
@@ -103,12 +116,15 @@ public interface ResourceResolver extends Adaptable {
      * If the <code>absPath</code> is a relative path, this method returns
      * <code>null</code>.
      * 
-     * @param absPath The absolute path to be mapped to a resource.
-     * @return The {@link Resource} mapped from the path or <code>null</code>
-     *         if no resource can be found for the path.
-     * @throws org.apache.sling.api.SlingException A subclass of this exception
-     *             is thrown if the resource to which the request maps cannot be
-     *             retrieved.
+     * @param absPath The absolute path to be resolved to a resource. If the
+     *            path is relative <code>null</code> is returned. This
+     *            parameter must not be <code>null</code>.
+     * @return The {@link Resource} addressed by the <code>absPath</code> or a
+     *         {@link NonExistingResource} if no such resource can be resolved.
+     * @throws NullPointerException if <code>absPath</code> is
+     *             <code>null</code>.
+     * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
+     *             thrown if an error occurrs trying to resolve the resource.
      */
     Resource resolve(String absPath);
 
