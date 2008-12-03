@@ -54,7 +54,7 @@ public interface ResourceResolver extends Adaptable {
      * method is, that this method may take request properties like the scheme,
      * the host header or request parameters into account to resolve the
      * resource.
-     * 
+     *
      * @param request The http servlet request object providing more hints at
      *            how to resolve the <code>absPath</code>. This parameter may
      *            be <code>null</code> in which case the implementation should
@@ -87,7 +87,7 @@ public interface ResourceResolver extends Adaptable {
      * the {@link #resolve(HttpServletRequest, String)} where the
      * <code>absPath</code> argument is the result of calling the
      * <code>getPathInfo()</code> on the <code>request</code> object.
-     * 
+     *
      * @param request The http servlet request object used to resolve the
      *            resource for. This must not be <code>null</code>.
      * @return The {@link Resource} addressed by
@@ -100,6 +100,7 @@ public interface ResourceResolver extends Adaptable {
      * @deprecated as of 2.0.4, use {@link #resolve(HttpServletRequest, String)}
      *             instead.
      */
+    @Deprecated
     Resource resolve(HttpServletRequest request);
 
     /**
@@ -115,7 +116,7 @@ public interface ResourceResolver extends Adaptable {
      * <p>
      * If the <code>absPath</code> is a relative path, this method returns
      * <code>null</code>.
-     * 
+     *
      * @param absPath The absolute path to be resolved to a resource. If the
      *            path is relative <code>null</code> is returned. This
      *            parameter must not be <code>null</code>.
@@ -143,7 +144,7 @@ public interface ResourceResolver extends Adaptable {
      * <p>
      * This method is intended as the reverse operation of the
      * {@link #resolve(String)} method.
-     * 
+     *
      * @param resourcePath The path for which to return a mapped path.
      * @return The mapped path.
      */
@@ -167,7 +168,7 @@ public interface ResourceResolver extends Adaptable {
      * {@link #resolve(HttpServletRequest, String)} method. As such the URL
      * returned is expected to be an absolute URL including scheme, host, any
      * servlet context path and the actual path used to resolve the resource.
-     * 
+     *
      * @param request The http servlet request object which may be used to apply
      *            more mapping functionality.
      * @param resourcePath The path for which to return a mapped path.
@@ -184,7 +185,10 @@ public interface ResourceResolver extends Adaptable {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     * 
+     * In contrast to the {@link #resolve(String)} method, this method
+     * does not apply any logic to the path, so the path is used as-is to
+     * fetch the content.
+     *
      * @param path The absolute path to the resource object to be loaded. The
      *            path may contain relative path specifiers like <code>.</code>
      *            (current location) and <code>..</code> (parent location),
@@ -207,7 +211,7 @@ public interface ResourceResolver extends Adaptable {
      * a Java Content Repository, the path could be a
      * <code>javax.jcr.Item</code> path from which the resource object is
      * loaded.
-     * 
+     *
      * @param base The base {@link Resource} against which a relative path
      *            argument given by <code>path</code> is resolved. This
      *            parameter may be <code>null</code> if the <code>path</code>
@@ -253,7 +257,7 @@ public interface ResourceResolver extends Adaptable {
      * reading content from a Java Content Repository, the children could be the
      * {@link Resource} objects loaded from child items of the <code>Item</code>
      * of the given <code>Resource</code>.
-     * 
+     *
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is
@@ -273,7 +277,7 @@ public interface ResourceResolver extends Adaptable {
      * create a JCR <code>Query</code> through the <code>QueryManager</code>.
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
-     * 
+     *
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching
@@ -299,7 +303,7 @@ public interface ResourceResolver extends Adaptable {
      * the column name and the column value is the JCR <code>Value</code>
      * object converted into the respective Java object, such as
      * <code>Boolean</code> for a value of property type <em>Boolean</em>.
-     * 
+     *
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances
