@@ -37,6 +37,7 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
+import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
@@ -186,6 +187,9 @@ public class JcrResourceResolverFactoryImpl implements
 
     protected ComponentContext componentContext;
 
+    // helper for the new JcrResourceResolver2
+    private MapEntries mapEntries = MapEntries.EMPTY;
+    
     /** all mappings */
     private Mapping[] mappings;
 
@@ -233,7 +237,7 @@ public class JcrResourceResolverFactoryImpl implements
             session, rootProviderEntry, getJcrResourceTypeProvider());
 
         if (useNewResourceResolver) {
-            return new JcrResourceResolver2(sessionRoot, this);
+            return new JcrResourceResolver2(sessionRoot, this, mapEntries);
         }
 
         return new JcrResourceResolver(sessionRoot, this);
@@ -273,11 +277,11 @@ public class JcrResourceResolverFactoryImpl implements
                 : null;
     }
 
-    BidiMap getVirtualURLMap() {
+    public BidiMap getVirtualURLMap() {
         return virtualURLMap;
     }
 
-    Mapping[] getMappings() {
+    public Mapping[] getMappings() {
         return mappings;
     }
 
@@ -389,6 +393,27 @@ public class JcrResourceResolverFactoryImpl implements
         }
         delayedResourceProviders.clear();
         this.processDelayedJcrResourceTypeProviders();
+        
+        // set up the map entries from configuration
+        if (useNewResourceResolver) {
+            try {
+                mapEntries = new MapEntries(this, getRepository());
+            } catch (Exception e) {
+                log.error(
+                    "activate: Cannot access repository, failed setting up Mapping Support",
+                    e);
+            }
+        }
+    }
+
+    /** Deativates this component, called by SCR to take out of service */
+    protected void deactivate(ComponentContext componentContext) {
+        if (useNewResourceResolver) {
+            mapEntries.dispose();
+            mapEntries = MapEntries.EMPTY;
+        }
+
+        this.componentContext = null;
     }
 
     private ResourcePattern[] getResourcePatterns(String[] patternList) {
@@ -448,11 +473,6 @@ public class JcrResourceResolverFactoryImpl implements
                 }
             });
 
-    }
-
-    /** Deativates this component, called by SCR to take out of service */
-    protected void deactivate(ComponentContext componentContext) {
-        this.componentContext = null;
     }
 
     protected void bindResourceProvider(ServiceReference reference) {
