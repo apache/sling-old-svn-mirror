@@ -116,13 +116,13 @@ public class DefaultThreadPool
                 handler = new ThreadPoolExecutor.AbortPolicy();
                 break;
             case DISCARD :
-                handler = new ThreadPoolExecutor.AbortPolicy();
+                handler = new ThreadPoolExecutor.DiscardPolicy();
                 break;
             case DISCARDOLDEST :
-                handler = new ThreadPoolExecutor.AbortPolicy();
+                handler = new ThreadPoolExecutor.DiscardOldestPolicy();
                 break;
             case RUN :
-                handler = new ThreadPoolExecutor.AbortPolicy();
+                handler = new ThreadPoolExecutor.CallerRunsPolicy();
                 break;
         }
         this.executor = new ThreadPoolExecutor(this.configuration.getMinPoolSize(),
