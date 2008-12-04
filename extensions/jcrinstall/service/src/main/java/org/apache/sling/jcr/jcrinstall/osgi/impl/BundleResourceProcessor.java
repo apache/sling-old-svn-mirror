@@ -385,7 +385,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 log.info("Starting Bundle {}/{} ", bundle.getSymbolicName(),
                     bundle.getBundleId());
                 try {
+                    final long start = System.currentTimeMillis();
                     bundle.start();
+                    final long delta = System.currentTimeMillis() - start;
+                    log.info("bundle.start() call took {} msec for bundle {}", delta, bundle.getSymbolicName());
                 } catch (BundleException be) {
                     log.info("Failed to start Bundle " 
                         + bundle.getSymbolicName() + "/" + bundle.getBundleId()
