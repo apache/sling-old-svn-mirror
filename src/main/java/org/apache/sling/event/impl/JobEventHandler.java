@@ -140,6 +140,12 @@ public class JobEventHandler
 
     public static ThreadPool JOB_THREAD_POOL;
 
+    /** Sync lock */
+    private final Object writeLock = new Object();
+
+    /** Sync lock */
+    private final Object backgroundLock = new Object();
+
     /**
      * Activate this component.
      * @param context
@@ -546,7 +552,7 @@ public class JobEventHandler
      */
     private boolean executeJob(final EventInfo info, final BlockingQueue<EventInfo> jobQueue) {
         boolean putback = false;
-        synchronized (this.backgroundSession) {
+        synchronized (this.backgroundLock) {
             try {
                 this.backgroundSession.refresh(false);
                 // check if the node still exists
@@ -1029,7 +1035,7 @@ public class JobEventHandler
                                         || job.getProperty(EventUtil.PROPERTY_JOB_PARALLEL) != null;
         EventInfo putback = null;
         // we have to use the same session for unlocking that we used for locking!
-        synchronized ( this.backgroundSession ) {
+        synchronized ( this.backgroundLock ) {
             try {
                 this.backgroundSession.refresh(false);
                 // check if the job has been cancelled
@@ -1334,7 +1340,7 @@ public class JobEventHandler
      */
     public void cancelJob(String jobId) {
         if ( jobId != null ) {
-            synchronized ( this.writerSession ) {
+            synchronized ( this.writeLock ) {
                 try {
                     this.writerSession.refresh(false);
                 } catch (RepositoryException e) {
