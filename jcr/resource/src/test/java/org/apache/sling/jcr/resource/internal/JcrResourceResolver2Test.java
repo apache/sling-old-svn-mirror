@@ -492,7 +492,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         HttpServletRequest request = new ResourceResolverTestRequest(rootPath) {
             @Override
             public String getScheme() {
-                return "http";
+                return "https";
             }
 
             @Override
