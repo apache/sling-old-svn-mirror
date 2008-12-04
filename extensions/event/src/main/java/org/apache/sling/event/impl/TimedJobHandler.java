@@ -80,6 +80,9 @@ public class TimedJobHandler
     /** Unloaded events. */
     protected Set<String>unloadedEvents = new HashSet<String>();
 
+    /** Sync lock */
+    private final Object writeLock = new Object();
+
     /**
      * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#startWriterSession()
      */
@@ -116,7 +119,7 @@ public class TimedJobHandler
 
                     // write event and update path
                     // if something went wrong we get the node path and reschedule
-                    synchronized ( this.writerSession ) {
+                    synchronized ( this.writeLock ) {
                         info.nodePath = this.persistEvent(info.event, scheduleInfo);
                     }
                     if ( info.nodePath != null ) {
@@ -146,7 +149,7 @@ public class TimedJobHandler
                 this.ignoreException(e);
             }
             if ( info != null && this.running ) {
-                synchronized ( this.writerSession ) {
+                synchronized ( this.writeLock ) {
                     ScheduleInfo scheduleInfo = null;
                     try {
                         scheduleInfo = new ScheduleInfo(info.event);
@@ -743,7 +746,7 @@ public class TimedJobHandler
      * @see org.apache.sling.event.TimedEventStatusProvider#cancelTimedEvent(java.lang.String)
      */
     public void cancelTimedEvent(String jobId) {
-        synchronized ( this.writerSession ) {
+        synchronized ( this.writeLock ) {
             try {
                 // is there a node?
                 final Item foundNode = this.writerSession.itemExists(jobId) ? this.writerSession.getItem(jobId) : null;
