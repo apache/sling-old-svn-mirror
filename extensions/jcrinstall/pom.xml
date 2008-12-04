@@ -38,6 +38,7 @@
 	
 	<modules>
 		<module>service</module>
+		<module>servlet</module>
 		<module>testbundles/observer</module>
 	</modules>
 	
