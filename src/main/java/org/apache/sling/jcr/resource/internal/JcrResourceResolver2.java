@@ -25,9 +25,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -52,6 +54,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
@@ -77,10 +80,6 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private static final String MANGLE_NAMESPACE_OUT = "/([^:]+):";
 
-    private static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
-
-    private static final String MAP_ROOT = "/etc/map";
-
     public static final String PROP_REG_EXP = "sling:match";
 
     public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
@@ -98,16 +97,13 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private final JcrResourceResolverFactoryImpl factory;
 
-    private final List<MapEntry> maps;
-    
-    private Set<String> namespaces;
+    private final MapEntries resourceMapper;
 
     public JcrResourceResolver2(JcrResourceProviderEntry rootProvider,
-            JcrResourceResolverFactoryImpl factory) {
+            JcrResourceResolverFactoryImpl factory, MapEntries resourceMapper) {
         this.rootProvider = rootProvider;
         this.factory = factory;
-
-        this.maps = getMap();
+        this.resourceMapper = resourceMapper;
     }
 
     // ---------- resolving resources
@@ -146,8 +142,59 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     // the content and in /etc/map
     public String map(HttpServletRequest request, String resourcePath) {
         
-        StringBuilder sb = new StringBuilder();
+        String mappedPath = resourcePath;
+        boolean mappedPathIsUrl = false;
+
+        Resource res = getResourceInternal(mappedPath);
+        if (res != null) {
+            
+            // find aliases for segments
+            LinkedList<String> names = new LinkedList<String>();
+            while (res != null) {
+                String alias = getProperty(res, PROP_ALIAS);
+                if (alias == null) {
+                    alias = ResourceUtil.getName(res);
+                }
+                if (alias != null && alias.length() > 0) {
+                    names.add(alias);
+                }
+                res = ResourceUtil.getParent(res);
+            }
+            
+            // build path from segment names
+            StringBuilder buf = new StringBuilder();
+            while (!names.isEmpty()) {
+                buf.append('/');
+                buf.append(names.removeLast());
+            }
+            mappedPath = buf.toString();
+        }
         
+        for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
+            String[] mappedPaths = mapEntry.replace(mappedPath);
+            if (mappedPaths != null && mappedPaths.length > 0) {
+                log.debug(
+                    "resolve: MapEntry {} matches, mapped path is {}",
+                    mapEntry, mappedPaths);
+
+                mappedPath = mappedPaths[0];
+                mappedPathIsUrl = !mapEntry.isInternal();
+                break;
+            }
+        }
+
+        // this should not be the case, since mappedPath is primed
+        if (mappedPath == null) {
+            mappedPath = resourcePath;
+        }
+        
+        if (mappedPathIsUrl) {
+            // TODO: probably need to mangle name spaces
+            return mappedPath;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+
         if (request != null) {
             sb.append(request.getScheme()).append("://");
             sb.append(request.getServerName());
@@ -161,7 +208,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         }
 
         // mangle the namespaces
-        sb.append(mangleNamespaces(resourcePath));
+        sb.append(mangleNamespaces(mappedPath));
         
         return sb.toString();
     }
@@ -290,23 +337,6 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         return rootProvider.getSession();
     }
     
-    private Set<String> getNamespaces() {
-        if (namespaces == null) {
-            
-            // get the current set of namespaces, we cache throughout our
-            // life time..
-            String[] namespaceList;
-            try {
-                namespaceList = getSession().getNamespacePrefixes();
-            } catch (RepositoryException re) {
-                namespaceList = new String[0];
-            }
-
-            namespaces = new HashSet<String>(Arrays.asList(namespaceList));
-        }
-        return namespaces;
-    }
-
     // expect absPath to be non-null and absolute
     public Resource resolveInternal(HttpServletRequest request, String absPath,
             boolean requireResource) {
@@ -333,7 +363,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         for (int i = 0; i < 100; i++) {
 
             String[] mappedPath = null;
-            for (MapEntry mapEntry : maps) {
+            for (MapEntry mapEntry : resourceMapper.getResolveMaps()) {
                 mappedPath = mapEntry.replace(requestPath);
                 if (mappedPath != null) {
                     log.debug(
@@ -597,7 +627,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         return null;
     }
 
-    private String getProperty(Resource res, String propName) {
+    public String getProperty(Resource res, String propName) {
         
         // check the property in the resource itself
         ValueMap props = res.adaptTo(ValueMap.class);
@@ -633,128 +663,6 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         return path;
     }
 
-    private List<MapEntry> getMap() {
-        List<MapEntry> entries = new ArrayList<MapEntry>();
-
-        // the standard map configuration
-        Resource res = getResourceInternal(MAP_ROOT);
-        if (res != null) {
-            gather(entries, res, "");
-        }
-
-        // backwards-compatible sling:vanityPath stuff
-        gatherVanityPaths(entries);
-        
-        // backwards-compatibility: read current configuration
-        gatherConfiguration(entries);
-        
-        return entries;
-    }
-
-    private void gather(List<MapEntry> entries, Resource parent,
-            String parentPath) {
-        // scheme list
-        Iterator<Resource> children = listChildren(parent);
-        while (children.hasNext()) {
-            Resource child = children.next();
-            String name = getProperty(child, PROP_REG_EXP);
-            if (name == null) {
-                name = ResourceUtil.getName(child);
-            }
-            String childPath = parentPath + name;
-
-            MapEntry mapEntry = MapEntry.create(childPath, child);
-            if (mapEntry != null) {
-                entries.add(mapEntry);
-            }
-
-            // add trailing slash to child path to append the child
-            childPath += "/";
-
-            // gather the children of this entry
-            gather(entries, child, childPath);
-        }
-    }
-    
-    private void gatherVanityPaths(List<MapEntry> entries) {
-        // sling:VanityPath (uppercase V) is the mixin name
-        // sling:vanityPath (lowercase) is the property name 
-        final String queryString = "SELECT sling:vanityPath, sling:redirect FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
-        final Iterator<Map<String, Object>> i = queryResources(queryString, Query.SQL);
-        while (i.hasNext()) {
-            Map<String, Object> row = i.next();
-            
-            // url is ignoring scheme and host.port and the path is
-            // what is stored in the sling:vanityPath property
-            Object pVanityPath = row.get("sling:vanityPath");
-            if (pVanityPath != null) {
-                String url = "^" + ANY_SCHEME_HOST + String.valueOf(pVanityPath);
-
-                // redirect target is the node providing the sling:vanityPath
-                // property (or its parent if the node is called jcr:content)
-                String redirect = String.valueOf(row.get("jcr:path"));
-                if (ResourceUtil.getName(redirect).equals("jcr:content")) {
-                    redirect = ResourceUtil.getParent(redirect);
-                }
-                
-                // whether the target is attained by a 302/FOUND or by an
-                // internal redirect is defined by the sling:redirect property
-                int status = -1;
-                if (row.containsKey("sling:redirect")
-                    && Boolean.valueOf(String.valueOf(row.get("sling:redirect")))) {
-                    status = HttpServletResponse.SC_FOUND;
-                }
-
-                // 1. entry with exact match
-                entries.add(new MapEntry(url + "$", redirect + ".html", status));
-
-                // 2. entry with match supporting selectors and extension
-                entries.add(new MapEntry(url + "(\\..*)", redirect + "$1", status));
-            }
-        }
-    }
-    
-    private void gatherConfiguration(List<MapEntry> entries) {
-        // virtual uris
-        Map<?, ?> virtuals = factory.getVirtualURLMap();
-        if (virtuals != null) {
-            for (Entry<?, ?> virtualEntry : virtuals.entrySet()) {
-                String extPath = (String) virtualEntry.getKey();
-                String intPath = (String) virtualEntry.getValue();
-                if (!extPath.equals(intPath)) {
-                    // this regular expression must match the whole URL !!
-                    String url = "^" + ANY_SCHEME_HOST + extPath + "$";
-                    String redirect = intPath;
-                    entries.add(new MapEntry(url, redirect, -1));
-                }
-            }
-        }
-        
-        // URL Mappings
-        Mapping[] mappings = factory.getMappings();
-        if (mappings != null) {
-            Map<String, List<String>> map = new HashMap<String, List<String>>();
-            for (Mapping mapping : mappings) {
-                if (mapping.mapsInbound()) {
-                    String url = mapping.getTo();
-                    String alias = mapping.getFrom();
-                    if (url.length() > 0) {
-                        List<String> aliasList = map.get(url);
-                        if (aliasList == null) {
-                            aliasList = new ArrayList<String>();
-                            map.put(url, aliasList);
-                        }
-                        aliasList.add(alias);
-                    }
-                }
-            }
-            for (Entry<String, List<String>> entry : map.entrySet()) {
-                entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(),
-                    entry.getValue().toArray(new String[0]), -1));
-            }
-        }
-    }
-
     private String mangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
             Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
@@ -773,7 +681,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private String unmangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_IN_PREFIX)) {
-            Set<String> namespaces = getNamespaces();
+            Set<String> namespaces = resourceMapper.getNamespacePrefixes();
             Pattern p = Pattern.compile(MANGLE_NAMESPACE_IN);
             Matcher m = p.matcher(absPath);
             StringBuffer buf = new StringBuffer();
