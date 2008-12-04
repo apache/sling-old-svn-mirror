@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.servlets.ErrorHandler;
 
@@ -235,7 +236,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
         this.status = status;
         ErrorHandler eh = getRequestData().getSlingMainServlet().getErrorHandler();
-        eh.handleError(status, message, requestData.getSlingRequest(), this);
+        eh.handleError(status, ResponseUtil.escapeXml(message), requestData.getSlingRequest(), this);
     }
 
     @Override
