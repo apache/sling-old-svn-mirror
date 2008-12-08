@@ -86,11 +86,13 @@ class ServletResourceIterator implements Iterator<Resource> {
                 path = path.substring(0, nextSlash);
                 if (!visited.contains(path)) {
                     visited.add(path);
-                    if (parentResource.getResourceResolver().getResource(path) == null) {
-                        return new SyntheticResource(
+                    Resource res =  parentResource.getResourceResolver().getResource(path);
+                    if (res == null) {
+                        res = new SyntheticResource(
                             parentResource.getResourceResolver(), path,
                             ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
                     }
+                    return res;
                 }
             }
         }
