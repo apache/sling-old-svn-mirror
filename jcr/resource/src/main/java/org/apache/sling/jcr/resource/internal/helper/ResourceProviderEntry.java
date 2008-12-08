@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -130,6 +131,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             private Resource nextResource;
 
             private Map<String, Resource> delayed;
+            
+            private Set<String> visited;
 
             private Iterator<Resource> delayedIter;
 
@@ -147,6 +150,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 
                 providers = providersSet.iterator();
                 delayed = new HashMap<String, Resource>();
+                visited = new HashSet<String>();
                 nextResource = seek();
             }
 
@@ -178,20 +182,40 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
                     if (resources != null && resources.hasNext()) {
                         Resource res = resources.next();
-                        if (res instanceof SyntheticResource) {
-                            delayed.put(res.getPath(), res);
+                        String resPath = res.getPath();
+                        
+                        if (visited.contains(resPath)) {
+
+                            // ignore a path, we have already visited and
+                            // ensure it will not be listed as a delayed
+                            // resource at the end
+                            delayed.remove(resPath);
+                            
+                        } else if (res instanceof SyntheticResource) {
+                            
+                            // don't return synthetic resources right away,
+                            // since a concrete resource for the same path
+                            // may be provided later on
+                            delayed.put(resPath, res);
+                            
                         } else {
+                            
+                            // we use this concrete, unvisited resource but
+                            // mark it as visited
+                            visited.add(resPath);
                             return res;
+                            
                         }
                     } else {
                         break;
                     }
                 }
 
+                // we exhausted all resource providers with their concrete
+                // resources. now lets do the delayed (synthetic) resources
                 if (delayedIter == null) {
                     delayedIter = delayed.values().iterator();
                 }
-
                 return delayedIter.hasNext() ? delayedIter.next() : null;
             }
         };
@@ -337,7 +361,26 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             }
 
             // no more specific provider, return mine
-            return getResourceProvider().getResource(resourceResolver, fullPath);
+            Resource resource = getResourceProvider().getResource(resourceResolver, fullPath);
+
+            // there is no concrete resource for the requested path, so lets
+            // check whether one of the child provider entries is prefixed
+            // with the requested path. if so, a synthetic resource is
+            // returned for the requested path
+            if (resource == null && entries != null) {
+                String checkPath = path.concat("/");
+                for (ResourceProviderEntry entry : entries) {
+                    if (entry.path.startsWith(checkPath)) {
+                        resource = new SyntheticResource(resourceResolver, fullPath,
+                            ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
+                        
+                        // don't look further
+                        break;
+                    }
+                }
+            }
+
+            return resource;
         }
 
         // no match for my prefix, return null
