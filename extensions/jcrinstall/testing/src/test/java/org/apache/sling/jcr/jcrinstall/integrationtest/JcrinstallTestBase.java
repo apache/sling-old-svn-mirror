@@ -33,7 +33,7 @@ import org.osgi.framework.Bundle;
 public class JcrinstallTestBase extends HttpTestBase {
 	
 	public static final String JCRINSTALL_STATUS_PATH = "/system/sling/jcrinstall";
-	public static final String DEFAULT_INSTALL_PATH = "/libs/jcrinstall/testing/install";
+	public static final String DEFAULT_INSTALL_PATH = "/libs/integration-testing/install";
 	public static final String DEFAULT_BUNDLE_NAME_PATTERN = "observer";
 	private static long bundleCounter = System.currentTimeMillis();
 	private static Set<String> installedClones;
