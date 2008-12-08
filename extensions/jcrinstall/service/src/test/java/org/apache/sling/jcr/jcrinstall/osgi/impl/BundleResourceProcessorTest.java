@@ -37,7 +37,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 
 /** Test the BundleResourceProcessor */
 public class BundleResourceProcessorTest {
@@ -82,8 +81,10 @@ public class BundleResourceProcessorTest {
         mockery.checking(new Expectations() {{
             allowing(pa).refreshPackages(null);
             allowing(pa).resolveBundles(null);
-            allowing(b).getBundleId() ;
+            allowing(b).getBundleId();
             will(returnValue(bundleId));
+            allowing(b).getLocation();
+            will(returnValue(uri));
             allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
 
             one(bc).installBundle(OsgiControllerImpl.getResourceLocation(uri), is);
