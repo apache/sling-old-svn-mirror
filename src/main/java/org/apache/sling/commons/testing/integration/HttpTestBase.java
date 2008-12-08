@@ -292,7 +292,14 @@ public class HttpTestBase extends TestCase {
             get.setQueryString(params.toArray(nvp));
         }
         final int status = httpClient.executeMethod(get);
-        final String content = get.getResponseBodyAsString();
+        final InputStream is = get.getResponseBodyAsStream();
+        final StringBuffer content = new StringBuffer();
+        final String charset = get.getResponseCharSet();
+        final byte [] buffer = new byte[16384];
+        int n = 0;
+        while( (n = is.read(buffer, 0, buffer.length)) > 0) {
+            content.append(new String(buffer, 0, n, charset));
+        }
         assertEquals("Expected status 200 for " + url + " (content=" + content + ")",200,status);
         final Header h = get.getResponseHeader("Content-Type");
         if(expectedContentType == null) {
@@ -313,7 +320,7 @@ public class HttpTestBase extends TestCase {
                 h.getValue().startsWith(expectedContentType)
             );
         }
-        return content;
+        return content.toString();
     }
 
     /** upload rendering test script, and return its URL for future deletion */
