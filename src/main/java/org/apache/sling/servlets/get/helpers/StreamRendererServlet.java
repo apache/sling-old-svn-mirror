@@ -23,29 +23,46 @@ import static org.apache.sling.api.servlets.HttpConstants.HEADER_LAST_MODIFIED;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.Date;
+import java.util.Iterator;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceNotFoundException;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 
 /**
  * The <code>StreamRendererServlet</code> streams the current resource to the
- * client on behalf of the {@link org.apache.sling.servlets.get.DefaultGetServlet}.
- * If the current resource cannot be streamed it is rendered using the
+ * client on behalf of the
+ * {@link org.apache.sling.servlets.get.DefaultGetServlet}. If the current
+ * resource cannot be streamed it is rendered using the
  * {@link PlainTextRendererServlet}.
  */
-public class StreamRendererServlet extends PlainTextRendererServlet {
+public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String EXT_RES = "res";
 
     private static final long serialVersionUID = -1L;
+
+    private boolean index;
+
+    private String[] indexFiles;
+
+    public StreamRendererServlet(boolean index, String[] indexFiles) {
+        this.index = index;
+        this.indexFiles = indexFiles;
+    }
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
@@ -65,6 +82,12 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
             throw new ResourceNotFoundException("No data to render.");
         }
 
+        // trailing slash on url means directory listing
+        if ("/".equals(request.getRequestPathInfo().getSuffix())) {
+            renderDirectory(request, response);
+            return;
+        }
+
         // check the last modification time and If-Modified-Since header
         ResourceMetadata meta = resource.getResourceMetadata();
         long modifTime = meta.getModificationTime();
@@ -75,13 +98,59 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
 
         // fall back to plain text rendering if the resource has no stream
         InputStream stream = resource.adaptTo(InputStream.class);
-        if (stream == null) {
-            super.doGet(request, response);
-            return;
+        if (stream != null) {
+            
+            streamResource(resource, stream, response);
+            
+        } else {
+            
+            // the resource is the root, do not redirect, immediately index
+            if ("/".equals(resource.getPath())) {
+                
+                renderDirectory(request, response);
+                
+            } else {
+                
+                // redirect to this with trailing slash to render the index
+                String url = request.getResourceResolver().map(request,
+                    resource.getPath())
+                    + "/";
+                response.sendRedirect(url);
+                
+            }
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if the request has a
+     * <code>If-Modified-Since</code> header whose date value is later than
+     * the last modification time given as <code>modifTime</code>.
+     * 
+     * @param request The <code>ComponentRequest</code> checked for the
+     *            <code>If-Modified-Since</code> header.
+     * @param modifTime The last modification time to compare the header to.
+     * @return <code>true</code> if the <code>modifTime</code> is less than
+     *         or equal to the time of the <code>If-Modified-Since</code>
+     *         header.
+     */
+    private boolean unmodified(HttpServletRequest request, long modifTime) {
+        if (modifTime > 0) {
+            long modTime = modifTime / 1000; // seconds
+            long ims = request.getDateHeader(HEADER_IF_MODIFIED_SINCE) / 1000;
+            return modTime <= ims;
         }
 
+        // we have no modification time value, assume modified
+        return false;
+    }
+
+    private void streamResource(Resource resource, InputStream stream,
+            SlingHttpServletResponse response) throws IOException {
         // finally stream the resource
         try {
+
+            ResourceMetadata meta = resource.getResourceMetadata();
+            long modifTime = meta.getModificationTime();
 
             if (modifTime > 0) {
                 response.setDateHeader(HEADER_LAST_MODIFIED, modifTime);
@@ -130,28 +199,122 @@ public class StreamRendererServlet extends PlainTextRendererServlet {
             }
         }
     }
+    
+    private void renderDirectory(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
 
-    /**
-     * Returns <code>true</code> if the request has a
-     * <code>If-Modified-Since</code> header whose date value is later than
-     * the last modification time given as <code>modifTime</code>.
-     *
-     * @param request The <code>ComponentRequest</code> checked for the
-     *            <code>If-Modified-Since</code> header.
-     * @param modifTime The last modification time to compare the header to.
-     * @return <code>true</code> if the <code>modifTime</code> is less than
-     *         or equal to the time of the <code>If-Modified-Since</code>
-     *         header.
-     */
-    private boolean unmodified(HttpServletRequest request, long modifTime) {
-        if (modifTime > 0) {
-            long modTime = modifTime / 1000; // seconds
-            long ims = request.getDateHeader(HEADER_IF_MODIFIED_SINCE) / 1000;
-            return modTime <= ims;
+        Resource resource = request.getResource();
+        ResourceResolver resolver = request.getResourceResolver();
+
+        // check for an index file
+        for (String index : indexFiles) {
+            Resource fileRes = resolver.getResource(resource, index);
+            if (fileRes != null && !ResourceUtil.isSyntheticResource(fileRes)) {
+
+                // include the index resource with no suffix and selectors !
+                RequestDispatcherOptions rdo = new RequestDispatcherOptions();
+                rdo.setReplaceSuffix("");
+                rdo.setReplaceSelectors("");
+
+                RequestDispatcher dispatcher;
+                if (index.indexOf('.') < 0) {
+                    String filePath = fileRes.getPath() + ".html";
+                    dispatcher = request.getRequestDispatcher(filePath, rdo);
+                } else {
+                    dispatcher = request.getRequestDispatcher(fileRes, rdo);
+                }
+                
+                dispatcher.include(request, response);
+                return;
+            }
         }
 
-        // we have no modification time value, assume modified
-        return false;
+        if (index) {
+//            RequestDispatcherOptions rdo = new RequestDispatcherOptions();
+//            rdo.setReplaceSelectors("sling.index");
+//            request.getRequestDispatcher(resource, rdo).include(request, response);
+            renderIndex(resource, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+        }
+
+    }
+    
+    private void renderIndex(Resource resource,
+            SlingHttpServletResponse response) throws IOException {
+        
+        response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+
+        String path = resource.getPath();
+
+        PrintWriter pw = response.getWriter();
+        pw.println("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">");
+        pw.println("<html>");
+        pw.println("<head>");
+        pw.println("<title>Index of " + path + "</title>");
+        pw.println("</head>");
+
+        pw.println("<body>");
+        pw.println("<h1>Index of " + path + "</h1>");
+
+        pw.println("<pre>");
+        pw.println("Name                               Last modified                   Size  Description");
+        pw.println("<hr>");
+
+        if (!"/".equals(path)) {
+            pw.println("<a href='../'>../</a>                                                                 -     Parent");
+        }
+
+        // render the children
+        Iterator<Resource> children = ResourceUtil.listChildren(resource);
+        while (children.hasNext()) {
+            renderChild(pw, children.next());
+        }
+
+        pw.println("</pre>");
+        pw.println("</body>");
+        pw.println("</html>");
+
     }
 
+    private void renderChild(PrintWriter pw, Resource resource) {
+
+        String name = ResourceUtil.getName(resource.getPath());
+
+        InputStream ins = resource.adaptTo(InputStream.class);
+        if (ins == null) {
+            name += "/";
+        } else {
+            try {
+                ins.close();
+            } catch (IOException ignore) {
+            }
+        }
+
+        String displayName = name;
+        String suffix;
+        if (displayName.length() >= 32) {
+            displayName = displayName.substring(0, 29) + "...";
+            suffix = "";
+        } else {
+            suffix = "                                               ".substring(
+                0, 32 - displayName.length());
+        }
+        pw.printf("<a href='%s'>%s</a>%s", name, displayName, suffix);
+
+        ResourceMetadata meta = resource.getResourceMetadata();
+        long lastModified = meta.getModificationTime();
+        pw.print("    " + new Date(lastModified) + "    ");
+
+        long length = meta.getContentLength();
+        if (length > 0) {
+            pw.print(length);
+        } else {
+            pw.print('-');
+        }
+
+        pw.println();
+    }
 }
