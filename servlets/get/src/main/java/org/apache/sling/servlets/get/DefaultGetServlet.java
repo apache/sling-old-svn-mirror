@@ -17,6 +17,7 @@
 package org.apache.sling.servlets.get;
 
 import java.io.IOException;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -42,9 +43,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
- *
+ * 
  * @scr.component immediate="true" label="%servlet.get.name"
- *                                 description="%servlet.get.description"
+ *                description="%servlet.get.description"
  * @scr.service interface="javax.servlet.Servlet"
  *
  * @scr.property name="service.description" value="Default GET Servlet"
@@ -70,15 +71,71 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
     /** @scr.property */
     private static final String ALIAS_PROPERTY = "aliases";
 
+    /** @scr.property valueRef="DEFAULT_INDEX_PROPERTY" type="Boolean" */
+    private static final String INDEX_PROPERTY = "index";
+
+    private static final boolean DEFAULT_INDEX_PROPERTY = false;
+
+    /** @scr.property valueRef="DEFAULT_INDEX_FILES_PROPERTY" */
+    private static final String INDEX_FILES_PROPERTY = "index.files";
+
+    private static final String[] DEFAULT_INDEX_FILES_PROPERTY = { "index",
+        "index.html" };
+
+    /** Default value for renderer selection (value is "true"). */
+    private static final boolean DEFAULT_RENDERER_PROPERTY = true;
+
+    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    private static final String HTML_RENDERER_PROPERTY = "enable.html";
+
+    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    private static final String TXT_RENDERER_PROPERTY = "enable.txt";
+
+    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    private static final String JSON_RENDERER_PROPERTY = "enable.json";
+
+    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    private static final String XML_RENDERER_PROPERTY = "enable.xml";
+
     /** Additional aliases. */
     private String[] aliases;
 
+    /** Whether to support automatic index rendering */
+    private boolean index;
+
+    /** The names of index rendering children */
+    private String[] indexFiles;
+
+    private boolean enableHtml;
+
+    private boolean enableTxt;
+
+    private boolean enableJson;
+
+    private boolean enableXml;
+
     protected void activate(ComponentContext ctx) {
-        this.aliases = OsgiUtil.toStringArray(ctx.getProperties().get(ALIAS_PROPERTY));
+        Dictionary<?, ?> props = ctx.getProperties();
+        this.aliases = OsgiUtil.toStringArray(props.get(ALIAS_PROPERTY));
+        this.index = OsgiUtil.toBoolean(props.get(INDEX_PROPERTY),
+            DEFAULT_INDEX_PROPERTY);
+        this.indexFiles = OsgiUtil.toStringArray(
+            props.get(INDEX_FILES_PROPERTY), DEFAULT_INDEX_FILES_PROPERTY);
+
+        this.enableHtml = OsgiUtil.toBoolean(props.get(HTML_RENDERER_PROPERTY),
+            DEFAULT_RENDERER_PROPERTY);
+        this.enableTxt = OsgiUtil.toBoolean(props.get(TXT_RENDERER_PROPERTY),
+            DEFAULT_RENDERER_PROPERTY);
+        this.enableJson = OsgiUtil.toBoolean(props.get(JSON_RENDERER_PROPERTY),
+            DEFAULT_RENDERER_PROPERTY);
+        this.enableXml = OsgiUtil.toBoolean(props.get(XML_RENDERER_PROPERTY),
+            DEFAULT_RENDERER_PROPERTY);
     }
 
     protected void deactivate(ComponentContext ctx) {
         this.aliases = null;
+        this.index = false;
+        this.indexFiles = null;
     }
 
     @Override
@@ -86,28 +143,45 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         super.init();
 
         // Register renderer servlets
-        setupServlet(rendererMap, HtmlRendererServlet.EXT_HTML,
-            new HtmlRendererServlet());
-        setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT,
-            new PlainTextRendererServlet());
-        setupServlet(rendererMap, JsonRendererServlet.EXT_JSON,
-            new JsonRendererServlet());
         setupServlet(rendererMap, StreamRendererServlet.EXT_RES,
-            new StreamRendererServlet());
-        setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
+            new StreamRendererServlet(index, indexFiles));
+
+        if (enableHtml) {
+            setupServlet(rendererMap, HtmlRendererServlet.EXT_HTML,
+                new HtmlRendererServlet());
+        }
+
+        if (enableTxt) {
+            setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT,
+                new PlainTextRendererServlet());
+        }
+        
+        if (enableJson) {
+            setupServlet(rendererMap, JsonRendererServlet.EXT_JSON,
+                new JsonRendererServlet());
+        }
+        
+        if (enableXml) {
+            setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
                 new XMLRendererServlet());
+        }
+        
+        // use the servlet for rendering StreamRendererServlet.EXT_RES as the
+        // streamer servlet
+        streamerServlet = rendererMap.get(StreamRendererServlet.EXT_RES);
 
         // check additional aliases
-        if ( this.aliases != null ) {
-            for(final String m : aliases) {
+        if (this.aliases != null) {
+            for (final String m : aliases) {
                 final int pos = m.indexOf(':');
-                if ( pos != -1 ) {
+                if (pos != -1) {
                     final String type = m.substring(0, pos);
                     final Servlet servlet = rendererMap.get(type);
-                    if ( servlet != null ) {
-                        final String extensions = m.substring(pos+1);
-                        final StringTokenizer st = new StringTokenizer(extensions, ",");
-                        while ( st.hasMoreTokens() ) {
+                    if (servlet != null) {
+                        final String extensions = m.substring(pos + 1);
+                        final StringTokenizer st = new StringTokenizer(
+                            extensions, ",");
+                        while (st.hasMoreTokens()) {
                             final String ext = st.nextToken();
                             rendererMap.put(ext, servlet);
                         }
@@ -115,9 +189,6 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
                 }
             }
         }
-        // use the servlet for rendering StreamRendererServlet.EXT_RES as the
-        // streamer servlet
-        streamerServlet = rendererMap.get(StreamRendererServlet.EXT_RES);
     }
 
     /**
@@ -145,13 +216,14 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
         // fail if we should not just stream or we cannot support the ext.
         if (rendererServlet == null) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                "No renderer for extension='" + ext + "'");
+            request.getRequestProgressTracker().log(
+                "No Renderer for extension " + ext);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        request.getRequestProgressTracker().log("Using "
-                + rendererServlet.getClass().getName()
+        request.getRequestProgressTracker().log(
+            "Using " + rendererServlet.getClass().getName()
                 + " to render for extension=" + ext);
         rendererServlet.service(request, response);
     }
