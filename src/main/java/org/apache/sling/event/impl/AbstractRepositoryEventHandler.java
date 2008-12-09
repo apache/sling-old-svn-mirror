@@ -30,13 +30,11 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.commons.threads.ThreadPool;
-import org.apache.sling.commons.threads.ThreadPoolConfig;
-import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.JobStatusProvider;
+import org.apache.sling.event.ThreadPool;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.osgi.service.component.ComponentContext;
@@ -88,10 +86,9 @@ public abstract class AbstractRepositoryEventHandler
     /** A local queue for writing received events into the repository. */
     protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
 
-    /** @scr.reference */
-    protected ThreadPoolManager threadPoolManager;
-
-    /** Our thread pool. */
+    /**
+     * Our thread pool.
+     * @scr.reference */
     protected ThreadPool threadPool;
 
     /** @scr.reference
@@ -125,21 +122,6 @@ public abstract class AbstractRepositoryEventHandler
         this.repositoryPath = OsgiUtil.toString(context.getProperties().get(
             CONFIG_PROPERTY_REPO_PATH), DEFAULT_PROPERTY_REPO_PATH);
 
-        // start background threads
-        if ( this.threadPoolManager == null ) {
-            throw new Exception("No ThreadPoolManager found.");
-        }
-        final ThreadPoolConfig config = new ThreadPoolConfig();
-        config.setMinPoolSize(10);
-        config.setMaxPoolSize(30);
-        config.setQueueSize(-1);
-        config.setShutdownGraceful(true);
-        threadPoolManager.create(EventHelper.THREAD_POOL_NAME, config);
-
-        this.threadPool = threadPoolManager.get(EventHelper.THREAD_POOL_NAME);
-        if ( this.threadPool == null ) {
-            throw new Exception("No thread pool found.");
-        }
         this.running = true;
         // start writer thread
         this.threadPool.execute(new Runnable() {
@@ -193,7 +175,6 @@ public abstract class AbstractRepositoryEventHandler
         } catch (InterruptedException e) {
             this.ignoreException(e);
         }
-        this.threadPool = null;
     }
 
     /**
