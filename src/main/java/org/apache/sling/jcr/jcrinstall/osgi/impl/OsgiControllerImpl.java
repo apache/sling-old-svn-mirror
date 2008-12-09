@@ -228,6 +228,11 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
 
     /** {@inheritDoc} */
     public void executeScheduledOperations() throws Exception {
+        if(processors == null) {
+            log.info("Not activated yet, cannot executeScheduledOperations");
+            return;
+        }
+    
         for(OsgiResourceProcessor p : processors) {
             p.processResourceQueue();
         }
