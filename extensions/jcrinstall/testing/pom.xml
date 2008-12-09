@@ -154,7 +154,9 @@
                     <execution>
                         <!-- 
                         	Copy bundles that must be initially installed to WEB-INF/resources/N
-                        	where N = start level of those bundles
+                        	where N = start level of those bundles.
+                            The jcrinstall bundle must be installed at a level lower than the default
+                            start level.
                         -->
                         <id>copy-bundles-dependencies</id>
                         <goals>
@@ -162,7 +164,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/20
+                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/19
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeGroupIds>
