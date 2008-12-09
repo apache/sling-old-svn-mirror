@@ -159,7 +159,14 @@ public class DefaultThreadPool
             throw new IllegalStateException("Thread pool " + this.name + " is already shutdown.");
         }
         if ( runnable != null ) {
-            this.logger.debug("Executing runnable: {},pool={}", runnable, this.name);
+            if ( this.logger.isDebugEnabled() ) {
+                this.logger.debug("Executing runnable: {}, pool={}, corePoolSize={}, maxPoolSize={}, queueSize={}",
+                        new Object[] {runnable,
+                                      this.name,
+                                      this.executor.getCorePoolSize(),
+                                      this.executor.getMaximumPoolSize(),
+                                      this.executor.getQueue().size()});
+            }
 
         	this.executor.execute(runnable);
         }
