@@ -184,10 +184,15 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			    needsRefresh = true;
 			} else {
 			    uri = OsgiControllerImpl.getResourceLocation(uri);
-			    final int level = installableData.getBundleStartLevel();
-			    log.debug("No matching Bundle for uri {}, installing with start level {}", uri, level);
+			    int level = installableData.getBundleStartLevel();
 			    b = ctx.installBundle(uri, data);
-			    startLevel.setBundleStartLevel(b, level);
+			    if(level > 0) {
+			        startLevel.setBundleStartLevel(b, level);
+	                log.debug("No matching Bundle for uri {}, installed with start level {}", uri, level);
+			    } else {
+			        level = startLevel.getBundleStartLevel(b);
+	                log.debug("No matching Bundle for uri {}, installing with current default start level {}", uri, level);
+			    }
 			}
 		} finally {
 		    // data is never null here
