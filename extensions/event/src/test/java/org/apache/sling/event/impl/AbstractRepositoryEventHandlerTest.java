@@ -32,10 +32,9 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListenerIterator;
 
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolConfig;
-import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.engine.SlingSettingsService;
+import org.apache.sling.event.ThreadPool;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -95,15 +94,8 @@ public abstract class AbstractRepositoryEventHandlerTest {
             }
         };
 
-        // we need a thread pool manager
-        this.handler.threadPoolManager = this.getMockery().mock(ThreadPoolManager.class);
-        final ThreadPool pool = new ThreadPoolImpl();
-        this.getMockery().checking(new Expectations() {{
-            allowing(handler.threadPoolManager).get(EventHelper.THREAD_POOL_NAME);
-            will(returnValue(pool));
-            allowing(handler.threadPoolManager).create(with(equal(EventHelper.THREAD_POOL_NAME)), with(any(ThreadPoolConfig.class)));
-            will(returnValue(null));
-        }});
+        // we need a thread pool
+        this.handler.threadPool = new ThreadPoolImpl();
 
         // lets set up the bundle context
         final BundleContext bundleContext = this.getMockery().mock(BundleContext.class);
