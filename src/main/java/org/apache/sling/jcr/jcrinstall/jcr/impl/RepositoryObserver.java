@@ -34,7 +34,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.jcr.JcrInstallService;
@@ -247,7 +246,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     
     protected void deactivate(ComponentContext context) {
         log.debug("deactivate()");
-        shutdown();
+        shutdown(false);
         if(context != null) {
             context.getBundleContext().removeFrameworkListener(this);
         }
@@ -257,7 +256,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     }
     
     /** Called at deactivation time, or when repository stops being available */
-    protected void shutdown() {
+    protected void shutdown(boolean allowStartLevelChange) {
         log.debug("shutdown()");
         
         observationCycleActive = false;
@@ -282,7 +281,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     	listeners.clear();
         folders.clear();
         
-        if(componentContext != null) {
+        if(componentContext != null && allowStartLevelChange)  {
             final int currentStartLevel = startLevel.getStartLevel();
             final int myStartLevel = startLevel.getBundleStartLevel(componentContext.getBundleContext().getBundle());
             if(currentStartLevel > myStartLevel) {
@@ -488,7 +487,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
         // to go back to it if repository comes back
         startLevelToSetAtStartup = startLevel.getStartLevel();
         log.debug("unbindSlingRepository() called at start level {}", startLevelToSetAtStartup);
-        shutdown();
+        shutdown(true);
         repository = null;
     }
 
