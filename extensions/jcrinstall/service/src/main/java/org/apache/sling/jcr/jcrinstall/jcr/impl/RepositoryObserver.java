@@ -86,11 +86,6 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     /** @scr.reference */
     protected StartLevel startLevel;
     
-    /** @scr.property type="Integer" valueRef="DEFAULT_BUNDLES_START_LEVEL" */
-    private static final String BUNDLES_START_LEVEL__PROPERTY = "bundles.startlevel";
-    private static final int DEFAULT_BUNDLES_START_LEVEL = 30;
-    private int installedBundlesStartLevel = DEFAULT_BUNDLES_START_LEVEL;
-
     private Session session;
     private File serviceDataFile;
     private int startLevelToSetAtStartup;
@@ -127,28 +122,17 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
             context.getBundleContext().addFrameworkListener(this);
         }
         
-        // Read config
-        if(context != null) {
-            final Object prop = context.getProperties().get(BUNDLES_START_LEVEL__PROPERTY);
-            if(prop != null && prop instanceof Number) {
-                installedBundlesStartLevel = ((Number)prop).intValue();
-                log.info("Start level for installed bundles set to {} by {} property", installedBundlesStartLevel, BUNDLES_START_LEVEL__PROPERTY);
-            } else {
-                installedBundlesStartLevel = DEFAULT_BUNDLES_START_LEVEL;
-                log.info("Start level for installed bundles set to default value {}", installedBundlesStartLevel);
-            }
-        }
-
         // Check start levels
         if(context != null) {
             final int myLevel = startLevel.getBundleStartLevel(context.getBundleContext().getBundle());
-            if(installedBundlesStartLevel < myLevel) {
+            final int initialBundleStartLevel = startLevel.getInitialBundleStartLevel();
+            if(initialBundleStartLevel < myLevel) {
                 // Running at a lower start level than the bundles that we install
                 // allows us to stop them if the repository goes away (SLING-747)
                 log.warn(
-                        "The configured start level for bundles installed by jcrinstall ({})"
+                        "The configured start level for installed bundles  ({})"
                         + " should be higher than the jcrinstall start level ({})",
-                        installedBundlesStartLevel, myLevel
+                        initialBundleStartLevel, myLevel
                 );
             }
         }
@@ -182,7 +166,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
          *	Using services and a whiteboard pattern for these would be nice,
          * 	but that could be problematic at startup due to async loading
          */
-    	converters.add(new FileNodeConverter(installedBundlesStartLevel));
+    	converters.add(new FileNodeConverter(0));
     	converters.add(new ConfigNodeConverter());
     	
     	String folderNameRegexp = getPropertyValue(componentContext, FOLDER_NAME_REGEXP_PROPERTY);
@@ -405,27 +389,16 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     public void run() {
         log.info("{} thread {} starts", getClass().getSimpleName(), Thread.currentThread().getName());
         
-        // We could use the scheduler service but that makes things harder to test
-        boolean scanning = false;
-        boolean oldScanning = !scanning;
-        
+        boolean lastScanningState = false;
         while (observationCycleActive) {
             try {
-                final int currentLevel = startLevel.getStartLevel(); 
-                scanning = currentLevel >= installedBundlesStartLevel;
-                if(scanning != oldScanning) {
-                    if(scanning) {
-                        log.info("Scanning enabled, current start level ({}) equals or above {} (start level of installed bundles)", 
-                                currentLevel, installedBundlesStartLevel);
-                    } else {
-                        log.info("Scanning disabled, current start level ({}) is below {} (start level of installed bundles)", 
-                                currentLevel, installedBundlesStartLevel);
-                    }
-                    oldScanning = scanning;
-                }
-                
+                boolean scanning = (repository != null); 
                 if(scanning) {
                     runOneCycle();
+                }
+                if(scanning != lastScanningState) {
+                    log.info("Repository scanning {}", scanning ? "active" : "inactive");
+                    lastScanningState = scanning;
                 }
             } catch (IllegalArgumentException ie) {
                 log.warn("IllegalArgumentException  in " + getClass().getSimpleName(), ie);
@@ -435,6 +408,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
                 log.error("Unhandled Exception in runOneCycle()", e);
             } finally {
                 try {
+                    // We could use the scheduler service but that makes things harder to test
                     Thread.sleep(1000L);
                 } catch (InterruptedException ignore) {
                     // ignore
