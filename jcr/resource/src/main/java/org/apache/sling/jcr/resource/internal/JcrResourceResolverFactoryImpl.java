@@ -86,14 +86,38 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     /**
+     * @scr.property value="true" type="Boolean"
+     */
+    private static final String PROP_USE_NEW_RESOLVER = "resource.resolver.new";
+
+    /**
      * @scr.property values.1="/apps" values.2="/libs"
      */
     public static final String PROP_PATH = "resource.resolver.searchpath";
 
     /**
+     * Defines whether namespace prefixes of resource names inside the path
+     * (e.g. <code>jcr:</code> in <code>/home/path/jcr:content</code>) are
+     * mangled or not.
+     * <p>
+     * Mangling means that any namespace prefix contained in the path is replaced
+     * as per the generic substitution pattern <code>/([^:]+):/_$1_/</code>
+     * when calling the <code>map</code> method of the resource resolver.
+     * Likewise the <code>resolve</code> methods will unmangle such namespace
+     * prefixes according to the substituation pattern
+     * <code>/_([^_]+)_/$1:/</code>.
+     * <p>
+     * This feature is provided since there may be systems out there in the wild
+     * which cannot cope with URLs containing colons, even though they are
+     * perfectly valid characters in the path part of URI references with a
+     * scheme.
+     * <p>
+     * The default value of this property if no configuration is provided is
+     * <code>true</code>.
+     * 
      * @scr.property value="true" type="Boolean"
      */
-    private static final String PROP_USE_NEW_RESOLVER = "resource.resolver.new";
+    private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
 
     /**
      * @scr.property value="true" type="Boolean"
@@ -133,30 +157,6 @@ public class JcrResourceResolverFactoryImpl implements
      * @scr.property values.1="/([^/]+?):([^/]+)|/_$1_$2"
      */
     private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
-
-    /**
-     * Defines whether namespace prefixes of resource names inside the path
-     * (e.g. <code>jcr:</code> in <code>/home/path/jcr:content</code>) are
-     * mangled or not.
-     * <p>
-     * Mangling means the any namespace prefix contained in the path is replaced
-     * as per the generic substitution pattern <code>/([^:]+):/_$1_/</code>
-     * when calling the <code>map</code> method of the resource resolver.
-     * Likewise the <code>resolve</code> methods will unmangle such namespace
-     * prefixes according to the substituation pattern
-     * <code>/_([^_]+)_/$1:/</code>.
-     * <p>
-     * This feature is provided since there may be systems out there in the wild
-     * which cannot cope with URLs containing colons, even though they are
-     * perfectly valid characters in the path part of URI references with a
-     * scheme.
-     * <p>
-     * The default value of this property if no configuration is provided is
-     * <code>false</code>.
-     * 
-     * @scr.property value="false" type="Boolean"
-     */
-    private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
