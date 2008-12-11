@@ -19,46 +19,40 @@
 package org.apache.sling.jcr.webdav.impl.servlets;
 
 import java.io.IOException;
-import java.util.Dictionary;
-import java.util.Hashtable;
 
+import javax.jcr.Repository;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.http.HttpService;
-import org.osgi.service.http.NamespaceException;
+import org.apache.sling.jcr.webdav.impl.helper.SlingResourceConfig;
 
 /**
  * The <code>SimpleWebDavServlet</code>
- * 
- * @scr.component label="%dav.name" description="%dav.description"
- * @scr.property name="service.description"
- *                value="Sling JcrResourceResolverFactory Implementation"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class SimpleWebDavServlet extends AbstractSlingWebDavServlet {
+public class SimpleWebDavServlet extends SimpleWebdavServlet {
 
-    /** @scr.property valueRef="DEFAULT_CONTEXT" */
-    private static final String PROP_CONTEXT = "dav.root";
+    private final SlingResourceConfig resourceConfig;
 
-    /** @scr.property valueRef="DEFAULT_REALM" */
-    private static final String PROP_REALM = "dav.realm";
+    private final Repository repository;
 
-    private static final String DEFAULT_CONTEXT = "/dav";
-
-    private static final String DEFAULT_REALM = "Sling WebDAV";
-    
-    /** @scr.reference */
-    private HttpService httpService;
-
-    // the alias under which the servlet is registered, null if not
-    private String contextPath;
+    /* package */SimpleWebDavServlet(SlingResourceConfig resourceConfig,
+            Repository repository) {
+        this.resourceConfig = resourceConfig;
+        this.repository = repository;
+    }
 
     // ---------- AbstractWebdavServlet overwrite ------------------------------
 
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        
+        setResourceConfig(resourceConfig);
+    }
+    
     @Override
     protected void service(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
@@ -85,51 +79,17 @@ public class SimpleWebDavServlet extends AbstractSlingWebDavServlet {
                 uri += slingRepo.getDefaultWorkspace();
                 response.sendRedirect(uri);
             }
-            
+
         } else {
-        
+
             super.service(request, response);
         }
-        
+
     }
 
-    // ---------- SCR integration ----------------------------------------------
-
-    protected void activate(ComponentContext componentContext)
-            throws NamespaceException, ServletException {
-
-        Dictionary<?, ?> props = componentContext.getProperties();
-
-        String context = getString(props, PROP_CONTEXT, DEFAULT_CONTEXT);
-
-        Dictionary<String, String> initparams = new Hashtable<String, String>();
-
-        initparams.put(INIT_PARAM_RESOURCE_PATH_PREFIX, context);
-
-        String value = getString(props, PROP_REALM, DEFAULT_REALM);
-        initparams.put(INIT_PARAM_AUTHENTICATE_HEADER, "Basic Realm=\"" + value
-            + "\"");
-
-        // Register servlet, and set the contextPath field to signal successful
-        // registration
-        httpService.registerServlet(context, this, initparams, null);
-        this.contextPath = context;
+    @Override
+    public Repository getRepository() {
+        return repository;
     }
-
-    protected void deactivate(ComponentContext context) {
-        if (contextPath != null) {
-            httpService.unregister(contextPath);
-            contextPath = null;
-        }
-    }
-
-    // ---------- internal -----------------------------------------------------
-
-    private String getString(Dictionary<?, ?> props, String name,
-            String defaultValue) {
-        Object propValue = props.get(name);
-        return (propValue instanceof String)
-                ? (String) propValue
-                : defaultValue;
-    }
+    
 }
