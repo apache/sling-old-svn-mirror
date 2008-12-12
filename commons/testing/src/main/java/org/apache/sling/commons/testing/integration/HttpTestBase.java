@@ -197,7 +197,7 @@ public class HttpTestBase extends TestCase {
         // POST, get URL of created node and get content
         {
             final String urlOfNewNode = testClient.createNode(url, props, null, true);
-            final GetMethod get = new GetMethod(urlOfNewNode);
+            final GetMethod get = new GetMethod(urlOfNewNode + ".txt");
             final int status = httpClient.executeMethod(get);
             if(status!=200) {
                 throw new HttpStatusCodeException(200, status, "GET", urlOfNewNode);
