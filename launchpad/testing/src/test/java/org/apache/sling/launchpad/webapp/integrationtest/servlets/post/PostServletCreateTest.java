@@ -43,7 +43,7 @@ public class PostServletCreateTest extends HttpTestBase {
 
     public void testCreateNode() throws IOException {
         final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
-        assertHttpStatus(location, HttpServletResponse.SC_OK,
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have generated name",
                 !location.endsWith("/*"));
@@ -53,7 +53,7 @@ public class PostServletCreateTest extends HttpTestBase {
 
     public void testCreateNodeWithExtension() throws IOException {
         final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX + ".html", null);
-        assertHttpStatus(location, HttpServletResponse.SC_OK,
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have generated name",
                 !location.endsWith("/*"));
@@ -64,7 +64,7 @@ public class PostServletCreateTest extends HttpTestBase {
     public void testCreateNodeAtSpecificUrl() throws IOException {
         final String specifiedLocation = postUrl + "/specified-location";
         final String location = testClient.createNode(specifiedLocation, null);
-        assertHttpStatus(location, HttpServletResponse.SC_OK,
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must be created at given URL (" + specifiedLocation + ")",
                 location.equals(specifiedLocation));
@@ -74,7 +74,7 @@ public class PostServletCreateTest extends HttpTestBase {
         final long id = System.currentTimeMillis();
         final String specifiedLocation = postUrl + "/specified-location" + id + "/deepA/deepB/" + id;
         final String location = testClient.createNode(specifiedLocation, null);
-        assertHttpStatus(location, HttpServletResponse.SC_OK,
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must be created (deep) at given URL (" + specifiedLocation + ")",
                 location.equals(specifiedLocation));
