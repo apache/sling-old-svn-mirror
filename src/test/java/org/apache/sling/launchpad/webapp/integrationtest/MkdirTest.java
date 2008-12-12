@@ -35,7 +35,7 @@ public class MkdirTest extends HttpTestBase {
             fail(ioe.getMessage());
         }
         
-        assertHttpStatus(testDirUrl, 200, testDirUrl);
+        assertHttpStatus(testDirUrl + DEFAULT_EXT, 200, testDirUrl);
         
         try {
             testClient.mkdir(testDirUrl);
@@ -43,7 +43,7 @@ public class MkdirTest extends HttpTestBase {
             fail("mkdir must succeed on an existing directory, got IOException:" + ioe);
         }
         
-        assertHttpStatus(testDirUrl, 200, testDirUrl);
+        assertHttpStatus(testDirUrl + DEFAULT_EXT, 200, testDirUrl);
         
         testClient.delete(testDirUrl);
         assertHttpStatus(testDirUrl, 404, testDirUrl + " must be gone after DELETE");
@@ -59,6 +59,6 @@ public class MkdirTest extends HttpTestBase {
         } catch(IOException ioe) {
             fail("mkdirs failed:" + ioe);
         }
-        assertHttpStatus(url,200,url + " must exist after test");
+        assertHttpStatus(url + DEFAULT_EXT,200,url + " must exist after test");
     }
 }
