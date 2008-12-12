@@ -25,12 +25,8 @@ public class HttpPingTest extends JcrinstallTestBase {
     
     public void testWebServerRoot() throws Exception
     {
-        // by default, the Launchpad default servlet redirects / to index.html
         final String url = HTTP_BASE_URL + "/";
-        final GetMethod get = new GetMethod(url);
-        get.setFollowRedirects(false);
-        final int status = httpClient.executeMethod(get);
-        assertEquals("Status must be 200 for " + url, 200, status);
+        assertHttpStatus(url, 403, "Root should return 403 as no redirect is setup in the repository");
     }
     
     public void test404() throws Exception

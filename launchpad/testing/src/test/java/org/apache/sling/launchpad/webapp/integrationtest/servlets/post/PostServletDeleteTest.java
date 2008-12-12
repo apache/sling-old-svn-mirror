@@ -47,28 +47,28 @@ public class PostServletDeleteTest extends HttpTestBase {
         final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
         
         // initially all nodes must be found
-        assertHttpStatus(urlA, HttpServletResponse.SC_OK, "A must initially exist");
-        assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must initially exist");
-        assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must initially exist");
-        assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must initially exist");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_OK, "A must initially exist");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_OK, "B must initially exist");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must initially exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must initially exist");
         
         // delete one and check
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
         params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
         assertPostStatus(urlA,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
-        assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
-        assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must still exist");
-        assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
-        assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must still exist");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_OK, "B must still exist");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must still exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must still exist");
         
         // delete the others with successive requests
         assertPostStatus(urlB,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
         assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
         assertPostStatus(urlD,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
-        assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
-        assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
-        assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
-        assertHttpStatus(urlD, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
         
         // attempting to delete non-existing nodes is ok
         assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status (2)");
@@ -81,10 +81,10 @@ public class PostServletDeleteTest extends HttpTestBase {
         final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
 
         // initially all nodes must be found
-        assertHttpStatus(urlA, HttpServletResponse.SC_OK, "A must initially exist");
-        assertHttpStatus(urlB, HttpServletResponse.SC_OK, "B must initially exist");
-        assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must initially exist");
-        assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must initially exist");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_OK, "A must initially exist");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_OK, "B must initially exist");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must initially exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must initially exist");
 
         // delete one and check
         final List <NameValuePair> params = new LinkedList<NameValuePair> ();
@@ -92,10 +92,10 @@ public class PostServletDeleteTest extends HttpTestBase {
         params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlA.substring(HTTP_BASE_URL.length())));
         params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlB.substring(HTTP_BASE_URL.length())));
         assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
-        assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
-        assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (1)");
-        assertHttpStatus(urlC, HttpServletResponse.SC_OK, "C must still exist");
-        assertHttpStatus(urlD, HttpServletResponse.SC_OK, "D must still exist");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (1)");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (1)");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must still exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must still exist");
 
         // delete the others with successive requests
         params.clear();
@@ -105,9 +105,9 @@ public class PostServletDeleteTest extends HttpTestBase {
         params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlC.substring(HTTP_BASE_URL.length())));
         params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, urlD.substring(HTTP_BASE_URL.length())));
         assertPostStatus(urlC,HttpServletResponse.SC_OK,params,"Delete must return expected status (3)");
-        assertHttpStatus(urlA, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
-        assertHttpStatus(urlB, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
-        assertHttpStatus(urlC, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
-        assertHttpStatus(urlD, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted (2)");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "B must be deleted (2)");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
     }
 }

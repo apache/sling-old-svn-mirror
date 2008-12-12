@@ -43,7 +43,7 @@ public class CreateNodeTest extends HttpTestBase {
         }
 
         // get and check URL of created node
-        final GetMethod get = new GetMethod(urlOfNewNode);
+        final GetMethod get = new GetMethod(urlOfNewNode + DEFAULT_EXT);
         final int status = httpClient.executeMethod(get);
         assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
         final String responseBodyStr = get.getResponseBodyAsString();
@@ -51,15 +51,15 @@ public class CreateNodeTest extends HttpTestBase {
         assertTrue(responseBodyStr.contains("value2"));
 
         // test default txt and html renderings
-        getContent(urlOfNewNode, CONTENT_TYPE_PLAIN);
+        getContent(urlOfNewNode + DEFAULT_EXT, CONTENT_TYPE_PLAIN);
         getContent(urlOfNewNode + ".txt", CONTENT_TYPE_PLAIN);
         getContent(urlOfNewNode + ".html", CONTENT_TYPE_HTML);
         getContent(urlOfNewNode + ".json", CONTENT_TYPE_JSON);
         getContent(urlOfNewNode + ".xml", CONTENT_TYPE_XML);
 
         // And extensions for which we have no renderer fail
-        assertHttpStatus(urlOfNewNode + ".pdf", 500);
-        assertHttpStatus(urlOfNewNode + ".someWeirdExtension", 500);
+        assertHttpStatus(urlOfNewNode + ".pdf", 403);
+        assertHttpStatus(urlOfNewNode + ".someWeirdExtension", 403);
     }
 
     public void testCreateNodeMultipart() throws IOException {
@@ -79,7 +79,7 @@ public class CreateNodeTest extends HttpTestBase {
         }
 
         // check node contents (not all renderings - those are tested above)
-        final GetMethod get = new GetMethod(urlOfNewNode);
+        final GetMethod get = new GetMethod(urlOfNewNode + DEFAULT_EXT);
         final int status = httpClient.executeMethod(get);
         assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
         final String responseBodyStr = get.getResponseBodyAsString();
@@ -163,7 +163,7 @@ public class CreateNodeTest extends HttpTestBase {
         }
 
         // get and check URL of created node
-        final GetMethod get = new GetMethod(urlOfNewNode);
+        final GetMethod get = new GetMethod(urlOfNewNode + DEFAULT_EXT);
         final int status = httpClient.executeMethod(get);
         assertEquals(urlOfNewNode + " must be accessible after createNode",200,status);
     }

@@ -89,7 +89,7 @@ public class SlingIntegrationTestClient {
         }
 
         final String url = baseUrl + path;
-        final int status = httpClient.executeMethod(new GetMethod(url));
+        final int status = httpClient.executeMethod(new GetMethod(url + ".txt"));
         if(status!=200) {
             throw new HttpStatusCodeException(200, status, "GET", url);
         }
@@ -115,7 +115,7 @@ public class SlingIntegrationTestClient {
         Map<String, String> nodeProperties = new HashMap<String, String>();
 
         // add sling specific properties
-        nodeProperties.put(":redirect", url);
+        nodeProperties.put(":redirect", "*");
         nodeProperties.put(":displayExtension", "");
         nodeProperties.put(":status", "browser");
 

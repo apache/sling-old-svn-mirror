@@ -59,6 +59,7 @@ public class HttpTestBase extends TestCase {
     public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
     
     public static final String SLING_POST_SERVLET_CREATE_SUFFIX = "/";
+	public static final String DEFAULT_EXT = ".txt";
 
     protected SlingIntegrationTestClient testClient;
     protected HttpClient httpClient;
@@ -197,7 +198,7 @@ public class HttpTestBase extends TestCase {
         // POST, get URL of created node and get content
         {
             final String urlOfNewNode = testClient.createNode(url, props, null, true);
-            final GetMethod get = new GetMethod(urlOfNewNode + ".txt");
+            final GetMethod get = new GetMethod(urlOfNewNode + DEFAULT_EXT);
             final int status = httpClient.executeMethod(get);
             if(status!=200) {
                 throw new HttpStatusCodeException(200, status, "GET", urlOfNewNode);
