@@ -132,21 +132,26 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         return resolveInternal(null, absPath, false);
     }
 
-    // trivial implementation not taking into account any mappings in
-    // the content
+    // calls map(HttpServletRequest, String) as map(null, resourcePath)
     public String map(String resourcePath) {
         return map(null, resourcePath);
     }
 
-    // trivial implementation not taking into account any mappings in
-    // the content and in /etc/map
+    // full implementation
+    //   - apply sling:alias from the resource path
+    //   - apply /etc/map mappings (inkl. config backwards compat)
+    //   - return absolute uri if possible
     public String map(HttpServletRequest request, String resourcePath) {
         
         String mappedPath = resourcePath;
         boolean mappedPathIsUrl = false;
+        String resolutionPathInfo;
 
-        Resource res = getResourceInternal(mappedPath);
+        Resource res = resolveInternal(mappedPath);
         if (res != null) {
+
+            // keep, what we might have cut off in internal resolution
+            resolutionPathInfo = res.getResourceMetadata().getResolutionPathInfo();
             
             // find aliases for segments
             LinkedList<String> names = new LinkedList<String>();
@@ -168,6 +173,12 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 buf.append(names.removeLast());
             }
             mappedPath = buf.toString();
+            
+        } else {
+            
+            // we have no resource, hence no resolution path info
+            resolutionPathInfo = null;
+            
         }
         
         for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
@@ -186,6 +197,11 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         // this should not be the case, since mappedPath is primed
         if (mappedPath == null) {
             mappedPath = resourcePath;
+        }
+        
+        // append resolution path info, which might have been cut off above
+        if (resolutionPathInfo != null) {
+            mappedPath = mappedPath.concat(resolutionPathInfo);
         }
         
         if (mappedPathIsUrl) {
