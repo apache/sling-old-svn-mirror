@@ -84,15 +84,22 @@ public class JcrNodeResource extends JcrItemResource {
             return (Type) getURL(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrPropertyMap(getNode()); // unchecked cast
-        } else if (type == PersistableValueMap.class ) {
+        } else if (type == PersistableValueMap.class) {
             // check write
             try {
-                getNode().getSession().checkPermission(getNode().getPath(), "set_property");
+                getNode().getSession().checkPermission(getNode().getPath(),
+                    "set_property");
                 return (Type) new JcrModifiablePropertyMap(getNode());
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
+                log.info(
+                    "adaptTo(PersistableValueMap): Cannot set properties on {}",
+                    this);
             } catch (RepositoryException e) {
                 // some other problem, cannot adapt
+                log.info(
+                    "adaptTo(PersistableValueMap): Unexpected problem for {}",
+                    this);
             }
         }
 
