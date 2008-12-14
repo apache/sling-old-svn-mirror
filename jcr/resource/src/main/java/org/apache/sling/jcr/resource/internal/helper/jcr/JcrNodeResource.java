@@ -26,6 +26,7 @@ import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.security.AccessControlException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -88,9 +89,10 @@ public class JcrNodeResource extends JcrItemResource {
             try {
                 getNode().getSession().checkPermission(getNode().getPath(), "set_property");
                 return (Type) new JcrModifiablePropertyMap(getNode());
+            } catch (AccessControlException ace) {
+                // the user has no write permission, cannot adapt
             } catch (RepositoryException e) {
-                // either the user has no write permission or a more
-                // sever exception occured - in both cases we don't return the map
+                // some other problem, cannot adapt
             }
         }
 
