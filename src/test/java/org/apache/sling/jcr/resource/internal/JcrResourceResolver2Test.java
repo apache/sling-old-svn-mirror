@@ -715,6 +715,40 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        final String selExt = ".html";
+        path = "/child" + selExt;
+        mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapSelectorsExtension() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        final String selExt = ".sel1.sel2.html";
+        path = "/child" + selExt;
+        mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapExtensionSuffix() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
 
         Node child = rootNode.addNode("child");
         session.save();
@@ -722,7 +756,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         // absolute path, expect rootPath segment to be
         // cut off the mapped path because we map the rootPath
         // onto root
-        final String selExt = ".sel1.sel2.html";
+        final String selExt = ".html/some/suffx.pdf";
         path = "/child" + selExt;
         mapped = resResolver.map(child.getPath() + selExt);
         assertEquals(path, mapped);
@@ -748,26 +782,68 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
     }
     
     public void testAliasExtension() throws Exception {
-
-        final String selExt = ".sel1.sel2.html";
-
+        
+        final String selExt = ".html";
+        
         Node child = rootNode.addNode("child");
         child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
         session.save();
-
+        
         // expect kind due to alias and no parent due to mapping
         // the rootPath onto root
         String path = "/kind" + selExt;
         String mapped = resResolver.map(child.getPath() + selExt);
         assertEquals(path, mapped);
-
+        
         Resource res = resResolver.resolve(null, path);
         Node resNode = res.adaptTo(Node.class);
         assertNotNull(resNode);
-
+        
         assertEquals(child.getPath(), resNode.getPath());
     }
-
+    
+    public void testAliasSelectorsExtension() throws Exception {
+        
+        final String selExt = ".sel1.sel2.html";
+        
+        Node child = rootNode.addNode("child");
+        child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
+        session.save();
+        
+        // expect kind due to alias and no parent due to mapping
+        // the rootPath onto root
+        String path = "/kind" + selExt;
+        String mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+        
+        Resource res = resResolver.resolve(null, path);
+        Node resNode = res.adaptTo(Node.class);
+        assertNotNull(resNode);
+        
+        assertEquals(child.getPath(), resNode.getPath());
+    }
+    
+    public void testAliasExtensionSuffix() throws Exception {
+        
+        final String selExt = ".html/some/suffx.pdf";
+        
+        Node child = rootNode.addNode("child");
+        child.setProperty(JcrResourceResolver2.PROP_ALIAS, "kind");
+        session.save();
+        
+        // expect kind due to alias and no parent due to mapping
+        // the rootPath onto root
+        String path = "/kind" + selExt;
+        String mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+        
+        Resource res = resResolver.resolve(null, path);
+        Node resNode = res.adaptTo(Node.class);
+        assertNotNull(resNode);
+        
+        assertEquals(child.getPath(), resNode.getPath());
+    }
+    
     // ---------- internal
 
     private void testStarResourceHelper(final String path, final String method) {
