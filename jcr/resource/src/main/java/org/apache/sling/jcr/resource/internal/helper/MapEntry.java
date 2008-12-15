@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,7 +38,7 @@ import org.apache.sling.jcr.resource.internal.JcrResourceResolver2;
  * 
  * @see http://cwiki.apache.org/SLING/flexible-resource-resolution.html
  */
-public class MapEntry {
+public class MapEntry implements Comparable<MapEntry> {
 
     private static final Pattern[] PATH_TO_URL_MATCH = {
         Pattern.compile("http/([^/]+)\\.80(/.*)?$"),
@@ -174,6 +175,10 @@ public class MapEntry {
         return null;
     }
 
+    public String getPattern() {
+        return urlPattern.toString();
+    }
+    
     public String[] getRedirect() {
         return redirect;
     }
@@ -186,6 +191,28 @@ public class MapEntry {
         return status;
     }
 
+    // ---------- Comparable
+
+    public int compareTo(MapEntry m) {
+        if (this == m) {
+            return 0;
+        }
+
+        int tlen = urlPattern.toString().length();
+        int mlen = m.urlPattern.toString().length();
+        if (tlen < mlen) {
+            return 1;
+        } else if (tlen > mlen) {
+            return -1;
+        }
+
+        // lentghs are equal, but the entries are not
+        // so order m after this
+        return 1;
+    }
+
+    // ---------- Object overwrite
+    
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
