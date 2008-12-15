@@ -181,15 +181,41 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             
         }
         
+        // cut off scheme and host, if the same as requested
+        String schemehostport;
+        if (request != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(request.getScheme()).append("://");
+            sb.append(request.getServerName());
+            if (request.getServerPort() > 0) {
+                sb.append(':').append(request.getServerPort());
+            }
+            sb.append("/");
+            schemehostport = sb.toString();
+        } else {
+            schemehostport = null;
+        }
+
         for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
             String[] mappedPaths = mapEntry.replace(mappedPath);
-            if (mappedPaths != null && mappedPaths.length > 0) {
-                log.debug(
-                    "resolve: MapEntry {} matches, mapped path is {}",
-                    mapEntry, mappedPaths);
+            if (mappedPaths != null) {
 
                 mappedPath = mappedPaths[0];
                 mappedPathIsUrl = !mapEntry.isInternal();
+
+                if (mappedPathIsUrl && schemehostport != null) {
+                    for (String candidate : mappedPaths) {
+                        if (candidate.startsWith(schemehostport)) {
+                            mappedPath = candidate.substring(schemehostport.length() - 1);
+                            break;
+                        }
+                    }
+                }
+
+                log.debug(
+                    "resolve: MapEntry {} matches, mapped path is {}",
+                    mapEntry, mappedPath);
+
                 break;
             }
         }
@@ -204,29 +230,12 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             mappedPath = mappedPath.concat(resolutionPathInfo);
         }
         
-        if (mappedPathIsUrl) {
-            
-            // cut off scheme and host, if the same as requested
-            if (request != null) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(request.getScheme()).append("://");
-                sb.append(request.getServerName());
-                if (request.getServerPort() > 0) {
-                    sb.append(':').append(request.getServerPort());
-                }
-                sb.append("/");
-                
-                if (mappedPath.startsWith(sb.toString())) {
-                    mappedPath = mappedPath.substring(sb.length()-1);
-                }
-            }
-            
-            // TODO: probably need to mangle name spaces
-            return mappedPath;
-        }
-
         // mangle the namespaces
         mappedPath = mangleNamespaces(mappedPath);
+
+        if (mappedPathIsUrl) {
+            return mappedPath;
+        }
 
         // prepend servlet context path if we have a request
         if (request != null && request.getContextPath() != null
