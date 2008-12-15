@@ -20,13 +20,13 @@ package org.apache.sling.event;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.osgi.service.event.Event;
 
 /**
@@ -173,17 +173,15 @@ public class EventPropertiesMap
     /**
      * @see java.util.Dictionary#elements()
      */
-    @SuppressWarnings("unchecked")
     public Enumeration<Object> elements() {
-        return new IteratorEnumeration(this.values().iterator());
+        return Collections.enumeration(this.values());
     }
 
     /**
      * @see java.util.Dictionary#keys()
      */
-    @SuppressWarnings("unchecked")
     public Enumeration<String> keys() {
-        return new IteratorEnumeration(this.keySet().iterator());
+        return Collections.enumeration(this.keySet());
     }
 
     /**
