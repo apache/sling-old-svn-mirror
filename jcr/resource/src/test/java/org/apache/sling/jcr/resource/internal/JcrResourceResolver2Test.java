@@ -394,11 +394,15 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         assertNotNull(res1);
         assertEquals("/content/virtual/playground/en.html", res1.getPath());
 
-        final String mapped0 = resResolver.map(request, res0.getPath());
-        assertEquals("http://virtual.host.com/playground.html", mapped0);
+        final String mapped00 = resResolver.map(res0.getPath());
+        assertEquals("http://virtual.host.com/playground.html", mapped00);
+        final String mapped01 = resResolver.map(request, res0.getPath());
+        assertEquals("/playground.html", mapped01);
 
-        final String mapped1 = resResolver.map(request, res1.getPath());
-        assertEquals("http://virtual.host.com/playground/en.html", mapped1);
+        final String mapped10 = resResolver.map(res1.getPath());
+        assertEquals("http://virtual.host.com/playground/en.html", mapped10);
+        final String mapped11 = resResolver.map(request, res1.getPath());
+        assertEquals("/playground/en.html", mapped11);
     }
 
     public void testResolveVirtualHostHttp8080() throws Exception {
@@ -436,11 +440,15 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         assertNotNull(res1);
         assertEquals("/content/virtual/playground/en.html", res1.getPath());
         
-        final String mapped0 = resResolver.map(request, res0.getPath());
-        assertEquals("http://virtual.host.com:8080/playground.html", mapped0);
+        final String mapped00 = resResolver.map(res0.getPath());
+        assertEquals("http://virtual.host.com:8080/playground.html", mapped00);
+        final String mapped01 = resResolver.map(request, res0.getPath());
+        assertEquals("/playground.html", mapped01);
         
-        final String mapped1 = resResolver.map(request, res1.getPath());
-        assertEquals("http://virtual.host.com:8080/playground/en.html", mapped1);
+        final String mapped10 = resResolver.map(res1.getPath());
+        assertEquals("http://virtual.host.com:8080/playground/en.html", mapped10);
+        final String mapped11 = resResolver.map(request, res1.getPath());
+        assertEquals("/playground/en.html", mapped11);
     }
     
     public void testResolveVirtualHostHttp8080Root() throws Exception {
@@ -478,11 +486,15 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         assertNotNull(res1);
         assertEquals("/playground/en.html", res1.getPath());
 
-        final String mapped0 = resResolver.map(request, res0.getPath());
-        assertEquals("http://virtual.host.com:8080/playground.html", mapped0);
-
-        final String mapped1 = resResolver.map(request, res1.getPath());
-        assertEquals("http://virtual.host.com:8080/playground/en.html", mapped1);
+        final String mapped00 = resResolver.map(res0.getPath());
+        assertEquals("http://virtual.host.com:8080/playground.html", mapped00);
+        final String mapped01 = resResolver.map(request, res0.getPath());
+        assertEquals("/playground.html", mapped01);
+        
+        final String mapped10 = resResolver.map(res1.getPath());
+        assertEquals("http://virtual.host.com:8080/playground/en.html", mapped10);
+        final String mapped11 = resResolver.map(request, res1.getPath());
+        assertEquals("/playground/en.html", mapped11);
     }
 
     public void testResolveVirtualHostHttps443() throws Exception {
@@ -520,11 +532,15 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         assertNotNull(res1);
         assertEquals("/content/virtual/playground/en.html", res1.getPath());
 
-        final String mapped0 = resResolver.map(request, res0.getPath());
-        assertEquals("https://virtual.host.com/playground.html", mapped0);
-
-        final String mapped1 = resResolver.map(request, res1.getPath());
-        assertEquals("https://virtual.host.com/playground/en.html", mapped1);
+        final String mapped00 = resResolver.map(res0.getPath());
+        assertEquals("https://virtual.host.com/playground.html", mapped00);
+        final String mapped01 = resResolver.map(request, res0.getPath());
+        assertEquals("/playground.html", mapped01);
+        
+        final String mapped10 = resResolver.map(res1.getPath());
+        assertEquals("https://virtual.host.com/playground/en.html", mapped10);
+        final String mapped11 = resResolver.map(request, res1.getPath());
+        assertEquals("/playground/en.html", mapped11);
     }
 
     public void testResolveVirtualHostHttps4443() throws Exception {
@@ -562,12 +578,15 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         assertNotNull(res1);
         assertEquals("/content/virtual/playground/en.html", res1.getPath());
 
-        final String mapped0 = resResolver.map(request, res0.getPath());
-        assertEquals("https://virtual.host.com:4443/playground.html", mapped0);
-
-        final String mapped1 = resResolver.map(request, res1.getPath());
-        assertEquals("https://virtual.host.com:4443/playground/en.html",
-            mapped1);
+        final String mapped00 = resResolver.map(res0.getPath());
+        assertEquals("https://virtual.host.com:4443/playground.html", mapped00);
+        final String mapped01 = resResolver.map(request, res0.getPath());
+        assertEquals("/playground.html", mapped01);
+        
+        final String mapped10 = resResolver.map(res1.getPath());
+        assertEquals("https://virtual.host.com:4443/playground/en.html", mapped10);
+        final String mapped11 = resResolver.map(request, res1.getPath());
+        assertEquals("/playground/en.html", mapped11);
     }
 
     public void testResolveResourceAlias() throws Exception {
