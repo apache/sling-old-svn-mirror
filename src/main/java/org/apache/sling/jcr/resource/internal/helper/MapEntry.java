@@ -53,6 +53,13 @@ public class MapEntry {
 
     private final int status;
 
+    public static String appendSlash(String path) {
+        if (!path.endsWith("/")) {
+            path = path.concat("/");
+        }
+        return path;
+    }
+    
     public static URI toURI(String uriPath) {
         for (int i = 0; i < PATH_TO_URL_MATCH.length; i++) {
             Matcher m = PATH_TO_URL_MATCH[i].matcher(uriPath);
@@ -69,7 +76,7 @@ public class MapEntry {
         return null;
     }
 
-    public static MapEntry createResolveEntry(String url, Resource resource) {
+    public static MapEntry createResolveEntry(String url, Resource resource, boolean trailingSlash) {
         ValueMap props = resource.adaptTo(ValueMap.class);
         if (props != null) {
             String redirect = props.get(
@@ -77,20 +84,20 @@ public class MapEntry {
             if (redirect != null) {
                 int status = props.get(
                     JcrResourceResolver2.PROP_REDIRECT_EXTERNAL_STATUS, 302);
-                return new MapEntry(url, redirect, status);
+                return new MapEntry(url, redirect, status, trailingSlash);
             }
 
             String[] internalRedirect = props.get(
                 JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
-                return new MapEntry(url, internalRedirect, -1);
+                return new MapEntry(url, internalRedirect, -1, trailingSlash);
             }
         }
 
         return null;
     }
 
-    public static List<MapEntry> createMapEntry(String url, Resource resource) {
+    public static List<MapEntry> createMapEntry(String url, Resource resource, boolean trailingSlash) {
         ValueMap props = resource.adaptTo(ValueMap.class);
         if (props != null) {
             String redirect = props.get(
@@ -115,7 +122,7 @@ public class MapEntry {
                     internalRedirect.length);
                 for (String redir : internalRedirect) {
                     if (!redir.contains("$")) {
-                        prepEntries.add(new MapEntry(redir, url, status));
+                        prepEntries.add(new MapEntry(redir, url, status, trailingSlash));
                     }
                 }
 
@@ -128,11 +135,21 @@ public class MapEntry {
         return null;
     }
 
-    public MapEntry(String url, String redirect, int status) {
-        this(url, new String[] { redirect }, status);
+    public MapEntry(String url, String redirect, int status, boolean trailingSlash) {
+        this(url, new String[] { redirect }, status, trailingSlash);
     }
 
-    public MapEntry(String url, String[] redirect, int status) {
+    public MapEntry(String url, String[] redirect, int status, boolean trailingSlash) {
+        
+        // ensure trailing slashes on redirects if the url
+        // ends with a trailing slash
+        if (trailingSlash) {
+            url = appendSlash(url);
+            for (int i = 0; i < redirect.length; i++) {
+                redirect[i] = appendSlash(redirect[i]);
+            }
+        }
+        
         this.urlPattern = Pattern.compile(url);
         this.redirect = redirect;
         this.status = status;
