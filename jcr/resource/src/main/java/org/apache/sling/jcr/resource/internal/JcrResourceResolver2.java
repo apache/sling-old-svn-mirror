@@ -230,12 +230,14 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             mappedPath = mappedPath.concat(resolutionPathInfo);
         }
         
-        // mangle the namespaces
-        mappedPath = mangleNamespaces(mappedPath);
-
         if (mappedPathIsUrl) {
+            // TODO: Consider mangling the path but not the scheme and
+            // esp. the host:port part
             return mappedPath;
         }
+
+        // mangle the namespaces
+        mappedPath = mangleNamespaces(mappedPath);
 
         // prepend servlet context path if we have a request
         if (request != null && request.getContextPath() != null
