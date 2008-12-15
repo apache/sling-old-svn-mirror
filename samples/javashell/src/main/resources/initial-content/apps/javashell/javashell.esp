@@ -94,6 +94,11 @@ scriptFolderNode.save();
 	<p class="note">The <a href="<%= fileNode.getPath() %>">complete source code</a> of the generated servlet is available.</p> 
 	
 	<h2>Result of execution</h2>
+	<p class="note">
+		If the block below is rendered by the <em>HtmlRendererServlet</em> instead of displaying
+		the result of executing the above code, it probably means that the <em>Sling - Scripting - Java Support</em>
+		bundle is not installed or not active.
+	</p>		 
 	<pre><% sling.include(currentNode.getPath(), "replaceSelectors=" + servlet.id + ", forceResourceType=javashell/" + servletFolderName); %></pre> 
 </div>
 </body>
