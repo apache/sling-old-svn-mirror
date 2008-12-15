@@ -147,8 +147,16 @@ public class MockResourceResolver implements ResourceResolver {
                 if (!entry.endsWith("/")) {
                     entry = entry.concat("/");
                 }
-                this.searchPath[i] = entry; 
+                this.searchPath[i] = entry;
             }
         }
+    }
+
+    public String map(HttpServletRequest request, String resourcePath) {
+        return resourcePath;
+    }
+
+    public Resource resolve(HttpServletRequest request, String absPath) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 }
