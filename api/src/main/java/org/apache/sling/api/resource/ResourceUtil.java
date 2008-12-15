@@ -152,7 +152,7 @@ public class ResourceUtil {
         if ( parentPath == null ) {
             return null;
         }
-        return rsrc.getResourceResolver().resolve(parentPath);
+        return rsrc.getResourceResolver().getResource(parentPath);
     }
 
     /**
