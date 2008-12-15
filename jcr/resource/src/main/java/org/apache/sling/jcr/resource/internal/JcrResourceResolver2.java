@@ -205,28 +205,36 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         }
         
         if (mappedPathIsUrl) {
+            
+            // cut off scheme and host, if the same as requested
+            if (request != null) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(request.getScheme()).append("://");
+                sb.append(request.getServerName());
+                if (request.getServerPort() > 0) {
+                    sb.append(':').append(request.getServerPort());
+                }
+                sb.append("/");
+                
+                if (mappedPath.startsWith(sb.toString())) {
+                    mappedPath = mappedPath.substring(sb.length()-1);
+                }
+            }
+            
             // TODO: probably need to mangle name spaces
             return mappedPath;
         }
-        
-        StringBuilder sb = new StringBuilder();
-
-        if (request != null) {
-            sb.append(request.getScheme()).append("://");
-            sb.append(request.getServerName());
-            if (request.getServerPort() > 0) {
-                sb.append(':').append(request.getServerPort());
-            }
-            if (request.getContextPath() != null
-                && request.getContextPath().length() > 0) {
-                sb.append(request.getContextPath());
-            }
-        }
 
         // mangle the namespaces
-        sb.append(mangleNamespaces(mappedPath));
-        
-        return sb.toString();
+        mappedPath = mangleNamespaces(mappedPath);
+
+        // prepend servlet context path if we have a request
+        if (request != null && request.getContextPath() != null
+            && request.getContextPath().length() > 0) {
+            mappedPath = request.getContextPath().concat(mappedPath);
+        }
+
+        return mappedPath;
     }
 
     // ---------- search path for relative resoures
