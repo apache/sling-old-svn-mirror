@@ -132,12 +132,12 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         
         // explicite type
         Property result = map.get(PROP_NAME, Property.class);
-        assertEquals(prop, result);
+        assertTrue(prop.isSame(result));
 
         // type by default value
         Property defaultValue = rootNode.getProperty("jcr:primaryType");
         result = map.get(PROP_NAME, defaultValue);
-        assertEquals(prop, result);
+        assertTrue(prop.isSame(result));
         
         // default value
         result = map.get(PROP_NAME_NIL, defaultValue);
