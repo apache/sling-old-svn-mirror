@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Map.Entry;
 
 import javax.jcr.RepositoryException;
@@ -66,7 +70,7 @@ public class MapEntries implements EventListener {
 
     private List<MapEntry> resolveMaps;
 
-    private List<MapEntry> mapMaps;
+    private Collection<MapEntry> mapMaps;
 
     private Set<String> namespaces;
 
@@ -114,7 +118,7 @@ public class MapEntries implements EventListener {
         try {
 
             List<MapEntry> newResolveMaps = new ArrayList<MapEntry>();
-            List<MapEntry> newMapMaps = new ArrayList<MapEntry>();
+            SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
 
             // load the /etc/map entries into the maps
             loadResolverMap(resolver, newResolveMaps, newMapMaps);
@@ -123,11 +127,11 @@ public class MapEntries implements EventListener {
             loadVanityPaths(resolver, newResolveMaps);
             loadConfiguration(factory, newResolveMaps);
 
-            // load the configuration into the mapper map 
+            // load the configuration into the mapper map
             loadMapConfiguration(factory, newMapMaps);
 
             this.resolveMaps = newResolveMaps;
-            this.mapMaps = newMapMaps;
+            this.mapMaps = new TreeSet<MapEntry>(newMapMaps.values());
 
         } finally {
 
@@ -185,7 +189,7 @@ public class MapEntries implements EventListener {
         return resolveMaps;
     }
 
-    public List<MapEntry> getMapMaps() {
+    public Collection<MapEntry> getMapMaps() {
         return mapMaps;
     }
 
@@ -246,7 +250,8 @@ public class MapEntries implements EventListener {
     // ---------- internal
 
     private void loadResolverMap(JcrResourceResolver2 resolver,
-            List<MapEntry> resolveEntries, List<MapEntry> mapEntries) {
+            Collection<MapEntry> resolveEntries,
+            Map<String, MapEntry> mapEntries) {
         // the standard map configuration
         Resource res = resolver.getResource(MAP_ROOT);
         if (res != null) {
@@ -255,13 +260,13 @@ public class MapEntries implements EventListener {
     }
 
     private void gather(JcrResourceResolver2 resolver,
-            List<MapEntry> resolveEntries, List<MapEntry> mapEntries,
-            Resource parent, String parentPath) {
+            Collection<MapEntry> resolveEntries,
+            Map<String, MapEntry> mapEntries, Resource parent, String parentPath) {
         // scheme list
         Iterator<Resource> children = ResourceUtil.listChildren(parent);
         while (children.hasNext()) {
             Resource child = children.next();
-            
+
             String name = resolver.getProperty(child,
                 JcrResourceResolver2.PROP_REG_EXP);
             boolean trailingSlash = false;
@@ -281,7 +286,10 @@ public class MapEntries implements EventListener {
             List<MapEntry> childMapEntries = MapEntry.createMapEntry(childPath,
                 child, trailingSlash);
             if (childMapEntries != null) {
-                mapEntries.addAll(childMapEntries);
+                for (MapEntry mapEntry : childMapEntries) {
+                    addMapEntry(mapEntries, mapEntry.getPattern(),
+                        mapEntry.getRedirect()[0], mapEntry.getStatus());
+                }
             }
 
             // add trailing slash to child path to append the child
@@ -327,7 +335,8 @@ public class MapEntries implements EventListener {
                 }
 
                 // 1. entry with exact match
-                entries.add(new MapEntry(url + "$", redirect + ".html", status, false));
+                entries.add(new MapEntry(url + "$", redirect + ".html", status,
+                    false));
 
                 // 2. entry with match supporting selectors and extension
                 entries.add(new MapEntry(url + "(\\..*)", redirect + "$1",
@@ -379,7 +388,7 @@ public class MapEntries implements EventListener {
     }
 
     private void loadMapConfiguration(JcrResourceResolverFactoryImpl factory,
-            List<MapEntry> entries) {
+            Map<String, MapEntry> entries) {
         // URL Mappings
         Mapping[] mappings = factory.getMappings();
         if (mappings != null) {
@@ -389,7 +398,7 @@ public class MapEntries implements EventListener {
                     String url = mapping.getTo();
                     String alias = mapping.getFrom();
                     if (!url.equals(alias)) {
-                        entries.add(new MapEntry(alias, url, -1, false));
+                        addMapEntry(entries, alias, url, -1);
                     }
                 }
             }
@@ -405,9 +414,25 @@ public class MapEntries implements EventListener {
                     // this regular expression must match the whole URL !!
                     String path = "^" + intPath + "$";
                     String url = extPath;
-                    entries.add(new MapEntry(path, url, -1, false));
+                    addMapEntry(entries, path, url, -1);
                 }
             }
         }
+    }
+
+    private void addMapEntry(Map<String, MapEntry> entries, String path,
+            String url, int status) {
+        MapEntry entry = entries.get(path);
+        if (entry == null) {
+            entry = new MapEntry(path, url, status, false);
+        } else {
+            String[] redir = entry.getRedirect();
+            String[] newRedir = new String[redir.length + 1];
+            System.arraycopy(redir, 0, newRedir, 0, redir.length);
+            newRedir[redir.length] = url;
+            entry = new MapEntry(entry.getPattern(), newRedir,
+                entry.getStatus(), false);
+        }
+        entries.put(path, entry);
     }
 }
