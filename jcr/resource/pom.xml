@@ -127,6 +127,11 @@
            <artifactId>commons-collections</artifactId>
        </dependency>
 
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole</artifactId>
+        </dependency>
+
         <!-- for adapting JCR resources to URLs -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
