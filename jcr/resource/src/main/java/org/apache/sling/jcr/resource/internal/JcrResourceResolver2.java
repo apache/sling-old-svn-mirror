@@ -141,17 +141,42 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     //   - apply sling:alias from the resource path
     //   - apply /etc/map mappings (inkl. config backwards compat)
     //   - return absolute uri if possible
-    public String map(HttpServletRequest request, String resourcePath) {
+    public String map(final HttpServletRequest request, final String resourcePath) {
         
         String mappedPath = resourcePath;
         boolean mappedPathIsUrl = false;
         String resolutionPathInfo;
+
+        // cut off scheme and host, if the same as requested
+        String schemehostport;
+        if (request != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(request.getScheme()).append("://");
+            sb.append(request.getServerName());
+            if (request.getServerPort() > 0) {
+                sb.append(':').append(request.getServerPort());
+            }
+            sb.append("/");
+            schemehostport = sb.toString();
+
+            log.debug("map: Mapping path {} for {}", resourcePath,
+                schemehostport);
+
+        } else {
+
+            schemehostport = null;
+            log.debug("map: Mapping path {} for default", resourcePath);
+
+        }
 
         Resource res = resolveInternal(mappedPath);
         if (res != null) {
 
             // keep, what we might have cut off in internal resolution
             resolutionPathInfo = res.getResourceMetadata().getResolutionPathInfo();
+            
+            log.debug("map: Path maps to resource {} with path info {}", res,
+                resolutionPathInfo);
             
             // find aliases for segments
             LinkedList<String> names = new LinkedList<String>();
@@ -174,6 +199,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             }
             mappedPath = buf.toString();
             
+            log.debug("map: Alias mapping resolves to path {}", mappedPath);
+            
         } else {
             
             // we have no resource, hence no resolution path info
@@ -181,25 +208,12 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             
         }
         
-        // cut off scheme and host, if the same as requested
-        String schemehostport;
-        if (request != null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(request.getScheme()).append("://");
-            sb.append(request.getServerName());
-            if (request.getServerPort() > 0) {
-                sb.append(':').append(request.getServerPort());
-            }
-            sb.append("/");
-            schemehostport = sb.toString();
-        } else {
-            schemehostport = null;
-        }
-
         for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
             String[] mappedPaths = mapEntry.replace(mappedPath);
             if (mappedPaths != null) {
 
+                log.debug("map: Match for Entry {}", mapEntry);
+                
                 mappedPath = mappedPaths[0];
                 mappedPathIsUrl = !mapEntry.isInternal();
 
@@ -207,6 +221,9 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                     for (String candidate : mappedPaths) {
                         if (candidate.startsWith(schemehostport)) {
                             mappedPath = candidate.substring(schemehostport.length() - 1);
+                            log.debug(
+                                "map: Found host specific mapping {} resolving to {}",
+                                candidate, mappedPath);
                             break;
                         }
                     }
@@ -233,6 +250,10 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         if (mappedPathIsUrl) {
             // TODO: Consider mangling the path but not the scheme and
             // esp. the host:port part
+            
+            log.debug("map: Returning URL {} as mapping for path {}",
+                mappedPath, resourcePath);
+            
             return mappedPath;
         }
 
@@ -245,6 +266,10 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             mappedPath = request.getContextPath().concat(mappedPath);
         }
 
+        log.debug(
+            "map: Returning path {} (after mangling, inlc. context) for {}",
+            mappedPath, resourcePath);
+        
         return mappedPath;
     }
 
