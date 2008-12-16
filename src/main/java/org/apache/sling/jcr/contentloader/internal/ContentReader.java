@@ -27,7 +27,7 @@ import javax.jcr.RepositoryException;
  * The <code>ContentReader</code>
  * A content reader is provided by an {@link ImportProvider}.
  */
-interface ContentReader {
+public interface ContentReader {
 
     /**
      * Read the content from the input stream and create the

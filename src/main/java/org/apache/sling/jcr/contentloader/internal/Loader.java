@@ -26,15 +26,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.jcr.InvalidSerializedDataException;
@@ -43,6 +43,9 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.jcr.contentloader.internal.readers.JsonReader;
+import org.apache.sling.jcr.contentloader.internal.readers.XmlReader;
+import org.apache.sling.jcr.contentloader.internal.readers.ZipReader;
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,14 +75,14 @@ public class Loader {
     /** All available import providers. */
     private Map<String, ImportProvider> defaultImportProviders;
 
-    private final ContentLoader contentCreator;
+    private final DefaultContentCreator contentCreator;
 
     // bundles whose registration failed and should be retried
     private List<Bundle> delayedBundles;
 
     public Loader(ContentLoaderService jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
-        this.contentCreator = new ContentLoader(jcrContentHelper);
+        this.contentCreator = new DefaultContentCreator(jcrContentHelper);
         this.delayedBundles = new LinkedList<Bundle>();
 
         defaultImportProviders = new LinkedHashMap<String, ImportProvider>();
@@ -108,6 +111,10 @@ public class Loader {
     public void registerBundle(final Session session,
                                final Bundle bundle,
                                final boolean isUpdate) {
+        // if this is an update, we have to uninstall the old content first
+        if ( isUpdate ) {
+            this.unregisterBundle(session, bundle);
+        }
 
         log.debug("Registering bundle {} for content loading.",
             bundle.getSymbolicName());
@@ -153,7 +160,7 @@ public class Loader {
 
             // check if the content has already been loaded
             final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
-                session, bundle);
+                session, bundle, true);
 
             // if we don't get an info, someone else is currently loading
             if (bundleContentInfo == null) {
@@ -161,6 +168,7 @@ public class Loader {
             }
 
             boolean success = false;
+            List<String> createdNodes = null;
             try {
 
                 final boolean contentAlreadyLoaded = ((Boolean) bundleContentInfo.get(ContentLoaderService.PROPERTY_CONTENT_LOADED)).booleanValue();
@@ -172,7 +180,7 @@ public class Loader {
 
                 } else {
 
-                    installContent(session, bundle, pathIter,
+                    createdNodes = installContent(session, bundle, pathIter,
                         contentAlreadyLoaded);
 
                     if (isRetry) {
@@ -189,7 +197,7 @@ public class Loader {
 
             } finally {
                 jcrContentHelper.unlockBundleContentInfo(session, bundle,
-                    success);
+                    success, createdNodes);
             }
 
         } catch (RepositoryException re) {
@@ -211,29 +219,48 @@ public class Loader {
      */
     public void unregisterBundle(final Session session, final Bundle bundle) {
 
-        // check if bundle has initial content
-        final Iterator<PathEntry> pathIter = PathEntry.getContentPaths(bundle);
         if (delayedBundles.contains(bundle)) {
 
             delayedBundles.remove(bundle);
 
         } else {
+            try {
+                final Map<String, Object> bundleContentInfo = jcrContentHelper.getBundleContentInfo(
+                        session, bundle, false);
 
-            if (pathIter != null) {
-                uninstallContent(session, bundle, pathIter);
-                jcrContentHelper.contentIsUninstalled(session, bundle);
+                // if we don't get an info, someone else is currently loading or unloading
+                // or the bundle is already uninstalled
+                if (bundleContentInfo == null) {
+                    return;
+                }
+
+                try {
+                    uninstallContent(session, bundle, (String[])bundleContentInfo.get(ContentLoaderService.PROPERTY_UNINSTALL_PATHS));
+                    jcrContentHelper.contentIsUninstalled(session, bundle);
+                } finally {
+                    jcrContentHelper.unlockBundleContentInfo(session, bundle, false, null);
+
+                }
+            } catch (RepositoryException re) {
+                log.error("Cannot remove initial content for bundle "
+                        + bundle.getSymbolicName() + " : " + re.getMessage(), re);
             }
-
         }
     }
 
     // ---------- internal -----------------------------------------------------
 
-    private void installContent(final Session session,
-                                final Bundle bundle,
-                                final Iterator<PathEntry> pathIter,
-                                final boolean contentAlreadyLoaded)
+    /**
+     * Install the content from the bundle.
+     * @return If the content should be removed on uninstall, a list of top nodes
+     */
+    private List<String> installContent(final Session session,
+                                        final Bundle bundle,
+                                        final Iterator<PathEntry> pathIter,
+                                        final boolean contentAlreadyLoaded)
     throws RepositoryException {
+        final List<String> createdNodes = new ArrayList<String>();
+
         log.debug("Installing initial content from bundle {}",
             bundle.getSymbolicName());
         try {
@@ -245,7 +272,23 @@ public class Loader {
                     final Node targetNode = getTargetNode(session, entry.getTarget());
 
                     if (targetNode != null) {
-                        installFromPath(bundle, entry.getPath(), entry, targetNode);
+                        installFromPath(bundle, entry.getPath(), entry, targetNode,
+                            entry.isUninstall() ? createdNodes : null);
+                    }
+                }
+            }
+
+            // now optimize created nodes list
+            Collections.sort(createdNodes);
+            if ( createdNodes.size() > 1) {
+                final Iterator<String> i = createdNodes.iterator();
+                String previous = i.next() + '/';
+                while ( i.hasNext() ) {
+                    final String current = i.next();
+                    if ( current.startsWith(previous) ) {
+                        i.remove();
+                    } else {
+                        previous = current + '/';
                     }
                 }
             }
@@ -274,6 +317,7 @@ public class Loader {
         log.debug("Done installing initial content from bundle {}",
             bundle.getSymbolicName());
 
+        return createdNodes;
     }
 
     /**
@@ -283,12 +327,14 @@ public class Loader {
      * @param path The path
      * @param overwrite Should the content be overwritten.
      * @param parent The parent node.
+     * @param createdNodes An optional list to store all new nodes. This list is used for an uninstall
      * @throws RepositoryException
      */
     private void installFromPath(final Bundle bundle,
                                  final String path,
                                  final PathEntry configuration,
-                                 final Node parent)
+                                 final Node parent,
+                                 final List<String> createdNodes)
     throws RepositoryException {
 
         @SuppressWarnings("unchecked")
@@ -298,7 +344,7 @@ public class Loader {
             return;
         }
         //  init content creator
-        this.contentCreator.init(configuration, this.defaultImportProviders);
+        this.contentCreator.init(configuration, this.defaultImportProviders, createdNodes);
 
         final Map<URL, Node> processedEntries = new HashMap<URL, Node>();
         // potential root node import/extension
@@ -342,7 +388,7 @@ public class Loader {
 
                 // walk down the line
                 if (node != null) {
-                    installFromPath(bundle, entry, configuration, node);
+                    installFromPath(bundle, entry, configuration, node, createdNodes);
                 }
 
             } else {
@@ -377,7 +423,7 @@ public class Loader {
                 // otherwise just place as file
                 if ( node == null ) {
                     try {
-                        createFile(configuration, parent, file);
+                        createFile(configuration, parent, file, createdNodes);
                         node = parent.getNode(name);
                     } catch (IOException ioe) {
                         log.warn("Cannot create file node for {}", file, ioe);
@@ -455,21 +501,6 @@ public class Loader {
     }
 
     /**
-     * Delete the node from the initial content.
-     *
-     * @param parent
-     * @param name
-     * @param nodeXML
-     * @throws RepositoryException
-     */
-    private void deleteNode(Node parent, String name)
-            throws RepositoryException {
-        if (parent.hasNode(name)) {
-            parent.getNode(name).remove();
-        }
-    }
-
-    /**
      * Create a folder
      *
      * @param parent The parent node.
@@ -499,7 +530,7 @@ public class Loader {
      * @throws IOException
      * @throws RepositoryException
      */
-    private void createFile(PathEntry configuration, Node parent, URL source)
+    private void createFile(PathEntry configuration, Node parent, URL source, List<String> createdNodes)
     throws IOException, RepositoryException {
         final String srcPath = source.getPath();
         int pos = srcPath.lastIndexOf("/");
@@ -511,7 +542,7 @@ public class Loader {
             path = srcPath.substring(0, pos + 1) + name;
         }
 
-        this.contentCreator.init(configuration, defaultImportProviders);
+        this.contentCreator.init(configuration, defaultImportProviders, createdNodes);
         this.contentCreator.prepareParsing(parent, name);
         final URLConnection conn = source.openConnection();
         final long lastModified = conn.getLastModified();
@@ -520,22 +551,6 @@ public class Loader {
         this.contentCreator.createFileAndResourceNode(path, data, type, lastModified);
         this.contentCreator.finishNode();
         this.contentCreator.finishNode();
-    }
-
-    /**
-     * Delete the file from the given url.
-     *
-     * @param parent
-     * @param source
-     * @throws IOException
-     * @throws RepositoryException
-     */
-    private void deleteFile(Node parent, URL source) throws IOException,
-            RepositoryException {
-        String name = getName(source.getPath());
-        if (parent.hasNode(name)) {
-            parent.getNode(name).remove();
-        }
     }
 
     /**
@@ -603,25 +618,20 @@ public class Loader {
     }
 
     private void uninstallContent(final Session session, final Bundle bundle,
-            final Iterator<PathEntry> pathIter) {
+            final String[] uninstallPaths) {
         try {
             log.debug("Uninstalling initial content from bundle {}",
                 bundle.getSymbolicName());
-            while (pathIter.hasNext()) {
-                final PathEntry entry = pathIter.next();
-                if (entry.isUninstall()) {
-                    Node targetNode = getTargetNode(session, entry.getTarget());
-                    if (targetNode != null)
-                        uninstallFromPath(bundle, entry.getPath(), entry, targetNode);
-                } else {
-                    log.debug(
-                        "Ignoring to uninstall content at {}, uninstall directive is not set.",
-                        entry.getPath());
+            if ( uninstallPaths != null && uninstallPaths.length > 0 ) {
+                for(final String path : uninstallPaths) {
+                    if ( session.itemExists(path) ) {
+                        session.getItem(path).remove();
+                    }
                 }
+                // persist modifications now
+                session.save();
             }
 
-            // persist modifications now
-            session.save();
             log.debug("Done uninstalling initial content from bundle {}",
                 bundle.getSymbolicName());
         } catch (RepositoryException re) {
@@ -636,98 +646,6 @@ public class Loader {
                 log.warn(
                     "Failure to rollback uninstaling initial content for bundle {}",
                     bundle.getSymbolicName(), re);
-            }
-        }
-    }
-
-    /**
-     * Handle content uninstallation for a single path.
-     *
-     * @param bundle The bundle containing the content.
-     * @param path The path
-     * @param parent The parent node.
-     * @throws RepositoryException
-     */
-    private void uninstallFromPath(final Bundle bundle,
-                                   final String path,
-                                   final PathEntry configuration,
-                                   final Node parent) throws RepositoryException {
-        @SuppressWarnings("unchecked")
-        Enumeration<String> entries = bundle.getEntryPaths(path);
-        if (entries == null) {
-            return;
-        }
-
-        this.contentCreator.init(configuration, defaultImportProviders);
-
-        final Set<URL> ignoreEntry = new HashSet<URL>();
-
-        // potential root node import/extension
-        Descriptor rootNodeDescriptor = getRootNodeDescriptor(bundle, path);
-        if (rootNodeDescriptor != null) {
-            ignoreEntry.add(rootNodeDescriptor.rootNodeDescriptor);
-        }
-
-        while (entries.hasMoreElements()) {
-            final String entry = entries.nextElement();
-            log.debug("Processing initial content entry {}", entry);
-            if (entry.endsWith("/")) {
-                // dir, check for node descriptor , else create dir
-                String base = entry.substring(0, entry.length() - 1);
-                String name = getName(base);
-
-                URL nodeDescriptor = null;
-                for (String ext : this.contentCreator.getImportProviders().keySet()) {
-                    nodeDescriptor = bundle.getEntry(base + ext);
-                    if (nodeDescriptor != null) {
-                        break;
-                    }
-                }
-
-                final Node node;
-                boolean delete = false;
-                if (nodeDescriptor != null
-                    && !ignoreEntry.contains(nodeDescriptor)) {
-                    node = (parent.hasNode(toPlainName(name))
-                            ? parent.getNode(toPlainName(name))
-                            : null);
-                    delete = true;
-                } else {
-                    node = (parent.hasNode(name) ? parent.getNode(name) : null);
-                }
-
-                if (node != null) {
-                    // walk down the line
-                    uninstallFromPath(bundle, entry, configuration, node);
-                }
-
-                if (delete) {
-                    deleteNode(parent, toPlainName(name));
-                    ignoreEntry.add(nodeDescriptor);
-                }
-
-            } else {
-                // file => create file
-                URL file = bundle.getEntry(entry);
-                if (ignoreEntry.contains(file)) {
-                    // this is a consumed node descriptor
-                    continue;
-                }
-
-                // uninstall if it is a descriptor
-                boolean foundProvider = this.contentCreator.getImportProvider(entry) != null;
-                if (foundProvider) {
-                    deleteNode(parent, toPlainName(getName(entry)));
-                    ignoreEntry.add(file);
-                    continue;
-                }
-
-                // otherwise just delete the file
-                try {
-                    deleteFile(parent, file);
-                } catch (IOException ioe) {
-                    log.warn("Cannot delete file node for {}", file, ioe);
-                }
             }
         }
     }

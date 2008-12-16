@@ -28,7 +28,7 @@ import javax.jcr.RepositoryException;
  *
  * @since 2.0.4
  */
-interface ContentCreator {
+public interface ContentCreator {
 
     /**
      * Create a new node.

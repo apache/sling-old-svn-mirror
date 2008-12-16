@@ -21,6 +21,7 @@ package org.apache.sling.jcr.contentloader.internal;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -28,6 +29,7 @@ import java.util.StringTokenizer;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
 import org.apache.sling.commons.mime.MimeTypeService;
@@ -56,6 +58,11 @@ import org.slf4j.LoggerFactory;
 public class ContentLoaderService implements SynchronousBundleListener {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
+    private static final String PROPERTY_CONTENT_LOADED_AT = "content-load-time";
+    private static final String PROPERTY_CONTENT_LOADED_BY = "content-loaded-by";
+    private static final String PROPERTY_CONTENT_UNLOADED_AT = "content-unload-time";
+    private static final String PROPERTY_CONTENT_UNLOADED_BY = "content-unloaded-by";
+    public static final String PROPERTY_UNINSTALL_PATHS = "uninstall-paths";
 
     public static final String BUNDLE_CONTENT_NODE = "/var/sling/bundle-content";
 
@@ -140,7 +147,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 // we will use this info when the new start event is triggered
                 this.updatedBundles.add(event.getBundle().getSymbolicName());
                 break;
-            case BundleEvent.STOPPED:
+            case BundleEvent.UNINSTALLED:
                 try {
                     Session session = getAdminSession();
                     initialContentLoader.unregisterBundle(session, event.getBundle());
@@ -269,11 +276,14 @@ public class ContentLoaderService implements SynchronousBundleListener {
      * @return The map of bundle content info or null.
      * @throws RepositoryException
      */
-    public Map<String, Object> getBundleContentInfo(final Session session, final Bundle bundle)
+    public Map<String, Object> getBundleContentInfo(final Session session, final Bundle bundle, boolean create)
     throws RepositoryException {
         final String nodeName = bundle.getSymbolicName();
         final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
         if ( !parentNode.hasNode(nodeName) ) {
+            if ( !create ) {
+                return null;
+            }
             try {
                 final Node bcNode = parentNode.addNode(nodeName, "nt:unstructured");
                 bcNode.addMixin("mix:lockable");
@@ -300,22 +310,34 @@ public class ContentLoaderService implements SynchronousBundleListener {
         } else {
             info.put(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
         }
+        if ( bcNode.hasProperty(ContentLoaderService.PROPERTY_UNINSTALL_PATHS) ) {
+            final Value[] values = bcNode.getProperty(PROPERTY_UNINSTALL_PATHS).getValues();
+            final String[] s = new String[values.length];
+            for(int i=0; i<values.length; i++) {
+                s[i] = values[i].getString();
+            }
+            info.put(ContentLoaderService.PROPERTY_UNINSTALL_PATHS, s);
+        }
         return info;
     }
 
     public void unlockBundleContentInfo(final Session session,
                                         final Bundle  bundle,
-                                        final boolean contentLoaded)
+                                        final boolean contentLoaded,
+                                        final List<String> createdNodes)
     throws RepositoryException {
         final String nodeName = bundle.getSymbolicName();
         final Node parentNode = (Node)session.getItem(BUNDLE_CONTENT_NODE);
         final Node bcNode = parentNode.getNode(nodeName);
         if ( contentLoaded ) {
             bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, contentLoaded);
-            bcNode.setProperty("content-load-time", Calendar.getInstance());
-            bcNode.setProperty("content-loaded-by", this.slingId);
-            bcNode.setProperty("content-unload-time", (String)null);
-            bcNode.setProperty("content-unloaded-by", (String)null);
+            bcNode.setProperty(PROPERTY_CONTENT_LOADED_AT, Calendar.getInstance());
+            bcNode.setProperty(PROPERTY_CONTENT_LOADED_BY, this.slingId);
+            bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, (String)null);
+            bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_BY, (String)null);
+            if ( createdNodes != null && createdNodes.size() > 0 ) {
+                bcNode.setProperty(PROPERTY_UNINSTALL_PATHS, createdNodes.toArray(new String[createdNodes.size()]));
+            }
             bcNode.save();
         }
         bcNode.unlock();
@@ -329,8 +351,8 @@ public class ContentLoaderService implements SynchronousBundleListener {
             if ( parentNode.hasNode(nodeName) ) {
                 final Node bcNode = parentNode.getNode(nodeName);
                 bcNode.setProperty(ContentLoaderService.PROPERTY_CONTENT_LOADED, false);
-                bcNode.setProperty("content-unload-time", Calendar.getInstance());
-                bcNode.setProperty("content-unloaded-by", this.slingId);
+                bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_AT, Calendar.getInstance());
+                bcNode.setProperty(PROPERTY_CONTENT_UNLOADED_BY, this.slingId);
                 bcNode.save();
             }
         } catch (RepositoryException re) {
