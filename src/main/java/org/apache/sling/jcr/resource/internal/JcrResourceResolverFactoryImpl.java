@@ -301,6 +301,11 @@ public class JcrResourceResolverFactoryImpl implements
         return mangleNamespacePrefixes;
         
     }
+    
+    MapEntries getMapEntries() {
+        return mapEntries;
+    }
+    
     /**
      * Getter for rootProviderEntry, making it easier to extend
      * JcrResourceResolverFactoryImpl. See <a
@@ -398,6 +403,7 @@ public class JcrResourceResolverFactoryImpl implements
         if (useNewResourceResolver) {
             try {
                 mapEntries = new MapEntries(this, getRepository());
+                plugin = new JcrResourceResolverPlugin(componentContext.getBundleContext(), this);
             } catch (Exception e) {
                 log.error(
                     "activate: Cannot access repository, failed setting up Mapping Support",
@@ -406,8 +412,15 @@ public class JcrResourceResolverFactoryImpl implements
         }
     }
 
+    private JcrResourceResolverPlugin plugin;
+    
     /** Deativates this component, called by SCR to take out of service */
     protected void deactivate(ComponentContext componentContext) {
+        if (plugin != null) {
+            plugin.dispose();
+            plugin = null;
+        }
+        
         if (useNewResourceResolver) {
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
