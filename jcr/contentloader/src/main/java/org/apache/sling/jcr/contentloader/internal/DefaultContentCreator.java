@@ -41,7 +41,7 @@ import javax.jcr.ValueFactory;
  * The <code>ContentLoader</code> creates the nodes and properties.
  * @since 2.0.4
  */
-public class ContentLoader implements ContentCreator {
+public class DefaultContentCreator implements ContentCreator {
 
     private PathEntry configuration;
 
@@ -65,21 +65,32 @@ public class ContentLoader implements ContentCreator {
     // default content type for createFile()
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
 
+    /** Helper class to get the mime type of a file. */
     private final ContentLoaderService jcrContentHelper;
 
+    /** List of active import providers mapped by extension. */
     private Map<String, ImportProvider> importProviders;
 
-    public ContentLoader(ContentLoaderService jcrContentHelper) {
+    /** Optional list of created nodes (for uninstall) */
+    private List<String> createdNodes;
+
+    /**
+     * Constructor.
+     * @param jcrContentHelper Helper class to get the mime type of a file
+     */
+    public DefaultContentCreator(ContentLoaderService jcrContentHelper) {
         this.jcrContentHelper = jcrContentHelper;
     }
 
     /**
      * Initialize this component.
-     * @param pathEntry
+     * @param pathEntry The configuration for this import.
+     * @param defaultImportProviders List of all import providers.
+     * @param createdNodes Optional list to store new nodes (for uninstall)
      */
     public void init(final PathEntry pathEntry,
-                     final Map<String, ImportProvider> defaultImportProviders) {
-
+                     final Map<String, ImportProvider> defaultImportProviders,
+                     final List<String> createdNodes) {
         this.configuration = pathEntry;
         // create list of allowed import providers
         this.importProviders = new HashMap<String, ImportProvider>();
@@ -90,6 +101,7 @@ public class ContentLoader implements ContentCreator {
                 importProviders.put(current.getKey(), current.getValue());
             }
         }
+        this.createdNodes = createdNodes;
     }
 
     /**
@@ -121,6 +133,10 @@ public class ContentLoader implements ContentCreator {
         this.versionables.clear();
     }
 
+    /**
+     * Set the ignore overwrite flag.
+     * @param flag
+     */
     public void setIgnoreOverwriteFlag(boolean flag) {
         this.ignoreOverwriteFlag = flag;
     }
@@ -132,10 +148,19 @@ public class ContentLoader implements ContentCreator {
         return this.rootNode;
     }
 
+    /**
+     * Get all active import providers.
+     * @return A map of providers
+     */
     public Map<String, ImportProvider> getImportProviders() {
         return this.importProviders;
     }
 
+    /**
+     * Return the import provider for the name
+     * @param name The file name.
+     * @return The provider or <code>null</code>
+     */
     public ImportProvider getImportProvider(String name) {
         ImportProvider provider = null;
         final Iterator<String> ipIter = importProviders.keySet().iterator();
@@ -148,6 +173,11 @@ public class ContentLoader implements ContentCreator {
         return provider;
     }
 
+    /**
+     * Get the extension of the file name.
+     * @param name The file name.
+     * @return The extension a provider is registered for - or <code>null</code>
+     */
     public String getImportProviderExtension(String name) {
         String providerExt = null;
         final Iterator<String> ipIter = importProviders.keySet().iterator();
@@ -188,16 +218,21 @@ public class ContentLoader implements ContentCreator {
 
                 // use existing node
                 node = parentNode.getNode(name);
-
             } else if (primaryNodeType == null) {
 
                 // no explicit node type, use repository default
                 node = parentNode.addNode(name);
+                if ( this.createdNodes != null ) {
+                    this.createdNodes.add(node.getPath());
+                }
 
             } else {
 
                 // explicit primary node type
                 node = parentNode.addNode(name, primaryNodeType);
+                if ( this.createdNodes != null ) {
+                    this.createdNodes.add(node.getPath());
+                }
             }
 
             // ammend mixin node types
@@ -557,7 +592,10 @@ public class ContentLoader implements ContentCreator {
                 if ( newNodeType == null ) {
                     return false;
                 }
-                node.addNode(token, newNodeType);
+                final Node n = node.addNode(token, newNodeType);
+                if ( this.createdNodes != null ) {
+                    this.createdNodes.add(n.getPath());
+                }
             }
             node = node.getNode(token);
         }

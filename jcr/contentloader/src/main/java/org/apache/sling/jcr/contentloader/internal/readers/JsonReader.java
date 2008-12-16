@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.contentloader.internal;
+package org.apache.sling.jcr.contentloader.internal.readers;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,12 +31,15 @@ import javax.jcr.RepositoryException;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.jcr.contentloader.internal.ContentCreator;
+import org.apache.sling.jcr.contentloader.internal.ContentReader;
+import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
 
 /**
  * The <code>JsonReader</code> TODO
  */
-class JsonReader implements ContentReader {
+public class JsonReader implements ContentReader {
 
     private static final String REFERENCE = "jcr:reference:";
     private static final String PATH = "jcr:path:";
@@ -53,7 +56,7 @@ class JsonReader implements ContentReader {
         ignoredNames.add("jcr:created");
     }
 
-    static final ImportProvider PROVIDER = new ImportProvider() {
+    public static final ImportProvider PROVIDER = new ImportProvider() {
         private JsonReader jsonReader;
 
         public ContentReader getReader() {
