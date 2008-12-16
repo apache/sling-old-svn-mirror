@@ -48,4 +48,8 @@ public final class RedirectResource extends SyntheticResource {
         return super.adaptTo(type);
     }
 
+    @Override
+    public String toString() {
+        return super.toString() + ", target=" + target;
+    }
 }
