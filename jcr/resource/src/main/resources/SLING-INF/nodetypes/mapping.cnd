@@ -60,5 +60,11 @@
 //   * sling:Resource     -> allow setting the resource type
 //   * nt:hierarchyNode   -> allow placing below nt:folder
 [sling:Mapping] > sling:MappingSpec, sling:Resource, nt:hierarchyNode
+
+    // child node order is significant in the resolution process
+    // so allow for custom child node ordering
+    orderable
+    
+    // allow any child node, but prefer sling:Mapping nodes
   + * (nt:base) = sling:Mapping version
   
