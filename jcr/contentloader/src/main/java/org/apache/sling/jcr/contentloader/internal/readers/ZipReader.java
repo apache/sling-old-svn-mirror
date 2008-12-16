@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.contentloader.internal;
+package org.apache.sling.jcr.contentloader.internal.readers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +26,9 @@ import java.util.zip.ZipInputStream;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
+import org.apache.sling.jcr.contentloader.internal.ContentCreator;
+import org.apache.sling.jcr.contentloader.internal.ContentReader;
+import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
 
 /**
@@ -33,11 +36,11 @@ import org.apache.commons.io.input.CloseShieldInputStream;
  *
  * @since 2.0.4
  */
-class ZipReader implements ContentReader {
+public class ZipReader implements ContentReader {
 
     private static final String NT_FOLDER = "nt:folder";
 
-    static final ImportProvider ZIP_PROVIDER = new ImportProvider() {
+    public static final ImportProvider ZIP_PROVIDER = new ImportProvider() {
         private ZipReader zipReader;
 
         public ContentReader getReader() {
@@ -48,7 +51,7 @@ class ZipReader implements ContentReader {
         }
     };
 
-    static final ImportProvider JAR_PROVIDER = new ImportProvider() {
+    public static final ImportProvider JAR_PROVIDER = new ImportProvider() {
         private ZipReader zipReader;
 
         public ContentReader getReader() {

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.contentloader.internal;
+package org.apache.sling.jcr.contentloader.internal.readers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +26,9 @@ import java.util.List;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.jcr.contentloader.internal.ContentCreator;
+import org.apache.sling.jcr.contentloader.internal.ContentReader;
+import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -86,7 +89,7 @@ public class XmlReader implements ContentReader {
 
     private static final String ELEM_TYPE = "type";
 
-    static final ImportProvider PROVIDER = new ImportProvider() {
+    public static final ImportProvider PROVIDER = new ImportProvider() {
         private XmlReader xmlReader;
 
         public ContentReader getReader() throws IOException {
