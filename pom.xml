@@ -105,6 +105,7 @@
         <module>scripting/jsp</module>
         <module>scripting/jsp-taglib</module>
         <module>scripting/java</module>
+        <module>scripting/python</module>
         
         <!-- Extensions -->
         <module>extensions/adapter</module>

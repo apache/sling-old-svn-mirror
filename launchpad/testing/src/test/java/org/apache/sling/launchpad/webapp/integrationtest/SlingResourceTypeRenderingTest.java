@@ -251,6 +251,69 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
+    
+    public void testPythonHtml() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.py","html.py");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertContains(content, "Python");
+            assertContains(content, "<p>" + testText + "</p>");
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testPythonJavaCode() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.py","html.py");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertContains(content, "Python");
+            assertContains(content, "TestLinkedListTest");
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testPythonHtmlInAppsFolder() throws IOException {
+        // make sure there's no leftover rendering script
+        {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertFalse("Content must not contain script marker before testing", content.contains("Python"));
+        }
+
+        // put our script under /apps/<resource type>
+        final String path = "/apps/" + slingResourceType;
+        testClient.mkdirs(WEBDAV_BASE_URL, path);
+        final String toDelete = uploadTestScript(path,"rendering-test.py","html.py");
+        try {
+            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
+            assertContains(content, "Python");
+            assertContains(content, "<p>" + testText + "</p>");
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testPythonXml() throws IOException {
+        final String toDelete = uploadTestScript("rendering-test.py","xml.py");
+        try {
+            final String content = getContent(displayUrl + ".xml", CONTENT_TYPE_XML);
+            assertContains(content, "Python");
+            assertContains(content, "<p>" + testText + "</p>");
+        } finally {
+            testClient.delete(toDelete);
+        }
+    }
+
+    public void testPythonPlain() throws IOException {
+    	final String toDelete = uploadTestScript("rendering-test.py","txt.py");
+    	try {
+    		final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
+    		assertContains(content, "Python");
+    	} finally {
+    		testClient.delete(toDelete);
+    	}
+    }  
 
     public void TODO_FAILS_testVltHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.vlt","html.vlt");
