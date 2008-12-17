@@ -20,29 +20,21 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.StringTokenizer;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.SlingException;
@@ -56,7 +48,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
-import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.ResourcePathIterator;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResourceIterator;
@@ -150,14 +141,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         // cut off scheme and host, if the same as requested
         String schemehostport;
         if (request != null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(request.getScheme()).append("://");
-            sb.append(request.getServerName());
-            if (request.getServerPort() > 0) {
-                sb.append(':').append(request.getServerPort());
-            }
-            sb.append("/");
-            schemehostport = sb.toString();
+            schemehostport = MapEntry.getURI(request.getScheme(),
+                request.getServerName(), request.getServerPort(), "/");
 
             log.debug("map: Mapping path {} for {}", resourcePath,
                 schemehostport);
@@ -496,7 +481,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             if (realPath.startsWith("/")) {
 
                 // let's check it with a direct access first
-                log.debug("resolve: Try absolute mapped path");
+                log.debug("resolve: Try absolute mapped path {}", realPath);
                 res = resolveInternal(realPath);
 
             } else {
@@ -540,13 +525,13 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
      *            is 80 unless the scheme is "https" in which case the default
      *            value is 443.
      * @param path The (absolute) path
-     * @return The request path string {scheme}/{host}.{port}/{path}.
+     * @return The request path string {scheme}/{host}.{port}{path}.
      */
-    private String getMapPath(String scheme, String host, int port, String path) {
+    public static String getMapPath(String scheme, String host, int port, String path) {
         if (port < 0) {
             port = ("https".equals(scheme)) ? 443 : 80;
         }
-
+        
         return scheme + "/" + host + "." + port + path;
     }
 
@@ -597,6 +582,10 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
             String rpi = absPath.substring(curPath.length());
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
+            
+            log.debug(
+                "resolveInternal: Found resource {} with path info {} for {}",
+                new Object[] { resource, rpi, absPath });
 
         } else {
 
@@ -651,6 +640,9 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             String alias = getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
                 // TODO: might be a redirect ??
+                log.warn(
+                    "getChildInternal: Internal redirect to {} for Resource {} is not supported yet, ignoring",
+                    alias, child);
             }
 
             // we have the resource name, continue with the next level
@@ -664,11 +656,16 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             child = children.next();
             String alias = getProperty(child, PROP_ALIAS);
             if (childName.equals(alias)) {
+                log.debug(
+                    "getChildInternal: Found Resource {} with alias {} to use",
+                    child, childName);
                 return child;
             }
         }
 
         // no match for the childName found
+        log.debug("getChildInternal: Resource {} has no child {}", parent,
+            childName);
         return null;
     }
 
@@ -694,6 +691,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         if (props != null) {
             String prop = props.get(propName, String.class);
             if (prop != null) {
+                log.debug("getProperty: Resource {} has property {}={}",
+                    new Object[] { res, propName, prop });
                 return prop;
             }
         }
