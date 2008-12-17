@@ -88,7 +88,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (nodes.hasNext()) {
             try {
-                return new JcrNodeResource(resourceResolver, nodes.nextNode(), resourceTypeProviders);
+                Resource resource = new JcrNodeResource(resourceResolver,
+                    nodes.nextNode(), resourceTypeProviders);
+                log.debug("seek: Returning Resource {}", resource);
+                return resource;
             } catch (Throwable t) {
                 log.error(
                     "seek: Problem creating Resource for next node, skipping",
