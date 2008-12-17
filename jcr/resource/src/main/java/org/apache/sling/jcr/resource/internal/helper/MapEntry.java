@@ -22,7 +22,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +60,31 @@ public class MapEntry implements Comparable<MapEntry> {
         return path;
     }
     
+    /**
+     * Returns a string used for matching map entries against the given request
+     * or URI parts.
+     * 
+     * @param scheme The URI scheme
+     * @param host The host name
+     * @param port The port number. If this is negative, the default value used
+     *            is 80 unless the scheme is "https" in which case the default
+     *            value is 443.
+     * @param path The (absolute) path
+     * @return The request path string {scheme}://{host}:{port}{path}.
+     */
+    public static String getURI(String scheme, String host, int port, String path) {
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(scheme).append("://").append(host);
+        if (port > 0 && !(port == 80 && "http".equals(scheme))
+            && !(port == 443 && "https".equals(scheme))) {
+            sb.append(':').append(port);
+        }
+        sb.append(path);
+        
+        return sb.toString();
+    }
+
     public static URI toURI(String uriPath) {
         for (int i = 0; i < PATH_TO_URL_MATCH.length; i++) {
             Matcher m = PATH_TO_URL_MATCH[i].matcher(uriPath);
@@ -115,7 +139,9 @@ public class MapEntry implements Comparable<MapEntry> {
                 int status = -1;
                 URI extPathPrefix = toURI(url);
                 if (extPathPrefix != null) {
-                    url = extPathPrefix.toString();
+                    url = getURI(extPathPrefix.getScheme(),
+                        extPathPrefix.getHost(), extPathPrefix.getPort(),
+                        extPathPrefix.getPath());
                     status = 302;
                 }
 
