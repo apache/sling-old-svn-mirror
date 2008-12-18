@@ -59,7 +59,7 @@ public class MapEntry implements Comparable<MapEntry> {
         }
         return path;
     }
-    
+
     /**
      * Returns a string used for matching map entries against the given request
      * or URI parts.
@@ -72,8 +72,9 @@ public class MapEntry implements Comparable<MapEntry> {
      * @param path The (absolute) path
      * @return The request path string {scheme}://{host}:{port}{path}.
      */
-    public static String getURI(String scheme, String host, int port, String path) {
-        
+    public static String getURI(String scheme, String host, int port,
+            String path) {
+
         StringBuilder sb = new StringBuilder();
         sb.append(scheme).append("://").append(host);
         if (port > 0 && !(port == 80 && "http".equals(scheme))
@@ -81,7 +82,7 @@ public class MapEntry implements Comparable<MapEntry> {
             sb.append(':').append(port);
         }
         sb.append(path);
-        
+
         return sb.toString();
     }
 
@@ -101,7 +102,8 @@ public class MapEntry implements Comparable<MapEntry> {
         return null;
     }
 
-    public static MapEntry createResolveEntry(String url, Resource resource, boolean trailingSlash) {
+    public static MapEntry createResolveEntry(String url, Resource resource,
+            boolean trailingSlash) {
         ValueMap props = resource.adaptTo(ValueMap.class);
         if (props != null) {
             String redirect = props.get(
@@ -122,7 +124,8 @@ public class MapEntry implements Comparable<MapEntry> {
         return null;
     }
 
-    public static List<MapEntry> createMapEntry(String url, Resource resource, boolean trailingSlash) {
+    public static List<MapEntry> createMapEntry(String url, Resource resource,
+            boolean trailingSlash) {
         ValueMap props = resource.adaptTo(ValueMap.class);
         if (props != null) {
             String redirect = props.get(
@@ -149,7 +152,8 @@ public class MapEntry implements Comparable<MapEntry> {
                     internalRedirect.length);
                 for (String redir : internalRedirect) {
                     if (!redir.contains("$")) {
-                        prepEntries.add(new MapEntry(redir, url, status, trailingSlash));
+                        prepEntries.add(new MapEntry(redir, url, status,
+                            trailingSlash));
                     }
                 }
 
@@ -162,12 +166,14 @@ public class MapEntry implements Comparable<MapEntry> {
         return null;
     }
 
-    public MapEntry(String url, String redirect, int status, boolean trailingSlash) {
+    public MapEntry(String url, String redirect, int status,
+            boolean trailingSlash) {
         this(url, new String[] { redirect }, status, trailingSlash);
     }
 
-    public MapEntry(String url, String[] redirect, int status, boolean trailingSlash) {
-        
+    public MapEntry(String url, String[] redirect, int status,
+            boolean trailingSlash) {
+
         // ensure trailing slashes on redirects if the url
         // ends with a trailing slash
         if (trailingSlash) {
@@ -176,7 +182,7 @@ public class MapEntry implements Comparable<MapEntry> {
                 redirect[i] = appendSlash(redirect[i]);
             }
         }
-        
+
         this.urlPattern = Pattern.compile(url);
         this.redirect = redirect;
         this.status = status;
@@ -204,7 +210,7 @@ public class MapEntry implements Comparable<MapEntry> {
     public String getPattern() {
         return urlPattern.toString();
     }
-    
+
     public String[] getRedirect() {
         return redirect;
     }
@@ -238,7 +244,7 @@ public class MapEntry implements Comparable<MapEntry> {
     }
 
     // ---------- Object overwrite
-    
+
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
