@@ -30,6 +30,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Repository;
 import javax.jcr.lock.Lock;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
@@ -565,81 +566,85 @@ public class SessionPool {
             return;
         }
 
-        // if the session has locks, we logout the session and drop it,
-        // as there is no easy way of finding the temporary locks and
-        // unlocking them, we could use the search, however ???
-        try {
-            QueryManager qm = session.getWorkspace().getQueryManager();
-            // FIXME - this search searches for all locks for the user of the session
-            //         so if the user has more than one session, locks from other
-            //         sessions will be delivered as well.
-            Query q = qm.createQuery(
-                "/jcr:root//element(*,mix:lockable)[@jcr:lockOwner='"
-                    + session.getUserID() + "']", Query.XPATH);
-            NodeIterator ni = q.execute().getNodes();
-            while (ni.hasNext()) {
-                Node node = ni.nextNode();
-                String path = node.getPath();
-                try {
-                    final Lock lock = node.getLock();
-                    if (lock.getLockToken() == null) {
+        if (isSupported(session.getRepository(), Repository.OPTION_LOCKING_SUPPORTED)) {
+            // if the session has locks, we logout the session and drop it,
+            // as there is no easy way of finding the temporary locks and
+            // unlocking them, we could use the search, however ???
+            try {
+                QueryManager qm = session.getWorkspace().getQueryManager();
+                // FIXME - this search searches for all locks for the user of the session
+                //         so if the user has more than one session, locks from other
+                //         sessions will be delivered as well.
+                Query q = qm.createQuery(
+                    "/jcr:root//element(*,mix:lockable)[@jcr:lockOwner='"
+                        + session.getUserID() + "']", Query.XPATH);
+                NodeIterator ni = q.execute().getNodes();
+                while (ni.hasNext()) {
+                    Node node = ni.nextNode();
+                    String path = node.getPath();
+                    try {
+                        final Lock lock = node.getLock();
+                        if (lock.getLockToken() == null) {
+                            log.debug("Ignoring lock on {} held by {}, not held by this session",
+                                path, userId);
+                        } else if (lock.isSessionScoped()) {
+                            log.info("Unlocking session-scoped lock on {} held by {}",
+                                path, userId);
+                            node.unlock();
+                        } else {
+                            log.warn("Dropping lock token of permanent lock on {} held by {}",
+                                path, userId);
+                            session.removeLockToken(lock.getLockToken());
+                        }
+                    } catch (RepositoryException re) {
                         log.debug("Ignoring lock on {} held by {}, not held by this session",
-                            path, userId);
-                    } else if (lock.isSessionScoped()) {
-                        log.info("Unlocking session-scoped lock on {} held by {}",
-                            path, userId);
-                        node.unlock();
-                    } else {
-                        log.warn("Dropping lock token of permanent lock on {} held by {}",
-                            path, userId);
-                        session.removeLockToken(lock.getLockToken());
+                                path, userId);
                     }
-                } catch (RepositoryException re) {
-                    log.debug("Ignoring lock on {} held by {}, not held by this session",
-                            path, userId);
                 }
-            }
 
-            String[] lockTokens = session.getLockTokens();
-            if (lockTokens != null && lockTokens.length > 0) {
-                log.warn("Session still has lock tokens !");
-                for (int i=0; i < lockTokens.length; i++) {
-                    log.warn("Dropping lock token {} held by {}",
-                        lockTokens[i], userId);
-                    session.removeLockToken(lockTokens[i]);
+                String[] lockTokens = session.getLockTokens();
+                if (lockTokens != null && lockTokens.length > 0) {
+                    log.warn("Session still has lock tokens !");
+                    for (int i=0; i < lockTokens.length; i++) {
+                        log.warn("Dropping lock token {} held by {}",
+                            lockTokens[i], userId);
+                        session.removeLockToken(lockTokens[i]);
+                    }
                 }
+            } catch (RepositoryException re) {
+                if ( log.isDebugEnabled() ) {
+                    log.debug("Cannot cleanup lockes of session " + userId + ", logging out", re);
+                } else {
+                    log.info("Cannot cleanup lockes of session {}, logging out", userId);
+                }
+                this.poolDropCounter++;
+                session.logout();
+                return;
             }
-        } catch (RepositoryException re) {
-            if ( log.isDebugEnabled() ) {
-                log.debug("Cannot cleanup lockes of session " + userId + ", logging out", re);
-            } else {
-                log.info("Cannot cleanup lockes of session {}, logging out", userId);
-            }
-            this.poolDropCounter++;
-            session.logout();
-            return;
         }
 
 
-        // make sure the session has no more registered event listeners which
-        // may be notified on changes, and - worse - prevent the objects from
-        // being collected
-        try {
-            ObservationManager om = session.getWorkspace().getObservationManager();
-            EventListenerIterator eli = om.getRegisteredEventListeners();
-            if (eli.hasNext()) {
-                log.debug("Unregistering remaining EventListeners of {}", userId);
-                while (eli.hasNext()) {
-                    EventListener el = (EventListener) eli.next();
-                    om.removeEventListener(el);
+        if (isSupported(session.getRepository(), Repository.OPTION_OBSERVATION_SUPPORTED)) {
+            // make sure the session has no more registered event listeners which
+            // may be notified on changes, and - worse - prevent the objects from
+            // being collected
+            try {
+                ObservationManager om = session.getWorkspace().getObservationManager();
+                EventListenerIterator eli = om.getRegisteredEventListeners();
+                if (eli.hasNext()) {
+                    log.debug("Unregistering remaining EventListeners of {}", userId);
+                    while (eli.hasNext()) {
+                        EventListener el = (EventListener) eli.next();
+                        om.removeEventListener(el);
+                    }
                 }
+            } catch (RepositoryException re) {
+                log.info("Cannot check or unregister event listeners of session " +
+                    "{}, logging out", userId);
+                this.poolDropCounter++;
+                session.logout();
+                return;
             }
-        } catch (RepositoryException re) {
-            log.info("Cannot check or unregister event listeners of session " +
-                "{}, logging out", userId);
-            this.poolDropCounter++;
-            session.logout();
-            return;
         }
 
         // Otherwise clean up the session if there are any pending changes.
@@ -669,6 +674,19 @@ public class SessionPool {
     }
 
     //---------- internal -----------------------------------------------------
+
+    /**
+     * Returns <code>true</code> if the given <code>repository</code> supports
+     * the feature as indicated by the repository <code>descriptor</code>.
+     *
+     * @param repository the repository.
+     * @param descriptor the name of a repository descriptor.
+     * @return <code>true</code> if the repository supports the feature,
+     *          <code>false</code> otherwise.
+     */
+    protected final boolean isSupported(Repository repository, String descriptor) {
+        return "true".equals(repository.getDescriptor(descriptor));
+    }
 
     /**
      * Wraps the repository session as a pooled session and increments the
