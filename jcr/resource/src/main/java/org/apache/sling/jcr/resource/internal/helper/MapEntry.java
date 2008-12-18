@@ -183,6 +183,11 @@ public class MapEntry implements Comparable<MapEntry> {
             }
         }
 
+        // ensure pattern is hooked to the start of the string
+        if (!url.startsWith("^")) {
+            url = "^".concat(url);
+        }
+        
         this.urlPattern = Pattern.compile(url);
         this.redirect = redirect;
         this.status = status;
