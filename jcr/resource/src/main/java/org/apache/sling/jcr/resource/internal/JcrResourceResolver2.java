@@ -680,7 +680,8 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             return resource;
         }
 
-        log.debug("Cannot resolve path '{}' to a resource", path);
+        log.debug(
+            "getResourceInternal: Cannot resolve path '{}' to a resource", path);
         return null;
     }
 
