@@ -21,8 +21,11 @@ package org.apache.sling.jcr.ocm;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableMapImpl;
+
 
 /**
  * The <code>DefaultMappedObject</code> is used by the JCR based resource
@@ -245,7 +248,7 @@ public class DefaultMappedObject extends HashMap<String, Object> {
         // versions. Version 1.7.1 will fix this again, though ...
         if (FIELD_PROPERTIES.equals(key)) {
             Object old = getProperties();
-            setProperties((ManagedHashMap) value);
+            setProperties((ManageableMap) value);
             return old;
         }
 
@@ -290,9 +293,9 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      *                 collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl"
      */
     @SuppressWarnings("unchecked")
-    public void setProperties(ManagedHashMap contents) {
+    public void setProperties(ManageableMap contents) {
         if (contents != null) {
-            putAll(contents); // unchecked cast
+            putAll((Map<String, Object>) contents.getObjects()); // unchecked cast
         }
     }
 
@@ -307,13 +310,13 @@ public class DefaultMappedObject extends HashMap<String, Object> {
      * This method returns a new instance of a <code>ManagedHashMap</code>
      * containing a copy of the current properties on each call.
      */
-    public ManagedHashMap getProperties() {
+    public ManageableMap getProperties() {
         // a copy of this map with the special properties removed
-        ManagedHashMap properties = new ManagedHashMap(this);
+        HashMap<String, Object> properties = new HashMap<String, Object>(this);
         properties.remove(FIELD_PATH);
         properties.remove(FIELD_PRIMARY_TYPE);
         properties.remove(FIELD_MIXIN_TYPES);
-        return properties;
+        return new ManageableMapImpl(properties);
     }
 
     /**
