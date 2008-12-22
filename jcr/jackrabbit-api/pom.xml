@@ -71,6 +71,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
+            <version>1.4</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
