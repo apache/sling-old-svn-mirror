@@ -68,7 +68,7 @@
                             javax.naming.*, javax.xml.*,
                             javax.security.*,
                             org.apache.commons.collections.*,
-                            org.apache.jackrabbit.api,
+                            org.apache.jackrabbit.api.*,
                             org.osgi.*,
                             org.slf4j, org.xml.sax, org.xml.sax.helpers
                         </Import-Package>
@@ -129,18 +129,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- Export embedded repositories through RMI -->
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-rmi</artifactId>
+            <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -148,31 +137,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-text-extractors</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-            <version>3.0.1-FINAL</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-scratchpad</artifactId>
-            <version>3.0.1-FINAL</version>
-        </dependency>
-        <dependency>
-            <groupId>pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>0.7.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.textmining</groupId>
-            <artifactId>tm-extractors</artifactId>
-            <!-- 
-              NOTE: tm-extractors V0.4 is under Apache License,
-              but later versions are not (SLING-494).
-            -->
-            <version>0.4</version>
+            <version>1.5.0</version>
         </dependency>
         
         <!-- Neko HTML Dependencies for bundle inclusion -->
