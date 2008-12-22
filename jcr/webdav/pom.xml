@@ -69,6 +69,7 @@
                             org.apache.jackrabbit.server.io,
                             org.apache.jackrabbit.server.jcr,
                             org.apache.jackrabbit.webdav,
+                            org.apache.jackrabbit.webdav.bind,
                             org.apache.jackrabbit.webdav.header,
                             org.apache.jackrabbit.webdav.io,
                             org.apache.jackrabbit.webdav.jcr,
