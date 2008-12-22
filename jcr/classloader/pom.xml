@@ -96,11 +96,13 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-classloader</artifactId>
+            <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
