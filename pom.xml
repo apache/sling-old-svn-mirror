@@ -196,11 +196,13 @@
                                     <version>2.0.2-incubator</version>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.apache.sling</groupId>
+                                    <groupId>
+                                        org.apache.jackrabbit
+                                    </groupId>
                                     <artifactId>
-                                        org.apache.sling.jcr.jackrabbit.api
+                                        jackrabbit-api
                                     </artifactId>
-                                    <version>2.0.2-incubator</version>
+                                    <version>1.5.0</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
@@ -218,6 +220,7 @@
                                     <artifactId>
                                         jackrabbit-jcr-commons
                                     </artifactId>
+                                    <version>1.5.0</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
