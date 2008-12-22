@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.testing.jcr;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
@@ -38,8 +40,8 @@ import org.apache.jackrabbit.core.jndi.RegistryHelper;
 import org.apache.sling.jcr.api.SlingRepository;
 
 /**
- * Utility class for managing JCR repositories, used to
- * initialize temporary Jackrabbit repositories for testing.
+ * Utility class for managing JCR repositories, used to initialize temporary
+ * Jackrabbit repositories for testing.
  */
 public class RepositoryUtil {
 
@@ -53,7 +55,7 @@ public class RepositoryUtil {
 
     public static final String PROVIDER_URL = "localhost";
 
-    public static final String CONFIG_FILE = "src/test/test-config/jackrabbit-test-config.xml";
+    public static final String CONFIG_FILE = "jackrabbit-test-config.xml";
 
     public static final String HOME_DIR = "target/repository";
 
@@ -66,22 +68,63 @@ public class RepositoryUtil {
 
     /**
      * Start a new repository
-     *
+     * 
      * @throws RepositoryException when it is not possible to start the
      *             repository.
      * @throws NamingException
      */
     public static void startRepository() throws RepositoryException,
             NamingException {
+
+        // copy the repository configuration file to the repository HOME_DIR
+        InputStream ins = RepositoryUtil.class.getClassLoader().getResourceAsStream(
+            CONFIG_FILE);
+        if (ins == null) {
+            throw new RepositoryException("Cannot get " + CONFIG_FILE);
+        }
+
+        File configFile = new File(HOME_DIR, CONFIG_FILE);
+        configFile.getParentFile().mkdirs();
+        
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(configFile);
+            byte[] buf = new byte[1024];
+            int rd;
+            while ((rd = ins.read(buf)) >= 0) {
+                out.write(buf, 0, rd);
+            }
+        } catch (IOException ioe) {
+            throw new RepositoryException("Cannot copy configuration file to "
+                + configFile);
+        } finally {
+            try {
+                ins.close();
+            } catch (IOException ignore) {
+            }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+
+        // somewhat dirty hack to have the derby.log file in a sensible
+        // location, but don't overwrite anything already set
+        if (System.getProperty("derby.stream.error.file") == null) {
+            String derbyLog = HOME_DIR + "/derby.log";
+            System.setProperty("derby.stream.error.file", derbyLog);
+        }
+
         RegistryHelper.registerRepository(getInitialContext(), REPOSITORY_NAME,
-            CONFIG_FILE, HOME_DIR, true);
+            configFile.getPath(), HOME_DIR, true);
     }
 
     /**
      * Stop a repository.
-     *
-     * @throws NamingException when it is not possible to stop the
-     *             repository
+     * 
+     * @throws NamingException when it is not possible to stop the repository
      * @throws NamingException
      */
     public static void stopRepository() throws NamingException {
@@ -91,11 +134,11 @@ public class RepositoryUtil {
 
     /**
      * Get a repository
-     *
+     * 
      * @return a JCR repository reference
-     * @throws NamingException when it is not possible to get the
-     *             repository. Before calling this method, the repository has to
-     *             be registered (@see RepositoryUtil#registerRepository(String,
+     * @throws NamingException when it is not possible to get the repository.
+     *             Before calling this method, the repository has to be
+     *             registered (@see RepositoryUtil#registerRepository(String,
      *             String, String)
      * @throws NamingException
      */
@@ -115,7 +158,7 @@ public class RepositoryUtil {
      * <p>
      * This method is not synchronized. It is up to the calling method to
      * prevent paralell execution.
-     *
+     * 
      * @param session The <code>Session</code> providing the node type manager
      *            through which the node type is to be registered.
      * @param source The <code>InputStream</code> from which the CND file is
