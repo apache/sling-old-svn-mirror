@@ -62,9 +62,11 @@
                             org.apache.sling.jcr.base.util;version=${pom.version},
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.jcr.base.internal.*,
-                            org.apache.jackrabbit.rmi.*
+                            org.apache.sling.jcr.base.internal.*
                         </Private-Package>
+                        <Embed-Dependency>
+                            jackrabbit-jcr-rmi;inline=true
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -93,11 +95,13 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-rmi</artifactId>
-            <scope>compile</scope>
+            <version>1.5.0</version>
+            <scope>provided</scope>
         </dependency>
         <!-- OSGi Libraries -->
         <dependency>
