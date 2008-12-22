@@ -18,6 +18,7 @@ if(!dojo._hasResource["dojox.data.SlingPropertyStore"]){ //_hasResource checks a
 dojo._hasResource["dojox.data.SlingPropertyStore"] = true;
 
 dojo.require("dojo.data.util.simpleFetch");
+dojo.require("dojo.data.util.filter");
 dojo.provide("dojox.data.SlingPropertyStore");
 
 dojo.declare("dojox.data.SlingPropertyStore", null, {
@@ -29,9 +30,17 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
    *   It will return one data item for every property found
 	 */
 	constructor: function(/* Object */ keywordParameters){ console.log("constructor");
-    this.uri = keywordParameters.url;
+	    this.uri = keywordParameters.url;
+	    if(keywordParameters.query) {
+	    	this.query = keywordParameters.query;
+	    }
 	},
-  
+  setUrl: function(/* String */ url) {
+		this.uri = url;
+  },
+  setQuery: function(/* Object */ query) {
+	  this.query = query;
+  },
   getValue: function(	/* item */ item,  /* attribute-name-string */ attribute,  /* value? */ defaultValue){
     //console.log("getValue " + attribute + " " + item.name);
     if (!this.isItem(item)) {
@@ -51,8 +60,17 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
     if (!dojo.isString(attribute)) {
       throw new Error(attribute + " is not a string");
     }
-    return item[attribute];
-	},
+    if (item[attribute]) {
+      if (dojo.isArray(item[attribute])) {
+        return item[attribute]
+      } else {
+        return [item[attribute]];
+      }
+    } else {
+      var array = [];
+      return array; // an array that may contain literals and items
+    }
+  },
   
   getAttributes: function(/* item */ item){ //console.log("getAttributes");
     //console.log("getAttributes");
@@ -116,41 +134,8 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
   _fetchItems: function(	/* Object */ keywordArgs, 
 							/* Function */ findCallback, 
 							/* Function */ errorCallback) {
-    var request = keywordArgs;
-    
-    var xhr;
-    
-    request.abort = function() {
-      errorCallback.("XHR aborted", keywordArgs)
-    };
-    
-    var depth = 1;
-    
-    var url = this.uri + "."+depth+".json";
-    var that = this;
-    
-    var query = keywordArgs.query;
-  
-    xhr = dojo.xhrGet({
-        url: url,
-        handleAs: "json-comment-optional",
-        load: function(response, ioargs) {
-          var items = [];
-          for (var property in response) {
-            if (!dojo.isObject(response[property])) {
-              //console.debug(property);
-              items.push({ uri: that.uri, name: property, value: response[property]});
-            }
-          }
-          findCallback(items, keywordArgs);
-        }
-    });
-    
-  },
-  
-  _nofetch: function(/* object */ keywordArgs) { console.log("fetch");
-    var request = keywordArgs;
-    
+	  var request = keywordArgs;
+	    
     var xhr;
     
     request.abort = function() {
@@ -159,48 +144,122 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
       }
     };
     
-    var depth = 1;
+    var query = keywordArgs.query;
     
-    /*
-    if (keywordArgs.count) {
-      depth = keywordArgs.count;
-    }
-    */
+    var depth = 0;
     
     var url = this.uri + "."+depth+".json";
     var that = this;
     
-    var query = keywordArgs.query;
+    // mixin store query with caller-provided query
+    // won't work well if two queries share an attribute
+    if(this.query) {
+    	if(!query) {
+    		query = {};
+    	}
+    	dojo.mixin(query,this.query);
+    }
     
     xhr = dojo.xhrGet({
         url: url,
         handleAs: "json-comment-optional",
-        load: function(response, ioargs) { console.log("load");
-          //console.dir(response);
+        load: function(response, ioargs) {
           var items = [];
-          
           for (var property in response) {
-            if (!dojo.isObject(response[property])) {
+            if (dojo.isArray(response[property]) || !dojo.isObject(response[property])) {
               //console.debug(property);
-              items.push({ uri: that.uri, name: property, value: response[property]});
+            	var checkitem = { uri: that.uri, name: property, value: response[property]};
+            	if(that.accept(checkitem,query)) {
+            		items.push(checkitem);
+            	}
             }
           }
-          
-          if (request.onComplete) {
-            if (request.scope) {
-              request.onComplete.call(request.scope, item. request)
-            } else {
-              request.onComplete(items, request);
-            }
-            //request.onComplete(items, request);
-          }
+          findCallback(items, keywordArgs);
         }
     });
-    //TODO: implement
-    //alert(this.url);
-    return request;
+    
   },
- 
+  
+  accept: function(item, query) {
+	  // TODO: handle querying for arrays
+    if (!query) {
+      return true;
+    }
+       
+    var ignoreCase = true;
+
+	//See if there are any string values that can be regexp parsed first to avoid multiple regexp gens on the
+	//same value for each item examined.  Much more efficient.
+	var regexpList = {};
+	for(var key in query){
+		var value = query[key];
+		if(typeof value === "string"){
+			regexpList[key] = dojo.data.util.filter.patternToRegExp(value, ignoreCase);
+		}
+	}
+
+	for (var property in query) {
+      //console.log(property);
+      if (item[property]) {
+    	var checkItem = item;
+        if (dojo.isArray(query[property])) {
+          //console.log("multiple values possible");
+          var onematch = false;
+			
+          for (var value in query[property]) {
+            //console.log("checking value " + query[property][value]);
+        	  if (!this._containsValue(checkItem, property, checkItem[property], regexpList[property])){
+        		  onematch = false;
+  			  }
+          }
+          if (!onematch) {
+            //console.log("required property " + property + " has wrong value "+ item.node[property]);
+            return false;
+          }
+        } else {
+        	 if (!this._containsValue(checkItem, property, checkItem[property], regexpList[property])){
+        		//console.log("required property " + property + " has wrong value "+ item.node[property]);
+       		  	return false;
+ 			  }
+        }
+      } else {
+        //console.log("required property " + property + " missing");
+        return false;
+      }
+    }
+    return true;
+  },
+	  
+  _containsValue: function(	/* item */ item, 
+			/* attribute-name-string */ attribute, 
+			/* anything */ value,
+			/* RegExp?*/ regexp){
+	//	summary: 
+	//		Internal function for looking at the values contained by the item.
+	//	description: 
+	//		Internal function for looking at the values contained by the item.  This 
+	//		function allows for denoting if the comparison should be case sensitive for
+	//		strings or not (for handling filtering cases where string case should not matter)
+	//	
+	//	item:
+	//		The data item to examine for attribute values.
+	//	attribute:
+	//		The attribute to inspect.
+	//	value:	
+	//		The value to match.
+	//	regexp:
+	//		Optional regular expression generated off value if value was of string type to handle wildcarding.
+	//		If present and attribute values are string, then it can be used for comparison instead of 'value'
+	  return dojo.some(this.getValues(item, attribute), function(possibleValue){
+		if(possibleValue !== null && !dojo.isObject(possibleValue) && regexp){
+			if(possibleValue.toString().match(regexp)){
+				return true; // Boolean
+			}
+		}else if(value === possibleValue){
+			return true; // Boolean
+		}
+	  });
+	},
   
   getFeatures: function() { console.log("getFeatures");
     console.log("getFeatures");
@@ -237,7 +296,7 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
       console.log("error: not an item");
       throw new Error(item + " is not an item");
     }
-    return item.uri + "[" + item.name + "]";
+    return this.uri + "[" + item.name + "]";
   },
   
   getIdentityAttributes: function(/* item */ item) { console.log("getIdentityAttributes");
@@ -256,8 +315,37 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
 		//			onError: Function,
 		//			scope: object
 		//		}
+    var request = keywordArgs;
     
-    //TODO: implement
+  	var itemId = keywordArgs.identity;
+  	var idParts = itemId.split('['); 
+  	var itemUri = idParts[0];
+  	var itemName = idParts[1].substring(0,idParts[1].length-1);
+  	var url = itemUri + "/" + itemName + ".0.json";
+	 
+	 var that = this;
+	    
+	    xhr = dojo.xhrGet({
+	        url: url,
+	        handleAs: "json-comment-optional",
+	        load: function(response, ioargs) {
+	          
+	          if (request.onItem) {
+	        	  for (var property in response) {
+	                  if (dojo.isArray(response[property]) || !dojo.isObject(response[property])) {
+	                  	var checkitem = { uri: itemUri, name: property, value: response[property]};
+	                  	request.onItem(checkitem);
+	                  	break;
+	                  }
+	        	  }
+	          }
+	        },
+	        error: function(response, ioargs) {
+	        	if(request.onError) {
+	        		request.onError(response);
+	        	}
+	        }
+	    });
   },
   
   
@@ -322,11 +410,7 @@ dojo.declare("dojox.data.SlingPropertyStore", null, {
   
   setValues: function(item, attribute, values) { console.log("setValues");
     console.log("setValues");
-    var oldvalues = item.values;
-    item.value = values;
-    item.dirty = true;
-    
-    this.onSet(item, attribute, oldvalues, values);
+    this.setValue(item, attribute, values);
   },
   
   unsetAttribute: function(	/* item */ item, 
