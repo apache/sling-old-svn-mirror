@@ -28,6 +28,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 /** Test creating Nodes and rendering them in JSON */
 public class JsonRenderingTest extends HttpTestBase {
 
+	private final String testPath = "/" + getClass().getSimpleName();
     private String postUrl;
 
     private String testText;
@@ -45,7 +46,7 @@ public class JsonRenderingTest extends HttpTestBase {
 
         // create the test node, under a path that's specific to this class to
         // allow collisions
-        postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_"
+        postUrl = HTTP_BASE_URL + testPath + "_"
             + System.currentTimeMillis()
             + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         final Map<String, String> props = new HashMap<String, String>();
@@ -211,5 +212,17 @@ public class JsonRenderingTest extends HttpTestBase {
     	int min = 5;
     	
     	assertTrue("The .tidy selector should add at least 2 EOL chars to json output (delta=" + delta + ")", delta > min);
+    }
+    
+    public void testRootNoRecursion() throws IOException {
+    	final String json = getContent(HTTP_BASE_URL + "/.json", CONTENT_TYPE_JSON);
+    	assertJavascript("rep:root", json, "out.print(data['jcr:primaryType'])");
+    	assertJavascript("undefined", json, "out.print(typeof data['jcr:system'])");
+    }
+    
+    public void testRootWithRecursion() throws IOException {
+    	final String json = getContent(HTTP_BASE_URL + "/.1.json", CONTENT_TYPE_JSON);
+    	assertJavascript("rep:root", json, "out.print(data['jcr:primaryType'])");
+    	assertJavascript("rep:system", json, "out.print(data['jcr:system']['jcr:primaryType'])");
     }
 }
