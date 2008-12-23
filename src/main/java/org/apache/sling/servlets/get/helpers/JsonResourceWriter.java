@@ -132,7 +132,7 @@ public class JsonResourceWriter {
     protected void dumpSingleResource(Resource n, JSONWriter w,
             int currentRecursionLevel, int maxRecursionLevels)
             throws JSONException {
-        if (recursionLevelActive(currentRecursionLevel, maxRecursionLevels)) {
+        if (recursionLevelActive(currentRecursionLevel, maxRecursionLevels) && !ResourceUtil.isSyntheticResource(n) ) {
             w.key(ResourceUtil.getName(n));
             dump(n, w, currentRecursionLevel + 1, maxRecursionLevels);
         }
