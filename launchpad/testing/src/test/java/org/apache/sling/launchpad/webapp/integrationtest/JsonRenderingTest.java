@@ -23,7 +23,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
-import org.apache.sling.commons.testing.util.TestStringUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** Test creating Nodes and rendering them in JSON */
@@ -176,22 +175,26 @@ public class JsonRenderingTest extends HttpTestBase {
         }
     }
     
+    protected static int countOccurences(String str, char toCount) {
+    	int result = 0;
+    	for(char c : str.toCharArray()) {
+    		if(c == toCount) {
+    			result++;
+    		}
+    	}
+    	return result;
+    }
+    
     public void testTidyNonRecursive() throws IOException {
-        {
-            final String json = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
-            final String expected =
-                "{\"jcr:primaryType\":\"nt:unstructured\",\"text\":\"" + testText + "\"}";
-            assertEquals("Without .tidy selector, json should be flat", 
-                    expected, TestStringUtil.flatten(json));
-        }
-        
-        {
-            final String json = getContent(createdNodeUrl + ".tidy.json", CONTENT_TYPE_JSON);
-            final String expected = 
-                "{.  \"jcr:primaryType\": \"nt:unstructured\",.  \"text\": \"" + testText + "\".}";
-            assertEquals("With .tidy selector, json should be pretty-printed", 
-                    expected, TestStringUtil.flatten(json));
-        }
+    	// Count end-of-line chars, there must be more in the tidy form
+    	int noTidyCount = countOccurences(getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON), '\n');
+    	int tidyCount = countOccurences(getContent(createdNodeUrl + ".tidy.json", CONTENT_TYPE_JSON), '\n');
+    	int delta = tidyCount - noTidyCount;
+    	
+    	// Output contains two properties so at least two EOL chars
+    	int min = 2;
+    	
+    	assertTrue("The .tidy selector should add at least 2 EOL chars to json output (delta=" + delta + ")", delta > min);
     }
     
     public void testTidyRecursive() throws IOException {
@@ -200,26 +203,13 @@ public class JsonRenderingTest extends HttpTestBase {
         props.put("a/b", "yes");
         final String url = testClient.createNode(postUrl, props);
         
-        {
-            final String json = getContent(url + ".tidy.infinity.json", CONTENT_TYPE_JSON);
-            final String expected = 
-                "{.  \"jcr:primaryType\": \"nt:unstructured\",.  \"text\": \"" + testText 
-                + "\",.  \"a\": {.    \"jcr:primaryType\": \"nt:unstructured\",.    \"b\": \"yes\".  }"
-                + ".}";
-            assertEquals("With .tidy.infinity selector, json should be pretty-printed", 
-                    expected, TestStringUtil.flatten(json));
-        }
-        
-        {
-            final String json = getContent(url + ".infinity.json", CONTENT_TYPE_JSON);
-            final String expected = 
-                "{\"jcr:primaryType\":\"nt:unstructured\",\"text\":"
-                + "\"" + testText + "\",\"a\":{\"jcr:primaryType\":"
-                + "\"nt:unstructured\",\"b\":\"yes\"}}"
-            ;
-            assertEquals("With .infinity selector only, json should be flat", 
-                    expected, TestStringUtil.flatten(json));
-        }
-        
+    	int noTidyCount = countOccurences(getContent(url + ".infinity.json", CONTENT_TYPE_JSON), '\n');
+    	int tidyCount = countOccurences(getContent(url + ".tidy.infinity.json", CONTENT_TYPE_JSON), '\n');
+    	int delta = tidyCount - noTidyCount;
+    	
+    	// Output contains 3 properties and a subnode with one, so at least 5 EOL chars
+    	int min = 5;
+    	
+    	assertTrue("The .tidy selector should add at least 2 EOL chars to json output (delta=" + delta + ")", delta > min);
     }
 }
