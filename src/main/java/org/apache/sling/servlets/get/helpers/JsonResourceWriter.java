@@ -96,7 +96,11 @@ public class JsonResourceWriter {
                 w.key(ResourceUtil.getName(resource));
                 w.value(value);
                 w.endObject();
+                return;
             }
+            // we can't even adapt to a string, so just output an empty object
+            w.object();
+            w.endObject();
             return;
         }
         w.object();
