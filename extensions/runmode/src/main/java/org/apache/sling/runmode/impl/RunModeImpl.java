@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
  *  that's one way of defining the current set of run modes.
  *        
  *  @scr.component
+ *      metatype="no"
  *      label="Sling RunMode service"
  *      description="RunMode service configured from a BundleContext property"
  *      immediate="true"
