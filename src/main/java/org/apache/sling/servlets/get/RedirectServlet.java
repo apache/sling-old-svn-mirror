@@ -176,6 +176,11 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
     private static void makeRelative(StringBuffer pathBuffer, String base,
             String target) {
 
+        // pseudo entry to correctly calculate the relative path
+        if (base.endsWith("/")) {
+            base = base.concat(String.valueOf(Character.MAX_VALUE));
+        }
+        
         String[] bParts = base.substring(1).split("/");
         String[] tParts = target.substring(1).split("/");
 
