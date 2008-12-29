@@ -39,6 +39,12 @@ public class RedirectServletTest extends TestCase {
         assertEquals("d", toRedirect(base, target));
     }
 
+    public void testTrailingSlash() {
+        String base = "/a/b/c/";
+        String target = "/a/b/c.html";
+        assertEquals("../c.html", toRedirect(base, target));
+    }
+
     public void testCommonAncestor() {
         String base = "/a/b/c/d";
         String target = "/a/b/x/y";
