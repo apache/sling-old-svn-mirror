@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>RhinoJavaScriptEngineFactory</code> TODO
  * 
- * @scr.component
+ * @scr.component metatype="no"
  * @scr.service interface="javax.script.ScriptEngineFactory"
  * @scr.reference name="HostObjectProvider"
  *                interface="org.apache.sling.scripting.javascript.RhinoHostObjectProvider"
