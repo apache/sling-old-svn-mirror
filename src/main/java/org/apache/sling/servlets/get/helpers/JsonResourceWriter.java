@@ -79,45 +79,46 @@ public class JsonResourceWriter {
     }
 
     /** Dump given resource in JSON, optionally recursing into its objects */
-    protected void dump(Resource resource, JSONWriter w, int currentRecursionLevel,
-            int maxRecursionLevels) throws JSONException {
-        final ValueMap valueMap = resource.adaptTo(ValueMap.class);
-        @SuppressWarnings("unchecked")
-        Map propertyMap = valueMap;
-        if ( propertyMap == null ) {
-            propertyMap = resource.adaptTo(Map.class);
-        }
+    protected void dump(Resource resource, JSONWriter w,
+            int currentRecursionLevel, int maxRecursionLevels)
+            throws JSONException {
 
-        if ( propertyMap == null ) {
+        final ValueMap valueMap = resource.adaptTo(ValueMap.class);
+
+        @SuppressWarnings("unchecked")
+        final Map propertyMap = (valueMap != null)
+                ? valueMap
+                : resource.adaptTo(Map.class);
+
+        w.object();
+
+        if (propertyMap == null) {
+
             // no map available, try string
             final String value = resource.adaptTo(String.class);
-            if ( value != null ) {
-                w.object();
+            if (value != null) {
                 w.key(ResourceUtil.getName(resource));
                 w.value(value);
-                w.endObject();
-                return;
             }
-            // we can't even adapt to a string, so just output an empty object
-            w.object();
-            w.endObject();
-            return;
-        }
-        w.object();
-        @SuppressWarnings("unchecked")
-        final Iterator<Map.Entry> props = propertyMap.entrySet().iterator();
 
-        // the node's actual properties
-        while (props.hasNext()) {
+        } else {
+
             @SuppressWarnings("unchecked")
-            final Map.Entry prop = props.next();
+            final Iterator<Map.Entry> props = propertyMap.entrySet().iterator();
 
-            if (propertyNamesToIgnore != null
-                && propertyNamesToIgnore.contains(prop.getKey())) {
-                continue;
+            // the node's actual properties
+            while (props.hasNext()) {
+                @SuppressWarnings("unchecked")
+                final Map.Entry prop = props.next();
+
+                if (propertyNamesToIgnore != null
+                    && propertyNamesToIgnore.contains(prop.getKey())) {
+                    continue;
+                }
+
+                writeProperty(w, valueMap, prop.getKey().toString(),
+                    prop.getValue());
             }
-
-            writeProperty(w, valueMap, prop.getKey().toString(), prop.getValue());
         }
 
         // the child nodes
@@ -125,13 +126,14 @@ public class JsonResourceWriter {
             final Iterator<Resource> children = ResourceUtil.listChildren(resource);
             while (children.hasNext()) {
                 final Resource n = children.next();
-                dumpSingleResource(n, w, currentRecursionLevel, maxRecursionLevels);
+                dumpSingleResource(n, w, currentRecursionLevel,
+                    maxRecursionLevels);
             }
         }
 
         w.endObject();
     }
-
+    
     /** Dump a single node */
     protected void dumpSingleResource(Resource n, JSONWriter w,
             int currentRecursionLevel, int maxRecursionLevels)
