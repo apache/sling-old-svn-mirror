@@ -125,8 +125,10 @@ public class JcrResourceUtil {
             val = fac.createValue(((Number)value).doubleValue());
         } else if (value instanceof Boolean) {
             val = fac.createValue((Boolean) value);
+        } else if ( value != null ){
+            val = fac.createValue(value.toString());
         } else {
-            val = fac.createValue((String)value);
+            val = null;
         }
         return val;
     }
