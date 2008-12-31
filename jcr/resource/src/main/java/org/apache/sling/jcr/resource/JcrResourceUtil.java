@@ -113,17 +113,17 @@ public class JcrResourceUtil {
             throws RepositoryException {
         Value val;
         ValueFactory fac = session.getValueFactory();
-        if(value.getClass().isAssignableFrom(Calendar.class)) {
+        if(value instanceof Calendar) {
             val = fac.createValue((Calendar)value);
-        } else if (value.getClass().isAssignableFrom(InputStream.class)) {
+        } else if (value instanceof InputStream) {
             val = fac.createValue((InputStream)value);
-        } else if (value.getClass().isAssignableFrom(Node.class)) {
+        } else if (value instanceof Node) {
             val = fac.createValue((Node)value);
-        } else if (value.getClass().isAssignableFrom(Long.class)) {
+        } else if (value instanceof Long) {
             val = fac.createValue((Long)value);
-        } else if (value.getClass().isAssignableFrom(Number.class)) {
+        } else if (value instanceof Number) {
             val = fac.createValue(((Number)value).doubleValue());
-        } else if (value.getClass().isAssignableFrom(Boolean.class)) {
+        } else if (value instanceof Boolean) {
             val = fac.createValue((Boolean) value);
         } else {
             val = fac.createValue((String)value);
