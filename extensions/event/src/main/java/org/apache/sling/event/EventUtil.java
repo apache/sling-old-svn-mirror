@@ -500,13 +500,13 @@ public abstract class EventUtil {
      */
     public static Value getNodePropertyValue(final ValueFactory valueFactory, final Object eventValue) {
         final Value val;
-        if (eventValue.getClass().isAssignableFrom(Calendar.class)) {
+        if (eventValue instanceof Calendar) {
             val = valueFactory.createValue((Calendar)eventValue);
-        } else if (eventValue.getClass().isAssignableFrom(Long.class)) {
+        } else if (eventValue instanceof Long) {
             val = valueFactory.createValue((Long)eventValue);
-        } else if (eventValue.getClass().isAssignableFrom(Double.class)) {
+        } else if (eventValue instanceof Double) {
             val = valueFactory.createValue(((Double)eventValue).doubleValue());
-        } else if (eventValue.getClass().isAssignableFrom(Boolean.class)) {
+        } else if (eventValue instanceof Boolean) {
             val = valueFactory.createValue((Boolean) eventValue);
         } else if (eventValue instanceof String) {
             val = valueFactory.createValue((String)eventValue);
