@@ -99,6 +99,17 @@ public interface SlingPostConstants {
     public static final String OPERATION_MOVE = "move";
 
     /**
+     * Name of the predefined null operation (value is "nop").
+     * <p>
+     * The null operation is a pseudo operation, which has no effects
+     * whatsoever except setting the response status. The null operation may
+     * be accompanied with the {@link #RP_NOP_STATUS} parameter to indicate
+     * the actual response status to set and the {@link #RP_STATUS} parameter
+     * to indicate how to send the actual response status.
+     */
+    public static final String OPERATION_NOP = "nop";
+    
+    /**
      * Name of the request parameter used to indicate the resource to apply the
      * operation to (value is ":applyTo").
      * <p>
@@ -245,6 +256,29 @@ public interface SlingPostConstants {
      */
     public static final String STATUS_VALUE_BROWSER = "browser";
 
+    /**
+     * Optional request parameter to indicate the actual response status to
+     * send back as a result of calling the #OPERATION_NOP (value is ":nopstatus").
+     * <p>
+     * This parameter is expected to be single-valued and by an integer being a
+     * valid HTTP status code. If this parameter is missing or the parameter
+     * value cannot be converted to a HTTP status code (integer in the range
+     * [100..999]), the default status code 200/OK is returned.
+     * 
+     * @see #OPERATION_NOP
+     * @see #RP_STATUS
+     */
+    public static final String RP_NOP_STATUS = RP_PREFIX + "nopstatus";
+    
+    /**
+     * The default response status sent back by a {@link #OPERATION_NOP} if the
+     * {@link #RP_NOP_STATUS} parameter is not provided or the parameter value
+     * cannot be converted into a valid response status code (value is 200).
+     * 
+     * @see #RP_NOP_STATUS
+     */
+    public static final int NOPSTATUS_VALUE_DEFAULT = 200;
+    
     /**
      * Optional request parameter: if provided, added at the end of the computed
      * (or supplied) redirect URL
