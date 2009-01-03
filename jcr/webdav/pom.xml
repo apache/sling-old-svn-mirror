@@ -55,52 +55,29 @@
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling,jcr</Bundle-Category>
-                        <!-- No Export-Package -->
                         <Private-Package>
-                            org.apache.sling.jcr.webdav.impl.*,
-                            org.apache.jackrabbit;
-                            org.apache.jackrabbit.commons.iterator;
-                            org.apache.jackrabbit.name;
-                            org.apache.jackrabbit.uuid;
-                            org.apache.jackrabbit.util;
-                            org.apache.jackrabbit.value;-split-package:=merge-first,
-                            org.apache.jackrabbit.webdav.simple,
-                            org.apache.jackrabbit.server,
-                            org.apache.jackrabbit.server.io,
-                            org.apache.jackrabbit.server.jcr,
-                            org.apache.jackrabbit.webdav,
-                            org.apache.jackrabbit.webdav.bind,
-                            org.apache.jackrabbit.webdav.header,
-                            org.apache.jackrabbit.webdav.io,
-                            org.apache.jackrabbit.webdav.jcr,
-                            org.apache.jackrabbit.webdav.jcr.lock,
-                            org.apache.jackrabbit.webdav.jcr.nodetype,
-                            org.apache.jackrabbit.webdav.jcr.observation,
-                            org.apache.jackrabbit.webdav.jcr.property,
-                            org.apache.jackrabbit.webdav.jcr.search,
-                            org.apache.jackrabbit.webdav.jcr.transaction,
-                            org.apache.jackrabbit.webdav.jcr.version,
-                            org.apache.jackrabbit.webdav.jcr.version.report,
-                            org.apache.jackrabbit.webdav.lock,
-                            org.apache.jackrabbit.webdav.observation,
-                            org.apache.jackrabbit.webdav.ordering,
-                            org.apache.jackrabbit.webdav.property,
-                            org.apache.jackrabbit.webdav.search,
-                            org.apache.jackrabbit.webdav.security,
-                            org.apache.jackrabbit.webdav.server,
-                            org.apache.jackrabbit.webdav.transaction,
-                            org.apache.jackrabbit.webdav.util,
-                            org.apache.jackrabbit.webdav.version,
-                            org.apache.jackrabbit.webdav.version.report,
-                            org.apache.jackrabbit.webdav.xml,
-                            org.apache.xml.serialize,
-                            org.apache.xerces.*
+                            org.apache.sling.jcr.webdav.impl.*
                         </Private-Package>
                         <Import-Package>
-                            javax.transaction.xa; javax.xml.*;
-                            org.apache.xml.resolver.*;org.w3c.*;
-                            org.xml.sax.*;resolution:=optional, !sun.*,*
+                            <!-- ignore HTTP client methods of webdav -->
+                            !org.apache.commons.httpclient.*,
+                            
+                            <!-- ignore XML resolver of xerces -->
+                            !org.apache.xml.resolver.*,
+                            
+                            <!-- don't import any sun stuff -->
+                            !sun.*,
+                            
+                            <!-- import the rest -->
+                            *
                         </Import-Package>
+                        <Embed-Dependency>
+                            jackrabbit-jcr-server,
+                            jackrabbit-webdav,
+                            xercesImpl,
+                            jackrabbit-jcr-commons
+                        </Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
             </plugin>
@@ -134,21 +111,7 @@
 
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
-            <scope>compile</scope>
-            <version>1.5.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
-            <version>1.5.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-webdav</artifactId>
             <version>1.5.0</version>
             <scope>compile</scope>
         </dependency>
