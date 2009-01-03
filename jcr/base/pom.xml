@@ -59,7 +59,7 @@
                         </Bundle-Category>
                         <Export-Package>
                             org.apache.sling.jcr.base;
-                            org.apache.sling.jcr.base.util;version=${pom.version},
+                            org.apache.sling.jcr.base.util;version=${pom.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.jcr.base.internal.*
