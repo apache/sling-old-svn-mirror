@@ -38,6 +38,7 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.sling.jcr.api.TooManySessionsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -699,8 +700,15 @@ public class SessionPool {
      * @param delegatee The <code>Session</code> to wrap as a pooled session.
      * @see PooledSession
      */
-    protected PooledSession createPooledSession(Session delegatee) throws RepositoryException {
-        PooledSession pooledSession = new PooledSession(this, delegatee);
+    protected PooledSession createPooledSession(Session delegatee)
+            throws RepositoryException {
+        PooledSession pooledSession;
+        if (delegatee instanceof JackrabbitSession) {
+            pooledSession = new PooledJackrabbitSession(this,
+                (JackrabbitSession) delegatee);
+        } else {
+            pooledSession = new PooledSession(this, delegatee);
+        }
 
         // keep the pooled session
         synchronized (this.activeSessions) {
