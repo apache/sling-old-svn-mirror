@@ -49,12 +49,13 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
- * The <code>PooledSession</code> class implements the <code>javax.jcr.Session</code>
- * interface as a wrapper to a delegatee session. The only method overwritten
- * by this implementation is the {@link #logout()} which does not actually
- * logout the delegatee but releases this session to the session pool to which
- * this session is attached and {@link #impersonate(Credentials)} which also
- * tries to return a pooled session for the impersonated user.
+ * The <code>PooledSession</code> class implements the
+ * <code>javax.jcr.Session</code> interface as a wrapper to a delegatee session.
+ * The only method overwritten by this implementation is the {@link #logout()}
+ * which does not actually logout the delegatee but releases this session to the
+ * session pool to which this session is attached and
+ * {@link #impersonate(Credentials)} which also tries to return a pooled session
+ * for the impersonated user.
  */
 public class PooledSession implements Session {
 
@@ -93,7 +94,7 @@ public class PooledSession implements Session {
      * Returns the delegatee session to which all calls except {@link #logout()}
      * and {@link #impersonate(Credentials)} are delegated.
      */
-    protected Session getSession() {
+    public Session getSession() {
         return this.delegatee;
     }
 
