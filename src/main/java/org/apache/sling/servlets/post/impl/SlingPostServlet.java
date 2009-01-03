@@ -42,6 +42,7 @@ import org.apache.sling.servlets.post.impl.operations.CopyOperation;
 import org.apache.sling.servlets.post.impl.operations.DeleteOperation;
 import org.apache.sling.servlets.post.impl.operations.ModifyOperation;
 import org.apache.sling.servlets.post.impl.operations.MoveOperation;
+import org.apache.sling.servlets.post.impl.operations.NopOperation;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -50,18 +51,22 @@ import org.slf4j.LoggerFactory;
 
 /**
  * POST servlet that implements the sling client library "protocol"
- *
+ * 
  * @scr.component immediate="true" label="%servlet.post.name"
  *                description="%servlet.post.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="Sling Post Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
+ * 
  * Use this as the default servlet for POST requests for Sling
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default" private="true"
  * @scr.property name="sling.servlet.methods" value="POST" private="true"
- * @scr.reference name="postProcessor" interface="org.apache.sling.servlets.post.SlingPostProcessor" cardinality="0..n" policy="dynamic"
+ * 
+ * Get all SlingPostProcessors
+ * @scr.reference name="postProcessor"
+ *                interface="org.apache.sling.servlets.post.SlingPostProcessor"
+ *                cardinality="0..n" policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -127,6 +132,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             new MoveOperation());
         postOperations.put(SlingPostConstants.OPERATION_DELETE,
             new DeleteOperation());
+        postOperations.put(SlingPostConstants.OPERATION_NOP, new NopOperation());
     }
 
     @Override
