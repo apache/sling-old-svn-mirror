@@ -81,13 +81,13 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
-            <version>1.5.0</version>
+            <version>1.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
-            <version>1.5.0</version>
+            <version>1.4.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
