@@ -811,6 +811,51 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        path = "/child";
+        mapped = resResolver.map(child.getPath());
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapNamespaceMangling() throws Exception {
+        
+        final String mapHost = "virtual.host.com";
+        final String mapRootPath = "/content/virtual";
+        
+        Node virtualhost80 = mapRoot.getNode("map/http").addNode(
+            mapHost + ".80", "sling:Mapping");
+        virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+            mapRootPath);
+        session.save();
+
+        Thread.sleep(1000L);
+
+        final HttpServletRequest foreignRequest = new ResourceResolverTestRequest(null,
+            "foreign.host.com", -1, rootPath);
+        final HttpServletRequest virtualRequest = new ResourceResolverTestRequest(null,
+            mapHost, -1, rootPath);
+
+        // simple mapping - cut off prefix and add host
+        final String path0 = "/sample";
+        final String mapped0 = resResolver.map(foreignRequest, mapRootPath + path0);
+        assertEquals("http://" + mapHost + path0, mapped0);
+        
+        // expected name mangling without host prefix
+        final String path1 = "/sample/jcr:content";
+        final String mapped1 = resResolver.map(virtualRequest, mapRootPath + path1);
+        assertEquals(path1, mapped1);
+    }
+    
+    public void testMapContext() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
 
         Node child = rootNode.addNode("child");
         session.save();
