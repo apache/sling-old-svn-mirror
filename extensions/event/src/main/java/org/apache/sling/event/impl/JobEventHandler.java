@@ -1278,6 +1278,9 @@ public class JobEventHandler
                 buffer.append(')');
             }
             buffer.append("]");
+            buffer.append(" order by @");
+            buffer.append(EventHelper.NODE_PROPERTY_CREATED);
+            buffer.append(" ascending");
             final String queryString = buffer.toString();
             logger.debug("Executing job query {}.", queryString);
 
