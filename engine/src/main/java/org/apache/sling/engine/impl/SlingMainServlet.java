@@ -58,6 +58,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.impl.auth.MissingRepositoryException;
 import org.apache.sling.engine.impl.auth.SlingAuthenticator;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
@@ -516,17 +517,17 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
             PrintWriter pw = response.getWriter();
             pw.println("<html><head><title>");
-            pw.println(message);
+            pw.println(ResponseUtil.escapeXml(message));
             pw.println("</title></head><body><h1>");
             if (throwable != null) {
-                pw.println(throwable.toString());
+                pw.println(ResponseUtil.escapeXml(throwable.toString()));
             } else if (message != null) {
-                pw.println(message);
+                pw.println(ResponseUtil.escapeXml(message));
             } else {
                 pw.println("Internal error (no Exception to report)");
             }
             pw.println("</h1><p>");
-            pw.println("RequestURI=" + request.getRequestURI());
+            pw.println("RequestURI=" + ResponseUtil.escapeXml(request.getRequestURI()));
             if (servletName != null) {
                 pw.println("</p>Servlet=" + servletName + "<p>");
             }
