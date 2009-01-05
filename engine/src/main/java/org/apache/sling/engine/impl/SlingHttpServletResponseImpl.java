@@ -236,7 +236,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
         this.status = status;
         ErrorHandler eh = getRequestData().getSlingMainServlet().getErrorHandler();
-        eh.handleError(status, ResponseUtil.escapeXml(message), requestData.getSlingRequest(), this);
+        eh.handleError(status, message, requestData.getSlingRequest(), this);
     }
 
     @Override
