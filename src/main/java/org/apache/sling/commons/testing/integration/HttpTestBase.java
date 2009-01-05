@@ -27,6 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
 import junit.framework.TestCase;
 
 import org.apache.commons.httpclient.Credentials;
@@ -282,11 +284,15 @@ public class HttpTestBase extends TestCase {
         return getContent(url, expectedContentType, null);
     }
 
+    protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
+        return getContent(url, expectedContentType, params, HttpServletResponse.SC_OK);
+    }
+    
     /** retrieve the contents of given URL and assert its content type
      * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked 
      * @throws IOException
      * @throws HttpException */
-    protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
+    protected String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
         final GetMethod get = new GetMethod(url);
         if(params != null) {
             final NameValuePair [] nvp = new NameValuePair[0];
@@ -301,7 +307,8 @@ public class HttpTestBase extends TestCase {
         while( (n = is.read(buffer, 0, buffer.length)) > 0) {
             content.append(new String(buffer, 0, n, charset));
         }
-        assertEquals("Expected status 200 for " + url + " (content=" + content + ")",200,status);
+        assertEquals("Expected status " + expectedStatusCode + " for " + url + " (content=" + content + ")",
+                expectedStatusCode,status);
         final Header h = get.getResponseHeader("Content-Type");
         if(expectedContentType == null) {
             if(h!=null) {
