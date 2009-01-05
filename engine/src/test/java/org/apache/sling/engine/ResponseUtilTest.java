@@ -16,6 +16,10 @@
  */
 package org.apache.sling.engine;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+
 import junit.framework.TestCase;
 
 public class ResponseUtilTest extends TestCase {
@@ -30,5 +34,13 @@ public class ResponseUtilTest extends TestCase {
     public void testEscapes() {
         assertEquals("&lt;bonnie&gt; &amp; &lt;/clyde&gt; &amp;&amp; others", 
                 ResponseUtil.escapeXml("<bonnie> & </clyde> && others"));
+    }
+    
+    public void testXmlEscapingWriter() throws IOException {
+        final StringWriter sw = new StringWriter();
+        final Writer w = ResponseUtil.getXmlEscapingWriter(sw);
+        w.write("<bonnie> & </clyde> && others");
+        w.flush();
+        assertEquals("&lt;bonnie&gt; &amp; &lt;/clyde&gt; &amp;&amp; others", sw.toString()); 
     }
 }

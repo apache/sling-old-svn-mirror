@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.engine.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,17 +67,22 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
 
         // write the exception message
         if (req.getAttribute(SlingConstants.ERROR_EXCEPTION) instanceof Throwable) {
+            final PrintWriter escapingWriter = new PrintWriter(ResponseUtil.getXmlEscapingWriter(pw));
             Throwable throwable = (Throwable) req.getAttribute(SlingConstants.ERROR_EXCEPTION);
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
-            printStackTrace(pw, throwable);
+            pw.flush();
+            printStackTrace(escapingWriter, throwable);
+            escapingWriter.flush();
             pw.println("</pre>");
             
             if (req instanceof SlingHttpServletRequest) {
                 RequestProgressTracker tracker = ((SlingHttpServletRequest) req).getRequestProgressTracker();
                 pw.println("<h3>Request Progress:</h3>");
                 pw.println("<pre>");
-                tracker.dump(pw);
+                pw.flush();
+                tracker.dump(escapingWriter);
+                escapingWriter.flush();
                 pw.println("</pre>");
             }
         }
@@ -118,9 +124,11 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
      * response HTML text with the header, and an introductory phrase.
      */
     private PrintWriter sendIntro(HttpServletResponse response, int statusCode,
-            String statusMessage, String requestUri, String servletName)
+            String statusMessageIn, String requestUri, String servletName)
             throws IOException {
 
+        final String statusMessage = ResponseUtil.escapeXml(statusMessageIn);
+        
         // set the status code and content type in the response
         final PrintWriter pw = response.getWriter();
         if(!response.isCommitted()) {
@@ -139,7 +147,7 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             log.warn("Response already committed, unable to change status, output might not be well formed");
         }
         pw.println("<h1>" + statusMessage + " (" + statusCode + ")</h1>");
-        pw.print("<p>The requested URL " + requestUri
+        pw.print("<p>The requested URL " + ResponseUtil.escapeXml(requestUri)
             + " resulted in an error");
 
         if (servletName != null) {
