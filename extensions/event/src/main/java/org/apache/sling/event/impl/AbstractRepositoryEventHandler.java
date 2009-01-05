@@ -226,7 +226,7 @@ public abstract class AbstractRepositoryEventHandler
     throws RepositoryException {
         final Node node = JcrResourceUtil.createPath(this.repositoryPath,
                                    EventHelper.NODETYPE_FOLDER,
-                                   EventHelper.NODETYPE_FOLDER,
+                                   EventHelper.NODETYPE_ORDERED_FOLDER,
                                    this.writerSession, true);
 
         return node;

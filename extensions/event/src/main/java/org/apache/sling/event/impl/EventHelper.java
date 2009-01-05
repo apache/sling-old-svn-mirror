@@ -45,8 +45,11 @@ public abstract class EventHelper {
     public static final String JOB_NODE_TYPE = "slingevent:Job";
     public static final String TIMED_EVENT_NODE_TYPE = "slingevent:TimedEvent";
 
-    /** The nodetype for newly created folders */
+    /** The nodetype for newly created intermediate folders */
     public static final String NODETYPE_FOLDER = "sling:Folder";
+
+    /** The nodetype for newly created folders */
+    public static final String NODETYPE_ORDERED_FOLDER = "sling:OrderedFolder";
 
     /** Allowed characters for a node name */
     private static final String ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+*#!¤$%&()=[]?";
