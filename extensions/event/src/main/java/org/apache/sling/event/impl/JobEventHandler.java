@@ -283,6 +283,31 @@ public class JobEventHandler
                     }
                 }
             }
+            // check for idle threads
+            synchronized ( this.jobQueues ) {
+                final Iterator<Map.Entry<String, JobBlockingQueue>> i = this.jobQueues.entrySet().iterator();
+                while ( i.hasNext() ) {
+                    final Map.Entry<String, JobBlockingQueue> current = i.next();
+                    final JobBlockingQueue jbq = current.getValue();
+                    if ( jbq.size() == 0 ) {
+                        if ( jbq.isMarkedForCleanUp() ) {
+                            // set to finished
+                            jbq.setFinished(true);
+                            // wake up
+                            try {
+                                jbq.put(new EventInfo());
+                            } catch (InterruptedException e) {
+                                this.ignoreException(e);
+                            }
+                            // remove
+                            i.remove();
+                        } else {
+                            // mark to be removed during next cycle
+                            jbq.markForCleanUp();
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -481,7 +506,7 @@ public class JobEventHandler
      */
     private void runJobQueue(final String queueName, final JobBlockingQueue jobQueue) {
         EventInfo info = null;
-        while ( this.running ) {
+        while ( this.running && !jobQueue.isFinished() ) {
             if ( info == null ) {
                 // so let's wait/get the next job from the queue
                 try {
@@ -492,7 +517,7 @@ public class JobEventHandler
                 }
             }
 
-            if ( info != null && this.running ) {
+            if ( info != null && this.running && !jobQueue.isFinished() ) {
                 synchronized ( jobQueue.getLock()) {
                     final EventInfo processInfo = info;
                     info = null;
@@ -1394,13 +1419,28 @@ public class JobEventHandler
 
         private boolean isWaiting = false;
 
+        private boolean markForCleanUp = false;
+
+        private boolean finished = false;
+
         public EventInfo waitForFinish() throws InterruptedException {
             this.isWaiting = true;
+            this.markForCleanUp = false;
             this.lock.wait();
             this.isWaiting = false;
             final EventInfo object = this.eventInfo;
             this.eventInfo = null;
             return object;
+        }
+
+        public void markForCleanUp() {
+            if ( !this.isWaiting ) {
+                this.markForCleanUp = true;
+            }
+        }
+
+        public boolean isMarkedForCleanUp() {
+            return !this.isWaiting && this.markForCleanUp;
         }
 
         public void notifyFinish(EventInfo i) {
@@ -1414,6 +1454,14 @@ public class JobEventHandler
 
         public boolean isWaiting() {
             return this.isWaiting;
+        }
+
+        public boolean isFinished() {
+            return finished;
+        }
+
+        public void setFinished(boolean flag) {
+            this.finished = flag;
         }
     }
 
