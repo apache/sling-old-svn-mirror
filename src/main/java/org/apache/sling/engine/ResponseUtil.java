@@ -18,8 +18,64 @@
  */
 package org.apache.sling.engine;
 
+import java.io.IOException;
+import java.io.Writer;
+
 /** Response-related utilities */
 public class ResponseUtil {
+    
+    private static class XmlEscapingWriter extends Writer {
+        private final Writer target;
+        
+        XmlEscapingWriter(Writer target) {
+            this.target = target;
+        }
+
+        @Override
+        public void close() throws IOException {
+            target.close();
+        }
+
+        @Override
+        public void flush() throws IOException {
+            target.flush();
+        }
+
+        @Override
+        public void write(char[] buffer, int offset, int length) throws IOException {
+            for(int i = offset; i < offset + length; i++) {
+                write(buffer[i]);
+            }
+        }
+
+        @Override
+        public void write(char[] cbuf) throws IOException {
+            write(cbuf, 0, cbuf.length);
+        }
+
+        @Override
+        public void write(int c) throws IOException {
+            if(c == '&') {
+                target.write("&amp;");
+            } else if(c == '<') {
+                target.write("&lt;");
+            } else if(c == '>') {
+                target.write("&gt;");
+            } else {
+                target.write(c);
+            }
+        }
+
+        @Override
+        public void write(String str, int off, int len) throws IOException {
+            write(str.toCharArray(), off, len);
+        }
+
+        @Override
+        public void write(String str) throws IOException {
+            write(str.toCharArray());
+        }
+    }
     
     /** Escape xml text */
     public static String escapeXml(String input) {
@@ -41,5 +97,11 @@ public class ResponseUtil {
             }
         }
         return b.toString();
+    }
+    
+    /** Return a Writer that writes escaped XML text to target
+     */
+    public static Writer getXmlEscapingWriter(Writer target) {
+        return new XmlEscapingWriter(target);
     }
 }
