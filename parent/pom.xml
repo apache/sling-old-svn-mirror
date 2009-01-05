@@ -145,7 +145,7 @@ setting is not correct.
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.0.7</version>
+                    <version>1.0.8</version>
                     <executions>
                         <execution>
                             <id>generate-scr-scrdescriptor</id>
@@ -632,7 +632,7 @@ setting is not correct.
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr</artifactId>
-                <version>1.0.5-SNAPSHOT</version>
+                <version>1.0.6</version>
                 <scope>provided</scope>
             </dependency>
         
