@@ -12,8 +12,12 @@ public class MockInstallableData implements InstallableData {
 	private String digest;
 	private static int counter;
 	
-	public MockInstallableData(String uri) {
-        inputStream = new ByteArrayInputStream(uri.getBytes());
+    public MockInstallableData(String uri) {
+        this(uri, uri);
+    }
+    
+	public MockInstallableData(String uri, String data) {
+        inputStream = new ByteArrayInputStream(data.getBytes());
         lastModified = System.currentTimeMillis() + counter;
         counter++;
         digest = String.valueOf(lastModified);

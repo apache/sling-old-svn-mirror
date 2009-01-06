@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class ConfigResourceProcessor implements OsgiResourceProcessor {
 
     private static final String ALIAS_KEY = "_alias_factory_pid";
+    public static final String CONFIG_PATH_KEY = "_jcr_config_path";
     public static final String CONFIG_EXTENSION = ".cfg";
     private final ConfigurationAdmin configurationAdmin;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -80,6 +81,9 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     	if(dict == null) {
     		throw new JcrInstallException("Null Dictionary for uri=" + uri);
     	}
+    	
+    	// Add pseudo-properties
+    	dict.put(CONFIG_PATH_KEY, uri);
         
         // Get pids from node name
         final ConfigurationPid pid = new ConfigurationPid(uri);
