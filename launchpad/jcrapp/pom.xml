@@ -140,10 +140,15 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- the web based OSGi framework console -->
+        <!-- the web based OSGi framework console, requires the Felix shell service -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.shell</artifactId>
             <optional>true</optional>
         </dependency>
 

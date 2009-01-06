@@ -650,11 +650,16 @@ setting is not correct.
                 <scope>provided</scope>
             </dependency>
 
-	        <!-- the web based OSGi framework console -->
+	        <!-- the web based OSGi framework console and shell service -->
 	        <dependency>
 	            <groupId>org.apache.felix</groupId>
 	            <artifactId>org.apache.felix.webconsole</artifactId>
-	            <version>1.2.0</version>
+	            <version>1.2.2</version>
+	        </dependency>
+	        <dependency>
+	            <groupId>org.apache.felix</groupId>
+	            <artifactId>org.apache.felix.shell</artifactId>
+	            <version>1.0.2</version>
 	        </dependency>
 
             <!-- HttpService implementation: embedded Jetty -->
