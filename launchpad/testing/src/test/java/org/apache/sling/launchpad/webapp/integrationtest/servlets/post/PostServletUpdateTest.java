@@ -22,6 +22,9 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -109,5 +112,43 @@ public class PostServletUpdateTest extends HttpTestBase {
         String content = getContent(location + ".json", CONTENT_TYPE_JSON);
         assertTrue(content.indexOf("\"f\":[\"123\"]") > 0);
         assertTrue(content.indexOf("\"g\":\"456\"") > 0);
+    }
+
+    public void testMixinTypes() throws IOException, JSONException {
+        
+        // create a node without mixin node types
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("jcr:primaryType","nt:unstructured");
+        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        
+        // assert no mixins
+        String content = getContent(location + ".json", CONTENT_TYPE_JSON);
+        JSONObject json = new JSONObject(content);
+        assertFalse("jcr:mixinTypes not expected to be set", json.has("jcr:mixinTypes"));
+        
+        // add mixin
+        props.clear();
+        props.put("jcr:mixinTypes", "mix:versionable");
+        testClient.createNode(location, props);
+        
+        content = getContent(location + ".json", CONTENT_TYPE_JSON);
+        json = new JSONObject(content);
+        assertTrue("jcr:mixinTypes expected after setting them", json.has("jcr:mixinTypes"));
+        
+        Object mixObject = json.get("jcr:mixinTypes");
+        assertTrue("jcr:mixinTypes must be an array", mixObject instanceof JSONArray);
+        
+        JSONArray mix = (JSONArray) mixObject;
+        assertTrue("jcr:mixinTypes must have a single entry", mix.length() == 1);
+        assertEquals("jcr:mixinTypes must have correct value", "mix:versionable", mix.get(0));
+
+        // remove mixin
+        props.clear();
+        props.put("jcr:mixinTypes@Delete", "-");
+        testClient.createNode(location, props);
+
+        content = getContent(location + ".json", CONTENT_TYPE_JSON);
+        json = new JSONObject(content);
+        assertTrue("no jcr:mixinTypes expected after clearing it", !json.has("jcr:mixinTypes"));
     }
 }

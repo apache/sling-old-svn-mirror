@@ -18,15 +18,19 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
 
 import org.apache.sling.api.SlingException;
@@ -208,10 +212,37 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
         String path = response.getPath();
         if (!session.itemExists(path)) {
+            
             deepGetOrCreateNode(session, path, reqProperties, changes);
             response.setCreateRequest(true);
-        }
+            
+        } else {
+            
+            String[] mixins = getMixinTypes(reqProperties, path);
+            if (mixins != null) {
 
+                Item item = session.getItem(path);
+                if (item.isNode()) {
+
+                    Set<String> newMixins = new HashSet<String>();
+                    newMixins.addAll(Arrays.asList(mixins));
+
+                    // clear existing mixins first
+                    Node node = (Node) item;
+                    for (NodeType mixin : node.getMixinNodeTypes()) {
+                        String mixinName = mixin.getName();
+                        if (!newMixins.remove(mixinName)) {
+                            node.removeMixin(mixinName);
+                        }
+                    }
+                    
+                    // add new mixins
+                    for (String mixin : newMixins) {
+                        node.addMixin(mixin);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -352,7 +383,17 @@ public class ModifyOperation extends AbstractSlingPostOperation {
             if (property.isDelete()) {
                 String propPath = property.getPath();
                 if (session.itemExists(propPath)) {
-                    session.getItem(propPath).remove();
+                    Item item = session.getItem(property.getParentPath());
+                    
+                    if (property.getName().equals("jcr:mixinTypes") && item.isNode()) {
+                        // clear all mixins
+                        Node parent = (Node) item;
+                        for (NodeType mixin : parent.getMixinNodeTypes()) {
+                            parent.removeMixin(mixin.getName());
+                        }
+                    } else {
+                        item.remove();
+                    }
                     changes.add(Modification.onDeleted(propPath));
                 }
             }
@@ -599,7 +640,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
     private String[] getMixinTypes(Map<String, RequestProperty> reqProperties,
             String path) {
         RequestProperty prop = reqProperties.get(path + "/jcr:mixinTypes");
-        return prop == null ? null : prop.getStringValues();
+        return (prop == null) || !prop.hasValues() ? null : prop.getStringValues();
     }
 
     /**
