@@ -77,6 +77,13 @@
             <version>1.0.4</version>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.equinox.http</groupId>
+            <artifactId>servlet</artifactId>
+            <version>1.0.0-v20070606</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
             <version>2.0.2-incubator</version>
