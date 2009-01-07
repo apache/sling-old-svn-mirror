@@ -676,11 +676,13 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <version>1.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
             <scope>provided</scope>
         </dependency>
         
@@ -694,6 +696,7 @@
         <dependency>
             <groupId>org.eclipse.equinox.http</groupId>
             <artifactId>servlet</artifactId>
+            <version>1.0.0-v20070606</version>
             <scope>provided</scope>
         </dependency>
 
@@ -705,16 +708,19 @@
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.5.2</version>
             <scope>test</scope>
         </dependency>
 		<dependency>
