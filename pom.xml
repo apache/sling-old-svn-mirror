@@ -262,6 +262,7 @@
                                 <artifactItem>
                                     <groupId>commons-io</groupId>
                                     <artifactId>commons-io</artifactId>
+                                    <version>1.4</version>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>
