@@ -83,7 +83,7 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <excludePackageNames>
-                        org.apache.sling.extensions.threaddump.internal
+                        org.apache.sling.extensions.threaddump
                     </excludePackageNames>
                 </configuration>
             </plugin>
