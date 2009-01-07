@@ -93,11 +93,13 @@
         <dependency>
             <groupId>rhino</groupId>
             <artifactId>js</artifactId>
+            <version>1.6R6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
             <scope>compile</scope>
             <exclusions>
                 <!-- 
