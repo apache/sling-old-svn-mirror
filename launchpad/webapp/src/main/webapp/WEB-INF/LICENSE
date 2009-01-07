@@ -381,6 +381,28 @@ JCR 1.0 API
    without limitation the Feedback for any purpose related to the
    Specification and future versions, implementations, and test suites thereof.
 
+JCR 1.0 API Additional Terms
+
+	In addition to the permissions granted under the Specification
+	License, Day Management AG hereby grants to You a perpetual,
+	worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+	license to reproduce, publicly display, publicly perform,
+	sublicense, and distribute unmodified copies of the Content
+	Repository for Java Technology API (JCR 1.0) Java Archive (JAR)
+	file ("jcr-1.0.jar") and to make, have made, use, offer to sell,
+	sell, import, and otherwise transfer said file on its own or
+	as part of a larger work that makes use of the JCR API.
+	
+	With respect to any patent claims covered by this license
+	that would be infringed by all technically feasible implementations
+	of the Specification, such license is conditioned upon your
+	offering on fair, reasonable and non-discriminatory terms,
+	to any party seeking it from You, a perpetual, non-exclusive,
+	non-transferable, worldwide license under Your patent rights
+	that are or would be infringed by all technically feasible
+	implementations of the Specification to develop, distribute
+	and use a Compliant Implementation.
+
 kXML parser
 
    Copyright (c) 2002,2003, Stefan Haustein, Oberhausen, Rhld., Germany
@@ -1077,7 +1099,7 @@ Equinox
 
    THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC
    LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
-   CONSTITUTES RECIPIENTÕS ACCEPTANCE OF THIS AGREEMENT.
+   CONSTITUTES RECIPIENTï¿½S ACCEPTANCE OF THIS AGREEMENT.
 
    1. DEFINITIONS
 
@@ -1212,7 +1234,7 @@ Equinox
    product offering, Product X. That Contributor is then a Commercial
    Contributor. If that Commercial Contributor then makes performance claims,
    or offers warranties related to Product X, those performance claims and
-   warranties are such Commercial ContributorÕs responsibility alone. Under
+   warranties are such Commercial Contributorï¿½s responsibility alone. Under
    this section, the Commercial Contributor would have to defend claims
    against the other Contributors related to those performance claims and
    warranties, and if a court requires any other Contributor to pay any
@@ -1253,13 +1275,13 @@ Equinox
    If Recipient institutes patent litigation against any entity (including a
    cross-claim or counterclaim in a lawsuit) alleging that the Program itself
    (excluding combinations of the Program with other software or hardware)
-   infringes such RecipientÕs patent(s), then such RecipientÕs rights granted
+   infringes such Recipientï¿½s patent(s), then such Recipientï¿½s rights granted
    under Section 2(b) shall terminate as of the date such litigation is filed.
 
-   All RecipientÕs rights under this Agreement shall terminate if it fails to
+   All Recipientï¿½s rights under this Agreement shall terminate if it fails to
    comply with any of the material terms or conditions of this Agreement and
    does not cure such failure in a reasonable period of time after becoming
-   aware of such noncompliance. If all RecipientÕs rights under this Agreement
+   aware of such noncompliance. If all Recipientï¿½s rights under this Agreement
    terminate, Recipient agrees to cease use and distribution of the Program as
    soon as reasonably practicable. However, Recipient's obligations under this
    Agreement and any licenses granted by Recipient relating to the Program
