@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" localization="OSGI-INF/metatype/metatype">
+    <metatype:OCD id="org.apache.sling.configresource.impl.ConfigResourceProvider" name="%org.apache.sling.configresource.impl.ConfigResourceProvider.name" description="%org.apache.sling.configresource.impl.ConfigResourceProvider.description">
+        <metatype:AD id="provider.roots" type="String" default="/test/configs" name="%provider.roots.name" description="%provider.roots.description"/>
+    </metatype:OCD>
+    <metatype:Designate pid="org.apache.sling.configresource.impl.ConfigResourceProvider">
+        <metatype:Object ocdref="org.apache.sling.configresource.impl.ConfigResourceProvider"/>
+    </metatype:Designate>
+</metatype:MetaData>
