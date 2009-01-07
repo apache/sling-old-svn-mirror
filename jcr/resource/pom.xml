@@ -136,6 +136,7 @@
         <dependency>
            <groupId>commons-collections</groupId>
            <artifactId>commons-collections</artifactId>
+           <version>3.2.1</version>
         </dependency>
 
         <!-- For the Console Plugin of the JcrResourceResolverFactoryImpl -->
@@ -146,6 +147,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>1.2.0</version>
         </dependency>
 
         <!-- for adapting JCR resources to URLs -->

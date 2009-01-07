@@ -618,10 +618,9 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
+            <version>1.0.4</version>
             <scope>provided</scope>
         </dependency>
-
-        <!-- the most important bundle after the framework: logging -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>

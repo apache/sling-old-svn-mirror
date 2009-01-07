@@ -144,6 +144,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
+            <version>1.2.2</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -156,16 +157,19 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr</artifactId>
+            <version>1.0.6</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.0.4</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.metatype</artifactId>
+            <version>1.0.0</version>
             <optional>true</optional>
         </dependency>
 
@@ -173,6 +177,7 @@
         <dependency>
             <groupId>org.ops4j.pax.web</groupId>
             <artifactId>pax-web-service</artifactId>
+            <version>0.2.3</version>
             <optional>true</optional>
         </dependency>
 
@@ -231,11 +236,13 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <version>1.4</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
             <optional>true</optional>
         </dependency>
 
