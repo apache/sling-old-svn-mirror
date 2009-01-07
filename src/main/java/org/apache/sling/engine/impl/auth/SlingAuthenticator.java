@@ -273,7 +273,10 @@ public class SlingAuthenticator implements ManagedService {
 
         if ( !done ) {
             // no handler could send an authentication request, fail with FORBIDDEN
-            log.info("requestAuthentication: No handler for request, sending FORBIDDEN");
+            log.info(
+            		"requestAuthentication: No handler for request, sending FORBIDDEN ({} handlers available)",
+            		handlerInfos.length
+            );
             sendFailure(response);
         }
     }
