@@ -116,6 +116,7 @@
         <module>extensions/apt/servlet</module>
         <module>extensions/jcrinstall</module>
         <module>extensions/runmode</module>
+        <module>extensions/threaddump</module>
 
         <!-- Samples -->
         <module>samples/simple-demo</module>
