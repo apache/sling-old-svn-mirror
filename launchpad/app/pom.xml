@@ -111,12 +111,6 @@
                                     </version>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.apache.felix</groupId>
-                                    <artifactId>
-                                        org.apache.felix.shell
-                                    </artifactId>
-                                </artifactItem>
-                                <artifactItem>
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>
                                         org.apache.sling.commons.json
