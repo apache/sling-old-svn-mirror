@@ -376,26 +376,28 @@ public class ModifyOperation extends AbstractSlingPostOperation {
      *             removing properties.
      */
     private void processDeletes(Session session,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
-            throws RepositoryException {
+            Map<String, RequestProperty> reqProperties,
+            List<Modification> changes) throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
-            if (property.isDelete()) {
-                String propPath = property.getPath();
-                if (session.itemExists(propPath)) {
-                    Item item = session.getItem(property.getParentPath());
+
+            if (property.isDelete() && session.itemExists(property.getPath())) {
+            
+                if (property.getName().equals("jcr:mixinTypes")) {
                     
-                    if (property.getName().equals("jcr:mixinTypes") && item.isNode()) {
-                        // clear all mixins
-                        Node parent = (Node) item;
-                        for (NodeType mixin : parent.getMixinNodeTypes()) {
-                            parent.removeMixin(mixin.getName());
-                        }
-                    } else {
-                        item.remove();
+                    // clear all mixins
+                    Node parent = (Node) session.getItem(property.getParentPath());
+                    for (NodeType mixin : parent.getMixinNodeTypes()) {
+                        parent.removeMixin(mixin.getName());
                     }
-                    changes.add(Modification.onDeleted(propPath));
+                    
+                } else {
+                    
+                    session.getItem(property.getPath()).remove();
+                    
                 }
+                
+                changes.add(Modification.onDeleted(property.getPath()));
             }
         }
 
