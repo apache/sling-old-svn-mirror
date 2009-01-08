@@ -117,7 +117,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.sling.jcr.api,org.apache.sling.jcr.base,jackrabbit-api,org.apache.sling.jcr.jackrabbit.server,jackrabbit-jcr-commons,commons-io,commons-collections,org.apache.sling.commons.osgi,org.apache.sling.commons.mime
+                                org.apache.sling.jcr.api,org.apache.sling.jcr.base,jackrabbit-api,org.apache.sling.jcr.jackrabbit.server,jackrabbit-jcr-commons,commons-io,commons-collections,org.apache.sling.commons.osgi,org.apache.sling.commons.mime,org.apache.sling.jcr.webdav
                             </includeArtifactIds>
 
                             <excludeTransitive>true</excludeTransitive>
@@ -135,7 +135,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.sling.api,org.apache.sling.engine,org.apache.sling.httpauth,org.apache.sling.adapter,org.apache.sling.servlets.resolver,org.apache.sling.servlets.get,org.apache.sling.servlets.post,org.apache.sling.samples.path-based.rtp,org.apache.sling.commons.json,org.apache.sling.jcr.contentloader,org.apache.sling.jcr.resource,org.apache.sling.jcr.ocm,org.apache.sling.jcr.classloader,org.apache.sling.bundleresource.impl,org.apache.sling.launchpad.content,org.apache.sling.scripting.api,org.apache.sling.scripting.core,org.apache.sling.scripting.javascript,org.apache.sling.scripting.jsp,org.apache.sling.scripting.jsp.taglib,org.apache.sling.extensions.apt.servlet,org.apache.sling.extensions.apt.parser,org.apache.sling.jcr.webdav
+                                org.apache.sling.api,org.apache.sling.engine,org.apache.sling.httpauth,org.apache.sling.adapter,org.apache.sling.servlets.resolver,org.apache.sling.servlets.get,org.apache.sling.servlets.post,org.apache.sling.samples.path-based.rtp,org.apache.sling.commons.json,org.apache.sling.jcr.contentloader,org.apache.sling.jcr.resource,org.apache.sling.jcr.ocm,org.apache.sling.jcr.classloader,org.apache.sling.bundleresource.impl,org.apache.sling.launchpad.content,org.apache.sling.scripting.api,org.apache.sling.scripting.core,org.apache.sling.scripting.javascript,org.apache.sling.scripting.jsp,org.apache.sling.scripting.jsp.taglib,org.apache.sling.extensions.apt.servlet,org.apache.sling.extensions.apt.parser
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
