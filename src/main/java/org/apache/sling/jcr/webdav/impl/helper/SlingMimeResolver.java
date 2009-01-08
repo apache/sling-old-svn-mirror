@@ -14,21 +14,20 @@
  */
 package org.apache.sling.jcr.webdav.impl.helper;
 
-import javax.servlet.ServletContext;
-
 import org.apache.jackrabbit.server.io.MimeResolver;
+import org.apache.sling.commons.mime.MimeTypeService;
 
 public class SlingMimeResolver extends MimeResolver {
 
-    private final ServletContext servletContext;
+    private final MimeTypeService mimeTypeService;
     
-    public SlingMimeResolver(ServletContext servletContext) {
-        this.servletContext = servletContext;
+    public SlingMimeResolver(MimeTypeService mimeTypeService) {
+        this.mimeTypeService = mimeTypeService;
     }
 
     @Override
     public String getMimeType(String filename) {
-        String type = servletContext.getMimeType(filename);
+        String type = mimeTypeService.getMimeType(filename);
         if (type == null) {
             type = getDefaultMimeType();
         }
