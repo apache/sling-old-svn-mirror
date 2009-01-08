@@ -21,12 +21,12 @@ package org.apache.sling.jcr.webdav.impl.servlets;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.webdav.impl.helper.SlingLocatorFactory;
 import org.apache.sling.jcr.webdav.impl.helper.SlingResourceConfig;
@@ -103,7 +103,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     private HttpService httpService;
 
     /** @scr.reference */
-    private ServletContext servletContext;
+    private MimeTypeService mimeTypeService;
 
     private SlingResourceConfig resourceConfig;
 
@@ -169,7 +169,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     protected void activate(ComponentContext context)
             throws NamespaceException, ServletException {
 
-        resourceConfig = new SlingResourceConfig(servletContext,
+        resourceConfig = new SlingResourceConfig(mimeTypeService,
             context.getProperties());
 
         // Register servlet, and set the contextPath field to signal successful

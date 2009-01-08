@@ -21,7 +21,6 @@ import java.util.Hashtable;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.servlet.ServletContext;
 
 import org.apache.jackrabbit.server.io.DefaultHandler;
 import org.apache.jackrabbit.server.io.DirListingExportHandler;
@@ -34,6 +33,7 @@ import org.apache.jackrabbit.webdav.simple.DefaultItemFilter;
 import org.apache.jackrabbit.webdav.simple.ItemFilter;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
+import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.webdav.impl.servlets.SlingWebDavServlet;
 
@@ -53,9 +53,9 @@ public class SlingResourceConfig extends ResourceConfig {
 
     private final Dictionary<String, String> servletInitParams;
 
-    public SlingResourceConfig(ServletContext servletContext,
+    public SlingResourceConfig(MimeTypeService mimetypService,
             Dictionary<?, ?> config) {
-        mimeResolver = new SlingMimeResolver(servletContext);
+        mimeResolver = new SlingMimeResolver(mimetypService);
         collectionTypes = OsgiUtil.toStringArray(
             config.get(SlingWebDavServlet.COLLECTION_TYPES),
             SlingWebDavServlet.COLLECTION_TYPES_DEFAULT);
