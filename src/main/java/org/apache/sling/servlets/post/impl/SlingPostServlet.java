@@ -88,7 +88,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     /**
      * @scr.property values.0="title" values.1="jcr:title" values.2="name"
      *               values.3="description" values.4="jcr:description"
-     *               values.5="abstract"
+     *               values.5="abstract" values.6="text" values.7="jcr:text"
      */
     private static final String PROP_NODE_NAME_HINT_PROPERTIES = "servlet.post.nodeNameHints";
 
