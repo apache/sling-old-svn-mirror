@@ -18,14 +18,12 @@
  */
 package org.apache.sling.bundleresource.impl;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -85,7 +83,7 @@ public class BundleResourceProvider implements ResourceProvider {
     }
 
     //---------- Web Console plugin support
-    
+
     BundleResourceCache getBundleResourceCache() {
         return bundle;
     }
@@ -93,9 +91,9 @@ public class BundleResourceProvider implements ResourceProvider {
     MappedPath[] getMappedPaths() {
         return roots;
     }
-    
+
     //---------- internal
-    
+
     /** Returns the root paths */
     private String[] getRoots() {
         String[] rootPaths = new String[roots.length];
