@@ -31,7 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
@@ -205,7 +204,7 @@ public class JcrResourceResolverPlugin extends AbstractWebConsolePlugin {
 
         String test = request.getParameter(ATTR_TEST);
         if (test != null && test.length() > 0) {
-            
+
             // set test value for the re-rendering of the form
             request.setAttribute(ATTR_TEST, test);
 
@@ -229,7 +228,7 @@ public class JcrResourceResolverPlugin extends AbstractWebConsolePlugin {
 
                 // set the result to render the result
                 request.setAttribute(ATTR_RESULT, result.toString());
-                
+
             } catch (Throwable t) {
                 // TOOD: log
             } finally {

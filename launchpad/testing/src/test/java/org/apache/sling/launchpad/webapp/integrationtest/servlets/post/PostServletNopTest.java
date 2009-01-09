@@ -17,14 +17,10 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+
 
 public class PostServletNopTest extends HttpTestBase {
 
@@ -34,30 +30,30 @@ public class PostServletNopTest extends HttpTestBase {
     public void testDefault() throws IOException {
         post(TEST_URL, null, 200);
     }
-    
+
     public void testStatus200() throws IOException {
         post(TEST_URL, 200);
     }
-    
+
     public void testStatus708() throws IOException {
         post(TEST_URL, 708);
     }
-    
+
     // request status <100, expect default 200
     public void testStatus88() throws IOException {
         post(TEST_URL, "88", 200);
     }
-    
+
     // request status >999, expect default 200
     public void testStatus1234() throws IOException {
         post(TEST_URL, "1234", 200);
     }
-    
+
     // request non-numeric status, expect default 200
     public void testStatusNonNumeric() throws IOException {
         post(TEST_URL, "nonumber", 200);
     }
-    
+
     private void post(String url, int status) throws IOException {
         post(url, String.valueOf(status), status);
     }

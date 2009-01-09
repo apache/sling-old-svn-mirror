@@ -34,7 +34,6 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
-import org.apache.sling.commons.testing.osgi.MockBundle;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
@@ -49,6 +48,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+
 
 /** Helpers to run javascript code fragments in tests */
 public class ScriptEngineHelper {
@@ -119,36 +119,36 @@ public class ScriptEngineHelper {
     }
 
     private static class RhinoMockComponentContext extends MockComponentContext {
-        
+
         private RhinoMockComponentContext() {
             super(null, null);
         }
-        
+
         @Override
         public BundleContext getBundleContext() {
             return new BundleContext() {
 
                 public void addBundleListener(BundleListener arg0) {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public void addFrameworkListener(
                         FrameworkListener arg0) {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public void addServiceListener(ServiceListener arg0) {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public void addServiceListener(
                         ServiceListener arg0, String arg1)
                         throws InvalidSyntaxException {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public Filter createFilter(String arg0)
@@ -233,19 +233,19 @@ public class ScriptEngineHelper {
 
                 public void removeBundleListener(BundleListener arg0) {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public void removeFrameworkListener(
                         FrameworkListener arg0) {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public void removeServiceListener(
                         ServiceListener arg0) {
                     // TODO Auto-generated method stub
-                    
+
                 }
 
                 public boolean ungetService(ServiceReference arg0) {

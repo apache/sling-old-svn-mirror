@@ -16,9 +16,6 @@
  */
 package org.apache.sling.scripting.javascript.helper;
 
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
-
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.tools.debugger.Dim;
 import org.mozilla.javascript.tools.debugger.SwingGui;

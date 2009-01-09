@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resource.internal.helper.starresource;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
@@ -37,7 +36,7 @@ public class StarResource extends SyntheticResource {
 
     final static String SLASH_STAR = "/*";
     public final static String DEFAULT_RESOURCE_TYPE = "sling:syntheticStarResource";
-    
+
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
     private String resourceSuperType;
@@ -85,7 +84,7 @@ public class StarResource extends SyntheticResource {
             resourceType = DEFAULT_RESOURCE_TYPE;
         }
         setResourceType(resourceType);
-        
+
         resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 

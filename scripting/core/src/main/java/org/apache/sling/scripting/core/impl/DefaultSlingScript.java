@@ -57,7 +57,6 @@ import javax.servlet.ServletResponse;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.scripting.ScriptEvaluationException;
@@ -153,7 +152,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             ctx.getErrorWriter().flush();
 
             return result;
-            
+
         } catch (IOException ioe) {
             throw new ScriptEvaluationException(scriptName, ioe.getMessage(),
                 ioe);
@@ -162,7 +161,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             Throwable cause = (se.getCause() == null) ? se : se.getCause();
             throw new ScriptEvaluationException(scriptName, se.getMessage(),
                 cause);
-            
+
         } finally {
             // dispose of the SlingScriptHelper
             if ( bindings != null ) {
@@ -171,7 +170,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                     helper.dispose();
                 }
             }
-            
+
             // close the script reader (SLING-380)
             if (reader != null) {
                 try {
@@ -229,14 +228,14 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             // log in the request progress tracker
             logScriptError(request, see);
-            
+
             throw see;
-            
+
         } catch (Exception e) {
-            
+
             // log in the request progress tracker
             logScriptError(request, e);
-            
+
             throw new SlingException("Cannot get DefaultSlingScript: "
                 + e.getMessage(), e);
         }
@@ -434,7 +433,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             bindings.put(RESPONSE, sling.getResponse());
             bindings.put(RESOURCE, sling.getRequest().getResource());
             bindings.put(OUT, sling.getResponse().getWriter());
-            
+
             // set the current node if the resource is node based
             Node node = sling.getRequest().getResource().adaptTo(Node.class);
             if (node != null) {

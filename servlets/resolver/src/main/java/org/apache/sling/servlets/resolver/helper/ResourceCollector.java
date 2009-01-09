@@ -30,7 +30,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +84,7 @@ public class ResourceCollector {
      * and request extension into account for finding servlet resources.
      * Otherwise an instance of this class itself is returned which just takes
      * the resource type and request method name into account.
-     * 
+     *
      * @param request The <code>SlingHttpServletRequest</code> for which to
      *            return a <code>ResourceCollector</code>.
      * @return The <code>ResourceCollector</code> to find servlets and scripts
@@ -98,7 +97,7 @@ public class ResourceCollector {
     /**
      * Creates a <code>ResourceCollector</code> finding servlets and scripts
      * for the given <code>methodName</code>.
-     * 
+     *
      * @param methodName The <code>methodName</code> used to find scripts for.
      *            This must not be <code>null</code>.
      * @param baseResourceType The basic resource type to use as a final
@@ -120,7 +119,7 @@ public class ResourceCollector {
     /**
      * Creates a <code>ResourceCollector</code> finding servlets and scripts
      * for the given <code>methodName</code>.
-     * 
+     *
      * @param methodName The <code>methodName</code> used to find scripts for.
      *            This must not be <code>null</code>.
      * @param baseResourceType The basic resource type to use as a final
@@ -232,7 +231,7 @@ public class ResourceCollector {
                         WeightedResource.WEIGHT_NONE);
                     continue;
                 }
-                
+
                 if (scriptName.equals(methodName)) {
                     addWeightedResource(resources, child, selIdx,
                         WeightedResource.WEIGHT_NONE);
@@ -262,7 +261,7 @@ public class ResourceCollector {
      * Creates a {@link WeightedResource} and adds it to the set of resources.
      * The number of resources already present in the set is used as the ordinal
      * number for the newly created resource.
-     * 
+     *
      * @param resources The set of resource to which the
      *            {@link WeightedResource} is added.
      * @param resource The <code>Resource</code> on which the
@@ -285,7 +284,7 @@ public class ResourceCollector {
      * <code>base</code> resource. If no resource exists at the given path -
      * absolute or relative to the base resource - a
      * <code>SyntheticResource</code> is returned.
-     * 
+     *
      * @param resolver The <code>ResourceResolver</code> used to access the
      *            resource.
      * @param base The (optional) base resource. This may be <code>null</code>

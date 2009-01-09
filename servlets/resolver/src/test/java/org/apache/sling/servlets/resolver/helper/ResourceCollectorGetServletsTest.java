@@ -26,19 +26,18 @@ import java.util.Map;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.sling.MockResource;
-import org.apache.sling.servlets.resolver.helper.ResourceCollector;
 
 public class ResourceCollectorGetServletsTest extends HelperTestBase {
 
     private String label;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         label = ResourceUtil.getName(resourceTypePath);
     }
-    
+
     public void testGetServlets0() {
         String[] names = { "/" + label + ".esp", // 0
                 "/GET.esp", // 1
@@ -51,13 +50,13 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print", // resource to enable walking the tree
                 "/print", // resource to enable walking the tree
         };
-        
+
         int[] baseIdxs = { 0, 1, 1, 0, 0, 1, 0, 1, 0, 1 };
         int[] indices  = { 7, 5, 6, 4, 2, 3, 0, 1 };
-        
+
         effectiveTest(names, baseIdxs, indices);
     }
-    
+
     public void testGetServlets1() {
         String[] names = { "/" + label + ".esp", // 0
                 "/GET.esp", // 1
@@ -70,13 +69,13 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print", // resource to enable walking the tree
                 "/print", // resource to enable walking the tree
         };
-        
+
         int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
         int[] indices = { 7, 6, 3, 2, 0, 1 };
-        
+
         effectiveTest(names, baseIdxs, indices);
     }
-    
+
     public void testGetServlets2() {
         String[] names = { "/" + label + ".esp", // 0
                 "/GET.esp", // 1
@@ -90,13 +89,13 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print", // resource to enable walking the tree
                 "/print", // resource to enable walking the tree
         };
-        
+
         int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
         int[] indices = { 8, 7, 2, 3, 0, 1 };
-        
+
         effectiveTest(names, baseIdxs, indices);
     }
-    
+
     public void testGetServlets3() {
         String[] names = { ".servlet", // 0
                 "/" + label + ".esp", // 1
@@ -111,13 +110,13 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print", // resource to enable walking the tree
                 "/print", // resource to enable walking the tree
         };
-        
+
         int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
         int[] indices = { 9, 8, 3, 4, 1, 2, 0 };
-        
+
         effectiveTest(names, baseIdxs, indices);
     }
-    
+
     public void testGetServlets4() {
         String[] names = { ".servlet", // 0
                 "/" + label + ".esp", // 1
@@ -133,19 +132,18 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
                 "/print", // resource to enable walking the tree
                 "/print", // resource to enable walking the tree
         };
-        
+
         int[] baseIdxs = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1 };
         int[] indices = { 10, 9, 3, 4, 1, 2, 0 };
-        
+
         effectiveTest(names, baseIdxs, indices);
     }
-    
+
     protected void effectiveTest(String[] names, int[] baseIdxs, int[] indices) {
 
         String[] base = { "/apps/" + resourceTypePath,
             "/libs/" + resourceTypePath };
 
-        @SuppressWarnings("unchecked")
         Map<String, String> pathMap = new HashMap<String, String>();
 
         for (int i=0; i < names.length; i++) {
@@ -155,7 +153,7 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
             createScriptResource(path, "nt:file");
             pathMap.put(name, path);
         }
-        
+
         ResourceCollector lu = ResourceCollector.create(request);
         Collection<Resource> res = lu.getServlets(request.getResource());
         Iterator<Resource> rIter = res.iterator();
