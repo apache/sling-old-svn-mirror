@@ -34,8 +34,8 @@ import org.apache.sling.jcr.resource.internal.JcrResourceResolver2;
  * The <code>MapEntry</code> class represents a mapping entry in the mapping
  * configuration tree at <code>/etc/map</code>.
  * <p>
- * 
- * @see http://cwiki.apache.org/SLING/flexible-resource-resolution.html
+ *
+ * @see "http://cwiki.apache.org/SLING/flexible-resource-resolution.html"
  */
 public class MapEntry implements Comparable<MapEntry> {
 
@@ -63,7 +63,7 @@ public class MapEntry implements Comparable<MapEntry> {
     /**
      * Returns a string used for matching map entries against the given request
      * or URI parts.
-     * 
+     *
      * @param scheme The URI scheme
      * @param host The host name
      * @param port The port number. If this is negative, the default value used
@@ -187,7 +187,7 @@ public class MapEntry implements Comparable<MapEntry> {
         if (!url.startsWith("^")) {
             url = "^".concat(url);
         }
-        
+
         this.urlPattern = Pattern.compile(url);
         this.redirect = redirect;
         this.status = status;
