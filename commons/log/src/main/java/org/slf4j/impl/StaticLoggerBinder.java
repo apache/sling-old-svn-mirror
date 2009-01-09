@@ -24,7 +24,7 @@ import org.slf4j.spi.LoggerFactoryBinder;
 
 /**
  * This <code>StaticLoggerBinder</code> class returns the
- * {@link SlingLoggerFactory} singleton instance as the SLF4J logger factory.
+ * {@link LogConfigManager} singleton instance as the SLF4J logger factory.
  */
 public class StaticLoggerBinder implements LoggerFactoryBinder {
 
