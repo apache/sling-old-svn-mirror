@@ -199,7 +199,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     public ResourceBundle getResourceBundle(Locale locale) {
         return getResourceBundle(null, locale);
     }
-    
+
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getResourceBundle(String, Locale)
      */
@@ -207,7 +207,7 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         if (locale == null) {
             locale = getLocale();
         }
-        
+
         return new NullResourceBundle(locale);
     }
 
@@ -225,7 +225,6 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getResponseContentTypes()
      */
-    @SuppressWarnings("unchecked")
     public Enumeration<String> getResponseContentTypes() {
         List<String> result = new ArrayList<String>();
 
@@ -263,10 +262,9 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
-     * @see javax.servlet.http.HttpServletRequestWrapper#isUserInRole()
+     * @see javax.servlet.http.HttpServletRequestWrapper#isUserInRole(String)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public boolean isUserInRole(String role) {
         Object authorization = getAttribute(HttpContext.AUTHORIZATION);
         return (authorization instanceof Authorization)
