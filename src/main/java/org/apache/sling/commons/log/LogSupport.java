@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -144,7 +143,7 @@ public class LogSupport implements BundleListener, ServiceListener,
      * stopped or otherwise releases the Log Reader Service, the Log Reader
      * Service must remove all of the bundle's listeners.</blockquote>
      * <p>
-     * 
+     *
      * @param bundle The bundle whose listeners are to be removed.
      */
     /* package */void removeLogListeners(Bundle bundle) {
@@ -360,7 +359,7 @@ public class LogSupport implements BundleListener, ServiceListener,
     /**
      * Get a logger for messages orginating from the given bundle. If no bundle
      * is specified, we use the system bundle logger.
-     * 
+     *
      * @param bundle The bundle for which a logger is to be returned.
      * @return The Logger for the bundle.
      */
@@ -528,7 +527,7 @@ public class LogSupport implements BundleListener, ServiceListener,
         /**
          * Get the next log entry for dispatching. This method blocks until an
          * event is available or the thread is interrupted.
-         * 
+         *
          * @return The next event to dispatch
          * @throws InterruptedException If the thread has been interrupted while
          *             waiting for a log event to dispatch.
