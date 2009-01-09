@@ -26,8 +26,6 @@ import junit.framework.TestCase;
 
 public class SlingLoggerTest extends TestCase {
 
-    private static final String LOGGER_NAME = "test.log";
-
     private SlingLoggerWriter output = new SlingLoggerWriter(null) {
         public void writeln() throws IOException {
             // just flush, no end of line
