@@ -18,7 +18,6 @@ package org.apache.sling.scripting.javascript.internal;
 
 import java.io.Reader;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -30,7 +29,6 @@ import javax.script.ScriptException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.apache.sling.scripting.javascript.helper.SlingWrapFactory;
 import org.apache.sling.scripting.javascript.io.EspReader;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ImporterTopLevel;

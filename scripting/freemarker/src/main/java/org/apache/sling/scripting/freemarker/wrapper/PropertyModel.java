@@ -16,12 +16,11 @@
  */
 package org.apache.sling.scripting.freemarker.wrapper;
 
-import freemarker.template.TemplateModel;
-import freemarker.template.TemplateScalarModel;
-import freemarker.template.TemplateModelException;
-
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+
+import freemarker.template.TemplateModelException;
+import freemarker.template.TemplateScalarModel;
 
 /**
  * A wrapper for JCR properties to support freemarker scripting.
