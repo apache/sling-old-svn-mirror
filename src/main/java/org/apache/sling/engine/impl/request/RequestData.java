@@ -143,7 +143,8 @@ public class RequestData implements BufferProvider {
 
         // resolve the resource
         requestProgressTracker.startTimer("ResourceResolution");
-        Resource resource = resourceResolver.resolve(getServletRequest());
+        final HttpServletRequest request = getServletRequest();
+        Resource resource = resourceResolver.resolve(request, request.getPathInfo());
         requestProgressTracker.logTimer("ResourceResolution",
             "URI={0} resolves to Resource={1}",
             getServletRequest().getRequestURI(), resource);
@@ -514,20 +515,20 @@ public class RequestData implements BufferProvider {
             currentContentData = contentDataStack.removeLast();
 
             if (contentDataStack.isEmpty()) {
-                
+
                 // remove the request attributes if the stack is empty now
                 servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_CONTENT);
                 servletRequest.removeAttribute(SlingConstants.ATTR_REQUEST_SERVLET);
-                
+
             } else {
-                
+
                 // otherwise reset the attributes of the including content data
                 ContentData including = contentDataStack.getLast();
                 servletRequest.setAttribute(ATTR_REQUEST_CONTENT,
                     including.getResource());
                 servletRequest.setAttribute(ATTR_REQUEST_SERVLET,
                     including.getServlet());
-                
+
             }
 
         } else {

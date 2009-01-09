@@ -35,7 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.servlets.ErrorHandler;
 
@@ -297,7 +296,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
             super.setCharacterEncoding(charset);
         }
     }
-    
+
     public void setDateHeader(String name, long date) {
         this.registerHeader(name, toDateString(date), false);
         super.setDateHeader(name, date);
