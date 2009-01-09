@@ -18,13 +18,11 @@
  */
 package org.apache.sling.bundleresource.impl;
 
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,7 @@ class BundleResourceIterator implements Iterator<Resource> {
     private final BundleResourceCache bundle;
 
     private final MappedPath mappedPath;
-    
+
     /** Underlying bundle entry path enumeration */
     private final Iterator<String> entries;
 
@@ -86,7 +84,7 @@ class BundleResourceIterator implements Iterator<Resource> {
 
     BundleResourceIterator(ResourceResolver resourceResolver, BundleResourceCache bundle,
             MappedPath mappedPath, String parentPath) {
-        
+
         // trailing slash to enumerate children
         if (!parentPath.endsWith("/")) {
             parentPath = parentPath.concat("/");
