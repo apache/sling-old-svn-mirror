@@ -32,9 +32,9 @@ public interface Resource extends Adaptable {
      * resources (value is "sling:nonexisting"). This resource type is used by
      * {@link ResourceResolver} instances to mark a resource which could not
      * actually be resolved.
-     * 
+     *
      * @see #getResourceType()
-     * @see ResourceResolver#resolve(javax.servlet.http.HttpServletRequest)
+     * @see ResourceResolver#resolve(javax.servlet.http.HttpServletRequest, String)
      */
     static final String RESOURCE_TYPE_NON_EXISTING = "sling:nonexisting";
 
@@ -62,14 +62,14 @@ public interface Resource extends Adaptable {
      * if the {@link #getResourceType()} has no supertype.
      */
     String getResourceSuperType();
-    
+
     /**
      * Returns the metadata of this resource. The concrete data contained in the
      * {@link ResourceMetadata} object returned is implementation specific
      * except for the {@link ResourceMetadata#RESOLUTION_PATH} property which is
      * required to be set to the part of the request URI used to resolve the
      * resource.
-     * 
+     *
      * @see ResourceMetadata
      */
     ResourceMetadata getResourceMetadata();
