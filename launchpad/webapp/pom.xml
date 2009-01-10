@@ -119,7 +119,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.sling.launchpad.app,servlet
+                                org.apache.sling.launchpad.app
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -129,30 +129,6 @@
                             <overWriteSnapshots>
                                 true
                             </overWriteSnapshots>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- Copy bundles that must be initially installed to WEB-INF/resources/bundles -->
-                        <id>copy-dependencies</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>
-                                ${project.build.directory}/${project.build.finalName}/WEB-INF/resources/0
-                            </outputDirectory>
-                            <excludeTransitive>true</excludeTransitive>
-                            <includeGroupIds>
-                                org.apache.felix,org.apache.sling,org.apache.jackrabbit
-                            </includeGroupIds>
-                            <excludeArtifactIds>
-                              <!-- the app bundle is not needed, we only depend on it to get the same dependencies,
-                                   same is try for the base bundle -->
-                              org.apache.sling.launchpad.app,org.apache.sling.launchpad.base
-                            </excludeArtifactIds>
-                            <includeScope>
-                                provided
-                            </includeScope>
                         </configuration>
                     </execution>
                 </executions>
@@ -174,18 +150,10 @@
                                 <exclude>
                                     org/apache/sling/launcher/app/main/**
                                 </exclude>
-                                <exclude>
-                                    resources/5/org.apache.felix.http.jetty*.jar
-                                </exclude>
-                                <exclude>
-                                    resources/5/pax-web-service*.jar
-                                </exclude>
-                                <exclude>
-                                    resources/5/org.apache.felix.commons.servlet-api*.jar
-                                </exclude>
                             </excludes>
                             <includes>
                                 <include>org/**</include>
+                                <include>info/**</include>
                             </includes>
                         </resource>
                         <!-- the configuration resources -->
@@ -202,13 +170,10 @@
                             </includes>
                             <excludes>
                                 <exclude>
-                                    resources/5/org.apache.felix.http.jetty*.jar
+                                    resources/*/org.apache.felix.http.jetty*.jar
                                 </exclude>
                                 <exclude>
-                                    resources/5/pax-web-service*.jar
-                                </exclude>
-                                <exclude>
-                                    resources/5/org.apache.felix.commons.servlet-api*.jar
+                                    resources/*/pax-web-service*.jar
                                 </exclude>
                             </excludes>
                         </resource>
@@ -268,19 +233,6 @@
             <version>5-incubator-SNAPSHOT</version>
             <scope>provided</scope>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.equinox.http</groupId>
-            <artifactId>servlet</artifactId>
-            <version>1.0.0-v20070606</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
         </dependency>
     </dependencies>
 </project>
