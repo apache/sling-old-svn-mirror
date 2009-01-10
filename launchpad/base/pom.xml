@@ -42,6 +42,58 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/base</developerConnection>
         <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/base</url>
     </scm>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.0</version>
+                <executions>
+                    <execution>
+                        <id>inline-osgi-bundles</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                org.osgi.core,org.osgi.compendium,servlet-api,servlet
+                            </includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}
+                            </outputDirectory>
+                            <includes>**</includes>
+                            <excludes>
+                                org/osgi/framework/**,
+                                org/osgi/service/packageadmin/**,
+                                org/osgi/service/startlevel/**,
+                                org/osgi/service/url/**,
+                                org/osgi/util/tracker/**, META-INF/**
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>inline-framework-bundles</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                org.apache.felix.framework
+                            </includeArtifactIds>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}
+                            </outputDirectory>
+                            <includes>**</includes>
+                            <excludes>META-INF/**,**/NOTICE</excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
     <reporting>
         <plugins>
             <plugin>
@@ -70,11 +122,13 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
             <version>1.0.4</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.equinox.http</groupId>
