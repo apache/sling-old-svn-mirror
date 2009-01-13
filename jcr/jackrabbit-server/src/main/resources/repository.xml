@@ -18,20 +18,24 @@
   under the License.
 -->
 <!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.4.dtd">
+                            "http://jackrabbit.apache.org/dtd/repository-1.5.dtd">
 <Repository>
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
         <param name="path" value="${rep.home}/repository"/>
     </FileSystem>
 
     <Security appName="Jackrabbit">
-        <AccessManager class="org.apache.jackrabbit.core.security.SimpleAccessManager">
+        <SecurityManager class="org.apache.jackrabbit.core.DefaultSecurityManager" workspaceName="security">
+        </SecurityManager>
+
+        <AccessManager class="org.apache.jackrabbit.core.security.DefaultAccessManager">
         </AccessManager>
 
-        <LoginModule class="org.apache.jackrabbit.core.security.SimpleLoginModule">
-           <param name="anonymousId" value="anonymous"/>
+        <LoginModule class="org.apache.jackrabbit.core.security.authentication.DefaultLoginModule">
+            <param name="anonymousId" value="anonymous"/>
+            <param name="adminId" value="admin"/>
         </LoginModule>
-    </Security>
+    </Security> 
 
     <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default"/>
 
@@ -42,6 +46,7 @@
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
           <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+          <param name="shutdownOnClose" value="true"/>
         </PersistenceManager>
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="path" value="${wsp.home}/index"/>
@@ -59,6 +64,7 @@
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
+          <param name="shutdownOnClose" value="true"/>
         </PersistenceManager>
     </Versioning>
 
