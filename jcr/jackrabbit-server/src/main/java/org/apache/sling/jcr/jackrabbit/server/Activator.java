@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.DriverManager;
 import java.util.Hashtable;
 
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
@@ -106,7 +107,21 @@ public class Activator implements BundleActivator, ServiceListener {
     }
 
     public void stop(BundleContext arg0) {
-        // nothing to do
+        
+        /*
+         * when stopping Derby (which is used by Jackrabbit by default) a
+         * derby.antiGC thread keeps running which prevents this bundle from
+         * being garbage collected ... we try to really stop derby here and
+         * ignore the exception since according to
+         * http://db.apache.org/derby/docs/10.4/devguide/tdevdvlp20349.html this
+         * exception will always be thrown.
+         */
+
+        try {
+            DriverManager.getConnection("jdbc:derby:;shutdown=true");
+        } catch (Throwable t) {
+            // exception is always thrown
+        }
     }
 
     // ---------- ServiceListener ----------------------------------------------
