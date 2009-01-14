@@ -21,8 +21,10 @@ package org.apache.sling.maven.bundlesupport;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
@@ -32,6 +34,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.FilePartSource;
@@ -41,6 +44,9 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.commons.osgi.ManifestHeader.Entry;
 
@@ -137,9 +143,9 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         getLog().info(
             "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
                 + slingUrl);
-        configure(slingUrl, bundleFile);
+        post(slingUrl, bundleFile);
         if ( mountByFS ) {
-            post(slingUrl, bundleFile);
+            configure(slingUrl, bundleFile);
         }
     }
 
@@ -221,7 +227,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
         // authentication stuff
         client.getParams().setAuthenticationPreemptive(true);
-        Credentials defaultcreds = new UsernamePasswordCredentials(user,
+        final Credentials defaultcreds = new UsernamePasswordCredentials(user,
                 password);
         client.getState().setCredentials(AuthScope.ANY, defaultcreds);
 
@@ -230,6 +236,13 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         final List resources = project.getResources();
         if ( resources == null || resources.size() == 0 ) {
             throw new MojoExecutionException("No resources configured for this project.");
+        }
+        // now get current configurations
+        final Map configs = this.getCurrentFileProviderConfigs(targetURL, client);
+        final Iterator configIter = configs.keySet().iterator();
+        while ( configIter.hasNext() ) {
+            final String key = configIter.next().toString();
+            getLog().info("Found " + key + " : " + configs.get(key));
         }
         final Entry[] entries = header.getEntries();
         for(final Entry entry : entries) {
@@ -289,6 +302,51 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                         + " failed, cause: " + ex.getMessage(), ex);
             }
         }
+    }
+
+    /**
+     * Return all file provider configs for this project
+     * @param targetURL The targetURL of the webconsole
+     * @param client The http client
+     * @return A map (may be empty) with the pids as keys and the path as value
+     * @throws MojoExecutionException
+     */
+    protected Map getCurrentFileProviderConfigs(final String targetURL, final HttpClient client)
+    throws MojoExecutionException {
+        getLog().debug("Getting current file provider configurations.");
+        final Map result = new HashMap();
+        final String getUrl = targetURL  + "/configMgr/(service.factoryPid=" + FS_FACTORY + ").json";
+        final GetMethod get = new GetMethod(getUrl);
+
+        try {
+            final int status = client.executeMethod(get);
+            if ( status == 200 )
+            {
+                final String jsonText = get.getResponseBodyAsString();
+                try {
+                    JSONArray array = new JSONArray(jsonText);
+                    for(int i=0; i<array.length(); i++) {
+                        final JSONObject obj = array.getJSONObject(i);
+                        final String pid = obj.getString("pid");
+                        final String path = obj.getJSONObject("provider.file").getString("value");
+                        if ( path != null && path.startsWith(this.project.getBasedir().getAbsolutePath()) ) {
+                            getLog().debug("Found configuration with pid: " + pid + ", path: " + path);
+                            result.put(pid, path);
+                        }
+                    }
+                } catch (JSONException ex) {
+                    throw new MojoExecutionException("Reading configuration from " + getUrl
+                            + " failed, cause: " + ex.getMessage(), ex);
+                }
+            }
+        } catch (HttpException ex) {
+            throw new MojoExecutionException("Reading configuration from " + getUrl
+                    + " failed, cause: " + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new MojoExecutionException("Reading configuration from " + getUrl
+                    + " failed, cause: " + ex.getMessage(), ex);
+        }
+        return result;
     }
 
     /**
