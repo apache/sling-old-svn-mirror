@@ -103,7 +103,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
 
     private RepositoryClassLoaderProvider repoCLProvider;
 
-    public static final String SCRIPT_TYPE = "jsp";
+    public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
 
     private static final String CLASSLOADER_NAME = "admin";
 
