@@ -33,7 +33,7 @@
     <packaging>bundle</packaging>
     <version>0.1.0-incubator-SNAPSHOT</version>
 
-    <name>Sling Thread Dumper</name>
+    <name>Apache Sling Thread Dumper</name>
     <description>
         Plugin providing plugins to the Felix Shell and Web Console to
         have the current threads with the stack traces dumped.
