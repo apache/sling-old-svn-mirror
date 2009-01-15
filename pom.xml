@@ -31,7 +31,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Scripting Implementation API</name>
+    <name>Apache Sling Scripting Implementation API</name>
     <description>
         This bundle provides the internal API to implement scripting. As such
         it bundles the Java Scripting API provided by Apache BSF.
