@@ -31,7 +31,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Object Content Mapping</name>
+    <name>Apache Sling Object Content Mapping</name>
     <description>
         This bundle provides Object Content Mapping support for
         resources loaded from a JCR repositories. This support is
