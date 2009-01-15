@@ -31,7 +31,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Commons OSGi support</name>
+    <name>Apache Sling Commons OSGi support</name>
     <description>Commons OSGi</description>
 
     <scm>
