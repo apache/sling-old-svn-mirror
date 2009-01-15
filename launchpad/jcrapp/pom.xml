@@ -31,7 +31,7 @@
     <packaging>jar</packaging>
     <version>2.0.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Launchpad Jackrabbit Server</name>
+    <name>Apache Sling Launchpad Jackrabbit Server</name>
     <description>
         Standalone Sling JCR Server launching the embedded Jackrabbit Repository.
         Note, that this is not the full Sling Application but just the bundles

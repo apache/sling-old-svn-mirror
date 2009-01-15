@@ -31,7 +31,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Scripting - Java Support</name>
+    <name>Apache Sling Scripting Java Support</name>
     <description>Support for scripting Java</description>
 
     <scm>

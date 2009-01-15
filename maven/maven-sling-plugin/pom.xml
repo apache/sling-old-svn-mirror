@@ -32,7 +32,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Sling - Maven Plugin for Supporting Bundle Development</name>
+    <name>Apache Sling Maven Plugin for Supporting Bundle Development</name>
     <description>
         Maven Plugin supporting various Sling Development Tasks
     </description>

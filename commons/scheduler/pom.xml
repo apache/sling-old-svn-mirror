@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Scheduler Support</name>
+    <name>Apache Sling Scheduler Support</name>
     <description>
         Support for scheduling.
     </description>

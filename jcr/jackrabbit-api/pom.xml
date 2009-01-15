@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Jackrabbit API Bundle</name>
+    <name>Apache Sling Jackrabbit API Bundle</name>
     <description>
         This OSGi bundle provides the Jackrabbit API packages.
     </description>

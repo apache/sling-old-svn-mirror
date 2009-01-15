@@ -31,7 +31,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - OSGi Bundle Repository</name>
+    <name>Apache Sling OSGi Bundle Repository</name>
     <description>
         This bundle provides a servlet, which implements an OSGi Bundle
         Repository with the following functionality: Upload of bundles,

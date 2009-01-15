@@ -31,7 +31,7 @@
     <packaging>war</packaging>
     <version>5-incubator-SNAPSHOT</version>
 
-    <name>Sling - Launchpad Testing</name>
+    <name>Apache Sling Launchpad Testing</name>
     <description>
         Sling Launchpad Testing module, contains integration tests that
         were previously in the launchpad webapp module.

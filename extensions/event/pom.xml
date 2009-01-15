@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Event Support</name>
+    <name>Apache Sling Event Support</name>
     <description>
         Support for eventing.
     </description>

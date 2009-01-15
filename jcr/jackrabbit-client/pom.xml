@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Repository Accessor</name>
+    <name>Apache Sling Repository Accessor</name>
     <description>
         Bundle to access an existing JCR repository from JNDI or through
         RMI

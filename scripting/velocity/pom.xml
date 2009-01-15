@@ -31,7 +31,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Scripting - Velocity Support</name>
+    <name>Apache Sling Scripting Velocity Support</name>
     <description>Support for Velocity scripting</description>
 
     <scm>

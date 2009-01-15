@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - MIME type mapping support</name>
+    <name>Apache Sling MIME type mapping support</name>
     <description>
 	Support for configurable MIME type mapping and querying
     </description>

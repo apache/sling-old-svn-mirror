@@ -27,7 +27,7 @@
     <packaging>pom</packaging>
     <version>4-incubator</version>
 
-    <name>Sling (Builder)</name>
+    <name>Apache Sling (Builder)</name>
     <description>
         Pseudo project to build the complete Sling project
     </description>

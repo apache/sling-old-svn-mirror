@@ -32,12 +32,12 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Sample Sling Application</name>
+    <name>Apache Sling Sample Application</name>
     <description>
-        This bundle provides a simple Sling Application to show some of
-        the features and functionalities of Sling, such as node type
-        definition, content mapping, running JSPs off the repository and
-        the bundle.
+        This bundle provides a simple Apache Sling Application to show
+        some of the features and functionalities of Apache Sling, such
+        as node type definition, content mapping, running JSPs off the
+        repository and the bundle.
     </description>
 
     <scm>

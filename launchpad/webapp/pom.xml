@@ -31,7 +31,7 @@
     <packaging>war</packaging>
     <version>5-incubator-SNAPSHOT</version>
 
-    <name>Sling - Launchpad Web Application</name>
+    <name>Apache Sling Launchpad Web Application</name>
     <description>
         The launchpad webapp packages the standard launchpad components
         in a Sling web application. See SLING-149.

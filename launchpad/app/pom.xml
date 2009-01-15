@@ -31,7 +31,7 @@
     <packaging>jar</packaging>
     <version>5-incubator-SNAPSHOT</version>
 
-    <name>Sling - Launchpad Application</name>
+    <name>Apache Sling Launchpad Application</name>
     <description>
         Standalone Launchpad Java Application. Everything needed to run
         the Launchpad is included in a single JAR file.

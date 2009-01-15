@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Sling JSON Library</name>
+    <name>Sling Apache Sling JSON Library</name>
     <description>Sling JSON Library</description>
 
     <scm>
