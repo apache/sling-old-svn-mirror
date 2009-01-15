@@ -27,7 +27,7 @@ import org.osgi.service.component.ComponentContext;
 
 /**
  * The configurable eventing thread pool.
- * @scr.component
+ * @scr.component label="%event.pool.name" description="%event.pool.description"
  * @scr.service interface="org.apache.sling.event.ThreadPool"
  *
  * @scr.property nameRef="PROPERTY_MIN_POOL_SIZE" valueRef="DEFAULT_MIN_POOL_SIZE"
