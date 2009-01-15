@@ -31,7 +31,7 @@
     <packaging>pom</packaging>
     <version>5-incubator-SNAPSHOT</version>
 
-    <name>Sling (Parent)</name>
+    <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
     <inceptionYear>2007</inceptionYear>
 
