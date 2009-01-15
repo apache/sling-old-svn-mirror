@@ -52,7 +52,6 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-jcrocm-plugin</artifactId>
-                <version>2.0.2-incubator</version>
                 <executions>
                     <execution>
                         <id>generate-JCR-OCM-descriptor</id>
@@ -67,7 +66,6 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-jspc-plugin</artifactId>
-                <version>2.0.2-incubator</version>
                 <executions>
                     <execution>
                         <id>compile-jsp</id>
