@@ -31,7 +31,7 @@
     <packaging>jar</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Launchpad Base</name>
+    <name>Apache Sling Launchpad Base</name>
     <description>
         This module contains the common classes and configuration files used by the various
         launchpad modules..
