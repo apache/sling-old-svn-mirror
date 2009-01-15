@@ -31,7 +31,7 @@
   <version>2.0.3-incubator-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Sling - JCR OSGi Installer Service</name>
+  <name>Apache Sling JCR OSGi Installer Service</name>
   <description> 
     Loads OSGi bundles, deployment packages and configs from
     configurable locations in the JCR repository.
