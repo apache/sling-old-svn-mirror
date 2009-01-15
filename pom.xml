@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Sample Path Based Resource Type Provider</name>
+    <name>Apache Sling Sample Path Based Resource Type Provider</name>
     <description>
         Provides a configurable path-based sample resource type provider
         for resources which do not have an explicit one.
