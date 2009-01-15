@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Default GET Servlets</name>
+    <name>Apache Sling Default GET Servlets</name>
     <description>
         Provides default GET servlets for HTML, Text and JSON rendering
         and streaming resources.
