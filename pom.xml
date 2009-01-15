@@ -31,8 +31,8 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling Apache Sling JSON Library</name>
-    <description>Sling JSON Library</description>
+    <name>Apache Sling JSON Library</name>
+    <description>Apache Sling JSON Library</description>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/json</connection>
