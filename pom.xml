@@ -30,7 +30,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Initial Content Loader</name>
+    <name>Apache Sling Initial Content Loader</name>
     <description>
         This bundle provides initial content installation through bundles.
     </description>
