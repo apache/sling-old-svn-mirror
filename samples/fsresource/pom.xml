@@ -30,7 +30,7 @@
     <packaging>bundle</packaging>
     <version>0.9.0-incubator-SNAPSHOT</version>
 
-    <name>Sling - Filesystem Resource Provider</name>
+    <name>Apache Sling Filesystem Resource Provider</name>
     <description>
         Provides a ResourceProvider implementation supporting filesystem
         based resources.

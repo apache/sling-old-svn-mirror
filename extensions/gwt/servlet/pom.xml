@@ -34,7 +34,7 @@
 
     <packaging>bundle</packaging>
 
-    <name>Sling Google Web Toolkit Servlet Library</name>
+    <name>Apache Sling Google Web Toolkit Servlet Library</name>
     <description>
         This bundle provides the Google Web Toolkit (GWT) servlet
         library.

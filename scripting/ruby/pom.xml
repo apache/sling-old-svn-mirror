@@ -31,7 +31,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Scripting - Ruby Support</name>
+    <name>Apache Sling Scripting Ruby Support</name>
     <description>Support for Ruby scripting</description>
 
     <scm>

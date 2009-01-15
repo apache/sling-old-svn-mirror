@@ -30,7 +30,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Resource Resolver</name>
+    <name>Apache Sling Resource Resolver</name>
     <description>
         This bundle provides the JCR based ResourceResolver.
     </description>

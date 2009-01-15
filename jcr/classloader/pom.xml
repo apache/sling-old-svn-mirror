@@ -30,7 +30,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Repository ClassLoader</name>
+    <name>Apache Sling Repository ClassLoader</name>
     <description>
         Provides Support for delegate class loaders built dynamically.
         Delegate class loaders supported are generic ClassLoader, OSGi

@@ -30,7 +30,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Jackrabbit Embedded Repository</name>
+    <name>Apache Sling Jackrabbit Embedded Repository</name>
     <description>
         Bundle providing support to embed Jackrabbit Repository
         instances and publish via RMI and/or JNDI

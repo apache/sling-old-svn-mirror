@@ -28,7 +28,7 @@
 	<artifactId>org.apache.sling.jcr.jcrinstall.testbundles.observer</artifactId>
 	<packaging>bundle</packaging>
 	<version>2.0.3-incubator-SNAPSHOT</version>
-	<name>Sling - JCR OSGi Installer - Observer test bundle</name>
+	<name>Apache Sling JCR OSGi Installer Observer test bundle</name>
 	<description> Bundle used in jcrinstall automated tests. </description>
 	
 	<scm>

@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Engine Implementation</name>
+    <name>Apache Sling Engine Implementation</name>
     <description>
         Bundle implementing the core of Sling.
     </description>

@@ -31,7 +31,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - RunMode service</name>
+    <name>Apache Sling RunMode service</name>
     <description>
         Used to enable/disable sets of components based on a list of
         "run mode" strings.

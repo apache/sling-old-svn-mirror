@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Simple WebDAV Access to repositories</name>
+    <name>Apache Sling Simple WebDAV Access to repositories</name>
     <description>
         Bundle to access JCR repositories over WebDAV
     </description>

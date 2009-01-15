@@ -33,7 +33,7 @@
     <version>2.0.0-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling Google Web Toolkit Sample</name>
+    <name>Apache Sling Google Web Toolkit Sample</name>
     <description>
         This bundle provides a small demonstration of using Google Web
         Toolkit with RPC servlet interaction. The application lets you

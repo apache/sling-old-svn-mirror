@@ -27,7 +27,7 @@
 	<artifactId>org.apache.sling.jcr.jcrinstall.parent</artifactId>
 	<version>2.0.3-incubator-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Sling - JCR OSGi Installer Parent</name>
+	<name>Apache Sling JCR OSGi Installer Parent</name>
 	<description>Parent pom for the the jcrinstall submodules</description>
 	
 	<scm>

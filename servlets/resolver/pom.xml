@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.5-incubator-SNAPSHOT</version>
 
-    <name>Sling - Servlet Resolver</name>
+    <name>Apache Sling Servlet Resolver</name>
     <description>
         Bundle implementing the Sling API ServletResolver.
     </description>

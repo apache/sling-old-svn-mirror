@@ -31,9 +31,9 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Scripting - JSP Support, Core Tag Library</name>
+    <name>Apache Sling JSP Tag Library</name>
     <description>
-        Core Tag Library for Project Sling JSP support
+        Core Tag Library for Apache Sling JSP support
     </description>
 
     <scm>

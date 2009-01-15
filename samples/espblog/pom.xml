@@ -20,7 +20,7 @@
   <artifactId>org.apache.sling.samples.espblog</artifactId>
   <packaging>bundle</packaging>
   <version>2.0.3-incubator-SNAPSHOT</version>
-  <name>Sling - ESP blog sample</name>
+  <name>Apache Sling ESP blog sample</name>
   <description>
     Sample Sling application - blog written using ESP scripts.
   </description>

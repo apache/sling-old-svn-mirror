@@ -32,7 +32,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Javashell sample</name>
+    <name>Apache Sling Javashell sample</name>
     <description>
         Sample applications that executes java code snippets
         defined by content nodes, includes a simple editing form.

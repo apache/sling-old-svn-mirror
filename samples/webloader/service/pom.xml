@@ -32,7 +32,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - Webloader Service</name>
+    <name>Apache Sling Webloader Service</name>
     <description>
         Sample OSGi service that retrieves documents from the Web using a Google
         search, and stores them into the repository.

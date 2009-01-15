@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - AdapterManager implementation</name>
+    <name>Apache Sling AdapterManager implementation</name>
     <description>
         Bundle implementing the AdapterManager and provides a convenience
         implementation of the Adaptable interface to make use of this

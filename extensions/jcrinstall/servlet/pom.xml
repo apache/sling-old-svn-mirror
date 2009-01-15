@@ -31,7 +31,7 @@
   <version>2.0.3-incubator-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Sling - JCR OSGi Installer Servlet</name>
+  <name>Apache Sling JCR OSGi Installer Servlet</name>
   <description> 
     Information and control servlet for the jcrinstall service
   </description>

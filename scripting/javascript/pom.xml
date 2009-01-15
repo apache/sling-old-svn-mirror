@@ -31,7 +31,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - Scripting - JavaScript Support</name>
+    <name>Apache Sling Scripting JavaScript Support</name>
     <description>Support for JavaScript scripting</description>
 
     <scm>
