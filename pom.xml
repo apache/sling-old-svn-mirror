@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Sling - HTTP Header Authentication</name>
+    <name>Apache Sling HTTP Header Authentication</name>
     <description>
         Bundle implementing Basic HTTP Header authentication with login
         and logout support
