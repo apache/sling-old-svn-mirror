@@ -31,7 +31,7 @@
     <packaging>bundle</packaging>
     <version>2.0.1-incubator-SNAPSHOT</version>
 
-    <name>Sling - Internationalization Support</name>
+    <name>Apache Sling Internationalization Support</name>
     <description>
         Support for creating Java I18N ResourceBundles from repository
         resources.
