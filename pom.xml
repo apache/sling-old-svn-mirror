@@ -31,7 +31,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Sling - OSGi LogService Implementation</name>
+    <name>Apache Sling OSGi LogService Implementation</name>
     <description>
         Implementation of the OSGi Compendium Log Service using SLF4J
         on top of a private implementation. In addition to providing the
