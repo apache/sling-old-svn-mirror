@@ -116,7 +116,7 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.sling.jcr.api,org.apache.sling.jcr.base,jackrabbit-api,org.apache.sling.jcr.jackrabbit.server,jackrabbit-jcr-commons,commons-io,commons-collections,org.apache.sling.commons.osgi,org.apache.sling.commons.mime,org.apache.sling.jcr.webdav
+                                org.apache.sling.jcr.api,org.apache.sling.jcr.base,jackrabbit-api,org.apache.sling.jcr.jackrabbit.server,jackrabbit-jcr-commons,commons-io,commons-collections,commons-lang,org.apache.sling.commons.osgi,org.apache.sling.commons.mime,org.apache.sling.jcr.webdav
                             </includeArtifactIds>
 
                             <excludeTransitive>true</excludeTransitive>
@@ -327,6 +327,12 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
