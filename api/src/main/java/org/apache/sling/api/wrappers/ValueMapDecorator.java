@@ -18,7 +18,10 @@
  */
 package org.apache.sling.api.wrappers;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,15 +50,26 @@ public class ValueMapDecorator implements ValueMap {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     public <T> T get(String name, Class<T> type) {
+        return convert(get(name), type);
+    }
+
+    /**
+     * Converts the object to the given type.
+     * @param obj object
+     * @param type type
+     * @return the converted object
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T convert(Object obj, Class<T> type) {
+        // todo: do smarter checks
         try {
-            // todo: do smarter checks
-            Object obj = get(name);
             if (obj == null) {
                 return null;
             } else if (type.isAssignableFrom(obj.getClass())) {
                 return (T) obj;
+            } else if (type.isArray()) {
+                return (T) convertToArray(obj, type.getComponentType());
             } else if (type == String.class) {
                 return (T) String.valueOf(obj);
             } else if (type == Integer.class) {
@@ -72,6 +86,26 @@ public class ValueMapDecorator implements ValueMap {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /**
+     * Converts the object to an array of the given type
+     * @param obj tje object or object array
+     * @param type the component type of the array
+     * @return and array of type T
+     */
+    private <T> T[] convertToArray(Object obj, Class<T> type) {
+        List<T> values = new LinkedList<T>();
+        if (obj.getClass().isArray()) {
+            for (Object o: (Object[]) obj) {
+                values.add(convert(o, type));
+            }
+        } else {
+            values.add(convert(obj, type));
+        }
+        @SuppressWarnings("unchecked")
+        T[] result = (T[]) Array.newInstance(type, values.size());
+        return values.toArray(result);
     }
 
     /**
