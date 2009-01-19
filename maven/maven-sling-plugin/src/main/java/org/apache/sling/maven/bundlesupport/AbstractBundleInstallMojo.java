@@ -68,7 +68,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      *            default-value="http://localhost:8080/system/console"
      * @required
      */
-    private String slingUrl;
+    protected String slingUrl;
 
     /**
      * The user name to authenticate at the running Sling instance.
@@ -343,7 +343,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             final int status = client.executeMethod(post);
             // we get a moved temporarily back from the configMgr plugin
             if (status == HttpStatus.SC_MOVED_TEMPORARILY || status == HttpStatus.SC_OK) {
-                getLog().info("Configuration removed.");
+                getLog().debug("Configuration removed.");
             } else {
                 getLog().error(
                     "Removing configuration failed, cause: "
@@ -355,6 +355,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         } catch (IOException ex) {
             throw new MojoExecutionException("Removing configuration at " + postUrl
                     + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            post.releaseConnection();
         }
     }
 
@@ -388,6 +390,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         } catch (IOException ex) {
             throw new MojoExecutionException("Configuration on " + postUrl
                     + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            post.releaseConnection();
         }
     }
 
@@ -442,6 +446,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         } catch (IOException ex) {
             throw new MojoExecutionException("Reading configuration from " + getUrl
                     + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            get.releaseConnection();
         }
         return result;
     }
