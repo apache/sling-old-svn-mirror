@@ -21,13 +21,13 @@ package org.apache.sling.commons.log.slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import org.apache.sling.commons.log.LogManager;
 import org.osgi.service.cm.ConfigurationException;
@@ -356,7 +356,7 @@ public class LogConfigManager implements ILoggerFactory {
      * names form a hierarchy like Java packages, the listed names also apply to
      * "child names" unless more specific configuration applies for such
      * children. This property may be a single string, an array of strings or a
-     * vector of strings. Each string may itself be a comma-separated list of
+     * collection of strings. Each string may itself be a comma-separated list of
      * logger names. If this property is missing a
      * <code>ConfigurationException</code> is thrown.</dd>
      * <dt>{@link LogManager#LOG_FILE}</dt>
@@ -566,7 +566,7 @@ public class LogConfigManager implements ILoggerFactory {
     /**
      * Decomposes the <code>loggers</code> configuration object into a set of
      * logger names. The <code>loggers</code> object may be a single string,
-     * an array of strings or a vector of strings. Each string may in turn be a
+     * an array of strings or a collection of strings. Each string may in turn be a
      * comma-separated list of strings. Each entry makes up an entry in the
      * resulting set.
      * 
@@ -598,8 +598,8 @@ public class LogConfigManager implements ILoggerFactory {
         Object[] loggersArray;
         if (loggers.getClass().isArray()) {
             loggersArray = (Object[]) loggers;
-        } else if (loggers instanceof Vector) {
-            loggersArray = ((Vector<?>) loggers).toArray();
+        } else if (loggers instanceof Collection) {
+            loggersArray = ((Collection<?>) loggers).toArray();
         } else {
             loggersArray = new Object[] { loggers };
         }
