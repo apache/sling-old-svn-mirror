@@ -304,45 +304,22 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             while ( !found && entryIterator.hasNext() ) {
                 final Map.Entry current = (Map.Entry) entryIterator.next();
                 final String[] value = (String[])current.getValue();
+                getLog().debug("Comparing " + dir.getAbsolutePath() + " with " + value[0] + " (" + value[1] + ")");
                 if ( dir.getAbsolutePath().equals(value[0]) ) {
                     if ( installPath.equals(value[1]) ) {
                         getLog().debug("Using existing configuration for " + dir + " and " + installPath);
                         found = true;
                     } else {
-                        getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
                         // remove old config
-                        // TODO
+                        getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
+                        removeConfiguration(client, targetURL, current.getKey().toString());
                     }
                     entryIterator.remove();
                 }
             }
             if ( !found ) {
                 getLog().debug("Adding new configuration for " + dir + " and " + installPath);
-                final String postUrl = targetURL  + "/configMgr/" + FS_FACTORY;
-                final PostMethod post = new PostMethod(postUrl);
-                post.addParameter("apply", "true");
-                post.addParameter("factoryPid", FS_FACTORY);
-                post.addParameter("pid", "new");
-                post.addParameter("provider.file", dir.getAbsolutePath());
-                post.addParameter("provider.roots", installPath);
-                post.addParameter("propertylist", "provider.roots,provider.file");
-                try {
-                    final int status = client.executeMethod(post);
-                    // we get a moved temporarily back from the configMgr plugin
-                    if (status == HttpStatus.SC_MOVED_TEMPORARILY || status == HttpStatus.SC_OK) {
-                        getLog().info("Configuration created.");
-                    } else {
-                        getLog().error(
-                            "Configuration failed, cause: "
-                                + HttpStatus.getStatusText(status));
-                    }
-                } catch (HttpException ex) {
-                    throw new MojoExecutionException("Configuration on " + postUrl
-                            + " failed, cause: " + ex.getMessage(), ex);
-                } catch (IOException ex) {
-                    throw new MojoExecutionException("Configuration on " + postUrl
-                            + " failed, cause: " + ex.getMessage(), ex);
-                }
+                addConfiguration(client, targetURL, dir.getAbsolutePath(), installPath);
             }
         }
         // finally remove old configs
@@ -352,7 +329,65 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             final String[] value = (String[])current.getValue();
             getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
             // remove old config
-            // TODO
+            removeConfiguration(client, targetURL, current.getKey().toString());
+        }
+    }
+
+    protected void removeConfiguration(final HttpClient client, final String targetURL, String pid)
+    throws MojoExecutionException {
+        final String postUrl = targetURL  + "/configMgr/" + pid;
+        final PostMethod post = new PostMethod(postUrl);
+        post.addParameter("apply", "true");
+        post.addParameter("delete", "true");
+        try {
+            final int status = client.executeMethod(post);
+            // we get a moved temporarily back from the configMgr plugin
+            if (status == HttpStatus.SC_MOVED_TEMPORARILY || status == HttpStatus.SC_OK) {
+                getLog().info("Configuration removed.");
+            } else {
+                getLog().error(
+                    "Removing configuration failed, cause: "
+                        + HttpStatus.getStatusText(status));
+            }
+        } catch (HttpException ex) {
+            throw new MojoExecutionException("Removing configuration at " + postUrl
+                    + " failed, cause: " + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new MojoExecutionException("Removing configuration at " + postUrl
+                    + " failed, cause: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Add a new configuration for the file system provider
+     * @throws MojoExecutionException
+     */
+    protected void addConfiguration(final HttpClient client, final String targetURL, String dir, String path)
+    throws MojoExecutionException {
+        final String postUrl = targetURL  + "/configMgr/" + FS_FACTORY;
+        final PostMethod post = new PostMethod(postUrl);
+        post.addParameter("apply", "true");
+        post.addParameter("factoryPid", FS_FACTORY);
+        post.addParameter("pid", "[Temporary PID replaced by real PID upon save]");
+        post.addParameter("provider.file", dir);
+        post.addParameter("provider.roots", path);
+        post.addParameter("propertylist", "provider.roots,provider.file");
+        try {
+            final int status = client.executeMethod(post);
+            // we get a moved temporarily back from the configMgr plugin
+            if (status == HttpStatus.SC_MOVED_TEMPORARILY || status == HttpStatus.SC_OK) {
+                getLog().info("Configuration created.");
+            } else {
+                getLog().error(
+                    "Configuration failed, cause: "
+                        + HttpStatus.getStatusText(status));
+            }
+        } catch (HttpException ex) {
+            throw new MojoExecutionException("Configuration on " + postUrl
+                    + " failed, cause: " + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new MojoExecutionException("Configuration on " + postUrl
+                    + " failed, cause: " + ex.getMessage(), ex);
         }
     }
 
@@ -373,9 +408,14 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
         try {
             final int status = client.executeMethod(get);
-            if ( status == 200 )
-            {
-                if ( !JSON_MIME_TYPE.equals(get.getResponseHeader(HEADER_CONTENT_TYPE).getValue()) ) {
+            if ( status == 200 ) {
+                String contentType = get.getResponseHeader(HEADER_CONTENT_TYPE).getValue();
+                int pos = contentType.indexOf(';');
+                if ( pos != -1 ) {
+                    contentType = contentType.substring(0, pos);
+                }
+                if ( !JSON_MIME_TYPE.equals(contentType) ) {
+                    getLog().debug("Response type from web console is not JSON, but " + contentType);
                     throwWebConsoleTooOldException();
                 }
                 final String jsonText = get.getResponseBodyAsString();
