@@ -128,10 +128,10 @@ public class OsgiUtil {
 
     /**
      * Returns the named service reference property as a single value. If the
-     * property is neither an array nor a <code>java.util.Vector</code> the
+     * property is neither an array nor a <code>java.util.Collection</code> the
      * property is returned unmodified. If the property is a non-empty array,
      * the first array element is returned. If the property is a non-empty
-     * <code>java.util.Vector</code>, the first vector element is returned.
+     * <code>java.util.Collection</code>, the first collection element is returned.
      * Otherwise <code>null</code> is returned.
      */
     public static Object toObject(Object propValue) {
@@ -152,8 +152,8 @@ public class OsgiUtil {
      * Returns the named service reference property as an array of Strings. If
      * the property is a scalar value its string value is returned as a single
      * element array. If the property is an array, the elements are converted to
-     * String objects and returned as an array. If the property is a vector, the
-     * vector elements are converted to String objects and returned as an array.
+     * String objects and returned as an array. If the property is a collection, the
+     * collection elements are converted to String objects and returned as an array.
      * Otherwise (if the property does not exist) <code>null</code> is
      * returned.
      */
@@ -165,8 +165,8 @@ public class OsgiUtil {
      * Returns the named service reference property as an array of Strings. If
      * the property is a scalar value its string value is returned as a single
      * element array. If the property is an array, the elements are converted to
-     * String objects and returned as an array. If the property is a vector, the
-     * vector elements are converted to String objects and returned as an array.
+     * String objects and returned as an array. If the property is a collection, the
+     * collection elements are converted to String objects and returned as an array.
      * Otherwise (if the property does not exist) a provided default value is
      * returned.
      * @since 2.0.4
@@ -196,15 +196,15 @@ public class OsgiUtil {
             return values.toArray(new String[values.size()]);
 
         } else if (propValue instanceof Collection) {
-            // vector
-            Collection<?> valueVector = (Collection<?>) propValue;
-            List<String> values = new ArrayList<String>(valueVector.size());
-            for (Object value : valueVector) {
+            // collection
+            Collection<?> valueCollection = (Collection<?>) propValue;
+            List<String> valueList = new ArrayList<String>(valueCollection.size());
+            for (Object value : valueCollection) {
                 if (value != null) {
-                    values.add(value.toString());
+                    valueList.add(value.toString());
                 }
             }
-            return values.toArray(new String[values.size()]);
+            return valueList.toArray(new String[valueList.size()]);
         }
 
         return defaultArray;
