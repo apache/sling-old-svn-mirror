@@ -145,8 +145,32 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 + slingUrl);
         post(slingUrl, bundleFile);
         if ( mountByFS ) {
+            // if we get a version, we have a recent web console
+            final String version = checkWebConsoleVersion(slingUrl);
+            if ( version == null ) {
+                throw new MojoExecutionException("Apache Felix Web Console is too old to mount " +
+                        "the initial content through file system provider configs. " +
+                        "Either upgrade the web console or disable this feature.");
+            }
             configure(slingUrl, bundleFile);
         }
+    }
+
+    /**
+     * Get the http client
+     */
+    protected HttpClient getHttpClient() {
+        final HttpClient client = new HttpClient();
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(
+            5000);
+
+        // authentication stuff
+        client.getParams().setAuthenticationPreemptive(true);
+        Credentials defaultcreds = new UsernamePasswordCredentials(user,
+            password);
+        client.getState().setCredentials(AuthScope.ANY, defaultcreds);
+
+        return client;
     }
 
     protected void post(String targetURL, File file)
@@ -176,17 +200,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
             filePost.setRequestEntity(new MultipartRequestEntity(parts,
                 filePost.getParams()));
-            HttpClient client = new HttpClient();
-            client.getHttpConnectionManager().getParams().setConnectionTimeout(
-                5000);
 
-            // authentication stuff
-            client.getParams().setAuthenticationPreemptive(true);
-            Credentials defaultcreds = new UsernamePasswordCredentials(user,
-                password);
-            client.getState().setCredentials(AuthScope.ANY, defaultcreds);
-
-            int status = client.executeMethod(filePost);
+            int status = getHttpClient().executeMethod(filePost);
             if (status == HttpStatus.SC_OK) {
                 getLog().info("Bundle installed");
             } else {
@@ -222,14 +237,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             throw new MojoExecutionException("Unable to read manifest from file " + file, ioe);
         }
         // setup http client
-        final HttpClient client = new HttpClient();
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
-
-        // authentication stuff
-        client.getParams().setAuthenticationPreemptive(true);
-        final Credentials defaultcreds = new UsernamePasswordCredentials(user,
-                password);
-        client.getState().setCredentials(AuthScope.ANY, defaultcreds);
+        final HttpClient client = getHttpClient();
 
         getLog().info("Trying to configure file system provider...");
         // quick check if resources are configured
@@ -368,5 +376,53 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 }
             }
         }
+    }
+
+    /**
+     * Try to get the version of the web console
+     * @return The version or <code>null</code> if version is not detectable.
+     */
+    protected String checkWebConsoleVersion(final String targetUrl) {
+        getLog().debug("Checking web console version....");
+        final String bundleUrl = targetUrl + "/bundles/org.apache.felix.webconsole.json";
+        final HttpClient client = getHttpClient();
+        final GetMethod gm = new GetMethod(bundleUrl);
+        // if something goes wrong, we assume an older version!!
+        try {
+            final int status = client.executeMethod(gm);
+            if ( status == 200 ) {
+                if ( gm.getResponseContentLength() == 0 ) {
+                    getLog().debug("Response has zero length. Assuming older version of web console.");
+                    return null;
+                }
+                final String jsonText = gm.getResponseBodyAsString();
+                try {
+                    final JSONObject obj = new JSONObject(jsonText);
+                    final JSONArray props = obj.getJSONArray("props");
+                    for(int i=0; i<props.length(); i++) {
+                        final JSONObject property = props.getJSONObject(i);
+                        if ( "Version".equals(property.get("key")) ) {
+                            final String version = property.getString("value");
+                            getLog().debug("Found web console version " + version);
+                            return version;
+                        }
+                    }
+                    getLog().debug("Version property not found in response. Assuming older version.");
+                    return null;
+                } catch (JSONException ex) {
+                    getLog().debug("Converting response to JSON failed. Assuming older version: " + ex.getMessage());
+                    return null;
+                }
+
+            }
+            getLog().debug("Status code from web console: " + status);
+       } catch (HttpException e) {
+            getLog().debug("HttpException: " + e.getMessage());
+        } catch (IOException e) {
+            getLog().debug("IOException: " + e.getMessage());
+        }
+
+        getLog().debug("Unknown version.");
+        return null;
     }
 }
