@@ -50,7 +50,7 @@ public interface SlingPostOperation {
      * The name of the service registration property indicating the name(s) of
      * the operation provided by the operation implementation (value is
      * "sling.post.operation"). The value of this service property must be a
-     * single String or an array or <code>java.util.Vector</code> of Strings.
+     * single String or an array or <code>java.util.Collection</code> of Strings.
      * If multiple strings are defined, the service is registered for all
      * operation names.
      */
