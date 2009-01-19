@@ -66,7 +66,11 @@ public class CompilationUnit
      * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
      */
     public char[] getFileName() {
-        return className.concat(".java").toCharArray();
+        int slash = sourceFile.lastIndexOf('/');
+        if (slash > 0) {
+            return sourceFile.substring(slash + 1).toCharArray();
+        }
+        return sourceFile.toCharArray();
     }
 
     /**
