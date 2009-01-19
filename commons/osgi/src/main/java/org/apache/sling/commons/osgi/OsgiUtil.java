@@ -19,11 +19,11 @@
 package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -140,9 +140,9 @@ public class OsgiUtil {
         } else if (propValue.getClass().isArray()) {
             Object[] prop = (Object[]) propValue;
             return prop.length > 0 ? prop[0] : null;
-        } else if (propValue instanceof Vector) {
-            Vector<?> prop = (Vector<?>) propValue;
-            return prop.isEmpty() ? null : prop.get(0);
+        } else if (propValue instanceof Collection) {
+            Collection<?> prop = (Collection<?>) propValue;
+            return prop.isEmpty() ? null : prop.iterator().next();
         } else {
             return propValue;
         }
@@ -195,9 +195,9 @@ public class OsgiUtil {
             }
             return values.toArray(new String[values.size()]);
 
-        } else if (propValue instanceof Vector) {
+        } else if (propValue instanceof Collection) {
             // vector
-            Vector<?> valueVector = (Vector<?>) propValue;
+            Collection<?> valueVector = (Collection<?>) propValue;
             List<String> values = new ArrayList<String>(valueVector.size());
             for (Object value : valueVector) {
                 if (value != null) {
