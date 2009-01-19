@@ -52,8 +52,14 @@ import org.apache.sling.commons.osgi.ManifestHeader.Entry;
 
 abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
+    /** Header containing the sling initial content information. */
     private static final String HEADER_INITIAL_CONTENT = "Sling-Initial-Content";
+    /** The fs resource provider factory. */
     private static final String FS_FACTORY = "org.apache.sling.fsprovider.FsResourceProvider";
+    /** Mime type for json response. */
+    private static final String JSON_MIME_TYPE = "application/json";
+    /** Http header for content type. */
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
 
     /**
      * The URL of the running Sling instance.
@@ -145,15 +151,20 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 + slingUrl);
         post(slingUrl, bundleFile);
         if ( mountByFS ) {
-            // if we get a version, we have a recent web console
-            final String version = checkWebConsoleVersion(slingUrl);
-            if ( version == null ) {
-                throw new MojoExecutionException("Apache Felix Web Console is too old to mount " +
-                        "the initial content through file system provider configs. " +
-                        "Either upgrade the web console or disable this feature.");
-            }
             configure(slingUrl, bundleFile);
         }
+    }
+
+    /**
+     * Helper method to throw a meaningful exception for an outdated felix
+     * web console.
+     * @throws MojoExecutionException
+     */
+    protected void throwWebConsoleTooOldException()
+    throws MojoExecutionException {
+        throw new MojoExecutionException("The Apache Felix Web Console is too old to mount " +
+                "the initial content through file system provider configs. " +
+                "Either upgrade the web console or disable this feature.");
     }
 
     /**
@@ -217,6 +228,12 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         }
     }
 
+    /**
+     * Add configurations to a running OSGi instance for initial content.
+     * @param targetURL The web console base url
+     * @param file The artifact (bundle)
+     * @throws MojoExecutionException
+     */
     protected void configure(String targetURL, File file)
     throws MojoExecutionException {
         // first, let's get the manifest and see if initial content is configured
@@ -246,12 +263,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             throw new MojoExecutionException("No resources configured for this project.");
         }
         // now get current configurations
-        final Map configs = this.getCurrentFileProviderConfigs(targetURL, client);
-        final Iterator configIter = configs.keySet().iterator();
-        while ( configIter.hasNext() ) {
-            final String key = configIter.next().toString();
-            getLog().info("Found " + key + " : " + configs.get(key));
-        }
+        final Map oldConfigs = this.getCurrentFileProviderConfigs(targetURL, client);
+
         final Entry[] entries = header.getEntries();
         for(final Entry entry : entries) {
             final String path = entry.getValue();
@@ -284,31 +297,62 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                 throw new MojoExecutionException("Mapping to root path not supported by fs provider at the moment. Please adapt your initial content configuration.");
             }
             getLog().info("Mapping " + dir + " to " + installPath);
-            final String postUrl = targetURL  + "/configMgr/" + FS_FACTORY;
-            final PostMethod post = new PostMethod(postUrl);
-            post.addParameter("apply", "true");
-            post.addParameter("factoryPid", FS_FACTORY);
-            post.addParameter("pid", "new");
-            post.addParameter("provider.file", dir.toString());
-            post.addParameter("provider.roots", installPath);
-            post.addParameter("propertylist", "provider.roots,provider.file");
-            try {
-                final int status = client.executeMethod(post);
-                // we get a moved temporarily back from the configMgr plugin
-                if (status == HttpStatus.SC_MOVED_TEMPORARILY || status == HttpStatus.SC_OK) {
-                    getLog().info("Configuration created.");
-                } else {
-                    getLog().error(
-                        "Configuration failed, cause: "
-                            + HttpStatus.getStatusText(status));
+
+            // check if this is already configured
+            boolean found = false;
+            final Iterator entryIterator = oldConfigs.entrySet().iterator();
+            while ( !found && entryIterator.hasNext() ) {
+                final Map.Entry current = (Map.Entry) entryIterator.next();
+                final String[] value = (String[])current.getValue();
+                if ( dir.getAbsolutePath().equals(value[0]) ) {
+                    if ( installPath.equals(value[1]) ) {
+                        getLog().debug("Using existing configuration for " + dir + " and " + installPath);
+                        found = true;
+                    } else {
+                        getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
+                        // remove old config
+                        // TODO
+                    }
+                    entryIterator.remove();
                 }
-            } catch (HttpException ex) {
-                throw new MojoExecutionException("Configuration on " + postUrl
-                        + " failed, cause: " + ex.getMessage(), ex);
-            } catch (IOException ex) {
-                throw new MojoExecutionException("Configuration on " + postUrl
-                        + " failed, cause: " + ex.getMessage(), ex);
             }
+            if ( !found ) {
+                getLog().debug("Adding new configuration for " + dir + " and " + installPath);
+                final String postUrl = targetURL  + "/configMgr/" + FS_FACTORY;
+                final PostMethod post = new PostMethod(postUrl);
+                post.addParameter("apply", "true");
+                post.addParameter("factoryPid", FS_FACTORY);
+                post.addParameter("pid", "new");
+                post.addParameter("provider.file", dir.getAbsolutePath());
+                post.addParameter("provider.roots", installPath);
+                post.addParameter("propertylist", "provider.roots,provider.file");
+                try {
+                    final int status = client.executeMethod(post);
+                    // we get a moved temporarily back from the configMgr plugin
+                    if (status == HttpStatus.SC_MOVED_TEMPORARILY || status == HttpStatus.SC_OK) {
+                        getLog().info("Configuration created.");
+                    } else {
+                        getLog().error(
+                            "Configuration failed, cause: "
+                                + HttpStatus.getStatusText(status));
+                    }
+                } catch (HttpException ex) {
+                    throw new MojoExecutionException("Configuration on " + postUrl
+                            + " failed, cause: " + ex.getMessage(), ex);
+                } catch (IOException ex) {
+                    throw new MojoExecutionException("Configuration on " + postUrl
+                            + " failed, cause: " + ex.getMessage(), ex);
+                }
+            }
+        }
+        // finally remove old configs
+        final Iterator entryIterator = oldConfigs.entrySet().iterator();
+        while ( entryIterator.hasNext() ) {
+            final Map.Entry current = (Map.Entry) entryIterator.next();
+            final String[] value = (String[])current.getValue();
+            getLog().debug("Removing old configuration for " + value[0] + " and " + value[1]);
+            // remove old config
+            // TODO
         }
     }
 
@@ -316,7 +360,8 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      * Return all file provider configs for this project
      * @param targetURL The targetURL of the webconsole
      * @param client The http client
-     * @return A map (may be empty) with the pids as keys and the path as value
+     * @return A map (may be empty) with the pids as keys and a string array
+     *         containing the path and the root
      * @throws MojoExecutionException
      */
     protected Map getCurrentFileProviderConfigs(final String targetURL, final HttpClient client)
@@ -330,6 +375,9 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             final int status = client.executeMethod(get);
             if ( status == 200 )
             {
+                if ( !JSON_MIME_TYPE.equals(get.getResponseHeader(HEADER_CONTENT_TYPE).getValue()) ) {
+                    throwWebConsoleTooOldException();
+                }
                 final String jsonText = get.getResponseBodyAsString();
                 try {
                     JSONArray array = new JSONArray(jsonText);
@@ -337,9 +385,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                         final JSONObject obj = array.getJSONObject(i);
                         final String pid = obj.getString("pid");
                         final String path = obj.getJSONObject("provider.file").getString("value");
+                        final String roots = obj.getJSONObject("provider.roots").getString("value");
                         if ( path != null && path.startsWith(this.project.getBasedir().getAbsolutePath()) ) {
-                            getLog().debug("Found configuration with pid: " + pid + ", path: " + path);
-                            result.put(pid, path);
+                            getLog().debug("Found configuration with pid: " + pid + ", path: " + path + ", roots: " + roots);
+                            result.put(pid, new String[] {path, roots});
                         }
                     }
                 } catch (JSONException ex) {
