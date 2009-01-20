@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.app;
+package org.apache.sling.launchpad.base.impl;
 
 import static org.apache.felix.framework.util.FelixConstants.EMBEDDED_EXECUTION_PROP;
 
@@ -40,6 +40,8 @@ import java.util.Map.Entry;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
+import org.apache.sling.launchpad.base.shared.Notifiable;
+import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -96,7 +98,7 @@ public class Sling implements BundleActivator {
      *
      * @see #SLING_HOME_URL
      */
-    public static final String SLING_HOME = "sling.home";
+//    public static final String SLING_HOME = "sling.home";
 
     /**
      * The name of the configuration property defining the Sling home directory
@@ -192,8 +194,9 @@ public class Sling implements BundleActivator {
      *
      * @throws BundleException if the framework cannot be initialized.
      */
-    public Sling(Logger logger, ResourceProvider resourceProvider,
-            Map<String, String> propOverwrite) throws BundleException {
+    public Sling(Notifiable notifiable, Logger logger,
+            ResourceProvider resourceProvider, Map<String, String> propOverwrite)
+            throws BundleException {
     	
         this.logger = logger;
         this.resourceProvider = resourceProvider;
@@ -218,7 +221,7 @@ public class Sling implements BundleActivator {
         activators.add(new BootstrapInstaller(logger, resourceProvider));
 
         // create the framework and start it
-        Felix tmpFelix = new Felix(logger, props, activators);
+        Felix tmpFelix = new SlingFelix(notifiable, logger, props, activators);
         tmpFelix.start();
 
         // only assign field if start succeeds
@@ -233,12 +236,20 @@ public class Sling implements BundleActivator {
      * delegatee servlet if one is set at all.
      */
     public final void destroy() {
-        // shutdown the Felix container
         if (felix != null) {
-            logger.log(Logger.LOG_INFO, "Shutting down Sling");
-            felix.stopAndWait();
-            logger.log(Logger.LOG_INFO, "Sling stopped");
-            felix = null;
+            // get a private copy of the reference and remove the class ref
+            Felix myFelix;
+            synchronized (this) {
+                myFelix = felix;
+                felix = null;
+            }
+
+            // shutdown the Felix container
+            if (myFelix != null) {
+                logger.log(Logger.LOG_INFO, "Shutting down Sling");
+                myFelix.stopAndWait();
+                logger.log(Logger.LOG_INFO, "Sling stopped");
+            }
         }
     }
 
@@ -329,20 +340,13 @@ public class Sling implements BundleActivator {
         }
 
         // check whether sling.home is overwritten by system property
-        String slingHome = System.getProperty(SLING_HOME);
+        String slingHome = props.get(SharedConstants.SLING_HOME);
         if (slingHome == null || slingHome.length() == 0) {
-
-            // no system property, ensure default setting
-            slingHome = props.get(SLING_HOME);
-            if (slingHome == null || slingHome.length() == 0) {
-                slingHome = "sling";
-                this.logger.log(Logger.LOG_INFO,
-                    "sling.home is not defined. Using '" + slingHome + "'");
-            }
+            throw new BundleException("sling.home property is missing, cannot start");
         }
 
         // resolve variables and ensure sling.home is an absolute path
-        slingHome = substVars(slingHome, SLING_HOME, null, props);
+        slingHome = substVars(slingHome, SharedConstants.SLING_HOME, null, props);
         File slingHomeFile = new File(slingHome).getAbsoluteFile();
         slingHome = slingHomeFile.getAbsolutePath();
 
@@ -382,8 +386,8 @@ public class Sling implements BundleActivator {
         // reset back the sling home property
         // might have been overwritten by system properties, included
         // files or the sling.properties file
-        origProps.put(SLING_HOME, slingHome);
-        props.put(SLING_HOME, slingHome);
+        origProps.put(SharedConstants.SLING_HOME, slingHome);
+        props.put(SharedConstants.SLING_HOME, slingHome);
         props.put(SLING_HOME_URL, slingHomeFile.toURI().toString());
 
         // Perform variable substitution for system properties.

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.app;
+package org.apache.sling.launchpad.base.impl;
 
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -75,7 +75,7 @@ public class ClassLoaderResourceProvider extends ResourceProvider {
     }
 
     /**
-     * @see org.apache.sling.launcher.app.ResourceProvider#getResource(java.lang.String)
+     * @see org.apache.sling.launchpad.base.impl.ResourceProvider#getResource(java.lang.String)
      */
     public URL getResource(String path) {
         // ensure path
