@@ -28,13 +28,13 @@
     </parent>
 
     <artifactId>org.apache.sling.launchpad.base</artifactId>
-    <packaging>jar</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
+    <packaging>bundle</packaging>
 
     <name>Apache Sling Launchpad Base</name>
     <description>
-        This module contains the common classes and configuration files used by the various
-        launchpad modules..
+        This module contains the common classes and configuration files used
+        by the various launchpad modules..
     </description>
 
     <scm>
@@ -42,51 +42,124 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/base</developerConnection>
         <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/base</url>
     </scm>
-    
+
     <build>
         <plugins>
             <plugin>
+
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>1.4.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Category>
+                            sling
+                        </Bundle-Category>
+                        <Bundle-SymbolicName>
+                            system.bundle
+                        </Bundle-SymbolicName>
+                        <Bundle-DocURL>
+                            http://cwiki.apache.org/SLING/the-sling-launchpad.html
+                        </Bundle-DocURL>
+                        <Private-Package>
+                            !org.apache.sling.launchpad.base.shared.*, *
+                        </Private-Package>
+                        <Import-Package>!*</Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+                        <Embed-Dependency>
+                            org.apache.felix.framework;inline=org/**,
+                            org.osgi.core;inline=org/osgi/service/condpermadmin/**|
+                                org/osgi/service/permissionadmin/**,
+                            org.osgi.compendium;inline=org/osgi/service/log/**|
+                                org/osgi/service/http/**|
+                                org/osgi/service/device/**|
+                                org/osgi/service/cm/**|
+                                org/osgi/service/metatype/**|
+                                org/osgi/service/prefs/**|
+                                org/osgi/service/useradmin/**|
+                                org/osgi/service/wireadmin/**|
+                                org/osgi/service/io/**|
+                                org/osgi/service/provisioning/**|
+                                org/osgi/service/upnp/**|
+                                org/osgi/service/component/**|
+                                org/osgi/service/event/**|
+                                org/osgi/service/deploymentadmin/**|
+                                org/osgi/service/deploymentadmin/spi/**|
+                                org/osgi/service/application/**|
+                                info/dmtree/**| info/dmtree/notification/**|
+                                info/dmtree/notification/spi/**|
+                                info/dmtree/registry/**|
+                                info/dmtree/security/**| info/dmtree/spi/**|
+                                org/osgi/service/monitor/**|
+                                org/osgi/application/**|
+                                org/osgi/util/xml/**|
+                                org/osgi/util/position/**|
+                                org/osgi/util/measurement/**,
+                            servlet-api;inline=javax/servlet/**,
+                            servlet;inline=org/eclipse/**
+                        </Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>inline-osgi-bundles</id>
+                        <id>base-app</id>
                         <goals>
-                            <goal>unpack-dependencies</goal>
+                            <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>
-                                org.osgi.core,org.osgi.compendium,servlet-api,servlet
-                            </includeArtifactIds>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}
-                            </outputDirectory>
-                            <includes>**</includes>
-                            <excludes>
-                                org/osgi/framework/**,
-                                org/osgi/service/packageadmin/**,
-                                org/osgi/service/startlevel/**,
-                                org/osgi/service/url/**,
-                                org/osgi/util/tracker/**, META-INF/**
-                            </excludes>
+                            <archive>
+                                <manifest>
+                                    <mainClass>
+                                        org.apache.sling.launchpad.app.Main
+                                    </mainClass>
+                                    <addDefaultImplementationEntries>
+                                        true
+                                    </addDefaultImplementationEntries>
+                                </manifest>
+                            </archive>
+                            <classifier>app</classifier>
+                            <includes>
+                                <include>org/apache/sling/launchpad/base/shared/**</include>
+                                <include>org/apache/sling/launchpad/app/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
                         </configuration>
                     </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <executions>
                     <execution>
-                        <id>inline-framework-bundles</id>
+                        <id>base-webapp</id>
                         <goals>
-                            <goal>unpack-dependencies</goal>
+                            <goal>war</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>
-                                org.apache.felix.framework
-                            </includeArtifactIds>
-                            <excludeTransitive>true</excludeTransitive>
-                            <outputDirectory>
-                                ${project.build.outputDirectory}
-                            </outputDirectory>
-                            <includes>**</includes>
-                            <excludes>META-INF/**,**/NOTICE</excludes>
+                            <archive>
+                                <manifest>
+                                    <addDefaultImplementationEntries>
+                                        true
+                                    </addDefaultImplementationEntries>
+                                </manifest>
+                            </archive>
+                            <classifier>webapp</classifier>
+                            <!-- <webXml>${basedir}/target/classes/WEB-INF/web.xml</webXml> -->
+                            <packagingExcludes>
+                                WEB-INF/classes/*,
+                                WEB-INF/classes/META-INF/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/app/*,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/impl/*,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/main/*,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/webapp/*,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/main/*
+                            </packagingExcludes>
                         </configuration>
                     </execution>
                 </executions>
@@ -99,7 +172,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                  <!-- No javadocs -->
+                    <!-- No javadocs -->
                     <excludePackageNames>
                         org.apache.sling
                     </excludePackageNames>
@@ -112,10 +185,14 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

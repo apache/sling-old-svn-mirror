@@ -34,7 +34,7 @@
     <name>Apache Sling Launchpad Web Application</name>
     <description>
         The launchpad webapp packages the standard launchpad components
-        in a Sling web application. See SLING-149.
+        in a Sling web application.
     </description>
 
     <scm>
@@ -118,16 +118,40 @@
                         </goals>
                         <configuration>
                             <includeArtifactIds>
-                                org.apache.sling.launchpad.app
+                                org.apache.sling.launchpad.bundles
                             </includeArtifactIds>
+                            <includes>
+                                resources/**
+                            </includes>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
-                                ${project.build.directory}/launchpad-app
+                                ${project.build.directory}/launchpad-bundles
                             </outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>
                                 true
                             </overWriteSnapshots>
+                        </configuration>
+                    </execution>
+                    <!-- Launcher Jar -->                    
+                    <execution>
+                        <id>copy-launcher-jar</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.base</artifactId>
+                                    <version>2.0.3-incubator-SNAPSHOT</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <stripVersion>true</stripVersion>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/launchpad-bundles/resources
+                            </outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -139,52 +163,12 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
                     <webResources>
-                        <!-- the classes (except unneeded Main) -->
-                        <resource>
-                            <directory>
-                                ${basedir}/target/launchpad-app
-                            </directory>
-                            <targetPath>WEB-INF/classes</targetPath>
-                            <excludes>
-                                <exclude>
-                                    org/apache/sling/launcher/app/main/**
-                                </exclude>
-                            </excludes>
-                            <includes>
-                                <include>org/**</include>
-                                <include>info/**</include>
-                            </includes>
-                        </resource>
                         <!-- the configuration resources -->
                         <resource>
                             <directory>
-                                ${basedir}/target/launchpad-app
+                                ${project.build.directory}/launchpad-bundles
                             </directory>
                             <targetPath>WEB-INF</targetPath>
-                            <includes>
-                                <include>resources/**</include>
-                                <include>sling.properties</include>
-                                <include>sling_install.properties</include>
-                                <include>jre-*.properties</include>
-                            </includes>
-                            <excludes>
-                                <exclude>
-                                    resources/*/org.apache.felix.http.jetty*.jar
-                                </exclude>
-                                <exclude>
-                                    resources/*/pax-web-service*.jar
-                                </exclude>
-                            </excludes>
-                        </resource>
-                        <!-- selected WEB-INF resources -->
-                        <resource>
-                            <directory>
-                                ${basedir}/target/launchpad-app
-                            </directory>
-                            <targetPath>/</targetPath>
-                            <includes>
-                                <include>WEB-INF/jcr-client.properties</include>
-                            </includes>
                         </resource>
                         <!-- Legal stuff -->
                         <resource>
@@ -228,7 +212,16 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.app</artifactId>
+            <artifactId>org.apache.sling.launchpad.base</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <classifier>webapp</classifier>
+            <type>war</type>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad.bundles</artifactId>
             <version>5-incubator-SNAPSHOT</version>
             <scope>provided</scope>
             <optional>true</optional>

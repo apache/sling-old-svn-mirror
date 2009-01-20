@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.webapp;
+package org.apache.sling.launchpad.base.webapp;
 
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
-import org.apache.sling.launcher.app.ResourceProvider;
-import org.apache.sling.launcher.app.Sling;
+import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.base.impl.Sling;
+import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.eclipse.equinox.http.servlet.internal.Activator;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleException;
@@ -35,9 +36,10 @@ public class SlingBridge extends Sling {
     // The Equinox Http Service activator
     private BundleActivator httpServiceActivator;
 
-    public SlingBridge(Logger logger, ResourceProvider resourceProvider,
-            Map<String, String> propOverwrite) throws BundleException {
-        super(logger, resourceProvider, propOverwrite);
+    public SlingBridge(Notifiable notifiable, Logger logger,
+            ResourceProvider resourceProvider, Map<String, String> propOverwrite)
+            throws BundleException {
+        super(notifiable, logger, resourceProvider, propOverwrite);
     }
 
     @Override
