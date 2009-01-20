@@ -63,7 +63,11 @@
                             http://cwiki.apache.org/SLING/the-sling-launchpad.html
                         </Bundle-DocURL>
                         <Private-Package>
-                            !org.apache.sling.launchpad.base.shared.*, *
+                            <!-- External (app, webapp) components -->
+                            !org.apache.sling.launchpad.app.*,
+                            !org.apache.sling.launchpad.base.shared.*,
+                            !org.apache.sling.launchpad.webapp.*,
+                            *
                         </Private-Package>
                         <Import-Package>!*</Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
@@ -150,15 +154,13 @@
                                 </manifest>
                             </archive>
                             <classifier>webapp</classifier>
-                            <!-- <webXml>${basedir}/target/classes/WEB-INF/web.xml</webXml> -->
                             <packagingExcludes>
                                 WEB-INF/classes/*,
                                 WEB-INF/classes/META-INF/**,
-                                WEB-INF/classes/org/apache/sling/launchpad/app/*,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/impl/*,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/main/*,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/webapp/*,
-                                WEB-INF/classes/org/apache/sling/launchpad/base/main/*
+                                WEB-INF/classes/org/apache/sling/launchpad/app/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/app/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/impl/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/webapp/**
                             </packagingExcludes>
                         </configuration>
                     </execution>
