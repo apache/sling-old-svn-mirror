@@ -127,6 +127,7 @@
 
         <!-- Launchpad -->
         <module>launchpad/base</module>
+        <module>launchpad/bundles</module>
         <module>launchpad/content</module>
         <module>launchpad/app</module>
         <module>launchpad/webapp</module>
