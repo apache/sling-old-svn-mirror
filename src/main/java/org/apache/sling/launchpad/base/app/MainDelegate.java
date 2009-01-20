@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.app.main;
+package org.apache.sling.launchpad.base.app;
 
 import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
@@ -23,9 +23,12 @@ import java.util.Map;
 
 import org.apache.felix.framework.Logger;
 import org.apache.sling.commons.log.LogManager;
-import org.apache.sling.launcher.app.ClassLoaderResourceProvider;
-import org.apache.sling.launcher.app.ResourceProvider;
-import org.apache.sling.launcher.app.Sling;
+import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
+import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.base.impl.Sling;
+import org.apache.sling.launchpad.base.shared.Launcher;
+import org.apache.sling.launchpad.base.shared.Notifiable;
+import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 
@@ -59,11 +62,11 @@ import org.osgi.framework.Constants;
  * overwrites the <code>org.osgi.service.http.port</code> setting the
  * <code>sling.properties</code> file.</dd>
  * <dt>-h</dt>
- * <dd>Prints a simple usage message listing all available command line
- * options.</dd>
+ * <dd>Prints a simple usage message listing all available command line options.
+ * </dd>
  * </dl>
  */
-public class Main {
+public class MainDelegate implements Launcher {
 
     /** Mapping between log level numbers and names */
     private static final String[] logLevels = { "FATAL", "ERROR", "WARN",
@@ -88,27 +91,48 @@ public class Main {
     private static final String DEFAULT_PORT = "8080";
 
     /**
-     * The property value to export the Servlet API 2.5 from the system
-     * bundle.
+     * The property value to export the Servlet API 2.5 from the system bundle.
      */
-    private static final String SERVLET_API_EXPORT =
-        "javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.5";
+    private static final String SERVLET_API_EXPORT = "javax.servlet;javax.servlet.http;javax.servlet.resources; version=2.5";
+
+    private Notifiable notifiable;
 
     /** The parsed command line mapping (Sling) option name to option value */
-    private static Map<String, String> commandLine;
+    private Map<String, String> commandLine;
 
-    public static void main(String[] args) throws Exception {
-        
-        Map<String, String> props = new HashMap<String, String>();
+    private String slingHome;
 
-        // parse the command line (exit in case of failure)
+    private Sling sling;
+
+    public void setNotifiable(Notifiable notifiable) {
+        this.notifiable = notifiable;
+    }
+
+    public void setCommandLine(String[] args) {
         commandLine = new HashMap<String, String>();
         commandLine.put(PROP_PORT, DEFAULT_PORT);
         parseCommandLine(args, commandLine);
+    }
+
+    public void setSlingHome(String slingHome) {
+        this.slingHome = slingHome;
+    }
+
+    public boolean start() {
+
+        Map<String, String> props = new HashMap<String, String>();
+
+        // parse the command line (exit in case of failure)
+        if (commandLine == null) {
+            setCommandLine(new String[0]);
+        }
 
         // if sling.home was set on the command line, set it in the properties
-        if (commandLine.containsKey(Sling.SLING_HOME)) {
-            props.put(Sling.SLING_HOME, commandLine.get(Sling.SLING_HOME));
+        if (slingHome != null) {
+            props.put(SharedConstants.SLING_HOME, slingHome);
+        } else if (commandLine.containsKey(SharedConstants.SLING_HOME)) {
+            props.put(SharedConstants.SLING_HOME,
+                commandLine.get(SharedConstants.SLING_HOME));
         }
 
         // set up and configure Felix Logger
@@ -127,13 +151,16 @@ public class Main {
 
         try {
             ResourceProvider resProvider = new ClassLoaderResourceProvider(
-                Main.class.getClassLoader());
-            
-            // creating the instance launches the framework and we are done here ..
-            Sling sling = new Sling(logger, resProvider, props) {
-            	
-                // overwrite the loadPropertiesOverride method to inject the command
-                // line arguments unconditionally. These will not be persisted in any
+                MainDelegate.class.getClassLoader());
+
+            // creating the instance launches the framework and we are done here
+            // ..
+            sling = new Sling(notifiable, logger, resProvider, props) {
+
+                // overwrite the loadPropertiesOverride method to inject the
+                // command
+                // line arguments unconditionally. These will not be persisted
+                // in any
                 // properties file, though
                 protected void loadPropertiesOverride(
                         Map<String, String> properties) {
@@ -153,26 +180,22 @@ public class Main {
                 }
             };
 
-            Runtime.getRuntime().addShutdownHook(new TerminateSling(sling));
+            // we successfully started it
+            return true;
+
         } catch (BundleException be) {
             log("Failed to Start OSGi framework");
             be.printStackTrace(System.err);
-            System.exit(2);
         }
+
+        // we failed to start
+        return false;
     }
 
-    private static class TerminateSling extends Thread {
-        private final Sling sling;
-
-        TerminateSling(Sling sling) {
-            super("Sling Terminator");
-            this.sling = sling;
-        }
-
-        public void run() {
-            if (this.sling != null) {
-                this.sling.destroy();
-            }
+    public void stop() {
+        if (sling != null) {
+            sling.destroy();
+            sling = null;
         }
     }
 
@@ -228,7 +251,7 @@ public class Main {
                             usage("Missing directory value", 1);
                             continue;
                         }
-                        props.put(Sling.SLING_HOME, value);
+                        props.put(SharedConstants.SLING_HOME, value);
                         break;
 
                     case 'p':
@@ -272,7 +295,7 @@ public class Main {
         }
 
         log("usage: "
-            + Main.class.getName()
+            + MainDelegate.class.getName()
             + " [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
 
         log("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
@@ -301,7 +324,9 @@ public class Main {
         return null;
     }
 
-    /** Verifies the log level is one of the known values, returns null otherwise */
+    /**
+     * Verifies the log level is one of the known values, returns null otherwise
+     */
     private static String checkLogLevel(String level) {
         for (int i = 0; i < logLevels.length; i++) {
             if (logLevels[i].equalsIgnoreCase(level)) {

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.launcher.app;
+package org.apache.sling.launchpad.base.impl;
 
 import java.io.File;
 import java.io.FileInputStream;

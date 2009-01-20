@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launcher.webapp;
+package org.apache.sling.launchpad.base.webapp;
 
 import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,20 +34,21 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.framework.Logger;
-import org.apache.sling.launcher.app.ClassLoaderResourceProvider;
-import org.apache.sling.launcher.app.ResourceProvider;
-import org.apache.sling.launcher.app.Sling;
+import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
+import org.apache.sling.launchpad.base.impl.ResourceProvider;
+import org.apache.sling.launchpad.base.impl.Sling;
+import org.apache.sling.launchpad.base.shared.Launcher;
+import org.apache.sling.launchpad.base.shared.Notifiable;
+import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
- * The <code>SlingServlet</code> serves as a basic servlet for Project Sling.
+ * The <code>SlingServletDelegate</code> serves as a basic servlet for Project Sling.
  * The tasks of this servlet are as follows:
  * <ul>
  * <li>The {@link #init()} method launches Apache <code>Felix</code> as the
@@ -76,7 +76,7 @@ import org.osgi.framework.ServiceReference;
  * to be specified for startup. This servlet builds the list of parameters from
  * three locations:
  * <ol>
- * <li>The <code>com/day/osgi/servlet/SlingServlet.properties</code> is read
+ * <li>The <code>com/day/osgi/servlet/SlingServletDelegate.properties</code> is read
  * from the servlet class path. This properties file contains default settings.</li>
  * <li>Extensions of this servlet may provide additional properties to be
  * loaded overwriting the {@link #loadConfigProperties()} method.
@@ -104,7 +104,7 @@ import org.osgi.framework.ServiceReference;
  * and Log4J logging. It is recommended that this bundle is used to setup and
  * configure logging for systems based on this servlet.
  */
-public class SlingServlet extends GenericServlet {
+public class SlingServletDelegate extends GenericServlet implements Launcher {
 
     /** Pseduo class version ID to keep the IDE quite. */
     private static final long serialVersionUID = 1L;
@@ -125,6 +125,14 @@ public class SlingServlet extends GenericServlet {
     private static final String OBR_REPOSITORY_URL = "obr.repository.url";
     
     /**
+     * Flag set by the {@link #destroy()} method to indicate the servlet has
+     * been destroyed. This flag is used by the {@link #startSling(String)}
+     * method to check whether the SlingServletDelegate has been destroyed while Sling
+     * was starting up.
+     */
+    private boolean servletDestroyed = false;
+    
+    /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
      */
@@ -141,7 +149,32 @@ public class SlingServlet extends GenericServlet {
      */
     private Servlet delegatee;
 
-    /**
+    private Notifiable notifiable;
+
+    private String slingHome;
+    
+    public void setNotifiable(Notifiable notifiable) {
+        this.notifiable = notifiable;
+    }
+
+    public void setCommandLine(String[] args) {
+        // ignore this for now
+    }
+
+    public void setSlingHome(String slingHome) {
+        this.slingHome = slingHome;
+    }
+    
+    public boolean start() {
+        // might want to log, why we don't start !
+        return false;
+    }
+
+    public void stop() {
+        destroy();
+    }
+
+   /**
      * Initializes this servlet by loading the framework configuration
      * properties, starting the OSGi framework (Apache Felix) and exposing the
      * system bundle context and the <code>Felix</code> instance as servlet
@@ -150,27 +183,70 @@ public class SlingServlet extends GenericServlet {
      * @throws ServletException if the framework cannot be initialized.
      */
     public final void init() throws ServletException {
-        super.init();
-
-        // read the default parameters
-        Map<String, String> props = loadConfigProperties();
-
+        // temporary holders control final setup and ensure proper
+        // disposal in case of setup errors
+        SlingBridge tmpSling = null;
+        Servlet tmpDelegatee = null;
+        
         try {
+            
+            log("Starting Sling in " + slingHome);
+
+            // read the default parameters
+            Map<String, String> props = loadConfigProperties(slingHome);
+    
             Logger logger = new ServletContextLogger(getServletContext());
             ResourceProvider rp = new ServletContextResourceProvider(
                 getServletContext());
-            sling = new SlingBridge(logger, rp, props);
-        } catch (Exception ex) {
-            log("Cannot start the OSGi framework", ex);
-            throw new UnavailableException("Cannot start the OSGi Framework: "
-                + ex);
+            tmpSling = new SlingBridge(notifiable, logger, rp, props);
+
+            // set up the OSGi HttpService proxy servlet
+            tmpDelegatee = new HttpServiceServlet();
+            tmpDelegatee.init(getServletConfig());
+            
+            // set the fields only if the SlingServletDelegate has no been destroyed
+            // while Sling has been starting up. Otherwise we do not set the
+            // fields and leave the temporary variables assigned to have
+            // them destroyed in the finally clause.
+            if (servletDestroyed) {
+                
+                log("SlingServletDelegate destroyed while starting Sling, shutting Sling down");
+                
+            } else {
+                
+                // set the fields now
+                sling = tmpSling;
+                delegatee = tmpDelegatee;
+                
+                // reset temporary holders to prevent destroyal
+                tmpSling = null;
+                tmpDelegatee = null;
+                
+                log("Sling successfully started in " + slingHome);
+            }
+            
+        } catch (BundleException be) {
+            
+            throw new ServletException("Failed to start Sling in " + slingHome, be);
+            
+        } catch (ServletException se) {
+            
+            throw new ServletException("Failed to start bridge servlet for Sling", se);
+            
+        } catch (Throwable t) {
+            
+            throw new ServletException("Uncaught Failure starting Sling", t);
+            
+        } finally {
+            
+            // clean up temporary fields
+            if (tmpDelegatee != null) {
+                tmpDelegatee.destroy();
+            }
+            if (tmpSling != null) {
+                tmpSling.destroy();
+            }
         }
-
-        // set up the OSGi HttpService proxy servlet
-        delegatee = new HttpServiceServlet();
-        delegatee.init(getServletConfig());
-
-        log("Servlet " + getServletName() + " initialized");
     }
 
     /**
@@ -206,6 +282,10 @@ public class SlingServlet extends GenericServlet {
      */
     public final void destroy() {
 
+        // set the destroyed flag to signal to the startSling method
+        // that Sling should be terminated immediately
+        servletDestroyed = true;
+        
         // destroy the delegatee
         if (delegatee != null) {
             delegatee.destroy();
@@ -240,11 +320,12 @@ public class SlingServlet extends GenericServlet {
      * The precise file from which to load configuration properties can be set
      * by initializing the "<tt>felix.config.properties</tt>" system
      * property to an arbitrary URL.
-     *
-     * @return A <tt>Properties</tt> instance or <tt>null</tt> if there was
-     *         an error.
+     * 
+     * @param slingHome The value to be used as the "sling.home" property in the
+     *            returned map. This parameter is expected to be non-<code>null</code>.
+     * @return A <tt>Properties</tt> instance.
      */
-    private Map<String, String> loadConfigProperties() {
+    private Map<String, String> loadConfigProperties(String slingHome) {
         // The config properties file is either specified by a system
         // property or it is in the same directory as the Felix JAR file.
         // Try to load it from one of these places.
@@ -259,9 +340,6 @@ public class SlingServlet extends GenericServlet {
 
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");
-
-        // add optional boot delegation for JCR and Jackrabbit API
-        props.put("sling.include.jcr-client", "jcr-client.properties");
 
         // copy context init parameters
         @SuppressWarnings("unchecked")
@@ -286,35 +364,14 @@ public class SlingServlet extends GenericServlet {
         // full url
         final String repoLocation = props.get(OBR_REPOSITORY_URL);
         if (insideWebapp(repoLocation)) {
-        	final URL url = getUrl(repoLocation);
-        	// only if we get back a resource url, we update it
-        	if (url != null)
-        		props.put(OBR_REPOSITORY_URL, url.toExternalForm());
+            final URL url = getUrl(repoLocation);
+            // only if we get back a resource url, we update it
+            if (url != null)
+                props.put(OBR_REPOSITORY_URL, url.toExternalForm());
         }
         
-        // idem to jcr repo home
-        final String jcrRepoHome = props.get(Sling.JCR_REPO_HOME);
-        if (insideWebapp(jcrRepoHome)) {
-        	// ensure exists
-        	final URL webroot = getUrl("/");
-        	File jcrRepoHomeDir = new File(webroot.getPath() + jcrRepoHome);
-        	if (!jcrRepoHomeDir.isDirectory())
-                 jcrRepoHomeDir.mkdirs();
-           
-        	final URL url = getUrl(jcrRepoHome);
-        	// only if we get back a resource url, we update it
-        	if (url != null)
-        		props.put(Sling.JCR_REPO_HOME, url.getPath());
-        }
-        
-        // idem to jcr repo config file
-        final String jcrRepoConfigFile = props.get(Sling.JCR_REPO_CONFIG_FILE_URL);
-        if (insideWebapp(jcrRepoConfigFile)) {
-        	final URL url = getUrl(jcrRepoConfigFile);
-        	// only if we get back a resource url, we update it
-        	if (url != null)
-        		props.put(Sling.JCR_REPO_CONFIG_FILE_URL, url.toExternalForm());
-        }
+        // set sling home
+        props.put(SharedConstants.SLING_HOME, slingHome);
         
         return props;
     }
@@ -339,17 +396,14 @@ public class SlingServlet extends GenericServlet {
     }
     
     private boolean insideWebapp(String path) {
-    	if (path != null && path.indexOf(":/") < 1 && path.startsWith("/"))
-    		return true;
-    	else
-    		return false;
+        return path != null && path.indexOf(":/") < 1 && path.startsWith("/");
     }
     
     private URL getUrl(String path) {
-    	try {
-    		return getServletContext().getResource(path);
-    	} catch (MalformedURLException e) {
-    		return null;
+        try {
+            return getServletContext().getResource(path);
+        } catch (MalformedURLException e) {
+            return null;
         }
     }
 
@@ -405,7 +459,7 @@ public class SlingServlet extends GenericServlet {
         private ServletContext servletContext;
         
         private ServletContextResourceProvider(ServletContext servletContext) {
-            super(SlingServlet.class.getClassLoader());
+            super(SlingServletDelegate.class.getClassLoader());
             this.servletContext = servletContext;
         }
 
