@@ -85,11 +85,6 @@ public class ContentLoaderService implements SynchronousBundleListener {
     private MimeTypeService mimeTypeService;
 
     /**
-     * Administrative sessions used to check item existence.
-     */
-    private Session adminSession;
-
-    /**
      * The initial content loader which is called to load initial content up
      * into the repository when the providing bundle is installed.
      */
@@ -126,13 +121,14 @@ public class ContentLoaderService implements SynchronousBundleListener {
         // This is synchronous - take care to not block the system !!
         //
 
+        Session session = null;
         switch (event.getType()) {
             case BundleEvent.STARTING:
                 // register content when the bundle content is available
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.
                 try {
-                    Session session = getAdminSession();
+                    session = getAdminSession();
                     final boolean isUpdate = this.updatedBundles.remove(event.getBundle().getSymbolicName());
                     initialContentLoader.registerBundle(session, event.getBundle(), isUpdate);
                 } catch (Throwable t) {
@@ -140,6 +136,10 @@ public class ContentLoaderService implements SynchronousBundleListener {
                         "bundleChanged: Problem loading initial content of bundle "
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
+                } finally {
+                    if ( session != null ) {
+                        session.logout();
+                    }
                 }
                 break;
             case BundleEvent.UPDATED:
@@ -149,13 +149,17 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 break;
             case BundleEvent.UNINSTALLED:
                 try {
-                    Session session = getAdminSession();
+                    session = getAdminSession();
                     initialContentLoader.unregisterBundle(session, event.getBundle());
                 } catch (Throwable t) {
                     log.error(
                         "bundleChanged: Problem unloading initial content of bundle "
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
+                } finally {
+                    if ( session != null ) {
+                        session.logout();
+                    }
                 }
                 break;
         }
@@ -205,8 +209,9 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
         componentContext.getBundleContext().addBundleListener(this);
 
+        Session session = null;
         try {
-            final Session session = getAdminSession();
+            session = this.getAdminSession();
             this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
@@ -218,7 +223,18 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 if ((bundle.getState() & (Bundle.INSTALLED | Bundle.UNINSTALLED)) == 0) {
                     // load content for bundles which are neither INSTALLED nor
                     // UNINSTALLED
-                    initialContentLoader.registerBundle(session, bundle, false);
+                    try {
+                        initialContentLoader.registerBundle(session, bundle, false);
+                    } catch (Throwable t) {
+                        log.error(
+                            "Problem loading initial content of bundle "
+                                + bundle.getSymbolicName() + " ("
+                                + bundle.getBundleId() + ")", t);
+                    } finally {
+                        if ( session.hasPendingChanges() ) {
+                            session.refresh(false);
+                        }
+                    }
                 } else {
                     ignored++;
                 }
@@ -233,6 +249,10 @@ public class ContentLoaderService implements SynchronousBundleListener {
         } catch (Throwable t) {
             log.error("activate: Problem while loading initial content and"
                 + " registering mappings for existing bundles", t);
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
         }
     }
 
@@ -243,11 +263,6 @@ public class ContentLoaderService implements SynchronousBundleListener {
         if ( this.initialContentLoader != null ) {
             this.initialContentLoader.dispose();
             this.initialContentLoader = null;
-        }
-
-        if ( adminSession != null ) {
-            this.adminSession.logout();
-            this.adminSession = null;
         }
     }
 
@@ -261,12 +276,9 @@ public class ContentLoaderService implements SynchronousBundleListener {
     /**
      * Returns an administrative session to the default workspace.
      */
-    private synchronized Session getAdminSession()
+    private Session getAdminSession()
     throws RepositoryException {
-        if ( adminSession == null ) {
-            adminSession = getRepository().loginAdministrative(null);
-        }
-        return adminSession;
+        return getRepository().loginAdministrative(null);
     }
 
     /**
