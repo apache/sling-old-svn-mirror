@@ -128,7 +128,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 // as node types are registered when the bundle is installed
                 // we can safely add the content at this point.
                 try {
-                    session = getAdminSession();
+                    session = this.getSession();
                     final boolean isUpdate = this.updatedBundles.remove(event.getBundle().getSymbolicName());
                     initialContentLoader.registerBundle(session, event.getBundle(), isUpdate);
                 } catch (Throwable t) {
@@ -137,9 +137,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
                 } finally {
-                    if ( session != null ) {
-                        session.logout();
-                    }
+                    this.ungetSession(session);
                 }
                 break;
             case BundleEvent.UPDATED:
@@ -149,7 +147,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                 break;
             case BundleEvent.UNINSTALLED:
                 try {
-                    session = getAdminSession();
+                    session = this.getSession();
                     initialContentLoader.unregisterBundle(session, event.getBundle());
                 } catch (Throwable t) {
                     log.error(
@@ -157,9 +155,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
                             + event.getBundle().getSymbolicName() + " ("
                             + event.getBundle().getBundleId() + ")", t);
                 } finally {
-                    if ( session != null ) {
-                        session.logout();
-                    }
+                    this.ungetSession(session);
                 }
                 break;
         }
@@ -211,7 +207,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
 
         Session session = null;
         try {
-            session = this.getAdminSession();
+            session = this.getSession();
             this.createRepositoryPath(session, ContentLoaderService.BUNDLE_CONTENT_NODE);
             log.debug(
                     "Activated - attempting to load content from all "
@@ -250,9 +246,7 @@ public class ContentLoaderService implements SynchronousBundleListener {
             log.error("activate: Problem while loading initial content and"
                 + " registering mappings for existing bundles", t);
         } finally {
-            if ( session != null ) {
-                session.logout();
-            }
+            this.ungetSession(session);
         }
     }
 
@@ -276,9 +270,22 @@ public class ContentLoaderService implements SynchronousBundleListener {
     /**
      * Returns an administrative session to the default workspace.
      */
-    private Session getAdminSession()
+    private Session getSession()
     throws RepositoryException {
         return getRepository().loginAdministrative(null);
+    }
+
+    /**
+     * Return the administrative session and close it.
+     */
+    private void ungetSession(final Session session) {
+        if ( session != null ) {
+            try {
+                session.logout();
+            } catch (Throwable t) {
+                log.error("Unable to log out of session: " + t.getMessage(), t);
+            }
+        }
     }
 
     /**
