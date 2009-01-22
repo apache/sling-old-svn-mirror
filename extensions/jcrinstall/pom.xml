@@ -41,20 +41,4 @@
 		<module>servlet</module>
 		<module>testbundles/observer</module>
 	</modules>
-	
-	<profiles>
-		<profile>
-			<!--
-				Allow the integration tests to be excluded, as they might be slow
-			-->
-			<id>integrationTests</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
-			<modules>
-				<module>testing</module>
-			</modules>
-		</profile>
-	</profiles>
-	
 </project>
