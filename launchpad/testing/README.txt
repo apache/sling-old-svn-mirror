@@ -93,3 +93,13 @@ To run a single test, other values can be used for the "-Dtest" parameter.
 This is very useful during development: you can leave a Sling webapp instance
 running, update bundles in it using the mvn autoInstallBundle profile, and run
 specific integration tests quickly from another terminal.
+
+JCR Install Integration tests
+-----------------------------
+
+This module also contains integration tests for the JCR Install module. These
+tests are disabled by default, since they may not be of general interest. To
+include the JCR Install tests in the integration tests run enable the
+jcrinstall-tests profile such as in
+
+   mvn -P jcrinstall-tests integration-test
