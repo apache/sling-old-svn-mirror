@@ -80,6 +80,33 @@
             started. Useful to manually test the integration testing webapp.
         -->
         <integration.test.wait>false</integration.test.wait>
+        
+        <!--
+            Defines the part of the tree, which must not be compiled in
+            normal test scenarios. The jcrinstall-tests profile will
+            compile these classes to be included in a full-test scenario. 
+        -->
+        <jcrinstall.integration.test.code.path>
+            **/jcrinstall/**
+        </jcrinstall.integration.test.code.path>
+
+        <!--
+            Where to copy our test bundles
+            Used when profile jcrinstall-tests is active
+         -->
+        <sling.testbundles.path>${project.build.directory}/testbundles</sling.testbundles.path>
+        
+        <!--
+            Can be used to run tests with more or less bundles
+            Used when profile jcrinstall-tests is active
+         -->
+        <sling.test.scale.factor>1</sling.test.scale.factor>
+        
+        <!--
+             How long to wait for the expected number of bundles to be active, in tests
+            Used when profile jcrinstall-tests is active
+         -->
+        <sling.test.bundles.wait.seconds>20</sling.test.bundles.wait.seconds>
     </properties>
 
     <build>
@@ -212,6 +239,25 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!--
+                Exclude the JCRInstall test classes from default build
+                See jcrinstall-tests for the setup of compilation of these
+                classes for a full test
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <sumpf>gurk</sumpf>
+                    <testExcludes>
+                        <testExclude>
+                            ${jcrinstall.integration.test.code.path}
+                        </testExclude>
+                    </testExcludes>
+                    <verbose>true</verbose>
+                </configuration>
             </plugin>
 
             <!-- 
@@ -353,6 +399,20 @@
                                                 http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
                                             </value>
                                         </property>
+                                        
+                                        <!-- system properties used for profile jcrinstall-tests -->
+                                        <property>
+                                            <name>sling.testbundles.path</name>
+                                            <value>${sling.testbundles.path}</value>
+                                        </property>
+                                        <property>
+                                            <name>sling.test.scale.factor</name>
+                                            <value>${sling.test.scale.factor}</value>
+                                        </property>
+                                        <property>
+                                            <name>sling.test.bundles.wait.seconds</name>
+                                            <value>${sling.test.bundles.wait.seconds}</value>
+                                        </property>
                                     </systemProperties>
                                 </configuration>
                             </execution>
@@ -432,6 +492,96 @@
                 </plugins>
             </build>
         </profile>
+        
+        <!--
+            The jcrinstall-tests profile includes the integration tests
+            for the JCRInstall functionality in the integration tests. By
+            default this profile is disabled.
+            For CI builds it is recommended to activate this profile, for
+            normal builds you may omit this profile 
+        -->
+        <profile>
+            <id>jcrinstall-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-jcrinstall-dependencies</id>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>
+                                        ${project.build.directory}/launchpad-bundles/resources/0
+                                    </outputDirectory>
+                                    <excludeTransitive>true</excludeTransitive>
+                                    <includeArtifactIds>
+                                        org.apache.sling.jcr.jcrinstall,org.apache.sling.jcr.jcrinstall.testbundles.observer,org.apache.sling.jcr.jcrinstall.servlet,org.apache.sling.runmode
+                                    </includeArtifactIds>
+                                </configuration>
+                            </execution>
+                       </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile-jcrinstall-tests</id>
+                                <goals>
+                                    <goal>testCompile</goal>
+                                </goals>
+                                <configuration>
+                                    <testIncludes>
+                                        <testInclude>
+                                            ${jcrinstall.integration.test.code.path}
+                                        </testInclude>
+                                    </testIncludes>
+                                    <!-- overwrite global setting here -->
+                                    <testExcludes>
+                                        <testExclude>
+                                            dummymarker
+                                        </testExclude>
+                                    </testExcludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall.testbundles.observer</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall.servlet</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.runmode</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
     <dependencies>
@@ -461,6 +611,19 @@
             <artifactId>org.apache.sling.scripting.python</artifactId>
             <version>2.0.3-incubator-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- JCR Install - needs to be in a profile -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bnd</artifactId>
+            <version>0.0.169</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Dependencies for the Test Build and Run -->
