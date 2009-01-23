@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
     <name>Apache Sling Jackrabbit Embedded Repository</name>
@@ -44,56 +44,168 @@
 
     <build>
         <plugins>
+            <!-- generate the SCR descriptors -->
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
             </plugin>
+            
+            <!--
+                copy the SCR descriptors into the correct location
+                because the maven-scr-plugin cannot be configured
+                to write the descriptors elsewhere
+            -->
             <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                  <execution>
+                    <id>copy-resources</id>
+                    <phase>process-classes</phase>
+                    <goals>
+                      <goal>copy-resources</goal>
+                    </goals>
+                    <configuration>
+                      <outputDirectory>
+                        ${project.build.outputDirectory}
+                      </outputDirectory>
+                      <encoding>UTF-8</encoding>
+                      <resources>          
+                        <resource>
+                          <directory>target/scr-plugin-generated</directory>
+                          <filtering>false</filtering>
+                        </resource>
+                      </resources>              
+                    </configuration>            
+                  </execution>
+                </executions>
+            </plugin>
+            
+            <!--
+                copy the embedded libraries required for the embedded
+                Jackrabbit Repository
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>embed-dependencies</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                jackrabbit-jcr-rmi,jackrabbit-core,jackrabbit-jcr-commons,jackrabbit-spi-commons,jackrabbit-spi,lucene-core,derby,concurrent,jackrabbit-text-extractors,pdfbox,jempbox,fontbox,poi,poi-scratchpad,nekohtml,xercesImpl
+                            </includeArtifactIds>
+                            <excludeTransitive>false</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.outputDirectory}
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                By default the JAR plugin will use the MANIFEST.MF file found
+                in the src/main/resources/META-INF folder, which is copied
+                as a resource.
+                
+                To use a manifest file, which is generated with the Apache
+                Felix Maven Bundle plugin enable the bundle profile (see below)
+                as in
+                
+                    $ mvn -P bundle clean install
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <instructions>
-                        <Bundle-Category>
-                            sling,jcr,jackrabbit
-                        </Bundle-Category>
-                        <Bundle-Activator>
-                            org.apache.sling.jcr.jackrabbit.server.Activator
-                        </Bundle-Activator>
-                        <Private-Package>
-                            org.apache.sling.jcr.jackrabbit.server
-                        </Private-Package>
-                        <Import-Package>
-                            org.apache.sling.*, javax.jcr.*,
-                            javax.naming.*, javax.xml.*,
-                            javax.security.*,
-                            org.apache.commons.collections.*,
-                            org.apache.jackrabbit.api.*,
-                            org.osgi.*,
-                            org.slf4j, org.xml.sax, org.xml.sax.helpers
-                        </Import-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
-
-                        <!-- Embedd some libraries -->
-                        <Embed-Transitive>true</Embed-Transitive>
-                        <Embed-Dependency>
-                            <!-- core repository implementation -->
-                            jackrabbit-jcr-rmi; jackrabbit-core;
-                            jackrabbit-jcr-commons;
-                            jackrabbit-spi-commons; jackrabbit-spi;
-                            lucene-core; derby; concurrent,
-                            
-                            <!-- jackrabbit text extraction -->
-                            jackrabbit-text-extractors,
-                            pdfbox, jempbox, fontbox,
-                            poi, poi-scratchpad,
-                            nekohtml, xercesImpl
-                        </Embed-Dependency>
-                    </instructions>
+                    <archive>
+                        <manifestFile>
+                            ${project.build.outputDirectory}/META-INF/MANIFEST.MF
+                        </manifestFile>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    
+    <profiles>
+        <!-- 
+            The bundle profile may be used to update the manifest entries of
+            the above default profile. If running the build with the build
+            profile, you may use the generated manifest to update the
+            src/main/resources/META-INF/MANIFEST.MF file for it to be used
+            in future builds excluding the bundle profile.
+        -->
+        <profile>
+            <id>bundle</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>maven-bundle-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>generate-manifest</id>
+                                <goals>
+                                    <goal>manifest</goal>
+                                </goals>
+                                <configuration>
+                                    <instructions>
+                                        <Note>Built by bundle profile</Note>
+                                        <Bundle-Category>
+                                            sling,jcr,jackrabbit
+                                        </Bundle-Category>
+                                        <Bundle-Activator>
+                                            org.apache.sling.jcr.jackrabbit.server.Activator
+                                        </Bundle-Activator>
+                                        <Private-Package>
+                                            org.apache.sling.jcr.jackrabbit.server
+                                        </Private-Package>
+                                        <Import-Package>
+                                            org.apache.sling.*, javax.jcr.*,
+                                            javax.naming.*, javax.xml.*,
+                                            javax.security.*,
+                                            org.apache.commons.collections.*,
+                                            org.apache.jackrabbit.api.*,
+                                            org.osgi.*,
+                                            org.slf4j, org.xml.sax, org.xml.sax.helpers
+                                        </Import-Package>
+                                        <DynamicImport-Package>*</DynamicImport-Package>
+                
+                                        <!-- Embedd some libraries -->
+                                        <Embed-Transitive>true</Embed-Transitive>
+                                        <Embed-Dependency>
+                                            <!-- core repository implementation -->
+                                            jackrabbit-jcr-rmi; jackrabbit-core;
+                                            jackrabbit-jcr-commons;
+                                            jackrabbit-spi-commons; jackrabbit-spi;
+                                            lucene-core; derby; concurrent,
+                                            
+                                            <!-- jackrabbit text extraction -->
+                                            jackrabbit-text-extractors,
+                                            pdfbox, jempbox, fontbox,
+                                            poi, poi-scratchpad,
+                                            nekohtml, xercesImpl
+                                        </Embed-Dependency>
+                                    </instructions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
     <reporting>
         <plugins>
             <plugin>
