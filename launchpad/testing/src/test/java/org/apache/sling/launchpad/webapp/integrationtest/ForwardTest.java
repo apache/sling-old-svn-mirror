@@ -118,7 +118,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Text of node A is not included (" + content + ")",!content.contains(testTextB));
     }
 
-    public void xtestInfiniteLoopDetection() throws IOException {
+    public void testInfiniteLoopDetection() throws IOException {
         // Node C has a property that causes an infinite include loop,
         // Sling must indicate the problem in its response
         final GetMethod get = new GetMethod(nodeUrlC + ".html");
