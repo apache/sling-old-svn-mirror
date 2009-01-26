@@ -118,6 +118,48 @@ public interface SlingScriptHelper {
     void include(String path, RequestDispatcherOptions options);
 
     /**
+     * Same as {@link #forward(String,RequestDispatcherOptions)}, but using
+     * empty options.
+     * 
+     * @throws SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the forward.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the forward.
+     */
+    void forward(String path);
+
+    /**
+     * Helper method to forward the request to a Servlet or script for the given
+     * <code>path</code> and <code>requestDispatcherOptions</code>. This method
+     * is intended to be implemented as follows:
+     * 
+     * <pre>
+     * RequestDispatcher dispatcher = getRequest().getRequestDispatcher(path,
+     *     &quot;option:xyz&quot;);
+     * if (dispatcher != null) {
+     *     dispatcher.forward(getRequest(), getResponse());
+     * }
+     * </pre>
+     * 
+     * <p>
+     * This method creates a <code>RequestDispatcherOptions</code> object by
+     * calling the
+     * {@link RequestDispatcherOptions#RequestDispatcherOptions(String)}
+     * constructor.
+     * 
+     * @param path The path to the resource to forward to.
+     * @param requestDispatcherOptions influence the rendering of the forwarded
+     *            Resource
+     * @throws SlingIOException Wrapping a <code>IOException</code> thrown
+     *             while handling the forward.
+     * @throws SlingServletException Wrapping a <code>ServletException</code>
+     *             thrown while handling the forward.
+     * @see RequestDispatcherOptions#RequestDispatcherOptions(String)
+     * @see #forward(String, RequestDispatcherOptions)
+     */
+    void forward(String path, String requestDispatcherOptions);
+
+    /**
      * Helper method to forward the request to a Servlet or script for the given
      * <code>path</code> and <code>options</code>. This method is intended
      * to be implemented as follows:
