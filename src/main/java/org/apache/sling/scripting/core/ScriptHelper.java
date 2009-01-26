@@ -131,6 +131,16 @@ public class ScriptHelper implements SlingScriptHelper {
         }
     }
     
+    /** Forward the request to another resource, using no options */
+    public void forward(String path) {
+        forward(path, (RequestDispatcherOptions) null);
+    }
+
+    /** Forward the request to another resource, using specified options */
+    public void forward(String path, String options) {
+        forward(path, new RequestDispatcherOptions(options));
+    }
+
     /** Forward the request to another resource, using specified options */
     public void forward(String path, RequestDispatcherOptions options) {
         final RequestDispatcher dispatcher = getRequest().getRequestDispatcher(
