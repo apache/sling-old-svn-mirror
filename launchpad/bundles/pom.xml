@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.bundles</artifactId>
     <packaging>jar</packaging>
-    <version>5-incubator-SNAPSHOT</version>
+    <version>4-incubator-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Bundles Collection</name>
     <description>
