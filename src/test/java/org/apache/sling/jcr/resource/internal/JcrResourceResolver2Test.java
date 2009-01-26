@@ -105,9 +105,15 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
         // ensure using JcrResourceResolver2
         Field unrrField = resFac.getClass().getDeclaredField(
-            "useNewResourceResolver");
+        "useNewResourceResolver");
         unrrField.setAccessible(true);
         unrrField.set(resFac, true);
+        
+        // ensure namespace mangling
+        Field mangeNamespacePrefixesField = resFac.getClass().getDeclaredField(
+            "mangleNamespacePrefixes");
+        mangeNamespacePrefixesField.setAccessible(true);
+        mangeNamespacePrefixesField.set(resFac, true);
 
         Field mapEntriesField = resFac.getClass().getDeclaredField("mapEntries");
         mapEntriesField.setAccessible(true);
@@ -827,7 +833,8 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         
         final String mapHost = "virtual.host.com";
         final String mapRootPath = "/content/virtual";
-        
+        final String contextPath = "/context";
+
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             mapHost + ".80", "sling:Mapping");
         virtualhost80.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
@@ -835,21 +842,69 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         session.save();
 
         Thread.sleep(1000L);
-
-        final HttpServletRequest foreignRequest = new ResourceResolverTestRequest(null,
-            "foreign.host.com", -1, rootPath);
+        
+        //---------------------------------------------------------------------
+        // tests expecting paths without context
+        
         final HttpServletRequest virtualRequest = new ResourceResolverTestRequest(null,
             mapHost, -1, rootPath);
-
+        
         // simple mapping - cut off prefix and add host
-        final String path0 = "/sample";
-        final String mapped0 = resResolver.map(foreignRequest, mapRootPath + path0);
-        assertEquals("http://" + mapHost + path0, mapped0);
+        final String pathv0 = "/sample";
+        final String mappedv0 = resResolver.map(virtualRequest, mapRootPath + pathv0);
+        assertEquals("Expect unmangled path", pathv0, mappedv0);
         
         // expected name mangling without host prefix
-        final String path1 = "/sample/jcr:content";
-        final String mapped1 = resResolver.map(virtualRequest, mapRootPath + path1);
-        assertEquals(path1, mapped1);
+        final String pathv1 = "/sample/jcr:content";
+        final String mangledv1 = "/sample/_jcr_content";
+        final String mappedv1 = resResolver.map(virtualRequest, mapRootPath + pathv1);
+        assertEquals("Expect mangled path", mangledv1, mappedv1);
+        
+
+        //---------------------------------------------------------------------
+        // tests expecting paths with context "/context"
+        
+        ((ResourceResolverTestRequest) virtualRequest).setContextPath(contextPath);
+        
+        // simple mapping - cut off prefix and add host
+        final String pathvc0 = "/sample";
+        final String mappedvc0 = resResolver.map(virtualRequest, mapRootPath + pathvc0);
+        assertEquals("Expect unmangled path", contextPath + pathv0, mappedvc0);
+
+        // expected name mangling without host prefix
+        final String pathvc1 = "/sample/jcr:content";
+        final String mangledvc1 = "/sample/_jcr_content";
+        final String mappedvc1 = resResolver.map(virtualRequest, mapRootPath + pathvc1);
+        assertEquals("Expect mangled path", contextPath + mangledvc1, mappedvc1);
+
+        //---------------------------------------------------------------------
+        // tests expecting absolute URLs without context
+        
+        final HttpServletRequest foreignRequest = new ResourceResolverTestRequest(null,
+            "foreign.host.com", -1, rootPath);
+        
+        final String pathf0 = "/sample";
+        final String mappedf0 = resResolver.map(foreignRequest, mapRootPath + pathf0);
+        assertEquals("Expect unmangled absolute URI", "http://" + mapHost + pathf0, mappedf0);
+        
+        final String pathf1 = "/sample/jcr:content";
+        final String mangledf1 = "/sample/_jcr_content";
+        final String mappedf1 = resResolver.map(foreignRequest, mapRootPath + pathf1);
+        assertEquals("Expect mangled absolute URI", "http://" + mapHost + mangledf1, mappedf1);
+
+        //---------------------------------------------------------------------
+        // tests expecting absolute URLs with context "/context"
+        
+        ((ResourceResolverTestRequest) foreignRequest).setContextPath(contextPath);
+
+        final String pathfc0 = "/sample";
+        final String mappedfc0 = resResolver.map(foreignRequest, mapRootPath + pathfc0);
+        assertEquals("Expect unmangled absolute URI", "http://" + mapHost + contextPath + pathfc0, mappedfc0);
+
+        final String pathfc1 = "/sample/jcr:content";
+        final String mangledfc1 = "/sample/_jcr_content";
+        final String mappedfc1 = resResolver.map(foreignRequest, mapRootPath + pathfc1);
+        assertEquals("Expect mangled absolute URI", "http://" + mapHost + contextPath + mangledfc1, mappedfc1);
     }
     
     public void testMapContext() throws Exception {
@@ -1024,6 +1079,8 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         private final String host;
 
         private final int port;
+        
+        private String contextPath;
 
         ResourceResolverTestRequest(String pathInfo) {
             this(pathInfo, null);
@@ -1047,6 +1104,10 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             this.method = httpMethod;
         }
 
+        void setContextPath(String contextPath) {
+            this.contextPath = contextPath;
+        }
+        
         public String getPathInfo() {
             return pathInfo;
         }
@@ -1155,6 +1216,10 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             return false;
         }
 
+        public String getContextPath() {
+            return contextPath;
+        }
+
         public void removeAttribute(String name) {
         }
 
@@ -1165,10 +1230,6 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         }
 
         public String getAuthType() {
-            return null;
-        }
-
-        public String getContextPath() {
             return null;
         }
 
