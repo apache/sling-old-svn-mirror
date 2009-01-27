@@ -122,7 +122,7 @@
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
-                                ${project.build.outputDirectory}/resources/5
+                                ${project.build.outputDirectory}/resources/bundles/5
                             </outputDirectory>
                         </configuration>
                     </execution>
