@@ -361,7 +361,7 @@
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
-                                        ${project.build.outputDirectory}/resources/1
+                                        ${project.build.outputDirectory}/resources/bundles/1
                                     </outputDirectory>
                                 </configuration>
                             </execution>
@@ -378,7 +378,7 @@
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
-                                        ${project.build.outputDirectory}/resources/5
+                                        ${project.build.outputDirectory}/resources/bundles/5
                                     </outputDirectory>
                                 </configuration>
                             </execution>
@@ -395,7 +395,7 @@
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
-                                        ${project.build.outputDirectory}/resources/10
+                                        ${project.build.outputDirectory}/resources/bundles/10
                                     </outputDirectory>
                                 </configuration>
                             </execution>
@@ -413,7 +413,7 @@
         
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
-                                        ${project.build.outputDirectory}/resources/15
+                                        ${project.build.outputDirectory}/resources/bundles/15
                                     </outputDirectory>
                                 </configuration>
                             </execution>
@@ -430,7 +430,7 @@
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
-                                        ${project.build.outputDirectory}/resources/0
+                                        ${project.build.outputDirectory}/resources/bundles/0
                                     </outputDirectory>
                                 </configuration>
                             </execution>
@@ -471,7 +471,7 @@
                                     </artifactItems>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
-                                        ${project.build.outputDirectory}/resources/1
+                                        ${project.build.outputDirectory}/resources/bundles/1
                                     </outputDirectory>
                                 </configuration>
                             </execution>

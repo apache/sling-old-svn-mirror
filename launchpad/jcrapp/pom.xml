@@ -110,7 +110,7 @@
                                 org.apache.sling.launchpad.bundles
                             </includeArtifactIds>
                             <excludes>
-                                resources/0/**,META-INF/**
+                                resources/bundles/0/**,META-INF/**
                             </excludes>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
@@ -131,7 +131,7 @@
                             </includeArtifactIds>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>
-                                ${project.build.outputDirectory}/resources/5
+                                ${project.build.outputDirectory}/resources/bundles/5
                             </outputDirectory>
                         </configuration>
                     </execution>
