@@ -140,11 +140,6 @@ public class SlingRequestDispatcher implements RequestDispatcher {
 
         if (resource == null) {
 
-            // the absolute path may have the context path, cut it off
-            if (absPath.startsWith(cRequest.getContextPath())) {
-                absPath = absPath.substring(cRequest.getContextPath().length());
-            }
-
             // resolve the absolute path in the resource resolver, using
             // only those parts of the path as if it would be request path
             resource = cRequest.getResourceResolver().resolve(absPath);

@@ -55,16 +55,17 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         testTextA = "Text A " + System.currentTimeMillis();
         props.put("text", testTextA);
         nodeUrlA = testClient.createNode(url, props);
+        String pathToInclude = nodeUrlA.substring(HTTP_BASE_URL.length());
 
         // Node B stores the path of A, so that the test script can
         // include A when rendering B
         testTextB = "Text B " + System.currentTimeMillis();
         props.put("text", testTextB);
-        props.put("pathToInclude", new URL(nodeUrlA).getPath());
+        props.put("pathToInclude", pathToInclude);
         nodeUrlB = testClient.createNode(url, props);
 
         // Node E is like B but with an extension on the include path
-        props.put("pathToInclude", new URL(nodeUrlA).getPath() + ".html");
+        props.put("pathToInclude", pathToInclude + ".html");
         nodeUrlE = testClient.createNode(url, props);
 
         // Node C is used for the infinite loop detection test
@@ -76,7 +77,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         forcedResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
         props.remove("testInfiniteLoop");
         props.put("forceResourceType", forcedResourceType);
-        props.put("pathToInclude", new URL(nodeUrlA).getPath());
+        props.put("pathToInclude", pathToInclude);
         nodeUrlD = testClient.createNode(url, props);
 
         // Script for forced resource type
