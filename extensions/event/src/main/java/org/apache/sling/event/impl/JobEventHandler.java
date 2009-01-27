@@ -416,7 +416,7 @@ public class JobEventHandler
                                   true);
         // give the system some time to start
         try {
-            Thread.sleep(1000 * 60 * 1); // 1min
+            Thread.sleep(1000 * 30); // 30 secs
         } catch (InterruptedException e) {
             this.ignoreException(e);
         }
