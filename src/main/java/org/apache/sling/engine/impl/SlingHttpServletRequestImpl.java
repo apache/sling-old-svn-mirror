@@ -59,12 +59,20 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
         SlingHttpServletRequest {
 
     private final RequestData requestData;
+    private final String pathInfo;
     private String responseContentType;
 
     public SlingHttpServletRequestImpl(RequestData requestData,
             HttpServletRequest servletRequest) {
         super(servletRequest);
         this.requestData = requestData;
+        
+        // prepare the pathInfo property
+        String pathInfo = servletRequest.getServletPath();
+        if (servletRequest.getPathInfo() != null) {
+            pathInfo = pathInfo.concat(servletRequest.getPathInfo());
+        }
+        this.pathInfo = pathInfo;
     }
 
     /**
@@ -272,6 +280,25 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
                 : false;
     }
 
+    /**
+     * Always returns the empty string since the actual servlet registered with
+     * the servlet container (the HttpService actually) is registered as if
+     * the servlet path is "/*".
+     */
+    @Override
+    public String getServletPath() {
+        return "";
+    }
+    
+    /**
+     * Returns the part of the request URL without the leading servlet context
+     * path.
+     */
+    @Override
+    public String getPathInfo() {
+        return pathInfo;
+    }
+    
     /**
      * A <code>UserPrincipal</code> ...
      */
