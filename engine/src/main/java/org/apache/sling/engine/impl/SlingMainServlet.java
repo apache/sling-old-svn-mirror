@@ -87,7 +87,6 @@ import org.slf4j.LoggerFactory;
  * The <code>SlingMainServlet</code> TODO
  * 
  * @scr.component immediate="true" metatype="no"
- * @scr.property name="sling.root" value="/" private="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
@@ -98,6 +97,12 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
+
+    /**
+     * The registration path for the SlingMainServlet is hard wired to always
+     * be the root, aka "<code>/</code>" (value is "/").
+     */
+    private static final String SLING_ROOT = "/";
 
     /**
      * The name of the product to report in the {@link #getServerInfo()} method
@@ -149,8 +154,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
-
-    private String slingRoot;
 
     private SlingAuthenticator slingAuthenticator;
 
@@ -610,15 +613,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             configuration.put(String.valueOf(key), componentConfig.get(key));
         }
 
-        // get the web manager root path
-        Object wmr = configuration.get("sling.root");
-        this.slingRoot = (wmr instanceof String) ? (String) wmr : null;
-        if (this.slingRoot == null) {
-            this.slingRoot = "/";
-        } else if (!this.slingRoot.startsWith("/")) {
-            this.slingRoot = "/" + this.slingRoot;
-        }
-
         // ensure the servlet name
         if (!(configuration.get("servlet-name") instanceof String)) {
             configuration.put("servlet-name", PRODUCT_NAME + " "
@@ -633,8 +627,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         try {
             Dictionary<String, String> servletConfig = toStringConfig(configuration);
 
-            this.httpService.registerServlet(this.slingRoot, this,
-                servletConfig, this);
+            this.httpService.registerServlet(SLING_ROOT, this, servletConfig,
+                this);
 
             log.info("{} ready to serve requests", this.getServerInfo());
 
@@ -669,7 +663,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     protected void deactivate(ComponentContext componentContext) {
 
         // first of all, we have to unregister
-        httpService.unregister(this.slingRoot);
+        httpService.unregister(SLING_ROOT);
 
         destroyFilters(innerFilterChain);
         destroyFilters(requestFilterChain);
