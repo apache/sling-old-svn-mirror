@@ -33,8 +33,9 @@ public class SLING760Test extends HttpTestBase {
 
         final TestNode tn = new TestNode(HTTP_BASE_URL + TEST_PATH, null);
 
+        String toDelete = null;
         try {
-            uploadTestScript(tn.scriptPath, "issues/sling760/throw-with-markup.esp", "html.esp");
+            toDelete = uploadTestScript(tn.scriptPath, "issues/sling760/throw-with-markup.esp", "html.esp");
             final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML,
                     null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 
@@ -46,6 +47,9 @@ public class SLING760Test extends HttpTestBase {
                 assertFalse("Content must NOT contain " + str + " (" + content + ")", content.contains(str));
             }
         } finally {
+            if (toDelete != null) {
+                testClient.delete(toDelete);
+            }
             tn.delete();
         }
     }
