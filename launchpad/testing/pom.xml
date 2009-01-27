@@ -218,8 +218,9 @@
 
                     <execution>
                         <!-- 
-                        	Copy bundles that must be initially installed to WEB-INF/resources/N
-                        	where N = desired start level 
+                        	Copy bundles that must be initially installed to
+                            WEB-INF/resources/bundles/N where N = desired
+                            start level 
                         -->
                         <id>copy-bundles-dependencies</id>
                         <goals>
@@ -227,7 +228,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/launchpad-bundles/resources/0
+                                ${project.build.directory}/launchpad-bundles/resources/bundles/0
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeArtifactIds>
@@ -518,7 +519,7 @@
                                 </goals>
                                 <configuration>
                                     <outputDirectory>
-                                        ${project.build.directory}/launchpad-bundles/resources/0
+                                        ${project.build.directory}/launchpad-bundles/resources/bundles/0
                                     </outputDirectory>
                                     <excludeTransitive>true</excludeTransitive>
                                     <includeArtifactIds>
