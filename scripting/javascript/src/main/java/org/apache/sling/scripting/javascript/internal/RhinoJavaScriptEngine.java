@@ -37,6 +37,7 @@ import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.WrapFactory;
+import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
 
 /**
@@ -116,8 +117,25 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
             final ScriptException se = new ScriptException(t.details(),
                 t.sourceName(), t.lineNumber());
 
+            // log the script stack trace
             ((Logger) bindings.get(SlingBindings.LOG)).error(t.getScriptStackTrace());
-            se.setStackTrace(t.getStackTrace());
+            
+            // set the exception cause
+            Object value = t.getValue();
+            if (value != null) {
+                if (value instanceof Wrapper) {
+                    value = ((Wrapper) value).unwrap();
+                }
+                if (value instanceof Throwable) {
+                    se.initCause((Throwable) value);
+                }
+            }
+            
+            // if the cause could not be set, overwrite the stack trace
+            if (se.getCause() == null) {
+                se.setStackTrace(t.getStackTrace());
+            }
+            
             throw se;
 
         } catch (Throwable t) {
