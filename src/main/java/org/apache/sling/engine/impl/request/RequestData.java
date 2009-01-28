@@ -526,7 +526,6 @@ public class RequestData implements BufferProvider {
                 request.setAttribute(SLING_CURRENT_SERVLET_NAME, oldValue);
 
                 requestData.getRequestProgressTracker().logTimer(timerName);
-                requestData.servletCallCounter--;
 
             }
         }
