@@ -128,8 +128,9 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         final GetMethod get = new GetMethod(nodeUrlC + ".html");
         httpClient.executeMethod(get);
         final String content = get.getResponseBodyAsString();
-        assertTrue("Response contains infinite loop error message",
-                content.contains("InfiniteIncludeLoopException"));
+        assertTrue(
+            "Response contains infinite loop error message",
+            content.contains("org.apache.sling.api.request.RecursionTooDeepException"));
 
         // TODO: SLING-515, status is 500 when running the tests as part of the maven build
         // but 200 if running tests against a separate instance started with mvn jetty:run
