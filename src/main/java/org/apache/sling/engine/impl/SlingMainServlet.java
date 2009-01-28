@@ -39,7 +39,6 @@ import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.GenericServlet;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -58,6 +57,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.impl.auth.MissingRepositoryException;
 import org.apache.sling.engine.impl.auth.SlingAuthenticator;
@@ -86,7 +86,8 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>SlingMainServlet</code> TODO
  * 
- * @scr.component immediate="true" metatype="no"
+ * @scr.component immediate="true" label="%sling.name"
+ *                description="%sling.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Sling Servlet"
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
@@ -95,6 +96,12 @@ import org.slf4j.LoggerFactory;
 public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         HttpContext {
 
+    /** @scr.property valueRef="RequestData.DEFAULT_MAX_CALL_COUNTER" */
+    public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls"; 
+
+    /** @scr.property valueRef="RequestData.DEFAULT_MAX_INCLUSION_COUNTER" */
+    public static final String PROP_MAX_INCLUSION_COUNTER = "sling.max.inclusions"; 
+    
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
 
@@ -156,17 +163,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     private SlingFilterChainHelper innerFilterChain = new SlingFilterChainHelper();
 
     private SlingAuthenticator slingAuthenticator;
-
-    private static final String INCLUDE_COUNTER = "Sling.ScriptHelper.include.counter";
-
-    private static final int MAX_INCLUDE_RECURSION_LEVEL = 50;
-
-    public static class InfiniteIncludeLoopException extends SlingException {
-        InfiniteIncludeLoopException(String path) {
-            super("Infinite include loop (> " + MAX_INCLUDE_RECURSION_LEVEL
-                + " levels) for path '" + path + "'");
-        }
-    }
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -369,84 +365,28 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     // ---------- Generic Content Request processor ----------------------------
 
-    public void includeServlet(ServletRequest request,
-            ServletResponse response, String path) throws IOException,
-            ServletException {
-
-        checkRecursionLevel(request, path);
-
-        // check type of response, don't care actually for the response itself
-        RequestData.unwrap(response);
-
-        // get the request data (and btw check the correct type
-        RequestData requestData = RequestData.getRequestData(request);
-
-        RequestDispatcher rd = requestData.getServletRequest().getRequestDispatcher(
-            path);
-        if (rd != null) {
-            rd.include(request, response);
-        } else {
-            log.error("includeServlet: Got no request dispatcher for {}", path);
-        }
-    }
-
     public void includeContent(ServletRequest request,
             ServletResponse response, Resource resource,
             RequestPathInfo resolvedURL) throws IOException, ServletException {
 
-        checkRecursionLevel(request, resolvedURL.getResourcePath());
+        // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel
+        // to continue
+        SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
+        SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
+
+        // get the request data (and btw check the correct type)
+        RequestData requestData = RequestData.getRequestData(cRequest);
+        ContentData contentData = requestData.pushContent(resource,
+            resolvedURL);
 
         try {
-            // we need a SlingHttpServletRequest/SlingHttpServletResponse tupel
-            // to continue
-            SlingHttpServletRequest cRequest = RequestData.toSlingHttpServletRequest(request);
-            SlingHttpServletResponse cResponse = RequestData.toSlingHttpServletResponse(response);
+            // resolve the servlet
+            Servlet servlet = getServletResolver().resolveServlet(cRequest);
+            contentData.setServlet(servlet);
 
-            // get the request data (and btw check the correct type)
-            RequestData requestData = RequestData.getRequestData(cRequest);
-            ContentData contentData = requestData.pushContent(resource,
-                resolvedURL);
-
-            try {
-                // resolve the servlet
-                Servlet servlet = getServletResolver().resolveServlet(cRequest);
-                contentData.setServlet(servlet);
-
-                processRequest(cRequest, cResponse);
-            } finally {
-                requestData.popContent();
-            }
+            processRequest(cRequest, cResponse);
         } finally {
-            decreaseRecursionLevel(request);
-        }
-    }
-
-    /** Add a recursion counter to req and fail if it's too high */
-    protected void checkRecursionLevel(ServletRequest request, String info)
-            throws InfiniteIncludeLoopException {
-        // Detect infinite loops
-        Integer recursionLevel = (Integer) request.getAttribute(INCLUDE_COUNTER);
-        if (recursionLevel == null) {
-            recursionLevel = new Integer(1);
-        } else if (recursionLevel.intValue() > MAX_INCLUDE_RECURSION_LEVEL) {
-            throw new InfiniteIncludeLoopException(info);
-        } else {
-            recursionLevel = new Integer(recursionLevel.intValue() + 1);
-        }
-        request.setAttribute(INCLUDE_COUNTER, recursionLevel);
-    }
-
-    /** Decrease the recursion counter */
-    protected void decreaseRecursionLevel(ServletRequest request) {
-        // this should never be null, but we better do a sanity check
-        final Integer recursionLevel = (Integer) request.getAttribute(INCLUDE_COUNTER);
-        if (recursionLevel != null) {
-            if (recursionLevel == 1) {
-                request.removeAttribute(INCLUDE_COUNTER);
-            } else {
-                request.setAttribute(INCLUDE_COUNTER, new Integer(
-                    recursionLevel.intValue() - 1));
-            }
+            requestData.popContent();
         }
     }
 
@@ -619,6 +559,14 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 + productVersion);
         }
 
+        // configure the request limits
+        RequestData.setMaxIncludeCounter(OsgiUtil.toInteger(
+            componentConfig.get(PROP_MAX_INCLUSION_COUNTER),
+            RequestData.DEFAULT_MAX_INCLUSION_COUNTER));
+        RequestData.setMaxCallCounter(OsgiUtil.toInteger(
+            componentConfig.get(PROP_MAX_CALL_COUNTER),
+            RequestData.DEFAULT_MAX_CALL_COUNTER));
+        
         // setup servlet request processing helpers
         SlingServletContext tmpServletContext = new SlingServletContext(this);
         slingAuthenticator = new SlingAuthenticator(bundleContext);

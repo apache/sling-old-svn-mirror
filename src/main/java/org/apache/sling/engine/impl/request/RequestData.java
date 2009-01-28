@@ -42,8 +42,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RecursionTooDeepException;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.api.request.TooManyCallsException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
@@ -78,6 +80,35 @@ public class RequestData implements BufferProvider {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(RequestData.class);
 
+    /**
+     * The default value for the number of recursive inclusions for a single
+     * instance of this class (value is 50).
+     */
+    public static final int DEFAULT_MAX_INCLUSION_COUNTER = 50;
+
+    /**
+     * The default value for the number of calls to the
+     * {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
+     * method for a single instance of this class (value is 1000).
+     */
+    public static final int DEFAULT_MAX_CALL_COUNTER = 1000;
+
+    /**
+     * The maximum inclusion depth (default
+     * {@link #DEFAULT_MAX_INCLUSION_COUNTER}). This value is compared to the
+     * number of entries in the {@link #contentDataStack} when the
+     * {@link #pushContent(Resource, RequestPathInfo)} method is called.
+     */
+    private static int maxInclusionCounter = DEFAULT_MAX_INCLUSION_COUNTER;
+
+    /**
+     * The maximum number of scripts which may be included through the
+     * {@link #service(SlingHttpServletRequest, SlingHttpServletResponse)}
+     * method (default {@link #DEFAULT_MAX_CALL_COUNTER}). This number should
+     * not be too small to prevent request aborts.
+     */
+    private static int maxCallCounter = DEFAULT_MAX_CALL_COUNTER;
+    
     /** The SlingMainServlet used for request dispatching and other stuff */
     private final SlingMainServlet slingMainServlet;
 
@@ -114,15 +145,30 @@ public class RequestData implements BufferProvider {
 
     /**
      * The name of the currently active serlvet.
-     *
+     * 
      * @see #setActiveServletName(String)
      * @see #getActiveServletName()
      */
     private String activeServletName;
 
+    public static void setMaxCallCounter(int maxCallCounter) {
+        RequestData.maxCallCounter = maxCallCounter;
+    }
+
+    public static int getMaxCallCounter() {
+        return maxCallCounter;
+    }
+
+    public static void setMaxIncludeCounter(int maxInclusionCounter) {
+        RequestData.maxInclusionCounter = maxInclusionCounter;
+    }
+
+    public static int getMaxIncludeCounter() {
+        return maxInclusionCounter;
+    }
+
     public RequestData(SlingMainServlet slingMainServlet,
-            HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletRequest request, HttpServletResponse response) {
 
         this.slingMainServlet = slingMainServlet;
 
@@ -452,9 +498,17 @@ public class RequestData implements BufferProvider {
         } else {
 
             String name = RequestUtil.getServletName(servlet);
+
+            // verify the number of service calls in this request
+            if (requestData.servletCallCounter >= maxCallCounter) {
+                throw new TooManyCallsException(name);
+            }
+            
+            // replace the current servlet name in the request
             Object oldValue = request.getAttribute(SLING_CURRENT_SERVLET_NAME);
             request.setAttribute(SLING_CURRENT_SERVLET_NAME, name);
 
+            // setup the tracker for this service call
             String timerName = name + "#" + requestData.servletCallCounter;
             requestData.servletCallCounter++;
             requestData.getRequestProgressTracker().startTimer(timerName);
@@ -486,6 +540,9 @@ public class RequestData implements BufferProvider {
         if (currentContentData != null) {
             if (contentDataStack == null) {
                 contentDataStack = new LinkedList<ContentData>();
+            } else if (contentDataStack.size() >= maxInclusionCounter) {
+                throw new RecursionTooDeepException(
+                    requestPathInfo.getResourcePath());
             }
 
             // set the request attributes of the include content data
