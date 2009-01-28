@@ -40,6 +40,7 @@ String text = getProperty(currentNode, "text");
 String pathToInclude = getProperty(currentNode, "pathToInclude");
 String forceResourceType = getProperty(currentNode, "forceResourceType");
 String testInfiniteLoop = getProperty(currentNode, "testInfiniteLoop");
+String testMaxCalls = getProperty(currentNode, "testMaxCalls");
 
 %><html>
 	<body>
@@ -78,6 +79,24 @@ String testInfiniteLoop = getProperty(currentNode, "testInfiniteLoop");
   		  	  <p>Including <%= pathToInclude %></p>
   		  	  <sling:include path="<%= pathToInclude %>" resourceType="<%= forceResourceType %>"/>
 			  <%
+			}
+		%>
+		
+		<h2>Test 4</h2>
+		<%
+			if(pathToInclude != null && testMaxCalls != null) {
+				%>
+				<p>pathToInclude = <%= pathToInclude %></p>
+				<p>Including <%= pathToInclude %></p>
+				<%
+			    for (int i=0; i < 1200; i++) {
+			        %>
+			        <%= i %><br />
+			        <hr />
+					<sling:include path="<%= pathToInclude %>" />
+			        <hr />
+					<%
+			    }
 			}
 		%>
 	</body>

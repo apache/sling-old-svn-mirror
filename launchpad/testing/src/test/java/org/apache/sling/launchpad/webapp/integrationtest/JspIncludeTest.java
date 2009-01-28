@@ -38,6 +38,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
     private String nodeUrlC;
     private String nodeUrlD;
     private String nodeUrlE;
+    private String nodeUrlF;
     private String scriptPath;
     private String forcedResourceType;
     private Set<String> toDelete = new HashSet<String>();
@@ -68,11 +69,16 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         props.put("pathToInclude", pathToInclude + ".html");
         nodeUrlE = testClient.createNode(url, props);
 
+        // Node F is used for the max calls detection test
+        props.put("testMaxCalls","true");
+        nodeUrlF = testClient.createNode(url, props);
+
         // Node C is used for the infinite loop detection test
         props.remove("pathToInclude");
+        props.remove("testMaxCalls");
         props.put("testInfiniteLoop","true");
         nodeUrlC = testClient.createNode(url, props);
-
+        
         // Node D is used for the "force resource type" test
         forcedResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
         props.remove("testInfiniteLoop");
@@ -131,6 +137,22 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue(
             "Response contains infinite loop error message",
             content.contains("org.apache.sling.api.request.RecursionTooDeepException"));
+        
+        // TODO: SLING-515, status is 500 when running the tests as part of the maven build
+        // but 200 if running tests against a separate instance started with mvn jetty:run
+        // final int status = get.getStatusCode();
+        // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
+    }
+    
+    public void testMaxCallsDetection() throws IOException {
+        // Node F has a property that causes over 1000 includes
+        // Sling must indicate the problem in its response
+        final GetMethod get = new GetMethod(nodeUrlF + ".html");
+        httpClient.executeMethod(get);
+        final String content = get.getResponseBodyAsString();
+        assertTrue(
+            "Response contains infinite loop error message",
+            content.contains("org.apache.sling.api.request.TooManyCallsException"));
 
         // TODO: SLING-515, status is 500 when running the tests as part of the maven build
         // but 200 if running tests against a separate instance started with mvn jetty:run
