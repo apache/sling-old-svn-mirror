@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
@@ -541,10 +540,13 @@ public class JobEventHandler
                                 // this job again
                                 if ( job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
                                     final long delay = (Long)job.getProperty(EventUtil.PROPERTY_JOB_RETRY_DELAY);
+                                    jobQueue.setSleeping(true, Thread.currentThread());
                                     try {
                                         Thread.sleep(delay);
                                     } catch (InterruptedException e) {
                                         this.ignoreException(e);
+                                    } finally {
+                                        jobQueue.setSleeping(false);
                                     }
                                 }
                                 info = newInfo;
@@ -555,18 +557,22 @@ public class JobEventHandler
                                     final Date fireDate = new Date();
                                     fireDate.setTime(System.currentTimeMillis() + delay);
 
+                                    final String schedulerJobName = "Waiting:" + queueName;
                                     final Runnable t = new Runnable() {
                                         public void run() {
+                                            jobQueue.setSleeping(true, schedulerJobName);
                                             try {
                                                 jobQueue.put(newEventInfo);
                                             } catch (InterruptedException e) {
                                                 // this should never happen
                                                 ignoreException(e);
+                                            } finally {
+                                                jobQueue.setSleeping(false);
                                             }
                                         }
                                     };
                                     try {
-                                        this.scheduler.fireJobAt(null, t, null, fireDate);
+                                        this.scheduler.fireJobAt(schedulerJobName, t, null, fireDate);
                                     } catch (Exception e) {
                                         // we ignore the exception and just put back the job in the queue
                                         ignoreException(e);
@@ -1411,59 +1417,27 @@ public class JobEventHandler
     }
 
 
-    private static final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
-
-        private EventInfo eventInfo;
-
-        private final Object lock = new Object();
-
-        private boolean isWaiting = false;
-
-        private boolean markForCleanUp = false;
-
-        private boolean finished = false;
-
-        public EventInfo waitForFinish() throws InterruptedException {
-            this.isWaiting = true;
-            this.markForCleanUp = false;
-            this.lock.wait();
-            this.isWaiting = false;
-            final EventInfo object = this.eventInfo;
-            this.eventInfo = null;
-            return object;
-        }
-
-        public void markForCleanUp() {
-            if ( !this.isWaiting ) {
-                this.markForCleanUp = true;
+    /**
+     * @see org.apache.sling.event.JobStatusProvider#wakeUpJobQueue(java.lang.String)
+     */
+    public void wakeUpJobQueue(String jobQueueName) {
+        if ( jobQueueName != null ) {
+            synchronized ( this.jobQueues ) {
+                final JobBlockingQueue queue = this.jobQueues.get(jobQueueName);
+                if ( queue != null && queue.isSleeping() ) {
+                    final String schedulerJobName = queue.getSchedulerJobName();
+                    final Thread thread = queue.getSleepingThread();
+                    if ( schedulerJobName != null ) {
+                        this.scheduler.removeJob(schedulerJobName);
+                    }
+                    if ( thread != null ) {
+                        thread.interrupt();
+                    }
+                }
             }
         }
-
-        public boolean isMarkedForCleanUp() {
-            return !this.isWaiting && this.markForCleanUp;
-        }
-
-        public void notifyFinish(EventInfo i) {
-            this.eventInfo = i;
-            this.lock.notify();
-        }
-
-        public Object getLock() {
-            return lock;
-        }
-
-        public boolean isWaiting() {
-            return this.isWaiting;
-        }
-
-        public boolean isFinished() {
-            return finished;
-        }
-
-        public void setFinished(boolean flag) {
-            this.finished = flag;
-        }
     }
+
 
     private static final class StartedJobInfo {
         public final Event event;
