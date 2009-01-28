@@ -100,4 +100,12 @@ public interface JobStatusProvider {
      * @param jobId The unique identifer as put into the property {@link EventUtil#PROPERTY_JOB_ID}.
      */
     void cancelJob(String topic, String jobId);
+
+    /**
+     * Wake up the named job queue.
+     * If a job failed, the job queue waits (sleeps) for a configured time. By calling this
+     * method, the job queue can be woken up and force an immediate reprocessing.
+     * @param jobQueueName The name of the queue.
+     */
+    void wakeUpJobQueue(final String jobQueueName);
 }
