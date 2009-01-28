@@ -450,6 +450,7 @@
                                 </systemProperties>
                             </container>
                             <configuration>
+                                <home>${project.build.directory}/cargo</home>
                                 <properties>
                                     <cargo.servlet.port>
                                         ${http.port}
