@@ -220,7 +220,7 @@ public class Sling implements BundleActivator {
         Map<String, Object> felixProps = new HashMap<String, Object>(props);
         felixProps.put(FelixConstants.LOG_LOGGER_PROP, logger);
         felixProps.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators);
-        Felix tmpFelix = new SlingFelix(notifiable, props);
+        Felix tmpFelix = new SlingFelix(notifiable, felixProps);
         tmpFelix.start();
 
         // only assign field if start succeeds
