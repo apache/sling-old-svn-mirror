@@ -25,6 +25,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Loader;
@@ -163,8 +166,13 @@ public class Main extends Thread implements Notifiable {
     private void startSling(URL launcherJar) {
         if (launcherJar != null) {
             try {
-                info("Installing " + launcherJar + " to " + slingHome, null);
-                Loader.installLauncherJar(launcherJar, slingHome);
+                info("Checking launcher JAR in " + slingHome, null);
+                if (Loader.installLauncherJar(launcherJar, slingHome)) {
+                    info("Installed or Updated launcher JAR file from "
+                        + launcherJar, null);
+                } else {
+                    info("Existing launcher JAR file already up to date", null);
+                }
             } catch (IOException ioe) {
                 error("Failed installing " + launcherJar, ioe);
             }
@@ -257,35 +265,44 @@ public class Main extends Thread implements Notifiable {
 
     // emit an informational message to standard out
     private static void info(String message, Throwable t) {
-        log(System.out, "INF: ", message, t);
+        log(System.out, "*INFO*", message, t);
     }
 
     // emit an error message to standard err
     private static void error(String message, Throwable t) {
-        log(System.err, "ERR: ", message, t);
+        log(System.err, "*ERROR*", message, t);
     }
 
+    private static final DateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS ");
+    
     // helper method to format the message on the correct output channel
     // the throwable if not-null is also prefixed line by line with the prefix
     private static void log(PrintStream out, String prefix, String message,
             Throwable t) {
-        out.print(prefix);
+        
+        final StringBuilder linePrefixBuilder = new StringBuilder();
+        synchronized (fmt) {
+            linePrefixBuilder.append(fmt.format(new Date()));
+        }
+        linePrefixBuilder.append(prefix);
+        linePrefixBuilder.append(" [");
+        linePrefixBuilder.append(Thread.currentThread().getName());
+        linePrefixBuilder.append("] ");
+        final String linePrefix = linePrefixBuilder.toString();
+        
+        out.print(linePrefix);
         out.println(message);
         if (t != null) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            t.printStackTrace(pw);
-            pw.close();
-            BufferedReader br = new BufferedReader(new StringReader(
-                sw.toString()));
-            String line;
-            try {
-                while ((line = br.readLine()) != null) {
-                    out.print(prefix);
-                    out.println(line);
+            t.printStackTrace(new PrintStream(out) {
+                @Override
+                public void println(String x) {
+                    synchronized (this) {
+                        print(linePrefix);
+                        super.println(x);
+                        flush();
+                    }
                 }
-            } catch (IOException ignore) {
-            }
+            });
         }
     }
 }

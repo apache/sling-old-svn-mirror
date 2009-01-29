@@ -277,8 +277,12 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
         if (launcherJar != null) {
             try {
-                log("Installing " + launcherJar + " to " + slingHome);
-                Loader.installLauncherJar(launcherJar, slingHome);
+                log("Checking launcher JAR in " + slingHome);
+                if (Loader.installLauncherJar(launcherJar, slingHome)) {
+                    log("Installed or Updated launcher JAR file from " + launcherJar);
+                } else {
+                    log("Existing launcher JAR file is already up to date");
+                }
             } catch (IOException ioe) {
                 log("Failed installing " + launcherJar, ioe);
             }
