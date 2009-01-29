@@ -76,7 +76,7 @@ import org.osgi.framework.ServiceReference;
  * to be specified for startup. This servlet builds the list of parameters from
  * three locations:
  * <ol>
- * <li>The <code>com/day/osgi/servlet/SlingServletDelegate.properties</code> is read
+ * <li>The <code>sling.properties</code> is read
  * from the servlet class path. This properties file contains default settings.</li>
  * <li>Extensions of this servlet may provide additional properties to be
  * loaded overwriting the {@link #loadConfigProperties()} method.
@@ -99,7 +99,7 @@ import org.osgi.framework.ServiceReference;
  * This servlet logs through the servlet container logging mechanism by calling
  * the <code>GenericServlet.log</code> methods. Bundles launched within the
  * framework provided by this servlet may use whatever logging mechanism they
- * choose to use. The Day Commons OSGI Log Bundle provides an OSGi Log Service
+ * choose to use. The Commons OSGI Log Bundle provides an OSGi Log Service
  * implementation, which also provides access to Apache Commons Logging, SLF4J
  * and Log4J logging. It is recommended that this bundle is used to setup and
  * configure logging for systems based on this servlet.
