@@ -58,7 +58,7 @@ public class Loader {
         File launcherJarFile = getLauncherJarFile(slingHome);
         if (!launcherJarFile.canRead()) {
             throw new IllegalArgumentException("Sling Launcher JAR "
-                + launcherJarFile + " cannot is not accessible");
+                + launcherJarFile + " is not accessible");
         }
 
         URL launcherJarURL;
@@ -110,6 +110,9 @@ public class Loader {
      * file. If the existing file is not older than the contents of the launcher
      * JAR file, the file is not replaced.
      * 
+     * @return <code>true</code> if the launcher JAR file has been installed or
+     *         updated. If the launcher JAR is already up to date,
+     *         <code>false</code> is returned.
      * @throws IOException If an error occurrs transferring the contents
      */
     public static boolean installLauncherJar(URL launcherJar, String slingHome)

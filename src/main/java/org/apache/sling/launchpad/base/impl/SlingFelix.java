@@ -36,13 +36,8 @@ public class SlingFelix extends Felix {
     
     private Notifier notifierThread;
     
-    public SlingFelix(Notifiable notifiable, Logger arg0, Map<?, ?> arg1, List<?> arg2) {
-        super(arg0, arg1, arg2);
-        this.notifiable = notifiable;
-    }
-
-    public SlingFelix(Notifiable notifiable, Map<?, ?> arg1, List<?> arg2) {
-        super(arg1, arg2);
+    public SlingFelix(Notifiable notifiable, Map<?, ?> props) {
+        super(props);
         this.notifiable = notifiable;
     }
 
@@ -68,7 +63,7 @@ public class SlingFelix extends Felix {
 
     public void stop(int status) throws BundleException {
         startNotifier(false, null);
-        super.stop(/*TODO status*/);
+        super.stop(status);
     }
     
     private synchronized void startNotifier(boolean restart, InputStream ins) {
@@ -106,7 +101,12 @@ public class SlingFelix extends Felix {
         
         @Override
         public void run() {
-            stopAndWait();
+
+            try {
+                waitForStop(0);
+            } catch (InterruptedException ie) {
+                // TODO: log
+            }
             
             if (restart) {
                 notifiable.updated(updateFile);
