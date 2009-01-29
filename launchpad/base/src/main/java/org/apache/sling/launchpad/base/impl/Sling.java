@@ -16,8 +16,6 @@
  */
 package org.apache.sling.launchpad.base.impl;
 
-import static org.apache.felix.framework.util.FelixConstants.EMBEDDED_EXECUTION_PROP;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -40,6 +38,7 @@ import java.util.Map.Entry;
 
 import org.apache.felix.framework.Felix;
 import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.util.FelixConstants;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.BundleActivator;
@@ -53,32 +52,32 @@ import org.osgi.service.url.URLStreamHandlerService;
 /**
  * The <code>Sling</code> serves as the starting point for Sling.
  * <ul>
- * <li>The {@link #Sling(Logger, ResourceProvider, Map)} method launches
- * Apache <code>Felix</code> as the OSGi framework implementation we use.
+ * <li>The {@link #Sling(Logger, ResourceProvider, Map)} method launches Apache
+ * <code>Felix</code> as the OSGi framework implementation we use.
  * </ul>
  * <p>
  * <b>Launch Configuration</b>
  * <p>
- * The Apache <code>Felix</code> framework requires configuration parameters
- * to be specified for startup. This servlet builds the list of parameters from
+ * The Apache <code>Felix</code> framework requires configuration parameters to
+ * be specified for startup. This servlet builds the list of parameters from
  * three locations:
  * <ol>
- * <li>The <code>com/day/osgi/servlet/Sling.properties</code> is read from
- * the servlet class path. This properties file contains default settings.</li>
- * <li>Extensions of this servlet may provide additional properties to be
- * loaded overwriting the {@link #loadPropertiesOverride(Map)} method.
+ * <li>The <code>sling.properties</code> file is read from the servlet class
+ * path. This properties file contains default settings.</li>
+ * <li>Extensions of this servlet may provide additional properties to be loaded
+ * overwriting the {@link #loadPropertiesOverride(Map)} method.
  * <li>Finally, web application init parameters are added to the properties and
  * may overwrite existing properties of the same name(s).
  * </ol>
  * <p>
  * After loading all properties, variable substitution takes place on the
  * property values. A variable is indicated as <code>${&lt;prop-name&gt;}</code>
- * where <code>&lt;prop-name&gt;</code> is the name of a system or
- * configuration property (configuration properties override system properties).
- * Variables may be nested and are resolved from inner-most to outer-most. For
- * example, the property value <code>${outer-${inner}}</code> is resolved by
- * first resolving <code>${inner}</code> and then resolving the property whose
- * name is the catenation of <code>outer-</code> and the result of resolving
+ * where <code>&lt;prop-name&gt;</code> is the name of a system or configuration
+ * property (configuration properties override system properties). Variables may
+ * be nested and are resolved from inner-most to outer-most. For example, the
+ * property value <code>${outer-${inner}}</code> is resolved by first resolving
+ * <code>${inner}</code> and then resolving the property whose name is the
+ * catenation of <code>outer-</code> and the result of resolving
  * <code>${inner}</code>.
  * <p>
  */
@@ -212,16 +211,16 @@ public class Sling implements BundleActivator {
         // ensure execution environment
         this.setExecutionEnvironment(props);
 
-        // make sure Felix does not exit the VM when terminating ...
-        props.put(EMBEDDED_EXECUTION_PROP, "true");
-
         // the custom activator list just contains this servlet
         List<BundleActivator> activators = new ArrayList<BundleActivator>();
         activators.add(this);
         activators.add(new BootstrapInstaller(logger, resourceProvider));
 
         // create the framework and start it
-        Felix tmpFelix = new SlingFelix(notifiable, logger, props, activators);
+        Map<String, Object> felixProps = new HashMap<String, Object>(props);
+        felixProps.put(FelixConstants.LOG_LOGGER_PROP, logger);
+        felixProps.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators);
+        Felix tmpFelix = new SlingFelix(notifiable, props);
         tmpFelix.start();
 
         // only assign field if start succeeds
@@ -247,7 +246,27 @@ public class Sling implements BundleActivator {
             // shutdown the Felix container
             if (myFelix != null) {
                 logger.log(Logger.LOG_INFO, "Shutting down Sling");
-                myFelix.stopAndWait();
+                try {
+                    
+                    myFelix.stop();
+                    myFelix.waitForStop(0);
+                    
+                } catch (BundleException be) {
+                    
+                    // may be thrown by stop, log but continue
+                    logger.log(Logger.LOG_ERROR,
+                        "Failure initiating Framework Shutdown", be);
+                    
+                } catch (InterruptedException ie) {
+                
+                    // may be thrown by waitForStop, log but continue
+                    logger.log(
+                        Logger.LOG_ERROR,
+                        "Interrupted while waiting for the Framework Termination",
+                        ie);
+                    
+                }
+                
                 logger.log(Logger.LOG_INFO, "Sling stopped");
             }
         }
@@ -326,78 +345,83 @@ public class Sling implements BundleActivator {
         // The config properties file is either specified by a system
         // property or it is in the same directory as the Felix JAR file.
         // Try to load it from one of these places.
-        Map<String, String> props = new HashMap<String, String>();
+        final Map<String, String> staticProps = new HashMap<String, String>();
 
         // Read the properties file.
-        this.load(props, CONFIG_PROPERTIES);
+        this.load(staticProps, CONFIG_PROPERTIES);
 
         // resolve inclusions (and remove property)
-        this.loadIncludes(props, null);
+        this.loadIncludes(staticProps, null);
 
         // overwrite default properties with initial overwrites
         if (propOverwrite != null) {
-            props.putAll(propOverwrite);
+            staticProps.putAll(propOverwrite);
         }
 
         // check whether sling.home is overwritten by system property
-        String slingHome = props.get(SharedConstants.SLING_HOME);
+        String slingHome = staticProps.get(SharedConstants.SLING_HOME);
         if (slingHome == null || slingHome.length() == 0) {
             throw new BundleException("sling.home property is missing, cannot start");
         }
 
         // resolve variables and ensure sling.home is an absolute path
-        slingHome = substVars(slingHome, SharedConstants.SLING_HOME, null, props);
+        slingHome = substVars(slingHome, SharedConstants.SLING_HOME, null, staticProps);
         File slingHomeFile = new File(slingHome).getAbsoluteFile();
         slingHome = slingHomeFile.getAbsolutePath();
 
         // overlay with ${sling.home}/sling.properties
         this.logger.log(Logger.LOG_INFO, "Starting sling in " + slingHome);
         File propFile = new File(slingHome, CONFIG_PROPERTIES);
-        this.load(props, propFile);
+        this.load(staticProps, propFile);
 
+        // migrate old properties to new properties
+        migrateProp(staticProps, "felix.cache.profiledir", Constants.FRAMEWORK_STORAGE);
+        migrateProp(staticProps, "felix.startlevel.framework", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
+        migrateProp(staticProps, "sling.osgi-core-packages", "osgi-core-packages");
+        migrateProp(staticProps, "sling.osgi-compendium-services", "osgi-compendium-services");
+        
         // create a copy of the properties to perform variable substitution
-        Map<String, String> origProps = props;
-        props = new HashMap<String, String>();
-        props.putAll(origProps);
+        final Map<String, String> runtimeProps = new HashMap<String, String>();
+        runtimeProps.putAll(staticProps);
 
         // check system properties for any overrides (except sling.home !)
-        String ignoreSystemProperties = props.get(SLING_IGNORE_SYSTEM_PROPERTIES);
+        String ignoreSystemProperties = runtimeProps.get(SLING_IGNORE_SYSTEM_PROPERTIES);
         if (!"true".equalsIgnoreCase(ignoreSystemProperties)) {
-            for (String name : props.keySet()) {
+            for (String name : runtimeProps.keySet()) {
                 String sysProp = System.getProperty(name);
                 if (sysProp != null) {
-                    props.put(name, sysProp);
+                    runtimeProps.put(name, sysProp);
                 }
             }
         }
 
         // resolve inclusions again
-        this.loadIncludes(props, slingHome);
+        this.loadIncludes(runtimeProps, slingHome);
 
         // overwrite properties, this is not persisted as such
-        this.loadPropertiesOverride(props);
+        this.loadPropertiesOverride(runtimeProps);
 
         // resolve boot delegation and system packages
-        this.resolve(props, "org.osgi.framework.bootdelegation",
+        this.resolve(runtimeProps, "org.osgi.framework.bootdelegation",
             "sling.bootdelegation.");
-        this.resolve(props, "org.osgi.framework.system.packages",
+        this.resolve(runtimeProps, "org.osgi.framework.system.packages",
             "sling.system.packages.");
 
         // reset back the sling home property
         // might have been overwritten by system properties, included
         // files or the sling.properties file
-        origProps.put(SharedConstants.SLING_HOME, slingHome);
-        props.put(SharedConstants.SLING_HOME, slingHome);
-        props.put(SLING_HOME_URL, slingHomeFile.toURI().toString());
+        staticProps.put(SharedConstants.SLING_HOME, slingHome);
+        runtimeProps.put(SharedConstants.SLING_HOME, slingHome);
+        runtimeProps.put(SLING_HOME_URL, slingHomeFile.toURI().toString());
 
         // Perform variable substitution for system properties.
-        for (Entry<String, String> entry : props.entrySet()) {
+        for (Entry<String, String> entry : runtimeProps.entrySet()) {
             entry.setValue(substVars(entry.getValue(), entry.getKey(), null,
-                props));
+                runtimeProps));
         }
 
         // look for context:/ URLs to substitute
-        for (Entry<String, String> entry : props.entrySet()) {
+        for (Entry<String, String> entry : runtimeProps.entrySet()) {
             String name = entry.getKey();
             String value = entry.getValue();
             if (value != null && value.startsWith("context:/")) {
@@ -423,7 +447,7 @@ public class Sling implements BundleActivator {
                         entry.setValue(target.getAbsolutePath());
 
                         // also set the new property on the unsubstituted props
-                        origProps.put(name, "${sling.home}" + path);
+                        staticProps.put(name, "${sling.home}" + path);
 
                     } catch (IOException ioe) {
                         this.logger.log(Logger.LOG_ERROR, "Cannot copy file "
@@ -454,7 +478,7 @@ public class Sling implements BundleActivator {
 
             // copy the values into a temporary properties structure to store
             Properties tmp = new Properties();
-            tmp.putAll(origProps);
+            tmp.putAll(staticProps);
             tmp.store(os, "Overlay properties for configuration");
         } catch (Exception ex) {
             this.logger.log(Logger.LOG_ERROR,
@@ -469,7 +493,7 @@ public class Sling implements BundleActivator {
             }
         }
 
-        return props;
+        return runtimeProps;
     }
 
     /**
@@ -533,6 +557,37 @@ public class Sling implements BundleActivator {
             this.logger.log(Logger.LOG_DEBUG, "Setting property " + osgiProp
                 + " to " + prop.toString());
             props.put(osgiProp, prop.toString());
+        }
+    }
+
+    /**
+     * Converts an old Felix framework property into a new (standard or modified
+     * Felix framework) property. If a property named <code>oldName</code> does
+     * not exist in the <code>props</code> map, the map is not modified. If such
+     * a property exists it is removed and add to the map with the
+     * <code>newName</code> key. If both properties <code>oldName</code> and
+     * <code>newName</code> exist, the property <code>newName</code> is replaced
+     * with the value of the property <code>oldName</code>.
+     * 
+     * @param props The map of properties containing the property to rename
+     * @param oldName The old key of the property value
+     * @param newName The new key of the property value
+     */
+    private void migrateProp(Map<String, String> props, String oldName,
+            String newName) {
+        String propValue = props.remove(oldName);
+        if (propValue != null) {
+            String previousNewValue = props.put(newName, propValue);
+            if (previousNewValue != null) {
+                logger.log(Logger.LOG_WARNING, "Old value (" + previousNewValue
+                    + ") of property " + newName + " by value: " + propValue);
+            } else {
+                logger.log(Logger.LOG_INFO, "Property " + oldName + " ("
+                    + propValue + ") renamed to " + newName);
+            }
+        } else {
+            logger.log(Logger.LOG_DEBUG, "Property " + oldName
+                + " does not exist, nothing to do");
         }
     }
 
