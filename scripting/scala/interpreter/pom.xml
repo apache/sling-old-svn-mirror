@@ -31,7 +31,7 @@
     <version>0.9.0-incubator-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Apache Sling Scala Interpreter</name>
+    <name>Apache Sling Scripting Scala Interpreter</name>
     <description>
         Scala interpreter with OSGi support. This module is used by the Scala
         ScriptEngineFactory to implement support scripts stored in OSGi bundles
