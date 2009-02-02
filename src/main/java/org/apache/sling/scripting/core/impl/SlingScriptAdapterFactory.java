@@ -33,6 +33,7 @@ import javax.script.ScriptEngineManager;
 
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -55,12 +56,13 @@ import org.slf4j.LoggerFactory;
  *               values.0="org.apache.sling.api.scripting.SlingScript"
  *               values.1="javax.servlet.Servlet"
  * @scr.service interface="org.apache.sling.api.adapter.AdapterFactory"
+ * @scr.service interface="org.apache.sling.commons.mime.MimeTypeProvider"
  * @scr.reference name="ScriptEngineFactory"
  *                interface="javax.script.ScriptEngineFactory"
  *                cardinality="0..n" policy="dynamic"
  */
 public class SlingScriptAdapterFactory implements AdapterFactory,
-        BundleListener {
+        MimeTypeProvider, BundleListener {
 
     private static final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
 
@@ -203,6 +205,54 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
             scriptEngineManager = null;
 
         }
+    }
+
+    // ---------- MimeTypeProvider
+
+    /**
+     * Returns the first MIME type entry of the supported MIME types of a
+     * ScriptEngineFactory which is registered for the extension of the given
+     * name. If no ScriptEngineFactory is registered for the given extension or
+     * the registered ScriptEngineFactory is not registered for a MIME type,
+     * this method returns <code>null</code>.
+     * 
+     * @param name The name whose extension is to be mapped to a MIME type. The
+     *            extension is the string after the last dot in the name. If the
+     *            name contains no dot, the entire name is considered the
+     *            extension.
+     */
+    public String getMimeType(String name) {
+        name = name.substring(name.lastIndexOf('.') + 1);
+        ScriptEngine se = getScriptEngineManager().getEngineByExtension(name);
+        if (se != null) {
+            List<?> mimeTypes = se.getFactory().getMimeTypes();
+            if (mimeTypes != null && mimeTypes.size() > 0) {
+                return String.valueOf(mimeTypes.get(0));
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the first extension entry of the supported extensions of a
+     * ScriptEngineFactory which is registered for the given MIME type. If no
+     * ScriptEngineFactory is registered for the given MIME type or the
+     * registered ScriptEngineFactory is not registered for an extensions, this
+     * method returns <code>null</code>.
+     * 
+     * @param mimeType The MIME type to be mapped to an extension.
+     */
+    public String getExtension(String mimeType) {
+        ScriptEngine se = getScriptEngineManager().getEngineByMimeType(mimeType);
+        if (se != null) {
+            List<?> extensions = se.getFactory().getExtensions();
+            if (extensions != null && extensions.size() > 0) {
+                return String.valueOf(extensions.get(0));
+            }
+        }
+
+        return null;
     }
 
     // ---------- SCR integration ----------------------------------------------
