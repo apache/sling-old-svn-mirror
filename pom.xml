@@ -106,6 +106,8 @@
         <module>scripting/jsp-taglib</module>
         <module>scripting/java</module>
         <module>scripting/python</module>
+        <module>scripting/scala/interpreter</module>
+        <module>scripting/scala/engine</module>
         
         <!-- Extensions -->
         <module>extensions/adapter</module>
