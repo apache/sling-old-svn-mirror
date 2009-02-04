@@ -56,8 +56,6 @@ import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jndi.toolkit.url.Uri;
-
 public class JcrResourceResolver2 extends SlingAdaptable implements
         ResourceResolver {
 
@@ -80,7 +78,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     public static final String PROP_ALIAS = "sling:alias";
 
     public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
-    
+
     public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
 
     /** default log */
@@ -116,12 +114,12 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
         return resolveInternal(request, absPath, true);
     }
-    
+
     public Resource resolve(String absPath) {
         if (absPath == null) {
             throw new NullPointerException("absPath");
         }
-        
+
         return resolveInternal(null, absPath, false);
     }
 
@@ -135,7 +133,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     //   - apply /etc/map mappings (inkl. config backwards compat)
     //   - return absolute uri if possible
     public String map(final HttpServletRequest request, final String resourcePath) {
-        
+
         String mappedPath = resourcePath;
         boolean mappedPathIsUrl = false;
         String resolutionPathInfo;
@@ -161,10 +159,10 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
             // keep, what we might have cut off in internal resolution
             resolutionPathInfo = res.getResourceMetadata().getResolutionPathInfo();
-            
+
             log.debug("map: Path maps to resource {} with path info {}", res,
                 resolutionPathInfo);
-            
+
             // find aliases for segments
             LinkedList<String> names = new LinkedList<String>();
             while (res != null) {
@@ -177,7 +175,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 }
                 res = ResourceUtil.getParent(res);
             }
-            
+
             // build path from segment names
             StringBuilder buf = new StringBuilder();
             while (!names.isEmpty()) {
@@ -185,22 +183,22 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 buf.append(names.removeLast());
             }
             mappedPath = buf.toString();
-            
+
             log.debug("map: Alias mapping resolves to path {}", mappedPath);
-            
+
         } else {
-            
+
             // we have no resource, hence no resolution path info
             resolutionPathInfo = null;
-            
+
         }
-        
+
         for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
             String[] mappedPaths = mapEntry.replace(mappedPath);
             if (mappedPaths != null) {
 
                 log.debug("map: Match for Entry {}", mapEntry);
-                
+
                 mappedPath = mappedPaths[0];
                 mappedPathIsUrl = !mapEntry.isInternal();
 
@@ -229,17 +227,17 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         if (mappedPath == null) {
             mappedPath = resourcePath;
         }
-        
+
         // append resolution path info, which might have been cut off above
         if (resolutionPathInfo != null) {
             mappedPath = mappedPath.concat(resolutionPathInfo);
         }
-        
+
         if (mappedPathIsUrl) {
             // TODO: Consider mangling the path but not the scheme and
             // esp. the host:port part
-            
-            // [scheme:][//authority][path][?query][#fragment] 
+
+            // [scheme:][//authority][path][?query][#fragment]
             try {
                 URI uri = new URI(mappedPath);
 
@@ -259,7 +257,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 log.warn("map: Unable to mangle namespaces for " + mappedPath
                     + " returning unmangled", use);
             }
-            
+
             log.debug("map: Returning URL {} as mapping for path {}",
                 mappedPath, resourcePath);
 
@@ -267,19 +265,19 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
             // mangle the namespaces
             mappedPath = mangleNamespaces(mappedPath);
-    
+
             // prepend servlet context path if we have a request
             if (request != null && request.getContextPath() != null
                 && request.getContextPath().length() > 0) {
                 mappedPath = request.getContextPath().concat(mappedPath);
             }
-    
+
             log.debug(
                 "map: Returning path {} (after mangling, inlc. context) for {}",
                 mappedPath, resourcePath);
-            
+
         }
-        
+
         return mappedPath;
     }
 
@@ -406,14 +404,14 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     private Session getSession() {
         return rootProvider.getSession();
     }
-    
+
     // expect absPath to be non-null and absolute
     public Resource resolveInternal(HttpServletRequest request, String absPath,
             boolean requireResource) {
 
         // check for special namespace prefix treatment
         absPath = unmangleNamespaces(absPath);
-        
+
         // Assume http://localhost:80 if request is null
         String[] realPathList = { absPath };
         String requestPath;
@@ -522,7 +520,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             }
 
         }
-        
+
         if (res == null) {
             if (requireResource) {
                 log.debug(
@@ -543,7 +541,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     /**
      * Returns a string used for matching map entries against the given request
      * or URI parts.
-     * 
+     *
      * @param scheme The URI scheme
      * @param host The host name
      * @param port The port number. If this is negative, the default value used
@@ -556,7 +554,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         if (port < 0) {
             port = ("https".equals(scheme)) ? 443 : 80;
         }
-        
+
         return scheme + "/" + host + "." + port + path;
     }
 
@@ -577,7 +575,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
      * <p>
      * If neither mechanism (direct access and drill down) resolves to a
      * resource this method returns <code>null</code>.
-     * 
+     *
      * @param absPath The absolute path of the resource to return.
      * @return The resource found or <code>null</code> if the resource could
      *         not be found. The
@@ -607,7 +605,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
             String rpi = absPath.substring(curPath.length());
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
-            
+
             log.debug(
                 "resolveInternal: Found resource {} with path info {} for {}",
                 new Object[] { resource, rpi, absPath });
@@ -711,7 +709,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     }
 
     public String getProperty(Resource res, String propName) {
-        
+
         // check the property in the resource itself
         ValueMap props = res.adaptTo(ValueMap.class);
         if (props != null) {
@@ -722,7 +720,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 return prop;
             }
         }
-        
+
         // otherwise, check it in the jcr:content child resource
         res = getResource(res, "jcr:content");
         if (res != null) {
@@ -737,7 +735,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
      * already absolute it is returned unmodified (the same instance actually).
      * If the path is relative it is made absolute by prepending the first entry
      * of the {@link #getSearchPath() search path}.
-     * 
+     *
      * @param path The path to ensure absolute
      * @return The absolute path as explained above
      */
@@ -760,7 +758,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             m.appendTail(buf);
             absPath = buf.toString();
         }
-        
+
         return absPath;
     }
 
@@ -780,7 +778,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             m.appendTail(buf);
             absPath = buf.toString();
         }
-        
+
         return absPath;
     }
 }
