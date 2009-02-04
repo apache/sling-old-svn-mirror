@@ -467,8 +467,8 @@ public class JobEventHandler
                                  * @see java.lang.Runnable#run()
                                  */
                                 public void run() {
+                                    logger.info("Starting job queue {}", queueName);
                                     while ( running ) {
-                                        logger.info("Starting job queue {}", queueName);
                                         try {
                                             runJobQueue(queueName, jq);
                                         } catch (Throwable t) {
