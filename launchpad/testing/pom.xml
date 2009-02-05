@@ -90,11 +90,14 @@
             **/jcrinstall/**
         </jcrinstall.integration.test.code.path>
 
+        <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
+        
         <!--
             Where to copy our test bundles
-            Used when profile jcrinstall-tests is active
+            Used when profile jcrinstall-tests is active.
          -->
-        <sling.testbundles.path>${project.build.directory}/testbundles</sling.testbundles.path>
+        <jcrinstall.start.level>0</jcrinstall.start.level>
+        <sling.testbundles.path>${resources.bundles.path}/${jcrinstall.start.level}</sling.testbundles.path>
         
         <!--
             Can be used to run tests with more or less bundles
@@ -228,7 +231,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/launchpad-bundles/resources/bundles/0
+                                ${resources.bundles.path}/0
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeArtifactIds>
@@ -314,6 +317,20 @@
                             <value>
                                 http://${test.host}:${http.port}/${webdav.workspace.path}
                             </value>
+                        </property>
+                        
+                        <!-- system properties used for profile jcrinstall-tests -->
+                        <property>
+                            <name>sling.testbundles.path</name>
+                            <value>${sling.testbundles.path}</value>
+                        </property>
+                        <property>
+                            <name>sling.test.scale.factor</name>
+                            <value>${sling.test.scale.factor}</value>
+                        </property>
+                        <property>
+                            <name>sling.test.bundles.wait.seconds</name>
+                            <value>${sling.test.bundles.wait.seconds}</value>
                         </property>
                     </systemProperties>
                 </configuration>
@@ -520,7 +537,7 @@
                                 </goals>
                                 <configuration>
                                     <outputDirectory>
-                                        ${project.build.directory}/launchpad-bundles/resources/bundles/0
+                                        ${resources.bundles.path}/${jcrinstall.start.level}
                                     </outputDirectory>
                                     <excludeTransitive>true</excludeTransitive>
                                     <includeArtifactIds>

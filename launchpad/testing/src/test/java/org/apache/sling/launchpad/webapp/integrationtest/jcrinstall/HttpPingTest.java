@@ -16,7 +16,6 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.jcrinstall;
 
-import org.apache.commons.httpclient.methods.GetMethod;
 
 /** Ping the Sling server to verify that our integration test
  *  setup is ok.
@@ -26,7 +25,7 @@ public class HttpPingTest extends JcrinstallTestBase {
     public void testWebServerRoot() throws Exception
     {
         final String url = HTTP_BASE_URL + "/";
-        assertHttpStatus(url, 403, "Root should return 403 as no redirect is setup in the repository");
+        assertHttpStatus(url, 200, "Root should return 200 when running inside the launchpad/testing environment");
     }
     
     public void test404() throws Exception
