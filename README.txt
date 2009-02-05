@@ -43,6 +43,9 @@ See the Subversion documentation for other source control features.
 How to run this
 ---------------
 
+  NOTE: "mvn clean" does not delete the "sling" work directory - make sure to 
+  delete it manually if you want to start from a clean state.
+
 1) Build all Sling bundles
 
   cd <top of the Sling source code tree>
