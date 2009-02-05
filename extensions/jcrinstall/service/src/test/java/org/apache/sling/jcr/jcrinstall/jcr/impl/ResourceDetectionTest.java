@@ -95,7 +95,6 @@ public class ResourceDetectionTest extends RepositoryTestBase {
         contentHelper.setupContent();
         
         final String dummyJar = "/libs/foo/bar/install/dummy.jar";
-        final InputStream data = new ByteArrayInputStream(dummyJar.getBytes());
         final MockInstallableData da = new MockInstallableData("a");
         final MockInstallableData db = new MockInstallableData("b");
         final Set<String> installedUri = new HashSet<String>();
@@ -161,7 +160,6 @@ public class ResourceDetectionTest extends RepositoryTestBase {
                 "/libs/foo/bar/install/dummy.cfg",
                 "/libs/foo/bar/install/dummy.dp"
         };
-        final InputStream data = new ByteArrayInputStream("hello".getBytes());
         final MockInstallableData da = new MockInstallableData("a");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
@@ -205,7 +203,6 @@ public class ResourceDetectionTest extends RepositoryTestBase {
                 "/libs/foo/bar/install/dummy.longextension"
         };
         
-        final InputStream data = new ByteArrayInputStream("hello".getBytes());
         final MockInstallableData da = new MockInstallableData("a");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
@@ -306,7 +303,6 @@ public class ResourceDetectionTest extends RepositoryTestBase {
                 "/libs/foo/bar/install/dummy.cfg",
                 "/libs/foo/bar/install/dummy.dp"
         };
-        final InputStream data = new ByteArrayInputStream("hello".getBytes());
         final MockInstallableData da = new MockInstallableData("a");
         final Set<String> installedUri = new HashSet<String>();
         final OsgiController c = mockery.mock(OsgiController.class);
