@@ -40,6 +40,9 @@ See the Subversion documentation for other source control features.
 How to run the Sling launcher/app module
 ----------------------------------------
 
+  NOTE: "mvn clean" does not delete the "sling" work directory - make sure to 
+  delete it manually if you want to start from a clean state.
+
 1) Build Sling using 
 
 	mvn clean install
