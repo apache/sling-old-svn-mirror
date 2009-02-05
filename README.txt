@@ -103,3 +103,21 @@ include the JCR Install tests in the integration tests run enable the
 jcrinstall-tests profile such as in
 
    mvn -P jcrinstall-tests integration-test
+   
+*** WARNING: the jcrinstall-tests do not work in revision 741168, due to changes
+in the start levels. They can be run according to the scenario below, if you 
+change the default bundles start level to 30, after starting the Sling instance
+with mvn jetty:run, from http://localhost:8888/system/console/vmstat. ***     
+
+To run the jcrinstall integration tests quickly, without having to start the
+webapp first:
+
+1. Run mvn clean package jetty:run -P jcrinstall-tests in a first console
+
+(1.5 see WARNING above - adjust the default bundles start level)
+
+2. In another console run
+
+  mvn test -Pjcrinstall-tests  -Dtest=**/integrationtest/jcrinstall/**/*Test.java
+  
+       
