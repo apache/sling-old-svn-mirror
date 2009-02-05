@@ -40,6 +40,7 @@ import org.apache.sling.jcr.jcrinstall.jcr.JcrInstallService;
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
+import org.apache.sling.runmode.RunMode;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
@@ -69,13 +70,16 @@ import org.slf4j.LoggerFactory;
 public class RepositoryObserver implements Runnable, FrameworkListener, JcrInstallService {
 
     private final SortedSet<WatchedFolder> folders = new TreeSet<WatchedFolder>();
-    private RegexpFilter folderNameFilter;
+    private RunModeRegexpFilter folderNameFilter;
     private RegexpFilter filenameFilter;
     private ResourceOverrideRules roRules;
     private ComponentContext componentContext;
     private final PropertiesUtil propertiesUtil = new PropertiesUtil();
     private boolean observationCycleActive;
     private boolean activated;
+    
+    /** @scr.reference */ 
+    private RunMode runMode;
     
     /** @scr.reference */
     protected OsgiController osgiController;
@@ -176,7 +180,7 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     	} else {
             log.info("Using folder name regexp '{}' from context property '{}'", folderNameRegexp, FOLDER_NAME_REGEXP_PROPERTY);
     	}
-        folderNameFilter = new RegexpFilter(folderNameRegexp);
+        folderNameFilter = new RunModeRegexpFilter(folderNameRegexp, runMode);
         serviceDataFile = getServiceDataFile(componentContext);
         
         // Listen for any new WatchedFolders created after activation
