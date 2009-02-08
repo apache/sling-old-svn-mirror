@@ -16,13 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.openidauth;
+package org.apache.sling.openidauth.impl;
 
-public class OpenIDUserUtil {
-	public static String getPrincipalName(String openIdIdentifier) {
-		if(openIdIdentifier.endsWith("/")) {
-			openIdIdentifier = openIdIdentifier.substring(0,openIdIdentifier.length()-1);
-		}
-		return openIdIdentifier.replaceAll("://",".").replaceAll(":",".").replaceAll("/","_");
+import java.security.Principal;
+
+import org.apache.sling.openidauth.OpenIDUserUtil;
+
+import com.dyuproject.openid.OpenIdUser;
+
+public class OpenIDPrincipal implements Principal {
+
+	private String name;
+	private OpenIdUser user;
+	
+	public OpenIDPrincipal(OpenIdUser user) {
+		this.user = user;
+		this.name = this.user != null ? OpenIDUserUtil.getPrincipalName(user.getIdentity()) : "";
+	}
+	
+	public String getName() {
+		return name;
+	}
+
+	public OpenIdUser getUser() {
+		return user;
 	}
 }
