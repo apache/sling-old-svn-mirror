@@ -19,16 +19,25 @@
 package org.apache.sling.openidauth.impl;
 
 import java.io.IOException;
+import java.security.Principal;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.FailedLoginException;
+import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
+import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
+import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 import org.apache.sling.openidauth.OpenIDConstants;
 import org.apache.sling.openidauth.OpenIDUserUtil;
 import org.apache.sling.openidauth.OpenIDConstants.OpenIDFailure;
@@ -50,11 +59,11 @@ import com.dyuproject.openid.manager.CookieBasedUserManager;
  *                description="%auth.openid.description"
  * @scr.property name="service.description" value="Apache Sling OpenID Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" values.0="/" 
+ * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" values.0="/"
  * @scr.service
  */
 public class OpenIDAuthenticationHandler implements
-        AuthenticationHandler {
+        AuthenticationHandler, LoginModulePlugin {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -174,7 +183,6 @@ public class OpenIDAuthenticationHandler implements
     static final String SLASH = "/";
     
     private ComponentContext context;
-    private String openIdUserPassword;
     
     private String loginForm;
     private String authSuccessUrl;
@@ -269,11 +277,21 @@ public class OpenIDAuthenticationHandler implements
         // if the response is already committed, we have a problem !!
         if (!response.isCommitted()) {
         	
+        	// If we're here & we have a valid authenticated user
+        	// probably we failed the repository login (no repo user
+        	// configured for the authenticated principal)
+        	OpenIdUser user = (OpenIdUser)request.getAttribute(OpenIDConstants.OPEN_ID_USER_ATTRIBUTE);
+        	if(user != null && user.isAuthenticated()) {
+        		request.getSession().setAttribute(
+        				OpenIDConstants.OPENID_FAILURE_REASON_ATTRIBUTE, 
+        				OpenIDConstants.OpenIDFailure.REPOSITORY);
+        	}
+
         	// requestAuthentication is only called after a failed authentication
         	// so it makes sense to remove any existing login
-        	// original URL is set only if it doesn't already exist
         	relyingParty.invalidate(request, response);
-        	
+
+        	// original URL is set only if it doesn't already exist        	
         	if(request.getSession().getAttribute(OpenIDConstants.ORIGINAL_URL_ATTRIBUTE) == null) {
         		String originalUrl = request.getRequestURI() +
         			(request.getQueryString() != null ? "?" + request.getQueryString() : "");
@@ -327,10 +345,6 @@ public class OpenIDAuthenticationHandler implements
 
     protected void activate(ComponentContext componentContext) {
     	context = componentContext;
-    	
-    	openIdUserPassword = OsgiUtil.toString(
-         		context.getProperties().get(PROP_OPENID_USERS_PASSWORD), 
-         		DEFAULT_OPENID_USERS_PASSWORD);
     	
     	loginForm = OsgiUtil.toString(
          		context.getProperties().get(PROP_LOGIN_FORM), 
@@ -478,7 +492,7 @@ public class OpenIDAuthenticationHandler implements
 	            if(user.isAuthenticated()) {
 	                // user already authenticated
 	                request.setAttribute(OpenIdUser.ATTR_NAME, user);
-	                return getAuthInfoFromIdentifier(user.getIdentity());
+	                return getAuthInfoFromUser(user);
 	            } else if(user.isAssociated()) {
 	            	if(RelyingParty.isAuthResponse(request)) {
 		            	if(relyingParty.verifyAuth(user, request, response)) {
@@ -558,11 +572,49 @@ public class OpenIDAuthenticationHandler implements
 		return attr;
     }
     
-    private AuthenticationInfo getAuthInfoFromIdentifier(String id) {
-    	String jcrId = OpenIDUserUtil.getPrinicpalName(id);
+    private AuthenticationInfo getAuthInfoFromUser(OpenIdUser user) {
+    	String jcrId = OpenIDUserUtil.getPrincipalName(user.getIdentity());
 
-    	Credentials creds = new SimpleCredentials(jcrId,openIdUserPassword.toCharArray());
+    	SimpleCredentials creds = new SimpleCredentials(jcrId,new char[0]);
+    	creds.setAttribute(getClass().getName(), user);
         return new AuthenticationInfo(OpenIDConstants.OPEN_ID_AUTH_TYPE, creds);
     }
+
+	public boolean canHandle(Credentials credentials) {
+		if(credentials != null && credentials instanceof SimpleCredentials) {
+			SimpleCredentials sc = (SimpleCredentials)credentials;
+			OpenIdUser user = (OpenIdUser)sc.getAttribute(getClass().getName());
+			if(user != null) {
+				return user.isAssociated();
+			}
+		}
+		return false;
+	}
+
+	public void doInit(CallbackHandler callbackHandler, Session session,
+			Map options) throws LoginException {
+		return;
+	}
+
+	public AuthenticationPlugin getAuthentication(Principal principal,
+			Credentials creds) throws RepositoryException {
+		return new OpenIDAuthenticationPlugin(principal);
+	}
+
+	public Principal getPrincipal(Credentials credentials) {
+		if(credentials != null && credentials instanceof SimpleCredentials) {
+			SimpleCredentials sc = (SimpleCredentials)credentials;
+			OpenIdUser user = (OpenIdUser)sc.getAttribute(getClass().getName());
+			if(user != null) {
+				return new OpenIDPrincipal(user);
+			}
+		}
+		return null;
+	}
+
+	public int impersonate(Principal principal, Credentials credentials)
+			throws RepositoryException, FailedLoginException {
+		return LoginModulePlugin.IMPERSONATION_DEFAULT;
+	}
 
 }

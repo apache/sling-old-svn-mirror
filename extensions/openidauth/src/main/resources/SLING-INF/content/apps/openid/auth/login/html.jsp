@@ -29,6 +29,8 @@
 		failureMessage = "Unable to find OpenID provider";
 	} else if (failureReason == OpenIDConstants.OpenIDFailure.ASSOCIATION) {
 		failureMessage = "Unable to associate with OpenID provider";
+	} else if (failureReason == OpenIDConstants.OpenIDFailure.REPOSITORY) {
+		failureMessage = "No matching repository user found";
 	} else if (failureReason != null) {
 		failureMessage = "Unknown login error";
 	}
@@ -105,7 +107,8 @@
 			<div class="login-status">
 				<% if (failureReason != null) { %>
 					<div class="error"><%= failureMessage %></div>
-				<% } else if(currentLogin != null) { %>
+				<% } %>
+				<% if(currentLogin != null) { %>
 	            		Currently logged in as: 
 	            		<span class="username"><%= currentLogin %></span>
 	            <% } %>
