@@ -20,11 +20,13 @@ package org.apache.sling.engine.impl.auth;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -117,7 +119,7 @@ public class SlingAuthenticator implements ManagedService {
 
     private int authHandlerTrackerCount;
 
-    private AuthenticationHandlerInfo[] authHandlerCache;
+    private Map<String, Map<String, AuthenticationHandlerInfo[]>> authHandlerCache;
 
     /** The name of the impersonation parameter */
     private String sudoParameterName;
@@ -252,7 +254,7 @@ public class SlingAuthenticator implements ManagedService {
     public void requestAuthentication(HttpServletRequest request,
             HttpServletResponse response) {
 
-        AuthenticationHandlerInfo[] handlerInfos = getAuthenticationHandlers();
+        AuthenticationHandlerInfo[] handlerInfos = findApplicableAuthenticationHandlers(request);
         boolean done = false;
         for (int i = 0; !done && i < handlerInfos.length; i++) {
             if ( request.getPathInfo().startsWith(handlerInfos[i].path) ) {
@@ -274,8 +276,8 @@ public class SlingAuthenticator implements ManagedService {
         if ( !done ) {
             // no handler could send an authentication request, fail with FORBIDDEN
             log.info(
-            		"requestAuthentication: No handler for request, sending FORBIDDEN ({} handlers available)",
-            		handlerInfos.length
+                    "requestAuthentication: No handler for request, sending FORBIDDEN ({} handlers available)",
+                    handlerInfos.length
             );
             sendFailure(response);
         }
@@ -330,32 +332,121 @@ public class SlingAuthenticator implements ManagedService {
         return repo;
     }
 
+    private static Map<String,Map<String, AuthenticationHandlerInfo[]>> EMPTY_PROTOCOL_MAP = new HashMap<String, Map<String,AuthenticationHandlerInfo[]>>();
     private static AuthenticationHandlerInfo[] EMPTY_INFO = new AuthenticationHandlerInfo[0];
-    private AuthenticationHandlerInfo[] getAuthenticationHandlers() {
+    
+    private AuthenticationHandlerInfo[] findApplicableAuthenticationHandlers(HttpServletRequest request) {
+         Map<String, Map<String, AuthenticationHandlerInfo[]>> byProtocolMap = getAuthenticationHandlers();
+         
+         Map<String, AuthenticationHandlerInfo[]> byHostMap = byProtocolMap.get(request.getScheme());
+         if(byHostMap == null) {
+            byHostMap = byProtocolMap.get("");
+         }
+         
+         String hostname = request.getServerName() + 
+            (request.getServerPort() != 80 && request.getServerPort() != 443 ? ":" + request.getServerPort() : "");
+         
+         AuthenticationHandlerInfo[] infos = byHostMap.get(hostname);
+         if(infos == null) {
+             infos = byHostMap.get("");
+         }
+         
+         if(infos != null) {
+             return infos;
+         }
+         
+         return EMPTY_INFO;
+    }
+    
+    private Map<String, Map<String, AuthenticationHandlerInfo[]>> getAuthenticationHandlers() {
         if (authHandlerCache == null
             || authHandlerTrackerCount < authHandlerTracker.getTrackingCount()) {
             final ServiceReference[] services = authHandlerTracker.getServiceReferences();
             if ( services == null || services.length == 0 ) {
-                this.authHandlerCache = EMPTY_INFO;
+                this.authHandlerCache = EMPTY_PROTOCOL_MAP;
             } else {
-                final List<AuthenticationHandlerInfo> infos = new ArrayList<AuthenticationHandlerInfo>();
+                final Map<String, Map<String, List<AuthenticationHandlerInfo>>> byProtocolMap = new HashMap<String, Map<String,List<AuthenticationHandlerInfo>>>(); 
+                int regPathCount = 0;
+                
                 for (int i = 0; i < services.length; i++) {
                     final String paths[] = OsgiUtil.toStringArray(services[i].getProperty(AuthenticationHandler.PATH_PROPERTY));
+                    
                     if ( paths != null && paths.length > 0 ) {
                         final AuthenticationHandler handler = (AuthenticationHandler) authHandlerTracker.getService(services[i]);
+                        
                         for(int m = 0; m < paths.length; m++) {
                             if ( paths[m] != null && paths[m].length() > 0 ) {
-                                infos.add(new AuthenticationHandlerInfo(paths[m], handler));
+                                String path = paths[m];
+                                String host = "";
+                                String protocol = "";
+                                
+                                if(path.startsWith("http://") || path.startsWith("https://")) {
+                                    int idxProtocolEnd = path.indexOf("://");
+                                    protocol = path.substring(0,idxProtocolEnd);
+                                    path = path.substring(idxProtocolEnd + 1);
+                                }
+                                
+                                if (path.startsWith("//")) {
+                                    int idxHostEnd = path.indexOf("/",2);
+                                    idxHostEnd = idxHostEnd == -1 ? path.length() : idxHostEnd;
+                                    
+                                    if(path.length() > 2) {
+                                        host = path.substring(2,idxHostEnd);
+                                        if(idxHostEnd < path.length()) {
+                                            path = path.substring(idxHostEnd);
+                                        } else {
+                                            path="/";
+                                        }
+                                    } else {
+                                        path="/";
+                                    }
+                                } 
+                                
+                                AuthenticationHandlerInfo newInfo = new AuthenticationHandlerInfo(path, host, protocol, handler);
+                                
+                                Map<String, List<AuthenticationHandlerInfo>> byHostMap = byProtocolMap.get(protocol);
+                                if(byHostMap == null) {
+                                    byHostMap = new HashMap<String, List<AuthenticationHandlerInfo>>();
+                                    byProtocolMap.put(protocol, byHostMap);
+                                }
+                                
+                                List<AuthenticationHandlerInfo> byPathList = byHostMap.get(host);
+                                if(byPathList == null) {
+                                    byPathList = new ArrayList<AuthenticationHandlerInfo>();
+                                    byHostMap.put(host, byPathList);
+                                }
+                                
+                                byPathList.add(newInfo);
+                                regPathCount++;
                             }
                         }
                     }
                 }
-                if ( infos.size() == 0 ) {
-                    authHandlerCache = EMPTY_INFO;
+                if ( regPathCount == 0 ) {
+                    authHandlerCache = EMPTY_PROTOCOL_MAP;
                 } else {
-                    final AuthenticationHandlerInfo[] ac = infos.toArray(new AuthenticationHandlerInfo[infos.size()]);
-                    Arrays.sort(ac, AuthenticationHandlerInfoComparator.SINGLETON);
-                    authHandlerCache = ac;
+                    authHandlerCache = new HashMap<String, Map<String,AuthenticationHandlerInfo[]>>();
+                    
+                    for(Map.Entry<String, Map<String,List<AuthenticationHandlerInfo>>> protocolEntry : byProtocolMap.entrySet()) {
+                        Map<String,List<AuthenticationHandlerInfo>> hostMap = protocolEntry.getValue();
+                        
+                        Map<String, AuthenticationHandlerInfo[]> finalHostMap = authHandlerCache.get(protocolEntry.getKey());
+                        if(finalHostMap == null) {
+                            finalHostMap = new HashMap<String, AuthenticationHandlerInfo[]>();
+                            authHandlerCache.put(protocolEntry.getKey(), finalHostMap);
+                        }
+                        
+                        for(Map.Entry<String,List<AuthenticationHandlerInfo>> hostEntry : hostMap.entrySet()) {
+                            List<AuthenticationHandlerInfo> pathList = hostEntry.getValue();
+                            
+                            Collections.sort(pathList, AuthenticationHandlerInfoComparator.SINGLETON);
+                            
+                            final AuthenticationHandlerInfo[] authInfos = 
+                                pathList.toArray(new AuthenticationHandlerInfo[pathList.size()]);
+                            
+                            finalHostMap.put(hostEntry.getKey(), authInfos);
+                        }
+                    }
                 }
             }
             authHandlerTrackerCount = authHandlerTracker.getTrackingCount();
@@ -374,7 +465,7 @@ public class SlingAuthenticator implements ManagedService {
             pathInfo = "/";
         }
         
-        AuthenticationHandlerInfo[] local = getAuthenticationHandlers();
+        AuthenticationHandlerInfo[] local = findApplicableAuthenticationHandlers(request);
         for (int i = 0; i < local.length; i++) {
             if ( pathInfo.startsWith(local[i].path) ) {
                 final AuthenticationInfo authInfo = local[i].handler.authenticate(request,
@@ -384,7 +475,7 @@ public class SlingAuthenticator implements ManagedService {
                 }
             }
         }
-
+        
         // no handler found for the request ....
         log.debug("getCredentials: no handler could extract credentials");
         return null;
@@ -601,10 +692,14 @@ public class SlingAuthenticator implements ManagedService {
 
     protected static final class AuthenticationHandlerInfo {
         public final String path;
+        public final String host;
+        public final String protocol;
         public final AuthenticationHandler handler;
 
-        public AuthenticationHandlerInfo(final String p, final AuthenticationHandler h) {
+        public AuthenticationHandlerInfo(final String p, final String host, final String protocol, final AuthenticationHandler h) {
             this.path = p;
+            this.host = host;
+            this.protocol = protocol;
             this.handler = h;
         }
     }
