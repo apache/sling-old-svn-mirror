@@ -17,7 +17,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.2//EN"
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN"
                             "http://jackrabbit.apache.org/dtd/repository-1.5.dtd">
 <Repository>
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
@@ -31,7 +31,7 @@
         <AccessManager class="org.apache.jackrabbit.core.security.DefaultAccessManager">
         </AccessManager>
 
-        <LoginModule class="org.apache.jackrabbit.core.security.authentication.DefaultLoginModule">
+        <LoginModule class="org.apache.sling.jcr.jackrabbit.server.impl.security.PluggableDefaultLoginModule">
             <param name="anonymousId" value="anonymous"/>
             <param name="adminId" value="admin"/>
         </LoginModule>

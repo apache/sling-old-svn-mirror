@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jackrabbit.server;
+package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,9 @@ import java.net.URL;
 import java.sql.DriverManager;
 import java.util.Hashtable;
 
+import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
+import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -33,6 +35,7 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +47,7 @@ public class Activator implements BundleActivator, ServiceListener {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(Activator.class);
 
-    public static final String SERVER_REPOSITORY_FACTORY_PID = SlingServerRepository.class.getName();
+    public static final String SERVER_REPOSITORY_FACTORY_PID = "org.apache.sling.jcr.jackrabbit.server.SlingServerRepository";
 
     /**
      * The name of the configuration property naming the Sling Context for which
@@ -62,7 +65,20 @@ public class Activator implements BundleActivator, ServiceListener {
     private static final String CONFIG_ADMIN_NAME = ConfigurationAdmin.class.getName();
 
     // this bundle's context, used by verifyConfiguration
-    private BundleContext bundleContext;
+    private static BundleContext bundleContext;
+
+    // the service tracker used by the PluggableDefaultLoginModule
+    // this field is only set on the first call to getLoginModules()
+    private static ServiceTracker loginModuleTracker;
+    
+    // the tracking count when the moduleCache has been filled
+    private static int lastTrackingCount = -1;
+    
+    // the cache of login module services
+    private static LoginModulePlugin[] moduleCache;
+    
+    // empty list of login modules if there are none registered
+    private static LoginModulePlugin[] EMPTY = new LoginModulePlugin[0];
 
     // the name of the default sling context
     private String slingContext;
@@ -122,6 +138,15 @@ public class Activator implements BundleActivator, ServiceListener {
         } catch (Throwable t) {
             // exception is always thrown
         }
+        
+        // close the loginModuleTracker
+        if (loginModuleTracker != null) {
+            loginModuleTracker.close();
+            loginModuleTracker = null;
+        }
+        
+        // clear the bundle context field
+        bundleContext = null;
     }
 
     // ---------- ServiceListener ----------------------------------------------
@@ -135,6 +160,48 @@ public class Activator implements BundleActivator, ServiceListener {
             // don't care for any more service state changes
             bundleContext.removeServiceListener(this);
         }
+    }
+
+    // ---------- LoginModule tracker for PluggableDefaultLoginModule
+    
+    private static BundleContext getBundleContext() {
+        return bundleContext;
+    }
+
+    /**
+     * Returns the registered {@link LoginModulePlugin} services. If there are
+     * no {@link LoginModulePlugin} services registered, this method returns an
+     * empty array. <code>null</code> is never returned from this method.
+     */
+    public static LoginModulePlugin[] getLoginModules() {
+        // fast track cache (cache first, since loginModuleTracker is only
+        // non-null if moduleCache is non-null)
+        if (moduleCache != null
+            && lastTrackingCount == loginModuleTracker.getTrackingCount()) {
+            return moduleCache;
+        }
+        // invariant: moduleCache is null or modules have changed
+        
+        // tracker may be null if moduleCache is null
+        if (loginModuleTracker == null) {
+            loginModuleTracker = new ServiceTracker(getBundleContext(),
+                LoginModulePlugin.class.getName(), null);
+            loginModuleTracker.open();
+        }
+
+        if (moduleCache == null || lastTrackingCount < loginModuleTracker.getTrackingCount()) {
+            Object[] services = loginModuleTracker.getServices();
+            if (services == null || services.length == 0) {
+                moduleCache = EMPTY;
+            } else {
+                moduleCache = new LoginModulePlugin[services.length];
+                System.arraycopy(services, 0, moduleCache, 0, services.length);
+            }
+            lastTrackingCount = loginModuleTracker.getTrackingCount();
+        }
+
+        // the module cache is now up to date
+        return moduleCache;
     }
 
     // ---------- internal -----------------------------------------------------

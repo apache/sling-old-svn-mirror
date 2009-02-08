@@ -10,13 +10,16 @@ Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-Category: sling,jcr,jackrabbit
 Bundle-Vendor: The Apache Software Foundation
 Bundle-DocURL: http://incubator.apache.org/sling
-Bundle-Activator: org.apache.sling.jcr.jackrabbit.server.Activator
+Bundle-Activator: org.apache.sling.jcr.jackrabbit.server.impl.Activator
 Bundle-ClassPath: .,nekohtml-1.9.7.jar,lucene-core-2.3.2.jar,jackrabbi
  t-spi-commons-1.5.0.jar,jackrabbit-jcr-commons-1.5.0.jar,jempbox-0.2.
  0.jar,jackrabbit-jcr-rmi-1.4.1.jar,concurrent-1.3.4.jar,jackrabbit-te
  xt-extractors-1.5.0.jar,fontbox-0.1.0.jar,jackrabbit-core-1.5.0.jar,d
  erby-10.2.1.6.jar,poi-3.0.2-FINAL.jar,xercesImpl-2.8.1.jar,pdfbox-0.7
  .3.jar,jackrabbit-spi-1.5.0.jar,poi-scratchpad-3.0.2-FINAL.jar
+Export-Package: org.apache.sling.jcr.jackrabbit.server.security;uses:=
+ "javax.jcr,javax.security.auth.callback,javax.security.auth.login";ve
+ rsion="2.0.3.incubator-SNAPSHOT"
 Import-Package: javax.jcr,javax.jcr.lock,javax.jcr.nodetype,javax.jcr.
  observation,javax.jcr.query,javax.jcr.util,javax.jcr.version,javax.na
  ming,javax.naming.directory,javax.naming.spi,javax.security.auth,java
@@ -34,8 +37,10 @@ Import-Package: javax.jcr,javax.jcr.lock,javax.jcr.nodetype,javax.jcr.
  ersion="1.5",org.apache.jackrabbit.api.security.principal;version="1.
  5",org.apache.jackrabbit.api.security.user;version="1.5",org.apache.s
  ling.jcr.api,org.apache.sling.jcr.base;version="2.0.2.incubator",org.
- osgi.framework,org.osgi.service.cm,org.osgi.service.component,org.osg
- i.service.log,org.slf4j,org.xml.sax,org.xml.sax.helpers
+ apache.sling.jcr.jackrabbit.server.security;version="2.0.3.incubator-
+ SNAPSHOT",org.osgi.framework,org.osgi.service.cm,org.osgi.service.com
+ ponent,org.osgi.service.log,org.osgi.util.tracker,org.slf4j,org.xml.s
+ ax,org.xml.sax.helpers
 DynamicImport-Package: *
 Service-Component: OSGI-INF/serviceComponents.xml
 Bnd-LastModified: 1232723302069
