@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jackrabbit.server;
+package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,6 +41,7 @@ import org.osgi.service.log.LogService;
  *
  * @scr.component label="%repository.name" description="%repository.description"
  *          factory="org.apache.sling.jcr.jackrabbit.server.SlingServerRepositoryFactory"
+ *          name="org.apache.sling.jcr.jackrabbit.server.SlingServerRepository"
  *
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description"

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jackrabbit.server;
+package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
@@ -43,6 +43,7 @@ import org.osgi.service.log.LogService;
  *
  * @scr.component immediate="true" label="%jndi.name"
  *                description="%jndi.description"
+ *                name="org.apache.sling.jcr.jackrabbit.server.JndiRegistrationSupport"
  * @scr.reference name="Repository" interface="javax.jcr.Repository"
  *                policy="dynamic" cardinality="0..n"
  * @scr.reference name="Log" interface="org.osgi.service.log.LogService"
