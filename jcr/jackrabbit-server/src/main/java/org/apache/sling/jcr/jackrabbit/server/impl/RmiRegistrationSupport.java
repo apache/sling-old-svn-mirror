@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jcr.jackrabbit.server;
+package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -41,6 +41,7 @@ import org.osgi.service.log.LogService;
  * 
  * @scr.component immediate="true" label="%rmi.name"
  *                description="%rmi.description"
+ *                name="org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport"
  * @scr.reference name="Repository" interface="javax.jcr.Repository"
  *                policy="dynamic" cardinality="0..n"
  * @scr.reference name="Log" interface="org.osgi.service.log.LogService"

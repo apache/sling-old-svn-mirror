@@ -166,8 +166,11 @@
                                         <Bundle-Activator>
                                             org.apache.sling.jcr.jackrabbit.server.Activator
                                         </Bundle-Activator>
+                                        <Export-Package>
+                                        	org.apache.sling.jcr.jackrabbit.server.security
+                                        </Export-Package>
                                         <Private-Package>
-                                            org.apache.sling.jcr.jackrabbit.server
+                                            org.apache.sling.jcr.jackrabbit.server.impl.*
                                         </Private-Package>
                                         <Import-Package>
                                             org.apache.sling.*, javax.jcr.*,
