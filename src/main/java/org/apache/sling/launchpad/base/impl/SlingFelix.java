@@ -36,7 +36,7 @@ public class SlingFelix extends Felix {
     
     private Notifier notifierThread;
     
-    public SlingFelix(Notifiable notifiable, Map<?, ?> props) {
+    public SlingFelix(Notifiable notifiable, Map<?, ?> props) throws Exception {
         super(props);
         this.notifiable = notifiable;
     }

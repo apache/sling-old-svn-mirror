@@ -220,11 +220,19 @@ public class Sling implements BundleActivator {
         Map<String, Object> felixProps = new HashMap<String, Object>(props);
         felixProps.put(FelixConstants.LOG_LOGGER_PROP, logger);
         felixProps.put(FelixConstants.SYSTEMBUNDLE_ACTIVATORS_PROP, activators);
-        Felix tmpFelix = new SlingFelix(notifiable, felixProps);
-        tmpFelix.start();
+        try {
+            Felix tmpFelix = new SlingFelix(notifiable, felixProps);
+            tmpFelix.init(); // call needed due to FELIX-910
+            tmpFelix.start();
 
-        // only assign field if start succeeds
-        this.felix = tmpFelix;
+            // only assign field if start succeeds
+            this.felix = tmpFelix;
+        } catch (BundleException be) {
+            throw be;
+        } catch (Exception e) {
+            // thrown by SlingFelix constructor
+            throw new BundleException("Uncaught Instantiation Issue: " + e, e);
+        }
 
         // log sucess message
         this.logger.log(Logger.LOG_INFO, "Sling started");
