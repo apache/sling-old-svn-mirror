@@ -113,6 +113,7 @@
         <module>extensions/bundleresource</module>
         <module>extensions/event</module>
         <module>extensions/httpauth</module>
+        <module>extensions/openidauth</module>
         <module>extensions/apt/parser</module>
         <module>extensions/apt/servlet</module>
         <module>extensions/jcrinstall</module>
