@@ -490,8 +490,8 @@ dojo.declare("dojox.data.SlingNodeStore", null, {
 			
           for (var value in query[property]) {
             //console.log("checking value " + query[property][value]);
-        	  if (!this._containsValue(checkItem, property, checkItem.node[property], regexpList[property])){
-        		  onematch = false;
+        	  if (this._containsValue(checkItem, property, query[property][value], regexpList[property])){
+        		  onematch = true;
   			  }
           }
           if (!onematch) {
