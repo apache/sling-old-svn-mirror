@@ -133,7 +133,7 @@ abstract class AbstractCopyMoveOperation extends AbstractSlingPostOperation {
         }
 
         // finally apply the ordering parameter
-        orderNode(request, session.getItem(dest));
+        orderNode(request, session.getItem(dest), changes);
     }
 
     /**
