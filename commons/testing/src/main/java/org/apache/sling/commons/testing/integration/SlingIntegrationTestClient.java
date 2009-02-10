@@ -190,4 +190,29 @@ public class SlingIntegrationTestClient {
             throw new HttpStatusCodeException(200, status, "POST", url);
         }
     }
+
+    /** Upload multiple files to file node structures */
+    public void uploadToFileNodes(String url, File[] localFiles, String[] fieldNames, String[] typeHints)
+        throws IOException {
+
+    	List<Part> partsList = new ArrayList<Part>();
+    	for (int i=0; i < localFiles.length; i++) {
+            Part filePart = new FilePart(fieldNames[i], localFiles[i]);
+            partsList.add(filePart);
+            if (typeHints != null) {
+            	Part typeHintPart = new StringPart(fieldNames[i] + "@TypeHint", typeHints[i]);
+            	partsList.add(typeHintPart);
+            }
+		}
+    	
+        final Part[] parts = partsList.toArray(new Part[partsList.size()]);
+        final PostMethod post = new PostMethod(url);
+        post.setFollowRedirects(false);
+        post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
+
+        final int status = httpClient.executeMethod(post);
+        if(status!=200) { // fmeschbe: The default sling status is 200, not 302
+            throw new HttpStatusCodeException(200, status, "POST", url);
+        }
+    }
 }
