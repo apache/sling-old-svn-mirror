@@ -23,9 +23,11 @@ public class Modification {
     private final ModificationType type;
 
     private final String source;
+
     private final String destination;
 
-    public Modification(final ModificationType type, final String source, final String destination) {
+    public Modification(final ModificationType type, final String source,
+            final String destination) {
         this.type = type;
         this.source = source;
         this.destination = destination;
@@ -45,7 +47,7 @@ public class Modification {
 
     /**
      * Records a 'modified' change
-     *
+     * 
      * @param path path of the item that was modified
      */
     public static Modification onModified(String path) {
@@ -54,7 +56,7 @@ public class Modification {
 
     /**
      * Records a 'created' change
-     *
+     * 
      * @param path path of the item that was created
      */
     public static Modification onCreated(String path) {
@@ -63,7 +65,7 @@ public class Modification {
 
     /**
      * Records a 'deleted' change
-     *
+     * 
      * @param path path of the item that was deleted
      */
     public static Modification onDeleted(String path) {
@@ -71,10 +73,11 @@ public class Modification {
     }
 
     /**
-     * Records a 'moved' change. <p/> Note: the moved change only records the
-     * basic move command. the implied changes on the moved properties and sub
-     * nodes are not recorded.
-     *
+     * Records a 'moved' change.
+     * <p/>
+     * Note: the moved change only records the basic move command. the implied
+     * changes on the moved properties and sub nodes are not recorded.
+     * 
      * @param srcPath source path of the node that was moved
      * @param dstPath destination path of the node that was moved.
      */
@@ -83,15 +86,27 @@ public class Modification {
     }
 
     /**
-     * Records a 'copied' change. <p/> Note: the copy change only records the
-     * basic copy command. the implied changes on the copied properties and sub
-     * nodes are not recorded.
-     *
+     * Records a 'copied' change.
+     * <p/>
+     * Note: the copy change only records the basic copy command. the implied
+     * changes on the copied properties and sub nodes are not recorded.
+     * 
      * @param srcPath source path of the node that was copied
      * @param dstPath destination path of the node that was copied.
      */
     public static Modification onCopied(String srcPath, String dstPath) {
         return onChange(ModificationType.COPY, srcPath, dstPath);
+    }
+
+    /**
+     * Records a 'order' change.
+     * 
+     * @param orderedPath Path of the node that was reordered
+     * @param beforeSibbling Name of the sibbling node before which the source node has
+     *            been inserted.
+     */
+    public static Modification onOrder(String orderedPath, String beforeSibbling) {
+        return onChange(ModificationType.ORDER, orderedPath, beforeSibbling);
     }
 
     protected static Modification onChange(ModificationType type, String source) {
