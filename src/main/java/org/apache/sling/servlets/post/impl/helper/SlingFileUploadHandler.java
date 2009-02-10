@@ -108,99 +108,104 @@ public class SlingFileUploadHandler {
      */
     public void setFile(Node parent, RequestProperty prop, List<Modification> changes)
             throws RepositoryException {
-        RequestParameter value = prop.getValues()[0];
-        assert !value.isFormField();
+    	RequestParameter[] values = prop.getValues();
+    	for (RequestParameter requestParameter : values) {
+        	RequestParameter value = requestParameter;
 
-        // ignore if empty
-        if (value.getSize() <= 0) {
-            return;
-        }
-
-        // get node name
-        String name = prop.getName();
-        if (name.equals("*")) {
-            name = value.getFileName();
-            // strip of possible path (some browsers include the entire path)
-            name = name.substring(name.lastIndexOf('/') + 1);
-            name = name.substring(name.lastIndexOf('\\') + 1);
-        }
-        name = Text.escapeIllegalJcrChars(name);
-
-        // check type hint. if the type is ok and extends from nt:file,
-        // create an nt:file with that type. if it's invalid, drop it and let
-        // the parent node type decide.
-        boolean createNtFile = parent.isNodeType(NT_FOLDER);
-        String typeHint = prop.getTypeHint();
-        if (typeHint != null) {
-            try {
-                NodeTypeManager ntMgr = parent.getSession().getWorkspace().getNodeTypeManager();
-                NodeType nt = ntMgr.getNodeType(typeHint);
-                createNtFile = nt.isNodeType(NT_FILE);
-            } catch (RepositoryException e) {
-                // assuming type not valid.
-                typeHint = null;
+        	// ignore if a plain form field or empty
+            if (value.isFormField() || value.getSize() <= 0) {
+                continue;
             }
-        }
 
-        // also create an nt:file if the name contains an extension
-        // the rationale is that if the file name is "important" we want
-        // an nt:file, and an image name with an extension is probably "important"
-        if(!createNtFile && name.indexOf('.') > 0) {
-            createNtFile = true;
-        }
-
-        // set empty type
-        if (typeHint == null) {
-            typeHint = createNtFile ? NT_FILE : NT_RESOURCE;
-        }
-
-        // remove node
-        if (parent.hasNode(name)) {
-            parent.getNode(name).remove();
-        }
-
-        // create nt:file node if needed
-        if (createNtFile) {
-            // create nt:file
-            parent = parent.addNode(name, typeHint);
-            changes.add(Modification.onCreated(parent.getPath()));
-            name = JCR_CONTENT;
-            typeHint = NT_RESOURCE;
-        }
-
-        // create resource node
-        Node res = parent.addNode(name, typeHint);
-        changes.add(Modification.onCreated(res.getPath()));
-
-        // get content type
-        String contentType = value.getContentType();
-        if (contentType != null) {
-            int idx = contentType.indexOf(';');
-            if (idx > 0) {
-                contentType = contentType.substring(0, idx);
+            // get node name
+            String name = prop.getName();
+            if (name.equals("*")) {
+                name = value.getFileName();
+                // strip of possible path (some browsers include the entire path)
+                name = name.substring(name.lastIndexOf('/') + 1);
+                name = name.substring(name.lastIndexOf('\\') + 1);
             }
-        }
-        if (contentType == null || contentType.equals("application/octet-stream")) {
-            // try to find a better content type
-            contentType = this.servletContext.getMimeType(value.getFileName());
+            name = Text.escapeIllegalJcrChars(name);
+
+            // check type hint. if the type is ok and extends from nt:file,
+            // create an nt:file with that type. if it's invalid, drop it and let
+            // the parent node type decide.
+            boolean createNtFile = parent.isNodeType(NT_FOLDER);
+            String typeHint = prop.getTypeHint();
+            if (typeHint != null) {
+                try {
+                    NodeTypeManager ntMgr = parent.getSession().getWorkspace().getNodeTypeManager();
+                    NodeType nt = ntMgr.getNodeType(typeHint);
+                    createNtFile = nt.isNodeType(NT_FILE);
+                } catch (RepositoryException e) {
+                    // assuming type not valid.
+                    typeHint = null;
+                }
+            }
+
+            // also create an nt:file if the name contains an extension
+            // the rationale is that if the file name is "important" we want
+            // an nt:file, and an image name with an extension is probably "important"
+            if(!createNtFile && name.indexOf('.') > 0) {
+                createNtFile = true;
+            }
+
+            // set empty type
+            if (typeHint == null) {
+                typeHint = createNtFile ? NT_FILE : NT_RESOURCE;
+            }
+
+            // remove node
+            if (parent.hasNode(name)) {
+                parent.getNode(name).remove();
+            }
+
+            // create nt:file node if needed
+            Node resParent;
+            if (createNtFile) {
+                // create nt:file
+                resParent = parent.addNode(name, typeHint);
+                changes.add(Modification.onCreated(resParent.getPath()));
+                name = JCR_CONTENT;
+                typeHint = NT_RESOURCE;
+            } else {
+            	resParent = parent;
+            }
+
+            // create resource node
+            Node res = resParent.addNode(name, typeHint);
+            changes.add(Modification.onCreated(res.getPath()));
+
+            // get content type
+            String contentType = value.getContentType();
+            if (contentType != null) {
+                int idx = contentType.indexOf(';');
+                if (idx > 0) {
+                    contentType = contentType.substring(0, idx);
+                }
+            }
             if (contentType == null || contentType.equals("application/octet-stream")) {
-                contentType = "application/octet-stream";
+                // try to find a better content type
+                contentType = this.servletContext.getMimeType(value.getFileName());
+                if (contentType == null || contentType.equals("application/octet-stream")) {
+                    contentType = "application/octet-stream";
+                }
             }
-        }
 
-        // set properties
-        changes.add(Modification.onModified(
-            res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance()).getPath()
-        ));
-        changes.add(Modification.onModified(
-            res.setProperty(JCR_MIMETYPE, contentType).getPath()
-        ));
-        try {
+            // set properties
             changes.add(Modification.onModified(
-                res.setProperty(JCR_DATA, value.getInputStream()).getPath()
+                res.setProperty(JCR_LASTMODIFIED, Calendar.getInstance()).getPath()
             ));
-        } catch (IOException e) {
-            throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
-        }
+            changes.add(Modification.onModified(
+                res.setProperty(JCR_MIMETYPE, contentType).getPath()
+            ));
+            try {
+                changes.add(Modification.onModified(
+                    res.setProperty(JCR_DATA, value.getInputStream()).getPath()
+                ));
+            } catch (IOException e) {
+                throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
+            }
+		}
     }
 }
