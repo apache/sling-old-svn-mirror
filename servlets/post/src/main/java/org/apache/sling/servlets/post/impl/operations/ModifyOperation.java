@@ -100,7 +100,7 @@ public class ModifyOperation extends AbstractSlingPostOperation {
 
         // order content
         String path = response.getPath();
-        orderNode(request, session.getItem(path));
+        orderNode(request, session.getItem(path), changes);
     }
 
     @Override

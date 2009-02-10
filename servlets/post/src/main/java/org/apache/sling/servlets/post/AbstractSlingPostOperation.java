@@ -99,6 +99,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                     case MOVE :   response.onMoved(change.getSource(), change.getDestination()); break;
                     case COPY :   response.onCopied(change.getSource(), change.getDestination()); break;
                     case CREATE : response.onCreated(change.getSource()); break;
+                    case ORDER : response.onChange("ordered", change.getSource(), change.getDestination()); break;
                 }
             }
             if (session.hasPendingChanges()) {
@@ -247,8 +248,8 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
      * @param item node to order
      * @throws RepositoryException if an error occurs
      */
-    protected void orderNode(SlingHttpServletRequest request, Item item)
-            throws RepositoryException {
+    protected void orderNode(SlingHttpServletRequest request, Item item,
+            List<Modification> changes) throws RepositoryException {
 
         String command = request.getParameter(SlingPostConstants.RP_ORDER);
         if (command == null || command.length() == 0) {
@@ -324,6 +325,7 @@ public abstract class AbstractSlingPostOperation implements SlingPostOperation {
                 next = null;
             }
             parent.orderBefore(item.getName(), next);
+            changes.add(Modification.onOrder(item.getPath(), next));
             if (log.isDebugEnabled()) {
                 log.debug("Node {} moved '{}'", item.getPath(), command);
             }

@@ -20,9 +20,43 @@ package org.apache.sling.servlets.post;
 
 public enum ModificationType {
 
+    /**
+     * Content has been created or updated. The source path provides the path of
+     * the modified Item.
+     */
     MODIFY,
+
+    /**
+     * An Item has been deleted. The source path provides the path of the
+     * deleted Item.
+     */
     DELETE,
+
+    /**
+     * An Item has been moved to a new location. The source provides the
+     * original path of the Item, the destination provides the new path of the
+     * Item.
+     */
     MOVE,
+
+    /**
+     * An Item has been copied to a new location. The source path provides the
+     * path of the copied Item, the destination path provides the path of the
+     * new Item.
+     */
     COPY,
-    CREATE
+
+    /**
+     * A Node has been created. The source path provides the path of the newly
+     * created Node.
+     */
+    CREATE,
+
+    /**
+     * A child Node has been reordered. The source path provides the path of the
+     * node, which has been reordered. The destination path provides the name of
+     * the sibbling node before which the source Node has been ordered. which
+     * the
+     */
+    ORDER
 }
