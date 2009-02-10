@@ -19,6 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
@@ -147,4 +148,68 @@ public class UploadFileTest extends HttpTestBase {
         assertTrue("checking primary type", json.contains("\"jcr:primaryType\":\"nt:file\""));
     }
 
+    
+    public void testMultiFileUpload() throws IOException {
+        String folderPath = "/UploadFileTest_1_" + System.currentTimeMillis();
+        final String url = HTTP_BASE_URL + folderPath;
+
+        // create new node
+        String urlOfNewNode = null;
+        try {
+            urlOfNewNode = testClient.createNode(url, null);
+        } catch(IOException ioe) {
+            fail("createNode failed: " + ioe);
+        }
+
+        // upload local file
+        File [] localFiles = new File[] {
+        	new File(TEST_FILE),
+        	new File(TEST_FILE),
+        	new File(TEST_FILE)
+        };
+        String [] fieldNames = new String [] {
+        		"./file1.txt",
+        		"./file2.txt",
+        		"./*"        		
+        };
+        testClient.uploadToFileNodes(urlOfNewNode, localFiles, fieldNames, null);
+
+        // get and check URL of created file1
+        String urlOfFileNode = urlOfNewNode + "/file1.txt";
+        checkUploadedFileState(urlOfFileNode);    	
+
+        // get and check URL of created file2
+        String urlOfFileNode2 = urlOfNewNode + "/file2.txt";
+        checkUploadedFileState(urlOfFileNode2);    	
+
+        // get and check URL of created file3
+        String urlOfFileNode3 = urlOfNewNode + "/file-to-upload.txt";
+        checkUploadedFileState(urlOfFileNode3);    	
+    }
+
+	private void checkUploadedFileState(String urlOfFileNode) throws IOException,
+			HttpException {
+		final GetMethod get = new GetMethod(urlOfFileNode);
+        final int status = httpClient.executeMethod(get);
+        assertEquals(urlOfFileNode + " must be accessible after createNode",200,status);
+
+        /*
+        We should check the data, but nt:resources are not handled yet
+        // compare data with local file (just length)
+        final byte[] data = get.getResponseBody();
+        assertEquals("size of file must be same", localFile.length(), data.length);
+        */
+        String data = get.getResponseBodyAsString();
+        assertTrue("checking for content", data.contains("http://www.apache.org/licenses/LICENSE-2.0"));
+
+        // download structure
+        String json = getContent(urlOfFileNode + ".json", CONTENT_TYPE_JSON);
+        // just check for some strings
+        assertTrue("checking primary type", json.contains("\"jcr:primaryType\":\"nt:file\""));
+
+        String content_json = getContent(urlOfFileNode + "/jcr:content.json", CONTENT_TYPE_JSON);
+        // just check for some strings
+        assertTrue("checking primary type", content_json.contains("\"jcr:primaryType\":\"nt:resource\""));
+        assertTrue("checking mime type", content_json.contains("\"jcr:mimeType\":\"text/plain\""));
+	}
 }
