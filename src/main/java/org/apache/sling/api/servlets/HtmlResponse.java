@@ -301,7 +301,30 @@ public class HtmlResponse {
         onChange("copied", srcPath, dstPath);
     }
 
-    private void onChange(String type, String... arguments) {
+    /**
+     * Records a generic change of the given <code>type</code>.
+     * <p>
+     * The change is added to the internal list of changes with the syntax of a
+     * method call, where the <code>type</code> is the method name and the
+     * <code>arguments</code> are the string arguments to the method enclosed in
+     * double quotes. For example, the the call
+     * 
+     * <pre>
+     * onChange(&quot;sameple&quot;, &quot;arg1&quot;, &quot;arg2&quot;);
+     * </pre>
+     * 
+     * is aded as
+     * 
+     * <pre>
+     * sample(&quot;arg1&quot;, &quot;arg2&quot;)
+     * </pre>
+     * 
+     * to the internal list of changes.
+     * 
+     * @param type The type of the modification
+     * @param arguments The arguments to the modifications
+     */
+    public void onChange(String type, String... arguments) {
         changes.append(type);
         String delim = "(";
         for (String a : arguments) {
