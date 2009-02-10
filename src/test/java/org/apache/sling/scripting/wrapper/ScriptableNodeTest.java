@@ -23,10 +23,11 @@ import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.Value;
 
+import org.apache.sling.commons.json.jcr.JsonItemWriter;
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
-import org.apache.sling.commons.json.jcr.JsonItemWriter;
 
 /** Test the ScriptableNode class "live", by retrieving
  *  Nodes from a Repository and executing javascript code
@@ -333,5 +334,32 @@ public class ScriptableNodeTest extends RepositoryScriptingTestBase {
                 "/", 
                 script.eval("node.getSession().getRootNode().getPath()", data)
         );
+    }
+
+    /**
+     * Test for regressing this issue:
+     * https://issues.apache.org/jira/browse/SLING-534
+     */
+    public void testMultiValReferencePropLookup() throws Exception {
+        Node refNode1 = getNewNode();
+        refNode1.addMixin("mix:referenceable");
+        Node refNode2 = getNewNode();
+        refNode2.addMixin("mix:referenceable");
+
+        node.setProperty("singleRef", refNode1);
+        node.setProperty("multiRef", new Value[] {
+            session.getValueFactory().createValue(refNode1),
+            session.getValueFactory().createValue(refNode2) });
+
+        String code = "node['singleRef']";
+        assertTrue(script.eval(code, data) instanceof Node);
+        code = "node.singleRef instanceof Array";
+        assertEquals(false, script.eval(code, data));
+
+        code = "node.multiRef instanceof Array";
+        assertEquals(true, script.eval(code, data));
+
+        code = "node.multiRef[0]";
+        assertTrue(script.eval(code, data) instanceof Node);
     }
 }
