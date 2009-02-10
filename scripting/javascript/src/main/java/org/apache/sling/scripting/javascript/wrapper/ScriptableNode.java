@@ -317,32 +317,29 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
         }
 
         // Add all matching properties to result
+        boolean isMulti = false;
         try {
             PropertyIterator it = node.getProperties(name);
             while (it.hasNext()) {
                 Property prop = it.nextProperty();
-                int type = prop.getType();
                 if (prop.getDefinition().isMultiple()) {
+                    isMulti = true;
                     Value[] values = prop.getValues();
-                    for (int i=0;i<values.length;i++) {
+                    for (int i = 0; i < values.length; i++) {
                         items.add(wrap(values[i]));
                     }
                 } else {
-                    if (type==PropertyType.REFERENCE) {
-                        items.add(ScriptRuntime.toObject(this, prop.getNode()));
-                    } else {
-                        items.add(wrap(prop.getValue()));
-                    }
+                    items.add(wrap(prop.getValue()));
                 }
             }
         } catch (RepositoryException e) {
-            log.debug("RepositoryException while collecting Node properties",e);
+            log.debug("RepositoryException while collecting Node properties", e);
         }
 
         if (items.size()==0) {
             return getNative(name, start);
             
-        } else if (items.size()==1) {
+        } else if (items.size()==1 && !isMulti) {
             return items.iterator().next();
             
         } else {
@@ -355,7 +352,17 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     /** Wrap JCR Values in a simple way */
     private Scriptable wrap(Value value) throws ValueFormatException,
             IllegalStateException, RepositoryException {
-        return ScriptRuntime.toObject(this, JcrResourceUtil.toJavaObject(value));
+
+        Object javaObject;
+        if (value.getType() == PropertyType.REFERENCE) {
+            String nodeUuid = value.getString();
+            javaObject = node.getSession().getNodeByUUID(nodeUuid);
+
+        } else {
+            javaObject = JcrResourceUtil.toJavaObject(value);
+        }
+
+        return ScriptRuntime.toObject(this, javaObject);
     }
 
     @Override
