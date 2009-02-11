@@ -37,6 +37,12 @@
         and logout support
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/openidauth</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/openidauth</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/openidauth</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
