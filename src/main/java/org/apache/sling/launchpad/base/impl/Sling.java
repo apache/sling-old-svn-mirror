@@ -166,6 +166,16 @@ public class Sling implements BundleActivator {
     public static final String PROP_SYSTEM_PACKAGES = "org.apache.sling.launcher.system.packages";
 
     /**
+     * List of multiple Execution Environment names supported by various
+     * Java Runtime versions.
+     * @see #setExecutionEnvironment(Map)
+     */
+    private static final String[][] EE_NAMES = { { "JRE-1.1" }, { "J2SE-1.2" },
+        { "J2SE-1.3", "OSGi/Minimum-1.0", "CDC-1.0/Foundation-1.0" },
+        { "J2SE-1.4", "OSGi/Minimum-1.1", "CDC-1.1/Foundation-1.1" },
+        { "J2SE-1.5" }, { "JavaSE-1.6" } };
+
+    /**
      * The simple logger to log messages during startup and shutdown to
      */
     protected final Logger logger;
@@ -620,13 +630,12 @@ public class Sling implements BundleActivator {
     }
 
     /**
-     * Ensures sensible Execution Environment setting. If the
-     * <code>org.osgi.framework.executionenvironment</code> property is set in
-     * the configured properties or the system properties, we ensure that older
-     * settings for J2SE-1.2, J2SE-1.3 and J2SE-1.4 are included. If the
-     * property is neither set in the configuration properties nor in the system
-     * properties, the property is not set.
-     *
+     * Sets the correct execution environment values for the Java Runtime in
+     * which Sling is runnin. This method takes any
+     * <code>org.osgi.framework.executionenvironment</code> property already set
+     * and ensures the older settings are included. If the property is not set
+     * yet, it is fully constructed by this method.
+     * 
      * @param props The configuration properties to check and optionally ammend.
      */
     private void setExecutionEnvironment(Map<String, String> props) {
@@ -635,32 +644,41 @@ public class Sling implements BundleActivator {
         if (ee == null) {
             ee = System.getProperty(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
         }
-
-        // if there is a setting, ensure J2SE-1.2/3/4/5 is included in the list
+        
+        // prepare for building the new property value
+        StringBuilder eebuilder = new StringBuilder();
         if (ee != null) {
-            int javaMinor;
-            try {
-                String specVString = System.getProperty("java.specification.version");
-                javaMinor = Version.parseVersion(specVString).getMinor();
-            } catch (IllegalArgumentException iae) {
-                // don't care, assume minimal sling version (1.5)
-                javaMinor = 5;
-            }
+            eebuilder.append(ee);
+        }
 
-            for (int i = 2; i <= javaMinor; i++) {
-                String exEnv = "J2SE-1." + i;
-                if (ee.indexOf(exEnv) < 0) {
-                    ee += "," + exEnv;
+        // get the minor Java versions (expected to be 5, 6, or higher)
+        int javaMinor;
+        try {
+            String specVString = System.getProperty("java.specification.version");
+            javaMinor = Version.parseVersion(specVString).getMinor();
+        } catch (IllegalArgumentException iae) {
+            // don't care, assume minimal sling version (1.5)
+            javaMinor = 5;
+        }
+
+        // walk the list of known names and include any by java minor version
+        for (int i = 0; i < javaMinor && i < EE_NAMES.length; i++) {
+            String[] vmEENames = EE_NAMES[i];
+            for (String vmEEName : vmEENames) {
+                if (eebuilder.indexOf(vmEEName) < 0) {
+                    if (eebuilder.length() > 0) {
+                        eebuilder.append(',');
+                    }
+                    eebuilder.append(vmEEName);
                 }
             }
-
-            this.logger.log(Logger.LOG_INFO,
-                "Using Execution Environment setting: " + ee);
-            props.put(Constants.FRAMEWORK_EXECUTIONENVIRONMENT, ee);
-        } else {
-            this.logger.log(Logger.LOG_INFO,
-                "Not using Execution Environment setting");
         }
+
+        // finally set the new execution environment value
+        ee = eebuilder.toString();
+        this.logger.log(Logger.LOG_INFO,
+            "Using Execution Environment setting: " + ee);
+        props.put(Constants.FRAMEWORK_EXECUTIONENVIRONMENT, ee);
     }
 
     // ---------- Extension support --------------------------------------------
