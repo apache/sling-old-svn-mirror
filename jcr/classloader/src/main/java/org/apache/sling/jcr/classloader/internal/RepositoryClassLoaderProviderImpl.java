@@ -118,6 +118,7 @@ public class RepositoryClassLoaderProviderImpl
     //---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext componentContext) {
+        @SuppressWarnings("unchecked")
         Dictionary properties = componentContext.getProperties();
 
         Object prop = properties.get(CLASS_PATH_PROP);
@@ -136,6 +137,7 @@ public class RepositoryClassLoaderProviderImpl
         this.parent = new BundleProxyClassLoader(owner, null);
     }
 
+    @SuppressWarnings("unchecked")
     protected void deactivate(ComponentContext componentContext) {
         for (Iterator ci=this.loaders.values().iterator(); ci.hasNext(); ) {
             RepositoryClassLoaderFacade cl = (RepositoryClassLoaderFacade) ci.next();
@@ -144,14 +146,6 @@ public class RepositoryClassLoaderProviderImpl
         }
 
         this.parent = null;
-    }
-
-    protected void bindRepository(SlingRepository repository) {
-        this.repository = repository;
-    }
-
-    protected void unbindRepository(SlingRepository repository) {
-        this.repository = null;
     }
 
     //---------- internal -----------------------------------------------------
