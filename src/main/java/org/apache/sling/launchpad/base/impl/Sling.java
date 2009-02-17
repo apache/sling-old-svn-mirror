@@ -52,7 +52,7 @@ import org.osgi.service.url.URLStreamHandlerService;
 /**
  * The <code>Sling</code> serves as the starting point for Sling.
  * <ul>
- * <li>The {@link #Sling(Logger, ResourceProvider, Map)} method launches Apache
+ * <li>The {@link #Sling(Notifiable, Logger, ResourceProvider, Map)} method launches Apache
  * <code>Felix</code> as the OSGi framework implementation we use.
  * </ul>
  * <p>
@@ -107,10 +107,10 @@ public class Sling implements BundleActivator {
      * <code>new File(${sling.home}).toURI().toString()</code> before
      * resolving the property variables.
      *
-     * @see #SLING_HOME
+     * @see SharedConstants#SLING_HOME
      */
     public static final String SLING_HOME_URL = "sling.home.url";
-    
+
     /**
      * The name of the configuration property defining the JCR home directory
      * (value is "sling.repository.home").
@@ -121,7 +121,7 @@ public class Sling implements BundleActivator {
      * Default value to #SLING_HOME/repository_name
      */
     public static final String JCR_REPO_HOME = "sling.repository.home";
-    
+
     /**
      * The name of the configuration property defining the URL of an existing
      * repository config file (repository.xml).
@@ -206,7 +206,7 @@ public class Sling implements BundleActivator {
     public Sling(Notifiable notifiable, Logger logger,
             ResourceProvider resourceProvider, Map<String, String> propOverwrite)
             throws BundleException {
-    	
+
         this.logger = logger;
         this.resourceProvider = resourceProvider;
 
@@ -265,26 +265,26 @@ public class Sling implements BundleActivator {
             if (myFelix != null) {
                 logger.log(Logger.LOG_INFO, "Shutting down Sling");
                 try {
-                    
+
                     myFelix.stop();
                     myFelix.waitForStop(0);
-                    
+
                 } catch (BundleException be) {
-                    
+
                     // may be thrown by stop, log but continue
                     logger.log(Logger.LOG_ERROR,
                         "Failure initiating Framework Shutdown", be);
-                    
+
                 } catch (InterruptedException ie) {
-                
+
                     // may be thrown by waitForStop, log but continue
                     logger.log(
                         Logger.LOG_ERROR,
                         "Interrupted while waiting for the Framework Termination",
                         ie);
-                    
+
                 }
-                
+
                 logger.log(Logger.LOG_INFO, "Sling stopped");
             }
         }
@@ -397,7 +397,7 @@ public class Sling implements BundleActivator {
         migrateProp(staticProps, "felix.startlevel.framework", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
         migrateProp(staticProps, "sling.osgi-core-packages", "osgi-core-packages");
         migrateProp(staticProps, "sling.osgi-compendium-services", "osgi-compendium-services");
-        
+
         // create a copy of the properties to perform variable substitution
         final Map<String, String> runtimeProps = new HashMap<String, String>();
         runtimeProps.putAll(staticProps);
@@ -586,7 +586,7 @@ public class Sling implements BundleActivator {
      * <code>newName</code> key. If both properties <code>oldName</code> and
      * <code>newName</code> exist, the property <code>newName</code> is replaced
      * with the value of the property <code>oldName</code>.
-     * 
+     *
      * @param props The map of properties containing the property to rename
      * @param oldName The old key of the property value
      * @param newName The new key of the property value
@@ -635,7 +635,7 @@ public class Sling implements BundleActivator {
      * <code>org.osgi.framework.executionenvironment</code> property already set
      * and ensures the older settings are included. If the property is not set
      * yet, it is fully constructed by this method.
-     * 
+     *
      * @param props The configuration properties to check and optionally ammend.
      */
     private void setExecutionEnvironment(Map<String, String> props) {
@@ -644,7 +644,7 @@ public class Sling implements BundleActivator {
         if (ee == null) {
             ee = System.getProperty(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
         }
-        
+
         // prepare for building the new property value
         StringBuilder eebuilder = new StringBuilder();
         if (ee != null) {
