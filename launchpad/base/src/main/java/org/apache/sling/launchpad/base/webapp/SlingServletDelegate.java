@@ -45,6 +45,7 @@ import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.eclipse.equinox.http.servlet.HttpServiceServlet;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -79,7 +80,7 @@ import org.osgi.framework.ServiceReference;
  * <li>The <code>sling.properties</code> is read
  * from the servlet class path. This properties file contains default settings.</li>
  * <li>Extensions of this servlet may provide additional properties to be
- * loaded overwriting the {@link #loadConfigProperties()} method.
+ * loaded overwriting the {@link #loadConfigProperties(String)} method.
  * <li>Finally, web application init parameters are added to the properties and
  * may overwrite existing properties of the same name(s).
  * </ol>
@@ -123,7 +124,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      * The name of the configuration property defining the obr repository.
      */
     private static final String OBR_REPOSITORY_URL = "obr.repository.url";
-    
+
     /**
      * Flag set by the {@link #destroy()} method to indicate the servlet has
      * been destroyed. This flag is used by the {@link #startSling(String)}
@@ -131,7 +132,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      * was starting up.
      */
     private boolean servletDestroyed = false;
-    
+
     /**
      * The <code>Felix</code> instance loaded on {@link #init()} and stopped
      * on {@link #destroy()}.
@@ -152,7 +153,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
     private Notifiable notifiable;
 
     private String slingHome;
-    
+
     public void setNotifiable(Notifiable notifiable) {
         this.notifiable = notifiable;
     }
@@ -164,7 +165,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
     public void setSlingHome(String slingHome) {
         this.slingHome = slingHome;
     }
-    
+
     public boolean start() {
         // might want to log, why we don't start !
         return false;
@@ -187,14 +188,14 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         // disposal in case of setup errors
         SlingBridge tmpSling = null;
         Servlet tmpDelegatee = null;
-        
+
         try {
-            
+
             log("Starting Sling in " + slingHome);
 
             // read the default parameters
             Map<String, String> props = loadConfigProperties(slingHome);
-    
+
             Logger logger = new ServletContextLogger(getServletContext());
             ResourceProvider rp = new ServletContextResourceProvider(
                 getServletContext());
@@ -203,42 +204,42 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             // set up the OSGi HttpService proxy servlet
             tmpDelegatee = new HttpServiceServlet();
             tmpDelegatee.init(getServletConfig());
-            
+
             // set the fields only if the SlingServletDelegate has no been destroyed
             // while Sling has been starting up. Otherwise we do not set the
             // fields and leave the temporary variables assigned to have
             // them destroyed in the finally clause.
             if (servletDestroyed) {
-                
+
                 log("SlingServletDelegate destroyed while starting Sling, shutting Sling down");
-                
+
             } else {
-                
+
                 // set the fields now
                 sling = tmpSling;
                 delegatee = tmpDelegatee;
-                
+
                 // reset temporary holders to prevent destroyal
                 tmpSling = null;
                 tmpDelegatee = null;
-                
+
                 log("Sling successfully started in " + slingHome);
             }
-            
+
         } catch (BundleException be) {
-            
+
             throw new ServletException("Failed to start Sling in " + slingHome, be);
-            
+
         } catch (ServletException se) {
-            
+
             throw new ServletException("Failed to start bridge servlet for Sling", se);
-            
+
         } catch (Throwable t) {
-            
+
             throw new ServletException("Uncaught Failure starting Sling", t);
-            
+
         } finally {
-            
+
             // clean up temporary fields
             if (tmpDelegatee != null) {
                 tmpDelegatee.destroy();
@@ -258,7 +259,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      *            client's request
      * @param res the <code>ServletResponse</code> object that will contain
      *            the servlet's response
-     * @throws UnavailableException if the no delegatee servlet is currently
+     * @throws javax.servlet.UnavailableException if the no delegatee servlet is currently
      *             available
      * @throws ServletException if an exception occurs that interferes with the
      *             servlet's normal operation occurred
@@ -285,7 +286,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         // set the destroyed flag to signal to the startSling method
         // that Sling should be terminated immediately
         servletDestroyed = true;
-        
+
         // destroy the delegatee
         if (delegatee != null) {
             delegatee.destroy();
@@ -320,7 +321,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
      * The precise file from which to load configuration properties can be set
      * by initializing the "<tt>felix.config.properties</tt>" system
      * property to an arbitrary URL.
-     * 
+     *
      * @param slingHome The value to be used as the "sling.home" property in the
      *            returned map. This parameter is expected to be non-<code>null</code>.
      * @return A <tt>Properties</tt> instance.
@@ -343,14 +344,15 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
 
         // copy context init parameters
         @SuppressWarnings("unchecked")
-        Enumeration<String> pe = getServletContext().getInitParameterNames();
-        while (pe.hasMoreElements()) {
-            String name = pe.nextElement();
+        Enumeration<String> cpe = getServletContext().getInitParameterNames();
+        while (cpe.hasMoreElements()) {
+            String name = cpe.nextElement();
             props.put(name, getServletContext().getInitParameter(name));
         }
 
         // copy servlet init parameters
-        pe = getInitParameterNames();
+        @SuppressWarnings("unchecked")
+        Enumeration<String> pe = getInitParameterNames();
         while (pe.hasMoreElements()) {
             String name = pe.nextElement();
             props.put(name, getInitParameter(name));
@@ -369,10 +371,10 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             if (url != null)
                 props.put(OBR_REPOSITORY_URL, url.toExternalForm());
         }
-        
+
         // set sling home
         props.put(SharedConstants.SLING_HOME, slingHome);
-        
+
         return props;
     }
 
@@ -394,11 +396,11 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             props.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
     }
-    
+
     private boolean insideWebapp(String path) {
         return path != null && path.indexOf(":/") < 1 && path.startsWith("/");
     }
-    
+
     private URL getUrl(String path) {
         try {
             return getServletContext().getResource(path);
@@ -457,7 +459,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         private static final String WEB_INF = "/WEB-INF";
 
         private ServletContext servletContext;
-        
+
         private ServletContextResourceProvider(ServletContext servletContext) {
             super(SlingServletDelegate.class.getClassLoader());
             this.servletContext = servletContext;
@@ -480,7 +482,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
             if ( resources == null || resources.isEmpty() ) {
                 // fall back to the class path
                 resourceIterator = super.getChildren(path);
-                
+
                 if(resourceIterator.hasNext()) {
                     return resourceIterator;
                 }
@@ -492,7 +494,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
                     return resourceIterator;
                 }
             }
-            
+
             if ( resources == null ) {
                 return Collections.EMPTY_LIST.iterator();
             }
@@ -522,7 +524,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
                 if(resource != null) {
                     return resource;
                 }
-                
+
                 // try classpath
                 resource = super.getResource(path);
                 if(resource != null) {
