@@ -16,13 +16,9 @@
  */
 package org.apache.sling.launchpad.app;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -44,7 +40,7 @@ import org.apache.sling.launchpad.base.shared.SharedConstants;
  * <p>
  * This class goes into the secondary artifact with the classifier <i>app</i> to
  * be used as the main class when starting the Java Application.
- * 
+ *
  * @see <a href="http://cwiki.apache.org/SLING/the-sling-launchpad.html">The
  *      Sling Launchpad</a>
  */
@@ -120,7 +116,7 @@ public class Main extends Thread implements Notifiable {
      * If an <code>InputStream</code> was provided, this has been copied to a
      * temporary file, which will be used in place of the existing launcher jar
      * file.
-     * 
+     *
      * @param updateFile The temporary file to replace the existing launcher jar
      *            file. If <code>null</code> the existing launcher jar will be
      *            used again.
@@ -221,7 +217,7 @@ public class Main extends Thread implements Notifiable {
      * <li>Environment variable <code>SLING_HOME</code></li>
      * <li>Default value <code>sling</code></li>
      * </ol>
-     * 
+     *
      * @param args The command line arguments
      * @return The value to use for sling.home
      */
@@ -274,12 +270,12 @@ public class Main extends Thread implements Notifiable {
     }
 
     private static final DateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS ");
-    
+
     // helper method to format the message on the correct output channel
     // the throwable if not-null is also prefixed line by line with the prefix
     private static void log(PrintStream out, String prefix, String message,
             Throwable t) {
-        
+
         final StringBuilder linePrefixBuilder = new StringBuilder();
         synchronized (fmt) {
             linePrefixBuilder.append(fmt.format(new Date()));
@@ -289,7 +285,7 @@ public class Main extends Thread implements Notifiable {
         linePrefixBuilder.append(Thread.currentThread().getName());
         linePrefixBuilder.append("] ");
         final String linePrefix = linePrefixBuilder.toString();
-        
+
         out.print(linePrefix);
         out.println(message);
         if (t != null) {

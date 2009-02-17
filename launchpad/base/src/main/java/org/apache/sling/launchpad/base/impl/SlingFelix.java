@@ -21,21 +21,20 @@ package org.apache.sling.launchpad.base.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.framework.Felix;
-import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.base.shared.Loader;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.osgi.framework.BundleException;
 
+
 public class SlingFelix extends Felix {
 
     private final Notifiable notifiable;
-    
+
     private Notifier notifierThread;
-    
+
     public SlingFelix(Notifiable notifiable, Map<?, ?> props) throws Exception {
         super(props);
         this.notifiable = notifiable;
@@ -45,16 +44,16 @@ public class SlingFelix extends Felix {
     public void update() throws BundleException {
         update(null);
     }
-    
+
     @Override
     public void update(InputStream is) throws BundleException {
         // get the update file
         startNotifier(true, is);
-        
+
         // just stop the framework now
         super.stop();
     }
-    
+
     @Override
     public void stop() throws BundleException {
         startNotifier(false, null);
@@ -65,7 +64,7 @@ public class SlingFelix extends Felix {
         startNotifier(false, null);
         super.stop(status);
     }
-    
+
     private synchronized void startNotifier(boolean restart, InputStream ins) {
         if (notifierThread == null) {
             notifierThread = new Notifier(restart, ins);
@@ -73,17 +72,17 @@ public class SlingFelix extends Felix {
             notifierThread.start();
         }
     }
-    
+
     private class Notifier extends Thread {
 
         private final boolean restart;
-        
+
         private final File updateFile;
-        
+
         private Notifier(boolean restart, InputStream ins) {
             super("Sling Notifier");
             this.restart = restart;
-            
+
             if (ins != null) {
                 File tmpFile;
                 try {
@@ -98,7 +97,7 @@ public class SlingFelix extends Felix {
                 updateFile = null;
             }
         }
-        
+
         @Override
         public void run() {
 
@@ -107,7 +106,7 @@ public class SlingFelix extends Felix {
             } catch (InterruptedException ie) {
                 // TODO: log
             }
-            
+
             if (restart) {
                 notifiable.updated(updateFile);
             } else {
