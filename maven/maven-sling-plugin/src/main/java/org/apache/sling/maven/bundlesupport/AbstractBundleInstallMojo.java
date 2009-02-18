@@ -34,8 +34,10 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.FileRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.FilePartSource;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -70,6 +72,38 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      */
     protected String slingUrl;
 
+    /**
+     * An optional url suffix which will be appended to the <code>sling.url</code>
+     * for use as the real target url. This allows to configure different target URLs
+     * in each POM, while using the same common <code>sling.url</code> in a parent
+     * POM (eg. <code>sling.url=http://localhost:8080</code> and
+     * <code>sling.urlSuffix=/project/specific/path</code>). This is typically used
+     * in conjunction with a HTTP PUT (<code>sling.usePut=true</code>).
+     *
+     * @parameter expression="${sling.urlSuffix}"
+     */
+    protected String slingUrlSuffix;
+
+    /**
+     * If a simple HTTP PUT should be used instead of the standard POST to the
+     * felix console. In the <code>uninstall</code> goal, a HTTP DELETE will be
+     * used.
+     * 
+     * @parameter expression="${sling.usePut}" default-value="false"
+     * @required
+     */
+    protected boolean usePut;
+
+    /**
+     * The content type / mime type used for the HTTP PUT (if
+     * <code>sling.usePut=true</code>).
+     * 
+     * @parameter expression="${sling.mimeTypeForPut}"
+     *            default-value="application/java-archive"
+     * @required
+     */
+    protected String mimeTypeForPut;
+    
     /**
      * The user name to authenticate at the running Sling instance.
      *
@@ -133,6 +167,26 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
     protected abstract String getBundleFileName() throws MojoExecutionException;
 
+    /**
+     * Returns the combination of <code>sling.url</code> and
+     * <code>sling.urlSuffix</code>.
+     */
+    protected String getTargetURL() {
+        String targetURL = slingUrl;
+        if (slingUrlSuffix != null) {
+            targetURL += slingUrlSuffix;
+        }
+        return targetURL;
+    }
+
+    /**
+     * Returns the URL for PUT or DELETE by appending the filename to the
+     * targetURL.
+     */
+    protected String getPutURL(String targetURL, String fileName) {
+        return targetURL + (targetURL.endsWith("/") ? "" : "/") + fileName;
+    }
+
     public void execute() throws MojoExecutionException {
 
         // get the file to upload
@@ -145,13 +199,21 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             getLog().info(bundleFile + " is not an OSGi Bundle, not uploading");
             return;
         }
+        
+        String targetURL = getTargetURL();
 
         getLog().info(
             "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
-                + slingUrl);
-        post(slingUrl, bundleFile);
+                + targetURL + " via " + (usePut ? "PUT" : "POST"));
+        
+        if (usePut) {
+            put(targetURL, bundleFile);
+        } else {
+            post(targetURL, bundleFile);
+        }
+        
         if ( mountByFS ) {
-            configure(slingUrl, bundleFile);
+            configure(targetURL, bundleFile);
         }
     }
 
@@ -228,6 +290,29 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
         }
     }
 
+    protected void put(String targetURL, File file) throws MojoExecutionException {
+
+        PutMethod filePut = new PutMethod(getPutURL(targetURL, file.getName()));
+        
+        try {
+            filePut.setRequestEntity(new FileRequestEntity(file, mimeTypeForPut));
+        
+            int status = getHttpClient().executeMethod(filePut);
+            if (status >= 200 && status < 300) {
+                getLog().info("Bundle installed");
+            } else {
+                getLog().error(
+                    "Installation failed, cause: "
+                        + HttpStatus.getStatusText(status));
+            }
+        } catch (Exception ex) {
+            throw new MojoExecutionException("Installation on " + targetURL
+                + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            filePut.releaseConnection();
+        }
+    }
+        
     /**
      * Add configurations to a running OSGi instance for initial content.
      * @param targetURL The web console base url
