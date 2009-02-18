@@ -16,19 +16,7 @@
 //  specific language governing permissions and limitations
 //  under the License.
 //
-
 <sling = 'http://sling.apache.org/jcr/sling/1.0'>
-<mix = 'http://www.jcp.org/jcr/mix/1.0'>
-<sling = 'http://sling.apache.org/jcr/sling/1.0'>
-
-// The sling:language mixin node type allows to list one or more base
-// names of resource bundles to which the messages below this language
-// node belong.
-[sling:Language] > mix:language
-    mixin
-  - sling:basename (string)
-  - sling:basename (string) multiple
-  
 
 // Mixin node type for a single key to message mapping
 // This mixin node type may be applied to any node such, that mappings
