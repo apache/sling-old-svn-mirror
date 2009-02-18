@@ -93,8 +93,12 @@ public class Activator implements BundleActivator, ServiceListener {
 
     public void start(BundleContext context) {
 
-        this.bundleContext = context;
+        bundleContext = context;
 
+        // ensure the module cache is not set right now, this may
+        // (theoretically) be non-null after the last bundle stop
+        moduleCache = null;
+        
         // check the name of the default context, nothing to do if none
         slingContext = context.getProperty(SLING_CONTEXT_DEFAULT);
         if (slingContext == null) {
@@ -139,6 +143,9 @@ public class Activator implements BundleActivator, ServiceListener {
             // exception is always thrown
         }
         
+        // drop module cache
+        moduleCache = null;
+
         // close the loginModuleTracker
         if (loginModuleTracker != null) {
             loginModuleTracker.close();
