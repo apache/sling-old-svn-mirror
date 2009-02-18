@@ -88,7 +88,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
      * If a simple HTTP PUT should be used instead of the standard POST to the
      * felix console. In the <code>uninstall</code> goal, a HTTP DELETE will be
      * used.
-     * 
+     *
      * @parameter expression="${sling.usePut}" default-value="false"
      * @required
      */
@@ -97,13 +97,13 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     /**
      * The content type / mime type used for the HTTP PUT (if
      * <code>sling.usePut=true</code>).
-     * 
-     * @parameter expression="${sling.mimeTypeForPut}"
+     *
+     * @parameter expression="${sling.mimeType}"
      *            default-value="application/java-archive"
      * @required
      */
-    protected String mimeTypeForPut;
-    
+    protected String mimeType;
+
     /**
      * The user name to authenticate at the running Sling instance.
      *
@@ -199,19 +199,19 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             getLog().info(bundleFile + " is not an OSGi Bundle, not uploading");
             return;
         }
-        
+
         String targetURL = getTargetURL();
 
         getLog().info(
             "Installing Bundle " + bundleName + "(" + bundleFile + ") to "
                 + targetURL + " via " + (usePut ? "PUT" : "POST"));
-        
+
         if (usePut) {
             put(targetURL, bundleFile);
         } else {
             post(targetURL, bundleFile);
         }
-        
+
         if ( mountByFS ) {
             configure(targetURL, bundleFile);
         }
@@ -293,10 +293,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     protected void put(String targetURL, File file) throws MojoExecutionException {
 
         PutMethod filePut = new PutMethod(getPutURL(targetURL, file.getName()));
-        
+
         try {
-            filePut.setRequestEntity(new FileRequestEntity(file, mimeTypeForPut));
-        
+            filePut.setRequestEntity(new FileRequestEntity(file, mimeType));
+
             int status = getHttpClient().executeMethod(filePut);
             if (status >= 200 && status < 300) {
                 getLog().info("Bundle installed");
@@ -312,7 +312,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             filePut.releaseConnection();
         }
     }
-        
+
     /**
      * Add configurations to a running OSGi instance for initial content.
      * @param targetURL The web console base url
