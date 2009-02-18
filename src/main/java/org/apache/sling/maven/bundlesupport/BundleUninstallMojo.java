@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -60,11 +61,42 @@ public class BundleUninstallMojo extends AbstractBundleInstallMojo {
             return;
         }
 
+        String targetURL = getTargetURL();
+        
         getLog().info(
             "Unistalling Bundle " + bundleName + ") from "
-                + slingUrl);
-        configure(slingUrl, bundleFile);
-        post(slingUrl, bundleName);
+                + targetURL + " via " + (usePut ? "DELETE" : "POST"));
+        
+        configure(targetURL, bundleFile);
+        
+        if (usePut) {
+            delete(targetURL, bundleFile);
+        } else {
+            post(targetURL, bundleName);
+        }
+    }
+
+    protected void delete(String targetURL, File file)
+        throws MojoExecutionException {
+        
+        final DeleteMethod delete = new DeleteMethod(getPutURL(targetURL, file.getName()));
+
+        try {
+
+            int status = getHttpClient().executeMethod(delete);
+            if (status >= 200 && status < 300) {
+                getLog().info("Bundle uninstalled");
+            } else {
+                getLog().error(
+                    "Uninstall failed, cause: "
+                        + HttpStatus.getStatusText(status));
+            }
+        } catch (Exception ex) {
+            throw new MojoExecutionException("Uninstall from " + targetURL
+                + " failed, cause: " + ex.getMessage(), ex);
+        } finally {
+            delete.releaseConnection();
+        }
     }
 
     protected void post(String targetURL, String symbolicName)
