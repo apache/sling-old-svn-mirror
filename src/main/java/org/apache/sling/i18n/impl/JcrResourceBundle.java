@@ -40,6 +40,8 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static final String PROP_VALUE = "sling:message";
 
+    private static final String PROP_BASENAME = "sling:basename";
+
     private static final String QUERY_BASE = "//element(*,mix:language)[@jcr:language='%s'%s]/*";
 
     private static final String QUERY_LOAD_FULLY = QUERY_BASE + "/(@"
@@ -125,7 +127,7 @@ public class JcrResourceBundle extends ResourceBundle {
                 if (key == null) {
                     key = ResourceUtil.getName(jcrPath);
                 }
-                
+
                 Map<String, Object> dst = rest;
                 for (int i = 0; i < path.length; i++) {
                     if (jcrPath.startsWith(path[i])) {
@@ -197,7 +199,8 @@ public class JcrResourceBundle extends ResourceBundle {
             return "";
         }
 
-        StringBuffer buf = new StringBuffer(" and @sling:basename");
+        StringBuilder buf = new StringBuilder(" and @");
+        buf.append(PROP_BASENAME);
 
         if (baseName.length() > 0) {
             buf.append("='").append(baseName).append('\'');
