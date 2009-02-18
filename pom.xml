@@ -31,7 +31,7 @@
     <packaging>jar</packaging>
     <version>2.0.3-incubator-SNAPSHOT</version>
 
-    <name>Apache Sling testing utilities</name>
+    <name>Apache Sling Testing Utilities</name>
     <description>
         Tools and utilities for automated testing of Sling modules
     </description>
