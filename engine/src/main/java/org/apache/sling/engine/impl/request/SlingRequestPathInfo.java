@@ -21,7 +21,7 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 
 /**
- * microsling request URI parser that provides SlingRequestPathInfo for the
+ * Sling request URI parser that provides SlingRequestPathInfo for the
  * current request, based on the path of the Resource. The values provided by
  * this depend on the Resource.getPath() value, as the ResourceResolver might
  * use all or only part of the request URI path to locate the resource (see also
