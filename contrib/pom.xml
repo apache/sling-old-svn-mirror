@@ -77,4 +77,18 @@
           <module>scripting/velocity</module>
           <module>launchpad/jcrapp</module>
     </modules>
+    <profiles>
+        <profile>
+            <!--
+              Allow the integration tests to be excluded, as they might be slow
+            -->
+            <id>integrationTests</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>launchpad/testing</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>
