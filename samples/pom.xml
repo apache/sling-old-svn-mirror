@@ -58,7 +58,6 @@
     <!-- List modules to be included in the build here ! -->
     <modules>
           <module>espblog</module>
-          <module>fsresource</module>
           <module>javashell</module>
           <module>path-based-rtp</module>
           <module>simple-demo</module>

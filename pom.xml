@@ -108,6 +108,7 @@
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
         <module>bundles/extensions/event</module>
+        <module>bundles/extensions/fsresource</module>
         <module>bundles/extensions/httpauth</module>
         <module>bundles/extensions/i18n</module>
         <module>bundles/extensions/openidauth</module>
