@@ -21,7 +21,7 @@
 		<groupId>org.apache.sling</groupId>
 		<artifactId>sling</artifactId>
 		<version>5-incubator-SNAPSHOT</version>
-		<relativePath>../../parent/</relativePath>
+		<relativePath>../../../parent/</relativePath>
 	</parent>
 	
 	<artifactId>org.apache.sling.jcr.jcrinstall.parent</artifactId>
