@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/samples/fsresource</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/samples/fsresource</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/samples/fsresource</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/fsresource</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/fsresource</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/fsresource</url>
     </scm>
 
     <build>
