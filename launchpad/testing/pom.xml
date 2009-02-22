@@ -118,11 +118,6 @@
                             <value>${jetty.sling.home}</value>
                         </systemProperty>
                         
-                        <!-- jython uses this to place various stuff -->
-                        <systemProperty>
-                            <name>python.home</name>
-                            <value>${jetty.sling.home}/python</value>
-                        </systemProperty>
                     </systemProperties>
 
                     <connectors>

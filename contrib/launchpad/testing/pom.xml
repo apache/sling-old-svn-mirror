@@ -27,20 +27,20 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.launchpad.testing</artifactId>
+    <artifactId>org.apache.sling.launchpad.contrib-testing</artifactId>
     <packaging>war</packaging>
     <version>4-incubator-SNAPSHOT</version>
 
-    <name>Apache Sling Launchpad Testing</name>
+    <name>Apache Sling Launchpad Contrib Testing</name>
     <description>
-        Sling Launchpad Testing module, contains integration tests that
+        Sling Launchpad Contrib Testing module, contains integration tests that
         were previously in the launchpad webapp module.
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/testing</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/testing</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/testing</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/testing</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/testing</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/launchpad/testing</url>
     </scm>
 
     <properties>
