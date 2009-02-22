@@ -41,13 +41,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/threaddump
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/threaddump
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/threaddump
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/threaddump
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/threaddump
+            http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/threaddump
         </url>
     </scm>
 

@@ -67,65 +67,51 @@
         <module>maven/maven-sling-plugin</module>
 
         <!-- The Sling API -->
-        <module>api</module>
+        <module>bundles/api</module>
 
         <!-- The commons sub project -->
-        <module>commons/json</module>
-        <module>commons/log</module>
-        <module>commons/mime</module>
-        <module>commons/osgi</module>
-        <module>commons/scheduler</module>
-        <module>commons/testing</module>
-        <module>commons/threads</module>
+        <module>bundles/commons/json</module>
+        <module>bundles/commons/log</module>
+        <module>bundles/commons/mime</module>
+        <module>bundles/commons/osgi</module>
+        <module>bundles/commons/scheduler</module>
+        <module>bundles/commons/testing</module>
+        <module>bundles/commons/threads</module>
         
         <!-- The Sling Engine -->
-        <module>engine</module>
+        <module>bundles/engine</module>
         
         <!-- The JCR sub project -->
-        <module>jcr/api</module>
-        <module>jcr/base</module>
-        <module>jcr/classloader</module>
-        <module>jcr/contentloader</module>
-        <module>jcr/jackrabbit-api</module>
-        <module>jcr/jackrabbit-client</module>
-        <module>jcr/jackrabbit-server</module>
-        <module>jcr/ocm</module>
-        <module>jcr/resource</module>
-        <module>jcr/webdav</module>
+        <module>bundles/jcr/api</module>
+        <module>bundles/jcr/base</module>
+        <module>bundles/jcr/classloader</module>
+        <module>bundles/jcr/contentloader</module>
+        <module>bundles/jcr/jackrabbit-api</module>
+        <module>bundles/jcr/jackrabbit-server</module>
+        <module>bundles/jcr/ocm</module>
+        <module>bundles/jcr/resource</module>
+        <module>bundles/jcr/webdav</module>
         
         <!-- Servlets -->
-        <module>servlets/resolver</module>
-        <module>servlets/get</module>
-        <module>servlets/post</module>
+        <module>bundles/servlets/resolver</module>
+        <module>bundles/servlets/get</module>
+        <module>bundles/servlets/post</module>
 
         <!-- Scripting Support -->
-        <module>scripting/api</module>
-        <module>scripting/core</module>
-        <module>scripting/javascript</module>
-        <module>scripting/jsp</module>
-        <module>scripting/jsp-taglib</module>
-        <module>scripting/java</module>
-        <module>scripting/python</module>
-        <module>scripting/scala</module>
+        <module>bundles/scripting/api</module>
+        <module>bundles/scripting/core</module>
+        <module>bundles/scripting/javascript</module>
+        <module>bundles/scripting/jsp</module>
+        <module>bundles/scripting/jsp-taglib</module>
         
         <!-- Extensions -->
-        <module>extensions/adapter</module>
-        <module>extensions/bundleresource</module>
-        <module>extensions/event</module>
-        <module>extensions/httpauth</module>
-        <module>extensions/openidauth</module>
-        <module>extensions/apt/parser</module>
-        <module>extensions/apt/servlet</module>
-        <module>extensions/jcrinstall</module>
-        <module>extensions/runmode</module>
-        <module>extensions/threaddump</module>
-
-        <!-- Samples -->
-        <module>samples/simple-demo</module>
-        <module>samples/path-based-rtp</module>
-        <module>samples/webloader/service</module>
-        <module>samples/webloader/ui</module>
-        <module>samples/espblog</module>
+        <module>bundles/extensions/adapter</module>
+        <module>bundles/extensions/bundleresource</module>
+        <module>bundles/extensions/event</module>
+        <module>bundles/extensions/httpauth</module>
+        <module>bundles/extensions/i18n</module>
+        <module>bundles/extensions/openidauth</module>
+        <module>bundles/extensions/threaddump</module>
 
         <!-- Launchpad -->
         <module>launchpad/base</module>
@@ -165,22 +151,6 @@
             </activation>
             <modules>
                 <module>launchpad/testing</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>allModules</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <modules>
-                <module>extensions/i18n</module>
-                <module>scripting/freemarker</module>
-                <module>scripting/jst</module>
-                <module>scripting/ruby</module>
-                <module>scripting/velocity</module>
-                <module>extensions/dojo</module>
-                <module>extensions/dojo-sling</module>
-                <module>launchpad/jcrapp</module>
             </modules>
         </profile>
     </profiles>

@@ -35,9 +35,9 @@
     <description>Support for JavaScript scripting</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/javascript</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/javascript</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/javascript</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/scripting/javascript</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/scripting/javascript</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/scripting/javascript</url>
     </scm>
 
     <build>

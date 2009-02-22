@@ -35,9 +35,9 @@
     <description>Apache Sling JSON Library</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/json</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/json</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/commons/json</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/json</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/json</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/commons/json</url>
     </scm>
 
     <build>

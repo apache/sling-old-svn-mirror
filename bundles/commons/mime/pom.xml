@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/mime</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/mime</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/commons/mime</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/mime</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/mime</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/commons/mime</url>
     </scm>
 
     <build>

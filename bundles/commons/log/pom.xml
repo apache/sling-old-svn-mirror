@@ -40,9 +40,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/log</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/log</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/commons/log</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/log</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/log</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/commons/log</url>
     </scm>
 
     <build>

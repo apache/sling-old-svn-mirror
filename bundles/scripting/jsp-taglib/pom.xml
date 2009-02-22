@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/jsp-taglib</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/jsp-taglib</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/jsp-taglib</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/scripting/jsp-taglib</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/scripting/jsp-taglib</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/scripting/jsp-taglib</url>
     </scm>
 
     <build>

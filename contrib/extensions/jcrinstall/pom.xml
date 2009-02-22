@@ -31,9 +31,9 @@
 	<description>Parent pom for the the jcrinstall submodules</description>
 	
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/jcrinstall</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/jcrinstall</developerConnection>
-		<url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/jcrinstall</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall</developerConnection>
+		<url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/extensions/jcrinstall</url>
 	</scm>
 	
 	<modules>

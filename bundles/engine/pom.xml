@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/engine</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/engine</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/sling/engine</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/engine</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/engine</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/sling/engine</url>
     </scm>
 
     <build>

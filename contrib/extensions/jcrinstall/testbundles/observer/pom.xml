@@ -32,9 +32,9 @@
 	<description> Bundle used in jcrinstall automated tests. </description>
 	
 	<scm>
-		<connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/jcrinstall/testbundles/observer</connection>
-		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/jcrinstall/testbundles/observer</developerConnection>
-		<url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/jcrinstall/testbundles/observer</url>
+		<connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/testbundles/observer</connection>
+		<developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/testbundles/observer</developerConnection>
+		<url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/extensions/jcrinstall/testbundles/observer</url>
 	</scm>
 	
 	<build>

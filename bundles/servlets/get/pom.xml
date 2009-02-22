@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets/get</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/sling/servlets/get</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/sling/servlets/get</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/sling/servlets/get</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/sling/servlets/get</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/sling/servlets/get</url>
     </scm>
 
     <build>

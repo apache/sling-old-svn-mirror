@@ -47,9 +47,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/gwt/servlet</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/gwt/servlet</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/gwt/servlet</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/gwt/servlet</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/gwt/servlet</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/extensions/gwt/servlet</url>
     </scm>
 
     <build>

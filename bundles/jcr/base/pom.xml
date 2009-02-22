@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/base</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/base</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/base</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/base</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/base</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/base</url>
     </scm>
 
     <build>

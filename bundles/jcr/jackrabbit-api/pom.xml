@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit-api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/jackrabbit-api</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/jackrabbit-api</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-api</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/jackrabbit-api</url>
     </scm>
 
     <build>
