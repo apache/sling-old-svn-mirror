@@ -37,13 +37,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/resource
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/resource
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/resource
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/resource
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/resource
+            http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/resource
         </url>
     </scm>
 
