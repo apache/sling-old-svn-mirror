@@ -36,26 +36,4 @@ public class GetStarTest extends RenderingTestBase {
         getContent(HTTP_BASE_URL + "/" + random + "/*.json", CONTENT_TYPE_JSON);
         getContent(HTTP_BASE_URL + "/" + random + "/*.12.json", CONTENT_TYPE_JSON);
     }
-
-    public void testGetStarWithScript() throws IOException {
-        final String scriptPath = "/apps/" + random;
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        urlsToDelete.add(WEBDAV_BASE_URL + scriptPath);
-        final String fakeNodePath = HTTP_BASE_URL + "/sling-test-pbrt/" + random + "/something/*.html";
-
-        {
-            final String content = getContent(fakeNodePath, CONTENT_TYPE_HTML);
-            assertContains(content, "dumped by HtmlRendererServlet");
-        }
-
-        final String urlToDelete = uploadTestScript(scriptPath, "rendering-test.esp", "html.esp");
-        try {
-            final String content = getContent(fakeNodePath, CONTENT_TYPE_HTML);
-            assertContains(content, "ESP template");
-        } finally {
-            testClient.delete(urlToDelete);
-        }
-
-    }
-
 }
