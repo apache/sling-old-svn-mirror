@@ -148,7 +148,7 @@
 	        -->
             <id>integrationTests</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
                 <module>launchpad/testing</module>
