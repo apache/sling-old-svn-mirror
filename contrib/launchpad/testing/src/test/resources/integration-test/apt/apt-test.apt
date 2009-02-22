@@ -1,0 +1,15 @@
+   -----------------------------
+   Simple APT file test
+   -----------------------------
+
+h1 heading
+
+* h2 heading
+
+  Text paragraph
+  with several lines
+  which must be indented in the APT file.
+  
+** h3 heading
+
+  And so on...  

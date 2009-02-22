@@ -1,0 +1,679 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>5-incubator-SNAPSHOT</version>
+        <relativePath>../../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>org.apache.sling.launchpad.testing</artifactId>
+    <packaging>war</packaging>
+    <version>4-incubator-SNAPSHOT</version>
+
+    <name>Apache Sling Launchpad Testing</name>
+    <description>
+        Sling Launchpad Testing module, contains integration tests that
+        were previously in the launchpad webapp module.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/testing</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/testing</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/testing</url>
+    </scm>
+
+    <properties>
+        <!--
+            Jetty default port (override with -D)
+        -->
+        <http.port>8888</http.port>
+        
+        <!-- path suffix for HTTP access to Sling -->
+        <http.base.path />
+
+        <!-- path suffix for WebDAV access to the repository -->
+        <webdav.workspace.path />
+
+        <!-- hostname for integration tests -->
+        <test.host>localhost</test.host>
+
+        <!--
+            Disable Jetty webapp rescan (override with -D) 
+        -->
+        <jetty.scan.interval.seconds>0</jetty.scan.interval.seconds>
+
+        <!-- 
+            Sling home directory when starting with jetty:run
+        -->
+        <jetty.sling.home>target/sling</jetty.sling.home>
+
+        <!-- 
+            Defines which tests are for the "integration-testing" phase
+        -->
+        <integration.test.code.path>
+            **/launchpad/webapp/integrationtest
+        </integration.test.code.path>
+
+        <!-- 
+            Set this to true to stop mvn once the integration test Jetty instance is
+            started. Useful to manually test the integration testing webapp.
+        -->
+        <integration.test.wait>false</integration.test.wait>
+        
+        <!--
+            Defines the part of the tree, which must not be compiled in
+            normal test scenarios. The jcrinstall-tests profile will
+            compile these classes to be included in a full-test scenario. 
+        -->
+        <jcrinstall.integration.test.code.path>
+            **/jcrinstall/**
+        </jcrinstall.integration.test.code.path>
+
+        <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
+        
+        <!--
+            Where to copy our test bundles
+            Used when profile jcrinstall-tests is active.
+         -->
+        <jcrinstall.start.level>0</jcrinstall.start.level>
+        <sling.testbundles.path>${resources.bundles.path}/${jcrinstall.start.level}</sling.testbundles.path>
+        
+        <!--
+            Can be used to run tests with more or less bundles
+            Used when profile jcrinstall-tests is active
+         -->
+        <sling.test.scale.factor>1</sling.test.scale.factor>
+        
+        <!--
+             How long to wait for the expected number of bundles to be active, in tests
+            Used when profile jcrinstall-tests is active
+         -->
+        <sling.test.bundles.wait.seconds>20</sling.test.bundles.wait.seconds>
+    </properties>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>derby.log</include>
+                                <include>cachedir</include>
+                                <include>sling</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>maven-jetty-plugin</artifactId>
+                <configuration>
+                    <contextPath>/</contextPath>
+                    <scanIntervalSeconds>
+                        ${jetty.scan.interval.seconds}
+                    </scanIntervalSeconds>
+
+                    <systemProperties>
+                        <systemProperty>
+                            <name>sling.home</name>
+                            <value>${jetty.sling.home}</value>
+                        </systemProperty>
+                        
+                        <!-- jython uses this to place various stuff -->
+                        <systemProperty>
+                            <name>python.home</name>
+                            <value>${jetty.sling.home}/python</value>
+                        </systemProperty>
+                    </systemProperties>
+
+                    <connectors>
+                        <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+                            <port>${http.port}</port>
+                            <maxIdleTime>60000</maxIdleTime>
+                        </connector>
+                    </connectors>
+
+                    <!-- 
+                        Use target/... as the webapp source, as we unpack stuff there from the
+                        Sling launcher modules
+                    -->
+                    <webAppSourceDirectory>
+                        target/${artifactId}-${pom.version}
+                    </webAppSourceDirectory>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- Unpack the sling-app launcher for inclusion in the web app -->
+                        <id>unpack-dependencies</id>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                org.apache.sling.launchpad.bundles
+                            </includeArtifactIds>
+                            <includes>
+                                resources/**
+                            </includes>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/launchpad-bundles
+                            </outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>
+                                true
+                            </overWriteSnapshots>
+                        </configuration>
+                    </execution>
+                    <!-- Launcher Jar -->                    
+                    <execution>
+                        <id>copy-launcher-jar</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.sling</groupId>
+                                    <artifactId>org.apache.sling.launchpad.base</artifactId>
+                                    <version>2.0.3-incubator-SNAPSHOT</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <stripVersion>true</stripVersion>
+                            <excludeTransitive>true</excludeTransitive>
+                            <outputDirectory>
+                                ${project.build.directory}/launchpad-bundles/resources
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <!-- 
+                        	Copy bundles that must be initially installed to
+                            WEB-INF/resources/bundles/N where N = desired
+                            start level 
+                        -->
+                        <id>copy-bundles-dependencies</id>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>
+                                ${resources.bundles.path}/0
+                            </outputDirectory>
+                            <excludeTransitive>true</excludeTransitive>
+                            <includeArtifactIds>
+                                org.apache.sling.scripting.python
+                            </includeArtifactIds>
+                            <includeScope>
+                                provided
+                            </includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Exclude the JCRInstall test classes from default build
+                See jcrinstall-tests for the setup of compilation of these
+                classes for a full test
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <sumpf>gurk</sumpf>
+                    <testExcludes>
+                        <testExclude>
+                            ${jcrinstall.integration.test.code.path}
+                        </testExclude>
+                    </testExcludes>
+                    <verbose>true</verbose>
+                </configuration>
+            </plugin>
+
+            <!-- 
+              Include sling-app launcher classes and resources, but no Sling 
+              bundles (we want to specify our own versions) 
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <webResources>
+                        <!-- the configuration resources -->
+                        <resource>
+                            <directory>
+                                ${project.build.directory}/launchpad-bundles
+                            </directory>
+                            <targetPath>WEB-INF</targetPath>
+                        </resource>
+                        <!-- Legal stuff -->
+                        <resource>
+                            <directory>${basedir}</directory>
+                            <targetPath>META-INF</targetPath>
+                            <includes>
+                                <include>LICENSE*</include>
+                                <include>NOTICE*</include>
+                                <include>DISCLAIMER</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemProperties>
+                        <!-- 
+                            WARNING: make sure these URLs are consistent with the
+                            cargo-maven2-plugin settings: AFAIK Maven does not
+                            expand variables in the <value> element.
+                            And WARNING: these properties are duplicated somewhere in this
+                            POM with slightly different values...there must be a better way. 
+                        -->
+                        <property>
+                            <name>launchpad.http.server.url</name>
+                            <value>
+                                http://${test.host}:${http.port}/${http.base.path}
+                            </value>
+                        </property>
+                        <property>
+                            <name>launchpad.webdav.server.url</name>
+                            <value>
+                                http://${test.host}:${http.port}/${webdav.workspace.path}
+                            </value>
+                        </property>
+                        
+                        <!-- system properties used for profile jcrinstall-tests -->
+                        <property>
+                            <name>sling.testbundles.path</name>
+                            <value>${sling.testbundles.path}</value>
+                        </property>
+                        <property>
+                            <name>sling.test.scale.factor</name>
+                            <value>${sling.test.scale.factor}</value>
+                        </property>
+                        <property>
+                            <name>sling.test.bundles.wait.seconds</name>
+                            <value>${sling.test.bundles.wait.seconds}</value>
+                        </property>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/bin.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                  <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <profiles>
+        <profile>
+            <!--
+                Run the cargo-based integration tests.
+            -->
+            <id>cargoIntegrationTesting</id>
+            <activation>
+                <property>
+                    <name>!maven.test.skip</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>surefire-integration-test</id>
+                                <phase>integration-test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <configuration>
+                                    <excludes>
+                                        <exclude>none</exclude>
+                                    </excludes>
+                                    <includes>
+                                        <include>
+                                            ${integration.test.code.path}/**/*Test.java
+                                        </include>
+                                    </includes>
+                                    <systemProperties>
+                                        <!-- 
+                                            WARNING: make sure these URLs are consistent with the
+                                            cargo-maven2-plugin settings: AFAIK Maven does not
+                                            expand variables in the <value> element.
+                                            And WARNING: these properties are duplicated somewhere in this
+                                            POM with slightly different values...there must be a better way. 
+                                        -->
+                                        <property>
+                                            <name>
+                                                launchpad.http.server.url
+                                            </name>
+                                            <value>
+                                                http://${test.host}:${http.port}/${project.build.finalName}
+                                            </value>
+                                        </property>
+                                        <property>
+                                            <name>
+                                                launchpad.webdav.server.url
+                                            </name>
+                                            <value>
+                                                http://${test.host}:${http.port}/${project.build.finalName}/${webdav.workspace.path}
+                                            </value>
+                                        </property>
+                                        
+                                        <!-- system properties used for profile jcrinstall-tests -->
+                                        <property>
+                                            <name>sling.testbundles.path</name>
+                                            <value>${sling.testbundles.path}</value>
+                                        </property>
+                                        <property>
+                                            <name>sling.test.scale.factor</name>
+                                            <value>${sling.test.scale.factor}</value>
+                                        </property>
+                                        <property>
+                                            <name>sling.test.bundles.wait.seconds</name>
+                                            <value>${sling.test.bundles.wait.seconds}</value>
+                                        </property>
+                                    </systemProperties>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.cargo</groupId>
+                        <artifactId>cargo-maven2-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>start-container</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>start</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>stop-container</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>stop</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <wait>${integration.test.wait}</wait>
+                            <container>
+                                <containerId>jetty6x</containerId>
+                                <type>embedded</type>
+                                <systemProperties>
+                                    <sling.home>
+                                        ${basedir}/target/it/sling
+                                    </sling.home>
+                                </systemProperties>
+                            </container>
+                            <configuration>
+                                <home>${project.build.directory}/cargo</home>
+                                <properties>
+                                    <cargo.servlet.port>
+                                        ${http.port}
+                                    </cargo.servlet.port>
+                                    <!-- 
+                                        <cargo.jvmargs>-Xdebug -Xnoagent -Xrunjdwp:transport=dt_socket,address=30333,server=y,suspend=y</cargo.jvmargs>
+                                    -->
+                                </properties>
+                            </configuration>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!--
+                By default, do not run the integration tests in the test phase, as they have
+                no Sling instance to talk to.
+                See README.txt for how to run the integration tests against a running instance
+                of Sling.
+            -->
+            <id>disableIntegrationTestsInTestPhase</id>
+            <activation>
+                <property>
+                    <name>!maven.test.skip</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>
+                                    ${integration.test.code.path}/**/*.java
+                                </exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <!--
+            The jcrinstall-tests profile includes the integration tests
+            for the JCRInstall functionality in the integration tests. By
+            default this profile is disabled.
+            For CI builds it is recommended to activate this profile, for
+            normal builds you may omit this profile 
+        -->
+        <profile>
+            <id>jcrinstall-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-jcrinstall-dependencies</id>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>
+                                        ${resources.bundles.path}/${jcrinstall.start.level}
+                                    </outputDirectory>
+                                    <excludeTransitive>true</excludeTransitive>
+                                    <includeArtifactIds>
+                                        org.apache.sling.jcr.jcrinstall,org.apache.sling.jcr.jcrinstall.testbundles.observer,org.apache.sling.jcr.jcrinstall.servlet,org.apache.sling.runmode
+                                    </includeArtifactIds>
+                                </configuration>
+                            </execution>
+                       </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>compile-jcrinstall-tests</id>
+                                <goals>
+                                    <goal>testCompile</goal>
+                                </goals>
+                                <configuration>
+                                    <testIncludes>
+                                        <testInclude>
+                                            ${jcrinstall.integration.test.code.path}
+                                        </testInclude>
+                                    </testIncludes>
+                                    <!-- overwrite global setting here -->
+                                    <testExcludes>
+                                        <testExclude>
+                                            dummymarker
+                                        </testExclude>
+                                    </testExcludes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall.testbundles.observer</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall.servlet</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.runmode</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
+    <dependencies>
+    
+        <!--  The basic Sling WebApp -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad.base</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <classifier>webapp</classifier>
+            <type>war</type>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- The basic Sling Bundles -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad.bundles</artifactId>
+            <version>4-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- additional bundles for integration tests -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.scripting.python</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- JCR Install - needs to be in a profile -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bnd</artifactId>
+            <version>0.0.169</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Dependencies for the Test Build and Run -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.testing</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.servlets.post</artifactId>
+            <version>2.0.2-incubator</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
