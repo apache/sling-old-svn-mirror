@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/httpauth</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/httpauth</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/httpauth</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/httpauth</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/httpauth</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/httpauth</url>
     </scm>
 
     <build>
