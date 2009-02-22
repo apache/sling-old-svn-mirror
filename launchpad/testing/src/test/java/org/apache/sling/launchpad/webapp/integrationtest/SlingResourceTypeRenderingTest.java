@@ -155,46 +155,6 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
         }
     }
 
-    public void TODO_FAILS_testJstHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertContains(content, "JST template");
-            assertContains(content, "\"text\":\"" + testText + "\"");
-            assertContains(content, "div id=\"JstDefaultRendering");
-            assertContains(content, "out.write( currentNode.text )");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void TODO_FAILS_testJstScriptTagA() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertContains(content, "JST template");
-            assertContains(content, "something scripted");
-            assertContains(content, "<script>something");
-            assertContains(content, "scripted</script>");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    /** TODO this test currently fails, see SLING-114 */
-    public void TODO_FAILS_testJstHtmlScriptTagB() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.jst","html.jst");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertContains(content, "JST template");
-            assertContains(content, "more scripting");
-            assertContains(content, "<script>more");
-            assertContains(content, "scripting</script>");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
     public void TODO_FAILS_testEspHtmlUppercase() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.esp","html.esp");
         try {
@@ -251,80 +211,6 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             testClient.delete(toDelete);
         }
     }
-    
-    public void testPythonHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.py","html.py");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertContains(content, "Python");
-            assertContains(content, "<p>" + testText + "</p>");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void testPythonJavaCode() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.py","html.py");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertContains(content, "Python");
-            assertContains(content, "TestLinkedListTest");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void testPythonHtmlInAppsFolder() throws IOException {
-        // make sure there's no leftover rendering script
-        {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertFalse("Content must not contain script marker before testing", content.contains("Python"));
-        }
-
-        // put our script under /apps/<resource type>
-        final String path = "/apps/" + slingResourceType;
-        testClient.mkdirs(WEBDAV_BASE_URL, path);
-        final String toDelete = uploadTestScript(path,"rendering-test.py","html.py");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertContains(content, "Python");
-            assertContains(content, "<p>" + testText + "</p>");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void testPythonXml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.py","xml.py");
-        try {
-            final String content = getContent(displayUrl + ".xml", CONTENT_TYPE_XML);
-            assertContains(content, "Python");
-            assertContains(content, "<p>" + testText + "</p>");
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void testPythonPlain() throws IOException {
-    	final String toDelete = uploadTestScript("rendering-test.py","txt.py");
-    	try {
-    		final String content = getContent(displayUrl + ".txt", CONTENT_TYPE_PLAIN);
-    		assertContains(content, "Python");
-    	} finally {
-    		testClient.delete(toDelete);
-    	}
-    }  
-
-    public void TODO_FAILS_testVltHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.vlt","html.vlt");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes VLT marker",content.contains("Velocity template"));
-            assertTrue("Content contains formatted test text",content.contains("<p><b>" + testText + "</b></p>"));
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
 
     public void TODO_FAILS_testJsHtml() throws IOException {
         final String toDelete = uploadTestScript("rendering-test.ecma","html.ecma");
@@ -332,28 +218,6 @@ public class SlingResourceTypeRenderingTest extends RenderingTestBase {
             final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
             assertTrue("Content includes JS marker",content.contains("Raw javascript template"));
             assertTrue("Content contains formatted test text",content.contains("<p><em>" + testText + "</em></p>"));
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void TODO_FAILS_testFtlHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.ftl","html.ftl");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes FreeMarker marker",content.contains("FreeMarker template"));
-            assertTrue("Content contains formatted test text",content.contains("<p><span>" + testText + "</span></p>"));
-        } finally {
-            testClient.delete(toDelete);
-        }
-    }
-
-    public void TODO_FAILS_testErbHtml() throws IOException {
-        final String toDelete = uploadTestScript("rendering-test.erb","html.erb");
-        try {
-            final String content = getContent(displayUrl + ".html", CONTENT_TYPE_HTML);
-            assertTrue("Content includes Ruby marker",content.contains("Ruby template"));
-            assertTrue("Content contains formatted test text",content.contains("<p><span>" + testText + "</span></p>"));
         } finally {
             testClient.delete(toDelete);
         }
