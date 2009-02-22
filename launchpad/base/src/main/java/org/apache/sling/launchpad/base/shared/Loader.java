@@ -61,16 +61,13 @@ public class Loader {
                 + launcherJarFile + " is not accessible");
         }
 
-        URL launcherJarURL;
+        ClassLoader loader;
         try {
-            launcherJarURL = launcherJarFile.toURL();
+            loader = new LauncherClassLoader(launcherJarFile);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(
                 "Cannot create an URL from the Sling Launcher JAR path name", e);
         }
-
-        ClassLoader loader = new URLClassLoader(new URL[] { launcherJarURL },
-            Loader.class.getClassLoader());
 
         try {
             Class<?> launcherClass = loader.loadClass(launcherClassName);
