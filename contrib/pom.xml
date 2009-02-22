@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling-contrib-builder</artifactId>
+    <packaging>pom</packaging>
+    <version>1-incubator</version>
+
+    <name>Apache Sling Contrib (Builder)</name>
+    <description>
+        Pseudo project to build all contribution modules.
+    </description>
+
+    <inceptionYear>2007</inceptionYear>
+
+    <prerequisites>
+        <maven>2.0.7</maven>
+    </prerequisites>
+
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://issues.apache.org/jira/browse/SLING</url>
+    </issueManagement>
+
+
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib
+        </developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib</url>
+    </scm>
+
+
+    <!-- List modules to be included in the build here ! -->
+    <modules>
+          <module>extensions/apt/parser</module>
+          <module>extensions/apt/servlet</module>
+          <module>extensions/dojo</module>
+          <module>extensions/dojo-sling</module>
+          <module>extensions/gwt/sample</module>
+          <module>extensions/gwt/servlet</module>
+          <module>extensions/jcrinstall</module>
+          <module>extensions/obr</module>
+          <module>extensions/runmode</module>
+          <module>jcr/jackrabbit-client</module>
+          <module>scripting/freemarker</module>
+          <module>scripting/java</module>
+          <module>scripting/jst</module>
+          <module>scripting/python</module>
+          <module>scripting/ruby</module>
+          <module>scripting/scala/engine</module>
+          <module>scripting/scala/interpreter</module>
+          <module>scripting/velocity</module>
+          <module>launchpad/jcrapp</module>
+    </modules>
+</project>
