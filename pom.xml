@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/i18n</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/i18n</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/i18n</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/i18n</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/i18n</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/i18n</url>
     </scm>
 
     <build>
