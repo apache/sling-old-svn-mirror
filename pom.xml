@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/event</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/event</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/event</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/event</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/event</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/event</url>
     </scm>
 
     <build>
