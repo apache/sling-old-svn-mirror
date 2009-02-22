@@ -88,7 +88,7 @@ class DefaultErrorHandler implements ErrorHandler {
                 buf.append(details[i].getErrorMessage());
             }
         }
-        buf.append("\n\nStacktrace:");
+        //buf.append("\n\nStacktrace:");
         throw new JasperException(
                 Localizer.getMessage("jsp.error.unable.compile") + ": " + buf);
     }

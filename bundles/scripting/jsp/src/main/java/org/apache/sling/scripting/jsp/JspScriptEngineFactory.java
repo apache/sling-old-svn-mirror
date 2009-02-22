@@ -43,6 +43,7 @@ import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
+import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -354,15 +355,14 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                     // cause in our new ScriptException
                     if (e.getCause() != null) {
                         // SlingServletException always wraps ServletExceptions
-                        ServletException se = (ServletException) e.getCause();
-                        if (se.getRootCause() != null) {
-                            // the ScriptException unfortunately does not accept a Throwable as cause,
-                            // but only a Exception, so we have to wrap it with a dummy Exception in Throwable cases
-                            if (se.getRootCause() instanceof Exception) {
-                                throw new BetterScriptException(se.getRootCause().getMessage(), (Exception) se.getRootCause());
-                            } else {
-                                throw new BetterScriptException(se.getRootCause().getMessage(), new Exception("Wrapping Throwable: " + se.getRootCause().toString(), se.getRootCause()));
-                            }
+                        Throwable rootCause = TagUtil.getRootCause((ServletException) e.getCause());
+                        // the ScriptException unfortunately does not accept a Throwable as cause,
+                        // but only a Exception, so we have to wrap it with a dummy Exception in Throwable cases
+                        if (rootCause instanceof Exception) {
+                            throw new BetterScriptException(rootCause.toString(), (Exception) rootCause);
+                        } else {
+                            throw new BetterScriptException(rootCause.toString(),
+                                    new Exception("Wrapping Throwable: " + rootCause.toString(), rootCause));
                         }
                     }
                     
