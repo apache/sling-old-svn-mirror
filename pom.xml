@@ -35,9 +35,9 @@
     <description>Support for scripting Java</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/java</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/java</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/java</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/java</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/java</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/scripting/java</url>
     </scm>
 
     <build>
