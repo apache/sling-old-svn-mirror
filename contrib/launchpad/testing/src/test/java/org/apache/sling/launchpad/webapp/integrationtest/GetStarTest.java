@@ -24,18 +24,6 @@ import java.io.IOException;
 public class GetStarTest extends RenderingTestBase {
     private final String random = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
 
-    public void testGetStarHtml() throws IOException {
-        getContent(HTTP_BASE_URL + "/*.html", CONTENT_TYPE_HTML);
-        getContent(HTTP_BASE_URL + "/" + random + "/*.html", CONTENT_TYPE_HTML);
-        getContent(HTTP_BASE_URL + "/" + random + "/" + random + "/*.html", CONTENT_TYPE_HTML);
-        getContent(HTTP_BASE_URL + "/" + random + "/*.someselector.html", CONTENT_TYPE_HTML);
-    }
-
-    public void testGetStarJson() throws IOException {
-        getContent(HTTP_BASE_URL + "/*.json", CONTENT_TYPE_JSON);
-        getContent(HTTP_BASE_URL + "/" + random + "/*.json", CONTENT_TYPE_JSON);
-        getContent(HTTP_BASE_URL + "/" + random + "/*.12.json", CONTENT_TYPE_JSON);
-    }
 
     public void testGetStarWithScript() throws IOException {
         final String scriptPath = "/apps/" + random;
