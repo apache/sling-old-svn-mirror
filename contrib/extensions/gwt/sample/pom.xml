@@ -42,9 +42,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/gwt/sample</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/gwt/sample</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/gwt/sample</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/gwt/sample</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/gwt/sample</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/extensions/gwt/sample</url>
     </scm>
 
     <build>

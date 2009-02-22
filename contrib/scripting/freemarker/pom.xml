@@ -35,9 +35,9 @@
     <description>Support for Freemarker scripting</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/freemarker</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/freemarker</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/freemarker</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/freemarker</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/freemarker</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/scripting/freemarker</url>
     </scm>
 
     <build>

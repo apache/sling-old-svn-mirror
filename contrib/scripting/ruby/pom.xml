@@ -36,13 +36,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/ruby
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/ruby
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/ruby
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/ruby
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/ruby
+            http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/scripting/ruby
         </url>
     </scm>
 

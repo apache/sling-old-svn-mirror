@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/classloader</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/classloader</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/classloader</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/classloader</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/classloader</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/classloader</url>
     </scm>
 
     <build>

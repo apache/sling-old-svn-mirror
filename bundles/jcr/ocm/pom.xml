@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/ocm</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/jcr/ocm</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/jcr/ocm</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/ocm</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/ocm</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/ocm</url>
     </scm>
 
     <build>

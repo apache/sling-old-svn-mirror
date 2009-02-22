@@ -41,13 +41,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/osgi/obr
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/osgi/obr
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/osgi/obr
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/osgi/obr
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/osgi/obr
+            http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/osgi/obr
         </url>
     </scm>
 

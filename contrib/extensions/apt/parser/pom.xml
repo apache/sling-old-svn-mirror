@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/apt/parser</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/apt/parser</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/apt/parser</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/apt/parser</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/apt/parser</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/extensions/apt/parser</url>
     </scm>
 
     <build>

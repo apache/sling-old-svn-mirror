@@ -36,13 +36,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/python
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/python
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/scripting/python
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/scripting/python
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/scripting/python
+            http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/scripting/python
         </url>
     </scm>
 

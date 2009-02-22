@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/threads</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/threads</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/commons/threads</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/threads</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/threads</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/commons/threads</url>
     </scm>
 
     <build>

@@ -38,13 +38,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/commons/testing
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/testing
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/commons/testing
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/testing
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/commons/testing
+            http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/commons/testing
         </url>
     </scm>
 

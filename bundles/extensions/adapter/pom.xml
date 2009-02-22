@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/adapter</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/extensions/adapter</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/extensions/adapter</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/adapter</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/adapter</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/adapter</url>
     </scm>
 
     <build>
