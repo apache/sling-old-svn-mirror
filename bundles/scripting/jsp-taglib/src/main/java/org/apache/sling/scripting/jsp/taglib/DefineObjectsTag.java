@@ -16,10 +16,13 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import java.util.Map;
+
 import javax.jcr.Node;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 
@@ -68,6 +71,18 @@ public class DefineObjectsTag extends TagSupport {
     public static final String DEFAULT_SLING_NAME = "sling";
 
     /**
+     * Default name for the scripting variable referencing the properties
+     * map (value is "properties").
+     */
+    public static final String DEFAULT_PROPERTIES_NAME = "properties";
+
+    /**
+     * Default name for the properties class information.
+     * (value is "true").
+     */
+    public static final Boolean DEFAULT_PROPERTIES_IS_VALUE_MAP = true;
+
+    /**
      * Default name for the scripting variable referencing the current
      * <code>ResourceResolver</code> (value is "resourceResolver").
      */
@@ -86,6 +101,10 @@ public class DefineObjectsTag extends TagSupport {
     private String logName = DEFAULT_LOG_NAME;
 
     private String resourceResolverName = DEFAULT_RESOURCE_RESOLVER_NAME;
+
+    private String propertiesName = DEFAULT_PROPERTIES_NAME;
+
+    private boolean propertiesIsValueMap = DEFAULT_PROPERTIES_IS_VALUE_MAP;
 
     /**
      * Default constructor.
@@ -121,6 +140,18 @@ public class DefineObjectsTag extends TagSupport {
         if (node != null) {
             pageContext.setAttribute(nodeName, node);
         }
+        if ( this.propertiesIsValueMap ) {
+            final ValueMap vm = resource.adaptTo(ValueMap.class);
+            if ( vm != null ) {
+                pageContext.setAttribute(propertiesName, vm);
+            }
+        } else {
+            @SuppressWarnings("unchecked")
+            final Map map = resource.adaptTo(Map.class);
+            if ( map != null ) {
+                pageContext.setAttribute(propertiesName, map);
+            }
+        }
 
         return EVAL_PAGE;
     }
@@ -153,5 +184,13 @@ public class DefineObjectsTag extends TagSupport {
 
     public void setResourceResolverName(String name) {
         this.resourceResolverName = name;
+    }
+
+    public void setPropertiesName(String name) {
+        this.propertiesName = name;
+    }
+
+    public void setPropertiesIsValueMap(boolean value) {
+        this.propertiesIsValueMap = value;
     }
 }
