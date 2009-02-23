@@ -179,9 +179,12 @@ public class AccessControlUtil {
      * Same as {@link #addEntry(AccessControlList, Principal, Privilege[], boolean, Map)} using
      * some implementation specific restrictions.
      */
-    public static boolean addEntry(AccessControlList acl, Principal principal, Privilege privileges[], boolean isAllow)
+    @SuppressWarnings("unchecked")
+	public static boolean addEntry(AccessControlList acl, Principal principal, Privilege privileges[], boolean isAllow)
         							throws AccessControlException, RepositoryException {
-		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, principal, privileges, isAllow);
+    	Object[] args = new Object[] {principal, privileges, isAllow};
+    	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class};
+		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
     
     /**
@@ -196,7 +199,9 @@ public class AccessControlUtil {
     @SuppressWarnings("unchecked")
 	public static boolean addEntry(AccessControlList acl, Principal principal, Privilege privileges[], boolean isAllow, Map restrictions)
     															throws UnsupportedRepositoryOperationException, RepositoryException {
-		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, principal, privileges, isAllow, restrictions);
+    	Object[] args = new Object[] {principal, privileges, isAllow, restrictions};
+    	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class, Map.class};
+		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
 
     // ---------- internal -----------------------------------------------------
@@ -205,10 +210,13 @@ public class AccessControlUtil {
      * Use reflection to invoke a repository method.
      */
     @SuppressWarnings("unchecked")
-	private static <T> T safeInvokeRepoMethod(Object target, String methodName, Class<T> returnType, Object... args) 
+	private static <T> T safeInvokeRepoMethod(Object target, String methodName, Class<T> returnType, Object[] args, Class[] argsTypes) 
     													throws UnsupportedRepositoryOperationException, RepositoryException {
     	try {
-			Method m = target.getClass().getMethod(methodName);
+    		Method m = target.getClass().getMethod(methodName, argsTypes);
+    		if (!m.isAccessible()) {
+    			m.setAccessible(true);
+    		}
 			return (T) m.invoke(target, args);
     	} catch (InvocationTargetException ite) {
             // wraps the exception thrown by the method
@@ -233,7 +241,12 @@ public class AccessControlUtil {
             throw new RepositoryException(methodName, t);
         }
 	}
-	
+    
+    private static <T> T safeInvokeRepoMethod(Object target, String methodName, Class<T> returnType, Object... args) 
+																		throws UnsupportedRepositoryOperationException, RepositoryException {
+    	return safeInvokeRepoMethod(target, methodName, returnType, args, new Class[0]);
+    }
+    
     /**
      * Unwrap the jackrabbit session.
      */
