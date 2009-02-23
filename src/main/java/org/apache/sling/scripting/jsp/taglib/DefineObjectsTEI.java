@@ -18,6 +18,8 @@ package org.apache.sling.scripting.jsp.taglib;
 
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_LOG_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_NODE_NAME;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_PROPERTIES_IS_VALUE_MAP;
+import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_PROPERTIES_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_REQUEST_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_NAME;
 import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_RESOURCE_RESOLVER_NAME;
@@ -26,6 +28,7 @@ import static org.apache.sling.scripting.jsp.taglib.DefineObjectsTag.DEFAULT_SLI
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Node;
 import javax.servlet.jsp.tagext.TagData;
@@ -36,6 +39,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.slf4j.Logger;
 
@@ -87,6 +91,18 @@ public class DefineObjectsTEI extends TagExtraInfo {
      */
     public static final String ATTR_LOG_NAME = "logName";
 
+    /**
+     * The name of the tag attribute used to define the name of the properties map
+     * scripting variable (value is "propertiesName").
+     */
+    public static final String ATTR_PROPERTIES_NAME = "propertiesName";
+
+    /**
+     * The name of the tag attribute used to define the class of the properties
+     * scripting variable (value is "propertiesIsValueMap").
+     */
+    public static final String ATTR_PROPERTIES_IS_VALUE_MAP_NAME = "propertiesIsValueMap";
+
     private static final String SLING_REQUEST_CLASS = SlingHttpServletRequest.class.getName();
 
     private static final String SLING_RESPONSE_CLASS = SlingHttpServletResponse.class.getName();
@@ -128,6 +144,22 @@ public class DefineObjectsTEI extends TagExtraInfo {
 
         addVar(varInfos, data, ATTR_LOG_NAME,
                 DEFAULT_LOG_NAME, LOG_CLASS);
+
+        Boolean isValueMap = DEFAULT_PROPERTIES_IS_VALUE_MAP;
+        final Object isValueMapObj = data.getAttribute(ATTR_PROPERTIES_IS_VALUE_MAP_NAME);
+        if ( isValueMapObj instanceof Boolean ) {
+            isValueMap = (Boolean)isValueMapObj;
+        }
+
+        final String propertiesClassName;
+        if ( isValueMap ) {
+            propertiesClassName = ValueMap.class.getName();
+        } else {
+            propertiesClassName = Map.class.getName();
+        }
+        addVar(varInfos, data, ATTR_PROPERTIES_NAME,
+                DEFAULT_PROPERTIES_NAME,
+                propertiesClassName);
 
         return varInfos.toArray(new VariableInfo[varInfos.size()]);
 
