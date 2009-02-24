@@ -29,6 +29,7 @@ import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
@@ -57,7 +58,10 @@ public class AccessControlUtil {
     private static final String METHOD_JACKRABBIT_ACL_SIZE = "size";
     // the name of the JackrabbitAccessControlList method 
     private static final String METHOD_JACKRABBIT_ACL_ADD_ENTRY = "addEntry";
-    
+    // the name of the JackrabbitAccessControlEntry method 
+    private static final String METHOD_JACKRABBIT_ACE_IS_ALLOW = "isAllow";
+
+
 	
     // ---------- SessionImpl methods -----------------------------------------------------
     
@@ -203,7 +207,17 @@ public class AccessControlUtil {
     	Class[] types = new Class[] {Principal.class, Privilege[].class, boolean.class, Map.class};
 		return safeInvokeRepoMethod(acl, METHOD_JACKRABBIT_ACL_ADD_ENTRY, Boolean.class, args, types);
     }
-
+    
+    // ---------- AccessControlEntry methods -----------------------------------------------
+    
+    /**
+     * Returns true if the AccessControlEntry represents 'allowed' rights or false 
+     * it it represents 'denied' rights.
+     */
+    public static boolean isAllow(AccessControlEntry ace) throws RepositoryException {
+		return safeInvokeRepoMethod(ace, METHOD_JACKRABBIT_ACE_IS_ALLOW, Boolean.class);
+    }
+    
     // ---------- internal -----------------------------------------------------
     
     /**
