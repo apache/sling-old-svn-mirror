@@ -24,7 +24,6 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,6 +31,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.ManifestHeader;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -54,12 +54,15 @@ public class BundleResourceProvider implements ResourceProvider {
      */
     public BundleResourceProvider(Bundle bundle, String rootList) {
         this.bundle = new BundleResourceCache(bundle);
-
-        StringTokenizer pt = new StringTokenizer(rootList, ", \t\n\r\f");
         List<MappedPath> prefixList = new ArrayList<MappedPath>();
-        while (pt.hasMoreTokens()) {
-            String resourceRoot = pt.nextToken();
-            if (resourceRoot.length() > 0) {
+
+        final ManifestHeader header = ManifestHeader.parse(rootList);
+        for(final ManifestHeader.Entry entry : header.getEntries()) {
+            final String resourceRoot = entry.getValue();
+            final String pathDirective = entry.getDirectiveValue("path");
+            if ( pathDirective != null ) {
+                prefixList.add(new MappedPath(resourceRoot, pathDirective));
+            } else {
                 prefixList.add(MappedPath.create(resourceRoot));
             }
         }
@@ -69,7 +72,7 @@ public class BundleResourceProvider implements ResourceProvider {
     void registerService(BundleContext context) {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION,
-            "Provider of Bundle based Resources");
+            "Provider of bundle based resources");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(ROOTS, getRoots());
 
