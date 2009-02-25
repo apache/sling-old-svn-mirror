@@ -57,6 +57,7 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
+          <module>commons/compiler</module>
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
           <module>extensions/dojo</module>
