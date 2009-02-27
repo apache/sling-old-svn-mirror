@@ -60,6 +60,7 @@
           <module>espblog</module>
           <module>javashell</module>
           <module>path-based-rtp</module>
+          <module>post-servlet-extensions</module>
           <module>simple-demo</module>
           <module>webloader/service</module>
           <module>webloader/ui</module>
