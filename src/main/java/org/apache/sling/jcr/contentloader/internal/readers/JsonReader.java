@@ -68,10 +68,25 @@ public class JsonReader implements ContentReader {
     };
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
      */
-    public void parse(InputStream ins, ContentCreator contentCreator)
+    public void parse(java.net.URL url, ContentCreator contentCreator)
     throws IOException, RepositoryException {
+        InputStream ins = null;
+        try {
+            ins = url.openStream();
+            parse(ins, contentCreator);
+        } finally {
+            if (ins != null) {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+    }
+
+    public void parse(InputStream ins, ContentCreator contentCreator) throws IOException, RepositoryException {
         try {
             String jsonString = toString(ins).trim();
             if (!jsonString.startsWith("{")) {
@@ -80,7 +95,6 @@ public class JsonReader implements ContentReader {
 
             JSONObject json = new JSONObject(jsonString);
             this.createNode(null, json, contentCreator);
-
         } catch (JSONException je) {
             throw (IOException) new IOException(je.getMessage()).initCause(je);
         }

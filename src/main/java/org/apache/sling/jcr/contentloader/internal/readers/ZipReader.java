@@ -70,34 +70,45 @@ public class ZipReader implements ContentReader {
     }
 
     /**
-     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.io.InputStream, org.apache.sling.jcr.contentloader.internal.ContentCreator)
+     * @see org.apache.sling.jcr.contentloader.internal.ContentReader#parse(java.net.URL, org.apache.sling.jcr.contentloader.internal.ContentCreator)
      */
-    public void parse(InputStream ins, ContentCreator creator)
+    public void parse(java.net.URL url, ContentCreator creator)
     throws IOException, RepositoryException {
-        creator.createNode(null, NT_FOLDER, null);
-        final ZipInputStream zis = new ZipInputStream(ins);
-        ZipEntry entry;
-        do {
-            entry = zis.getNextEntry();
-            if ( entry != null ) {
-                if ( !entry.isDirectory() ) {
-                    String name = entry.getName();
-                    int pos = name.lastIndexOf('/');
-                    if ( pos != -1 ) {
-                        creator.switchCurrentNode(name.substring(0, pos), NT_FOLDER);
-                    }
-                    creator.createFileAndResourceNode(name, new CloseShieldInputStream(zis), null, entry.getTime());
-                    creator.finishNode();
-                    creator.finishNode();
-                    if ( pos != -1 ) {
+        InputStream ins = null;
+        try {
+            ins = url.openStream();
+            creator.createNode(null, NT_FOLDER, null);
+            final ZipInputStream zis = new ZipInputStream(ins);
+            ZipEntry entry;
+            do {
+                entry = zis.getNextEntry();
+                if ( entry != null ) {
+                    if ( !entry.isDirectory() ) {
+                        String name = entry.getName();
+                        int pos = name.lastIndexOf('/');
+                        if ( pos != -1 ) {
+                            creator.switchCurrentNode(name.substring(0, pos), NT_FOLDER);
+                        }
+                        creator.createFileAndResourceNode(name, new CloseShieldInputStream(zis), null, entry.getTime());
                         creator.finishNode();
+                        creator.finishNode();
+                        if ( pos != -1 ) {
+                            creator.finishNode();
+                        }
                     }
+                    zis.closeEntry();
                 }
-                zis.closeEntry();
-            }
 
-        } while ( entry != null );
-        creator.finishNode();
+            } while ( entry != null );
+            creator.finishNode();
+        } finally {
+            if (ins != null) {
+                try {
+                    ins.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
     }
 
 }
