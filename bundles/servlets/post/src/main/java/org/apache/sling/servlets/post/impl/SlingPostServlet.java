@@ -67,6 +67,10 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="postProcessor"
  *                interface="org.apache.sling.servlets.post.SlingPostProcessor"
  *                cardinality="0..n" policy="dynamic"
+ * @scr.reference name="postOperation" 
+ * 					interface="org.apache.sling.servlets.post.SlingPostOperation" 
+ * 					cardinality="0..n" 
+ * 					policy="dynamic"
  */
 public class SlingPostServlet extends SlingAllMethodsServlet {
 
@@ -109,10 +113,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     private SlingPostOperation modifyOperation;
 
+    private final List<ServiceReference> delayedPostOperations = new ArrayList<ServiceReference>();
+
     private final Map<String, SlingPostOperation> postOperations = new HashMap<String, SlingPostOperation>();
 
     private final List<ServiceReference> delayedPostProcessors = new ArrayList<ServiceReference>();
-
+    
     private final List<ServiceReference> postProcessors = new ArrayList<ServiceReference>();
 
     private SlingPostProcessor[] cachedPostProcessors = new SlingPostProcessor[0];
@@ -285,6 +291,12 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             }
             this.delayedPostProcessors.clear();
         }
+        synchronized ( this.delayedPostOperations ) {
+            for(final ServiceReference ref : this.delayedPostOperations) {
+                this.registerPostOperation(ref);
+            }
+            this.delayedPostOperations.clear();
+        }
         Dictionary<?, ?> props = context.getProperties();
 
         String[] nameHints = OsgiUtil.toStringArray(props.get(PROP_NODE_NAME_HINT_PROPERTIES));
@@ -303,6 +315,33 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         nodeNameGenerator = null;
         dateParser = null;
         this.componentContext = null;
+    }
+    
+    protected void bindPostOperation(ServiceReference ref) {
+    	synchronized ( this.delayedPostOperations ) {
+			if (this.componentContext == null) {
+				this.delayedPostOperations.add(ref);
+			} else {
+				this.registerPostOperation(ref);
+			}
+		}
+    }
+    
+    protected void registerPostOperation(ServiceReference ref) {
+    	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
+		SlingPostOperation operation = (SlingPostOperation) this.componentContext.locateService("postOperation", ref);
+    	synchronized (this.postOperations) {
+			this.postOperations.put(operationName, operation);
+    	}
+    }
+    
+    protected void unbindPostOperation(ServiceReference ref) {
+    	synchronized ( this.delayedPostOperations ) {
+        	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
+        	synchronized (this.postOperations) {
+        		this.postOperations.remove(operationName);
+        	}
+    	}
     }
 
     protected void bindPostProcessor(ServiceReference ref) {
