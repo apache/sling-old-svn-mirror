@@ -482,8 +482,7 @@ public class Loader {
             }
 
             this.contentCreator.prepareParsing(parent, toPlainName(name));
-            ins = resourceUrl.openStream();
-            nodeReader.parse(ins, this.contentCreator);
+            nodeReader.parse(resourceUrl, this.contentCreator);
 
             return this.contentCreator.getRootNode();
         } catch (RepositoryException re) {
@@ -690,16 +689,16 @@ public class Loader {
             // the xml might not be System or Document View export, fall back
             // to old-style XML reading
             log.info(
-                "importSystemView: XML {} does not seem to be system view export, trying old style",
-                nodeXML);
+                "importSystemView: XML {} does not seem to be system view export, trying old style; cause: {}",
+                nodeXML, isde.toString());
             return null;
 
         } catch (RepositoryException re) {
 
             // any other repository related issue...
             log.info(
-                "importSystemView: Repository issue loading XML {}, trying old style",
-                nodeXML);
+                "importSystemView: Repository issue loading XML {}, trying old style; cause: {}",
+                nodeXML, re.toString());
             return null;
 
         } finally {
@@ -760,25 +759,15 @@ public class Loader {
             return null;
         }
 
-        InputStream ins = null;
         try {
-
-            ins = descriptor.rootNodeDescriptor.openStream();
             this.contentCreator.prepareParsing(session.getRootNode(), null);
-            descriptor.nodeReader.parse(ins, this.contentCreator);
+            descriptor.nodeReader.parse(descriptor.rootNodeDescriptor, this.contentCreator);
 
             return descriptor.rootNodeDescriptor;
         } catch (RepositoryException re) {
             throw re;
         } catch (Throwable t) {
             throw new RepositoryException(t.getMessage(), t);
-        } finally {
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (IOException ignore) {
-                }
-            }
         }
 
     }
