@@ -327,6 +327,12 @@
             <version>2.0.3-incubator-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>1.6.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -420,7 +426,7 @@
                                 </goals>
                                 <configuration>
                                     <includeArtifactIds>
-                                        org.apache.sling.api,org.apache.sling.engine,org.apache.sling.httpauth,org.apache.sling.adapter,org.apache.sling.servlets.resolver,org.apache.sling.servlets.get,org.apache.sling.servlets.post,org.apache.sling.commons.json,org.apache.sling.jcr.contentloader,org.apache.sling.jcr.resource,org.apache.sling.jcr.ocm,org.apache.sling.jcr.classloader,org.apache.sling.bundleresource.impl,org.apache.sling.launchpad.content,org.apache.sling.scripting.api,org.apache.sling.scripting.core,org.apache.sling.scripting.javascript,org.apache.sling.scripting.jsp,org.apache.sling.scripting.jsp.taglib
+                                        org.apache.sling.api,org.apache.sling.engine,org.apache.sling.httpauth,org.apache.sling.adapter,org.apache.sling.servlets.resolver,org.apache.sling.servlets.get,org.apache.sling.servlets.post,org.apache.sling.commons.json,org.apache.sling.jcr.contentloader,org.apache.sling.jcr.resource,org.apache.sling.jcr.ocm,org.apache.sling.jcr.classloader,org.apache.sling.bundleresource.impl,org.apache.sling.launchpad.content,org.apache.sling.scripting.api,org.apache.sling.scripting.core,org.apache.sling.scripting.javascript,org.apache.sling.scripting.jsp,org.apache.sling.scripting.jsp.taglib,groovy-all
                                     </includeArtifactIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>
