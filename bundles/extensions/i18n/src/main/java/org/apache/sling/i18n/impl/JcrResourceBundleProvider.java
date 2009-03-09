@@ -436,14 +436,6 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
             return Locale.getDefault();
         }
 
-        // check whether we have an exact match locale
-        Locale[] available = Locale.getAvailableLocales();
-        for (int i = 0; i < available.length; i++) {
-            if (available[i].toString().equals(localeString)) {
-                return available[i];
-            }
-        }
-
         // check language and country
         String[] parts = localeString.split("_");
         if (parts.length == 0) {
