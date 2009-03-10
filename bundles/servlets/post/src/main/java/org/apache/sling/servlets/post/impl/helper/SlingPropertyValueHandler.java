@@ -194,13 +194,19 @@ public class SlingPropertyValueHandler {
                 // ignore
             }
         }
+        final String[] values = prop.getStringValues();
+        if ( type == PropertyType.UNDEFINED && values != null && values.length > 0 ) {
+            if ( parent.hasProperty(prop.getName()) ) {
+                type = parent.getProperty(prop.getName()).getType();
+            }
+        }
 
-        String[] values = prop.getStringValues();
         if (values == null) {
             // remove property
-            changes.add(Modification.onDeleted(
-                removePropertyIfExists(parent, prop.getName())
-            ));
+            final String removePath = removePropertyIfExists(parent, prop.getName());
+            if ( removePath != null ) {
+                changes.add(Modification.onDeleted(removePath));
+            }
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
