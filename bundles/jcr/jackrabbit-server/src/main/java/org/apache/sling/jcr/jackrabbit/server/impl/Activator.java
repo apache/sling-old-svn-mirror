@@ -23,7 +23,6 @@ import java.net.URL;
 import java.sql.DriverManager;
 import java.util.Hashtable;
 
-import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 import org.osgi.framework.BundleActivator;
@@ -316,7 +315,7 @@ public class Activator implements BundleActivator, ServiceListener {
 				configFileUrl = new URL(repoConfigFileUrl);
 			} catch (MalformedURLException e) {
 				// this not an url, trying with "file:"
-				configFileUrl = new URL("file://" + repoConfigFileUrl);
+				configFileUrl = new URL("file:///" + repoConfigFileUrl);
 			}
     		
     		// local support only
