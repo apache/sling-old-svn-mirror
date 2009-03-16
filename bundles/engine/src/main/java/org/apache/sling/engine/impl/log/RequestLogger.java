@@ -90,10 +90,10 @@ public class RequestLogger {
 
     /**
      * The log format for the access log which is exactly the NCSA
-     * extended/combined log format (value is "%h %l %u %t \"%r\" %>s %b
+     * extended/combined log format (value is "%a %l %u %t \"%r\" %>s %b
      * \"%{Referer}i\" \"%{User-Agent}i\"").
      */
-    private static final String ACCESS_LOG_FORMAT = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
+    private static final String ACCESS_LOG_FORMAT = "%a %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
 
     /**
      * The list of {@link RequestLoggerService} called when the request enters
