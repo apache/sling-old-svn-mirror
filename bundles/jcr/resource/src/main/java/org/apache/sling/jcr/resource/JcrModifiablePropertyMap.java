@@ -105,7 +105,7 @@ public class JcrModifiablePropertyMap
      */
     public Object remove(Object key) {
         readFully();
-        final Object oldValue = this.get(key);
+        final Object oldValue = this.cache.remove(key);
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
