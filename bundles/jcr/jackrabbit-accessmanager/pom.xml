@@ -1,0 +1,119 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.apache.sling</groupId>
+		<artifactId>sling</artifactId>
+		<version>5-incubator-SNAPSHOT</version>
+		<relativePath>../../../parent/pom.xml</relativePath>
+	</parent>
+
+	<artifactId>org.apache.sling.jcr.jackrabbit.accessmanager</artifactId>
+	<packaging>bundle</packaging>
+	<version>2.0.0-incubator-SNAPSHOT</version>
+	<name>Apache Sling Jackrabbit JSR-283 Access Control Manager Support</name>
+	<description>
+		Provides SlingPostOperations for the Jackrabbit JSR-283 Access Control Manager.
+	</description>
+
+	<scm>
+		<connection>
+			scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+		</connection>
+		<developerConnection>
+			scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+		</developerConnection>
+		<url>
+			http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+		</url>
+	</scm>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-scr-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Private-Package>
+						</Private-Package>
+						<Export-Package>
+                     org.apache.sling.jcr.jackrabbit.accessmanager;version=${pom.version},
+                     org.apache.sling.jcr.jackrabbit.accessmanager.post;version=${pom.version}                   
+						</Export-Package>
+						<Sling-Initial-Content></Sling-Initial-Content>
+						<Sling-Nodetypes></Sling-Nodetypes>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<!-- No javadocs -->
+					<excludePackageNames>
+					</excludePackageNames>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+
+	<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+		</dependency>
+		
+      <dependency>
+         <groupId>org.apache.sling</groupId>
+         <artifactId>org.apache.sling.commons.json</artifactId>
+         <version>2.0.3-incubator-SNAPSHOT</version>
+      </dependency>
+		
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.api</artifactId>
+			<version>2.0.3-incubator-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.servlets.post</artifactId>
+			<version>2.0.3-incubator-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.jcr.jackrabbit.api</artifactId>
+			<version>2.0.3-incubator-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.jcr.base</artifactId>
+			<version>2.0.3-incubator-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>jackrabbit-api</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.osgi.core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+		</dependency>
+	</dependencies>
+</project>
