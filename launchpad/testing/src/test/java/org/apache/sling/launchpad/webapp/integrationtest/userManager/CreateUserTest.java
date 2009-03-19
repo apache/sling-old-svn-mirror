@@ -39,17 +39,15 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	protected void tearDown() throws Exception {
 		if (testUserId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId;
+			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			postParams.add(new NameValuePair(":operation", "deleteAuthorizable"));
 			assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 		super.tearDown();
 	}
 
 	/*
-		<form action="/system/userManager/createUser.html" method="POST">
-			<input type="hidden" name=":operation" value="creteUser" />
+		<form action="/system/userManager/user.create.html" method="POST">
 		   <div>Name: <input type="text" name=":name" value="testUser" /></div>
 		   <div>Password: <input type="text" name="pwd" value="testUser" /></div>
 		   <div>Password Confirm: <input type="text" name="pwdConfirm" value="testUser" /></div>
@@ -57,11 +55,10 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		</form>
 	 */
 	public void testCreateUser() throws IOException, JSONException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
         
 		testUserId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
@@ -77,33 +74,29 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		assertFalse(jsonObj.has(":name"));
 		assertFalse(jsonObj.has("pwd"));
 		assertFalse(jsonObj.has("pwdConfirm"));
-		assertFalse(jsonObj.has(":operation"));
 	}
 
 	public void testCreateUserMissingUserId() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	public void testCreateUserMissingPwd() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
         String userId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		postParams.add(new NameValuePair(":name", userId));
 		assertPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	public void testCreateUserWrongConfirmPwd() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
         String userId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		postParams.add(new NameValuePair(":name", userId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd2"));
@@ -111,11 +104,10 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	}
 
 	public void testCreateUserUserAlreadyExists() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
 		testUserId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
@@ -126,8 +118,7 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	}
 	
 	/*
-	<form action="/system/userManager/createUser.html" method="POST">
-	    <input type="hidden" name=":operation" value="creteUser" />
+	<form action="/system/userManager/user.create.html" method="POST">
 	   <div>Name: <input type="text" name=":name" value="testUser" /></div>
 	   <div>Password: <input type="text" name="pwd" value="testUser" /></div>
 	   <div>Password Confirm: <input type="text" name="pwdConfirm" value="testUser" /></div>
@@ -137,11 +128,10 @@ public class CreateUserTest extends AbstractUserManagerTest {
 	</form>
 	*/
 	public void testCreateUserWithExtraProperties() throws IOException, JSONException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
 		testUserId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
@@ -161,6 +151,5 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		assertFalse(jsonObj.has(":name"));
 		assertFalse(jsonObj.has("pwd"));
 		assertFalse(jsonObj.has("pwdConfirm"));
-		assertFalse(jsonObj.has(":operation"));
 	}		
 }

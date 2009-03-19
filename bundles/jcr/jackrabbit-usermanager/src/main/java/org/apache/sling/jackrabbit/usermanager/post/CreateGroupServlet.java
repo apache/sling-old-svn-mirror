@@ -35,33 +35,36 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * Sling Post Operation implementation for creating a group in the jackrabbit
+ * Sling Post Servlet implementation for creating a group in the jackrabbit
  * UserManager.
- *
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.servlets.post.SlingPostOperation"
- * @scr.property name="sling.post.operation" value="createGroup"
+ * 
+ * @scr.component immediate="true" 
+ * @scr.service interface="javax.servlet.Servlet"
+ * @scr.property name="sling.servlet.resourceTypes" value="sling/groups"
+ * @scr.property name="sling.servlet.methods" value="POST" 
+ * @scr.property name="sling.servlet.selectors" value="create" 
  */
-public class CreateGroupOperation extends AbstractAuthorizableOperation {
+public class CreateGroupServlet extends AbstractGroupPostServlet {
+	private static final long serialVersionUID = -1084915263933901466L;
 
 	/* (non-Javadoc)
-	 * @see org.apache.sling.servlets.post.AbstractSlingPostOperation#doRun(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
 	 */
 	@Override
-	protected void doRun(SlingHttpServletRequest request,
-			HtmlResponse response, List<Modification> changes)
-			throws RepositoryException {
-		Session session = request.getResourceResolver().adaptTo(Session.class);
-		if (session == null) {
-			throw new RepositoryException("JCR Session not found");
-		}
+	protected void handleOperation(SlingHttpServletRequest request,
+			HtmlResponse response, List<Modification> changes) throws RepositoryException {
 		
 		//check that the submitted parameter values have valid values.
 		final String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
 		if (principalName == null) {
 			throw new RepositoryException("Group name was not submitted");
 		}
-		
+
+		Session session = request.getResourceResolver().adaptTo(Session.class);
+		if (session == null) {
+			throw new RepositoryException("JCR Session not found");
+		}
+
 		try {
 			UserManager userManager = AccessControlUtil.getUserManager(session);
 			Authorizable authorizable = userManager.getAuthorizable(principalName);

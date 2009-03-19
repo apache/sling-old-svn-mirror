@@ -40,9 +40,8 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 	protected void tearDown() throws Exception {
 		if (testUserId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId;
+			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			postParams.add(new NameValuePair(":operation", "updateAuthorizable"));
 			assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 
@@ -52,10 +51,9 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 	public void testUpdateUser() throws IOException, JSONException {
 		testUserId = createTestUser();
 		
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId;
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".update.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "updateAuthorizable"));
 		postParams.add(new NameValuePair("displayName", "My Updated Test User"));
 		postParams.add(new NameValuePair("url", "http://www.apache.org/updated"));
 		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
@@ -69,16 +67,14 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 		JSONObject jsonObj = new JSONObject(json);
 		assertEquals("My Updated Test User", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org/updated", jsonObj.getString("url"));
-		assertFalse(jsonObj.has(":operation"));
 	}
 	
 	public void testChangeUserPassword() throws IOException {
 		testUserId = createTestUser();
 		
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId;
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "changePassword"));
 		postParams.add(new NameValuePair("oldPwd", "testPwd"));
 		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
 		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
@@ -90,10 +86,9 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 	public void testChangeUserPasswordWrongOldPwd() throws IOException {
 		testUserId = createTestUser();
 		
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId;
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "changePassword"));
 		postParams.add(new NameValuePair("oldPwd", "wrongTestPwd"));
 		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
 		postParams.add(new NameValuePair("newPwdConfirm", "testNewPwd"));
@@ -106,10 +101,9 @@ public class UpdateUserTest extends AbstractUserManagerTest {
 	public void testChangeUserPasswordWrongConfirmPwd() throws IOException {
 		testUserId = createTestUser();
 		
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId;
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".changePassword.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "changePassword"));
 		postParams.add(new NameValuePair("oldPwd", "testPwd"));
 		postParams.add(new NameValuePair("newPwd", "testNewPwd"));
 		postParams.add(new NameValuePair("newPwdConfirm", "wrongTestNewPwd"));
