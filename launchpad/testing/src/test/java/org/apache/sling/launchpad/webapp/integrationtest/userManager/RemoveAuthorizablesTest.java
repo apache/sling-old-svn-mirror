@@ -39,9 +39,8 @@ public class RemoveAuthorizablesTest extends AbstractUserManagerTest {
 		String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + userId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
 
-		String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + userId;
+		String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + userId + ".delete.html";
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "deleteAuthorizable"));
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		getUrl = HTTP_BASE_URL + "/system/userManager/user/" + userId + ".json";
@@ -56,9 +55,8 @@ public class RemoveAuthorizablesTest extends AbstractUserManagerTest {
 		String getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
 
-		String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId;
+		String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".delete.html";
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "deleteAuthorizable"));
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
@@ -77,9 +75,8 @@ public class RemoveAuthorizablesTest extends AbstractUserManagerTest {
 		getUrl = HTTP_BASE_URL + "/system/userManager/group/" + groupId + ".json";
 		assertAuthenticatedHttpStatus(creds, getUrl, HttpServletResponse.SC_OK, null); //make sure the profile request returns some data
 		
-		String postUrl = HTTP_BASE_URL + "/system/userManager";
+		String postUrl = HTTP_BASE_URL + "/system/userManager.delete.html";
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "deleteAuthorizable"));
 		postParams.add(new NameValuePair(":applyTo", "group/" + groupId));
 		postParams.add(new NameValuePair(":applyTo", "user/" + userId));
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);

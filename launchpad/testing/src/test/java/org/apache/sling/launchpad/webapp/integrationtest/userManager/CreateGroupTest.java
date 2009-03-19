@@ -39,9 +39,8 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	protected void tearDown() throws Exception {
 		if (testGroupId != null) {
 			//remove the test group if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId;
+			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			postParams.add(new NameValuePair(":operation", "deleteAuthorizable"));
 			assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 
@@ -49,11 +48,10 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	}
 
 	public void testCreateGroup() throws IOException, JSONException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		testGroupId = "testGroup" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createGroup"));
 		postParams.add(new NameValuePair(":name", testGroupId));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
@@ -67,19 +65,17 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	}
 
 	public void testCreateGroupMissingGroupId() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createGroup"));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
 	}
 
 	public void testCreateGroupAlreadyExists() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		testGroupId = "testGroup" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createGroup"));
 		postParams.add(new NameValuePair(":name", testGroupId));
 		assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
@@ -88,11 +84,10 @@ public class CreateGroupTest extends AbstractUserManagerTest {
 	}
 	
 	public void testCreateGroupWithExtraProperties() throws IOException, JSONException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		testGroupId = "testGroup" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createGroup"));
 		postParams.add(new NameValuePair(":name", testGroupId));
 		postParams.add(new NameValuePair("displayName", "My Test Group"));
 		postParams.add(new NameValuePair("url", "http://www.apache.org"));

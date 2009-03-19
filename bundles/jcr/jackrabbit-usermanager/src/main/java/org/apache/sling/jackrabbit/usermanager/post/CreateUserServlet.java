@@ -35,17 +35,27 @@ import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Sling Post Operation implementation for creating a user in the jackrabbit
+ * Sling Post Servlet implementation for creating a user in the jackrabbit
  * UserManager.
  * 
  * @scr.component immediate="true" label="%createUser.post.operation.name"
  *                description="%createUser.post.operation.description"
- * @scr.service interface="org.apache.sling.servlets.post.SlingPostOperation"
- * @scr.property name="sling.post.operation" value="createUser"
+ * @scr.service interface="javax.servlet.Servlet"
+ * @scr.property name="sling.servlet.resourceTypes" value="sling/users"
+ * @scr.property name="sling.servlet.methods" value="POST" 
+ * @scr.property name="sling.servlet.selectors" value="create" 
  */
-public class CreateUserOperation extends AbstractAuthorizableOperation {
+public class CreateUserServlet extends AbstractUserPostServlet {
+	private static final long serialVersionUID = 6871481922737658675L;
+
+	/**
+     * default log
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** @scr.property label="%self.registration.enabled.name" 
      * 					description="%self.registration.enabled.description" 
@@ -87,7 +97,6 @@ public class CreateUserOperation extends AbstractAuthorizableOperation {
             }
         }
     }
-    
 
     // ---------- SCR integration ---------------------------------------------
 
@@ -107,15 +116,15 @@ public class CreateUserOperation extends AbstractAuthorizableOperation {
         	selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
         }
     }
+
     
+
 	/* (non-Javadoc)
-	 * @see org.apache.sling.servlets.post.AbstractSlingPostOperation#doRun(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
 	 */
 	@Override
-	protected void doRun(SlingHttpServletRequest request,
-			HtmlResponse response, List<Modification> changes)
-			throws RepositoryException {
-
+	protected void handleOperation(SlingHttpServletRequest request,
+			HtmlResponse response, List<Modification> changes) throws RepositoryException {
 		//make sure user self-registration is enabled
 		if (!selfRegistrationEnabled) {
 			throw new RepositoryException("Sorry, registration of new users is not currently enabled.  Please try again later.");
@@ -155,6 +164,7 @@ public class CreateUserOperation extends AbstractAuthorizableOperation {
 
 				User user = userManager.createUser(principalName, digestPassword(pwd));
 				String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX + user.getID();
+				
 				response.setPath(userPath);
 				response.setLocation(externalizePath(request, userPath));
 				response.setParentLocation(externalizePath(request, AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));

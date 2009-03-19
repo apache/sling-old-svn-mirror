@@ -25,26 +25,30 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating a user or group in the 
+ * Sling Post Operation implementation for updating a group in the 
  * jackrabbit UserManager.
  * 
  * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.servlets.post.SlingPostOperation"
- * @scr.property name="sling.post.operation" value="updateAuthorizable"
+ * @scr.service interface="javax.servlet.Servlet"
+ * @scr.property name="sling.servlet.resourceTypes" values="sling/group"
+ * @scr.property name="sling.servlet.methods" value="POST" 
+ * @scr.property name="sling.servlet.selectors" value="update" 
  */
-public class UpdateAuthorizableOperation extends AbstractAuthorizableOperation {
+public class UpdateGroupServlet extends AbstractGroupPostServlet {
+	private static final long serialVersionUID = -8292054361992488797L;
 
 	/* (non-Javadoc)
-	 * @see org.apache.sling.servlets.post.AbstractSlingPostOperation#doRun(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
 	 */
 	@Override
-	protected void doRun(SlingHttpServletRequest request,
-			HtmlResponse response, List<Modification> changes)
+	protected void handleOperation(SlingHttpServletRequest request,
+			HtmlResponse htmlResponse, List<Modification> changes)
 			throws RepositoryException {
 		Authorizable authorizable = null;
 		Resource resource = request.getResource();
@@ -54,7 +58,7 @@ public class UpdateAuthorizableOperation extends AbstractAuthorizableOperation {
 		
 		//check that the group was located.
 		if (authorizable == null) {
-			throw new RepositoryException("Authorizable to update could not be determined");
+			throw new ResourceNotFoundException("Group to update could not be determined");
 		}
 
 		Session session = request.getResourceResolver().adaptTo(Session.class);
@@ -62,7 +66,7 @@ public class UpdateAuthorizableOperation extends AbstractAuthorizableOperation {
 			throw new RepositoryException("JCR Session not found");
 		}
 
-		Map<String, RequestProperty> reqProperties = collectContent(request, response);
+		Map<String, RequestProperty> reqProperties = collectContent(request, htmlResponse);
 		try {
 	        // cleanup any old content (@Delete parameters)
 	        processDeletes(authorizable, reqProperties, changes);
@@ -75,7 +79,7 @@ public class UpdateAuthorizableOperation extends AbstractAuthorizableOperation {
 		        updateGroupMembership(request, authorizable, changes);
 			}
 		} catch (RepositoryException re) {
-			throw new RepositoryException("Failed to update authorizable.", re);
+			throw new RepositoryException("Failed to update group.", re);
 		}
 	}
 }

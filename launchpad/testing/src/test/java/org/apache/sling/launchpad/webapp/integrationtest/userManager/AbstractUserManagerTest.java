@@ -55,6 +55,7 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
         URL baseUrl = new URL(HTTP_BASE_URL);
         AuthScope authScope = new AuthScope(baseUrl.getHost(), baseUrl.getPort(), AuthScope.ANY_REALM);
         post.setDoAuthentication(true);
+        Credentials oldCredentials = httpClient.getState().getCredentials(authScope);
         try {
 			httpClient.getState().setCredentials(authScope, creds);
 	        
@@ -70,7 +71,7 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
 	            assertEquals(assertMessage, expectedStatusCode, status);
 	        }
         } finally {
-        	httpClient.getState().setCredentials(authScope, null);
+        	httpClient.getState().setCredentials(authScope, oldCredentials);
         }
     }
 
@@ -81,6 +82,7 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
         AuthScope authScope = new AuthScope(baseUrl.getHost(), baseUrl.getPort(), AuthScope.ANY_REALM);
         GetMethod getMethod = new GetMethod(urlString);
         getMethod.setDoAuthentication(true);
+        Credentials oldCredentials = httpClient.getState().getCredentials(authScope);
     	try {
 			httpClient.getState().setCredentials(authScope, creds);
 
@@ -91,7 +93,7 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
                 assertEquals(assertMessage, expectedStatusCode, status);
             }
     	} finally {
-        	httpClient.getState().setCredentials(authScope, null);
+        	httpClient.getState().setCredentials(authScope, oldCredentials);
     	}
     }
 
@@ -106,6 +108,7 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
         URL baseUrl = new URL(HTTP_BASE_URL);
         AuthScope authScope = new AuthScope(baseUrl.getHost(), baseUrl.getPort(), AuthScope.ANY_REALM);
         get.setDoAuthentication(true);
+        Credentials oldCredentials = httpClient.getState().getCredentials(authScope);
     	try {
 			httpClient.getState().setCredentials(authScope, creds);
 			
@@ -146,7 +149,7 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
 	        return content.toString();
 			
     	} finally {
-        	httpClient.getState().setCredentials(authScope, null);
+        	httpClient.getState().setCredentials(authScope, oldCredentials);
     	}
     }
     
@@ -154,11 +157,10 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
     protected static int counter = 1;
     
 	protected String createTestUser() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/user/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
 		String testUserId = "testUser" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createUser"));
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
@@ -168,11 +170,10 @@ public abstract class AbstractUserManagerTest extends HttpTestBase {
 	}
     
 	protected String createTestGroup() throws IOException {
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/";
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
 		String testGroupId = "testGroup" + (counter++);
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "createGroup"));
 		postParams.add(new NameValuePair(":name", testGroupId));
 		
 		//success would be a redirect to the welcome page of the webapp

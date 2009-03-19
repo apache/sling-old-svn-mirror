@@ -40,9 +40,8 @@ public class UpdateGroupTest extends AbstractUserManagerTest {
 	protected void tearDown() throws Exception {
 		if (testGroupId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId;
+			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			postParams.add(new NameValuePair(":operation", "deleteAuthorizable"));
 			assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 
@@ -52,10 +51,9 @@ public class UpdateGroupTest extends AbstractUserManagerTest {
 	public void testUpdateGroup() throws IOException, JSONException {
 		testGroupId = createTestGroup();
 		
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId;
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "updateAuthorizable"));
 		postParams.add(new NameValuePair("displayName", "My Updated Test Group"));
 		postParams.add(new NameValuePair("url", "http://www.apache.org/updated"));
 		
@@ -70,17 +68,15 @@ public class UpdateGroupTest extends AbstractUserManagerTest {
 		JSONObject jsonObj = new JSONObject(json);
 		assertEquals("My Updated Test Group", jsonObj.getString("displayName"));
 		assertEquals("http://www.apache.org/updated", jsonObj.getString("url"));
-		assertFalse(jsonObj.has(":operation"));
 	}
 	
 	public void testUpdateGroupMembers() throws IOException, JSONException {
 		testGroupId = createTestGroup();
 		
-        String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId;
+        String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 
         //TODO: verify this works....
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-		postParams.add(new NameValuePair(":operation", "updateAuthorizable"));
 		postParams.add(new NameValuePair(":member", "../user/testUser"));
 		postParams.add(new NameValuePair(":member@Delete", "testGroup"));
 		
