@@ -26,25 +26,29 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating the password of
- * a user in the jackrabbit UserManager.
+ * Sling Post Operation implementation for updating the password of a user in the 
+ * jackrabbit UserManager.
  * 
  * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.servlets.post.SlingPostOperation"
- * @scr.property name="sling.post.operation" value="changePassword"
+ * @scr.service interface="javax.servlet.Servlet"
+ * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
+ * @scr.property name="sling.servlet.methods" value="POST" 
+ * @scr.property name="sling.servlet.selectors" value="changePassword" 
  */
-public class ChangePasswordOperation extends AbstractAuthorizableOperation {
+public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
+	private static final long serialVersionUID = 1923614318474654502L;
 
 	/* (non-Javadoc)
-	 * @see org.apache.sling.servlets.post.AbstractSlingPostOperation#doRun(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
 	 */
 	@Override
-	protected void doRun(SlingHttpServletRequest request,
-			HtmlResponse response, List<Modification> changes)
+	protected void handleOperation(SlingHttpServletRequest request,
+			HtmlResponse htmlResponse, List<Modification> changes)
 			throws RepositoryException {
 		Authorizable authorizable = null;
 		Resource resource = request.getResource();
@@ -54,7 +58,7 @@ public class ChangePasswordOperation extends AbstractAuthorizableOperation {
 		
 		//check that the user was located.
 		if (authorizable == null || authorizable.isGroup()) {
-			throw new RepositoryException("User to update could not be determined.");
+			throw new ResourceNotFoundException("User to update could not be determined.");
 		}
 
 		if ("anonymous".equals(authorizable.getID())) {

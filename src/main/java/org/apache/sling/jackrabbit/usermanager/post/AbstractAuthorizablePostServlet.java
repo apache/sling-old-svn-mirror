@@ -16,15 +16,14 @@
  */
 package org.apache.sling.jackrabbit.usermanager.post;
 
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -32,30 +31,39 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceNotFoundException;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jackrabbit.usermanager.post.impl.DateParser;
 import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
 import org.apache.sling.jackrabbit.usermanager.resource.AuthorizableResourceProvider;
-import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.osgi.service.component.ComponentContext;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Base class for operations that do work on authorizable resources
+ * Base class for all the POST servlets for the UserManager operations 
  */
-public abstract class AbstractAuthorizableOperation extends AbstractSlingPostOperation {
-	
+public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsServlet {
+	private static final long serialVersionUID = -5918670409789895333L;
+
+	/**
+     * default log
+     */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     /**
      * @scr.property values.0="EEE MMM dd yyyy HH:mm:ss 'GMT'Z"
      *               values.1="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
@@ -65,17 +73,7 @@ public abstract class AbstractAuthorizableOperation extends AbstractSlingPostOpe
     private static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
 	
 	private DateParser dateParser;
-
-
-	/**
-     * To be used for the encryption. E.g. for passwords in
-     * {@link javax.jcr.SimpleCredentials#getPassword()}  SimpleCredentials} 
-     * @scr.property valueRef="DEFAULT_PASSWORD_DIGEST_ALGORITHM"
-     */
-    private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
-    private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
-    private String passwordDigestAlgoritm = null;
-
+	
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
@@ -86,90 +84,178 @@ public abstract class AbstractAuthorizableOperation extends AbstractSlingPostOpe
         for (String dateFormat : dateFormats) {
             dateParser.register(dateFormat);
         }
-        Object propValue = props.get(PROP_PASSWORD_DIGEST_ALGORITHM);
-        if (propValue instanceof String) {
-        	passwordDigestAlgoritm = (String)propValue;
-        } else {
-        	passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
-        }
     }
 
     protected void deactivate(ComponentContext context) {
         dateParser = null;
-        passwordDigestAlgoritm = null;
     }
 	
-    protected String digestPassword(String pwd) throws IllegalArgumentException {
-        try {
-            StringBuffer password = new StringBuffer();
-            password.append("{").append(passwordDigestAlgoritm).append("}");
-            password.append(Text.digest(passwordDigestAlgoritm, pwd.getBytes("UTF-8")));
-            return password.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalArgumentException(e.toString());
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e.toString());
-        }
-    }
-	
-
-    /**
-     * Update the group membership based on the ":member" request
-     * parameters.  If the ":member" value ends with @Delete it is removed
-     * from the group membership, otherwise it is added to the group membership.
-     * 
-     * @param request
-     * @param authorizable
-     * @throws RepositoryException
-     */
-	protected void updateGroupMembership(SlingHttpServletRequest request,
-			Authorizable authorizable, List<Modification> changes) throws RepositoryException {
-		if (authorizable.isGroup()) {
-			Group group = ((Group)authorizable);
-    		String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX + group.getID(); 
-
-	    	ResourceResolver resolver = request.getResourceResolver();
-	    	Resource baseResource = request.getResource();
-	    	boolean changed = false;
-
-	    	//first remove any members posted as ":member@Delete"
-	    	String[] membersToDelete = request.getParameterValues(SlingPostConstants.RP_PREFIX + "member" + SlingPostConstants.SUFFIX_DELETE);
-	    	if (membersToDelete != null) {
-				for (String member : membersToDelete) {
-	                Resource res = resolver.getResource(baseResource, member);
-	                if (res != null) {
-	                	Authorizable memberAuthorizable = res.adaptTo(Authorizable.class);
-	                	if (memberAuthorizable != null) {
-	                		group.removeMember(memberAuthorizable);
-	                		changed = true;
-	                	}
-	                }
-					
-				}
-	    	}
-	    	
-	    	//second add any members posted as ":member"
-	    	String[] membersToAdd = request.getParameterValues(SlingPostConstants.RP_PREFIX + "member");
-	    	if (membersToAdd != null) {
-				for (String member : membersToAdd) {
-	                Resource res = resolver.getResource(baseResource, member);
-	                if (res != null) {
-	                	Authorizable memberAuthorizable = res.adaptTo(Authorizable.class);
-	                	if (memberAuthorizable != null) {
-	                		group.addMember(memberAuthorizable);
-	                		changed = true;
-	                	}
-	                }
-				}
-	    	}
-
-	    	if (changed) {
-        		//add an entry to the changes list to record the membership change
-        		changes.add(Modification.onModified(groupPath + "/members"));
-	    	}
-		}
-	}
     
+	/* (non-Javadoc)
+	 * @see org.apache.sling.api.servlets.SlingAllMethodsServlet#doPost(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
+	 */
+	@Override
+	protected void doPost(SlingHttpServletRequest request,
+			SlingHttpServletResponse httpResponse) throws ServletException,
+			IOException {
+        // prepare the response
+        HtmlResponse htmlResponse = new HtmlResponse();
+        htmlResponse.setReferer(request.getHeader("referer"));
+
+        // calculate the paths
+        String path = getItemPath(request);
+        htmlResponse.setPath(path);
+
+        // location
+        htmlResponse.setLocation(externalizePath(request, path));
+
+        // parent location
+        path = ResourceUtil.getParent(path);
+        if (path != null) {
+        	htmlResponse.setParentLocation(externalizePath(request, path));
+        }
+
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+
+        final List<Modification> changes = new ArrayList<Modification>();
+        
+        try {
+            handleOperation(request, htmlResponse, changes);
+            
+            //TODO: maybe handle SlingAuthorizablePostProcessor handlers here
+            
+            // set changes on html response
+            for(Modification change : changes) {
+                switch ( change.getType() ) {
+                    case MODIFY : htmlResponse.onModified(change.getSource()); break;
+                    case DELETE : htmlResponse.onDeleted(change.getSource()); break;
+                    case MOVE :   htmlResponse.onMoved(change.getSource(), change.getDestination()); break;
+                    case COPY :   htmlResponse.onCopied(change.getSource(), change.getDestination()); break;
+                    case CREATE : htmlResponse.onCreated(change.getSource()); break;
+                    case ORDER : htmlResponse.onChange("ordered", change.getSource(), change.getDestination()); break;
+                }
+            }
+            
+            if (session.hasPendingChanges()) {
+                session.save();
+            }
+        } catch (ResourceNotFoundException rnfe) {
+            htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
+                rnfe.getMessage());
+        } catch (Throwable throwable) {
+            log.debug("Exception while handling POST "
+                + request.getResource().getPath() + " with "
+                + getClass().getName(), throwable);
+            htmlResponse.setError(throwable);
+        } finally {
+            try {
+                if (session.hasPendingChanges()) {
+                    session.refresh(false);
+                }
+            } catch (RepositoryException e) {
+                log.warn("RepositoryException in finally block: {}",
+                    e.getMessage(), e);
+            }
+        }
+        
+        // check for redirect URL if processing succeeded
+        if (htmlResponse.isSuccessful()) {
+            String redirect = getRedirectUrl(request, htmlResponse);
+            if (redirect != null) {
+                httpResponse.sendRedirect(redirect);
+                return;
+            }
+        }
+
+        // create a html response and send if unsuccessful or no redirect
+        htmlResponse.send(httpResponse, isSetStatus(request));
+	}
+
+	/**
+	 * Extending Servlet should implement this operation to do the work
+	 * 
+	 * @param request the sling http request to process
+	 * @param htmlResponse the response 
+	 * @param changes 
+	 */
+	abstract protected void handleOperation(SlingHttpServletRequest request,
+			HtmlResponse htmlResponse, List<Modification> changes) throws RepositoryException;
+	
+	
+    /**
+     * compute redirect URL (SLING-126)
+     *
+     * @param ctx the post processor
+     * @return the redirect location or <code>null</code>
+     */
+    protected String getRedirectUrl(HttpServletRequest request, HtmlResponse ctx) {
+        // redirect param has priority (but see below, magic star)
+        String result = request.getParameter(SlingPostConstants.RP_REDIRECT_TO);
+        if (result != null && ctx.getPath() != null) {
+
+            // redirect to created/modified Resource
+            int star = result.indexOf('*');
+            if (star >= 0) {
+                StringBuffer buf = new StringBuffer();
+
+                // anything before the star
+                if (star > 0) {
+                    buf.append(result.substring(0, star));
+                }
+
+                // append the name of the manipulated node
+                buf.append(ResourceUtil.getName(ctx.getPath()));
+
+                // anything after the star
+                if (star < result.length() - 1) {
+                    buf.append(result.substring(star + 1));
+                }
+
+                // use the created path as the redirect result
+                result = buf.toString();
+
+            } else if (result.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX)) {
+                // if the redirect has a trailing slash, append modified node
+                // name
+                result = result.concat(ResourceUtil.getName(ctx.getPath()));
+            }
+
+            if (log.isDebugEnabled()) {
+                log.debug("Will redirect to " + result);
+            }
+        }
+        return result;
+    }
+
+    protected boolean isSetStatus(SlingHttpServletRequest request) {
+        String statusParam = request.getParameter(SlingPostConstants.RP_STATUS);
+        if (statusParam == null) {
+            log.debug(
+                "getStatusMode: Parameter {} not set, assuming standard status code",
+                SlingPostConstants.RP_STATUS);
+            return true;
+        }
+
+        if (SlingPostConstants.STATUS_VALUE_BROWSER.equals(statusParam)) {
+            log.debug(
+                "getStatusMode: Parameter {} asks for user-friendly status code",
+                SlingPostConstants.RP_STATUS);
+            return false;
+        }
+
+        if (SlingPostConstants.STATUS_VALUE_STANDARD.equals(statusParam)) {
+            log.debug(
+                "getStatusMode: Parameter {} asks for standard status code",
+                SlingPostConstants.RP_STATUS);
+            return true;
+        }
+
+        log.debug(
+            "getStatusMode: Parameter {} set to unknown value {}, assuming standard status code",
+            SlingPostConstants.RP_STATUS);
+        return true;
+    }
+	
     
     
     // ------ The methods below are based on the private methods from the ModifyOperation class -----
@@ -553,82 +639,79 @@ public abstract class AbstractAuthorizableOperation extends AbstractSlingPostOpe
 	}
 
 	
+	// ------ These methods were copied from AbstractSlingPostOperation ------
+
     /**
-     * Returns an iterator on <code>Resource</code> instances addressed in the
-     * {@link SlingPostConstants#RP_APPLY_TO} request parameter. If the request
-     * parameter is not set, <code>null</code> is returned. If the parameter
-     * is set with valid resources an empty iterator is returned. Any resources
-     * addressed in the {@link SlingPostConstants#RP_APPLY_TO} parameter is
-     * ignored.
-     *
-     * @param request The <code>SlingHttpServletRequest</code> object used to
-     *            get the {@link SlingPostConstants#RP_APPLY_TO} parameter.
-     * @return The iterator of resources listed in the parameter or
-     *         <code>null</code> if the parameter is not set in the request.
+     * Returns the path of the resource of the request as the item path.
+     * <p>
+     * This method may be overwritten by extension if the operation has
+     * different requirements on path processing.
      */
-    protected Iterator<Resource> getApplyToResources(
-            SlingHttpServletRequest request) {
-
-        String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
-        if (applyTo == null) {
-            return null;
-        }
-
-        return new ApplyToIterator(request, applyTo);
+    protected String getItemPath(SlingHttpServletRequest request) {
+        return request.getResource().getPath();
     }
 
-    private static class ApplyToIterator implements Iterator<Resource> {
+    /**
+     * Returns an external form of the given path prepending the context path
+     * and appending a display extension.
+     *
+     * @param path the path to externalize
+     * @return the url
+     */
+    protected final String externalizePath(SlingHttpServletRequest request,
+            String path) {
+        StringBuffer ret = new StringBuffer();
+        ret.append(SlingRequestPaths.getContextPath(request));
+        ret.append(request.getResourceResolver().map(path));
 
-        private final ResourceResolver resolver;
-        private final Resource baseResource;
-        private final String[] paths;
-
-        private int pathIndex;
-
-        private Resource nextResource;
-
-        ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
-            this.resolver = request.getResourceResolver();
-            this.baseResource = request.getResource();
-            this.paths = paths;
-            this.pathIndex = 0;
-
-            nextResource = seek();
-        }
-
-        public boolean hasNext() {
-            return nextResource != null;
-        }
-
-        public Resource next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
+        // append optional extension
+        String ext = request.getParameter(SlingPostConstants.RP_DISPLAY_EXTENSION);
+        if (ext != null && ext.length() > 0) {
+            if (ext.charAt(0) != '.') {
+                ret.append('.');
             }
-
-            Resource result = nextResource;
-            nextResource = seek();
-
-            return result;
+            ret.append(ext);
         }
 
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        private Resource seek() {
-            while (pathIndex < paths.length) {
-                String path = paths[pathIndex];
-                pathIndex++;
-
-                Resource res = resolver.getResource(baseResource, path);
-                if (res != null) {
-                    return res;
-                }
-            }
-
-            // no more elements in the array
-            return null;
-        }
+        return ret.toString();
     }
 	
+    /**
+     * Returns <code>true</code> if the <code>name</code> starts with either
+     * of the prefixes
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>}.
+     */
+    protected boolean hasItemPathPrefix(String name) {
+        return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT)
+            || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_PARENT);
+    }
+    
+    /**
+     * Returns true if any of the request parameters starts with
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
+     * In this case only parameters starting with either of the prefixes
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
+     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
+     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>} are
+     * considered as providing content to be stored. Otherwise all parameters
+     * not starting with the command prefix <code>:</code> are considered as
+     * parameters to be stored.
+     */
+    protected final boolean requireItemPathPrefix(
+            SlingHttpServletRequest request) {
+
+        boolean requirePrefix = false;
+
+        Enumeration<?> names = request.getParameterNames();
+        while (names.hasMoreElements() && !requirePrefix) {
+            String name = (String) names.nextElement();
+            requirePrefix = name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT);
+        }
+
+        return requirePrefix;
+    }
+    
 }
