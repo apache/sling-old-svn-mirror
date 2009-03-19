@@ -19,6 +19,9 @@
 package org.apache.sling.api.resource;
 
 import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 
 /**
@@ -274,7 +277,9 @@ public class ResourceUtil {
      * This method calls {@link Resource#adaptTo(Class)} with the
      * {@link ValueMap} class as an argument. If the <code>adaptTo</code>
      * method returns a map, this map is returned. If the resource is not
-     * adaptable to a value map, an empty value map is returned.
+     * adaptable to a value map, next an adaption to {@link Map} is tried
+     * and if this is successful the map is wrapped as a value map.
+     * If the adaptions are not successful an empty value map is returned.
      * If <code>null</code> is provided as the resource an empty map is
      * returned as well.
      * @param res The <code>Resource</code> to adapt to the value map.
@@ -283,7 +288,12 @@ public class ResourceUtil {
     public static ValueMap getValueMap(final Resource res) {
         ValueMap map = (res == null ? null : res.adaptTo(ValueMap.class));
         if ( map == null ) {
-            map = ValueMap.EMPTY;
+            Map m = res.adaptTo(Map.class);
+            if ( m != null ) {
+                map = new ValueMapDecorator(m);
+            } else {
+                map = ValueMap.EMPTY;
+            }
         }
         return map;
     }
