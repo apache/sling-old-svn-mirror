@@ -76,6 +76,7 @@
           <module>scripting/scala/engine</module>
           <module>scripting/scala/interpreter</module>
           <module>scripting/velocity</module>
+		  <module>scripting/xproc</module>
           <module>launchpad/jcrapp</module>
     </modules>
     <profiles>
