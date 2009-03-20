@@ -89,6 +89,7 @@
         <module>bundles/jcr/jackrabbit-api</module>
         <module>bundles/jcr/jackrabbit-server</module>
         <module>bundles/jcr/jackrabbit-usermanager</module>
+		<module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/ocm</module>
         <module>bundles/jcr/resource</module>
         <module>bundles/jcr/webdav</module>
