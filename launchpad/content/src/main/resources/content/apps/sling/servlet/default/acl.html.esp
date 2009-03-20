@@ -1,0 +1,93 @@
+<%
+   var privilegesInfo = new Packages.org.apache.sling.jcr.jackrabbit.accessmanager.PrivilegesInfo();
+   if (!privilegesInfo.canReadAccessControl(currentNode)) {
+      //no rights to view the access control of the node, so just return a 404 status
+      response.sendError(404);
+   } else {
+      var canModify = privilegesInfo.canModifyAccessControl(currentNode);
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+>
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+   <title>Access Control List : <%=currentNode.name%></title>
+</head>
+
+<body>
+
+   <h1>Manage Access Control For: <%=currentNode.path%></h1>
+
+   <% if (canModify) { %>
+   <fieldset>
+      <legend>Add an entry for a user or group</legend>
+      <form method="GET" action="<%=request.contextPath%><%=currentNode.path%>.ace.html">
+         <label for="addpid">Principal Name:</label> 
+         <input id="addpid" type="text" name="pid" value="" />
+         <input type="submit" value="Add"/>
+      </form>
+   </fieldset>
+   <% } %>
+
+   <fieldset>
+      <legend>Current access control entries</legend>
+
+      <form method="POST" action="<%=request.contextPath%><%=currentNode.path%>.deleteAce.html" >
+         <input type="hidden" name=":redirect" value="<%=request.contextPath%>" />
+         
+         <table width="100%">
+            <thead>
+               <tr>
+                  <th align="left" width="60%">Principal</th>
+                  <th align="center" width="25%">Privileges</th>
+                  <th align="center" width="15%"><% if (canModify) { %>Remove<% } %></th>
+               </tr>
+            </thead>
+            <tbody>
+            <%
+               var accessMap = privilegesInfo.getDeclaredAccessRights(currentNode);
+               var entrySet = accessMap.entrySet();
+               var iterator = entrySet.iterator();
+               while (iterator.hasNext()) {
+                  var entry = iterator.next();
+                  var principal = entry.getKey();
+                  var accessrights = entry.getValue();
+            %>
+               <tr>
+                  <td align="left" width="60%" >
+                     <% if (canModify) { %>
+                        <a href="<%=request.contextPath%><%=currentNode.path%>.ace.html?pid=<%=principal.getName()%>">
+                           <%=principal.getName()%>
+                        </a>
+                     <% } else { %>
+                        <%=principal.getName()%>
+                     <% } %>
+                  </td>
+                  <td align="center" width="25%" >
+                     <%=accessrights.getPrivilegeSetDisplayName(request.locale)%>
+                  </td>
+                  <td align="center" width="15%">
+                     <% if (canModify) { %>
+                        <input type="checkbox" name=":applyTo" value="<%=principal.getName()%>" />
+                     <% } %>
+                  </td>
+               </tr>
+            <%      
+               }
+            %>
+            </tbody>
+            <tfoot>
+               <tr>
+                  <td colspan="2"></td>
+                  <td align="center"><input type="submit" value="Remove Selected" /></td>
+               </tr>
+            </tfoot>
+         </table>
+      </form>
+   </fieldset>
+</body>
+</html>
+<%   
+   }
+%>
