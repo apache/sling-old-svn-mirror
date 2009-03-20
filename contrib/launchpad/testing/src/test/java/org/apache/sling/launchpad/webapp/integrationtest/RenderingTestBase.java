@@ -22,7 +22,7 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /** Base class for rendering tests
  */
-class RenderingTestBase extends HttpTestBase {
+public class RenderingTestBase extends HttpTestBase {
     protected String scriptPath;
     protected String testText;
     protected String displayUrl;

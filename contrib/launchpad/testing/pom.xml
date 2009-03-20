@@ -235,7 +235,7 @@
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeArtifactIds>
-                                org.apache.sling.scripting.python
+                                org.apache.sling.scripting.python,org.apache.sling.scripting.xproc
                             </includeArtifactIds>
                             <includeScope>
                                 provided
@@ -644,7 +644,15 @@
             <version>0.0.169</version>
             <scope>test</scope>
         </dependency>
-
+		
+		<!-- XML Processing bundle -->
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.scripting.xproc</artifactId>
+    		<version>2.0.0-incubator-SNAPSHOT</version>
+    		<scope>provided</scope>
+		</dependency>
+		
         <!-- Dependencies for the Test Build and Run -->
         <dependency>
             <groupId>org.apache.sling</groupId>
