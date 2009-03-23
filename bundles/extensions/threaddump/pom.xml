@@ -61,6 +61,7 @@
                     <instructions>
                         <Import-Package>
                             org.osgi.framework,
+                            org.slf4j.*,
                             javax.servlet.*;
                             org.apache.felix.shell;
                             org.apache.felix.webconsole;resolution:=optional
@@ -111,6 +112,10 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
