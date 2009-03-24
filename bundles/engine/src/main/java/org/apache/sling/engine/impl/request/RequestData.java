@@ -189,7 +189,7 @@ public class RequestData implements BufferProvider {
 
         // resolve the resource
         requestProgressTracker.startTimer("ResourceResolution");
-        final HttpServletRequest request = getServletRequest();
+        final SlingHttpServletRequest request = getSlingRequest();
         Resource resource = resourceResolver.resolve(request, request.getPathInfo());
         requestProgressTracker.logTimer("ResourceResolution",
             "URI={0} resolves to Resource={1}",
