@@ -31,8 +31,10 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.slf4j.Logger;
@@ -103,7 +105,7 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
                 // check whether the path (would) resolve, else SyntheticRes.
                 Resource tmp = request.getResourceResolver().resolve(path);
                 if (tmp == null && resourceType != null) {
-                    resource = new SyntheticResource(
+                    resource = new DispatcherSyntheticResource(
                         request.getResourceResolver(), path, resourceType);
 
                     // remove resource type overwrite as synthetic resource
@@ -179,5 +181,25 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
 
     public void setReplaceSuffix(String suffix) {
         this.replaceSuffix = suffix;
+    }
+
+    /**
+     * The <code>DispatcherSyntheticResource</code> extends the
+     * <code>SyntheticResource</code> class overwriting the
+     * {@link #getResourceSuperType()} method to provide a possibly non-
+     * <code>null</code> result.
+     */
+    private static class DispatcherSyntheticResource extends SyntheticResource {
+
+        public DispatcherSyntheticResource(ResourceResolver resourceResolver,
+                String path, String resourceType) {
+            super(resourceResolver, path, resourceType);
+        }
+
+        @Override
+        public String getResourceSuperType() {
+            return JcrResourceUtil.getResourceSuperType(getResourceResolver(),
+                getResourceType());
+        }
     }
 }
