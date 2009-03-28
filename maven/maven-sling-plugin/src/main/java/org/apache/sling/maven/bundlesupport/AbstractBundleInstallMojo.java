@@ -369,7 +369,16 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             final Iterator i = resources.iterator();
             while ( dir == null && i.hasNext() ) {
                 final Resource rsrc = (Resource)i.next();
-                dir = new File(rsrc.getDirectory(), path);
+                String child = path;
+                // if resource mapping defines a target path: remove target path from checked resource path
+                String targetPath = rsrc.getTargetPath();
+                if ( targetPath != null && !targetPath.endsWith("/") ) {
+                    targetPath = targetPath + "/";
+                }
+                if ( targetPath != null && path.startsWith(targetPath) ) {
+                    child = child.substring(targetPath.length());
+                }
+                dir = new File(rsrc.getDirectory(), child);
                 if ( !dir.exists() ) {
                     dir = null;
                 }
