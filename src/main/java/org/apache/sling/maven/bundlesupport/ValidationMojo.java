@@ -28,6 +28,7 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.codehaus.plexus.util.DirectoryScanner;
@@ -110,16 +111,27 @@ public class ValidationMojo extends AbstractMojo {
         final File file = new File(directory, fileName);
         if ( file.isFile() ) {
             if ( fileName.endsWith(".json") && !this.skipJson ) {
+                getLog().debug("Validation JSON file " + fileName);
+                FileInputStream fis = null;
+                String json = null;
                 try {
-                    final FileInputStream fis = new FileInputStream(file);
-                    getLog().debug("Validation JSON file " + fileName);
-                    final String json = IOUtils.toString(fis);
-                    new JSONObject(json);
-                    fis.close();
-                } catch (JSONException e) {
-                    throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
+                    fis = new FileInputStream(file);
+                    json = IOUtils.toString(fis);
                 } catch (IOException e) {
                     throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
+                } finally {
+                    IOUtils.closeQuietly(fis);
+                }
+                // first, let's see if this is a json array
+                try {
+                    new JSONArray(json);
+                } catch (JSONException e) {
+                    // it might be a json object
+                    try {
+                        new JSONObject(json);
+                    } catch (JSONException je) {
+                        throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", je);
+                    }
                 }
             }
         }
