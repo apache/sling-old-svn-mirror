@@ -147,7 +147,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     /**
      * Whether to add the mapping for the fs provider
      *
-     * @parameter expression="${sling.mountByFS}" default-value="true"
+     * @parameter expression="${sling.mountByFS}" default-value="false"
      * @required
      */
     private boolean mountByFS;
