@@ -28,9 +28,8 @@ import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.util.Validator;
 import org.codehaus.plexus.util.DirectoryScanner;
 
 /**
@@ -124,14 +123,9 @@ public class ValidationMojo extends AbstractMojo {
                 }
                 // first, let's see if this is a json array
                 try {
-                    new JSONArray(json);
+                    Validator.validate(json);
                 } catch (JSONException e) {
-                    // it might be a json object
-                    try {
-                        new JSONObject(json);
-                    } catch (JSONException je) {
-                        throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", je);
-                    }
+                    throw new MojoExecutionException("An Error occured while validating the file '"+fileName+"'", e);
                 }
             }
         }
