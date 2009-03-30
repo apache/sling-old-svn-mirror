@@ -34,10 +34,13 @@ public class XsltTest extends RenderingTestBase {
 	private final String random = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
 	
 	/**
-	 * Xpl (XProc) pipeline which XML source is a
-	 * static XML file.
+	 * Prepare the tests uploading a Xpl script and
+	 * a couple of XSLT stylesheets.
 	 */
-	public void testStaticXml() throws IOException {
+	@Override
+	protected void setUp() throws Exception {
+		super.setUp();
+		
 		// Upload xpl pipeline
 		final String scriptPath = "/apps/" + random;
 		testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
@@ -53,6 +56,13 @@ public class XsltTest extends RenderingTestBase {
 		urlsToDelete.add(urlXslContent);
 		final String urlXslHtml = uploadTestScript(xsltsPath, "xproc/xslt/test-html.xslt", "test-html.xslt");
 		urlsToDelete.add(urlXslHtml);
+	}
+	
+	/**
+	 * Xpl (XProc) pipeline which XML source is a
+	 * static XML file.
+	 */
+	public void testStaticXml() throws IOException {
 		
 		// New "xpl" resource
 		final String mokeNodePath = HTTP_BASE_URL + "/sling-test/" + random + "/static_xml";
@@ -61,7 +71,7 @@ public class XsltTest extends RenderingTestBase {
 		testClient.createNode(mokeNodePath, mokeNodeProps);
 		urlsToDelete.add(mokeNodePath);
 		
-		// The pipeline source: a static XML.
+		// The pipeline source: a static XML
 		final String staticXmlPath = "/sling-test/" + random;
 		final String urlStaticXml = uploadTestScript(staticXmlPath, "xproc/xslt/static_xml.xml", "static_xml.xml");
 		urlsToDelete.add(urlStaticXml);
@@ -69,6 +79,56 @@ public class XsltTest extends RenderingTestBase {
 		// Render content and assertions
 		final String content = getContent(mokeNodePath + ".html", CONTENT_TYPE_HTML);
 		assertContains(content, "static content");
+	}
+	
+	/**
+	 * Xpl (XProc) pipeline which XML source is a
+	 * dynamically generated XML (through a script,
+	 * for instance).
+	 */
+	public void testDynamicXml() throws IOException {
+		
+		// New "xpl" resource
+		final String mokeNodePath = HTTP_BASE_URL + "/sling-test/" + random + "/dynamic_xml";
+		Map<String, String> mokeNodeProps = new HashMap<String, String>();
+		mokeNodeProps.put("title", "dynamic_xml");
+		mokeNodeProps.put("sling:resourceType", random + "/dynamic_xml");
+		mokeNodeProps.put("sling:resourceSuperType", random);
+		testClient.createNode(mokeNodePath, mokeNodeProps);
+		urlsToDelete.add(mokeNodePath);
+		
+		// The pipeline source: a script generating XML
+		final String scriptPath = "/apps/" + random + "/dynamic_xml";
+		testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
+		urlsToDelete.add(WEBDAV_BASE_URL + scriptPath);
+		final String urlScript = uploadTestScript(scriptPath, "xproc/xslt/dynamic_xml.xml.esp", "dynamic_xml.xml.esp");
+		urlsToDelete.add(urlScript);
+		
+		// Render content and assertions
+		final String content = getContent(mokeNodePath + ".html", CONTENT_TYPE_HTML);
+		assertContains(content, "dynamic content");
+		
+	}
+	
+	/**
+	 * Xpl (XProc) pipeline which XML source is
+	 * the node´s XML document view (default behaviour).
+	 */
+	public void testNoXml() throws IOException {
+		
+		// New "xpl" resource
+		final String mokeNodePath = HTTP_BASE_URL + "/sling-test/" + random + "/no_xml";
+		Map<String, String> mokeNodeProps = new HashMap<String, String>();
+		mokeNodeProps.put("title", "no_xml");
+		mokeNodeProps.put("sling:resourceType", random);
+		testClient.createNode(mokeNodePath, mokeNodeProps);
+		urlsToDelete.add(mokeNodePath);
+		
+		// Render content and assertions
+		final String content = getContent(mokeNodePath + ".xml", CONTENT_TYPE_XML);
+		System.out.println(content);
+		assertContains(content, "no_xml");
+		
 	}
 	
 }

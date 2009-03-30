@@ -15,12 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<title>Just a pretty simple pipeline.</title>
-	</head>
-	<body>
-	       The pipeline contents: xpl-sample: content
-	</body>
-</html>
+<test>
+	<content>
+		xpl-sample: dynamic content
+	</content>
+</test>
+
