@@ -36,6 +36,11 @@ HOW TO TEST
 http://localhost:8888/content/espblog/*.html must display the "Sling ESP
 blog sample" page, with the Home/Admin/New Post/... menu.
 
+If you get Sling's default HTML rendition instead ("Resource dumped by 
+HtmlRendererServlet") that's probably because the "path-based-rtp" bundle
+is not installed. Run the above "mvn...clean install" command in the
+sling/samples/path-based-rtp folder to install it, and reload the page.
+
 Create a new post using the "New Post" menu.
 
 The post can include an attachment, if that's an image the included
