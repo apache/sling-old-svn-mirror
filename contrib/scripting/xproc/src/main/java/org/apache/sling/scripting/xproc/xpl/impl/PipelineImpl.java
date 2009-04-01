@@ -18,6 +18,7 @@
  */
 package org.apache.sling.scripting.xproc.xpl.impl;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.xml.namespace.QName;
@@ -48,7 +49,17 @@ public class PipelineImpl extends AbstractCompoundStepImpl implements Pipeline {
 			}
 			
 			this.getEnv().getCcPipeline().addComponent(new XMLSerializer());
-			OutputStream out = this.getEnv().getSling().getResponse().getOutputStream();
+			
+			// Don't retrieve OutputStream from response until actually writing
+			// to response, so that error handlers can retrieve it without getting
+			// an error
+			final OutputStream out = new OutputStreamWrapper() {
+        @Override
+        protected OutputStream getWrappedStream() throws IOException {
+          return getEnv().getSling().getResponse().getOutputStream();
+        }
+			};
+			
 			this.getEnv().getCcPipeline().setup(out);
 			this.getEnv().getCcPipeline().execute();
 			
