@@ -259,7 +259,7 @@ public class SlingAuthenticator implements ManagedService {
         for (int i = 0; !done && i < handlerInfos.length; i++) {
             if ( request.getPathInfo().startsWith(handlerInfos[i].path) ) {
                 log.debug(
-                    "requestAuthentication: requesting authentication using handler: {0}",
+                    "requestAuthentication: requesting authentication using handler: {}",
                     handlerInfos[i]);
 
                 try {
