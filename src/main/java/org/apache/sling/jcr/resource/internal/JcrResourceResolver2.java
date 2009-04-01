@@ -748,14 +748,20 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private String mangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
+            final int queryPos = absPath.indexOf('?');
+            final String path = (queryPos == -1 ? absPath : absPath.substring(0, queryPos));
+
             Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
-            Matcher m = p.matcher(absPath);
+            Matcher m = p.matcher(path);
             StringBuffer buf = new StringBuffer();
             while (m.find()) {
                 String replacement = MANGLE_NAMESPACE_IN_PREFIX + m.group(1) + MANGLE_NAMESPACE_IN_SUFFIX;
                 m.appendReplacement(buf, replacement);
             }
             m.appendTail(buf);
+            if ( queryPos != -1 ) {
+                buf.append(absPath.substring(queryPos));
+            }
             absPath = buf.toString();
         }
 
