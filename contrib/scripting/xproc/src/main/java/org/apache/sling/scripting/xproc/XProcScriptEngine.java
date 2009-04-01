@@ -64,8 +64,9 @@ public class XProcScriptEngine extends AbstractSlingScriptEngine {
 			xpl.eval();
 		} catch (Throwable t) {
 			log.error("Failure running XProc script.", t);
-            throw new ScriptException("Failure running XProc script "
-                + scriptName);
+      final ScriptException se = new ScriptException("Failure running XProc script " + scriptName);
+      se.initCause(t);
+      throw se;
 		}
 		
 		return null;
