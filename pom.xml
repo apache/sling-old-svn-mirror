@@ -55,6 +55,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            !org.eclipse.*,*
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.commons.compiler;version=${pom.version}
                         </Export-Package>

@@ -30,14 +30,6 @@ public interface CompilerEnvironment {
     byte[] findClass(String className) throws Exception;
 
     /**
-     *
-     * @param className
-     * @return
-     * @throws Exception
-     */
-    char[] findSource(String className) throws Exception;
-
-    /**
      *  
      * @param packageName
      * @return

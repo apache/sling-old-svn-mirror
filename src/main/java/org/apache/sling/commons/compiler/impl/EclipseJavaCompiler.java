@@ -56,7 +56,7 @@ import java.io.IOException;
 public class EclipseJavaCompiler implements JavaCompiler {
 
     /** Logger instance */
-    private static final Logger log = LoggerFactory.getLogger(JavaCompiler.class);
+    private static final Logger log = LoggerFactory.getLogger(EclipseJavaCompiler.class);
 
     // the static problem factory
     private static IProblemFactory PROBLEM_FACTORY =
