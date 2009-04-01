@@ -174,7 +174,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
         // Register servlet, and set the contextPath field to signal successful
         // registration
-        Servlet simpleServlet = new SimpleWebDavServlet(resourceConfig,
+        Servlet simpleServlet = new SlingSimpleWebDavServlet(resourceConfig,
             getRepository());
         httpService.registerServlet(resourceConfig.getServletContextPath(),
             simpleServlet, resourceConfig.getServletInitParams(), null);

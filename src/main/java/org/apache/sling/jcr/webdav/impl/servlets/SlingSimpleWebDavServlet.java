@@ -30,15 +30,17 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.webdav.impl.helper.SlingResourceConfig;
 
 /**
- * The <code>SimpleWebDavServlet</code>
+ * The <code>SlingSimpleWebDavServlet</code> extends the
+ * JCR <code>SimpleWebdavServlet</code> with some
+ * Sling-specific features
  */
-public class SimpleWebDavServlet extends SimpleWebdavServlet {
+public class SlingSimpleWebDavServlet extends SimpleWebdavServlet {
 
     private final SlingResourceConfig resourceConfig;
 
     private final Repository repository;
 
-    /* package */SimpleWebDavServlet(SlingResourceConfig resourceConfig,
+    /* package */ SlingSimpleWebDavServlet(SlingResourceConfig resourceConfig,
             Repository repository) {
         this.resourceConfig = resourceConfig;
         this.repository = repository;
