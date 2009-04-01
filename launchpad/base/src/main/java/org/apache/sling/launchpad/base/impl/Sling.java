@@ -394,9 +394,17 @@ public class Sling implements BundleActivator {
 
         // migrate old properties to new properties
         migrateProp(staticProps, "felix.cache.profiledir", Constants.FRAMEWORK_STORAGE);
-        migrateProp(staticProps, "felix.startlevel.framework", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
         migrateProp(staticProps, "sling.osgi-core-packages", "osgi-core-packages");
         migrateProp(staticProps, "sling.osgi-compendium-services", "osgi-compendium-services");
+
+        // migrate initial start level property: Felix used to have
+        // felix.startlevel.framework, later moved to org.osgi.framework.startlevel
+        // and finally now uses org.osgi.framework.startlevel.beginning as
+        // speced in the latest R 4.2 draft (2009/03/10). We first check the
+        // intermediate Felix property, then the initial property, thus allowing
+        // the older (and more probable value) to win
+        migrateProp(staticProps, "org.osgi.framework.startlevel", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
+        migrateProp(staticProps, "felix.startlevel.framework", Constants.FRAMEWORK_BEGINNING_STARTLEVEL);
 
         // create a copy of the properties to perform variable substitution
         final Map<String, String> runtimeProps = new HashMap<String, String>();
