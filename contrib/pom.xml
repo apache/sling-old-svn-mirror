@@ -68,6 +68,7 @@
           <module>extensions/obr</module>
           <module>extensions/runmode</module>
           <module>jcr/jackrabbit-client</module>
+          <module>jcr/compiler</module>
           <module>scripting/freemarker</module>
           <module>scripting/java</module>
           <module>scripting/jst</module>
