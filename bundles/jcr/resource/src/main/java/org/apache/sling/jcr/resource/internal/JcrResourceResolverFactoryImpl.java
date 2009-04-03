@@ -40,6 +40,7 @@ import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
+import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntryException;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -501,18 +502,25 @@ public class JcrResourceResolverFactoryImpl implements
                 ResourceProvider provider = (ResourceProvider) componentContext.locateService(
                     "ResourceProvider", reference);
 
-                for (String root : roots) {
-                    // cut off trailing slash
-                    if (root.endsWith("/") && root.length() > 1) {
-                        root = root.substring(0, root.length() - 1);
-                    }
+                // synchronized insertion of new resource providers into
+                // the tree to not inadvertandly loose an entry
+                synchronized (this) {
 
-                    try {
-                        rootProviderEntry.addResourceProvider(root, provider);
-                    } catch (IllegalStateException ise) {
-                        log.error(
-                            "bindResourceProvider: A ResourceProvider for {} is already registered",
-                            root);
+                    for (String root : roots) {
+                        // cut off trailing slash
+                        if (root.endsWith("/") && root.length() > 1) {
+                            root = root.substring(0, root.length() - 1);
+                        }
+
+                        try {
+                            rootProviderEntry.addResourceProvider(root,
+                                provider);
+                        } catch (ResourceProviderEntryException rpee) {
+                            log.error(
+                                "bindResourceProvider: Cannot register ResourceProvider {} for {}: ResourceProvider {} is already registered",
+                                new Object[] { provider, root,
+                                    rpee.getExisting().getResourceProvider() });
+                        }
                     }
                 }
             }
@@ -522,16 +530,22 @@ public class JcrResourceResolverFactoryImpl implements
     protected void unbindResourceProvider(ServiceReference reference) {
         String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
         if (roots != null && roots.length > 0) {
-            for (String root : roots) {
-                // cut off trailing slash
-                if (root.endsWith("/") && root.length() > 1) {
-                    root = root.substring(0, root.length() - 1);
-                }
 
-                // TODO: Do not remove this path, if another resource
-                // owns it. This may be the case if adding the provider
-                // yielded an IllegalStateException
-                rootProviderEntry.removeResourceProvider(root);
+            // synchronized insertion of new resource providers into
+            // the tree to not inadvertandly loose an entry
+            synchronized (this) {
+            
+                for (String root : roots) {
+                    // cut off trailing slash
+                    if (root.endsWith("/") && root.length() > 1) {
+                        root = root.substring(0, root.length() - 1);
+                    }
+
+                    // TODO: Do not remove this path, if another resource
+                    // owns it. This may be the case if adding the provider
+                    // yielded an ResourceProviderEntryException
+                    rootProviderEntry.removeResourceProvider(root);
+                }
             }
         }
     }

@@ -221,10 +221,22 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         };
     }
 
+    /**
+     * Adds the given resource provider into the tree for the given prefix.
+     * 
+     * @return <code>true</code> if the provider could be entered into the
+     *         subtree below this entry. Otherwise <code>false</code> is
+     *         returned.
+     * @throws ResourceProviderEntryException if a resource provider for the
+     *             given prefix has already been registered at or below this
+     *             entry.
+     */
     public boolean addResourceProvider(String prefix, ResourceProvider provider) {
         if (prefix.equals(this.path)) {
-            throw new IllegalStateException(
-                "ResourceProviderEntry for prefix already exists");
+        
+            throw new ResourceProviderEntryException(
+                "ResourceProviderEntry for prefix already exists", this);
+
         } else if (prefix.startsWith(this.prefix)) {
 
             // consider relative path for further checks
