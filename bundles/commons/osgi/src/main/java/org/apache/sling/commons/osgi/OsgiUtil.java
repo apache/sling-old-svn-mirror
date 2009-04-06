@@ -111,8 +111,9 @@ public class OsgiUtil {
      * the property is not an <code>Double</code> and cannot be converted to
      * an <code>Double</code> from the property's string value.
      * 
-     * @deprecated since 2.0.4, use toDouble instead
+     * @deprecated since 2.0.4, use {@link #toDouble(Object, double)} instead
      */
+    @Deprecated
     public static double getProperty(Object propValue, double defaultValue) {
         return toDouble(propValue, defaultValue);
     }
