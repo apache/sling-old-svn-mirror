@@ -150,20 +150,29 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
 
     public void testBasicAPIAssumptions() throws Exception {
 
+
+        // null resource is accessing /, which exists of course
+        final Resource res00 = resResolver.resolve((String) null);
+        assertNotNull(res00);
+        assertEquals("Null path is expected to return root", "/",
+            res00.getPath());
+
+        // relative paths are treated as if absolute
+        final String path01 = "relPath/relPath";
+        final Resource res01 = resResolver.resolve(path01);
+        assertNotNull(res01);
+        assertEquals("Expecting absolute path for relative path", "/" + path01,
+            res01.getPath());
+        assertTrue("Resource must be NonExistingResource",
+            res01 instanceof NonExistingResource);
+
         final String no_resource_path = "/no_resource/at/this/location";
-
-        try {
-            resResolver.resolve((String) null);
-            fail("Expected NullPointerException trying to resolve null path");
-        } catch (NullPointerException npe) {
-            // expected
-        }
-
-        assertNull("Expecting no resource for relative path",
-            resResolver.resolve("relPath/relPath"));
-
-        assertNull("Expecting null if resource cannot be found",
-            resResolver.resolve(no_resource_path));
+        final Resource res02 = resResolver.resolve(no_resource_path);
+        assertNotNull(res02);
+        assertEquals("Expecting absolute path for relative path",
+            no_resource_path, res02.getPath());
+        assertTrue("Resource must be NonExistingResource",
+            res01 instanceof NonExistingResource);
 
         try {
             resResolver.resolve((HttpServletRequest) null);
