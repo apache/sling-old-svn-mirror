@@ -110,8 +110,22 @@ public class OsgiUtil {
      * <code>defaultValue</code> if no such reference property exists or if
      * the property is not an <code>Double</code> and cannot be converted to
      * an <code>Double</code> from the property's string value.
+     * 
+     * @deprecated since 2.0.4, use toDouble instead
      */
     public static double getProperty(Object propValue, double defaultValue) {
+        return toDouble(propValue, defaultValue);
+    }
+    
+    /**
+     * Returns the named service reference property as a double or the
+     * <code>defaultValue</code> if no such reference property exists or if
+     * the property is not an <code>Double</code> and cannot be converted to
+     * an <code>Double</code> from the property's string value.
+     * 
+     * @since 2.0.4
+     */
+    public static double toDouble(Object propValue, double defaultValue) {
         propValue = toObject(propValue);
         if (propValue instanceof Double) {
             return (Double) propValue;
