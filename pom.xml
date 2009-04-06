@@ -67,6 +67,11 @@
             Sling home directory when starting with jetty:run
         -->
         <jetty.sling.home>target/sling</jetty.sling.home>
+        
+        <!--
+            Context path of the Sling web application
+        -->
+        <jetty.sling.context>/</jetty.sling.context>
 
     </properties>
 
@@ -97,13 +102,6 @@
                         ${jetty.scan.interval.seconds}
                     </scanIntervalSeconds>
 
-                    <systemProperties>
-                        <systemProperty>
-                            <name>sling.home</name>
-                            <value>${jetty.sling.home}</value>
-                        </systemProperty>
-                    </systemProperties>
-
                     <connectors>
                         <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
                             <port>${http.port}</port>
@@ -118,6 +116,12 @@
                     <webAppSourceDirectory>
                         target/${artifactId}-${pom.version}
                     </webAppSourceDirectory>
+                    <webAppConfig>
+                        <contextPath>${jetty.sling.context}</contextPath>
+                        <initParams>
+                            <sling.home>${jetty.sling.home}</sling.home>
+                        </initParams>
+                    </webAppConfig>
                 </configuration>
             </plugin>
 
