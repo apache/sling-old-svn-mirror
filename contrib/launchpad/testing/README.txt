@@ -39,10 +39,8 @@ you can checkout the latest source using the following command:
 See the Subversion documentation for other source control features.
 
 
-How to run this
----------------
-  NOTE: "mvn clean" does not delete the "sling" work directory - make sure to 
-  delete it manually if you want to start from a clean state.
+How to run these tests
+----------------------
 
 1) Build all Sling bundles
 
@@ -51,21 +49,12 @@ How to run this
   
 2) Build and run this
 
-  cd launchpad/testing
-  mvn clean package jetty:run
+  cd contrib/launchpad/testing
+  mvn clean install
   
-Once the webapp starts, http://localhost:8888/system/console should display the Felix
-OSGi console.
-
-4) Test node creation and display
-To create a node with curl:
-
-	 curl -D - -Ftitle=something http://admin:admin@localhost:8888/testing/this
-	 
-Then, http://admin:admin@localhost:8888/testing/this should display a default HTML
-representation, including the value of the "title" property.
-
-Add a txt or json extension to see other output formats.
+This might required building a few other Sling bundles, from the contrib
+and samples code trees. We'll need to improve this, but right now there's no
+common pom to build all what's required for these contrib integration tests.
 
 Integration tests
 -----------------

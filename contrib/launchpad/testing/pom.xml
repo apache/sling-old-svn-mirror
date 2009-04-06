@@ -235,7 +235,7 @@
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeArtifactIds>
-                                org.apache.sling.scripting.python,org.apache.sling.scripting.xproc
+                                org.apache.sling.scripting.python,org.apache.sling.scripting.xproc,org.apache.sling.extensions.apt.parser,org.apache.sling.extensions.apt.servlet,org.apache.sling.samples.path-based.rtp
                             </includeArtifactIds>
                             <includeScope>
                                 provided
@@ -659,6 +659,24 @@
             <artifactId>org.apache.sling.commons.testing</artifactId>
             <version>2.0.3-incubator-SNAPSHOT</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.apt.servlet</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.apt.parser</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling.samples</groupId>
+            <artifactId>org.apache.sling.samples.path-based.rtp</artifactId>
+            <version>2.0.3-incubator-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
