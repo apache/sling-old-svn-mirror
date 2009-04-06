@@ -44,8 +44,8 @@ public class SlingConstants {
      * The actual namespace URI depends on the environment. For example a
      * {@link org.apache.sling.api.resource.ResourceResolver} using a JCR
      * repository may define its namespace as
-     * <code><em>NAMESPACE_URI_ROOT + "jcr/sling/1.0"</em></code>. A JSP tag library for
-     * Sling may define its namespace as
+     * <code><em>NAMESPACE_URI_ROOT + "jcr/sling/1.0"</em></code>. A JSP
+     * tag library for Sling may define its namespace as
      * <code><em>NAMESPACE_URI_ROOT + "taglib/sling/1.0"</em></code>.
      */
     public static final String NAMESPACE_URI_ROOT = "http://sling.apache.org/";
