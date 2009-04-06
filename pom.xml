@@ -80,10 +80,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                  <!-- No javadocs at all -->
-                    <excludePackageNames>
-                        org.apache.sling.commons.log,org/slf4j/impl
-                    </excludePackageNames>
+                    <!-- No javadocs at all -->
+                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>
