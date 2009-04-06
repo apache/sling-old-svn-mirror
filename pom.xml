@@ -55,6 +55,27 @@
         <url>http://svn.apache.org/viewvc/incubator/sling/trunk</url>
     </scm>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <!-- SLING-845 --> 
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>derby.log</include>
+                                <include>cachedir</include>
+                                <include>sling</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <!-- List modules to be included in the build here ! -->
     <modules>
