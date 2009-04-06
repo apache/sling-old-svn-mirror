@@ -44,9 +44,7 @@ public interface SlingScriptHelper {
     SlingHttpServletResponse getResponse();
 
     /**
-     * Returns the {@link SlingScript} being called to handle the request. This
-     * is the same instance as given to the {@link javax.script.ScriptEngine}
-     * for evaluation.
+     * Returns the {@link SlingScript} being called to handle the request.
      */
     SlingScript getScript();
 

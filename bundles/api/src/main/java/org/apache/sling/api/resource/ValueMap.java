@@ -24,34 +24,40 @@ import java.util.Map;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
- * The <code>ValueMap</code> is an easy way to access
- * properties of a resource. With most resources you can
- * use {@link Resource#adaptTo(Class)} to adapt the resource
- * to a value map. The various getter methods can be used
- * to get the properties of the resource.
+ * The <code>ValueMap</code> is an easy way to access properties of a resource.
+ * With most resources you can use {@link Resource#adaptTo(Class)} to adapt the
+ * resource to a value map. The various getter methods can be used to get the
+ * properties of the resource.
  */
 public interface ValueMap extends Map<String, Object> {
 
     /**
      * Empty value map
      */
-    final ValueMap EMPTY = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+    final ValueMap EMPTY = new ValueMapDecorator(
+        Collections.<String, Object> emptyMap());
 
     /**
      * Get a named property and convert it into the given type.
+     * 
      * @param name The name of the property
      * @param type The class of the type
-     * @return Return named value converted to type T or <code>null</code>
-     *         if non existing or can't be converted.
+     * @return Return named value converted to type T or <code>null</code> if
+     *         non existing or can't be converted.
      */
     <T> T get(String name, Class<T> type);
 
     /**
      * Get a named property and convert it into the given type.
+     * 
      * @param name The name of the property
-     * @param type The class of the type
-     * @return Return named value converted to type T or the
-     *         default value if non existing or can't be converted.
+     * @param defaultValue The default value to use if the named property does
+     *            not exist or cannot be converted to the requested type. The
+     *            default value is also used to define the type to convert the
+     *            value to. If this is <code>null</code> any existing propert is
+     *            not converted.
+     * @return Return named value converted to type T or the default value if
+     *         non existing or can't be converted.
      */
     <T> T get(String name, T defaultValue);
 }
