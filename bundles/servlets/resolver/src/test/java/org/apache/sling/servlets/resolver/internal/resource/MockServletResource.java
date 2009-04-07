@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.resource;
+package org.apache.sling.servlets.resolver.internal.resource;
 
 import javax.servlet.Servlet;
 
 import org.apache.sling.api.resource.ResourceResolver;
 
 public class MockServletResource extends
-        org.apache.sling.servlets.resolver.resource.ServletResource {
+        org.apache.sling.servlets.resolver.internal.resource.ServletResource {
     public MockServletResource(ResourceResolver resourceResolver,
             Servlet servlet, String path) {
         super(resourceResolver, servlet, path);

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.helper;
+package org.apache.sling.servlets.resolver.internal.helper;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.servlets.resolver.ServletResolverConstants;
+import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
 
 /**
  * The <code>LocationIterator</code> provides access to an ordered collection

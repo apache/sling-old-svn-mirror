@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.resource;
+package org.apache.sling.servlets.resolver.internal.resource;
 
-import static org.apache.sling.servlets.resolver.ServletResolverConstants.SLING_SERVLET_EXTENSIONS;
-import static org.apache.sling.servlets.resolver.ServletResolverConstants.SLING_SERVLET_METHODS;
-import static org.apache.sling.servlets.resolver.ServletResolverConstants.SLING_SERVLET_PATHS;
-import static org.apache.sling.servlets.resolver.ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES;
-import static org.apache.sling.servlets.resolver.ServletResolverConstants.SLING_SERVLET_SELECTORS;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_EXTENSIONS;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_METHODS;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_PATHS;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_SELECTORS;
 
 import java.util.HashSet;
 import java.util.Set;
