@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.commons.log.slf4j;
+package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.sling.commons.log.LogManager;
+import org.apache.sling.commons.log.internal.LogManager;
 import org.osgi.service.cm.ConfigurationException;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;

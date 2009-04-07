@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.commons.log;
+package org.apache.sling.commons.log.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.commons.log.slf4j.LogConfigManager;
+import org.apache.sling.commons.log.internal.slf4j.LogConfigManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -55,7 +55,7 @@ public class LogManager {
 
     public static final String LOG_FILE_SIZE_DEFAULT = "10M";
 
-    public static final String PID = LogManager.class.getName();
+    public static final String PID = "org.apache.sling.commons.log.LogManager";
 
     public static final String FACTORY_PID_WRITERS = PID + ".factory.writer";
 
