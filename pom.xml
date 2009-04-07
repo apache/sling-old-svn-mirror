@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-    
-    http://www.apache.org/licenses/LICENSE-2.0
-    
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
+    Licensed to the Apache Software Foundation (ASF) under one or
+    more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information regarding
+    copyright ownership. The ASF licenses this file to you under the
+    Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain
+    a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed
+    under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions
+    and limitations under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -48,6 +46,12 @@
     </issueManagement>
 
 
+    <properties>
+        <site.jira.version.id>12313662</site.jira.version.id>
+        <site.javadoc.exclude></site.javadoc.exclude>
+    </properties>
+    
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/parent</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/parent</developerConnection>
@@ -60,8 +64,37 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.5</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
                 <configuration>
                     <stylesheet>maven</stylesheet>
+                    <excludePackageNames>*.impl:*.internal:${site.javadoc.exclude}</excludePackageNames>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>2.4.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-changes-plugin</artifactId>
+                <version>2.1</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>jira-report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+                <configuration>
+                    <fixVersionIds>${site.jira.version.id}</fixVersionIds>
                 </configuration>
             </plugin>
         </plugins>
@@ -111,33 +144,33 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <!-- warn for SLING-443 -->
             <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-antrun-plugin</artifactId>
-              <executions>
-                <execution>
-                  <phase>process-resources</phase>
-                  <configuration>
-                    <tasks>
-                      <echo>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <echo>
 ********************** WARNING (SLING-443) **********************************
 On most platforms, building Sling currently requires setting 
 MAVEN_OPTS="-Xmx256M", see https://issues.apache.org/jira/browse/SLING-443
 You might get a "java.lang.OutOfMemoryError: Java heap space" if that
 setting is not correct.
 *****************************************************************************
-                      </echo>
-                    </tasks>
-                  </configuration>
-                  <goals>
-                    <goal>run</goal>
-                  </goals>
-                </execution>
-              </executions>
+                                </echo>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
-            
+
         </plugins>
 
         <pluginManagement>
@@ -218,6 +251,11 @@ setting is not correct.
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>2.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
                     <version>2.1-alpha-2</version>
                 </plugin>
@@ -255,85 +293,85 @@ setting is not correct.
         </pluginManagement>
     </build>
 
-  <profiles>
-    <profile>
-      <!-- 
-        Use this profile to install the OSGi bundle 
-        automatically, during development
-      -->
-      <id>autoInstallBundle</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>maven-sling-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>install-bundle</id>
-                <goals>
-                  <goal>install</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-               </goals>
-             </execution>
-           </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <configuration>
-              <descriptorRefs>
-                <descriptorRef>bin</descriptorRef>
-                <descriptorRef>project</descriptorRef>
-              </descriptorRefs>
-            </configuration>
-            <executions>
-              <execution>
-                <id>make-assembly</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>attached</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+    <profiles>
+        <profile>
+            <!--
+                Use this profile to install the OSGi bundle
+                automatically, during development
+            -->
+            <id>autoInstallBundle</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.sling</groupId>
+                        <artifactId>maven-sling-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install-bundle</id>
+                                <goals>
+                                    <goal>install</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>bin</descriptorRef>
+                                <descriptorRef>project</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attached</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <mailingLists>
         <mailingList>
@@ -446,6 +484,16 @@ setting is not correct.
             <timezone>+1</timezone>
         </developer>
         <developer>
+            <name>Vidar Skauge Ramdal</name>
+            <id>vramdal</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
             <name>Jukka Zitting</name>
             <id>jukka</id>
             <email />
@@ -483,7 +531,7 @@ setting is not correct.
 
 
     <dependencyManagement>
-    
+
         <!-- OSGi Core and Compendium API -->
         <dependencies>
             <dependency>
@@ -504,7 +552,7 @@ setting is not correct.
                     </exclusion>
                 </exclusions>
             </dependency>
-            
+
             <!-- Web Application API -->
             <dependency>
                 <groupId>javax.servlet</groupId>
@@ -512,7 +560,7 @@ setting is not correct.
                 <version>2.4</version>
                 <scope>provided</scope>
             </dependency>
-            
+
             <!-- JCR API -->
             <dependency>
                 <groupId>javax.jcr</groupId>
@@ -520,7 +568,7 @@ setting is not correct.
                 <version>1.0</version>
                 <scope>provided</scope>
             </dependency>
-            
+
             <!-- Basic Logging -->
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -529,7 +577,7 @@ setting is not correct.
                 <scope>provided</scope>
             </dependency>
 
-            <!-- Basic dependencies for Unit Tests -->                
+            <!-- Basic dependencies for Unit Tests -->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -548,7 +596,7 @@ setting is not correct.
                 <version>1.5.2</version>
                 <scope>test</scope>
             </dependency>
- 
+
 
         </dependencies>
     </dependencyManagement>
@@ -610,7 +658,7 @@ setting is not correct.
         <site>
             <id>apache.sling.site</id>
             <url>
-                scp://people.apache.org/www/incubator.apache.org/sling
+                scp://people.apache.org/www/incubator.apache.org/sling/generated
             </url>
         </site>
     </distributionManagement>
