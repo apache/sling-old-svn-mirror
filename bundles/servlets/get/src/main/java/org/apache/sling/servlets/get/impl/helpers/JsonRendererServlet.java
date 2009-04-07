@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.get.helpers;
+package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JsonRendererServlet</code> renders the current resource in JSON
- * on behalf of the {@link org.apache.sling.servlets.get.DefaultGetServlet}.
+ * on behalf of the {@link org.apache.sling.servlets.get.impl.DefaultGetServlet}.
  */
 public class JsonRendererServlet extends SlingSafeMethodsServlet {
 

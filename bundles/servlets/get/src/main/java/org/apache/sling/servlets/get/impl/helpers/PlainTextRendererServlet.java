@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.get.helpers;
+package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,7 +34,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 /**
  * The <code>PlainTextRendererServlet</code> renders the current resource in
  * plain text on behalf of the
- * {@link org.apache.sling.servlets.get.DefaultGetServlet}.
+ * {@link org.apache.sling.servlets.get.impl.DefaultGetServlet}.
  */
 public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.get.helpers;
+package org.apache.sling.servlets.get.impl.helpers;
 
 import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
 import static org.apache.sling.api.servlets.HttpConstants.HEADER_IF_MODIFIED_SINCE;
@@ -45,7 +45,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 /**
  * The <code>StreamRendererServlet</code> streams the current resource to the
  * client on behalf of the
- * {@link org.apache.sling.servlets.get.DefaultGetServlet}. If the current
+ * {@link org.apache.sling.servlets.get.impl.DefaultGetServlet}. If the current
  * resource cannot be streamed it is rendered using the
  * {@link PlainTextRendererServlet}.
  */

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.get.impl.info;
+package org.apache.sling.servlets.get.impl.impl.info;
 
 import java.util.Map;
 
