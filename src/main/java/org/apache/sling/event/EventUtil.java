@@ -236,6 +236,19 @@ public abstract class EventUtil {
      * This method also sends an acknowledge message to the job event handler.
      */
     public static void processJob(final Event job, final JobProcessor processor) {
+        // first check for a notifier context to send an acknowledge
+        boolean notify = true;
+        final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
+        if ( ctx != null ) {
+            if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
+                // if we don't get an ack, someone else is already processing this job.
+                // we process but do not notify the job event handler.
+                LoggerFactory.getLogger(EventUtil.class).info("Someone else is already processing job {}.", job);
+                notify = false;
+            }
+        }
+        final boolean notifyResult = notify;
+
         final Runnable task = new Runnable() {
 
             /**
@@ -243,19 +256,7 @@ public abstract class EventUtil {
              */
             public void run() {
                 boolean result = false;
-                boolean notifyResult = true;
                 try {
-                    // first check for a notifier context to send an acknowledge
-                    final JobStatusNotifier.NotifierContext ctx = getNotifierContext(job);
-                    if ( ctx != null ) {
-                        if ( !ctx.notifier.sendAcknowledge(job, ctx.eventNodePath) ) {
-                            // if we don't get an ack, someone else is already processing this job.
-                            // we process but do not notify the job event handler.
-                            LoggerFactory.getLogger(EventUtil.class).info("Someone else is already processing job {}.", job);
-                            notifyResult = false;
-                        }
-                    }
-
                     result = processor.process(job);
                 } catch (Throwable t) {
                     LoggerFactory.getLogger(EventUtil.class).error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + job, t);
