@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.resource;
+package org.apache.sling.servlets.resolver.internal.resource;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,7 +31,7 @@ import junit.framework.TestCase;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.servlets.resolver.ServletResolverConstants;
+import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
 
 public class ServletResourceProviderCreateTest extends TestCase {
 

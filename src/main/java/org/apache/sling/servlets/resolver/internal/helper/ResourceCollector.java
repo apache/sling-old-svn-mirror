@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.helper;
+package org.apache.sling.servlets.resolver.internal.helper;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -30,7 +30,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactory;
+import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ public class ResourceCollector {
      * @param baseResourceType The basic resource type to use as a final
      *            resource super type. If this is <code>null</code> the
      *            default value
-     *            {@link org.apache.sling.servlets.resolver.ServletResolverConstants#DEFAULT_SERVLET_NAME}
+     *            {@link org.apache.sling.servlets.resolver.internal.ServletResolverConstants#DEFAULT_SERVLET_NAME}
      *            is assumed.
      */
     public ResourceCollector(String methodName, String baseResourceType) {
@@ -125,7 +125,7 @@ public class ResourceCollector {
      * @param baseResourceType The basic resource type to use as a final
      *            resource super type. If this is <code>null</code> the
      *            default value
-     *            {@link org.apache.sling.servlets.resolver.ServletResolverConstants#DEFAULT_SERVLET_NAME}
+     *            {@link org.apache.sling.servlets.resolver.internal.ServletResolverConstants#DEFAULT_SERVLET_NAME}
      *            is assumed.
      */
     private ResourceCollector(SlingHttpServletRequest request) {

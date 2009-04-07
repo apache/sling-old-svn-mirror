@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.helper;
-
-import org.apache.sling.servlets.resolver.helper.WeightedResource;
+package org.apache.sling.servlets.resolver.internal.helper;
 
 import junit.framework.TestCase;
 

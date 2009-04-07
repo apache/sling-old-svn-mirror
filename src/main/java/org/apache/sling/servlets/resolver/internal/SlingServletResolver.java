@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver;
+package org.apache.sling.servlets.resolver.internal;
 
 import static org.apache.sling.api.SlingConstants.ERROR_MESSAGE;
 import static org.apache.sling.api.SlingConstants.ERROR_SERVLET_NAME;
@@ -56,12 +56,12 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.RequestUtil;
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
-import org.apache.sling.servlets.resolver.defaults.DefaultErrorHandlerServlet;
-import org.apache.sling.servlets.resolver.defaults.DefaultServlet;
-import org.apache.sling.servlets.resolver.helper.ResourceCollector;
-import org.apache.sling.servlets.resolver.helper.SlingServletConfig;
-import org.apache.sling.servlets.resolver.resource.ServletResourceProvider;
-import org.apache.sling.servlets.resolver.resource.ServletResourceProviderFactory;
+import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
+import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
+import org.apache.sling.servlets.resolver.internal.helper.ResourceCollector;
+import org.apache.sling.servlets.resolver.internal.helper.SlingServletConfig;
+import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
+import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -72,7 +72,8 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>SlingServletResolver</code> TODO
  * 
- * @scr.component label="%servletresolver.name"
+ * @scr.component name="org.apache.sling.servlets.resolver.SlingServletResolver"
+ *                label="%servletresolver.name"
  *                description="%servletresolver.description"
  * @scr.property name="service.description" value="Sling Servlet Resolver and
  *               Error Handler"

@@ -16,12 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.resolver.helper;
+package org.apache.sling.servlets.resolver.internal.helper;
 
-import static org.apache.sling.servlets.resolver.ServletResolverConstants.DEFAULT_SERVLET_NAME;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.DEFAULT_SERVLET_NAME;
 
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.servlets.resolver.helper.LocationIterator;
 
 public class LocationIteratorTest extends HelperTestBase {
 
