@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.commons.log;
+package org.apache.sling.commons.log.internal;
 
 import java.util.Collections;
 import java.util.Enumeration;
