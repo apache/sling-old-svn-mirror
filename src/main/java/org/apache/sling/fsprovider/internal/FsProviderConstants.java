@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fsprovider;
+package org.apache.sling.fsprovider.internal;
 
 /**
  * The <code>FsProviderConstants</code> interface defines public constants for

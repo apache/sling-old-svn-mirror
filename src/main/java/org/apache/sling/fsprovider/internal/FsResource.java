@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fsprovider;
+package org.apache.sling.fsprovider.internal;
 
 import java.io.File;
 import java.io.FileInputStream;

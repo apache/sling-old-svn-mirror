@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.fsprovider;
+package org.apache.sling.fsprovider.internal;
 
 import java.io.File;
 import java.util.Collections;
@@ -45,7 +45,8 @@ import org.osgi.service.component.ComponentContext;
  * and the file system path from where files and folders are mapped into the
  * resource ({@link #PROP_PROVIDER_FILE}).
  *
- * @scr.component label="%resource.resolver.name"
+ * @scr.component name="org.apache.sling.fsprovider.FsResourceProvider"
+ *                label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  *                factory="org.apache.sling.fsprovider.FsResourceProviderFactory"
  * @scr.service
