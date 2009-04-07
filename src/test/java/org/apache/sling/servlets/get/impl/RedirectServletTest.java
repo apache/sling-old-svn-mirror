@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.get;
+package org.apache.sling.servlets.get.impl;
 
 import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.servlets.get.RedirectServlet;
+import org.apache.sling.servlets.get.impl.RedirectServlet;
 
 public class RedirectServletTest extends TestCase {
 

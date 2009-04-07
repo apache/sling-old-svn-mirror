@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.get;
+package org.apache.sling.servlets.get.impl;
 
 import org.apache.sling.api.request.RequestPathInfo;
 

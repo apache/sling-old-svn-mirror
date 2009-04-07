@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.servlets.get;
+package org.apache.sling.servlets.get.impl;
 
 import java.io.IOException;
 import java.util.Dictionary;
@@ -32,11 +32,11 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.servlets.get.helpers.HtmlRendererServlet;
-import org.apache.sling.servlets.get.helpers.JsonRendererServlet;
-import org.apache.sling.servlets.get.helpers.PlainTextRendererServlet;
-import org.apache.sling.servlets.get.helpers.StreamRendererServlet;
-import org.apache.sling.servlets.get.helpers.XMLRendererServlet;
+import org.apache.sling.servlets.get.impl.helpers.HtmlRendererServlet;
+import org.apache.sling.servlets.get.impl.helpers.JsonRendererServlet;
+import org.apache.sling.servlets.get.impl.helpers.PlainTextRendererServlet;
+import org.apache.sling.servlets.get.impl.helpers.StreamRendererServlet;
+import org.apache.sling.servlets.get.impl.helpers.XMLRendererServlet;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,8 @@ import org.slf4j.LoggerFactory;
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
  * 
- * @scr.component immediate="true" label="%servlet.get.name"
+ * @scr.component name="org.apache.sling.servlets.get.DefaultGetServlet"
+ *                immediate="true" label="%servlet.get.name"
  *                description="%servlet.get.description"
  * @scr.service interface="javax.servlet.Servlet"
  *
