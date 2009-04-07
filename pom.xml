@@ -70,26 +70,13 @@
                             org.apache.sling.extensions.threaddump.*
                         </Private-Package>
                         <Bundle-Activator>
-                            org.apache.sling.extensions.threaddump.Activator
+                            org.apache.sling.extensions.threaddump.internal.Activator
                         </Bundle-Activator>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <excludePackageNames>
-                        org.apache.sling.extensions.threaddump
-                    </excludePackageNames>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
     <dependencies>
         <dependency>
             <groupId>org.apache.felix</groupId>
