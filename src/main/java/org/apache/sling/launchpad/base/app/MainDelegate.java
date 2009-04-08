@@ -18,6 +18,10 @@ package org.apache.sling.launchpad.base.app;
 
 import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
+import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -145,6 +149,9 @@ public class MainDelegate implements Launcher {
             commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
         Logger logger = new Logger();
+        
+        // Display port number on console, in case HttpService doesn't
+        consoleInfo("HTTP server port: " + commandLine.get(PROP_PORT), null);
 
         // prevent tons of needless WARN from the framework
         logger.setLogLevel(Logger.LOG_ERROR);
@@ -347,5 +354,45 @@ public class MainDelegate implements Launcher {
         }
 
         return defaultLevel;
+    }
+    
+    // ---------- console logging
+
+    // emit an informational message to standard out
+    private static void consoleInfo(String message, Throwable t) {
+        log(System.out, "*INFO*", message, t);
+    }
+
+    private static final DateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS ");
+
+    // helper method to format the message on the correct output channel
+    // the throwable if not-null is also prefixed line by line with the prefix
+    private static void log(PrintStream out, String prefix, String message,
+            Throwable t) {
+
+        final StringBuilder linePrefixBuilder = new StringBuilder();
+        synchronized (fmt) {
+            linePrefixBuilder.append(fmt.format(new Date()));
+        }
+        linePrefixBuilder.append(prefix);
+        linePrefixBuilder.append(" [");
+        linePrefixBuilder.append(Thread.currentThread().getName());
+        linePrefixBuilder.append("] ");
+        final String linePrefix = linePrefixBuilder.toString();
+
+        out.print(linePrefix);
+        out.println(message);
+        if (t != null) {
+            t.printStackTrace(new PrintStream(out) {
+                @Override
+                public void println(String x) {
+                    synchronized (this) {
+                        print(linePrefix);
+                        super.println(x);
+                        flush();
+                    }
+                }
+            });
+        }
     }
 }
