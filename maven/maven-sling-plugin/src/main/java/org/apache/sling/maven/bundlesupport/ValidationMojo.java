@@ -80,25 +80,27 @@ public class ValidationMojo extends AbstractMojo {
         while ( rsrcIterator.hasNext() ) {
             final Resource rsrc = rsrcIterator.next();
 
-            getLog().debug("Scanning " + rsrc.getDirectory());
             final File directory = new File(rsrc.getDirectory());
-            final DirectoryScanner scanner = new DirectoryScanner();
-            scanner.setBasedir( directory );
+            if ( directory.exists() ) {
+                getLog().debug("Scanning " + rsrc.getDirectory());
+                final DirectoryScanner scanner = new DirectoryScanner();
+                scanner.setBasedir( directory );
 
-            if ( rsrc.getExcludes() != null && rsrc.getExcludes().size() > 0 ) {
-                scanner.setExcludes( (String[]) rsrc.getExcludes().toArray(new String[rsrc.getExcludes().size()] ) );
-            }
-            scanner.addDefaultExcludes();
-            if ( rsrc.getIncludes() != null && rsrc.getIncludes().size() > 0 ) {
-                scanner.setIncludes( (String[]) rsrc.getIncludes().toArray(new String[rsrc.getIncludes().size()] ));
-            }
+                if ( rsrc.getExcludes() != null && rsrc.getExcludes().size() > 0 ) {
+                    scanner.setExcludes( (String[]) rsrc.getExcludes().toArray(new String[rsrc.getExcludes().size()] ) );
+                }
+                scanner.addDefaultExcludes();
+                if ( rsrc.getIncludes() != null && rsrc.getIncludes().size() > 0 ) {
+                    scanner.setIncludes( (String[]) rsrc.getIncludes().toArray(new String[rsrc.getIncludes().size()] ));
+                }
 
-            scanner.scan();
+                scanner.scan();
 
-            final String[] files = scanner.getIncludedFiles();
-            if ( files != null ) {
-                for(int m=0; m<files.length; m++) {
-                    this.validate(directory, files[m]);
+                final String[] files = scanner.getIncludedFiles();
+                if ( files != null ) {
+                    for(int m=0; m<files.length; m++) {
+                        this.validate(directory, files[m]);
+                    }
                 }
             }
         }
