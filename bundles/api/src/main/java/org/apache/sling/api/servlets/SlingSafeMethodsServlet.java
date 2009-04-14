@@ -363,16 +363,17 @@ public class SlingSafeMethodsServlet extends GenericServlet {
     public void service(ServletRequest req, ServletResponse res)
             throws ServletException, IOException {
 
-        try {
-            SlingHttpServletRequest request = (SlingHttpServletRequest) req;
-            SlingHttpServletResponse response = (SlingHttpServletResponse) res;
+        if ((req instanceof SlingHttpServletRequest)
+            && (res instanceof SlingHttpServletResponse)) {
 
-            service(request, response);
+            service((SlingHttpServletRequest) req,
+                (SlingHttpServletResponse) res);
 
-        } catch (ClassCastException cce) {
+        } else {
+
             throw new ServletException("Not a Sling HTTP request/response");
-        }
 
+        }
     }
 
     /**
