@@ -153,6 +153,7 @@
             </activation>
             <modules>
                 <module>launchpad/testing</module>
+                <module>launchpad/test-services</module>
             </modules>
         </profile>
       <!-- Profile for including samples -->
