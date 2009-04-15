@@ -34,7 +34,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * 
  * @scr.property name="sling.servlet.resourceTypes"
- *               value="TEST_HeadMethodServlet"
+ *               value="LAUNCHPAD_TEST_ResourceType"
  *               
  * @scr.property name="sling.servlet.methods"
  *               value = "PUT"
