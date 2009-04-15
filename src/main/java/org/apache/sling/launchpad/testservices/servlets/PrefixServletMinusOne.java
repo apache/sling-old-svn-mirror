@@ -31,7 +31,8 @@ package org.apache.sling.launchpad.testservices.servlets;
  * @scr.property name="sling.servlet.resourceTypes"
  *               value="sling/servlet/default"
  * @scr.property name="sling.servlet.extensions"
- *               value="TEST_EXT_3"
+ *               values.1="TEST_EXT_3"
+ *               values.2="TEST_EXT_4"
  */
 
 @SuppressWarnings("serial")
