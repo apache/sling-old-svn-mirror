@@ -21,9 +21,9 @@ package org.apache.sling.servlets.resolver.internal;
 public class ServletResolverConstants {
 
     /**
-     * The name of the service registration property of a Servlet registered as
+     * The name of the service registration property of a servlet registered as
      * a service providing the absolute paths under which the servlet is
-     * accessible as a Resource (value is "sling.servlet.paths")
+     * accessible as a resource (value is "sling.servlet.paths")
      * <p>
      * The type of this property is a String or String[] (array of strings)
      * denoting the resource types.
@@ -31,7 +31,7 @@ public class ServletResolverConstants {
     public static final String SLING_SERVLET_PATHS = "sling.servlet.paths";
 
     /**
-     * The name of the service registration property of a Servlet registered as
+     * The name of the service registration property of a servlet registered as
      * a service containing the resource type(s) supported by the servlet (value
      * is "sling.servlet.resourceTypes").
      * <p>
@@ -41,6 +41,26 @@ public class ServletResolverConstants {
      * must be set or the servlet is ignored.
      */
     public static final String SLING_SERVLET_RESOURCE_TYPES = "sling.servlet.resourceTypes";
+
+    /**
+     * The name of the service registration property of a servlet registered as
+     * a service providing the prefix/index to be used to register this servlet.
+     * If the value of this property is a number, it defines the index of the search
+     * path entries from the resource resolver. The defined search path is used as
+     * a prefix to mount this servlet. The number can be -1 which always points to the
+     * last search entry. If the specified value is higher than than the highest index
+     * of the search paths, the last entry is used. The index starts with 0.
+     * If the value of this property is a string and parseable as a number, the above
+     * logic is used.
+     * If the value of this property is a string starting with "/", this value is applied
+     * as a prefix, regardless of the configured search paths!
+     * If the value is anything else, it is ignored.
+     * If this property is not specified, it defaults to the default configuration of the
+     * sling servlet resolver.
+     * <p>
+     * The type of this property is either String or a Number.
+     */
+    public static final String SLING_SERVLET_PREFIX = "sling.servlet.prefix";
 
     /**
      * The name of the service registration property of a Servlet registered as

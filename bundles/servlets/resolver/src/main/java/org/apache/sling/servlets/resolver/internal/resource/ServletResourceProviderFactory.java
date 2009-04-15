@@ -21,6 +21,7 @@ package org.apache.sling.servlets.resolver.internal.resource;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_EXTENSIONS;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_METHODS;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_PATHS;
+import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_PREFIX;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_RESOURCE_TYPES;
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.SLING_SERVLET_SELECTORS;
 
@@ -57,6 +58,16 @@ public class ServletResourceProviderFactory {
      */
     private final String servletRoot;
 
+    /**
+     * The index of the search path to be used as servlet root path
+     */
+    private final int servletRootIndex;
+
+    /**
+     * The search paths
+     */
+    private final String[] searchPaths;
+
     static String ensureServletNameExtension(String servletPath) {
         if (servletPath.endsWith(SERVLET_PATH_EXTENSION)) {
             return servletPath;
@@ -65,17 +76,44 @@ public class ServletResourceProviderFactory {
         return servletPath.concat(SERVLET_PATH_EXTENSION);
     }
 
-    public ServletResourceProviderFactory(String servletRoot) {
-
-        // ensure the root starts and ends with a slash
-        if (!servletRoot.startsWith("/")) {
-            servletRoot = "/" + servletRoot;
+    /**
+     * Constructor
+     * @param servletRoot The default value for the servlet root
+     */
+    public ServletResourceProviderFactory(Object servletRoot, String[] paths) {
+        this.searchPaths = paths;
+        String value = servletRoot.toString();
+        // check if servlet root specifies a number
+        boolean isNumber = false;
+        int index = -1;
+        if ( servletRoot instanceof Number ) {
+            isNumber = true;
+            index = ((Number)servletRoot).intValue();
+        } else {
+            if (!value.startsWith("/") ) {
+                try {
+                    index = Integer.valueOf(value);
+                    isNumber = true;
+                } catch (NumberFormatException nfe) {
+                    // ignore
+                }
+            }
         }
-        if (!servletRoot.endsWith("/")) {
-            servletRoot += "/";
-        }
+        if ( !isNumber ) {
+            // ensure the root starts and ends with a slash
+            if (!value.startsWith("/")) {
+                value = "/" + value;
+            }
+            if (!value.endsWith("/")) {
+                value += "/";
+            }
 
-        this.servletRoot = servletRoot;
+            this.servletRoot = value;
+            this.servletRootIndex = -1;
+        } else {
+            this.servletRoot = null;
+            this.servletRootIndex = index;
+        }
     }
 
     public ServletResourceProvider create(ServiceReference ref) {
@@ -101,16 +139,65 @@ public class ServletResourceProviderFactory {
             log.debug("create({}): Registering servlet for paths {}",
                 getServiceIdentifier(ref), pathSet);
         }
-        
+
         return new ServletResourceProvider(pathSet);
     }
 
+    /**
+     * Get the mount prefix.
+     */
+    private String getPrefix(final ServiceReference ref) {
+        Object value = ref.getProperty(SLING_SERVLET_PREFIX);
+        if ( value == null ) {
+            if ( this.servletRoot != null ) {
+                return this.servletRoot;
+            }
+            value = this.servletRootIndex;
+        }
+        int index = -1;
+        if ( value instanceof Number ) {
+            index = ((Number)value).intValue();
+        } else {
+            String s = value.toString();
+            if ( !s.startsWith("/") ) {
+                boolean isNumber = false;
+                try {
+                    index = Integer.valueOf(s);
+                    isNumber = true;
+                } catch (NumberFormatException nfe) {
+                    // ignore
+                }
+                if ( !isNumber ) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("getPrefix({}): Configuration property is ignored {}",
+                            getServiceIdentifier(ref), value);
+                    }
+                    if ( this.servletRoot != null ) {
+                        return this.servletRoot;
+                    }
+                    index = this.servletRootIndex;
+                }
+            } else {
+                return s;
+            }
+        }
+        if ( index == -1 || index >= this.searchPaths.length ) {
+            index = this.searchPaths.length - 1;
+        }
+        return this.searchPaths[index];
+    }
+
+    /**
+     * Add a servlet by path.
+     * @param pathSet
+     * @param ref
+     */
     private void addByPath(Set<String> pathSet, ServiceReference ref) {
         String[] paths = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_PATHS));
         if (paths != null && paths.length > 0) {
             for (String path : paths) {
                 if (!path.startsWith("/")) {
-                    path = servletRoot.concat(path);
+                    path = getPrefix(ref).concat(path);
                 }
 
                 // add the unmodified path
@@ -122,6 +209,11 @@ public class ServletResourceProviderFactory {
         }
     }
 
+    /**
+     * Add a servlet by type
+     * @param pathSet
+     * @param ref
+     */
     private void addByType(Set<String> pathSet, ServiceReference ref) {
         String[] types = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_RESOURCE_TYPES));
         if (types == null || types.length == 0) {
@@ -144,7 +236,7 @@ public class ServletResourceProviderFactory {
         // handle the methods property specially (SLING-430)
         String[] methods = OsgiUtil.toStringArray(ref.getProperty(SLING_SERVLET_METHODS));
         if (methods == null || methods.length == 0) {
-            
+
             // SLING-512 only, set default methods if no extensions are declared
             if (extensions == null || extensions.length == 0) {
                 if (log.isInfoEnabled()) {
@@ -154,7 +246,7 @@ public class ServletResourceProviderFactory {
                 }
                 methods = DEFAULT_SERVLET_METHODS;
             }
-            
+
         } else if (methods.length == 1 && ALL_METHODS.equals(methods[0])) {
             if (log.isInfoEnabled()) {
                 log.info("addByType({}): Assuming all methods for '*'",
@@ -170,7 +262,7 @@ public class ServletResourceProviderFactory {
 
             // make absolute if relative
             if (!type.startsWith("/")) {
-                type = servletRoot + type;
+                type = this.getPrefix(ref) + type;
             }
 
             // ensure trailing slash for full path building
