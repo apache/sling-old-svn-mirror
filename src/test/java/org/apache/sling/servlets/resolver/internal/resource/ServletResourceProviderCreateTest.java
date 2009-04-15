@@ -48,7 +48,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
     private static final String RES_TYPE_PATH = JcrResourceUtil.resourceTypeToPath(RES_TYPE);
 
     private ServletResourceProviderFactory factory = new ServletResourceProviderFactory(
-        ROOT);
+        ROOT, new String[] {"/apps/"});
 
     public void testCreateMethodsDefault() {
         MockServiceReference msr = new MockServiceReference(null);

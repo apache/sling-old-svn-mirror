@@ -21,6 +21,7 @@ package org.apache.sling.servlets.resolver.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 
@@ -28,6 +29,7 @@ import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.commons.testing.osgi.MockBundle;
@@ -37,6 +39,7 @@ import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.engine.EngineConstants;
+import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.resolver.internal.resource.MockServletResource;
 import org.osgi.framework.Constants;
 
@@ -55,8 +58,20 @@ public class SlingServletResolverTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
+        mockResourceResolver = new MockResourceResolver();
+        mockResourceResolver.setSearchPath("/");
+
+        final JcrResourceResolverFactory factory = new JcrResourceResolverFactory() {
+
+            public ResourceResolver getResourceResolver(Session session) {
+                return mockResourceResolver;
+            }
+        };
+
         servlet = new MockSlingRequestHandlerServlet();
         servletResolver = new SlingServletResolver();
+        servletResolver.bindResourceResolverFactory(factory);
+
         MockBundle bundle = new MockBundle(1L);
         MockComponentContext mockComponentContext = new MockComponentContext(
             bundle, SlingServletResolverTest.this.servlet);
@@ -73,8 +88,6 @@ public class SlingServletResolverTest extends TestCase {
 
         servletResolver.bindServlet(serviceReference);
         servletResolver.activate(mockComponentContext);
-        mockResourceResolver = new MockResourceResolver();
-        mockResourceResolver.setSearchPath("/");
 
         String path = "/"
             + MockSlingHttpServletRequest.RESOURCE_TYPE
@@ -115,7 +128,7 @@ public class SlingServletResolverTest extends TestCase {
 
     /**
      * This sample servlet will only handle secure requests.
-     * 
+     *
      * @see org.apache.sling.api.servlets.OptingServlet#accepts
      */
     private static class MockSlingRequestHandlerServlet extends HttpServlet
