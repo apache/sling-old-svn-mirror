@@ -93,7 +93,8 @@ public class SlingServletResolver implements ServletResolver,
      */
     public static final String PROP_SERVLET_ROOT = "servletresolver.servletRoot";
 
-    public static final String DEFAULT_SERVLET_ROOT = "/apps";
+    /** The default servlet root is the first search path (which is usally /apps) */
+    public static final String DEFAULT_SERVLET_ROOT = "0";
 
     private static final String REF_SERVLET = "Servlet";
 
