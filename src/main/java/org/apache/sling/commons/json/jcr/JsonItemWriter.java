@@ -73,7 +73,7 @@ public class JsonItemWriter {
         final JSONWriter w = new JSONWriter(out);
         w.array();
         while (it.hasNext()) {
-            dumpSingleNode(it.nextNode(), w, 1, 0);
+            dump(it.nextNode(), w, 1, 1);
         }
         w.endArray();
     }

@@ -19,12 +19,17 @@ package org.apache.sling.commons.json.jcr;
 import java.io.StringWriter;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import junit.framework.TestCase;
 
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.jcr.MockNode;
+import org.apache.sling.commons.testing.jcr.MockNodeIterator;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Test the JsonItemWriter */
 public class JsonItemWriterTest extends TestCase {
@@ -48,5 +53,24 @@ public class JsonItemWriterTest extends TestCase {
         final String [] values = { "1234", "yes" };
         n.setProperty("testprop", values);
         assertEquals("{\"testprop\":[\"1234\",\"yes\"]}",getJson(n, 0));
+    }
+
+    /**
+     * See <a href="https://issues.apache.org/jira/browse/SLING-924">SLING-924</a>
+     */
+    public void testOutputIterator() throws JSONException, RepositoryException {
+        MockNode node1 = new MockNode("/node1");
+        MockNode node2 = new MockNode("/node2");
+        node1.addNode("node3");
+        node1.setProperty("name", "node1");
+        node2.setProperty("name", "node2");
+        final NodeIterator it = new MockNodeIterator(new Node[]{node1, node2});
+        final StringWriter sw = new StringWriter();
+        writer.dump(it, sw);
+        Pattern testPattern = Pattern.compile("\\{(.[^\\}]*)\\}"); // Pattern to look for a {...}
+        Matcher matcher = testPattern.matcher(sw.toString());
+        assertTrue("Did not produce a JSON object", matcher.find()); // Find first JSON object
+        assertTrue("Did not produce a 2nd JSON object", matcher.find()); // Find second JSON object
+        assertFalse("Produced a JSON object for a child node", matcher.find()); // Assert no child node has been created
     }
 }
