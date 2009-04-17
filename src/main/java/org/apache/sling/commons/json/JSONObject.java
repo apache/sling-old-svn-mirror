@@ -324,10 +324,10 @@ public class JSONObject {
         if (o == null) {
             put(key, new JSONArray().put(value));
         } else if (o instanceof JSONArray) {
+            put(key, new JSONArray().put(o).put(value));
+        } else {
             throw new JSONException("JSONObject[" + key +
             		"] is not a JSONArray.");
-        } else {
-            put(key, new JSONArray().put(o).put(value));
         }
         return this;
     }
