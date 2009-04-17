@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.framework.Logger;
-import org.apache.sling.commons.log.LogManager;
 import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
 import org.apache.sling.launchpad.base.impl.ResourceProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
@@ -77,10 +76,10 @@ public class MainDelegate implements Launcher {
         "INFO", "DEBUG" };
 
     /** The Sling configuration property name setting the initial log level */
-    private static final String PROP_LOG_LEVEL = LogManager.LOG_LEVEL;
+    private static final String PROP_LOG_LEVEL = "org.apache.sling.commons.log.level";
 
     /** The Sling configuration property name setting the initial log file */
-    private static final String PROP_LOG_FILE = LogManager.LOG_FILE;
+    private static final String PROP_LOG_FILE = "org.apache.sling.commons.log.file";
 
     /** Default log level setting if no set on command line (value is "INFO"). */
     private static final int DEFAULT_LOG_LEVEL = Logger.LOG_INFO;
@@ -149,7 +148,7 @@ public class MainDelegate implements Launcher {
             commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
         Logger logger = new Logger();
-        
+
         // Display port number on console, in case HttpService doesn't
         consoleInfo("HTTP server port: " + commandLine.get(PROP_PORT), null);
 
@@ -355,7 +354,7 @@ public class MainDelegate implements Launcher {
 
         return defaultLevel;
     }
-    
+
     // ---------- console logging
 
     // emit an informational message to standard out

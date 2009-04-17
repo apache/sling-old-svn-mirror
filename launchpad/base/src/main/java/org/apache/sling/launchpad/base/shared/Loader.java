@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLConnection;
 
 /**
@@ -39,7 +38,7 @@ public class Loader {
      * Creates an URLClassLoader from a _launcher JAR_ file in the given
      * slingHome directory and loads and returns the launcher class identified
      * by the launcherClassName.
-     * 
+     *
      * @param launcherClassName The fully qualified name of a class implementing
      *            the Launcher interface. This class must have a public
      *            constructor taking no arguments.
@@ -106,7 +105,7 @@ public class Loader {
      * sling home directory and sets the last modification time stamp fo the
      * file. If the existing file is not older than the contents of the launcher
      * JAR file, the file is not replaced.
-     * 
+     *
      * @return <code>true</code> if the launcher JAR file has been installed or
      *         updated. If the launcher JAR is already up to date,
      *         <code>false</code> is returned.
@@ -136,7 +135,7 @@ public class Loader {
      * Spools the contents of the input stream to the given file replacing the
      * contents of the file with the contents of the input stream. When this
      * method returns, the input stream is guaranteed to be closed.
-     * 
+     *
      * @throws IOException If an error occurrs reading or writing the input
      *             stream contents.
      */
@@ -168,7 +167,7 @@ public class Loader {
     /**
      * Returns a <code>File</code> object representing the Launcher JAR file
      * found in the sling home folder.
-     * 
+     *
      * @throws IllegalArgumentException if the sling home folder cannot be
      *             created or exists as a non-directory filesystem entry.
      */
