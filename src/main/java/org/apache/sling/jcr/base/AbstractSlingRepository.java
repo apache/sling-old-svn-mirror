@@ -626,8 +626,12 @@ public abstract class AbstractSlingRepository implements SlingRepository,
         // immediately try to start the repository while activating
         // this component instance
         try {
-            startRepository();
-            log(LogService.LOG_INFO, "Repository started successfully"); 
+            if (startRepository()) {
+                log(LogService.LOG_INFO, "Repository started successfully");
+            } else {
+                log(LogService.LOG_WARNING,
+                    "Repository startup failed, will try later");
+            }
         } catch (Throwable t) {
             log(LogService.LOG_WARNING,
                 "activate: Unexpected problem starting repository", t);
@@ -671,7 +675,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
     protected void unbindLog(LogService log) {
         if (this.log == log) {
-            log = null;
+            this.log = null;
         }
     }
 
@@ -807,12 +811,7 @@ public abstract class AbstractSlingRepository implements SlingRepository,
                 if (pingRepository(newRepo)) {
                     repository = newRepo;
 
-                    if(!pingAndCheck()) {
-                        repository = null;
-                        log(LogService.LOG_DEBUG, "pingRepository() successful but pingAndCheck() fails, will try again");
-                        return false;
-
-                    } else {
+                    if(pingAndCheck()) {
                         log(LogService.LOG_DEBUG,
                             "startRepository: pingRepository() and pingAndCheck() successful, calling setupRepository()");
                         setupRepository(newRepo);
@@ -827,12 +826,27 @@ public abstract class AbstractSlingRepository implements SlingRepository,
 
                         return true;
                     }
+
+                    // ping succeeded but pingAndCheck fail, we have to drop
+                    // the repository in this situation and restart from
+                    // scratch later
+                    log(
+                        LogService.LOG_DEBUG,
+                        "pingRepository() successful but pingAndCheck() fails, calling disposeRepository()");
+                    
+                    // drop reference
+                    repository = null;
+                    
+                } else {
+
+                    // otherwise let go of the repository and fail startup
+                    log(LogService.LOG_DEBUG,
+                        "startRepository: pingRepository() failed, calling disposeRepository()");
+
                 }
 
-                // otherwise let go of the repository and fail startup
-                log(LogService.LOG_DEBUG,
-                    "startRepository: pingRepository() failed, calling disposeRepository()");
-                disposeRepository(repository);
+                // ping or pingAndCheck failed: dispose off repository
+                disposeRepository(newRepo);
             }
         } catch (Throwable t) {
             // consider an uncaught problem an error
