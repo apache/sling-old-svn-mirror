@@ -57,7 +57,7 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
     /** Header containing the sling initial content information. */
     private static final String HEADER_INITIAL_CONTENT = "Sling-Initial-Content";
     /** The fs resource provider factory. */
-    private static final String FS_FACTORY = "org.apache.sling.fsprovider.FsResourceProvider";
+    private static final String FS_FACTORY = "org.apache.sling.fsprovider.internal.FsResourceProvider";
     /** Mime type for json response. */
     private static final String JSON_MIME_TYPE = "application/json";
     /** Http header for content type. */

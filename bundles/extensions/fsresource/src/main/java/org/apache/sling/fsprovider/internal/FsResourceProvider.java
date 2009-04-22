@@ -45,10 +45,10 @@ import org.osgi.service.component.ComponentContext;
  * and the file system path from where files and folders are mapped into the
  * resource ({@link #PROP_PROVIDER_FILE}).
  *
- * @scr.component name="org.apache.sling.fsprovider.FsResourceProvider"
+ * @scr.component name="org.apache.sling.fsprovider.internal.FsResourceProvider"
  *                label="%resource.resolver.name"
  *                description="%resource.resolver.description"
- *                factory="org.apache.sling.fsprovider.FsResourceProviderFactory"
+ *                factory="org.apache.sling.fsprovider.internal.FsResourceProviderFactory"
  * @scr.service
  * @scr.property name="service.description" value="Sling Filesystem Resource
  *               Provider"
