@@ -55,7 +55,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>
-                            org.apache.sling.fsprovider.*
+                            org.apache.sling.fsprovider.internal
                         </Private-Package>
                     </instructions>
                 </configuration>
