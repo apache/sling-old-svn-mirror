@@ -1,0 +1,183 @@
+<!--
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; utf-8">
+<title>Login/Logout</title>
+<style type="text/css">
+body {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    color: black;
+    background-color: white;
+}
+
+#main {
+    border: 1px solid black;
+    margin-top: 25%;
+    margin-left: 25%;
+    width: 220px;
+    padding: 10px;
+}
+
+table {
+    width: ;
+}
+
+#login {
+    display: none;
+}
+
+#logout {
+    display: none;
+}
+
+#login form {
+    padding: 0px;
+    margin: 0px;
+}
+</style>
+
+<script>
+  // fix the display of login/logout
+  function onLoad() {
+      if ('@@authType@@') {
+          document.getElementById("logout").style.display = "block";
+      } else {
+          document.getElementById("login").style.display = "block";
+      }
+      document.getElementById("nojs").style.display = "none";
+  }
+   
+  // request object, do not access directly, use getXmlHttp instead
+  var xmlhttp = null;
+  function getXmlHttp() {
+     if (xmlhttp) {
+          return xmlhttp;
+     }
+      
+     if (window.XMLHttpRequest) {
+         xmlhttp = new XMLHttpRequest();
+     } else if (window.ActiveXObject) {
+         try {
+             xmlhttp = new ActiveXObject('Msxml2.XMLHTTP');
+         } catch (ex) {
+             try {
+                 xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
+             } catch (ex) {
+             }
+         }
+     }
+  
+     return xmlhttp;
+  }
+    
+  function sendRequest(/* String */ user, /* String */ pass) {
+      var xmlhttp = getXmlHttp();
+      if (!xmlhttp) {
+        return;
+      }
+
+      if (xmlhttp.readyState < 4) {
+        xmlhttp.abort();
+      }
+
+      xmlhttp.open('POST', '@@contextPath@@?sling:authRequestLogin=1', false, user, pass);
+      xmlhttp.send('');
+  }
+          
+  function loginuser() {
+    var user = document.forms['login'].usr.value;
+    var pass = document.forms['login'].pwd.value;
+    sendRequest(user, pass);
+    document.location = document.location
+    return false;
+  }
+
+  function logoutuser() {
+  
+      try {
+          // 'ClearAuthenticationCache' is only available in some browsers
+          // including the IE; for eg. Firefox, who cannot handle this command,
+          // we have the try-catch statement
+  
+          // works in IE
+          document.execCommand('ClearAuthenticationCache');
+  
+      } catch (e) {
+          sendRequest('__forced_logout_user__', 'null');
+      }
+  
+      document.location = document.location
+  }
+          
+</script>
+</head>
+<body onload="onLoad()">
+<div id="main"><!-- Login Form -->
+<div id="login">
+<form name='login' onsubmit='return loginuser()'>
+<table align='center'>
+  <tr>
+    <td colspan='2' align='center'>You are not currently logged in</td>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td><input type='text' name='usr' /></td>
+  </tr>
+  <tr>
+    <td>Password</td>
+    <td><input type='password' name='pwd' /></td>
+  </tr>
+  <tr>
+    <td colspan='2' align='center'><input type='submit'
+      value='Login' onClick='loginuser();' /></td>
+  </tr>
+</table>
+</form>
+</div>
+
+
+<!-- Logout Information -->
+<div id="logout">
+<table align='center'>
+  <tr>
+    <td align='center'>You are logged in as @@user@@</td>
+  </tr>
+  <tr>
+    <td align='center'><input type='button' value='Logout'
+      onClick='logoutuser();' /></td>
+  </tr>
+</table>
+</div>
+
+<!-- Warning in case JavaScript is disabled -->
+<div id="nojs">
+<table align='center'>
+  <tr>
+    <td align='center'>This Login/Logout form requires JavaScript
+    enabled.</td>
+  </tr>
+</table>
+</div>
+
+</div>
+</body>
+</html>
