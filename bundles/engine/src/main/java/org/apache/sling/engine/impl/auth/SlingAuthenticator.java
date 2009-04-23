@@ -42,6 +42,7 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
+import org.apache.sling.engine.auth.Authenticator;
 import org.apache.sling.jcr.api.TooManySessionsException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -76,7 +77,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.description" value="Sling Authenticator"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
-public class SlingAuthenticator implements ManagedService {
+public class SlingAuthenticator implements ManagedService, Authenticator {
 
     /**
      * The name of the request attribute containing the AuthenticationHandler
@@ -161,8 +162,9 @@ public class SlingAuthenticator implements ManagedService {
         props.put(Constants.SERVICE_DESCRIPTION, "Sling Request Authenticator");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-        registration = bundleContext.registerService(
-            ManagedService.class.getName(), this, props);
+        registration = bundleContext.registerService(new String[] {
+            ManagedService.class.getName(), Authenticator.class.getName() },
+            this, props);
     }
 
     public void dispose() {
@@ -242,7 +244,7 @@ public class SlingAuthenticator implements ManagedService {
      * Requests authentication information from the client. Returns
      * <code>true</code> if the information has been requested and request
      * processing can be terminated. Otherwise the request information could not
-     * be requested and the request should be terminated with a 40x (Forbidden)
+     * be requested and the request should be terminated with a 403/FORBIDDEN
      * response.
      * <p>
      * Any response sent by the handler is also handled by the error handler
@@ -251,9 +253,13 @@ public class SlingAuthenticator implements ManagedService {
      * @param request The request object
      * @param response The response object to which to send the request
      */
-    public void requestAuthentication(HttpServletRequest request,
-            HttpServletResponse response) {
+    public void login(HttpServletRequest request, HttpServletResponse response) {
 
+        // ensure the response is not committed yet
+        if (response.isCommitted()) {
+            throw new IllegalStateException("Response already committed");
+        }
+        
         AuthenticationHandlerInfo[] handlerInfos = findApplicableAuthenticationHandlers(request);
         boolean done = false;
         for (int i = 0; !done && i < handlerInfos.length; i++) {
@@ -501,7 +507,7 @@ public class SlingAuthenticator implements ManagedService {
 
         // request authentication now, and fail if not possible
         log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
-        requestAuthentication(req, res);
+        login(req, res);
 
         // fallback to no session
         return false;
@@ -529,7 +535,7 @@ public class SlingAuthenticator implements ManagedService {
             // if no handler can request authentication information.
             log.info("authenticate: Unable to authenticate: {}",
                 reason.getMessage());
-            requestAuthentication(request, response);
+            login(request, response);
 
         } else {
 
