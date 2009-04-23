@@ -18,8 +18,15 @@
  */
 package org.apache.sling.httpauth.impl;
 
+import java.awt.image.ImagingOpException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.jcr.SimpleCredentials;
 import javax.servlet.http.Cookie;
@@ -38,10 +45,11 @@ import org.slf4j.LoggerFactory;
  * the authorization steps based on the Authorization header of the HTTP
  * request. This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
- *
+ * 
  * @scr.component immediate="false" label="%auth.http.name"
  *                description="%auth.http.description"
- * @scr.property name="service.description" value="HTTP Header Authentication Handler"
+ * @scr.property name="service.description"
+ *               value="HTTP Header Authentication Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property nameRef="AuthenticationHandler.PATH_PROPERTY" value="/"
  * @scr.service
@@ -59,7 +67,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * in the {@link #authenticate(HttpServletRequest, HttpServletResponse)}
      * method if no credentials are present in the request (value is
      * "sling:authRequestLogin").
-     *
+     * 
      * @see #authenticate(HttpServletRequest, HttpServletResponse)
      */
     static final String REQUEST_LOGIN_PARAMETER = "sling:authRequestLogin";
@@ -80,10 +88,14 @@ public class AuthorizationHeaderAuthenticationHandler implements
 
     private static final String DEFAULT_REALM = "Sling (Development)";
 
+    private static final String LOGIN_FORM_TEMPLATE = "LoginFormTemplate.html";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String realm = DEFAULT_REALM;
+
+    private String loginFormTemplate;
 
     public AuthorizationHeaderAuthenticationHandler() {
         log.info("AuthorizationHeaderAuthenticationHandler created");
@@ -96,21 +108,25 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * is only based on the original request object, no URI translation has
      * taken place yet.
      * <p>
-     * The method returns any of the following values : <table>
+     * The method returns any of the following values :
+     * <table>
      * <tr>
      * <th>value
-     * <th>description</tr>
+     * <th>description
+     * </tr>
      * <tr>
      * <td><code>null</code>
-     * <td>no user details were contained in the request </tr>
+     * <td>no user details were contained in the request
+     * </tr>
      * <tr>
      * <td>{@link AuthenticationInfo#DOING_AUTH}
-     * <td>the handler is in an ongoing authentication exchange with the
-     * client. The request handling is terminated.
+     * <td>the handler is in an ongoing authentication exchange with the client.
+     * The request handling is terminated.
      * <tr>
      * <tr>
      * <td>valid credentials
-     * <td>The user sent credentials.</tr>
+     * <td>The user sent credentials.
+     * </tr>
      * </table>
      * <p>
      * The method must not request credential information from the client, if
@@ -120,7 +136,7 @@ public class AuthorizationHeaderAuthenticationHandler implements
      * the request may be for an included servlet, in which case the values for
      * some URI specific values are contained in javax.servlet.include.* request
      * attributes.
-     *
+     * 
      * @param request The request object containing the information for the
      *            authentication.
      * @param response The response object which may be used to send the
@@ -141,13 +157,8 @@ public class AuthorizationHeaderAuthenticationHandler implements
         }
 
         // no credentials, check whether the client wants to login
-        if (request.getParameter(REQUEST_LOGIN_PARAMETER) != null) {
-            try {
-                requestAuthentication(request, response);
-                return AuthenticationInfo.DOING_AUTH;
-            } catch (IOException ioe) {
-                log.error("authenticate: Failed requesting authentication", ioe);
-            }
+        if (forceAuthentication(request, response)) {
+            return AuthenticationInfo.DOING_AUTH;
         }
 
         // no special header, so we will not authenticate here
@@ -155,16 +166,12 @@ public class AuthorizationHeaderAuthenticationHandler implements
     }
 
     /**
-     * Sends status <code>401</code> (Unauthorized) with a
-     * <code>WWW-Authenticate</code> requesting standard HTTP header
-     * authentication with the <code>Basic</code> scheme and the configured
-     * realm name. If the response is already committed, an error message is
-     * logged but the 401 status is not sent.
-     *
+     * Sends back the form to log into the system.
+     * 
      * @param request The request object
      * @param response The response object to which to send the request
      * @return <code>true</code> is always returned by this handler
-     * @throws IOException if an error occurrs sending back the response.
+     * @throws IOException if an error occurrs sending back the form.
      */
     public boolean requestAuthentication(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -172,11 +179,32 @@ public class AuthorizationHeaderAuthenticationHandler implements
         // if the response is already committed, we have a problem !!
         if (!response.isCommitted()) {
 
-            response.setHeader(HEADER_WWW_AUTHENTICATE,
-                AUTHENTICATION_SCHEME_BASIC + " realm=\"" + this.realm + "\"");
+            // reset the response
+            response.reset();
+            response.setStatus(HttpServletResponse.SC_OK);
 
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            String form = getLoginForm();
 
+            if (form != null) {
+
+                form = replaceVariables(form, "@@contextPath@@",
+                    request.getContextPath(), "/");
+                form = replaceVariables(form, "@@authType@@",
+                    request.getAuthType(), "");
+                form = replaceVariables(form, "@@user@@",
+                    request.getRemoteUser(), "");
+
+                response.setContentType("text/html");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().print(form);
+
+            } else {
+                
+                // have no form, so just send 401/UNATHORIZED for simple login
+                sendUnauthorized(response);
+                
+            }
+            
         } else {
 
             log.error("requestAuthentication: Response is committed, cannot request authentication");
@@ -184,6 +212,78 @@ public class AuthorizationHeaderAuthenticationHandler implements
         }
 
         return true;
+    }
+
+    /**
+     * If the {@link #REQUEST_LOGIN_PARAMETER} parameter is set this method
+     * sends status <code>401</code> (Unauthorized) with a
+     * <code>WWW-Authenticate</code> requesting standard HTTP header
+     * authentication with the <code>Basic</code> scheme and the configured
+     * realm name. If the response is already committed, an error message is
+     * logged but the 401 status is not sent.
+     * <p>
+     * <code>false</code> is returned if the request parameter is not set, if
+     * the response is already committed or if an error occurred sending the
+     * status response. The latter two situations are logged as errors.
+     * 
+     * @param request The request object
+     * @param response The response object to which to send the request
+     * @return <code>true</code> if the 401/UNAUTHORIZED method has successfully
+     *         been sent.
+     */
+    private boolean forceAuthentication(HttpServletRequest request,
+            HttpServletResponse response) {
+
+        // presume 401/UNAUTHORIZED has not been sent
+        boolean authenticationForced = false;
+
+        if (request.getParameter(REQUEST_LOGIN_PARAMETER) != null) {
+
+            if (!response.isCommitted()) {
+
+                authenticationForced = sendUnauthorized(response);
+
+            } else {
+
+                log.error("forceAuthentication: Response is committed, cannot request authentication");
+
+            }
+            
+        } else {
+            
+            log.debug(
+                "forceAuthentication: Not forcing authentication because request parameter {} is not set",
+                REQUEST_LOGIN_PARAMETER);
+            
+        }
+
+        // true if 401/UNAUTHORIZED has been sent, false otherwise
+        return authenticationForced;
+    }
+    
+    /**
+     * Sends status <code>401</code> (Unauthorized) with a
+     * <code>WWW-Authenticate</code> requesting standard HTTP header
+     * authentication with the <code>Basic</code> scheme and the configured
+     * realm name.
+     * 
+     * @param response The response object to which to send the request
+     * @return <code>true</code> if the 401/UNAUTHORIZED method has successfully
+     *         been sent.
+     */
+    private boolean sendUnauthorized(HttpServletResponse response) {
+        response.setHeader(HEADER_WWW_AUTHENTICATE, AUTHENTICATION_SCHEME_BASIC
+            + " realm=\"" + this.realm + "\"");
+
+        try {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return true;
+        } catch (IOException ioe) {
+            log.error("sendUnauthorized: Failed requesting authentication",
+                ioe);
+        }
+
+        return false;
     }
 
     // ---------- SCR Integration ----------------------------------------------
@@ -275,5 +375,71 @@ public class AuthorizationHeaderAuthenticationHandler implements
         }
 
         return new AuthenticationInfo(HttpServletRequest.BASIC_AUTH, creds);
+    }
+
+    /**
+     * Returns the login form template as a string or <code>null</code> if it
+     * cannot be read. Failure to read the template is logged.
+     */
+    private String getLoginForm() {
+        if (loginFormTemplate == null) {
+            InputStream ins = getClass().getResourceAsStream(
+                LOGIN_FORM_TEMPLATE);
+            if (ins != null) {
+                try {
+
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    byte[] buf = new byte[3000];
+                    int bytes = 0;
+                    while ((bytes = ins.read(buf)) >= 0) {
+                        out.write(buf, 0, bytes);
+                    }
+                    out.close();
+                    loginFormTemplate = new String(out.toByteArray(), "UTF-8");
+
+                } catch (IOException ioe) {
+
+                    log.error(
+                        "getLoginForm: Failure reading login form template",
+                        ioe);
+
+                } finally {
+
+                    try {
+                        ins.close();
+                    } catch (IOException ignore) {
+                    }
+
+                }
+                
+            } else {
+                
+                log.error("getLoginForm: Cannot access login form template at "
+                    + LOGIN_FORM_TEMPLATE);
+                
+            }
+        }
+
+        return loginFormTemplate;
+    }
+
+    /**
+     * Replaces all occurrences in the <code>template</code> of the
+     * <code>key</code> (a regular expression) by the <code>value</code> or
+     * <code>defaultValue</code>.
+     * 
+     * @param template The template to replace occurences of key
+     * @param key The regular expression of the key to replace
+     * @param value The replacement value
+     * @param defaultValue The replacement value to use if the value is null or
+     *            an empty string.
+     * @return the template with the key values replaced.
+     */
+    private String replaceVariables(String template, String key, String value,
+            String defaultValue) {
+        if (value == null || value.length() == 0) {
+            value = defaultValue;
+        }
+        return template.replaceAll(key, value);
     }
 }
