@@ -79,14 +79,9 @@ public class Activator implements BundleActivator, ServiceListener {
     // empty list of login modules if there are none registered
     private static LoginModulePlugin[] EMPTY = new LoginModulePlugin[0];
 
-//    private static AccessManagerPluginFactory accessManagerFactory;
-//    private static ServiceTracker accessManagerFactoryTracker;
-//  private static int accessManagerCount = -1;
-
     // the name of the default sling context
     private String slingContext;
     private static AccessManagerFactoryTracker accessManagerFactoryTracker;
-//    protected static ServiceTrackerCustomizer serviceTrackerCustomizer;
 
     protected String getRepositoryName() {
     	String repoName = bundleContext.getProperty("sling.repository.name");
