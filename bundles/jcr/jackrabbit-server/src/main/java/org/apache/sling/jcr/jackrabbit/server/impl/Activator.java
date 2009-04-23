@@ -79,8 +79,14 @@ public class Activator implements BundleActivator, ServiceListener {
     // empty list of login modules if there are none registered
     private static LoginModulePlugin[] EMPTY = new LoginModulePlugin[0];
 
+//    private static AccessManagerPluginFactory accessManagerFactory;
+//    private static ServiceTracker accessManagerFactoryTracker;
+//  private static int accessManagerCount = -1;
+
     // the name of the default sling context
     private String slingContext;
+    private static AccessManagerFactoryTracker accessManagerFactoryTracker;
+//    protected static ServiceTrackerCustomizer serviceTrackerCustomizer;
 
     protected String getRepositoryName() {
     	String repoName = bundleContext.getProperty("sling.repository.name");
@@ -123,6 +129,10 @@ public class Activator implements BundleActivator, ServiceListener {
                     ise);
             }
         }
+        if (accessManagerFactoryTracker == null) {
+            accessManagerFactoryTracker = new AccessManagerFactoryTracker(bundleContext);
+        }
+        accessManagerFactoryTracker.open();
     }
 
     public void stop(BundleContext arg0) {
@@ -149,6 +159,11 @@ public class Activator implements BundleActivator, ServiceListener {
         if (loginModuleTracker != null) {
             loginModuleTracker.close();
             loginModuleTracker = null;
+        }
+
+        if (accessManagerFactoryTracker != null) {
+            accessManagerFactoryTracker.close();
+            accessManagerFactoryTracker = null;
         }
         
         // clear the bundle context field
@@ -208,6 +223,10 @@ public class Activator implements BundleActivator, ServiceListener {
 
         // the module cache is now up to date
         return moduleCache;
+    }
+
+    public static AccessManagerFactoryTracker getAccessManagerFactoryTracker() {
+        return accessManagerFactoryTracker;
     }
 
     // ---------- internal -----------------------------------------------------
@@ -329,5 +348,5 @@ public class Activator implements BundleActivator, ServiceListener {
         SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
     	return configFile;
     }
-    
+
 }

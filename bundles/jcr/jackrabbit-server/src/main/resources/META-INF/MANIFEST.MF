@@ -18,8 +18,15 @@ Bundle-ClassPath: .,nekohtml-1.9.7.jar,lucene-core-2.3.2.jar,jackrabbi
  erby-10.2.1.6.jar,poi-3.0.2-FINAL.jar,xercesImpl-2.8.1.jar,pdfbox-0.7
  .3.jar,jackrabbit-spi-1.5.0.jar,poi-scratchpad-3.0.2-FINAL.jar
 Export-Package: org.apache.sling.jcr.jackrabbit.server.security;uses:=
- "javax.jcr,javax.security.auth.callback,javax.security.auth.login";ve
- rsion="2.0.3.incubator-SNAPSHOT"
+ "javax.jcr,javax.security.auth.callback,javax.security.auth.login,jav
+ ax.security.auth";version="2.0.3.incubator-SNAPSHOT",org.apache.jackr
+ abbit.core.security.principal;uses:="javax.jcr,org.slf4j,org.apache.c
+ ommons.collections.iterators,org.apache.jackrabbit.api.security.user,
+ org.apache.commons.collections.map,javax.jcr.observation,org.apache.j
+ ackrabbit.api.security.principal,org.apache.commons.collections.set";
+ version="2.0.3.incubator-SNAPSHOT",org.apache.sling.jcr.jackrabbit.se
+ rver.security.accessmanager;uses:="javax.jcr,javax.security.auth";ver
+ sion="2.0.3.incubator-SNAPSHOT"
 Import-Package: javax.jcr,javax.jcr.lock,javax.jcr.nodetype,javax.jcr.
  observation,javax.jcr.query,javax.jcr.util,javax.jcr.version,javax.na
  ming,javax.naming.directory,javax.naming.spi,javax.security.auth,java
