@@ -245,10 +245,17 @@ public class JSONArray {
     public JSONArray getJSONArray(int index) throws JSONException {
         Object o = get(index);
         if (o instanceof JSONArray) {
-            return (JSONArray)o;
+            return (JSONArray) o;
+        } else if (o instanceof String) {
+            JSONTokener tokener = new JSONTokener((String) o);
+            try {
+                return new JSONArray(tokener);
+            } catch (JSONException ignore) {
+                // will throw the appropriate exception below
+            }
         }
-        throw new JSONException("JSONArray[" + index +
-                "] is not a JSONArray.");
+
+        throw new JSONException("JSONArray[" + index + "] is not a JSONArray.");
     }
 
 
@@ -262,10 +269,17 @@ public class JSONArray {
     public JSONObject getJSONObject(int index) throws JSONException {
         Object o = get(index);
         if (o instanceof JSONObject) {
-            return (JSONObject)o;
+            return (JSONObject) o;
+        } else if (o instanceof String) {
+            JSONTokener tokener = new JSONTokener((String) o);
+            try {
+                return new JSONObject(tokener);
+            } catch (JSONException ignore) {
+                // will throw the appropriate exception below
+            }
         }
-        throw new JSONException("JSONArray[" + index +
-            "] is not a JSONObject.");
+
+        throw new JSONException("JSONArray[" + index + "] is not a JSONObject.");
     }
 
 
@@ -448,8 +462,11 @@ public class JSONArray {
      * or if the value is not a JSONArray.
      */
     public JSONArray optJSONArray(int index) {
-        Object o = opt(index);
-        return o instanceof JSONArray ? (JSONArray)o : null;
+        try {
+            return getJSONArray(index);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 
@@ -462,8 +479,11 @@ public class JSONArray {
      * @return      A JSONObject value.
      */
     public JSONObject optJSONObject(int index) {
-        Object o = opt(index);
-        return o instanceof JSONObject ? (JSONObject)o : null;
+        try {
+            return getJSONObject(index);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 
