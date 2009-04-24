@@ -26,6 +26,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.engine.auth.Authenticator;
+import org.apache.sling.engine.auth.NoAuthenticationHandlerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +54,21 @@ public class LoginServlet extends SlingAllMethodsServlet {
 
         Authenticator authenticator = this.authenticator;
         if (authenticator != null) {
-            authenticator.login(request, response);
+            try {
+                authenticator.login(request, response);
+                return;
+            } catch (IllegalStateException ise) {
+                log.error("doGet: Response already committed, cannot login");
+                return;
+            } catch (NoAuthenticationHandlerException nahe) {
+                log.error("doGet: No AuthenticationHandler to login registered");
+            }
         } else {
             log.error("doGet: Authenticator service missing, cannot request authentication");
-            response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                "Cannot request Authentication");
         }
+
+        // fall back to forbid access
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Cannot login");
     }
 
     @Override
