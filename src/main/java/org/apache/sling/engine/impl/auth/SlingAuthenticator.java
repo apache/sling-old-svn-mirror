@@ -43,6 +43,7 @@ import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.apache.sling.engine.auth.Authenticator;
+import org.apache.sling.engine.auth.NoAuthenticationHandlerException;
 import org.apache.sling.jcr.api.TooManySessionsException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -134,16 +135,6 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
     /** Whether access without credentials is allowed */
     boolean anonymousAllowed;
 
-    /**
-     * The list of packages from the configuration file. This list is checked
-     * for each request. The handler of the first package match is used for the
-     * authentication.
-     */
-    // private AuthPackage[] packages;
-    /**
-     * The number of {@link AuthPackage} elements in the {@link #packages} list.
-     */
-    // private int numPackages;
     private ServiceRegistration registration;
 
     public SlingAuthenticator(BundleContext bundleContext) {
@@ -252,6 +243,9 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
      *
      * @param request The request object
      * @param response The response object to which to send the request
+     * @throws IllegalStateException If response is already committed
+     * @throws NoAuthenticationHandlerException If no authentication handler
+     *             claims responsibility to authenticate the request.
      */
     public void login(HttpServletRequest request, HttpServletResponse response) {
 
@@ -279,13 +273,12 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
             }
         }
 
-        if ( !done ) {
-            // no handler could send an authentication request, fail with FORBIDDEN
+        // no handler could send an authentication request, throw
+        if (!done) {
             log.info(
-                    "requestAuthentication: No handler for request, sending FORBIDDEN ({} handlers available)",
-                    handlerInfos.length
-            );
-            sendFailure(response);
+                "requestAuthentication: No handler for request ({} handlers available)",
+                handlerInfos.length);
+            throw new NoAuthenticationHandlerException();
         }
     }
 
@@ -551,16 +544,6 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
             }
         }
 
-    }
-
-    // TODO
-    private void sendFailure(HttpServletResponse res) {
-        try {
-            res.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
-        } catch (IOException ioe) {
-            log.error("Cannot send error " + HttpServletResponse.SC_FORBIDDEN
-                + " code", ioe);
-        }
     }
 
     /**
