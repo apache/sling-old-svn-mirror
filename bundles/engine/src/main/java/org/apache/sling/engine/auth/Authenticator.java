@@ -52,6 +52,8 @@ public interface Authenticator {
      * 
      * @param request The object representing the client request.
      * @param response The object representing the response to the client.
+     * @throws NoAuthenticationHandlerException If no authentication handler
+     *             claims responsibility to authenticate the request.
      * @throws IllegalStateException If the response has already been committed.
      */
     public void login(HttpServletRequest request, HttpServletResponse response);
