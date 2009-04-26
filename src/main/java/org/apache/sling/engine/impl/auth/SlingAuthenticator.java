@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.EngineConstants;
+import org.apache.sling.engine.RequestUtil;
 import org.apache.sling.engine.auth.AuthenticationHandler;
 import org.apache.sling.engine.auth.AuthenticationInfo;
 import org.apache.sling.engine.auth.Authenticator;
@@ -262,6 +263,7 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
                     "requestAuthentication: requesting authentication using handler: {}",
                     handlerInfos[i]);
 
+                Object oldPathAttr = RequestUtil.setRequestAttribute(request, AuthenticationHandler.PATH_PROPERTY, handlerInfos[i].fullPath);
                 try {
                     done = handlerInfos[i].handler.requestAuthentication(request, response);
                 } catch (IOException ioe) {
@@ -269,6 +271,8 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
                         "requestAuthentication: Failed sending authentication request through handler "
                             + handlerInfos[i] + ", access forbidden", ioe);
                     done = true;
+                } finally {
+                    RequestUtil.setRequestAttribute(request, AuthenticationHandler.PATH_PROPERTY, oldPathAttr);
                 }
             }
         }
@@ -377,7 +381,8 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
 
                         for(int m = 0; m < paths.length; m++) {
                             if ( paths[m] != null && paths[m].length() > 0 ) {
-                                String path = paths[m];
+                                String fullPath = paths[m];
+                                String path = fullPath;
                                 String host = "";
                                 String protocol = "";
 
@@ -403,7 +408,7 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
                                     }
                                 }
 
-                                AuthenticationHandlerInfo newInfo = new AuthenticationHandlerInfo(path, host, protocol, handler);
+                                AuthenticationHandlerInfo newInfo = new AuthenticationHandlerInfo(fullPath, path, host, protocol, handler);
 
                                 Map<String, List<AuthenticationHandlerInfo>> byHostMap = byProtocolMap.get(protocol);
                                 if(byHostMap == null) {
@@ -469,10 +474,18 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
         AuthenticationHandlerInfo[] local = findApplicableAuthenticationHandlers(request);
         for (int i = 0; i < local.length; i++) {
             if ( pathInfo.startsWith(local[i].path) ) {
-                final AuthenticationInfo authInfo = local[i].handler.authenticate(request,
-                    response);
-                if (authInfo != null) {
-                    return authInfo;
+                Object oldPathAttr = RequestUtil.setRequestAttribute(request,
+                    AuthenticationHandler.PATH_PROPERTY, local[i].fullPath);
+                try {
+                    final AuthenticationInfo authInfo = local[i].handler.authenticate(
+                        request, response);
+                    if (authInfo != null) {
+                        return authInfo;
+                    }
+                } finally {
+                    RequestUtil.setRequestAttribute(request,
+                        AuthenticationHandler.PATH_PROPERTY, oldPathAttr);
+
                 }
             }
         }
@@ -682,12 +695,14 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
     }
 
     protected static final class AuthenticationHandlerInfo {
+        public final String fullPath;
         public final String path;
         public final String host;
         public final String protocol;
         public final AuthenticationHandler handler;
 
-        public AuthenticationHandlerInfo(final String p, final String host, final String protocol, final AuthenticationHandler h) {
+        public AuthenticationHandlerInfo(final String fullPath, final String p, final String host, final String protocol, final AuthenticationHandler h) {
+            this.fullPath = fullPath;
             this.path = p;
             this.host = host;
             this.protocol = protocol;

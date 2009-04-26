@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.Servlet;
+import javax.servlet.http.HttpServletRequest;
 
 public class RequestUtil {
 
@@ -133,5 +134,27 @@ public class RequestUtil {
         }
 
         return name;
+    }
+
+    /**
+     * Sets the named request attribute to the new value and returns the
+     * previous value.
+     * 
+     * @param request The request object whose attribute is to be set.
+     * @param name The name of the attribute to be set.
+     * @param value The new value of the attribute. If this is <code>null</code>
+     *            the attribte is actually removed from the request.
+     * @return The previous value of the named request attribute or
+     *         <code>null</code> if it was not set.
+     */
+    public static Object setRequestAttribute(HttpServletRequest request,
+            String name, Object value) {
+        Object oldValue = request.getAttribute(name);
+        if (value == null) {
+            request.removeAttribute(name);
+        } else {
+            request.setAttribute(name, value);
+        }
+        return oldValue;
     }
 }
