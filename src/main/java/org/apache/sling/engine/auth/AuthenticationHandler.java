@@ -24,10 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * The <code>AuthenticationHandler</code> interface is implemented by handlers
- * configured for the <code>AuthenticationHandlerService</code>. That service
- * uses the handler to offload the implementation of extracting credential data
- * from the HTTP request.
+ * The <code>AuthenticationHandler</code> interface defines the service API
+ * used by the authentication implementation to support plugin various ways of
+ * extracting credentials from the request.
  */
 public interface AuthenticationHandler {
 
@@ -81,8 +80,7 @@ public interface AuthenticationHandler {
      * Requests authentication information from the client. Returns
      * <code>true</code> if the information has been requested and request
      * processing can be terminated normally. Otherwise the authorization
-     * information could not be requested and the request will be terminated
-     * with a 403 (Forbidden) response.
+     * information could not be requested.
      * <p>
      * Any response sent by the handler though the <code>sendError</code>
      * method is also handled by the error handler infrastructure.
