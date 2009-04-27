@@ -109,7 +109,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     }
 
     public Resource resolve(HttpServletRequest request, String absPath) {
-        
+
         // make sure abspath is not null and is absolute
         if (absPath == null) {
             absPath = "/";
@@ -205,7 +205,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 log.debug("resolve: Mapped path {} is a Star Resource",
                     realPath);
                 res = new StarResource(this, ensureAbsPath(realPath),
-                    factory.getJcrResourceTypeProvider());
+                    factory.getJcrResourceTypeProviders());
 
             } else
 
