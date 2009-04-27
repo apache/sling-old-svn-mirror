@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  * descriptors provided by bundles.
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
- * 
+ *
  * @scr.component immediate="true" label="%resource.resolver.name"
  *                description="%resource.resolver.description"
  * @scr.property name="service.description"
@@ -115,7 +115,7 @@ public class JcrResourceResolverFactoryImpl implements
      * <p>
      * The default value of this property if no configuration is provided is
      * <code>true</code>.
-     * 
+     *
      * @scr.property value="true" type="Boolean"
      */
     private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
@@ -130,7 +130,7 @@ public class JcrResourceResolverFactoryImpl implements
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
-     * 
+     *
      * @scr.property values.1="/-/"
      */
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
@@ -146,7 +146,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * These regexps are executing during the resource resolving phase before
      * the mappings are applied.
-     * 
+     *
      * @scr.property values.1="/_([^/]+?)_|/$1:"
      */
     private static final String PROP_REGEXPS = "resource.resolver.regexps";
@@ -154,7 +154,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * These regexps are executed during a map operation as the back conversion
      * of the {@link #PROP_REGEXPS}
-     * 
+     *
      * @scr.property values.1="/([^/]+?):([^/]+)|/_$1_$2"
      */
     private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
@@ -164,7 +164,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     /**
      * The JCR Repository we access to resolve resources
-     * 
+     *
      * @scr.reference
      */
     private SlingRepository repository;
@@ -190,7 +190,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     // helper for the new JcrResourceResolver2
     private MapEntries mapEntries = MapEntries.EMPTY;
-    
+
     /** all mappings */
     private Mapping[] mappings;
 
@@ -214,7 +214,7 @@ public class JcrResourceResolverFactoryImpl implements
     /**
      * Temporary field to select which JcrResourceResolver implementation to
      * use.
-     * 
+     *
      * @see #PROP_USE_NEW_RESOLVER
      * @see #getResourceResolver(Session)
      */
@@ -222,7 +222,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
-    
+
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
     }
@@ -235,7 +235,7 @@ public class JcrResourceResolverFactoryImpl implements
      */
     public ResourceResolver getResourceResolver(Session session) {
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
-            session, rootProviderEntry, getJcrResourceTypeProvider());
+            session, rootProviderEntry, getJcrResourceTypeProviders());
 
         if (useNewResourceResolver) {
             return new JcrResourceResolver2(sessionRoot, this, mapEntries);
@@ -244,7 +244,7 @@ public class JcrResourceResolverFactoryImpl implements
         return new JcrResourceResolver(sessionRoot, this);
     }
 
-    protected JcrResourceTypeProvider[] getJcrResourceTypeProvider() {
+    protected JcrResourceTypeProvider[] getJcrResourceTypeProviders() {
         JcrResourceTypeProvider[] providers = null;
         synchronized (this.jcrResourceTypeProviders) {
             if (this.jcrResourceTypeProviders.size() > 0) {
@@ -300,18 +300,18 @@ public class JcrResourceResolverFactoryImpl implements
 
     boolean isMangleNamespacePrefixes() {
         return mangleNamespacePrefixes;
-        
+
     }
-    
+
     MapEntries getMapEntries() {
         return mapEntries;
     }
-    
+
     /**
      * Getter for rootProviderEntry, making it easier to extend
      * JcrResourceResolverFactoryImpl. See <a
      * href="https://issues.apache.org/jira/browse/SLING-730">SLING-730</a>
-     * 
+     *
      * @return Our rootProviderEntry
      */
     protected ResourceProviderEntry getRootProviderEntry() {
@@ -399,7 +399,7 @@ public class JcrResourceResolverFactoryImpl implements
         }
         delayedResourceProviders.clear();
         this.processDelayedJcrResourceTypeProviders();
-        
+
         // set up the map entries from configuration
         if (useNewResourceResolver) {
             try {
@@ -414,14 +414,14 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     private JcrResourceResolverPlugin plugin;
-    
+
     /** Deativates this component, called by SCR to take out of service */
     protected void deactivate(ComponentContext componentContext) {
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
         }
-        
+
         if (useNewResourceResolver) {
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
@@ -534,7 +534,7 @@ public class JcrResourceResolverFactoryImpl implements
             // synchronized insertion of new resource providers into
             // the tree to not inadvertandly loose an entry
             synchronized (this) {
-            
+
                 for (String root : roots) {
                     // cut off trailing slash
                     if (root.endsWith("/") && root.length() > 1) {
