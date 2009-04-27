@@ -144,7 +144,11 @@ public class ScalaScriptEngineFactory extends AbstractScriptEngineFactory {
         URL[] bootUrls = getBootUrls(bundles[0]);
         StringBuilder bootPath = new StringBuilder(settings.classpath().v());
         for (int k = 0; k < bootUrls.length; k++) {
-            bootPath.append(PATH_SEPARATOR).append(bootUrls[k].getPath());
+            // bootUrls are sometimes null, at least when running integration
+            // tests with cargo-maven2-plugin
+            if(bootUrls[k] != null) {
+                bootPath.append(PATH_SEPARATOR).append(bootUrls[k].getPath());
+            }
         }
 
         settings.classpath().v_$eq(bootPath.toString());
