@@ -75,6 +75,9 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /** @scr.reference */
     private JcrResourceResolverFactory resourceResolverFactory;
 
+    /** The resource resolver. */
+    private ResourceResolver resourceResolver;
+
     /** loaded processor configurationss */
     private final Map<String, ConfigEntry[]> processors = new HashMap<String, ConfigEntry[]>();
 
@@ -101,7 +104,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
         this.adminSession = this.repository.loginAdministrative(null);
 
         // create array of search paths for actions and constraints
-        final ResourceResolver resourceResolver = this.resourceResolverFactory.getResourceResolver(adminSession);
+        this.resourceResolver = this.resourceResolverFactory.getResourceResolver(adminSession);
         this.searchPaths = resourceResolver.getSearchPath();
 
         // set up observation listener
@@ -125,6 +128,8 @@ public class ProcessorManagerImpl implements ProcessorManager {
 
         this.initProcessors();
 
+        // add default pipeline for html
+        this.addProcessor("*", "", new ProcessorConfigurationImpl());
         this.factoryCache.start();
     }
 
@@ -191,7 +196,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
     private ProcessorConfigurationImpl getProcessorConfiguration(Node configNode)
     throws RepositoryException {
         configNode.getSession().refresh(true);
-        final ProcessorConfigurationImpl config = new ProcessorConfigurationImpl(configNode);
+        final ProcessorConfigurationImpl config = new ProcessorConfigurationImpl(this.resourceResolver.getResource(configNode.getPath()));
         return config;
     }
 

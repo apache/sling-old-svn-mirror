@@ -19,14 +19,9 @@ package org.apache.sling.rewriter.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.rewriter.PipelineConfiguration;
 import org.apache.sling.rewriter.ProcessingComponentConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
@@ -98,35 +93,41 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     private final boolean processErrorResponse;
 
     /**
-     * Constructor.
-     * This constructor reads the configuration from the specified node.
+     * This is the default pipeline.
      */
-    public ProcessorConfigurationImpl(final Node configNode)
-    throws RepositoryException {
-        this.contentTypes = this.getValues(configNode, ProcessorConfigurationImpl.PROPERTY_CONTENT_TYPE);
-        this.paths = this.getValues(configNode, ProcessorConfigurationImpl.PROPERTY_PATHS);
-        this.extensions = this.getValues(configNode, ProcessorConfigurationImpl.PROPERTY_EXTENSIONS);
+    public ProcessorConfigurationImpl() {
+        this.contentTypes = new String[] {MIME_TYPE_HTML};
+        this.paths = null; // for all paths
+        this.extensions = null; // for all extensions
+        this.order = -1; // fallback
+        this.generatorConfiguration = new ProcessingComponentConfigurationImpl("html-parser", null);
+        this.serializerConfiguration = new ProcessingComponentConfigurationImpl("html-serializer", null);
+        this.transformerConfigurations = null;
+        this.processorConfig = null;
+        this.isActive = true;
+        this.isValid = true;
+        this.isPipeline = true;
+        this.processErrorResponse = true;
+    }
 
-        this.processorConfig = this.getComponentConfig(configNode, ProcessorConfigurationImpl.PROPERTY_PROCESSOR_TYPE, "processor");
-        this.generatorConfiguration = this.getComponentConfig(configNode, ProcessorConfigurationImpl.PROPERTY_GENERATOR, "generator");
-        this.transformerConfigurations = this.getComponentConfigs(configNode, ProcessorConfigurationImpl.PROPERTY_TRANFORMER, "transformer");
-        this.serializerConfiguration = this.getComponentConfig(configNode, ProcessorConfigurationImpl.PROPERTY_SERIALIZER, "serializer");
+    /**
+     * Constructor.
+     * This constructor reads the configuration from the specified resource.
+     */
+    public ProcessorConfigurationImpl(final Resource resource) {
+        final ValueMap properties = ResourceUtil.getValueMap(resource);
+        this.contentTypes = properties.get(PROPERTY_CONTENT_TYPE, String[].class);
+        this.paths = properties.get(PROPERTY_PATHS, String[].class);
+        this.extensions = properties.get(PROPERTY_EXTENSIONS, String[].class);
 
-        if ( configNode.hasProperty(ProcessorConfigurationImpl.PROPERTY_ORDER) ) {
-            this.order = (int) configNode.getProperty(ProcessorConfigurationImpl.PROPERTY_ORDER).getLong();
-        } else {
-            this.order = 0; // default
-        }
-        if ( configNode.hasProperty(ProcessorConfigurationImpl.PROPERTY_ACTIVE) ) {
-            this.isActive = configNode.getProperty(ProcessorConfigurationImpl.PROPERTY_ACTIVE).getBoolean();
-        } else {
-            this.isActive = true; // default
-        }
-        if ( configNode.hasProperty(ProcessorConfigurationImpl.PROPERTY_PROCESS_ERROR) ) {
-            this.processErrorResponse = configNode.getProperty(ProcessorConfigurationImpl.PROPERTY_PROCESS_ERROR).getBoolean();
-        } else {
-            this.processErrorResponse = true; // default
-        }
+        this.processorConfig = this.getComponentConfig(resource, PROPERTY_PROCESSOR_TYPE, "processor");
+        this.generatorConfiguration = this.getComponentConfig(resource, PROPERTY_GENERATOR, "generator");
+        this.transformerConfigurations = this.getComponentConfigs(resource, PROPERTY_TRANFORMER, "transformer");
+        this.serializerConfiguration = this.getComponentConfig(resource, PROPERTY_SERIALIZER, "serializer");
+
+        this.order = properties.get(PROPERTY_ORDER, 0);
+        this.isActive = properties.get(PROPERTY_ACTIVE, true);
+        this.processErrorResponse = properties.get(PROPERTY_PROCESS_ERROR, true);
         this.isPipeline = this.processorConfig == null;
 
         // let's do a sanity check!
@@ -147,107 +148,36 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         }
     }
 
-    protected ProcessingComponentConfiguration getComponentConfig(final Node configNode, final String propertyName, final String prefix)
-    throws RepositoryException {
-        ProcessingComponentConfiguration[] configs = this.getComponentConfigs(configNode, propertyName, prefix);
+    protected ProcessingComponentConfiguration getComponentConfig(final Resource configResource,
+                                                                  final String propertyName,
+                                                                  final String prefix) {
+        ProcessingComponentConfiguration[] configs = this.getComponentConfigs(configResource, propertyName, prefix);
         if ( configs != null && configs.length > 0 ) {
             return configs[0];
         }
         return null;
     }
 
-    protected ProcessingComponentConfiguration[] getComponentConfigs(final Node configNode, final String propertyName, final String prefix)
-    throws RepositoryException {
-        final String[] types = this.getValues(configNode, propertyName);
+    protected ProcessingComponentConfiguration[] getComponentConfigs(final Resource configResource,
+                                                                     final String propertyName,
+                                                                     final String prefix) {
+        final ValueMap properties = ResourceUtil.getValueMap(configResource);
+        final String[] types = properties.get(propertyName, String[].class);
         if ( types != null && types.length > 0 ) {
             final ProcessingComponentConfiguration[] configs = new ProcessingComponentConfiguration[types.length];
             for(int i=0; i<types.length; i++) {
-                final String nodeName = prefix + '-' + types[i];
+                final String resourceName = prefix + '-' + types[i];
+                final Resource childResource = configResource.getResourceResolver().getResource(configResource, resourceName);
                 final Map<String, Object> config;
-                if ( configNode.hasNode(nodeName) ) {
-                    final Node componentNode = configNode.getNode(nodeName);
-                    if ( componentNode.hasProperties() ) {
-                        config = new HashMap<String, Object>();
-                        final PropertyIterator iter = componentNode.getProperties();
-                        while ( iter.hasNext() ) {
-                            final Property property = iter.nextProperty();
-                            if ( property.getDefinition().isMultiple() ) {
-                                final Value[] values = property.getValues();
-                                if ( values != null && values.length > 0 ) {
-                                    final Object[] v = new Object[values.length];
-                                    for(int m=0; m<values.length; m++) {
-                                        v[m] = this.getValueObject(values[m]);
-                                    }
-                                    config.put(property.getName(), v);
-                                }
-                            } else {
-                                final Object value = this.getValueObject(property.getValue());
-                                if ( value != null ) {
-                                    config.put(property.getName(), value);
-                                }
-                            }
-                        }
-                    } else {
-                        config = null;
-                    }
+                if ( childResource != null ) {
+                    final ValueMap childProps = ResourceUtil.getValueMap(configResource);
+                    config = new HashMap<String, Object>(childProps);
                 } else {
                     config = null;
                 }
                 configs[i] = new ProcessingComponentConfigurationImpl(types[i], config);
             }
             return configs;
-        }
-        return null;
-    }
-
-    private Object getValueObject(Value v)
-    throws ValueFormatException, IllegalStateException, RepositoryException {
-        switch (v.getType()) {
-            case PropertyType.BINARY:
-                return null;
-            case PropertyType.DATE:
-                return v.getDate();
-            case PropertyType.BOOLEAN:
-                return v.getBoolean();
-            case PropertyType.LONG:
-                return v.getLong();
-            case PropertyType.DOUBLE:
-                return v.getDouble();
-            default:
-                return v.getString();
-        }
-    }
-
-    protected String[] getValues(final Node configNode, final String propName)
-    throws RepositoryException {
-        if ( configNode.hasProperty(propName) ) {
-            if ( configNode.getProperty(propName).getDefinition().isMultiple() ) {
-                final Value[] values = configNode.getProperty(propName).getValues();
-                if ( values.length > 0 ) {
-                    final String[] result = new String[values.length];
-                    for(int i=0; i<values.length; i++) {
-                        result[i] = values[i].getString();
-                    }
-                    return result;
-                }
-            } else {
-                return new String[] {configNode.getProperty(propName).getString()};
-            }
-        }
-        return null;
-    }
-
-    protected String getValue(final Node configNode, final String propName)
-    throws RepositoryException {
-        if ( configNode.hasProperty(propName) ) {
-            if ( configNode.getProperty(propName).getDefinition().isMultiple() ) {
-                final Value[] values = configNode.getProperty(propName).getValues();
-                if ( values.length > 0 ) {
-                    return values[0].getString();
-                }
-            } else {
-                return configNode.getProperty(propName).getString();
-            }
         }
         return null;
     }
