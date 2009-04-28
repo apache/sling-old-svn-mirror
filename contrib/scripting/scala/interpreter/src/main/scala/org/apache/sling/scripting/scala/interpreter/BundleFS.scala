@@ -36,6 +36,7 @@ object BundleFS {
     require(bundle != null, "bundle must not be null")
 
     abstract class BundleEntry(url: URL, parent: DirEntry) extends AbstractFile {
+      require(url != null, "url must not be null")
       lazy val (path: String, name: String) = getPathAndName(url)
       lazy val fullName: String = (path::name::Nil).filter(!_.isEmpty).mkString("/")
 
@@ -96,12 +97,26 @@ object BundleFS {
           def hasNext = dirs.hasMoreElements
           def next = {
             val entry = dirs.nextElement.asInstanceOf[String]
-            val entryUrl = bundle.getResource("/" + entry)
-            if (entry.endsWith("/"))
-              new DirEntry(entryUrl, DirEntry.this)
-            else
+            var entryUrl = bundle.getResource("/" + entry)
+
+            // Bundle.getResource seems to be inconsistent with respect to requiring
+            // a trailing slash
+            if (entryUrl == null) 
+              entryUrl = bundle.getResource("/" + removeTralingSlash(entry))
+            
+            if (entry.endsWith(".class"))
               new FileEntry(entryUrl, DirEntry.this)
+            else
+              new DirEntry(entryUrl, DirEntry.this)
           }
+          
+          private def removeTralingSlash(s: String): String = 
+            if (s == null || s.length == 0)
+              s
+            else if (s.last == '/') 
+              removeTralingSlash(s.substring(0, s.length - 1))
+            else
+              s
         }
       }
 
