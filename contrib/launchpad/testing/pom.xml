@@ -93,10 +93,16 @@
         <resources.bundles.path>${project.build.directory}/launchpad-bundles/resources/bundles</resources.bundles.path>
         
         <!--
+            Start levels - Sling stuff start level must be >= jcrinstall level,
+            and both must be < default bundles start level 
+         -->
+        <jcrinstall.start.level>15</jcrinstall.start.level>
+        <sling.modules.start.level>15</sling.modules.start.level>
+        
+        <!--
             Where to copy our test bundles
             Used when profile jcrinstall-tests is active.
          -->
-        <jcrinstall.start.level>0</jcrinstall.start.level>
         <sling.testbundles.path>${resources.bundles.path}/${jcrinstall.start.level}</sling.testbundles.path>
         
         <!--
@@ -231,7 +237,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>
-                                ${resources.bundles.path}/0
+                                ${resources.bundles.path}/${sling.modules.start.level}
                             </outputDirectory>
                             <excludeTransitive>true</excludeTransitive>
                             <includeArtifactIds>
@@ -344,6 +350,26 @@
                     </descriptors>
                 </configuration>
             </plugin>
+            
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <configuration>
+                            <tasks>
+                              <move todir="${resources.bundles.path}/${sling.modules.start.level}">
+                                <fileset dir="${resources.bundles.path}/0"/>
+                              </move>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+                      
         </plugins>
     </build>
     <reporting>
