@@ -55,8 +55,6 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     private static final String PROPERTY_PROCESS_ERROR = "processError";
 
 
-    private static final String MIME_TYPE_HTML = "text/html";
-
     /** For which content types should this processor be applied. */
     private final String[] contentTypes;
 
@@ -93,21 +91,28 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     private final boolean processErrorResponse;
 
     /**
-     * This is the default pipeline.
+     * This is the constructor for a pipeline
      */
-    public ProcessorConfigurationImpl() {
-        this.contentTypes = new String[] {MIME_TYPE_HTML};
-        this.paths = null; // for all paths
-        this.extensions = null; // for all extensions
-        this.order = -1; // fallback
-        this.generatorConfiguration = new ProcessingComponentConfigurationImpl("html-parser", null);
-        this.serializerConfiguration = new ProcessingComponentConfigurationImpl("html-serializer", null);
-        this.transformerConfigurations = null;
+    public ProcessorConfigurationImpl(String[] contentTypes,
+                                      String[] paths,
+                                      String[] extensions,
+                                      int      order,
+                                      ProcessingComponentConfiguration generatorConfig,
+                                      ProcessingComponentConfiguration[] transformerConfigs,
+                                      ProcessingComponentConfiguration serializerConfig,
+                                      boolean processErrorResponse) {
+        this.contentTypes = contentTypes;
+        this.paths = paths;
+        this.extensions = extensions;
+        this.order = order;
+        this.generatorConfiguration = generatorConfig;
+        this.transformerConfigurations = transformerConfigs;
+        this.serializerConfiguration = serializerConfig;
         this.processorConfig = null;
         this.isActive = true;
         this.isValid = true;
         this.isPipeline = true;
-        this.processErrorResponse = true;
+        this.processErrorResponse = processErrorResponse;
     }
 
     /**
@@ -199,7 +204,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         String contentType = processContext.getContentType();
         // if no content type is supplied, we assume html
         if ( contentType == null ) {
-            contentType = MIME_TYPE_HTML;
+            contentType = ProcessorManagerImpl.MIME_TYPE_HTML;
         } else {
             final int idx = contentType.indexOf(';');
             if (idx != -1) {

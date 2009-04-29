@@ -60,6 +60,8 @@ public class ProcessorManagerImpl implements ProcessorManager {
     private static final String CONFIG_REL_PATH = "config/rewriter";
     private static final String CONFIG_PATH = "/" + CONFIG_REL_PATH;
 
+    protected static final String MIME_TYPE_HTML = "text/html";
+
     /** The logger */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -100,7 +102,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
     protected void activate(final ComponentContext ctx)
     throws RepositoryException, InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
-        this.factoryCache = new FactoryCache(this.bundleContext);
+        this.factoryCache = this.getFactoryCache(this.bundleContext);
         this.adminSession = this.repository.loginAdministrative(null);
 
         // create array of search paths for actions and constraints
@@ -128,9 +130,33 @@ public class ProcessorManagerImpl implements ProcessorManager {
 
         this.initProcessors();
 
-        // add default pipeline for html
-        this.addProcessor("*", "", new ProcessorConfigurationImpl());
+        this.addDefaultProcessors();
         this.factoryCache.start();
+    }
+
+    /**
+     * Get the factory cache
+     */
+    protected FactoryCache getFactoryCache(BundleContext bc)
+    throws InvalidSyntaxException {
+        return new FactoryCache(bc);
+    }
+
+    /**
+     * Add the default configurations.
+     */
+    protected void addDefaultProcessors() {
+        // add default pipeline for html
+        this.addProcessor("*", "", new ProcessorConfigurationImpl(
+                new String[] {MIME_TYPE_HTML}, // content types
+                null, // paths,
+                null, // extension
+                -1,   // order
+                new ProcessingComponentConfigurationImpl("html-generator", null), // generator config
+                null, // transformer config
+                new ProcessingComponentConfigurationImpl("html-serializer", null), // serializer config
+                true  // process error response
+                ));
     }
 
     /**
@@ -203,7 +229,7 @@ public class ProcessorManagerImpl implements ProcessorManager {
     /**
      * adds a processor configuration
      */
-    private void addProcessor(final String key, final String configPath, final ProcessorConfigurationImpl config) {
+    protected void addProcessor(final String key, final String configPath, final ProcessorConfigurationImpl config) {
         ConfigEntry[] configs = this.processors.get(key);
         if ( configs == null ) {
             configs = new ConfigEntry[1];

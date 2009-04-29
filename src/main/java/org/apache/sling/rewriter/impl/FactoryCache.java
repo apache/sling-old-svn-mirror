@@ -45,22 +45,22 @@ import org.slf4j.LoggerFactory;
 public class FactoryCache {
 
     /** The logger. */
-    private static final Logger LOGGER = LoggerFactory.getLogger(FactoryCache.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(FactoryCache.class);
 
     /** The tracker for generator factories. */
-    private final HashingServiceTrackerCustomizer generatorTracker;
+    protected final HashingServiceTrackerCustomizer generatorTracker;
 
     /** The tracker for serializers factories. */
-    private final HashingServiceTrackerCustomizer serializerTracker;
+    protected final HashingServiceTrackerCustomizer serializerTracker;
 
     /** The tracker for transformer factories. */
-    private final HashingServiceTrackerCustomizer transformerTracker;
+    protected final HashingServiceTrackerCustomizer transformerTracker;
 
     /** The tracker for rewriting transformer factories. */
-    private final RewriterTransformerFactoryServiceTracker rewritingTransformerTracker;
+    protected final RewriterTransformerFactoryServiceTracker rewritingTransformerTracker;
 
     /** The tracker for processor factories. */
-    private final HashingServiceTrackerCustomizer processorTracker;
+    protected final HashingServiceTrackerCustomizer processorTracker;
 
     public FactoryCache(final BundleContext context)
     throws InvalidSyntaxException {
@@ -100,10 +100,10 @@ public class FactoryCache {
     /**
      * Lookup a factory component.
      */
-    private <ComponentType> ComponentType getComponent(final List<ComponentInstance> instanceList,
-                                                       final Class<ComponentType> typeClass,
-                                                       final String type,
-                                                       final HashingServiceTrackerCustomizer customizer) {
+    protected <ComponentType> ComponentType getComponent(final List<ComponentInstance> instanceList,
+                                                         final Class<ComponentType> typeClass,
+                                                         final String type,
+                                                         final HashingServiceTrackerCustomizer customizer) {
         // get factory
         final ComponentFactory factory = customizer.get(type);
         if ( factory == null ) {
@@ -177,7 +177,7 @@ public class FactoryCache {
     /**
      * This service tracker stores all services into a hash map.
      */
-    private final class HashingServiceTrackerCustomizer extends ServiceTracker {
+    protected final class HashingServiceTrackerCustomizer extends ServiceTracker {
 
         private final Map<String, ComponentFactory> services = new HashMap<String, ComponentFactory>();
 
@@ -228,10 +228,10 @@ public class FactoryCache {
         }
     }
 
-    private static final class RewriterTransformerFactoryServiceTracker extends ServiceTracker {
+    protected static final class RewriterTransformerFactoryServiceTracker extends ServiceTracker {
 
-        private static final RewriterTransformerFactory[] EMPTY_ARRAY = new RewriterTransformerFactory[0];
-        private static final RewriterTransformerFactory[][] EMPTY_DOUBLE_ARRAY = new RewriterTransformerFactory[][] {EMPTY_ARRAY, EMPTY_ARRAY};
+        public static final RewriterTransformerFactory[] EMPTY_ARRAY = new RewriterTransformerFactory[0];
+        public static final RewriterTransformerFactory[][] EMPTY_DOUBLE_ARRAY = new RewriterTransformerFactory[][] {EMPTY_ARRAY, EMPTY_ARRAY};
 
         private RewriterTransformerFactory[][] cached = EMPTY_DOUBLE_ARRAY;
 
@@ -255,6 +255,10 @@ public class FactoryCache {
         public void removedService(ServiceReference reference, Object service) {
             this.cacheIsValid = false;
             super.removedService(reference, service);
+        }
+
+        public boolean isCacheValid() {
+            return this.cacheIsValid;
         }
 
         private RewriterTransformerFactory[][] getTransformerFactories() {
@@ -336,7 +340,7 @@ public class FactoryCache {
     /**
      * Comparator for service references.
      */
-    private static final class ServiceReferenceComparator implements Comparator<ServiceReference> {
+    protected static final class ServiceReferenceComparator implements Comparator<ServiceReference> {
         public static ServiceReferenceComparator INSTANCE = new ServiceReferenceComparator();
 
         public int compare(ServiceReference o1, ServiceReference o2) {
@@ -344,8 +348,7 @@ public class FactoryCache {
             Long id = (Long) o1.getProperty(Constants.SERVICE_ID);
             Long otherId = (Long) o2.getProperty(Constants.SERVICE_ID);
 
-            if (id.equals(otherId))
-            {
+            if (id.equals(otherId)) {
                 return 0; // same service
             }
 
@@ -363,12 +366,9 @@ public class FactoryCache {
                 ? new Integer(0) : (Integer) otherRankObj;
 
             // Sort by rank in ascending order.
-            if (rank.compareTo(otherRank) < 0)
-            {
+            if (rank.compareTo(otherRank) < 0) {
                 return -1; // lower rank
-            }
-            else if (rank.compareTo(otherRank) > 0)
-            {
+            } else if (rank.compareTo(otherRank) > 0) {
                 return 1; // higher rank
             }
 
