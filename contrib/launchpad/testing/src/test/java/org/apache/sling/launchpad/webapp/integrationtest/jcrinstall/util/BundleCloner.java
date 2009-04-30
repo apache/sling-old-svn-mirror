@@ -18,6 +18,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.jcrinstall.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Properties;
 
@@ -33,16 +34,33 @@ public class BundleCloner {
 	public void cloneBundle(File bundle, File output, String name, String symbolicName) throws Exception {
 		int options = 0;
 		
+		if(!bundle.exists()) {
+		  throw new IOException("Bundle to clone not found: " + bundle.getAbsolutePath());
+		}
+		
+		final File parent = output.getParentFile();
+		parent.mkdirs();
+		if(!parent.isDirectory()) {
+		  throw new IOException("Unable to create output directory " + parent.getAbsolutePath());
+		}
+		
 		Properties props = new Properties();
 		props.put("Bundle-Name", name);
 		props.put("Bundle-SymbolicName", symbolicName);
 		File properties = File.createTempFile(getClass().getSimpleName(), "properties");
-		final OutputStream out = new FileOutputStream(properties);
+		OutputStream out = new FileOutputStream(properties);
 		
 		File classpath[] = null;
 		try {
 			props.store(out, getClass().getSimpleName());
+			out.close();
+			out = null;
 			bnd.doWrap(properties, bundle, output, classpath, options, null);
+			if(!output.exists()) {
+			  throw new IOException(
+			      "Output file not found after calling bnd.doWrap (" 
+			      + output.getAbsolutePath() + ")");
+			}
 		} finally {
 			if(out != null) {
 				out.close();
