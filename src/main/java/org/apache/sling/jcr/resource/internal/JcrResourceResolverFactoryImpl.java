@@ -87,11 +87,6 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     /**
-     * @scr.property value="true" type="Boolean"
-     */
-    private static final String PROP_USE_NEW_RESOLVER = "resource.resolver.new";
-
-    /**
      * @scr.property values.1="/apps" values.2="/libs"
      */
     public static final String PROP_PATH = "resource.resolver.searchpath";
@@ -143,22 +138,6 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
-    /**
-     * These regexps are executing during the resource resolving phase before
-     * the mappings are applied.
-     *
-     * @scr.property values.1="/_([^/]+?)_|/$1:"
-     */
-    private static final String PROP_REGEXPS = "resource.resolver.regexps";
-
-    /**
-     * These regexps are executed during a map operation as the back conversion
-     * of the {@link #PROP_REGEXPS}
-     *
-     * @scr.property values.1="/([^/]+?):([^/]+)|/_$1_$2"
-     */
-    private static final String PROP_MAPREGEXPS = "resource.resolver.mapregexps";
-
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -197,12 +176,6 @@ public class JcrResourceResolverFactoryImpl implements
     /** The fake urls */
     private BidiMap virtualURLMap;
 
-    /** The regexp patterns */
-    private ResourcePattern[] patterns;
-
-    /** The back regexp patterns */
-    private ResourcePattern[] backPatterns;
-
     /** <code>true</code>, if direct mappings from URI to handle are allowed */
     private boolean allowDirect = false;
 
@@ -210,15 +183,6 @@ public class JcrResourceResolverFactoryImpl implements
     private String[] searchPath;
 
     private ResourceProviderEntry rootProviderEntry;
-
-    /**
-     * Temporary field to select which JcrResourceResolver implementation to
-     * use.
-     *
-     * @see #PROP_USE_NEW_RESOLVER
-     * @see #getResourceResolver(Session)
-     */
-    private boolean useNewResourceResolver;
 
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
@@ -237,11 +201,7 @@ public class JcrResourceResolverFactoryImpl implements
         JcrResourceProviderEntry sessionRoot = new JcrResourceProviderEntry(
             session, rootProviderEntry, getJcrResourceTypeProviders());
 
-        if (useNewResourceResolver) {
-            return new JcrResourceResolver2(sessionRoot, this, mapEntries);
-        }
-
-        return new JcrResourceResolver(sessionRoot, this);
+        return new JcrResourceResolver2(sessionRoot, this, mapEntries);
     }
 
     protected JcrResourceTypeProvider[] getJcrResourceTypeProviders() {
@@ -290,14 +250,6 @@ public class JcrResourceResolverFactoryImpl implements
         return searchPath;
     }
 
-    ResourcePattern[] getPatterns() {
-        return patterns;
-    }
-
-    ResourcePattern[] getBackPatterns() {
-        return backPatterns;
-    }
-
     boolean isMangleNamespacePrefixes() {
         return mangleNamespacePrefixes;
 
@@ -326,20 +278,6 @@ public class JcrResourceResolverFactoryImpl implements
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
-        // BEGIN Temporary solution to select old and new JcrResourceResolver
-        // select new or old resource resolver
-        String propNewRes = componentContext.getBundleContext().getProperty(
-            PROP_USE_NEW_RESOLVER);
-        boolean flagNewRes = !"false".equalsIgnoreCase(propNewRes);
-        useNewResourceResolver = OsgiUtil.toBoolean(
-            properties.get(PROP_USE_NEW_RESOLVER), flagNewRes);
-        if (useNewResourceResolver) {
-            log.info("activate: Using new JCR ResourceResolver with extended Mapping");
-        } else {
-            log.info("activate: Using old JCR ResourceResolver");
-        }
-        // END Temporary solution to select old and new JcrResourceResolver
-
         BidiMap virtuals = new TreeBidiMap();
         String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
         for (int i = 0; virtualList != null && i < virtualList.length; i++) {
@@ -366,10 +304,6 @@ public class JcrResourceResolverFactoryImpl implements
         } else {
             mappings = tmp;
         }
-
-        // regexps
-        this.patterns = this.getResourcePatterns((String[]) properties.get(PROP_REGEXPS));
-        this.backPatterns = this.getResourcePatterns((String[]) properties.get(PROP_MAPREGEXPS));
 
         // from configuration if available
         searchPath = OsgiUtil.toStringArray(properties.get(PROP_PATH));
@@ -401,15 +335,13 @@ public class JcrResourceResolverFactoryImpl implements
         this.processDelayedJcrResourceTypeProviders();
 
         // set up the map entries from configuration
-        if (useNewResourceResolver) {
-            try {
-                mapEntries = new MapEntries(this, getRepository());
-                plugin = new JcrResourceResolverWebConsolePlugin(componentContext.getBundleContext(), this);
-            } catch (Exception e) {
-                log.error(
-                    "activate: Cannot access repository, failed setting up Mapping Support",
-                    e);
-            }
+        try {
+            mapEntries = new MapEntries(this, getRepository());
+            plugin = new JcrResourceResolverWebConsolePlugin(componentContext.getBundleContext(), this);
+        } catch (Exception e) {
+            log.error(
+                "activate: Cannot access repository, failed setting up Mapping Support",
+                e);
         }
     }
 
@@ -422,7 +354,7 @@ public class JcrResourceResolverFactoryImpl implements
             plugin = null;
         }
 
-        if (useNewResourceResolver) {
+        if (mapEntries != null) {
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
         }
