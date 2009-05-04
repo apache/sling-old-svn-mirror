@@ -21,8 +21,8 @@ package org.apache.sling.jcr.jcrinstall.osgi.impl;
 import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 /** An install/upgrade/uninistall task, meant to be executed
  * 	by the OsgiController worker thread.
  */
-class OsgiControllerTask {
+class OsgiControllerTask implements Callable<Object> {
 	
 	private final String uri;
 	private final InstallableData data;
@@ -61,12 +61,28 @@ class OsgiControllerTask {
 		this.data = data;
 	}
 	
-	void execute() throws JcrInstallException, IOException {
-		if(data != null) {
+	@Override
+	public String toString() {
+		return 
+			getClass().getSimpleName()
+			+ ", "
+			+ (isInstallOrUpdate() ? "install/update" : "uninstall")
+			+ ", "
+			+ uri
+		;
+	}
+	
+	public Object call() throws JcrInstallException, IOException {
+		if(isInstallOrUpdate()) {
 			executeInstallOrUpdate();
 		} else {
 			executeUninstall();
 		}
+		return null;
+	}
+	
+	boolean isInstallOrUpdate() {
+		return data != null;
 	}
 
 	private void executeUninstall() throws JcrInstallException {

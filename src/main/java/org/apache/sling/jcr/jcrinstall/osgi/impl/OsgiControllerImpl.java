@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
@@ -57,7 +58,8 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     private OsgiResourceProcessorList processors;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private ResourceOverrideRules roRules;
-    private final List<OsgiControllerTask> tasks = new LinkedList<OsgiControllerTask>();
+    private final List<Callable<Object>> tasks = new LinkedList<Callable<Object>>();
+    private final OsgiControllerTaskExecutor executor = new OsgiControllerTaskExecutor();
 
     public static final String STORAGE_FILENAME = "controller.storage";
 
@@ -140,21 +142,31 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
 
     /** {@inheritDoc} */
     public void executeScheduledOperations() throws Exception {
+    	
+    	// Ready to work?
         if(processors == null) {
             log.info("Not activated yet, cannot executeScheduledOperations");
             return;
         }
         
-        // Execute all our tasks, and then let processors execute
-        // their own queued operations
-        synchronized (tasks) {
-        	while(tasks.size() > 0) {
-    			tasks.remove(0).execute();
-        	}
-		}
-        for(OsgiResourceProcessor p : processors) {
-            p.processResourceQueue();
+        // Anything to do?
+        if(tasks.isEmpty()) {
+        	return;
         }
+        
+        synchronized (tasks) {
+            // Add tasks for our processors to execute their own operations,
+            // after our own tasks are executed
+            for(OsgiResourceProcessor p : processors) {
+            	tasks.add(new ResourceQueueTask(p));
+            }
+            
+            // Now execute all our tasks in a separate thread
+            log.debug("Executing {} queued tasks", tasks.size());
+            final long start = System.currentTimeMillis();
+            executor.execute(tasks);
+            log.debug("Done executing queued tasks ({} msec)", System.currentTimeMillis() - start);
+		}
 	}
 
 	public void setResourceOverrideRules(ResourceOverrideRules r) {
