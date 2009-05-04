@@ -32,7 +32,7 @@ public interface OsgiController {
      *  @param data The data to install
      *  @return one of the {@link InstallResultCode} result codes. 
      */
-    int scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
+    void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
     
     /** Schedule uninstallation of resource that was installed via given uri.
      *  Might be called several times for the same URI - needless calls should
