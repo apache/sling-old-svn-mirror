@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.osgi.impl;
 
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -56,11 +54,15 @@ import org.slf4j.LoggerFactory;
 public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener {
 
     private Storage storage;
-    private List<OsgiResourceProcessor> processors;
+    private OsgiResourceProcessorList processors;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private ResourceOverrideRules roRules;
+    private final List<OsgiControllerTask> tasks = new LinkedList<OsgiControllerTask>();
 
     public static final String STORAGE_FILENAME = "controller.storage";
+
+    /** Storage key: digest of an InstallableData */
+    public static final String KEY_DIGEST = "data.digest";
 
     /** @scr.reference */
     private ConfigurationAdmin configAdmin;
@@ -71,20 +73,11 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     /** @scr.reference */
     protected StartLevel startLevel;
     
-    /** Storage key: digest of an InstallableData */
-    public static final String KEY_DIGEST = "data.digest";
-
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
 
     protected void activate(ComponentContext context) throws IOException {
-    	
-    	// Note that, in executeScheduledOperations(),
-    	// processors are called in the order of this list
-        processors = new LinkedList<OsgiResourceProcessor>();
-        processors.add(new BundleResourceProcessor(context.getBundleContext(), packageAdmin, startLevel));
-        processors.add(new ConfigResourceProcessor(configAdmin));
-
+        processors = new OsgiResourceProcessorList(context.getBundleContext(), packageAdmin, startLevel, configAdmin);
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
     }
 
@@ -108,72 +101,15 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     }
     
     public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
-        
-        // If a corresponding higher priority resource is already installed, ignore this one
-        if(roRules != null) {
-            for(String r : roRules.getHigherPriorityResources(uri)) {
-                if(storage.contains(r)) {
-                    log.info("Resource {} ignored, overridden by {} which has higher priority",
-                            uri, r);
-                    return;
-                }
-            }
-        }
-        
-        // If a corresponding lower priority resource is installed, uninstall it first
-        if(roRules != null) {
-            for(String r : roRules.getLowerPriorityResources(uri)) {
-                if(storage.contains(r)) {
-                    log.info("Resource {} overrides {}, uninstalling the latter",
-                            uri, r);
-                    scheduleUninstall(uri);
-                }
-            }
-        }
-        
-        // let suitable OsgiResourceProcessor process install
-        final OsgiResourceProcessor p = getProcessor(uri, data);
-        if (p != null) {
-            try {
-                final Map<String, Object> map = storage.getMap(uri);
-                if(p.installOrUpdate(uri, map, data) != IGNORED) {
-                    map.put(KEY_DIGEST, data.getDigest());
-                }
-                storage.saveToFile();
-            } catch(IOException ioe) {
-                throw ioe;
-            } catch(Exception e) {
-                throw new JcrInstallException("Exception in installOrUpdate (" + uri + ")", e);
-            }
-        }
-        return;
+    	synchronized (tasks) {
+        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, data));
+		}
     }
 
     public void scheduleUninstall(String uri) throws JcrInstallException {
-        // If a corresponding higher priority resource is installed, ignore this request
-        if(roRules != null) {
-            for(String r : roRules.getHigherPriorityResources(uri)) {
-                if(storage.contains(r)) {
-                    log.info("Resource {} won't be uninstalled, overridden by {} which has higher priority",
-                            uri, r);
-                    return;
-                }
-            }
-        }
-        
-        try {
-	        // let each processor try to uninstall, one of them
-        	// should know how that handle uri
-	    	for(OsgiResourceProcessor p : this.processors) {
-	                p.uninstall(uri, storage.getMap(uri));
-	    	}
-	    	
-	        storage.remove(uri);
-	        storage.saveToFile();
-	        
-        } catch(Exception e) {
-            throw new JcrInstallException("Exception in uninstall (" + uri + ")", e);
-        }
+    	synchronized (tasks) {
+        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, null));
+    	}
     }
 
     public Set<String> getInstalledUris() {
@@ -197,28 +133,6 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
         return "jcrinstall://" + uri;
     }
 
-    /** Return the first processor that accepts given uri, null if not found */
-    OsgiResourceProcessor getProcessor(String uri, InstallableData data) {
-        OsgiResourceProcessor result = null;
-
-        if(processors == null) {
-            throw new IllegalStateException("Processors are not set");
-        }
-
-        for(OsgiResourceProcessor p : processors) {
-            if(p.canProcess(uri, data)) {
-                result = p;
-                break;
-            }
-        }
-
-        if(result == null) {
-            log.debug("No processor found for resource {}", uri);
-        }
-
-        return result;
-    }
-
     /** Schedule our next scan sooner if anything happens to bundles */
     public void bundleChanged(BundleEvent e) {
         //loopDelay = 0;
@@ -230,7 +144,14 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
             log.info("Not activated yet, cannot executeScheduledOperations");
             return;
         }
-    
+        
+        // Execute all our tasks, and then let processors execute
+        // their own queued operations
+        synchronized (tasks) {
+        	while(tasks.size() > 0) {
+    			tasks.remove(0).execute();
+        	}
+		}
         for(OsgiResourceProcessor p : processors) {
             p.processResourceQueue();
         }

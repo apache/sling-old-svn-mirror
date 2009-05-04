@@ -34,14 +34,6 @@ class Utilities {
         return result;
     }
     
-    static void setProcessors(OsgiControllerImpl c, OsgiResourceProcessor ... processors) throws Exception {
-        final List<OsgiResourceProcessor> list = new LinkedList<OsgiResourceProcessor>();
-        for(OsgiResourceProcessor p : processors) {
-            list.add(p);
-        }
-        setField(c, "processors", list);
-    }
-    
     static void setStorage(OsgiControllerImpl c, Storage s) throws Exception {
         final Field f = c.getClass().getDeclaredField("storage");
         f.setAccessible(true);
