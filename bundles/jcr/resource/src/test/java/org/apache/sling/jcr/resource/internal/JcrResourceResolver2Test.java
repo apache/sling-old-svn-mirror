@@ -103,12 +103,6 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         mappingsField.set(resFac, new Mapping[] { new Mapping("/-/"),
             new Mapping(rootPath + "/-/") });
 
-        // ensure using JcrResourceResolver2
-        Field unrrField = resFac.getClass().getDeclaredField(
-        "useNewResourceResolver");
-        unrrField.setAccessible(true);
-        unrrField.set(resFac, true);
-        
         // ensure namespace mangling
         Field mangeNamespacePrefixesField = resFac.getClass().getDeclaredField(
             "mangleNamespacePrefixes");
