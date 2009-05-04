@@ -103,6 +103,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             rootNode.remove();
             session.save();
         }
+        super.tearDown();
     }
 
     public void testGetResource() throws Exception {

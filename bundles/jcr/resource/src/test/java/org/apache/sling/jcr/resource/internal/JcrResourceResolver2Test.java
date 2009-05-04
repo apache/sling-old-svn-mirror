@@ -146,6 +146,8 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         }
 
         session.save();
+        
+        super.tearDown();
     }
 
     public void testBasicAPIAssumptions() throws Exception {

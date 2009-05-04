@@ -85,7 +85,7 @@ public class JcrResourceResolverFactoryImplTest {
     /**
      * Mock implementation of a service reference.
      */
-    protected final class ServiceReferenceImpl implements ServiceReference {
+    protected static final class ServiceReferenceImpl implements ServiceReference {
 
         protected final Long serviceId;
         protected final Long ranking;
