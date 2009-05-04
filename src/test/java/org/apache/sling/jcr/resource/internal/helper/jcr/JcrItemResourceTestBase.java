@@ -71,6 +71,8 @@ public class JcrItemResourceTestBase extends RepositoryTestBase {
             rootNode.remove();
             getSession().save();
         }
+        
+        super.tearDown();
     }
 
     protected void assertEquals(byte[] expected, InputStream actual)
