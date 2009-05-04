@@ -41,6 +41,7 @@ public class BundleResourceProcessorTest {
 
     private Mockery mockery;
     private Sequence sequence;
+    private static int counter;
 
     static class TestStorage extends Storage {
         int saveCounter;
@@ -65,6 +66,7 @@ public class BundleResourceProcessorTest {
 
         final OsgiControllerImpl c = new OsgiControllerImpl();
         final BundleContext bc = mockery.mock(BundleContext.class);
+        Utilities.setField(c, "bundleContext", bc);
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
         final TestStorage s = new TestStorage(Utilities.getTestFile());
         Utilities.setStorage(c, s);
@@ -72,7 +74,7 @@ public class BundleResourceProcessorTest {
         final Bundle [] bundles = { b };
         final long bundleId = 1234;
         final String uri = "/test/bundle.jar";
-        final MockInstallableData data = new MockInstallableData(uri);
+        final MockInstallableData data = new MockInstallableData(uri, "some data");
         final InputStream is = data.adaptTo(InputStream.class);
 
         // We'll try installing a bundle, re-installing to cause
@@ -93,8 +95,12 @@ public class BundleResourceProcessorTest {
             allowing(b).getLocation();
             will(returnValue(uri));
             allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
+            allowing(bc).getDataFile(with(any(String.class)));
+            will(returnValue(getDataFile()));
 
-            one(bc).installBundle(OsgiControllerImpl.getResourceLocation(uri), is);
+            one(bc).installBundle(
+            		with(equal(OsgiControllerImpl.getResourceLocation(uri))), 
+            		with(any(InputStream.class)));
             inSequence(sequence);
             will(returnValue(b));
 
@@ -105,7 +111,7 @@ public class BundleResourceProcessorTest {
             one(b).stop();
             inSequence(sequence);
             
-            one(b).update(is);
+            one(b).update(with(any(InputStream.class)));
             inSequence(sequence);
 
             one(b).uninstall();
@@ -165,5 +171,9 @@ public class BundleResourceProcessorTest {
         // And verify expectations
         mockery.assertIsSatisfied();
         t.active = false;
+    }
+    
+    static File getDataFile() throws IOException {
+        return File.createTempFile(BundleResourceProcessor.class.getSimpleName() + (++counter),".tmp");
     }
 }
