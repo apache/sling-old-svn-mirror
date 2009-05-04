@@ -18,9 +18,6 @@
  */
 package org.apache.sling.jcr.jcrinstall.osgi.impl;
 
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +32,7 @@ import org.jmock.Mockery;
 import org.jmock.Sequence;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.packageadmin.PackageAdmin;
 
@@ -71,6 +69,7 @@ public class BundleResourceProcessorTest {
         final TestStorage s = new TestStorage(Utilities.getTestFile());
         Utilities.setStorage(c, s);
         final Bundle b = mockery.mock(Bundle.class);
+        final Bundle [] bundles = { b };
         final long bundleId = 1234;
         final String uri = "/test/bundle.jar";
         final MockInstallableData data = new MockInstallableData(uri);
@@ -81,8 +80,16 @@ public class BundleResourceProcessorTest {
         mockery.checking(new Expectations() {{
             allowing(pa).refreshPackages(null);
             allowing(pa).resolveBundles(null);
+            allowing(b).start();
+            allowing(b).getSymbolicName();
+            will(returnValue(bundleId + "-name"));
             allowing(b).getBundleId();
             will(returnValue(bundleId));
+            allowing(b).getState();
+            allowing(bc).getBundle(bundleId);
+            will(returnValue(b));
+            allowing(bc).getBundles();
+            will(returnValue(bundles));
             allowing(b).getLocation();
             will(returnValue(uri));
             allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
@@ -107,30 +114,56 @@ public class BundleResourceProcessorTest {
 
         // Do the calls and check some stuff on the way
         final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa, new MockStartLevel());
-        Utilities.setProcessors(c, p);
+        final OsgiResourceProcessorList proc = new OsgiResourceProcessorList(bc, null, null, null);
+        proc.clear();
+        proc.add(p);
+        Utilities.setField(c, "processors", proc);
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
-
-        assertEquals("First install returns INSTALLED", INSTALLED, c.scheduleInstallOrUpdate(uri, data));
+        
+        // Need to send framework events to p 
+        // TODO: this test is getting too complicated... ;-)
+        class FEThread extends Thread {
+        	boolean active = true;
+        	public FEThread() {
+        		setDaemon(true);
+        		start();
+			}
+        	public void run() {
+        		while(active) {
+        			try {
+        				Thread.sleep(1000L);
+        			} catch(InterruptedException iex) {
+        				active = false;
+        			}
+        			p.frameworkEvent(new FrameworkEvent(FrameworkEvent.PACKAGES_REFRESHED, b, null));
+        		}
+        	}
+        };
+        FEThread t = new FEThread();
+        
+        // do the actual testing
+        c.scheduleInstallOrUpdate(uri, data);
+        c.executeScheduledOperations();
         assertTrue("After install, uri must be in list", c.getInstalledUris().contains(uri));
         assertEquals("Digest must have been stored", data.getDigest(), c.getDigest(uri));
         assertEquals("Storage data has been saved during install", 1, s.saveCounter);
 
         data.setDigest("digest is now different");
-        assertEquals("Second install returns UPDATED", UPDATED, c.scheduleInstallOrUpdate(uri, data));
+        c.scheduleInstallOrUpdate(uri, data);
+        c.executeScheduledOperations();
         assertTrue("After update, uri must be in list", c.getInstalledUris().contains(uri));
         assertEquals("Digest must have been updated", data.getDigest(), c.getDigest(uri));
         assertEquals("Storage data has been saved during update", 2, s.saveCounter);
 
         c.scheduleUninstall(uri);
+        c.executeScheduledOperations();
         assertFalse("After uninstall, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("Digest must be gone", null, c.getDigest(uri));
         assertFalse("After getLastModified, uri must not be in list", c.getInstalledUris().contains(uri));
         assertEquals("Storage data has been saved during uninstall", 3, s.saveCounter);
 
-        final String nonJarUri = "no_jar_extension";
-        assertEquals(nonJarUri + " must be ignored", c.scheduleInstallOrUpdate("", data), IGNORED);
-
         // And verify expectations
         mockery.assertIsSatisfied();
+        t.active = false;
     }
 }

@@ -26,31 +26,42 @@ import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
 import org.junit.runner.RunWith;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkListener;
 
 @RunWith(JMock.class)
-public class OsgiControllerGetProcessorTest {
+public class OsgiResourceProcessorListTest {
   
     private final Mockery mockery = new Mockery();
 
     @org.junit.Test public void testNoProcessors() throws Exception {
-        final OsgiControllerImpl c = new OsgiControllerImpl();
-        Utilities.setProcessors(c);
-        assertNull("Controller must return null processor for null uri", c.getProcessor(null, null));
-        assertNull("Controller must return null processor for TEST uri", c.getProcessor("TEST", null));
+        final BundleContext bc = mockery.mock(BundleContext.class);
+        mockery.checking(new Expectations() {{
+        	allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
+        }});
+        final OsgiResourceProcessorList c = new OsgiResourceProcessorList(bc, null, null, null);
+        c.clear();
+        assertNull("OsgiResourceProcessorList must return null processor for null uri", c.getProcessor(null, null));
+        assertNull("OsgiResourceProcessorList must return null processor for TEST uri", c.getProcessor("TEST", null));
     }
     
     @org.junit.Test public void testTwoProcessors() throws Exception {
-        final OsgiControllerImpl c = new OsgiControllerImpl();
+        final BundleContext bc = mockery.mock(BundleContext.class);
         final OsgiResourceProcessor p1 = mockery.mock(OsgiResourceProcessor.class);
         final OsgiResourceProcessor p2 = mockery.mock(OsgiResourceProcessor.class);
-        Utilities.setProcessors(c, p1, p2);
         
         mockery.checking(new Expectations() {{
+        	allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
             allowing(p1).canProcess("foo", null) ; will(returnValue(true));
             allowing(p1).canProcess("bar", null) ; will(returnValue(false));
             allowing(p2).canProcess("foo", null) ; will(returnValue(false));
             allowing(p2).canProcess("bar", null) ; will(returnValue(true));
         }});
+        
+        final OsgiResourceProcessorList c = new OsgiResourceProcessorList(bc, null, null, null); 
+        c.clear();
+        c.add(p1);
+        c.add(p2);
         
         assertEquals("foo extension must return processor p1", p1, c.getProcessor("foo", null));
         assertEquals("bar extension must return processor p2", p2, c.getProcessor("bar", null));
