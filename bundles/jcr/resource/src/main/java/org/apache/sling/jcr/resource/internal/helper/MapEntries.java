@@ -72,8 +72,6 @@ public class MapEntries implements EventListener {
 
     private Collection<MapEntry> mapMaps;
 
-    private Set<String> namespaces;
-
     private boolean initializing = false;
 
     private MapEntries() {
@@ -83,7 +81,6 @@ public class MapEntries implements EventListener {
 
         resolveMaps = Collections.<MapEntry> emptyList();
         mapMaps = Collections.<MapEntry> emptyList();
-        namespaces = Collections.<String> emptySet();
     }
 
     public MapEntries(JcrResourceResolverFactoryImpl factory,
@@ -191,23 +188,6 @@ public class MapEntries implements EventListener {
 
     public Collection<MapEntry> getMapMaps() {
         return mapMaps;
-    }
-
-    public Set<String> getNamespacePrefixes() {
-        if (namespaces == null) {
-
-            // get the current set of namespaces, we cache throughout our
-            // life time..
-            String[] namespaceList;
-            try {
-                namespaceList = getSession().getNamespacePrefixes();
-            } catch (RepositoryException re) {
-                namespaceList = new String[0];
-            }
-
-            namespaces = new HashSet<String>(Arrays.asList(namespaceList));
-        }
-        return namespaces;
     }
 
     public Session getSession() {

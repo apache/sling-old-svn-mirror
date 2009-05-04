@@ -29,6 +29,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -756,15 +757,34 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private String unmangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_IN_PREFIX)) {
-            Set<String> namespaces = resourceMapper.getNamespacePrefixes();
             Pattern p = Pattern.compile(MANGLE_NAMESPACE_IN);
             Matcher m = p.matcher(absPath);
             StringBuffer buf = new StringBuffer();
             while (m.find()) {
                 String namespace = m.group(1);
-                if (namespaces.contains(namespace)) {
-                    String replacement = MANGLE_NAMESPACE_OUT_PREFIX + namespace + MANGLE_NAMESPACE_OUT_SUFFIX;
+                try {
+
+                    // throws if "namespace" is not a registered
+                    // namespace prefix
+                    getSession().getNamespaceURI(namespace);
+                    
+                    String replacement = MANGLE_NAMESPACE_OUT_PREFIX
+                        + namespace + MANGLE_NAMESPACE_OUT_SUFFIX;
                     m.appendReplacement(buf, replacement);
+                    
+                } catch (NamespaceException ne) {
+                    
+                    // not a valid prefix
+                    log.debug(
+                        "unmangleNamespaces: '{}' is not a prefix, not unmangling",
+                        namespace);
+                    
+                } catch (RepositoryException re) {
+                    
+                    log.warn(
+                        "unmangleNamespaces: Problem checking namespace '{}'",
+                        namespace, re);
+                    
                 }
             }
             m.appendTail(buf);
