@@ -74,10 +74,10 @@ public class JcrPropertyResource extends JcrItemResource {
                 return (AdapterType) getProperty().getString();
 
             } else if (type == Boolean.class) {
-                return (AdapterType) new Boolean(getProperty().getBoolean());
+                return (AdapterType) Boolean.valueOf(getProperty().getBoolean());
 
             } else if (type == Long.class) {
-                return (AdapterType) new Long(getProperty().getLong());
+                return (AdapterType) Long.valueOf(getProperty().getLong());
 
             } else if (type == Double.class) {
                 return (AdapterType) new Double(getProperty().getDouble());
