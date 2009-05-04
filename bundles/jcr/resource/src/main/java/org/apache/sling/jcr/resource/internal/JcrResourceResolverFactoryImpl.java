@@ -404,7 +404,7 @@ public class JcrResourceResolverFactoryImpl implements
         if (useNewResourceResolver) {
             try {
                 mapEntries = new MapEntries(this, getRepository());
-                plugin = new JcrResourceResolverPlugin(componentContext.getBundleContext(), this);
+                plugin = new JcrResourceResolverWebConsolePlugin(componentContext.getBundleContext(), this);
             } catch (Exception e) {
                 log.error(
                     "activate: Cannot access repository, failed setting up Mapping Support",
@@ -413,7 +413,7 @@ public class JcrResourceResolverFactoryImpl implements
         }
     }
 
-    private JcrResourceResolverPlugin plugin;
+    private JcrResourceResolverWebConsolePlugin plugin;
 
     /** Deativates this component, called by SCR to take out of service */
     protected void deactivate(ComponentContext componentContext) {
@@ -490,12 +490,20 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     protected void bindResourceProvider(ServiceReference reference) {
+        
+        String serviceName = getServiceName(reference);
+        
         if (componentContext == null) {
+
+            log.debug("bindResourceProvider: Delaying {}", serviceName);
 
             // delay binding resource providers if called before activation
             delayedResourceProviders.add(reference);
 
         } else {
+            
+            log.debug("bindResourceProvider: Binding {}", serviceName);
+            
             String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
             if (roots != null && roots.length > 0) {
 
@@ -515,6 +523,9 @@ public class JcrResourceResolverFactoryImpl implements
                         try {
                             rootProviderEntry.addResourceProvider(root,
                                 provider);
+
+                            log.debug("bindResourceProvider: {}={} ({})",
+                                new Object[] { root, provider, serviceName });
                         } catch (ResourceProviderEntryException rpee) {
                             log.error(
                                 "bindResourceProvider: Cannot register ResourceProvider {} for {}: ResourceProvider {} is already registered",
@@ -524,10 +535,17 @@ public class JcrResourceResolverFactoryImpl implements
                     }
                 }
             }
+            
+            log.debug("bindResourceProvider: Bound {}", serviceName);
         }
     }
 
     protected void unbindResourceProvider(ServiceReference reference) {
+
+        String serviceName = getServiceName(reference);
+        
+        log.debug("unbindResourceProvider: Unbinding {}", serviceName);
+
         String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
         if (roots != null && roots.length > 0) {
 
@@ -545,9 +563,14 @@ public class JcrResourceResolverFactoryImpl implements
                     // owns it. This may be the case if adding the provider
                     // yielded an ResourceProviderEntryException
                     rootProviderEntry.removeResourceProvider(root);
+                    
+                    log.debug("unbindResourceProvider: root={} ({})", root,
+                        serviceName);
                 }
             }
         }
+        
+        log.debug("unbindResourceProvider: Unbound {}", serviceName);
     }
 
     protected void bindJcrResourceTypeProvider(ServiceReference reference) {
@@ -594,5 +617,19 @@ public class JcrResourceResolverFactoryImpl implements
             this.ranking = ranking;
             this.provider = p;
         }
+    }
+    
+    private String getServiceName(ServiceReference reference) {
+        if (log.isDebugEnabled()) {
+            StringBuilder snBuilder = new StringBuilder(64);
+            snBuilder.append('{');
+            snBuilder.append(reference.toString());
+            snBuilder.append('/');
+            snBuilder.append(reference.getProperty(Constants.SERVICE_ID));
+            snBuilder.append('}');
+            return snBuilder.toString();
+        }
+
+        return null;
     }
 }
