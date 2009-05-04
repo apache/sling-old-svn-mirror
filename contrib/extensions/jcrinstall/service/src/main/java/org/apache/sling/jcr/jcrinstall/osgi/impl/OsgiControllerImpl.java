@@ -107,8 +107,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
         processors = null;
     }
     
-    public int scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
-        int result = IGNORED;
+    public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
         
         // If a corresponding higher priority resource is already installed, ignore this one
         if(roRules != null) {
@@ -116,7 +115,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
                 if(storage.contains(r)) {
                     log.info("Resource {} ignored, overridden by {} which has higher priority",
                             uri, r);
-                    return IGNORED;
+                    return;
                 }
             }
         }
@@ -137,8 +136,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
         if (p != null) {
             try {
                 final Map<String, Object> map = storage.getMap(uri);
-                result = p.installOrUpdate(uri, map, data);
-                if (result != IGNORED) {
+                if(p.installOrUpdate(uri, map, data) != IGNORED) {
                     map.put(KEY_DIGEST, data.getDigest());
                 }
                 storage.saveToFile();
@@ -148,7 +146,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
                 throw new JcrInstallException("Exception in installOrUpdate (" + uri + ")", e);
             }
         }
-        return result;
+        return;
     }
 
     public void scheduleUninstall(String uri) throws JcrInstallException {
