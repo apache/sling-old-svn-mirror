@@ -30,6 +30,7 @@ import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -54,6 +55,7 @@ import org.slf4j.LoggerFactory;
 */
 public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener {
 
+	private BundleContext bundleContext;
     private Storage storage;
     private OsgiResourceProcessorList processors;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -79,11 +81,13 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
 
     protected void activate(ComponentContext context) throws IOException {
+    	bundleContext = context.getBundleContext();
         processors = new OsgiResourceProcessorList(context.getBundleContext(), packageAdmin, startLevel, configAdmin);
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
     }
 
     protected void deactivate(ComponentContext oldContext) {
+    	bundleContext = null;
         if(storage != null) {
             try {
                 storage.saveToFile();
@@ -104,13 +108,13 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     
     public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
     	synchronized (tasks) {
-        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, data));
+        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, data, bundleContext));
 		}
     }
 
-    public void scheduleUninstall(String uri) throws JcrInstallException {
+    public void scheduleUninstall(String uri) throws IOException, JcrInstallException {
     	synchronized (tasks) {
-        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, null));
+        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, null, bundleContext));
     	}
     }
 

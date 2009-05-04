@@ -41,7 +41,7 @@ public interface OsgiController {
      *  @param attributes metadata stored by the OsgiController, will be
      *      removed after calling this method
      */
-    void scheduleUninstall(String uri) throws JcrInstallException;
+    void scheduleUninstall(String uri) throws IOException, JcrInstallException;
     
     /** Return the list of uri for resources that have been installed 
      *  by this controller.

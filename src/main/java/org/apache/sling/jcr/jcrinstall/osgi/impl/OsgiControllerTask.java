@@ -28,6 +28,7 @@ import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
 import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,13 +53,14 @@ class OsgiControllerTask implements Callable<Object> {
 			OsgiResourceProcessorList processors, 
 			ResourceOverrideRules roRules, 
 			String uri, 
-			InstallableData data)
+			InstallableData data,
+			BundleContext bc) throws IOException
 	{
 		this.storage = storage;
 		this.processors = processors;
 		this.roRules = roRules;
 		this.uri = uri;
-		this.data = data;
+		this.data = (data == null ? null : new InstallableDataWrapper(data, bc));
 	}
 	
 	@Override
@@ -72,12 +74,18 @@ class OsgiControllerTask implements Callable<Object> {
 		;
 	}
 	
-	public Object call() throws JcrInstallException, IOException {
+	public Object call() throws Exception {
 		if(isInstallOrUpdate()) {
 			executeInstallOrUpdate();
 		} else {
 			executeUninstall();
 		}
+		
+		// Cleanup InstallableDataWrapper
+		if(data instanceof InstallableDataWrapper) {
+			((InstallableDataWrapper)data).cleanup();
+		}
+		
 		return null;
 	}
 	
@@ -85,7 +93,7 @@ class OsgiControllerTask implements Callable<Object> {
 		return data != null;
 	}
 
-	private void executeUninstall() throws JcrInstallException {
+	private void executeUninstall() throws Exception {
         // If a corresponding higher priority resource is installed, ignore this request
         if(roRules != null) {
             for(String r : roRules.getHigherPriorityResources(uri)) {
@@ -97,22 +105,17 @@ class OsgiControllerTask implements Callable<Object> {
             }
         }
         
-        try {
-	        // let each processor try to uninstall, one of them
-        	// should know how that handle uri
-	    	for(OsgiResourceProcessor p : this.processors) {
-	                p.uninstall(uri, storage.getMap(uri));
-	    	}
-	    	
-	        storage.remove(uri);
-	        storage.saveToFile();
-	        
-        } catch(Exception e) {
-            throw new JcrInstallException("Exception in uninstall (" + uri + ")", e);
-        }
+        // let each processor try to uninstall, one of them
+    	// should know how that handle uri
+    	for(OsgiResourceProcessor p : this.processors) {
+                p.uninstall(uri, storage.getMap(uri));
+    	}
+    	
+        storage.remove(uri);
+        storage.saveToFile();
 	}
 
-	private void executeInstallOrUpdate() throws JcrInstallException , IOException {
+	private void executeInstallOrUpdate() throws Exception {
         // If a corresponding higher priority resource is already installed, ignore this one
         if(roRules != null) {
             for(String r : roRules.getHigherPriorityResources(uri)) {
@@ -138,17 +141,11 @@ class OsgiControllerTask implements Callable<Object> {
         // let suitable OsgiResourceProcessor process install
         final OsgiResourceProcessor p = processors.getProcessor(uri, data);
         if (p != null) {
-            try {
-                final Map<String, Object> map = storage.getMap(uri);
-                if(p.installOrUpdate(uri, map, data) != IGNORED) {
-                    map.put(OsgiControllerImpl.KEY_DIGEST, data.getDigest());
-                }
-                storage.saveToFile();
-            } catch(IOException ioe) {
-                throw ioe;
-            } catch(Exception e) {
-                throw new JcrInstallException("Exception in installOrUpdate (" + uri + ")", e);
+            final Map<String, Object> map = storage.getMap(uri);
+            if(p.installOrUpdate(uri, map, data) != IGNORED) {
+                map.put(OsgiControllerImpl.KEY_DIGEST, data.getDigest());
             }
+            storage.saveToFile();
         }
         return;
 		
