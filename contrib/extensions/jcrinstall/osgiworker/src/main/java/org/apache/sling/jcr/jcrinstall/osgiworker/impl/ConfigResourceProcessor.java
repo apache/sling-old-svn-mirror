@@ -41,12 +41,12 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     private static final String ALIAS_KEY = "_alias_factory_pid";
     public static final String CONFIG_PATH_KEY = "_jcr_config_path";
     public static final String CONFIG_EXTENSION = ".cfg";
-    private final ConfigurationAdmin configurationAdmin;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final DictionaryReader reader = new DictionaryReader();
+    private final ServiceProxy serviceProxy;
     
-    ConfigResourceProcessor(ConfigurationAdmin ca) {
-        configurationAdmin = ca;
+    ConfigResourceProcessor(ServiceProxy sp) {
+        serviceProxy = sp;
     }
     
     public void dispose() {
@@ -125,7 +125,14 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     }
 
     /** Get or create configuration */
-    Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded) throws IOException, InvalidSyntaxException {
+    Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded) 
+    throws IOException, InvalidSyntaxException, MissingServiceException 
+    {
+    	final ConfigurationAdmin configurationAdmin = serviceProxy.getConfigurationAdmin();
+    	if(configurationAdmin == null) {
+    		throw new MissingServiceException(ConfigurationAdmin.class);
+    	}
+    	
         Configuration result = null;
         
         if (cp.getFactoryPid() == null) {

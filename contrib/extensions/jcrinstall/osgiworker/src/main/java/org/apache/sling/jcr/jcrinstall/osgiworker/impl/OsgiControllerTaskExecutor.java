@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -29,9 +30,10 @@ import org.slf4j.LoggerFactory;
 class OsgiControllerTaskExecutor {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     static int counter;
-
+    
 	/** Execute the given tasks in a new thread, return when done */
-	void execute(final List<Callable<Object>> tasks) throws InterruptedException {
+    List<Callable<Object>> execute(final List<Callable<Object>> tasks) throws InterruptedException {
+    	final List<Callable<Object>> remainingTasks = new LinkedList<Callable<Object>>();
 		final String threadName = getClass().getSimpleName() + " #" + (++counter);
 		final Thread t = new Thread(threadName) {
 			@Override
@@ -41,6 +43,9 @@ class OsgiControllerTaskExecutor {
 					try {
 						c.call();
 						log.debug("Task execution successful: " + c);
+					} catch(MissingServiceException mse) {
+						log.info("Task execution deferred due to " + mse + ", task=" + c);
+						remainingTasks.add(c);
 					} catch(Exception e) {
 						log.warn("Task execution failed: " + c, e);
 					}
@@ -50,5 +55,6 @@ class OsgiControllerTaskExecutor {
 		t.setDaemon(true);
 		t.start();
 		t.join();
+		return remainingTasks;
 	}
 }

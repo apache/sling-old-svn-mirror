@@ -42,6 +42,10 @@ public class JcrinstallTestBase extends HttpTestBase {
 	protected int scaleFactor;
 	protected int defaultBundlesTimeout;
 	
+	static interface StringCondition {
+		boolean eval(String input);
+	}
+	
     private class ShutdownThread extends Thread {
         @Override
         public void run() {
@@ -103,6 +107,23 @@ public class JcrinstallTestBase extends HttpTestBase {
     	}
     	final long delta = System.currentTimeMillis() - start;
     	fail(message + ": expected " + expectedCount + " active bundles, found " + count
+    			+ " after waiting " + delta / 1000.0 + " seconds");
+    }
+    
+    protected void assertContentWithTimeout(String message, String contentUrl, String expectedContentType, 
+    		StringCondition condition, int timeoutSeconds) throws IOException 
+    {
+    	final long start = System.currentTimeMillis();
+    	final long timeout = start + timeoutSeconds * 1000L;
+    	while(System.currentTimeMillis() < timeout) {
+    		final String content = getContent(contentUrl, expectedContentType);
+    		if(condition.eval(content)) {
+    			return;
+    		}
+    		sleep(200);
+    	}
+    	final long delta = System.currentTimeMillis() - start;
+    	fail(message + ": StringCondition did not return true" 
     			+ " after waiting " + delta / 1000.0 + " seconds");
     }
     
