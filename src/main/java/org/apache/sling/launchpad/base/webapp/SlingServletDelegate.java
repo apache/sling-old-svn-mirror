@@ -158,7 +158,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         this.notifiable = notifiable;
     }
 
-    public void setCommandLine(String[] args) {
+    public void setCommandLine(Map<String, String> args) {
         // ignore this for now
     }
 

@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.base.impl.ClassLoaderResourceProvider;
@@ -111,7 +112,7 @@ public class MainDelegate implements Launcher {
         this.notifiable = notifiable;
     }
 
-    public void setCommandLine(String[] args) {
+    public void setCommandLine(Map<String, String> args) {
         commandLine = new HashMap<String, String>();
         commandLine.put(PROP_PORT, DEFAULT_PORT);
         parseCommandLine(args, commandLine);
@@ -127,7 +128,7 @@ public class MainDelegate implements Launcher {
 
         // parse the command line (exit in case of failure)
         if (commandLine == null) {
-            setCommandLine(new String[0]);
+            setCommandLine(new HashMap<String, String>());
         }
 
         // if sling.home was set on the command line, set it in the properties
@@ -209,24 +210,15 @@ public class MainDelegate implements Launcher {
      * Parses the command line in <code>args</code> and sets appropriate Sling
      * configuration options in the <code>props</code> map.
      */
-    private static void parseCommandLine(String[] args,
+    private static void parseCommandLine(Map<String, String> args,
             Map<String, String> props) {
-        for (int argc = 0; argc < args.length; argc++) {
-            String arg = args[argc];
-            if (arg.startsWith("-")) {
 
-                // require at least another character naming the option
-                if (arg.length() != 2) {
-                    usage("Missing option name", 1);
-                }
-
-                // option argument is following the current option
-                argc++;
-                String value = argc < args.length ? args[argc] : null;
-
-                switch (arg.charAt(1)) {
+        for (Entry<String, String> arg : args.entrySet()) {
+            if (arg.getKey().length() == 1) {
+                String value = arg.getValue();
+                switch (arg.getKey().charAt(0)) {
                     case 'l':
-                        if (value == null) {
+                        if (value == arg.getKey()) {
                             usage("Missing log level value", 1);
                             continue;
                         }
@@ -243,7 +235,7 @@ public class MainDelegate implements Launcher {
                         break;
 
                     case 'f':
-                        if (value == null) {
+                        if (value == arg.getKey()) {
                             usage("Missing log file value", 1);
                             continue;
                         } else if ("-".equals(value)) {
@@ -253,7 +245,7 @@ public class MainDelegate implements Launcher {
                         break;
 
                     case 'c':
-                        if (value == null) {
+                        if (value == arg.getKey()) {
                             usage("Missing directory value", 1);
                             continue;
                         }
@@ -261,7 +253,7 @@ public class MainDelegate implements Launcher {
                         break;
 
                     case 'p':
-                        if (value == null) {
+                        if (value == arg.getKey()) {
                             usage("Missing port value", 1);
                             continue;
                         }
@@ -275,7 +267,7 @@ public class MainDelegate implements Launcher {
                         break;
 
                     case 'a':
-                        if (value == null) {
+                        if (value == arg.getKey()) {
                             usage("Missing address value", 1);
                             continue;
                         }
@@ -289,6 +281,8 @@ public class MainDelegate implements Launcher {
                         usage("Unrecognized option " + arg, 1);
                         break;
                 }
+            } else {
+                usage("Unrecognized option " + arg, 1);
             }
         }
     }
