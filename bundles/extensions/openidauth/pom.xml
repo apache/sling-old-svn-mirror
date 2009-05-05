@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.openidauth</artifactId>
     <packaging>bundle</packaging>
-    <version>0.9.0-incubator-SNAPSHOT</version>
+    <version>0.9.0-incubator</version>
 
     <name>Apache Sling OpenID Authentication</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/openidauth</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/openidauth</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/openidauth</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.openidauth-0.9.0-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.openidauth-0.9.0-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.openidauth-0.9.0-incubator</url>
     </scm>
 
     <build>
