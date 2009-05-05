@@ -24,7 +24,7 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 
 /** Provides data (InputStream, last modified data) about
  * 	JCR nodes which are files.

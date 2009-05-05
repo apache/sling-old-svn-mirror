@@ -4,7 +4,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

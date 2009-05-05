@@ -25,8 +25,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.jcrinstall.osgi.impl.MockInstallableData;
-
 class ContentHelper {
     public static final String NT_FOLDER = "nt:folder";
     public static final String NT_FILE = "nt:file";

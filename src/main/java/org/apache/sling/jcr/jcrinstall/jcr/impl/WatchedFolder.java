@@ -35,10 +35,10 @@ import javax.jcr.observation.EventListener;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
-import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.JcrInstallException;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgiworker.ResourceOverrideRules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
