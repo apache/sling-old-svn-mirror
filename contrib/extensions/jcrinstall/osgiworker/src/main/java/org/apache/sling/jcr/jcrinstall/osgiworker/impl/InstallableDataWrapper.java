@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 import org.osgi.framework.BundleContext;
 
 /** Wraps InstallableData instances that provide an InputStream

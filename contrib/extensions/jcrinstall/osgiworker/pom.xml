@@ -59,7 +59,7 @@
                 <Export-Package>
                     org.apache.sling.jcr.jcrinstall.osgiworker
                 </Export-Package>
-                <Private-Package>org.apache.sling.jcr.jcrinstall.osgiworker.*</Private-Package>
+                <Private-Package>org.apache.sling.jcr.jcrinstall.osgiworker.impl.*</Private-Package>
             </instructions>
         </configuration>
       </plugin>

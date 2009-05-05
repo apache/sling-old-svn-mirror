@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,9 +25,10 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter.PropertyConverter;
-import org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter.PropertyValue;
-import org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter.ValueConverterException;
+import org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter.PropertyConverter;
+import org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter.PropertyValue;
+import org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter.ValueConverterException;
+
 
 /** Reads a Dictionary from an InputStream, using the
  *  syntax of the Properties class, enhanced to support

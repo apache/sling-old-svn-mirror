@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi;
+package org.apache.sling.jcr.jcrinstall.osgiworker;
 
 /** Result codes for resource installation operations */
 public class InstallResultCode {

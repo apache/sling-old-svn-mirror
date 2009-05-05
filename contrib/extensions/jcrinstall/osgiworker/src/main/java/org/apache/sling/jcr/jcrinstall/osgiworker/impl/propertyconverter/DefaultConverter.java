@@ -16,10 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter;
 
-/** Convert a single Property value */
-interface ValueConverter {
-    boolean appliesTo(String key);
-    PropertyValue convert(String key, String value) throws ValueConverterException;
+/** Do-nothing conversion, just trims values */
+class DefaultConverter implements ValueConverter {
+
+    public boolean appliesTo(String key) {
+        return true;
+    }
+
+    public PropertyValue convert(String key, String value) {
+        if(value != null) {
+            value = value.trim();
+        }
+        return new PropertyValue(key, value);
+    }
+
 }

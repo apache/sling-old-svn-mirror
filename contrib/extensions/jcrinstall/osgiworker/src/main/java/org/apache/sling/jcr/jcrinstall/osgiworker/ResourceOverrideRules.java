@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi;
+package org.apache.sling.jcr.jcrinstall.osgiworker;
 
 /** Resources can be overridden by others based on their URIs.
  *  This interface returns a list of resources that have a lower,

@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
+import static org.apache.sling.jcr.jcrinstall.osgiworker.InstallResultCode.INSTALLED;
+import static org.apache.sling.jcr.jcrinstall.osgiworker.InstallResultCode.UPDATED;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.JcrInstallException;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiResourceProcessor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;

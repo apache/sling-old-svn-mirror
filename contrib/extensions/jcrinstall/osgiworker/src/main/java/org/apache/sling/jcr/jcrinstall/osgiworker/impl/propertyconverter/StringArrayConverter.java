@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter;
 
 import java.util.ArrayList;
 

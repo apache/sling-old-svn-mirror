@@ -16,15 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter;
 
-@SuppressWarnings("serial")
-public class JcrInstallException extends Exception {
-    public JcrInstallException(String reason) {
-        super(reason);
-    }
-    
-    public JcrInstallException(String reason, Throwable cause) {
-        super(reason, cause);
-    }
+/** Convert a single Property value */
+interface ValueConverter {
+    boolean appliesTo(String key);
+    PropertyValue convert(String key, String value) throws ValueConverterException;
 }

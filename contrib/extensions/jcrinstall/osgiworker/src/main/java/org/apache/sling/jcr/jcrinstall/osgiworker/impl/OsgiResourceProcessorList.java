@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 import java.util.LinkedList;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiResourceProcessor;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.packageadmin.PackageAdmin;

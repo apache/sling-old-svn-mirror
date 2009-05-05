@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar

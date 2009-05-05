@@ -16,18 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
+import static org.apache.sling.jcr.jcrinstall.osgiworker.InstallResultCode.IGNORED;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
-import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiResourceProcessor;
+import org.apache.sling.jcr.jcrinstall.osgiworker.ResourceOverrideRules;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

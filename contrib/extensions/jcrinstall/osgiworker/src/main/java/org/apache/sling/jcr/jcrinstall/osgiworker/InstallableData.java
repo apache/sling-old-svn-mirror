@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi;
+package org.apache.sling.jcr.jcrinstall.osgiworker;
 
 /** A piece of data that can be installed by
  * 	the OSGi controller.

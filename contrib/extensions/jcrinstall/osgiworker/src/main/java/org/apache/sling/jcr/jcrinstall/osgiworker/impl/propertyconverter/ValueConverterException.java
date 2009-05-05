@@ -16,27 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter;
 
-import java.util.concurrent.Callable;
+import java.io.IOException;
 
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
-
-/** Callable that processes the resource queue of an OsgiResourceProcessor */
-class ResourceQueueTask implements Callable<Object> {
-	private final OsgiResourceProcessor p;
-	
-	ResourceQueueTask(OsgiResourceProcessor p) {
-		this.p = p;
-	}
-	
-	public String toString() {
-		return getClass().getSimpleName() + ": " + p.getClass().getSimpleName()+ ".processResourceQueue()";
-	}
-	
-	public Object call() throws Exception {
-		p.processResourceQueue();
-		return null;
-	}
-
+@SuppressWarnings("serial")
+public class ValueConverterException extends IOException {
+    public ValueConverterException(String reason, String key, String value) {
+        super(reason + " (key=" + key + ", value=" + value + ")");
+    }
 }

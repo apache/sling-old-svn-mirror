@@ -16,26 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter;
+package org.apache.sling.jcr.jcrinstall.osgiworker;
 
-/** Base class for simple type conversions using (type) marker */
-abstract class SimpleTypeConverter implements ValueConverter {
-
-    private final String typePattern;
-    
-    SimpleTypeConverter(String typeName) {
-        this.typePattern = "(" + typeName + ")";
+@SuppressWarnings("serial")
+public class JcrInstallException extends Exception {
+    public JcrInstallException(String reason) {
+        super(reason);
     }
     
-    public boolean appliesTo(String key) {
-        return key.endsWith(typePattern);
+    public JcrInstallException(String reason, Throwable cause) {
+        super(reason, cause);
     }
-
-    public PropertyValue convert(final String key, String value) throws ValueConverterException {
-        final int pos = key.indexOf(typePattern);
-        final String modifiedKey = key.substring(0, pos).trim();
-        return new PropertyValue(modifiedKey, convertValue(key, value));
-    }
-    
-    protected abstract Object convertValue(String key, String value) throws ValueConverterException;
 }

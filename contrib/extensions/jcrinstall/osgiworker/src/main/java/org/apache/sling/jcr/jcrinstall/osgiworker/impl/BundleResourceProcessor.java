@@ -16,12 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.IGNORED;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.INSTALLED;
-import static org.apache.sling.jcr.jcrinstall.osgi.InstallResultCode.UPDATED;
-
+import static org.apache.sling.jcr.jcrinstall.osgiworker.InstallResultCode.IGNORED;
+import static org.apache.sling.jcr.jcrinstall.osgiworker.InstallResultCode.UPDATED;
+import static org.apache.sling.jcr.jcrinstall.osgiworker.InstallResultCode.INSTALLED;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -34,8 +33,8 @@ import java.util.TreeSet;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiResourceProcessor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;

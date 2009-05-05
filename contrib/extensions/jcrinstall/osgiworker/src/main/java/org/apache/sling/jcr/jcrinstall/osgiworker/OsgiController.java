@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi;
+package org.apache.sling.jcr.jcrinstall.osgiworker;
 
 import java.io.IOException;
 import java.util.Set;

@@ -16,20 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
-/** Do-nothing conversion, just trims values */
-class DefaultConverter implements ValueConverter {
+import java.util.concurrent.Callable;
 
-    public boolean appliesTo(String key) {
-        return true;
-    }
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiResourceProcessor;
 
-    public PropertyValue convert(String key, String value) {
-        if(value != null) {
-            value = value.trim();
-        }
-        return new PropertyValue(key, value);
-    }
+/** Callable that processes the resource queue of an OsgiResourceProcessor */
+class ResourceQueueTask implements Callable<Object> {
+	private final OsgiResourceProcessor p;
+	
+	ResourceQueueTask(OsgiResourceProcessor p) {
+		this.p = p;
+	}
+	
+	public String toString() {
+		return getClass().getSimpleName() + ": " + p.getClass().getSimpleName()+ ".processResourceQueue()";
+	}
+	
+	public Object call() throws Exception {
+		p.processResourceQueue();
+		return null;
+	}
 
 }

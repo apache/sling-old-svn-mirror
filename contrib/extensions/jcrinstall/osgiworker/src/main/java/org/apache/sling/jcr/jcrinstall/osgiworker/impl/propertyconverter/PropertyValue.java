@@ -16,13 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter;
 
-import java.io.IOException;
+public class PropertyValue {
+    private final String key;
+    private final Object value;
+    
+    public PropertyValue(String key, Object value) {
+        this.key = key;
+        this.value = value;
+    }
 
-@SuppressWarnings("serial")
-public class ValueConverterException extends IOException {
-    public ValueConverterException(String reason, String key, String value) {
-        super(reason + " (key=" + key + ", value=" + value + ")");
+    public String getKey() {
+        return key;
+    }
+
+    public Object getValue() {
+        return value;
     }
 }
