@@ -24,6 +24,8 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Loader;
@@ -49,12 +51,12 @@ public class Main extends Thread implements Notifiable {
     // The name of the environment variable to consult to find out
     // about sling.home
     private static final String ENV_SLING_HOME = "SLING_HOME";
-
+    
     public static void main(String[] args) {
         new Main(args);
     }
 
-    private final String[] commandLineArgs;
+    private final Map<String, String> commandLineArgs;
 
     private final String slingHome;
 
@@ -65,12 +67,11 @@ public class Main extends Thread implements Notifiable {
         // set the thread name
         super("Sling Terminator");
 
-        // sling.home from the command line or system properties, else default
-        String slingHome = getSlingHome(args);
-        info("Starting Sling in " + slingHome, null);
+        this.commandLineArgs = parseCommandLine(args);
 
-        this.commandLineArgs = args;
-        this.slingHome = slingHome;
+        // sling.home from the command line or system properties, else default
+        this.slingHome = getSlingHome(commandLineArgs);
+        info("Starting Sling in " + slingHome, null);
 
         Runtime.getRuntime().addShutdownHook(this);
 
@@ -209,6 +210,58 @@ public class Main extends Thread implements Notifiable {
     }
 
     /**
+     * Parses the command line arguments into a map of strings indexed by
+     * strings. This method suppports single character option names only at the
+     * moment. Each pair of an option name and its value is stored into the
+     * map. If a single dash '-' character is encountered the rest of the command
+     * line are interpreted as option names and are stored in the map unmodified
+     * as entries with the same key and value.
+     * <table>
+     * <tr><th>Command Line</th><th>Mapping</th></tr>
+     * <tr><td>x</td><td>x -> x</td></tr>
+     * <tr><td>-y z</td><td>y -> z</td></tr>
+     * <tr><td>-yz</td><td>y -> z</td></tr>
+     * <tr><td>-y -z</td><td>y -> y, z -> z</td></tr>
+     * <tr><td>-y x - -z a</td><td>y -> x, -z -> -z, a -> a</td></tr>
+     * </table>
+     * 
+     * @param args The command line to parse
+     * 
+     * @return The map of command line options and their values
+     */
+    static Map<String, String> parseCommandLine(String[] args) {
+        Map<String, String> commandLine = new HashMap<String, String>();
+        boolean readUnparsed = false;
+        for (int argc = 0; args != null && argc < args.length; argc++) {
+            String arg = args[argc];
+            
+            if (readUnparsed) {
+                commandLine.put(arg, arg);
+            } else if (arg.startsWith("-")) {
+                if (arg.length() == 1) {
+                   readUnparsed = true;
+                } else {
+                    String key = String.valueOf(arg.charAt(1));
+                    if (arg.length() > 2) {
+                        commandLine.put(key, arg.substring(2));
+                    } else {
+                        argc++;
+                        if (argc < args.length && !args[argc].startsWith("-")) {
+                            commandLine.put(key, args[argc]);
+                        } else {
+                            commandLine.put(key, key);
+                            argc--;
+                        }
+                    }
+                }
+            } else {
+                commandLine.put(arg, arg);
+            }
+        }
+        return commandLine;
+    }
+    
+    /**
      * Define the sling.home parameter implementing the algorithme defined on
      * the wiki page to find the setting according to this algorithm:
      * <ol>
@@ -221,34 +274,33 @@ public class Main extends Thread implements Notifiable {
      * @param args The command line arguments
      * @return The value to use for sling.home
      */
-    private static String getSlingHome(String[] args) {
+    private static String getSlingHome(Map<String, String> commandLine) {
         String source = null;
-        String slingHome = null;
 
-        for (int argc = 0; argc < args.length; argc++) {
-            String arg = args[argc];
-            if (arg.startsWith("-") && arg.length() == 2
-                && arg.charAt(1) == 'c') {
-                argc++;
-                if (argc < args.length) {
-                    source = "command line";
-                    slingHome = args[argc];
-                }
-                break;
-            }
-        }
+        String slingHome = commandLine.get("c");
+        if (slingHome != null) {
+            
+            source = "command line";
 
-        if (slingHome == null) {
+        } else {
+            
             slingHome = System.getProperty(SharedConstants.SLING_HOME);
             if (slingHome != null) {
+                
                 source = "system property sling.home";
+                
             } else {
+                
                 slingHome = System.getenv(ENV_SLING_HOME);
                 if (slingHome != null) {
+                    
                     source = "environment variable SLING_HOME";
+                    
                 } else {
+                    
                     source = "default";
                     slingHome = SharedConstants.SLING_HOME_DEFAULT;
+                    
                 }
             }
         }

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.launchpad.base.shared;
 
+import java.util.Map;
+
 /**
  * The <code>Launcher</code> interface is implemented by the delegate classes
  * inside the Launcher JAR and are used by the actual Main class or servlet to
@@ -40,7 +42,7 @@ public interface Launcher {
     /**
      * The commandline provided from the standalone launch case.
      */
-    public void setCommandLine(String[] args);
+    public void setCommandLine(Map<String, String> args);
 
     /**
      * Starts the framework and returns <code>true</code> if successfull.
