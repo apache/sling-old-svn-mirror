@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiResourceProcessor;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
@@ -36,9 +35,9 @@ import org.slf4j.LoggerFactory;
 class OsgiResourceProcessorList extends LinkedList<OsgiResourceProcessor> {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-	OsgiResourceProcessorList(BundleContext ctx, PackageAdmin pa, StartLevel sa, ConfigurationAdmin ca) {
+	OsgiResourceProcessorList(BundleContext ctx, PackageAdmin pa, StartLevel sa, ServiceProxy sp) {
         add(new BundleResourceProcessor(ctx, pa, sa));
-        add(new ConfigResourceProcessor(ca));
+        add(new ConfigResourceProcessor(sp));
 	}
 	
 	OsgiResourceProcessor getProcessor(String uri, InstallableData data) {

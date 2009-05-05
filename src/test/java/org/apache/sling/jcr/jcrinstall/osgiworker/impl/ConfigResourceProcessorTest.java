@@ -41,7 +41,12 @@ public class ConfigResourceProcessorTest {
         final String data = "foo = bar";
         final MockInstallableData id = new MockInstallableData(path, data);
         final ConfigurationAdmin ca = mockery.mock(ConfigurationAdmin.class);
-        final ConfigResourceProcessor p = new ConfigResourceProcessor(ca);
+        final ServiceProxy sp = new ServiceProxy() {
+			public ConfigurationAdmin getConfigurationAdmin() {
+				return ca;
+			}
+        };
+        final ConfigResourceProcessor p = new ConfigResourceProcessor(sp);
         final Configuration c = mockery.mock(Configuration.class);
         final String pid = "dummyConfigPid";
         

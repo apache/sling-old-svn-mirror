@@ -35,10 +35,9 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** OsgiController service
  *
@@ -53,12 +52,11 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
 */
-public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener {
+public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener, ServiceProxy {
 
 	private BundleContext bundleContext;
     private Storage storage;
     private OsgiResourceProcessorList processors;
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private ResourceOverrideRules roRules;
     private final List<Callable<Object>> tasks = new LinkedList<Callable<Object>>();
     private final OsgiControllerTaskExecutor executor = new OsgiControllerTaskExecutor();
@@ -68,7 +66,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     /** Storage key: digest of an InstallableData */
     public static final String KEY_DIGEST = "data.digest";
 
-    /** @scr.reference */
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
     private ConfigurationAdmin configAdmin;
 
     /** @scr.reference */
@@ -77,22 +75,33 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     /** @scr.reference */
     protected StartLevel startLevel;
     
+    /** @scr.reference */
+    protected LogService logService;
+    
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
 
     protected void activate(ComponentContext context) throws IOException {
     	bundleContext = context.getBundleContext();
-        processors = new OsgiResourceProcessorList(context.getBundleContext(), packageAdmin, startLevel, configAdmin);
+        processors = new OsgiResourceProcessorList(context.getBundleContext(), packageAdmin, startLevel, this);
         storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
     }
 
     protected void deactivate(ComponentContext oldContext) {
+    	if(logService != null) {
+    		logService.log(LogService.LOG_WARNING, 
+    				OsgiController.class.getName() 
+    				+ " service deactivated - this warning can be ignored if system is shutting down");
+    	}
+    	
     	bundleContext = null;
         if(storage != null) {
             try {
                 storage.saveToFile();
             } catch(IOException ioe) {
-                log.warn("IOException in Storage.saveToFile()", ioe);
+            	if(logService != null) {
+            		logService.log(LogService.LOG_WARNING, "IOException in Storage.saveToFile()", ioe);
+            	}
             }
         }
         
@@ -149,7 +158,9 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     	
     	// Ready to work?
         if(processors == null) {
-            log.info("Not activated yet, cannot executeScheduledOperations");
+        	if(logService != null) {
+                logService.log(LogService.LOG_INFO, "Not activated yet, cannot executeScheduledOperations");
+        	}
             return;
         }
         
@@ -166,14 +177,27 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
             }
             
             // Now execute all our tasks in a separate thread
-            log.debug("Executing {} queued tasks", tasks.size());
+        	if(logService != null) {
+                logService.log(LogService.LOG_DEBUG, "Executing " + tasks.size() + " queued tasks");
+        	}
             final long start = System.currentTimeMillis();
-            executor.execute(tasks);
-            log.debug("Done executing queued tasks ({} msec)", System.currentTimeMillis() - start);
+            
+            // execute returns the list of tasks that could not be executed but should be retried later
+            // and those have been removed from the tasks list
+            tasks.addAll(executor.execute(tasks));
+            
+        	if(logService != null) {
+                logService.log(LogService.LOG_DEBUG, 
+                		"Done executing queued tasks (" + (System.currentTimeMillis() - start) + " msec)");
+        	}
 		}
 	}
 
 	public void setResourceOverrideRules(ResourceOverrideRules r) {
         roRules = r;
     }
+
+	public ConfigurationAdmin getConfigurationAdmin() {
+		return configAdmin;
+	}
 }
