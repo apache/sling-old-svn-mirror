@@ -108,4 +108,12 @@ public class MainTest extends TestCase {
         assertEquals("argument -b must -b", "-b", commandline.get("-b"));
         assertEquals("argument bpar must bpar", "bpar", commandline.get("bpar"));
     }
+
+    public void test_parseCommandLine_single_arg_with_dash_par() {
+        String[] args = { "-a", "-" };
+        Map<String, String> commandline = Main.parseCommandLine(args);
+        assertNotNull("commandline map must not be null", commandline);
+        assertEquals("commandline map must have three entries", 1, commandline.size());
+        assertEquals("argument a must -", "-", commandline.get("a"));
+    }
 }
