@@ -119,7 +119,7 @@
                             <rules>
                                 <requireJavaVersion>
                                     <message>
-                                        Sling must be compiled with Java
+                                        Apache Sling must be compiled with Java
                                         5 or higher
                                     </message>
                                     <version>1.5.0</version>
@@ -156,7 +156,7 @@
                             <tasks>
                                 <echo>
 ********************** WARNING (SLING-443) **********************************
-On most platforms, building Sling currently requires setting 
+On most platforms, building Apache Sling currently requires setting 
 MAVEN_OPTS="-Xmx256M", see https://issues.apache.org/jira/browse/SLING-443
 You might get a "java.lang.OutOfMemoryError: Java heap space" if that
 setting is not correct.
@@ -375,7 +375,7 @@ setting is not correct.
 
     <mailingLists>
         <mailingList>
-            <name>Sling Development List</name>
+            <name>Apache Sling Development List</name>
             <subscribe>
                 sling-dev-subscribe@incubator.apache.org
             </subscribe>
@@ -393,7 +393,7 @@ setting is not correct.
             </otherArchives>
         </mailingList>
         <mailingList>
-            <name>Sling Source Control List</name>
+            <name>Apache Sling Source Control List</name>
             <subscribe>
                 sling-commits-subscribe@incubator.apache.org
             </subscribe>
