@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -12,7 +10,7 @@
 
 	<artifactId>org.apache.sling.jcr.jackrabbit.accessmanager</artifactId>
 	<packaging>bundle</packaging>
-	<version>2.0.0-incubator-SNAPSHOT</version>
+	<version>2.0.0-incubator</version>
 	<name>Apache Sling Jackrabbit JSR-283 Access Control Manager Support</name>
 	<description>
 		Provides SlingPostOperations for the Jackrabbit JSR-283 Access Control Manager.
@@ -20,13 +18,13 @@
 
 	<scm>
 		<connection>
-			scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+			scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.0.0-incubator
 		</connection>
 		<developerConnection>
-			scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+			scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.0.0-incubator
 		</developerConnection>
 		<url>
-			http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+			http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.0.0-incubator
 		</url>
 	</scm>
 
@@ -48,8 +46,8 @@
                      org.apache.sling.jcr.jackrabbit.accessmanager;version=${pom.version},
                      org.apache.sling.jcr.jackrabbit.accessmanager.post;version=${pom.version}                   
 						</Export-Package>
-						<Sling-Initial-Content></Sling-Initial-Content>
-						<Sling-Nodetypes></Sling-Nodetypes>
+						<Sling-Initial-Content />
+						<Sling-Nodetypes />
 					</instructions>
 				</configuration>
 			</plugin>
