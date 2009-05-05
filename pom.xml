@@ -10,7 +10,7 @@
 
 	<artifactId>org.apache.sling.jcr.jackrabbit.accessmanager</artifactId>
 	<packaging>bundle</packaging>
-	<version>2.0.0-incubator</version>
+	<version>2.0.1-incubator-SNAPSHOT</version>
 	<name>Apache Sling Jackrabbit JSR-283 Access Control Manager Support</name>
 	<description>
 		Provides SlingPostOperations for the Jackrabbit JSR-283 Access Control Manager.
@@ -18,13 +18,13 @@
 
 	<scm>
 		<connection>
-			scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.0.0-incubator
+			scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
 		</connection>
 		<developerConnection>
-			scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.0.0-incubator
+			scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
 		</developerConnection>
 		<url>
-			http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.jcr.jackrabbit.accessmanager-2.0.0-incubator
+			http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
 		</url>
 	</scm>
 
