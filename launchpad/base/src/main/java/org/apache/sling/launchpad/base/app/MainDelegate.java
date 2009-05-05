@@ -296,8 +296,12 @@ public class MainDelegate implements Launcher {
 
         log("usage: "
             + MainDelegate.class.getName()
-            + " [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
+            + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
 
+        log("    start         listen for control connection (uses -j)");
+        log("    stop          terminate running Sling (uses -j)");
+        log("    start         check whether Sling is running (uses-j)");
+        log("    -j adr        host and port to use for control connection in the format '[host:]port' (default localhost:63000)");
         log("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
         log("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
         log("    -c slinghome  the sling context directory (default sling)");
