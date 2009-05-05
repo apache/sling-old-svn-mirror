@@ -85,7 +85,6 @@
         <module>bundles/jcr/base</module>
         <module>bundles/jcr/classloader</module>
         <module>bundles/jcr/contentloader</module>
-        <module>bundles/jcr/jackrabbit-api</module>
         <module>bundles/jcr/jackrabbit-server</module>
         <module>bundles/jcr/jackrabbit-usermanager</module>
 		<module>bundles/jcr/jackrabbit-accessmanager</module>
