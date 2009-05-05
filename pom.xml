@@ -27,7 +27,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>5-incubator-SNAPSHOT</version>
+    <version>5-incubator</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -48,14 +48,14 @@
 
     <properties>
         <site.jira.version.id>12313662</site.jira.version.id>
-        <site.javadoc.exclude></site.javadoc.exclude>
+        <site.javadoc.exclude />
     </properties>
     
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/parent</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/parent</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/parent</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/sling-5-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/sling-5-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/sling-5-incubator</url>
     </scm>
 
 
