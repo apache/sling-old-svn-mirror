@@ -69,6 +69,9 @@ public class Main extends Thread implements Notifiable {
 
         this.commandLineArgs = parseCommandLine(args);
 
+        // support usage first
+        doHelp();
+        
         // check for control commands (might exit)
         doControlCommand();
         
@@ -374,8 +377,30 @@ public class Main extends Thread implements Notifiable {
         }
     }
 
+    /** prints a simple usage plus optional error message and exists */
+    private void doHelp() {
+        if (commandLineArgs.remove("h") != null) {
+            System.out.println("usage: "
+                + Main.class.getName()
+                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
+    
+            System.out.println("    start         listen for control connection (uses -j)");
+            System.out.println("    stop          terminate running Sling (uses -j)");
+            System.out.println("    start         check whether Sling is running (uses-j)");
+            System.out.println("    -j adr        host and port to use for control connection in the format '[host:]port' (default localhost:63000)");
+            System.out.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
+            System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
+            System.out.println("    -c slinghome  the sling context directory (default sling)");
+            System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
+            System.out.println("    -p port       the port to listen to (default 8080)");
+            System.out.println("    -h            prints this usage message");
+    
+            System.exit(0);
+        }
+    }
+    
     private void doControlCommand() {
-        String commandSocketSpec = commandLineArgs.get("j");
+        String commandSocketSpec = commandLineArgs.remove("j");
         if ("j".equals(commandSocketSpec)) {
             commandSocketSpec = null;
         }
