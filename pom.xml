@@ -22,12 +22,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>5-incubator-SNAPSHOT</version>
+        <version>5-incubator</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.sling.jcr.resource</artifactId>
-    <version>2.0.3-incubator-SNAPSHOT</version>
+    <version>2.0.4-incubator</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Resolver</name>
@@ -37,13 +37,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/resource
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.resource-2.0.4-incubator
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/resource
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.jcr.resource-2.0.4-incubator
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/resource
+            http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.jcr.resource-2.0.4-incubator
         </url>
     </scm>
 
@@ -112,7 +112,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
+            <version>2.0.4-incubator</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -162,7 +162,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.3-incubator-SNAPSHOT</version>
+            <version>2.0.4-incubator</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
