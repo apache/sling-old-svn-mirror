@@ -69,6 +69,9 @@ public class Main extends Thread implements Notifiable {
 
         this.commandLineArgs = parseCommandLine(args);
 
+        // check for control commands (might exit)
+        doControlCommand();
+        
         // sling.home from the command line or system properties, else default
         this.slingHome = getSlingHome(commandLineArgs);
         info("Starting Sling in " + slingHome, null);
@@ -80,6 +83,25 @@ public class Main extends Thread implements Notifiable {
             SharedConstants.DEFAULT_SLING_LAUNCHER_JAR));
     }
 
+    // ---------- Shutdown support for control listener and shutdown hook
+
+    void shutdown() {
+        // remove the shutdown hook, will fail if called from the
+        // shutdown hook itself. Otherwise this prevents shutdown
+        // from being called again
+        try {
+            Runtime.getRuntime().removeShutdownHook(this);
+        } catch (Throwable t) {
+            // don't care for problems removing the hook
+        }
+
+        // now really shutdown sling
+        if (sling != null) {
+            info("Stopping Sling", null);
+            sling.stop();
+        }
+    }
+    
     // ---------- Notifiable interface
 
     /**
@@ -152,10 +174,7 @@ public class Main extends Thread implements Notifiable {
     @Override
     public void run() {
         info("Java VM is shutting down", null);
-        if (sling != null) {
-            info("Stopping Sling", null);
-            sling.stop();
-        }
+        shutdown();
     }
 
     // ---------- internal
@@ -246,7 +265,8 @@ public class Main extends Thread implements Notifiable {
                         commandLine.put(key, arg.substring(2));
                     } else {
                         argc++;
-                        if (argc < args.length && !args[argc].startsWith("-")) {
+                        if (argc < args.length
+                            && (args[argc].equals("-") || !args[argc].startsWith("-"))) {
                             commandLine.put(key, args[argc]);
                         } else {
                             commandLine.put(key, key);
@@ -312,12 +332,12 @@ public class Main extends Thread implements Notifiable {
     // ---------- logging
 
     // emit an informational message to standard out
-    private static void info(String message, Throwable t) {
+    static void info(String message, Throwable t) {
         log(System.out, "*INFO*", message, t);
     }
 
     // emit an error message to standard err
-    private static void error(String message, Throwable t) {
+    static void error(String message, Throwable t) {
         log(System.err, "*ERROR*", message, t);
     }
 
@@ -351,6 +371,24 @@ public class Main extends Thread implements Notifiable {
                     }
                 }
             });
+        }
+    }
+
+    private void doControlCommand() {
+        String commandSocketSpec = commandLineArgs.get("j");
+        if ("j".equals(commandSocketSpec)) {
+            commandSocketSpec = null;
+        }
+
+        ControlListener sl = new ControlListener(this, commandSocketSpec);
+        if (commandLineArgs.remove(ControlListener.COMMAND_STOP) != null) {
+            sl.shutdownServer();
+            System.exit(0);
+        } else if (commandLineArgs.remove(ControlListener.COMMAND_STATUS) != null) {
+            sl.statusServer();
+            System.exit(0);
+        } else if (commandLineArgs.remove("start") != null) {
+            sl.listen();
         }
     }
 }
