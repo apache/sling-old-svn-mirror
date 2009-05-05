@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.jcr.jcrinstall.jcr.impl.MockStartLevel;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
@@ -75,7 +74,6 @@ public class BundleResourceProcessorTest {
         final long bundleId = 1234;
         final String uri = "/test/bundle.jar";
         final MockInstallableData data = new MockInstallableData(uri, "some data");
-        final InputStream is = data.adaptTo(InputStream.class);
 
         // We'll try installing a bundle, re-installing to cause
         // it to be updated, and removing

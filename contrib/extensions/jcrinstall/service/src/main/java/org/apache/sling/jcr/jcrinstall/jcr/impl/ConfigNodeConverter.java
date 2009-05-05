@@ -32,7 +32,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 import org.apache.sling.runmode.RunMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

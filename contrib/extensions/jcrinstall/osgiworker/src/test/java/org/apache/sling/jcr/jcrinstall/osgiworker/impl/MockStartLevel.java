@@ -16,36 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
-import org.apache.sling.runmode.RunMode;
+import org.osgi.framework.Bundle;
+import org.osgi.service.startlevel.StartLevel;
 
-class MockRunMode implements RunMode {
+public class MockStartLevel implements StartLevel {
 
-    private final String[] modes;
-    
-    MockRunMode(String [] modes) {
-        this.modes = modes;
-    }
-    
-    public String[] getCurrentRunModes() {
-        return modes;
+    public int getBundleStartLevel(Bundle arg0) {
+        return 0;
     }
 
-    public boolean isActive(String[] runModes) {
-        boolean result = false;
-        
-        main:
-        for(String a : runModes) {
-            for(String b : modes) {
-                if(b.equals(a)) {
-                    result = true;
-                    break main;
-                }
-            }
-        }
-        
-        return result;
+    public int getInitialBundleStartLevel() {
+        return 0;
     }
 
+    public int getStartLevel() {
+        return 0;
+    }
+
+    public boolean isBundleActivationPolicyUsed(Bundle arg0) {
+        return false;
+    }
+
+    public boolean isBundlePersistentlyStarted(Bundle arg0) {
+        return false;
+    }
+
+    public void setBundleStartLevel(Bundle arg0, int arg1) {
+    }
+
+    public void setInitialBundleStartLevel(int arg0) {
+    }
+
+    public void setStartLevel(int arg0) {
+    }
 }

@@ -18,9 +18,7 @@
  */
 package org.apache.sling.jcr.jcrinstall.jcr.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -33,11 +31,10 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgi.JcrInstallException;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
-import org.apache.sling.jcr.jcrinstall.osgi.ResourceOverrideRules;
-import org.apache.sling.jcr.jcrinstall.osgi.impl.MockInstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.JcrInstallException;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgiworker.ResourceOverrideRules;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;

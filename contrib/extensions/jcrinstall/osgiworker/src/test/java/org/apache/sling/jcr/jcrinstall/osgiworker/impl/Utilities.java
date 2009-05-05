@@ -16,15 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor;
 
 class Utilities {
     

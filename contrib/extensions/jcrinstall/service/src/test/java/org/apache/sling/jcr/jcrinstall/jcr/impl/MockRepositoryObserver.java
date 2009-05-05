@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.jcrinstall.osgi.OsgiController;
+import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiController;
 import org.osgi.service.component.ComponentContext;
 
 /** Slightly customized RepositoryObserver

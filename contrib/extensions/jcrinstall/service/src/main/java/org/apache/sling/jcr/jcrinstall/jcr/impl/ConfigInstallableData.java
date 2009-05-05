@@ -24,7 +24,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Dictionary;
 
-import org.apache.sling.jcr.jcrinstall.osgi.InstallableData;
+import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 
 /** InstallableData that wraps a Dictionary */
 class ConfigInstallableData implements InstallableData {

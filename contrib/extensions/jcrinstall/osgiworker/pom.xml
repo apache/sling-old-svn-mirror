@@ -31,7 +31,7 @@
   <version>2.0.3-incubator-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Apache Sling JCR OSGi Installer - OSGi worker</name>
+  <name>Apache Sling JCR OSGi Installer OSGi worker</name>
   <description> 
     Implements the OSGi-specific parts of the jcrinstall service,
     with as few dependencies as possible so that the service is

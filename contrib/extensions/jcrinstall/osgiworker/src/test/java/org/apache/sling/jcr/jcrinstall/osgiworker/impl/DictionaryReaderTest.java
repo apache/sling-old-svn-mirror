@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.osgi.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -26,8 +26,8 @@ import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Properties;
 
-import org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter.PropertyConverter;
-import org.apache.sling.jcr.jcrinstall.osgi.impl.propertyconverter.ValueConverterException;
+import org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter.PropertyConverter;
+import org.apache.sling.jcr.jcrinstall.osgiworker.impl.propertyconverter.ValueConverterException;
 
 /** Test the DictionaryReader */
 public class DictionaryReaderTest {

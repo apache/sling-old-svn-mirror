@@ -567,7 +567,7 @@
                                     </outputDirectory>
                                     <excludeTransitive>true</excludeTransitive>
                                     <includeArtifactIds>
-                                        org.apache.sling.jcr.jcrinstall,org.apache.sling.jcr.jcrinstall.testbundles.observer,org.apache.sling.jcr.jcrinstall.servlet,org.apache.sling.runmode
+                                        org.apache.sling.jcr.jcrinstall,org.apache.sling.jcr.jcrinstall.testbundles.observer,org.apache.sling.jcr.jcrinstall.servlet,org.apache.sling.runmode,org.apache.sling.jcr.jcrinstall.osgiworker
                                     </includeArtifactIds>
                                 </configuration>
                             </execution>
@@ -604,6 +604,12 @@
                 <dependency>
                     <groupId>org.apache.sling</groupId>
                     <artifactId>org.apache.sling.jcr.jcrinstall</artifactId>
+                    <version>2.0.3-incubator-SNAPSHOT</version>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.sling</groupId>
+                    <artifactId>org.apache.sling.jcr.jcrinstall.osgiworker</artifactId>
                     <version>2.0.3-incubator-SNAPSHOT</version>
                     <scope>provided</scope>
                 </dependency>

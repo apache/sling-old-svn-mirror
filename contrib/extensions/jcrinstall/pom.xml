@@ -39,6 +39,7 @@
 	<modules>
 		<module>service</module>
 		<module>servlet</module>
+		<module>osgiworker</module>
 		<module>testbundles/observer</module>
 	</modules>
 </project>
