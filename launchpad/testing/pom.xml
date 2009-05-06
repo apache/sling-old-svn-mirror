@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.testing</artifactId>
     <packaging>war</packaging>
-    <version>4-incubator-SNAPSHOT</version>
+    <version>4-incubator</version>
 
     <name>Apache Sling Launchpad Testing</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/testing</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/testing</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/testing</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.testing-4-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.testing-4-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.launchpad.testing-4-incubator</url>
     </scm>
 
     <properties>
@@ -116,7 +116,7 @@
                          <configuration>
                              <tasks>
                                  <echo>SLING-845 - delete parent sling folder before integration tests</echo>
-                                 <delete dir="../../sling"/>
+                                 <delete dir="../../sling" />
                              </tasks>
                         </configuration>
                      </execution>
