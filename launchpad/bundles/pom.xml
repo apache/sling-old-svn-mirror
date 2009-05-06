@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.bundles</artifactId>
     <packaging>jar</packaging>
-    <version>5-incubator</version>
+    <version>6-incubator-SNAPSHOT</version>
 
     <name>Apache Sling Launchpad Bundles Collection</name>
     <description>
@@ -41,13 +41,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.bundles-5-incubator
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/bundles
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.bundles-5-incubator
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/bundles
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.launchpad.bundles-5-incubator
+            http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/bundles
         </url>
     </scm>
 
