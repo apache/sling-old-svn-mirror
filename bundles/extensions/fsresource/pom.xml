@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.fsresource</artifactId>
     <packaging>bundle</packaging>
-    <version>0.9.1-incubator-SNAPSHOT</version>
+    <version>0.9.2-incubator</version>
 
     <name>Apache Sling Filesystem Resource Provider</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/fsresource</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/fsresource</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/fsresource</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.fsresource-0.9.2-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.fsresource-0.9.2-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.fsresource-0.9.2-incubator</url>
     </scm>
 
     <build>
