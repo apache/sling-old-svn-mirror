@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.launchpad.test-services</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.5-incubator-SNAPSHOT</version>
+    <version>2.0.6-incubator</version>
 
     <name>Apache Sling Launchpad Testing Services</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/test-services</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/test-services</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/test-services</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-2.0.6-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/org.apache.sling.launchpad.test-services-2.0.6-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/org.apache.sling.launchpad.test-services-2.0.6-incubator</url>
     </scm>
 
     <build>
