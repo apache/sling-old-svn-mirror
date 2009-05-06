@@ -82,7 +82,6 @@
         <module>engine</module>
         
         <!-- Extensions -->
-        <module>extensions/adapter</module>
         <module>extensions/bundleresource</module>
         <module>extensions/event</module>
         <module>extensions/fsresource</module>
@@ -91,7 +90,6 @@
         <module>extensions/threaddump</module>
 
         <!-- The JCR sub project -->
-        <module>jcr/api</module>
         <module>jcr/base</module>
         <module>jcr/classloader</module>
         <module>jcr/contentloader</module>
@@ -103,7 +101,6 @@
         <module>jcr/webdav</module>
         
         <!-- Scripting Support -->
-        <module>scripting/api</module>
         <module>scripting/core</module>
         <module>scripting/javascript</module>
         <module>scripting/jsp</module>
@@ -124,6 +121,19 @@
         <module>launchpad/testing</module>
 
     </modules>
+    <profiles>
+        <profile>
+            <id>includeOldReleases</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>extensions/adapter</module>
+                <module>jcr/api</module>
+                <module>scripting/api</module>
+            </modules>
+        </profile>
+    </profiles>
     <distributionManagement>
         <!-- place our releases in the incubator's repository -->
         <snapshotRepository>
