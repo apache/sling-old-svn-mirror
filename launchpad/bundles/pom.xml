@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>6-incubator-SNAPSHOT</version>
+        <version>5-incubator</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -101,7 +101,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.extensions.threaddump</artifactId>
-            <version>0.1.0-incubator</version>
+            <version>0.1.2-incubator</version>
             <scope>provided</scope>
         </dependency>
 
@@ -159,13 +159,13 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.jackrabbit.usermanager</artifactId>
-            <version>2.0.0-incubator</version>
+            <version>2.0.2-incubator</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.jackrabbit.accessmanager</artifactId>
-            <version>2.0.0-incubator</version>
+            <version>2.0.2-incubator</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -177,7 +177,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.webdav</artifactId>
-            <version>2.0.4-incubator</version>
+            <version>2.0.6-incubator</version>
             <scope>provided</scope>
         </dependency>
         <!--
@@ -293,7 +293,12 @@
             <version>2.0.4-incubator</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+           <artifactId>org.apache.sling.fsresource</artifactId>
+           <version>0.9.2-incubator</version>
+        </dependency>
+        
         <!-- Launchpad initial content -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -324,7 +329,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.jsp</artifactId>
-            <version>2.0.4-incubator</version>
+            <version>2.0.6-incubator</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
