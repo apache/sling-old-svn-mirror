@@ -36,6 +36,7 @@ application/oda                oda
 application/pdf                pdf
 application/photoshop          psd
 application/postscript         ps ai eps
+application/rss+xml            rss
 application/rtf                rtf
 application/smil               smi smil
 application/vnd.mif            mif
@@ -78,6 +79,7 @@ application/x-troff            tr t roff
 application/x-ustar            ustar
 application/x-wais-source      src
 application/x-x509-ca-cert     crt
+application/xml                xml
 application/zip                zip
 audio/basic                    au snd
 audio/midi                     midi kar mid
@@ -121,7 +123,6 @@ text/sgml                      sgml sgm
 text/tab-separated-values      tsv
 text/vnd.wap.wml               wml
 text/vnd.wap.wmlscript         wmls
-text/xml                       xml
 text/x-java-source             java
 text/x-setext                  etx
 video/mpeg                     mpeg mpg mpe
