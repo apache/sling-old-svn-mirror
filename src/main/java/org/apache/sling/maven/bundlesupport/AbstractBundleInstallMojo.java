@@ -352,7 +352,10 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
         final Entry[] entries = header.getEntries();
         for(final Entry entry : entries) {
-            final String path = entry.getValue();
+            String path = entry.getValue();
+            if ( path != null && !path.endsWith("/") ) {
+                path += "/";
+            }
             // check if we should ignore this
             final String ignoreValue = entry.getDirectiveValue("maven:mount");
             if ( ignoreValue != null && ignoreValue.equalsIgnoreCase("false") ) {
