@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory;
  */
 public class LoginServlet extends SlingAllMethodsServlet {
 
+    /** serialization UID */
+    private static final long serialVersionUID = -8797082194403667968L;
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
