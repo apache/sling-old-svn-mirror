@@ -550,6 +550,10 @@ setting is not correct.
                         <groupId>org.apache.felix</groupId>
                         <artifactId>javax.servlet</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>org.osgi.foundation</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
