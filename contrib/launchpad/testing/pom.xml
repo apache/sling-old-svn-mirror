@@ -37,6 +37,13 @@
         were previously in the launchpad webapp module.
     </description>
 
+    <repositories>
+        <repository>
+            <id>aQute</id>
+            <url>http://www.aQute.biz/repo</url>
+        </repository>
+    </repositories>
+
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/testing</connection>
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/testing</developerConnection>
@@ -679,7 +686,7 @@
         <dependency>
             <groupId>biz.aQute</groupId>
             <artifactId>bnd</artifactId>
-            <version>0.0.169</version>
+            <version>0.0.323</version>
             <scope>test</scope>
         </dependency>
 		
