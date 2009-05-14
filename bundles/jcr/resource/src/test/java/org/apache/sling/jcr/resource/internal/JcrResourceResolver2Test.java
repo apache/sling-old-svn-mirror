@@ -303,26 +303,60 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("_playground_designground_",
-            "sling:Mapping");
+        "sling:Mapping");
         toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
-            "(playground|designground)");
+        "(playground|designground)");
         toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
-            "/content/$1");
+        "/content/$1");
+        session.save();
+        
+        Thread.sleep(1000L);
+        
+        Resource res = resResolver.resolve(request, "/playground.html");
+        assertNotNull(res);
+        assertEquals("/content/playground.html", res.getPath());
+        
+        res = resResolver.resolve(request, "/playground/en.html");
+        assertNotNull(res);
+        assertEquals("/content/playground/en.html", res.getPath());
+        
+        res = resResolver.resolve(request, "/libs/nt/folder.html");
+        assertNotNull(res);
+        assertEquals("/libs/nt/folder.html", res.getPath());
+    }
+    
+    public void testResolveResourceInternalRedirectExact() throws Exception {
+        HttpServletRequest request = new ResourceResolverTestRequest("https",
+            null, -1, rootPath);
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+        Node toContent = localhost443.addNode("virtual", "sling:Mapping");
+        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
+            "virtual$");
+        toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+            "/content/virtual.html");
         session.save();
 
         Thread.sleep(1000L);
 
-        Resource res = resResolver.resolve(request, "/playground.html");
+        Resource res = resResolver.resolve(request, "/virtual");
         assertNotNull(res);
-        assertEquals("/content/playground.html", res.getPath());
+        assertEquals("/content/virtual.html", res.getPath());
 
-        res = resResolver.resolve(request, "/playground/en.html");
+        res = resResolver.resolve(request, "/virtual.html");
         assertNotNull(res);
-        assertEquals("/content/playground/en.html", res.getPath());
+        assertEquals("/virtual.html", res.getPath());
 
-        res = resResolver.resolve(request, "/libs/nt/folder.html");
+        res = resResolver.resolve(request, "/virtual/child.html");
         assertNotNull(res);
-        assertEquals("/libs/nt/folder.html", res.getPath());
+        assertEquals("/virtual/child.html", res.getPath());
+        
+        String url = resResolver.map(null, "/content/virtual.html");
+        assertNotNull(url);
+        assertEquals("https://localhost/virtual", url);
+        
+        url = resResolver.map(request, "/content/virtual.html");
+        assertNotNull(url);
+        assertEquals("/virtual", url);
     }
 
     public void testResolveVirtualHostHttp80() throws Exception {
