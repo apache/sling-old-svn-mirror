@@ -32,6 +32,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
 import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
+import org.apache.sling.jcr.jcrinstall.osgiworker.DictionaryInstallableData;
 import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
 import org.apache.sling.runmode.RunMode;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ class ConfigNodeConverter implements NodeConverter {
 		// We only consider CONFIG_NODE_TYPE nodes
 		if(n.isNodeType(CONFIG_NODE_TYPE)) {
 			final Dictionary<String, Object> config = load(n);
-			result = new ConfigInstallableData(config);
+			result = new DictionaryInstallableData(config);
 			log.debug("Converted node {} to {}", n.getPath(), result);
 		} else {
 			log.debug("Node is not a {} node, ignored:{}", CONFIG_NODE_TYPE, n.getPath());

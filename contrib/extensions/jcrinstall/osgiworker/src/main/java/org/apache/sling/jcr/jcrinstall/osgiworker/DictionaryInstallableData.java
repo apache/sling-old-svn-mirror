@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.jcr.jcrinstall.osgiworker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -24,15 +24,14 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Dictionary;
 
-import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
-
-/** InstallableData that wraps a Dictionary */
-class ConfigInstallableData implements InstallableData {
-
+/** InstallableData that provides a Dictionary, used for
+ * 	OSGi Configurations.
+ */
+public class DictionaryInstallableData implements InstallableData {
 	private final Dictionary<String, Object> data;
 	private final String digest;
 	
-	ConfigInstallableData(Dictionary<String, Object> data) throws Exception {
+	public DictionaryInstallableData(Dictionary<String, Object> data) throws Exception {
 		this.data = data;
 		digest = computeDigest(data);
 	}
@@ -72,4 +71,5 @@ class ConfigInstallableData implements InstallableData {
 	public int getBundleStartLevel() {
 	    return 0;
 	}
+
 }
