@@ -43,7 +43,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugin {
-
+    
     private static final long serialVersionUID = 0;
     
     private static final String ATTR_TEST = "plugin.test";
@@ -54,7 +54,7 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
 
     private final transient JcrResourceResolverFactoryImpl resolverFactory;
 
-    private ServiceRegistration service;
+    private transient ServiceRegistration service;
 
     JcrResourceResolverWebConsolePlugin(BundleContext context,
             JcrResourceResolverFactoryImpl resolverFactory) {
@@ -236,7 +236,10 @@ public class JcrResourceResolverWebConsolePlugin extends AbstractWebConsolePlugi
                 request.setAttribute(ATTR_RESULT, result.toString());
 
             } catch (Throwable t) {
-                // TOOD: log
+            
+                // some error occurred, report it as a result
+                request.setAttribute(ATTR_RESULT, "Test Failure: " + t);
+
             } finally {
                 if (session != null) {
                     session.logout();

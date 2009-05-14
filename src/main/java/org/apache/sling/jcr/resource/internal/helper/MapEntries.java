@@ -19,15 +19,12 @@
 package org.apache.sling.jcr.resource.internal.helper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -273,13 +270,16 @@ public class MapEntries implements EventListener {
                 }
             }
 
-            // add trailing slash to child path to append the child
-            if (!trailingSlash) {
-                childPath = childPath.concat("/");
-            }
+            // gather the children of this entry (only if child is not end hooked)
+            if (!childPath.endsWith("$")) {
 
-            // gather the children of this entry
-            gather(resolver, resolveEntries, mapEntries, child, childPath);
+	            // add trailing slash to child path to append the child
+	            if (!trailingSlash) {
+	                childPath = childPath.concat("/");
+	            }
+
+                gather(resolver, resolveEntries, mapEntries, child, childPath);
+            }
         }
     }
 
@@ -318,12 +318,12 @@ public class MapEntries implements EventListener {
                         : -1;
 
                 // 1. entry with exact match
-                entries.add(new MapEntry(url + "$", redirect + ".html", status,
-                    false));
+                entries.add(new MapEntry(url + "$", status, false, redirect
+                    + ".html"));
 
                 // 2. entry with match supporting selectors and extension
-                entries.add(new MapEntry(url + "(\\..*)", redirect + "$1",
-                    status, false));
+                entries.add(new MapEntry(url + "(\\..*)", status, false,
+                    redirect + "$1"));
             }
         }
     }
@@ -340,7 +340,7 @@ public class MapEntries implements EventListener {
                     // this regular expression must match the whole URL !!
                     String url = "^" + ANY_SCHEME_HOST + extPath + "$";
                     String redirect = intPath;
-                    entries.add(new MapEntry(url, redirect, -1, false));
+                    entries.add(new MapEntry(url, -1, false, redirect));
                 }
             }
         }
@@ -365,7 +365,7 @@ public class MapEntries implements EventListener {
             }
             for (Entry<String, List<String>> entry : map.entrySet()) {
                 entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(),
-                    entry.getValue().toArray(new String[0]), -1, false));
+                    -1, false, entry.getValue().toArray(new String[0])));
             }
         }
     }
@@ -407,14 +407,14 @@ public class MapEntries implements EventListener {
             String url, int status) {
         MapEntry entry = entries.get(path);
         if (entry == null) {
-            entry = new MapEntry(path, url, status, false);
+            entry = new MapEntry(path, status, false, url);
         } else {
             String[] redir = entry.getRedirect();
             String[] newRedir = new String[redir.length + 1];
             System.arraycopy(redir, 0, newRedir, 0, redir.length);
             newRedir[redir.length] = url;
-            entry = new MapEntry(entry.getPattern(), newRedir,
-                entry.getStatus(), false);
+            entry = new MapEntry(entry.getPattern(), entry.getStatus(),
+                false, newRedir);
         }
         entries.put(path, entry);
     }

@@ -111,13 +111,13 @@ public class MapEntry implements Comparable<MapEntry> {
             if (redirect != null) {
                 int status = props.get(
                     JcrResourceResolver2.PROP_REDIRECT_EXTERNAL_STATUS, 302);
-                return new MapEntry(url, redirect, status, trailingSlash);
+                return new MapEntry(url, status, trailingSlash, redirect);
             }
 
             String[] internalRedirect = props.get(
                 JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
-                return new MapEntry(url, internalRedirect, -1, trailingSlash);
+                return new MapEntry(url, -1, trailingSlash, internalRedirect);
             }
         }
 
@@ -135,6 +135,13 @@ public class MapEntry implements Comparable<MapEntry> {
                 return null;
             }
 
+            // check whether the url is a match hooked to then string end
+            String endHook = "";
+            if (url.endsWith("$")) {
+                endHook = "$";
+                url = url.substring(0, url.length()-1);
+            }
+            
             String[] internalRedirect = props.get(
                 JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
@@ -152,8 +159,8 @@ public class MapEntry implements Comparable<MapEntry> {
                     internalRedirect.length);
                 for (String redir : internalRedirect) {
                     if (!redir.contains("$")) {
-                        prepEntries.add(new MapEntry(redir, url, status,
-                            trailingSlash));
+                        prepEntries.add(new MapEntry(redir.concat(endHook),
+                            status, trailingSlash, url));
                     }
                 }
 
@@ -166,13 +173,8 @@ public class MapEntry implements Comparable<MapEntry> {
         return null;
     }
 
-    public MapEntry(String url, String redirect, int status,
-            boolean trailingSlash) {
-        this(url, new String[] { redirect }, status, trailingSlash);
-    }
-
-    public MapEntry(String url, String[] redirect, int status,
-            boolean trailingSlash) {
+    public MapEntry(String url, int status, boolean trailingSlash,
+            String... redirect) {
 
         // ensure trailing slashes on redirects if the url
         // ends with a trailing slash
@@ -191,10 +193,6 @@ public class MapEntry implements Comparable<MapEntry> {
         this.urlPattern = Pattern.compile(url);
         this.redirect = redirect;
         this.status = status;
-    }
-
-    public Matcher getMatcher(String value) {
-        return urlPattern.matcher(value);
     }
 
     // Returns the replacement or null if the value does not match
