@@ -255,12 +255,26 @@ public class MapEntries implements EventListener {
 
             String childPath = parentPath.concat(name);
 
+            // gather the children of this entry (only if child is not end hooked)
+            if (!childPath.endsWith("$")) {
+
+                // add trailing slash to child path to append the child
+                String childParent = childPath;
+                if (!trailingSlash) {
+                    childParent = childParent.concat("/");
+                }
+
+                gather(resolver, resolveEntries, mapEntries, child, childParent);
+            }
+
+            // add resolution entries for this node
             MapEntry childResolveEntry = MapEntry.createResolveEntry(childPath,
                 child, trailingSlash);
             if (childResolveEntry != null) {
                 resolveEntries.add(childResolveEntry);
             }
 
+            // add map entries for this node
             List<MapEntry> childMapEntries = MapEntry.createMapEntry(childPath,
                 child, trailingSlash);
             if (childMapEntries != null) {
@@ -270,16 +284,6 @@ public class MapEntries implements EventListener {
                 }
             }
 
-            // gather the children of this entry (only if child is not end hooked)
-            if (!childPath.endsWith("$")) {
-
-	            // add trailing slash to child path to append the child
-	            if (!trailingSlash) {
-	                childPath = childPath.concat("/");
-	            }
-
-                gather(resolver, resolveEntries, mapEntries, child, childPath);
-            }
         }
     }
 
