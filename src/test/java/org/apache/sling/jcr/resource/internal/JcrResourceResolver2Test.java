@@ -140,12 +140,11 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         }
 
         session.save();
-        
+
         super.tearDown();
     }
 
     public void testBasicAPIAssumptions() throws Exception {
-
 
         // null resource is accessing /, which exists of course
         final Resource res00 = resResolver.resolve((String) null);
@@ -303,35 +302,34 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("_playground_designground_",
-        "sling:Mapping");
+            "sling:Mapping");
         toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
-        "(playground|designground)");
+            "(playground|designground)");
         toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
-        "/content/$1");
+            "/content/$1");
         session.save();
-        
+
         Thread.sleep(1000L);
-        
+
         Resource res = resResolver.resolve(request, "/playground.html");
         assertNotNull(res);
         assertEquals("/content/playground.html", res.getPath());
-        
+
         res = resResolver.resolve(request, "/playground/en.html");
         assertNotNull(res);
         assertEquals("/content/playground/en.html", res.getPath());
-        
+
         res = resResolver.resolve(request, "/libs/nt/folder.html");
         assertNotNull(res);
         assertEquals("/libs/nt/folder.html", res.getPath());
     }
-    
+
     public void testResolveResourceInternalRedirectExact() throws Exception {
         HttpServletRequest request = new ResourceResolverTestRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("virtual", "sling:Mapping");
-        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP,
-            "virtual$");
+        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP, "virtual$");
         toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
             "/content/virtual.html");
         session.save();
@@ -349,14 +347,46 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         res = resResolver.resolve(request, "/virtual/child.html");
         assertNotNull(res);
         assertEquals("/virtual/child.html", res.getPath());
-        
+
         String url = resResolver.map(null, "/content/virtual.html");
         assertNotNull(url);
         assertEquals("https://localhost/virtual", url);
-        
+
         url = resResolver.map(request, "/content/virtual.html");
         assertNotNull(url);
         assertEquals("/virtual", url);
+    }
+
+    public void testResolveResourceInternalRedirectDepthFirst()
+            throws Exception {
+        HttpServletRequest request = new ResourceResolverTestRequest("https",
+            null, -1, rootPath);
+
+        // map anything
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+        localhost443.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+            "/content");
+
+        // map only ../virtual
+        Node toContent = localhost443.addNode("virtual", "sling:Mapping");
+        toContent.setProperty(JcrResourceResolver2.PROP_REG_EXP, "virtual$");
+        toContent.setProperty(JcrResourceResolver2.PROP_REDIRECT_INTERNAL,
+            "/content/virtual.html");
+        session.save();
+
+        Thread.sleep(1000L);
+
+        Resource res = resResolver.resolve(request, "/virtual");
+        assertNotNull(res);
+        assertEquals("/content/virtual.html", res.getPath());
+
+        res = resResolver.resolve(request, "/virtual.html");
+        assertNotNull(res);
+        assertEquals("/content/virtual.html", res.getPath());
+
+        res = resResolver.resolve(request, "/virtual/child.html");
+        assertNotNull(res);
+        assertEquals("/content/virtual/child.html", res.getPath());
     }
 
     public void testResolveVirtualHostHttp80() throws Exception {
@@ -856,10 +886,10 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
-        
+
         Node child = rootNode.addNode("child");
         session.save();
-        
+
         // absolute path, expect rootPath segment to be
         // cut off the mapped path because we map the rootPath
         // onto root
@@ -867,9 +897,9 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         mapped = resResolver.map(child.getPath());
         assertEquals(path, mapped);
     }
-    
+
     public void testMapNamespaceMangling() throws Exception {
-        
+
         final String mapHost = "virtual.host.com";
         final String mapRootPath = "/content/virtual";
         final String contextPath = "/context";
@@ -881,71 +911,82 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         session.save();
 
         Thread.sleep(1000L);
-        
-        //---------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------
         // tests expecting paths without context
-        
-        final HttpServletRequest virtualRequest = new ResourceResolverTestRequest(null,
-            mapHost, -1, rootPath);
-        
+
+        final HttpServletRequest virtualRequest = new ResourceResolverTestRequest(
+            null, mapHost, -1, rootPath);
+
         // simple mapping - cut off prefix and add host
         final String pathv0 = "/sample";
-        final String mappedv0 = resResolver.map(virtualRequest, mapRootPath + pathv0);
+        final String mappedv0 = resResolver.map(virtualRequest, mapRootPath
+            + pathv0);
         assertEquals("Expect unmangled path", pathv0, mappedv0);
-        
+
         // expected name mangling without host prefix
         final String pathv1 = "/sample/jcr:content";
         final String mangledv1 = "/sample/_jcr_content";
-        final String mappedv1 = resResolver.map(virtualRequest, mapRootPath + pathv1);
+        final String mappedv1 = resResolver.map(virtualRequest, mapRootPath
+            + pathv1);
         assertEquals("Expect mangled path", mangledv1, mappedv1);
-        
 
-        //---------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // tests expecting paths with context "/context"
-        
+
         ((ResourceResolverTestRequest) virtualRequest).setContextPath(contextPath);
-        
+
         // simple mapping - cut off prefix and add host
         final String pathvc0 = "/sample";
-        final String mappedvc0 = resResolver.map(virtualRequest, mapRootPath + pathvc0);
+        final String mappedvc0 = resResolver.map(virtualRequest, mapRootPath
+            + pathvc0);
         assertEquals("Expect unmangled path", contextPath + pathv0, mappedvc0);
 
         // expected name mangling without host prefix
         final String pathvc1 = "/sample/jcr:content";
         final String mangledvc1 = "/sample/_jcr_content";
-        final String mappedvc1 = resResolver.map(virtualRequest, mapRootPath + pathvc1);
+        final String mappedvc1 = resResolver.map(virtualRequest, mapRootPath
+            + pathvc1);
         assertEquals("Expect mangled path", contextPath + mangledvc1, mappedvc1);
 
-        //---------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // tests expecting absolute URLs without context
-        
-        final HttpServletRequest foreignRequest = new ResourceResolverTestRequest(null,
-            "foreign.host.com", -1, rootPath);
-        
+
+        final HttpServletRequest foreignRequest = new ResourceResolverTestRequest(
+            null, "foreign.host.com", -1, rootPath);
+
         final String pathf0 = "/sample";
-        final String mappedf0 = resResolver.map(foreignRequest, mapRootPath + pathf0);
-        assertEquals("Expect unmangled absolute URI", "http://" + mapHost + pathf0, mappedf0);
-        
+        final String mappedf0 = resResolver.map(foreignRequest, mapRootPath
+            + pathf0);
+        assertEquals("Expect unmangled absolute URI", "http://" + mapHost
+            + pathf0, mappedf0);
+
         final String pathf1 = "/sample/jcr:content";
         final String mangledf1 = "/sample/_jcr_content";
-        final String mappedf1 = resResolver.map(foreignRequest, mapRootPath + pathf1);
-        assertEquals("Expect mangled absolute URI", "http://" + mapHost + mangledf1, mappedf1);
+        final String mappedf1 = resResolver.map(foreignRequest, mapRootPath
+            + pathf1);
+        assertEquals("Expect mangled absolute URI", "http://" + mapHost
+            + mangledf1, mappedf1);
 
-        //---------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // tests expecting absolute URLs with context "/context"
-        
+
         ((ResourceResolverTestRequest) foreignRequest).setContextPath(contextPath);
 
         final String pathfc0 = "/sample";
-        final String mappedfc0 = resResolver.map(foreignRequest, mapRootPath + pathfc0);
-        assertEquals("Expect unmangled absolute URI", "http://" + mapHost + contextPath + pathfc0, mappedfc0);
+        final String mappedfc0 = resResolver.map(foreignRequest, mapRootPath
+            + pathfc0);
+        assertEquals("Expect unmangled absolute URI", "http://" + mapHost
+            + contextPath + pathfc0, mappedfc0);
 
         final String pathfc1 = "/sample/jcr:content";
         final String mangledfc1 = "/sample/_jcr_content";
-        final String mappedfc1 = resResolver.map(foreignRequest, mapRootPath + pathfc1);
-        assertEquals("Expect mangled absolute URI", "http://" + mapHost + contextPath + mangledfc1, mappedfc1);
+        final String mappedfc1 = resResolver.map(foreignRequest, mapRootPath
+            + pathfc1);
+        assertEquals("Expect mangled absolute URI", "http://" + mapHost
+            + contextPath + mangledfc1, mappedfc1);
     }
-    
+
     public void testMapContext() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
@@ -1118,7 +1159,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         private final String host;
 
         private final int port;
-        
+
         private String contextPath;
 
         ResourceResolverTestRequest(String pathInfo) {
@@ -1146,7 +1187,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         void setContextPath(String contextPath) {
             this.contextPath = contextPath;
         }
-        
+
         public String getPathInfo() {
             return pathInfo;
         }
