@@ -41,5 +41,6 @@
 		<module>servlet</module>
 		<module>osgiworker</module>
 		<module>testbundles/observer</module>
+		<module>it</module>
 	</modules>
 </project>
