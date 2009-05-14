@@ -22,15 +22,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Properties;
 
 import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.ValueFormatException;
 
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -68,19 +65,27 @@ public class EventUtilTest {
         assertFalse(EventUtil.isLocal(remoteEvent));
     }
 
+    protected Value getValueOfType(final int type) {
+        final Value v = this.context.mock(Value.class);
+        this.context.checking(new Expectations() {{
+            allowing(v).getType();will(returnValue(type));
+        }});
+        return v;
+    }
+
     @Test public void testGetNodePropertyValue() {
         final ValueFactory factory = this.context.mock(ValueFactory.class);
         this.context.checking(new Expectations() {{
             allowing(factory).createValue(true);
-            will(returnValue(new ValueImpl(PropertyType.BOOLEAN)));
+            will(returnValue(getValueOfType(PropertyType.BOOLEAN)));
             allowing(factory).createValue(false);
-            will(returnValue(new ValueImpl(PropertyType.BOOLEAN)));
+            will(returnValue(getValueOfType(PropertyType.BOOLEAN)));
             allowing(factory).createValue(with(any(Long.class)));
-            will(returnValue(new ValueImpl(PropertyType.LONG)));
+            will(returnValue(getValueOfType(PropertyType.LONG)));
             allowing(factory).createValue(with(any(String.class)));
-            will(returnValue(new ValueImpl(PropertyType.STRING)));
+            will(returnValue(getValueOfType(PropertyType.STRING)));
             allowing(factory).createValue(with(any(Calendar.class)));
-            will(returnValue(new ValueImpl(PropertyType.DATE)));
+            will(returnValue(getValueOfType(PropertyType.DATE)));
         }});
         // boolean
         assertEquals(PropertyType.BOOLEAN, EventUtil.getNodePropertyValue(factory, true).getType());
@@ -95,48 +100,5 @@ public class EventUtilTest {
         assertEquals(PropertyType.STRING, EventUtil.getNodePropertyValue(factory, "something").getType());
         // calendar
         assertEquals(PropertyType.DATE, EventUtil.getNodePropertyValue(factory, Calendar.getInstance()).getType());
-    }
-
-    private final static class ValueImpl implements Value {
-
-        private final int type;
-
-        public ValueImpl(int type) {
-            this.type = type;
-        }
-
-        public boolean getBoolean() throws ValueFormatException,
-                IllegalStateException, RepositoryException {
-            return false;
-        }
-
-        public Calendar getDate() throws ValueFormatException,
-                IllegalStateException, RepositoryException {
-            return null;
-        }
-
-        public double getDouble() throws ValueFormatException,
-                IllegalStateException, RepositoryException {
-            return 0;
-        }
-
-        public long getLong() throws ValueFormatException,
-                IllegalStateException, RepositoryException {
-            return 0;
-        }
-
-        public InputStream getStream() throws IllegalStateException,
-                RepositoryException {
-            return null;
-        }
-
-        public String getString() throws ValueFormatException,
-                IllegalStateException, RepositoryException {
-            return null;
-        }
-
-        public int getType() {
-            return this.type;
-        }
     }
 }
