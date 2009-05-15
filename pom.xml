@@ -46,6 +46,23 @@
         <url>http://svn.apache.org/viewvc/incubator/sling/whiteboard/jcrinstall</url>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>ops4j.releases</id>
+            <url>http://repository.ops4j.org/maven2</url>
+        </repository>
+        <repository>
+            <id>ops4j.profiles</id>
+            <url>http://scm.ops4j.org/repos/ops4j/projects/pax/runner-repository</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>ops4j.releases</id>
+            <url>http://repository.ops4j.org/maven2</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <plugins>
             <plugin>
@@ -93,6 +110,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.jcrinstall.osgiworker</artifactId>
             <version>${pom.version}</version>
+            <scope>provided</scope>
+        </dependency>          
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.log</artifactId>
+            <version>2.0.2-incubator</version>
             <scope>provided</scope>
         </dependency>          
         <dependency>
