@@ -52,10 +52,10 @@ public class HttpTestBase extends TestCase {
     public static final String TEST_PATH = "/launchpad-integration-tests";
 
     public static final String CONTENT_TYPE_HTML = "text/html";
-    public static final String CONTENT_TYPE_XML = "text/xml";
+    public static final String CONTENT_TYPE_XML = "application/xml";
     public static final String CONTENT_TYPE_PLAIN = "text/plain";
     public static final String CONTENT_TYPE_JSON = "application/json";
-    public static final String CONTENT_TYPE_JS = "application/x-javascript";
+    public static final String CONTENT_TYPE_JS = "application/javascript";
     public static final String CONTENT_TYPE_CSS = "text/css";
 
     public static final String SLING_RESOURCE_TYPE = "sling:resourceType";
