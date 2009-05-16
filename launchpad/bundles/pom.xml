@@ -210,7 +210,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.mime</artifactId>
-            <version>2.0.4-incubator</version>
+            <version>2.0.5-incubator-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -230,7 +230,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.httpauth</artifactId>
-            <version>2.0.4-incubator</version>
+            <version>2.0.5-incubator-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -272,7 +272,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.0.4-incubator</version>
+            <version>2.0.5-incubator-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
