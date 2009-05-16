@@ -42,8 +42,6 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String EXT_HTML = "html";
 
-    private static final String responseContentType = "text/html";
-
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws ServletException, IOException {
@@ -53,7 +51,7 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
             throw new ResourceNotFoundException("No data to render.");
         }
 
-        resp.setContentType(responseContentType);
+        resp.setContentType(req.getResponseContentType());
         resp.setCharacterEncoding("UTF-8");
 
         final PrintWriter pw = resp.getWriter();
