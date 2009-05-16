@@ -43,8 +43,6 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String EXT_JSON = "json";
 
-    public static final String responseContentType = "application/json";
-
     private final JsonResourceWriter itemWriter;
 
     /** Recursion level selector that means "all levels" */
@@ -86,7 +84,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             }
         }
 
-        resp.setContentType(responseContentType);
+        resp.setContentType(req.getResponseContentType());
         resp.setCharacterEncoding("UTF-8");
 
         // do the dump

@@ -115,7 +115,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
                 }
             }
 
-            resp.setContentType(JsonRendererServlet.responseContentType);
+            resp.setContentType(req.getResponseContentType());
             resp.setCharacterEncoding("UTF-8");
 
             final JSONWriter w = new JSONWriter(resp.getWriter());

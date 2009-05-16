@@ -44,8 +44,6 @@ public class XMLRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String EXT_XML = "xml";
 
-    private static final String responseContentType = "text/xml";
-
     private static final String SYSVIEW = "sysview";
     private static final String DOCVIEW = "docview";
 
@@ -59,7 +57,7 @@ public class XMLRendererServlet extends SlingSafeMethodsServlet {
             throw new ResourceNotFoundException("No data to render.");
         }
 
-        resp.setContentType(responseContentType);
+        resp.setContentType(req.getResponseContentType());
         resp.setCharacterEncoding("UTF-8");
 
         // are we included?

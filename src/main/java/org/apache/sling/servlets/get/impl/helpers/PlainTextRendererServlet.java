@@ -42,8 +42,6 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String EXT_TXT = "txt";
 
-    private static final String responseContentType = "text/plain";
-
     @Override
     protected void doGet(SlingHttpServletRequest req,
             SlingHttpServletResponse resp) throws ServletException, IOException {
@@ -57,7 +55,7 @@ public class PlainTextRendererServlet extends SlingSafeMethodsServlet {
          * return; }
          */
 
-        resp.setContentType(responseContentType);
+        resp.setContentType(req.getResponseContentType());
         resp.setCharacterEncoding("UTF-8");
 
         final PrintWriter pw = resp.getWriter();
