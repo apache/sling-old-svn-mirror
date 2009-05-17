@@ -88,36 +88,26 @@ public class MimeTypeServiceImplTest extends TestCase {
     }
 
     public void testFileLoading() throws Exception {
-        InputStream ins = this.getClass().getResourceAsStream("/META-INF/mime.types");
-        assertNotNull(ins);
+        loadMimeTypes(MimeTypeServiceImpl.CORE_MIME_TYPES);
+        loadMimeTypes(MimeTypeServiceImpl.MIME_TYPES);
 
-        try {
-            this.service.registerMimeType(ins);
-
-            final String [] exts = { TXT, LOG, APT };
-            for(String ext : exts) {
-                assertEquals("Extension " + ext + " (1)", TEXT_PLAIN, this.service.getMimeType("file." + ext));
-                assertEquals("Extension " + ext + " (2)", TEXT_PLAIN, this.service.getMimeType(ext));
-            }
-
-            assertEquals(TEXT_PLAIN,
-                this.service.getMimeType(("file." + TXT).toUpperCase()));
-            assertEquals(TEXT_PLAIN, this.service.getMimeType((TXT).toUpperCase()));
-            assertEquals(TEXT_PLAIN,
-                this.service.getMimeType(("file." + LOG).toUpperCase()));
-            assertEquals(TEXT_PLAIN, this.service.getMimeType((LOG).toUpperCase()));
-
-            assertEquals(IMAGE_GIF, this.service.getMimeType(GIF));
-            assertNull(this.service.getMimeType(UNMAPPED_GIF));
-
-            assertEquals(TXT, this.service.getExtension(TEXT_PLAIN));
-
-        } finally {
-            try {
-                ins.close();
-            } catch (IOException ignore) {
-            }
+        final String [] exts = { TXT, LOG, APT };
+        for(String ext : exts) {
+            assertEquals("Extension " + ext + " (1)", TEXT_PLAIN, this.service.getMimeType("file." + ext));
+            assertEquals("Extension " + ext + " (2)", TEXT_PLAIN, this.service.getMimeType(ext));
         }
+
+        assertEquals(TEXT_PLAIN,
+            this.service.getMimeType(("file." + TXT).toUpperCase()));
+        assertEquals(TEXT_PLAIN, this.service.getMimeType((TXT).toUpperCase()));
+        assertEquals(TEXT_PLAIN,
+            this.service.getMimeType(("file." + LOG).toUpperCase()));
+        assertEquals(TEXT_PLAIN, this.service.getMimeType((LOG).toUpperCase()));
+
+        assertEquals(IMAGE_GIF, this.service.getMimeType(GIF));
+        assertNull(this.service.getMimeType(UNMAPPED_GIF));
+
+        assertEquals(TXT, this.service.getExtension(TEXT_PLAIN));
     }
 
     public void testProvider() throws Exception {
@@ -184,6 +174,21 @@ public class MimeTypeServiceImplTest extends TestCase {
                 }
             }
         };
+
+    }
+    
+    private void loadMimeTypes(String path) throws IOException {
+        InputStream ins = this.getClass().getResourceAsStream(path);
+        assertNotNull(ins);
+
+        try {
+            this.service.registerMimeType(ins);
+        } finally {
+            try {
+                ins.close();
+            } catch (IOException ignore) {
+            }
+        }
 
     }
 }
