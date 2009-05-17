@@ -23,20 +23,25 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 
 /**
- * The <code>MimeTypeServiceImpl</code> TODO
+ * The <code>MimeTypeServiceImpl</code> is the official implementation of the
+ * {@link MimeTypeService} interface.
  * 
  * @scr.component immediate="false" metatype="no"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -62,6 +67,10 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     private MimeTypeProvider[] typeProviders;
 
     private List<MimeTypeProvider> typeProviderList = new ArrayList<MimeTypeProvider>();
+
+    private MimeTypeWebConsolePlugin webConsolePlugin;
+
+    private ServiceRegistration webConsolePluginService;
 
     /**
      * @see org.apache.sling.commons.mime.MimeTypeService#getMimeType(java.lang.String)
@@ -241,10 +250,35 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
                 this.registerMimeType(bundles[i].getEntry(MIME_TYPES));
             }
         }
+
+        try {
+            MimeTypeWebConsolePlugin plugin = new MimeTypeWebConsolePlugin(this);
+            plugin.activate(context.getBundleContext());
+
+            Dictionary<String, String> props = new Hashtable<String, String>();
+            props.put(WebConsoleConstants.PLUGIN_LABEL, plugin.getLabel());
+
+            webConsolePluginService = context.getBundleContext().registerService(
+                WebConsoleConstants.SERVICE_NAME, plugin, props);
+            webConsolePlugin = plugin;
+        } catch (Throwable t) {
+            // don't care, we thus don't have the console plugin
+        }
     }
 
     protected void deactivate(ComponentContext context) {
         context.getBundleContext().removeBundleListener(this);
+
+        if (webConsolePluginService != null) {
+            webConsolePluginService.unregister();
+            webConsolePluginService = null;
+
+        }
+
+        if (webConsolePlugin != null) {
+            webConsolePlugin.deactivate();
+            webConsolePlugin = null;
+        }
     }
 
     protected void bindMimeTypeProvider(MimeTypeProvider mimeTypeProvider) {
@@ -267,5 +301,15 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         if (event.getType() == BundleEvent.RESOLVED) {
             this.registerMimeType(event.getBundle().getEntry(MIME_TYPES));
         }
+    }
+
+    // ---------- plugin support -----------------------------------------------
+
+    Map<String, String> getMimeMap() {
+        return mimeTab;
+    }
+
+    Map<String, String> getExtensionMap() {
+        return extensionMap;
     }
 }
