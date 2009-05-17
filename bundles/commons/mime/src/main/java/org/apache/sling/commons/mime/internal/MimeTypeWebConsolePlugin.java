@@ -121,7 +121,7 @@ class MimeTypeWebConsolePlugin extends AbstractWebConsolePlugin {
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th colspan='2'>Mime Type</th>");
-        pw.println("<th'>Extensions</th>");
+        pw.println("<th>Extensions</th>");
         pw.println("</tr>");
         pw.println("</thead>");
 
