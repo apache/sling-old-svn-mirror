@@ -32,6 +32,7 @@ import java.util.Map;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
@@ -43,13 +44,14 @@ import org.osgi.service.log.LogService;
  * The <code>MimeTypeServiceImpl</code> is the official implementation of the
  * {@link MimeTypeService} interface.
  * 
- * @scr.component immediate="false" metatype="no"
+ * @scr.component immediate="false" label="%mime.service.name"
+ *                description="%mime.service.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling Servlet"
+ * @scr.property name="service.description" value="Apache Sling MIME Type Service"
+ * @scr.service interface="org.apache.sling.commons.mime.MimeTypeService"
  * @scr.reference name="MimeTypeProvider"
  *                interface="org.apache.sling.commons.mime.MimeTypeProvider"
  *                cardinality="0..n" policy="dynamic"
- * @scr.service interface="org.apache.sling.commons.mime.MimeTypeService"
  */
 public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
@@ -57,6 +59,9 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     public static final String MIME_TYPES = "/META-INF/mime.types";
 
+    /** @scr.property cardinality="-2147483647" type="String" */
+    private static final String PROP_MIME_TYPES = "mime.types";
+    
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private LogService logService;
 
@@ -115,6 +120,15 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         return ext;
     }
 
+    public void registerMimeType(String line) {
+        String[] parts = line.split("\\s+");
+        if (parts.length > 1) {
+            String[] extensions = new String[parts.length - 1];
+            System.arraycopy(parts, 1, extensions, 0, extensions.length);
+            this.registerMimeType(parts[0], extensions);
+        }
+    }
+    
     public void registerMimeType(String mimeType, String... extensions) {
         if (mimeType == null || mimeType.length() == 0 || extensions == null
             || extensions.length == 0) {
@@ -170,12 +184,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
                 continue;
             }
 
-            String[] parts = line.split("\\s+");
-            if (parts.length > 1) {
-                String[] extensions = new String[parts.length - 1];
-                System.arraycopy(parts, 1, extensions, 0, extensions.length);
-                this.registerMimeType(parts[0], extensions);
-            }
+            registerMimeType(line);
         }
     }
 
@@ -251,6 +260,15 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
             }
         }
 
+        // register configuration properties
+        String[] configTypes = OsgiUtil.toStringArray(context.getProperties().get(
+            PROP_MIME_TYPES));
+        if (configTypes != null) {
+            for (String configType : configTypes) {
+                registerMimeType(configType);
+            }
+        }
+        
         try {
             MimeTypeWebConsolePlugin plugin = new MimeTypeWebConsolePlugin(this);
             plugin.activate(context.getBundleContext());
