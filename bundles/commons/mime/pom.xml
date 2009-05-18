@@ -54,6 +54,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-DocURL>
+                            http://incubator.apache.org/sling/site/mime-type-support.html
+                        </Bundle-DocURL>
                         <Export-Package>
                             org.apache.sling.commons.mime;version=${pom.version}
                         </Export-Package>
