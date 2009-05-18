@@ -137,11 +137,17 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     public int installOrUpdate(String uri, Map<String, Object> attributes,
             InstallableData installableData) throws BundleException, IOException {
     	
+    	// Check that we have bundle data and manifest
     	InputStream data = installableData.adaptTo(InputStream.class);
     	if(data == null) {
     		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
     	}
     	
+		final Manifest m = getManifest(installableData);
+		if(m == null) {
+			throw new IOException("Manifest not found for InstallableData " + uri);
+		}
+		
         // Update if we already have a bundle id, else install
 		Bundle b;
 		boolean updated;
@@ -158,30 +164,32 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			// either we don't know the bundle yet or it does not exist,
 			// so check whether the bundle can be found by its symbolic name
 			if (b == null) {
-			    final BundleInfo info = getMatchingBundle(installableData);
-			    if (info != null) {
-			        final Version availableVersion = new Version(
-			            (String) info.bundle.getHeaders().get(
-			                Constants.BUNDLE_VERSION));
-			        final Version newVersion = new Version(info.newVersion);
-			        if (newVersion.compareTo(availableVersion) > 0) {
-			            b = info.bundle;
-			        } else {
-			            log.debug(
-			                "Ignore update of bundle {} from {} as the installed version is equal or higher.",
-			                info.bundle.getSymbolicName(), uri);
-			            return IGNORED;
-			        }
+			    b = getMatchingBundle(m);
+			}
+			
+			// If the bundle (or one with the same symbolic name) is
+			// already installed, ignore the new one if it's a lower
+			// version
+			if(b != null && m!= null) {
+				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
+				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
+				if (newBundleVersion.compareTo(installedVersion) <= 0) {
+		            log.debug(
+		                "Ignore update of bundle {} from {} as the installed version is equal or higher.",
+		                b.getSymbolicName(), uri);
+		            return IGNORED;
 			    }
 			}
 
 			if (b != null) {
-			    log.debug("Calling Bundle.stop() for {}", b.getLocation());
+				// Existing bundle -> stop and update
+			    log.debug("Calling Bundle.stop() and updating {}", uri);
 			    b.stop();
 			    b.update(data);
 			    updated = true;
 			    needsRefresh = true;
 			} else {
+				// New bundle -> install
 			    uri = OsgiControllerImpl.getResourceLocation(uri);
 			    int level = installableData.getBundleStartLevel();
 			    b = ctx.installBundle(uri, data);
@@ -328,10 +336,26 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      *         with a symbolic name.
      * @throws IOException If an error occurrs reading from the input stream.
      */
-    private BundleInfo getMatchingBundle(InstallableData installableData) throws IOException {
+    private Bundle getMatchingBundle(Manifest m) throws IOException {
 
-        // open the stream to read the bundle manifest from
-        InputStream ins = installableData.adaptTo(InputStream.class);
+        final String symbolicName = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+        if (symbolicName != null) {
+
+            Bundle[] bundles = ctx.getBundles();
+            for (Bundle bundle : bundles) {
+                if (symbolicName.equals(bundle.getSymbolicName())) {
+                    return bundle;
+                }
+            }
+        }
+        
+    	return null;
+    }
+
+    /** Read the manifest from the InstallableData */
+    protected Manifest getManifest(InstallableData data) throws IOException {
+    	Manifest result = null;
+        InputStream ins = data.adaptTo(InputStream.class);
         if (ins == null) {
         	return null;
        	}
@@ -339,26 +363,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
         JarInputStream jis = null;
         try {
             jis = new JarInputStream(ins);
-            Manifest manifest = jis.getManifest();
-            if (manifest != null) {
-
-                String symbolicName = manifest.getMainAttributes().getValue(
-                    Constants.BUNDLE_SYMBOLICNAME);
-                if (symbolicName != null) {
-
-                    Bundle[] bundles = ctx.getBundles();
-                    for (Bundle bundle : bundles) {
-                        if (symbolicName.equals(bundle.getSymbolicName())) {
-                            final BundleInfo info = new BundleInfo();
-                            info.bundle = bundle;
-                            info.newVersion = manifest.getMainAttributes().getValue(
-                                Constants.BUNDLE_VERSION);
-                            return info;
-                        }
-                    }
-
-                }
-            }
+            result= jis.getManifest();
 
         } finally {
 
@@ -377,17 +382,9 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 } catch (IOException ignore) {
                 }
             }
-
         }
-
-        // fall back to no bundle found for update
-        return null;
-    }
-
-    protected static final class BundleInfo {
-        public Bundle bundle;
-
-        public String newVersion;
+        
+        return result;
     }
 
     /**
