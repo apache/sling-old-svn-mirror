@@ -17,7 +17,14 @@
 package org.apache.sling.commons.mime;
 
 /**
- * The <code>MimeTypeProvider</code> TODO
+ * The <code>MimeTypeProvider</code> interface defines an API for services
+ * which are asked for MIME type mappings for unknown MIME types or extensions.
+ * <p>
+ * It is important to understand, that services registered with this interface
+ * are only called as a last resort and that the first service asked and
+ * replying with a non-<code>null</code> answer wins. Specifically if a MIME
+ * type mapping is configured by default or as an extension to the MIME type
+ * service, MimeTypeProvider services are not queried.
  * <p>
  * This interface may be implemented by bundles wishing to provide control over
  * how extensions are mapped to MIME types and vice-versa.
