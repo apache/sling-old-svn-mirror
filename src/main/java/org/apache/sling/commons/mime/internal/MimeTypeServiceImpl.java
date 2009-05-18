@@ -47,7 +47,8 @@ import org.osgi.service.log.LogService;
  * @scr.component immediate="false" label="%mime.service.name"
  *                description="%mime.service.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Apache Sling MIME Type Service"
+ * @scr.property name="service.description"
+ *               value="Apache Sling MIME Type Service"
  * @scr.service interface="org.apache.sling.commons.mime.MimeTypeService"
  * @scr.reference name="MimeTypeProvider"
  *                interface="org.apache.sling.commons.mime.MimeTypeProvider"
@@ -61,7 +62,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     /** @scr.property cardinality="-2147483647" type="String" */
     private static final String PROP_MIME_TYPES = "mime.types";
-    
+
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private LogService logService;
 
@@ -77,9 +78,8 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     private ServiceRegistration webConsolePluginService;
 
-    /**
-     * @see org.apache.sling.commons.mime.MimeTypeService#getMimeType(java.lang.String)
-     */
+    // --------- MimeTypeService interface
+
     public String getMimeType(String name) {
         if (name == null) {
             return null;
@@ -99,9 +99,6 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         return type;
     }
 
-    /**
-     * @see org.apache.sling.commons.mime.MimeTypeService#getExtension(java.lang.String)
-     */
     public String getExtension(String mimeType) {
         if (mimeType == null) {
             return null;
@@ -120,15 +117,6 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         return ext;
     }
 
-    public void registerMimeType(String line) {
-        String[] parts = line.split("\\s+");
-        if (parts.length > 1) {
-            String[] extensions = new String[parts.length - 1];
-            System.arraycopy(parts, 1, extensions, 0, extensions.length);
-            this.registerMimeType(parts[0], extensions);
-        }
-    }
-    
     public void registerMimeType(String mimeType, String... extensions) {
         if (mimeType == null || mimeType.length() == 0 || extensions == null
             || extensions.length == 0) {
@@ -188,58 +176,6 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
         }
     }
 
-    // ---------- internal -----------------------------------------------------
-
-    private MimeTypeProvider[] getMimeTypeProviders() {
-        MimeTypeProvider[] list = this.typeProviders;
-
-        if (list == null) {
-            synchronized (this.typeProviderList) {
-                this.typeProviders = this.typeProviderList.toArray(new MimeTypeProvider[this.typeProviderList.size()]);
-                list = this.typeProviders;
-            }
-        }
-
-        return list;
-    }
-
-    private void registerMimeType(URL mimetypes) {
-        if (mimetypes != null) {
-            InputStream ins = null;
-            try {
-                ins = mimetypes.openStream();
-                this.registerMimeType(ins);
-            } catch (IOException ioe) {
-                // log but don't actually care
-                this.log(LogService.LOG_WARNING, "An error occurred reading "
-                    + mimetypes, ioe);
-            } finally {
-                if (ins != null) {
-                    try {
-                        ins.close();
-                    } catch (IOException ioe) {
-                        // ignore
-                    }
-                }
-            }
-        }
-    }
-
-    private void log(int level, String message, Throwable t) {
-        LogService log = this.logService;
-        if (log != null) {
-            log.log(level, message, t);
-        } else {
-            PrintStream out = (level == LogService.LOG_ERROR)
-                    ? System.err
-                    : System.out;
-            out.println(message);
-            if (t != null) {
-                t.printStackTrace(out);
-            }
-        }
-    }
-
     // ---------- SCR implementation -------------------------------------------
 
     protected void activate(ComponentContext context) {
@@ -268,7 +204,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
                 registerMimeType(configType);
             }
         }
-        
+
         try {
             MimeTypeWebConsolePlugin plugin = new MimeTypeWebConsolePlugin(this);
             plugin.activate(context.getBundleContext());
@@ -330,4 +266,73 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     Map<String, String> getExtensionMap() {
         return extensionMap;
     }
+
+    // ---------- internal -----------------------------------------------------
+
+    private MimeTypeProvider[] getMimeTypeProviders() {
+        MimeTypeProvider[] list = this.typeProviders;
+
+        if (list == null) {
+            synchronized (this.typeProviderList) {
+                this.typeProviders = this.typeProviderList.toArray(new MimeTypeProvider[this.typeProviderList.size()]);
+                list = this.typeProviders;
+            }
+        }
+
+        return list;
+    }
+
+    private void registerMimeType(URL mimetypes) {
+        if (mimetypes != null) {
+            InputStream ins = null;
+            try {
+                ins = mimetypes.openStream();
+                this.registerMimeType(ins);
+            } catch (IOException ioe) {
+                // log but don't actually care
+                this.log(LogService.LOG_WARNING, "An error occurred reading "
+                    + mimetypes, ioe);
+            } finally {
+                if (ins != null) {
+                    try {
+                        ins.close();
+                    } catch (IOException ioe) {
+                        // ignore
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Splits the <code>line</code> on whitespace an registers the MIME type
+     * mappings provided the line contains more than one whitespace separated
+     * fields.
+     * 
+     * @throws NullPointerException if <code>line</code> is <code>null</code>.
+     */
+    private void registerMimeType(String line) {
+        String[] parts = line.split("\\s+");
+        if (parts.length > 1) {
+            String[] extensions = new String[parts.length - 1];
+            System.arraycopy(parts, 1, extensions, 0, extensions.length);
+            this.registerMimeType(parts[0], extensions);
+        }
+    }
+
+    private void log(int level, String message, Throwable t) {
+        LogService log = this.logService;
+        if (log != null) {
+            log.log(level, message, t);
+        } else {
+            PrintStream out = (level == LogService.LOG_ERROR)
+                    ? System.err
+                    : System.out;
+            out.println(message);
+            if (t != null) {
+                t.printStackTrace(out);
+            }
+        }
+    }
+
 }
