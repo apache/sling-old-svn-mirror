@@ -18,12 +18,10 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import java.util.concurrent.Callable;
-
 import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 
 /** Callable that processes the resource queue of an OsgiResourceProcessor */
-class ResourceQueueTask implements Callable<Object> {
+class ResourceQueueTask implements OsgiControllerTask {
 	private final OsgiResourceProcessor p;
 	
 	ResourceQueueTask(OsgiResourceProcessor p) {
@@ -34,9 +32,8 @@ class ResourceQueueTask implements Callable<Object> {
 		return getClass().getSimpleName() + ": " + p.getClass().getSimpleName()+ ".processResourceQueue()";
 	}
 	
-	public Object call() throws Exception {
+	
+	public void execute(Context ctx) throws Exception {
 		p.processResourceQueue();
-		return null;
 	}
-
 }

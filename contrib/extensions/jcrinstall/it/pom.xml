@@ -168,6 +168,42 @@
                             </archive>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>otherbundleA-1.0</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>otherbundleA-1.0</classifier>
+                            <archive>
+                                <manifestEntries>
+                                    <Manifest-Version>2</Manifest-Version>
+                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>jcrinstall-otherbundleA</Bundle-SymbolicName>
+                                    <Bundle-Version>1.0</Bundle-Version>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>otherbundleB-1.0</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>otherbundleB-1.0</classifier>
+                            <archive>
+                                <manifestEntries>
+                                    <Manifest-Version>2</Manifest-Version>
+                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>jcrinstall-otherbundleB</Bundle-SymbolicName>
+                                    <Bundle-Version>1.0</Bundle-Version>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
           </plugins>
