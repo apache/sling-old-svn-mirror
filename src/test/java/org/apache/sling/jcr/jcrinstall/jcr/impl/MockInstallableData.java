@@ -21,7 +21,7 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.osgi.installer.InstallableData;
 
 public class MockInstallableData implements InstallableData {
 

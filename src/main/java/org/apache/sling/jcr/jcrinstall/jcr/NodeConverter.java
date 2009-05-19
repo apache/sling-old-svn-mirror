@@ -20,7 +20,7 @@ package org.apache.sling.jcr.jcrinstall.jcr;
 
 import javax.jcr.Node;
 
-import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.osgi.installer.InstallableData;
 
 /** Convert a Node to InstallableData */
 public interface NodeConverter {

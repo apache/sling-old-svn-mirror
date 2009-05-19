@@ -25,8 +25,8 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiController;
-import org.apache.sling.jcr.jcrinstall.osgiworker.ResourceOverrideRules;
+import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 
