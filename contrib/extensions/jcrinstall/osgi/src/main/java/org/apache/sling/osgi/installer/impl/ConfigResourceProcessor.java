@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.JcrInstallException;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
@@ -43,9 +44,9 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     public static final String CONFIG_EXTENSION = ".cfg";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final DictionaryReader reader = new DictionaryReader();
-    private final ServiceProxy serviceProxy;
+    private final OsgiControllerServices serviceProxy;
     
-    ConfigResourceProcessor(ServiceProxy sp) {
+    ConfigResourceProcessor(OsgiControllerServices sp) {
         serviceProxy = sp;
     }
     
