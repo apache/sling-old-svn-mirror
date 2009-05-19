@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl;
 
-import javax.jcr.Node;
-
-import org.apache.sling.osgi.installer.InstallableData;
-
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+/** Thrown when a required service is missing to execute a task,
+ * 	in which case the task can be retried later
+ */
+@SuppressWarnings("serial")
+class MissingServiceException extends Exception {
+	MissingServiceException(Class<?> serviceClass) {
+		super(serviceClass.getName());
+	}
 }

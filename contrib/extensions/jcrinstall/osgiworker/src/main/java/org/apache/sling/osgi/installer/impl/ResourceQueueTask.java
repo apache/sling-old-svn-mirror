@@ -16,13 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl;
 
-import javax.jcr.Node;
+import java.util.concurrent.Callable;
 
-import org.apache.sling.osgi.installer.InstallableData;
+import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+/** Callable that processes the resource queue of an OsgiResourceProcessor */
+class ResourceQueueTask implements Callable<Object> {
+	private final OsgiResourceProcessor p;
+	
+	ResourceQueueTask(OsgiResourceProcessor p) {
+		this.p = p;
+	}
+	
+	public String toString() {
+		return getClass().getSimpleName() + ": " + p.getClass().getSimpleName()+ ".processResourceQueue()";
+	}
+	
+	public Object call() throws Exception {
+		p.processResourceQueue();
+		return null;
+	}
+
 }

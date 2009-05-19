@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer;
 
-import javax.jcr.Node;
+/** Result codes for resource installation operations */
+public class InstallResultCode {
+    /** Result code for installOrUpdate: resource was ignored */
+    public static final int IGNORED = 0;
 
-import org.apache.sling.osgi.installer.InstallableData;
-
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+    /** Result code for installOrUpdate: resource was installed */
+    public static final int INSTALLED = 1;
+    
+    /** Result code for installOrUpdate: resource was updated */
+    public static final int UPDATED = 2;
 }

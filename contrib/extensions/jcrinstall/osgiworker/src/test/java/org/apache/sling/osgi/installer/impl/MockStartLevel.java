@@ -16,13 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl;
 
-import javax.jcr.Node;
+import org.osgi.framework.Bundle;
+import org.osgi.service.startlevel.StartLevel;
 
-import org.apache.sling.osgi.installer.InstallableData;
+public class MockStartLevel implements StartLevel {
 
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+    public int getBundleStartLevel(Bundle arg0) {
+        return 0;
+    }
+
+    public int getInitialBundleStartLevel() {
+        return 0;
+    }
+
+    public int getStartLevel() {
+        return 0;
+    }
+
+    public boolean isBundleActivationPolicyUsed(Bundle arg0) {
+        return false;
+    }
+
+    public boolean isBundlePersistentlyStarted(Bundle arg0) {
+        return false;
+    }
+
+    public void setBundleStartLevel(Bundle arg0, int arg1) {
+    }
+
+    public void setInitialBundleStartLevel(int arg0) {
+    }
+
+    public void setStartLevel(int arg0) {
+    }
 }

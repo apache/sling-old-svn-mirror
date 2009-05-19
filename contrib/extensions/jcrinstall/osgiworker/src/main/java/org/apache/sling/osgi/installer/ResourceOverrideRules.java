@@ -16,13 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer;
 
-import javax.jcr.Node;
-
-import org.apache.sling.osgi.installer.InstallableData;
-
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+/** Resources can be overridden by others based on their URIs.
+ *  This interface returns a list of resources that have a lower,
+ *  or higher priority than the provided one.
+ */
+public interface ResourceOverrideRules {
+    /** Return the list of URIs of lower priority resources, which
+     *  might or might not exist.
+     */
+    public String [] getHigherPriorityResources(String uri);
+    
+    /** Return the list of URIs of higher priority resources, which
+     *  might or might not exist.
+     */
+    public String [] getLowerPriorityResources(String uri);
 }

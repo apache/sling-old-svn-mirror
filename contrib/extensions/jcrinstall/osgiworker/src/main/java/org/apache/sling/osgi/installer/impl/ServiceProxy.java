@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl;
 
-import javax.jcr.Node;
+import org.osgi.service.cm.ConfigurationAdmin;
 
-import org.apache.sling.osgi.installer.InstallableData;
-
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+/** Proxy for services that might not be always available, allows
+ * 	classes which are not OSGi services to access such services easily
+ */
+interface ServiceProxy {
+	ConfigurationAdmin getConfigurationAdmin();
 }

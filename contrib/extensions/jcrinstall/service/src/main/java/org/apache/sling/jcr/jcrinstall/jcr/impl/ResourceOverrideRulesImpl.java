@@ -3,7 +3,7 @@ package org.apache.sling.jcr.jcrinstall.jcr.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.jcr.jcrinstall.osgiworker.ResourceOverrideRules;
+import org.apache.sling.osgi.installer.ResourceOverrideRules;
 
 /** Simple path-based ResourceOverrideRules */
 class ResourceOverrideRulesImpl implements ResourceOverrideRules {

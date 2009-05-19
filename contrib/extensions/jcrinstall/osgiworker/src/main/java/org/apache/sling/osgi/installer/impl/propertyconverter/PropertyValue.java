@@ -16,13 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl.propertyconverter;
 
-import javax.jcr.Node;
+public class PropertyValue {
+    private final String key;
+    private final Object value;
+    
+    public PropertyValue(String key, Object value) {
+        this.key = key;
+        this.value = value;
+    }
 
-import org.apache.sling.osgi.installer.InstallableData;
+    public String getKey() {
+        return key;
+    }
 
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+    public Object getValue() {
+        return value;
+    }
 }

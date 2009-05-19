@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl.propertyconverter;
 
-import javax.jcr.Node;
+import java.io.IOException;
 
-import org.apache.sling.osgi.installer.InstallableData;
-
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+@SuppressWarnings("serial")
+public class ValueConverterException extends IOException {
+    public ValueConverterException(String reason, String key, String value) {
+        super(reason + " (key=" + key + ", value=" + value + ")");
+    }
 }

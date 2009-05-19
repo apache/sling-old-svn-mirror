@@ -16,13 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer.impl;
 
-import javax.jcr.Node;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
 
-import org.apache.sling.osgi.installer.InstallableData;
+class Utilities {
+    
+    static File getTestFile() throws IOException {
+        final File result = File.createTempFile(Utilities.class.getName(), null);
+        result.deleteOnExit();
+        return result;
+    }
+    
+    static void setStorage(OsgiControllerImpl c, Storage s) throws Exception {
+        final Field f = c.getClass().getDeclaredField("storage");
+        f.setAccessible(true);
+        f.set(c, s);
+    }
+    
+    static void setField(Object o, String name, Object value) throws Exception {
+        final Field f = o.getClass().getDeclaredField(name);
+        f.setAccessible(true);
+        f.set(o, value);
+    }
 
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
 }

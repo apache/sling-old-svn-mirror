@@ -31,10 +31,10 @@ import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
-import org.apache.sling.jcr.jcrinstall.osgiworker.JcrInstallException;
-import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiController;
-import org.apache.sling.jcr.jcrinstall.osgiworker.ResourceOverrideRules;
+import org.apache.sling.osgi.installer.InstallableData;
+import org.apache.sling.osgi.installer.JcrInstallException;
+import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;

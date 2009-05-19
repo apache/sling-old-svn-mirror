@@ -27,20 +27,19 @@
     <relativePath>../</relativePath>
   </parent>
 
-  <artifactId>org.apache.sling.jcr.jcrinstall.osgiworker</artifactId>
+  <artifactId>org.apache.sling.osgi.installer</artifactId>
   <version>2.0.3-incubator-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
-  <name>Apache Sling JCR OSGi Installer OSGi worker</name>
+  <name>Apache Sling OSGi installer</name>
   <description> 
-    Implements the OSGi-specific parts of the jcrinstall service,
-    with as few dependencies as possible so that the service is
-    not stopped when restarting other bundles.
+    Provides services to install OSGi bundles and configurations
+    by supplying input streams and dictionaries.
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/osgiworker</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/osgiworker</developerConnection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/osgi</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/osgi</developerConnection>
     <url>http://svn.apache.org/viewvc/incubator/sling/whiteboard/jcrinstall</url>
   </scm>
   
@@ -57,9 +56,9 @@
         <configuration>
             <instructions>
                 <Export-Package>
-                    org.apache.sling.jcr.jcrinstall.osgiworker
+                    org.apache.sling.osgi.installer
                 </Export-Package>
-                <Private-Package>org.apache.sling.jcr.jcrinstall.osgiworker.impl.*</Private-Package>
+                <Private-Package>org.apache.sling.osgi.installer.impl.*</Private-Package>
             </instructions>
         </configuration>
       </plugin>

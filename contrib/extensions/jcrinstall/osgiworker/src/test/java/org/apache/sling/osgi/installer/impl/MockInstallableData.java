@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr.impl;
+package org.apache.sling.osgi.installer.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

@@ -16,13 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.jcrinstall.jcr;
+package org.apache.sling.osgi.installer;
 
-import javax.jcr.Node;
-
-import org.apache.sling.osgi.installer.InstallableData;
-
-/** Convert a Node to InstallableData */
-public interface NodeConverter {
-	InstallableData convertNode(Node n) throws Exception;
+/** A piece of data that can be installed by
+ * 	the OSGi controller.
+ */
+public interface InstallableData {
+	/** String that must change if the underlying data
+	 * 	changes. Stored by the OsgiController when installing
+	 * 	the data, meant to be used by the OsgiController client
+	 * 	when deciding if the data needs to be updated.
+	 */
+	String getDigest();
+	
+	/** Adapt the underlying data to the provided type.
+	 *	@return null if cannot be adapted */
+	<AdapterType> AdapterType adaptTo(Class<AdapterType> type);
+	
+	/** If data to install is a Bundle, this is the start level
+	 *  to use when installing it.
+	 */
+	int getBundleStartLevel();
 }

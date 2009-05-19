@@ -30,7 +30,7 @@
     <version>2.0.3-incubator-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Apache Sling JCR OSGi Installer Integration Tests</name>
+    <name>Apache Sling Jcrinstall Integration Tests</name>
     <description> 
     Test the jcrinstall bundles in the OSGi framework.
   </description>
@@ -176,7 +176,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.jcrinstall.osgiworker</artifactId>
+            <artifactId>org.apache.sling.osgi.installer</artifactId>
             <version>2.0.3-incubator-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>          

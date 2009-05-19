@@ -21,7 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.jcr.jcrinstall.osgiworker.InstallableData;
+import org.apache.sling.osgi.installer.InstallableData;
 
 class SimpleFileInstallableData implements InstallableData {
 	
