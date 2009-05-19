@@ -30,8 +30,8 @@ import java.io.File;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.jcr.jcrinstall.osgiworker.DictionaryInstallableData;
-import org.apache.sling.jcr.jcrinstall.osgiworker.OsgiController;
+import org.apache.sling.osgi.installer.DictionaryInstallableData;
+import org.apache.sling.osgi.installer.OsgiController;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Inject;
@@ -191,7 +191,7 @@ public class OsgiControllerTest {
             mavenBundle("org.apache.felix", "org.apache.felix.scr"),
             mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
             mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
-        	mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcrinstall.osgiworker", POM_VERSION),
+        	mavenBundle("org.apache.sling", "org.apache.sling.osgi.installer", POM_VERSION),
             felix(),
             vmOption(vmOpt),
             waitForFrameworkStartup()
