@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.JcrInstallException;
@@ -54,13 +53,13 @@ import org.osgi.service.startlevel.StartLevel;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
 */
-public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener, OsgiControllerServices {
+public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener, OsgiControllerServices, OsgiControllerTask.Context {
 
 	private BundleContext bundleContext;
     private Storage storage;
     private OsgiResourceProcessorList processors;
     private ResourceOverrideRules roRules;
-    private final List<Callable<Object>> tasks = new LinkedList<Callable<Object>>();
+    private final List<OsgiControllerTask> tasks = new LinkedList<OsgiControllerTask>();
     private final OsgiControllerTaskExecutor executor = new OsgiControllerTaskExecutor();
 
     public static final String STORAGE_FILENAME = "controller.storage";
@@ -116,13 +115,13 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     
     public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
     	synchronized (tasks) {
-        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, data, bundleContext));
+        	tasks.add(new OsgiResourceTask(uri, data, bundleContext));
 		}
     }
 
     public void scheduleUninstall(String uri) throws IOException, JcrInstallException {
     	synchronized (tasks) {
-        	tasks.add(new OsgiControllerTask(storage, processors, roRules, uri, null, bundleContext));
+        	tasks.add(new OsgiResourceTask(uri, null, bundleContext));
     	}
     }
 
@@ -183,7 +182,7 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
             
             // execute returns the list of tasks that could not be executed but should be retried later
             // and those have been removed from the tasks list
-            tasks.addAll(executor.execute(tasks));
+            tasks.addAll(executor.execute(tasks, this));
             
         	if(logService != null) {
                 logService.log(LogService.LOG_DEBUG, 
@@ -206,5 +205,17 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
 		    }
 		}
 		return null;
+	}
+
+	public OsgiResourceProcessorList getProcessors() {
+		return processors;
+	}
+
+	public ResourceOverrideRules getResourceOverrideRules() {
+		return roRules;
+	}
+
+	public Storage getStorage() {
+		return storage;
 	}
 }

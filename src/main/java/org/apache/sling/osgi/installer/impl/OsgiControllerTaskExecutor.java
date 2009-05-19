@@ -20,7 +20,6 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,29 +31,30 @@ class OsgiControllerTaskExecutor {
     static int counter;
     
 	/** Execute the given tasks in a new thread, return when done */
-    List<Callable<Object>> execute(final List<Callable<Object>> tasks) throws InterruptedException {
-    	final List<Callable<Object>> remainingTasks = new LinkedList<Callable<Object>>();
+    List<OsgiControllerTask >execute(final List<OsgiControllerTask> tasks, final OsgiControllerTask.Context context) 
+    throws InterruptedException {
+    	final List<OsgiControllerTask> remainingTasks = new LinkedList<OsgiControllerTask>(); 
 		final String threadName = getClass().getSimpleName() + " #" + (++counter);
-		final Thread t = new Thread(threadName) {
+		final Thread executor = new Thread(threadName) {
 			@Override
 			public void run() {
 				while(!tasks.isEmpty()) {
-					final Callable<Object> c = tasks.remove(0);
+					final OsgiControllerTask t = tasks.remove(0);
 					try {
-						c.call();
-						log.debug("Task execution successful: " + c);
+						t.execute(context);
+						log.debug("Task execution successful: " + t);
 					} catch(MissingServiceException mse) {
-						log.info("Task execution deferred due to " + mse + ", task=" + c);
-						remainingTasks.add(c);
+						log.info("Task execution deferred due to " + mse + ", task=" + t);
+						remainingTasks.add(t);
 					} catch(Exception e) {
-						log.warn("Task execution failed: " + c, e);
+						log.warn("Task execution failed: " + t, e);
 					}
 				}
 			}
 		};
-		t.setDaemon(true);
-		t.start();
-		t.join();
+		executor.setDaemon(true);
+		executor.start();
+		executor.join();
 		return remainingTasks;
 	}
 }
