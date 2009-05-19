@@ -28,10 +28,12 @@ import java.util.concurrent.Callable;
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -52,7 +54,7 @@ import org.osgi.service.startlevel.StartLevel;
  *      name="service.vendor"
  *      value="The Apache Software Foundation"
 */
-public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener, ServiceProxy {
+public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener, OsgiControllerServices {
 
 	private BundleContext bundleContext;
     private Storage storage;
@@ -65,9 +67,6 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
 
     /** Storage key: digest of an InstallableData */
     public static final String KEY_DIGEST = "data.digest";
-
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
-    private ConfigurationAdmin configAdmin;
 
     /** @scr.reference */
     private PackageAdmin packageAdmin;
@@ -198,6 +197,14 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     }
 
 	public ConfigurationAdmin getConfigurationAdmin() {
-		return configAdmin;
+		// TODO ConfigurationAdmin should be bound/unbound rather than
+		// looking it up every time, but that caused problems in the it/OsgiControllerTest
+		if(bundleContext != null) {
+		   	final ServiceReference ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
+		    if(ref != null) {
+		    	return (ConfigurationAdmin)bundleContext.getService(ref);
+		    }
+		}
+		return null;
 	}
 }

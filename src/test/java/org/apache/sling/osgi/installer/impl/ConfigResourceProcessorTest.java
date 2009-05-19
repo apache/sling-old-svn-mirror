@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Dictionary;
 
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -41,7 +42,7 @@ public class ConfigResourceProcessorTest {
         final String data = "foo = bar";
         final MockInstallableData id = new MockInstallableData(path, data);
         final ConfigurationAdmin ca = mockery.mock(ConfigurationAdmin.class);
-        final ServiceProxy sp = new ServiceProxy() {
+        final OsgiControllerServices sp = new OsgiControllerServices() {
 			public ConfigurationAdmin getConfigurationAdmin() {
 				return ca;
 			}

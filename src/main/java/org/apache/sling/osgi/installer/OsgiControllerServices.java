@@ -16,13 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 
 /** Proxy for services that might not be always available, allows
- * 	classes which are not OSGi services to access such services easily
+ * 	classes which are not OSGi services to access such services easily.
+ * 	Should normally be part of the implementation package, but it is
+ * 	used in tests to find out when the controller is ready.
  */
-interface ServiceProxy {
+public interface OsgiControllerServices {
 	ConfigurationAdmin getConfigurationAdmin();
 }
