@@ -20,9 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
@@ -42,11 +44,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.startlevel.StartLevel;
 
 /** Test the OsgiController running in the OSGi framework */
 @RunWith(JUnit4TestRunner.class)
 public class OsgiControllerTest {
 	public final static String POM_VERSION = System.getProperty("jcrinstall.pom.version");
+	public final static int CONFIG_ADMIN_START_LEVEL = 100;
+	public final static int NO_CONFIG_ADMIN_START_LEVEL = CONFIG_ADMIN_START_LEVEL - 1;
 	
     @Inject
     protected BundleContext bundleContext;
@@ -61,12 +66,15 @@ public class OsgiControllerTest {
     }
     
     protected Configuration findConfiguration(String pid) throws Exception {
-    	final Configuration[] cfgs = getService(ConfigurationAdmin.class).listConfigurations(null);
-    	if(cfgs != null) {
-	    	for(Configuration cfg : cfgs) {
-	    		if(cfg.getPid().equals(pid)) {
-	    			return cfg;
-	    		}
+    	final ConfigurationAdmin ca = getService(ConfigurationAdmin.class);
+    	if(ca != null) {
+	    	final Configuration[] cfgs = ca.listConfigurations(null);
+	    	if(cfgs != null) {
+		    	for(Configuration cfg : cfgs) {
+		    		if(cfg.getPid().equals(pid)) {
+		    			return cfg;
+		    		}
+		    	}
 	    	}
     	}
     	return null;
@@ -85,8 +93,23 @@ public class OsgiControllerTest {
     	return new File(System.getProperty("jcrinstall.base.dir"), bundleName);
     }
     
+    protected void setStartLevel(int level) throws InterruptedException {
+    	final StartLevel s = getService(StartLevel.class);
+    	s.setStartLevel(level);
+    	final int timeout = 5;
+    	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
+    	do {
+    		if(s.getStartLevel() == level) {
+    			return;
+    		}
+    		Thread.sleep(100L);
+    	} while(System.currentTimeMillis() < waitUntil);
+    	fail("Start level did not change to " + level + " after waiting " + timeout + " seconds");
+    }
+    
     @Test
     public void testInstallAndRemoveConfig() throws Exception {
+    	setStartLevel(CONFIG_ADMIN_START_LEVEL);
     	final OsgiController c = getService(OsgiController.class);
     	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
     	cfgData.put("foo", "bar");
@@ -109,6 +132,34 @@ public class OsgiControllerTest {
     	assertNull("Config " + cfgPid + " must be gone after executeScheduledOperations", findConfiguration(cfgPid));
     }
     
+    // TODO test fails due to SCR no rebinding the ConfigurationAdmin service
+    // to the OsgiController @Test
+    public void testDeferredConfigInstall() throws Exception {
+    	setStartLevel(CONFIG_ADMIN_START_LEVEL);
+    	
+    	final OsgiController c = getService(OsgiController.class);
+    	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+    	cfgData.put("foo", "bar");
+    	final String cfgPid = getClass().getName() + ".deferred." + System.currentTimeMillis();
+    	assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+    	
+    	c.scheduleInstallOrUpdate(cfgPid, new DictionaryInstallableData(cfgData));
+    	assertNull("Config " + cfgPid + " must not be found right after scheduleInstall", findConfiguration(cfgPid));
+    	
+    	// Config installs must be deferred if ConfigAdmin service is stopped
+    	setStartLevel(NO_CONFIG_ADMIN_START_LEVEL);
+    	c.executeScheduledOperations();
+    	setStartLevel(CONFIG_ADMIN_START_LEVEL);
+    	getService(ConfigurationAdmin.class);
+    	assertNull("Config " + cfgPid + " must not be installed if ConfigAdmin was stopped", findConfiguration(cfgPid));
+    	
+    	// with configadmin back, executeScheduledOperations must install deferred configs
+    	c.executeScheduledOperations();
+    	assertNotNull("Config " + cfgPid + " must be installed after restarting ConfigAdmin", findConfiguration(cfgPid));
+    	findConfiguration(cfgPid).delete();
+    	assertNull("Config " + cfgPid + " must be gone after test", findConfiguration(cfgPid));
+    }
+    
     @Test
     public void testInstallUpgradeDowngradeBundle() throws Exception {
     	final String symbolicName = "jcrinstall-testbundle";
@@ -127,6 +178,7 @@ public class OsgiControllerTest {
         	final Bundle b = findBundle(symbolicName);
         	bundleId = b.getBundleId();
         	assertNotNull("Test bundle 1.1 must be found after executeScheduledOperations", b);
+        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
         	assertEquals("Version must be 1.1", "1.1", b.getHeaders().get(BUNDLE_VERSION));
     	}
     	
@@ -136,6 +188,7 @@ public class OsgiControllerTest {
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.2 must be found after executeScheduledOperations", b);
+        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
         	assertEquals("Version must be 1.2 after upgrade", "1.2", b.getHeaders().get(BUNDLE_VERSION));
         	assertEquals("Bundle ID must not change after upgrade", bundleId, b.getBundleId());
     	}
@@ -146,6 +199,7 @@ public class OsgiControllerTest {
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.2 must be found after executeScheduledOperations", b);
+        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
         	assertEquals("Version must be 1.2 after ignored downgrade", "1.2", b.getHeaders().get(BUNDLE_VERSION));
         	assertEquals("Bundle ID must not change after downgrade", bundleId, b.getBundleId());
     	}
@@ -164,6 +218,7 @@ public class OsgiControllerTest {
         	c.executeScheduledOperations();
         	final Bundle b = findBundle(symbolicName);
         	assertNotNull("Test bundle 1.0 must be found after executeScheduledOperations", b);
+        	assertEquals("Installed bundle must be started", Bundle.ACTIVE, b.getState());
         	assertEquals("Version must be 1.0 after uninstall and downgrade", "1.0", b.getHeaders().get(BUNDLE_VERSION));
         	assertFalse("Bundle ID must have changed after uninstall and reinstall", bundleId == b.getBundleId());
     	}
@@ -173,7 +228,8 @@ public class OsgiControllerTest {
     public static Option[] configuration() {
     	String vmOpt = "-Djrcinstall.testing";
     	
-    	// make all jcrinstall.* system properties available to OSGi framework VM
+    	// This runs in the VM that runs the build, but the tests run in another one.
+    	// Make all jcrinstall.* system properties available to OSGi framework VM
     	for(Object o : System.getProperties().keySet()) {
     		final String key = (String)o;
     		if(key.startsWith("jcrinstall.")) {
@@ -188,13 +244,15 @@ public class OsgiControllerTest {
     	}
     	
         return options(
-            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
-            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
-            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
-        	mavenBundle("org.apache.sling", "org.apache.sling.osgi.installer", POM_VERSION),
-            felix(),
-            vmOption(vmOpt),
-            waitForFrameworkStartup()
+                felix(),
+                vmOption(vmOpt),
+                waitForFrameworkStartup(),
+        		provision(
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.0.6"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").startLevel(CONFIG_ADMIN_START_LEVEL),
+        	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
+        	        	mavenBundle("org.apache.sling", "org.apache.sling.osgi.installer", POM_VERSION)
+        		)
         );
     }
 }
