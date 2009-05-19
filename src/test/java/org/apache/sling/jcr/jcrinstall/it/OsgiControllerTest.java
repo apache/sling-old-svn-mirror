@@ -34,6 +34,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.DictionaryInstallableData;
 import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Inject;
@@ -44,14 +45,11 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.startlevel.StartLevel;
 
 /** Test the OsgiController running in the OSGi framework */
 @RunWith(JUnit4TestRunner.class)
 public class OsgiControllerTest {
 	public final static String POM_VERSION = System.getProperty("jcrinstall.pom.version");
-	public final static int CONFIG_ADMIN_START_LEVEL = 100;
-	public final static int NO_CONFIG_ADMIN_START_LEVEL = CONFIG_ADMIN_START_LEVEL - 1;
 	
     @Inject
     protected BundleContext bundleContext;
@@ -93,23 +91,22 @@ public class OsgiControllerTest {
     	return new File(System.getProperty("jcrinstall.base.dir"), bundleName);
     }
     
-    protected void setStartLevel(int level) throws InterruptedException {
-    	final StartLevel s = getService(StartLevel.class);
-    	s.setStartLevel(level);
+    protected void waitForConfigAdmin(boolean shouldBePresent) throws InterruptedException {
+    	final OsgiControllerServices svc = getService(OsgiControllerServices.class);
     	final int timeout = 5;
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
     	do {
-    		if(s.getStartLevel() == level) {
+    		boolean isPresent = svc.getConfigurationAdmin() != null;
+    		if(isPresent == shouldBePresent) {
     			return;
     		}
     		Thread.sleep(100L);
     	} while(System.currentTimeMillis() < waitUntil);
-    	fail("Start level did not change to " + level + " after waiting " + timeout + " seconds");
+    	fail("ConfigurationAdmin service not available after waiting " + timeout + " seconds");
     }
     
     @Test
     public void testInstallAndRemoveConfig() throws Exception {
-    	setStartLevel(CONFIG_ADMIN_START_LEVEL);
     	final OsgiController c = getService(OsgiController.class);
     	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
     	cfgData.put("foo", "bar");
@@ -132,10 +129,19 @@ public class OsgiControllerTest {
     	assertNull("Config " + cfgPid + " must be gone after executeScheduledOperations", findConfiguration(cfgPid));
     }
     
-    // TODO test fails due to SCR no rebinding the ConfigurationAdmin service
-    // to the OsgiController @Test
+    @Test
     public void testDeferredConfigInstall() throws Exception {
-    	setStartLevel(CONFIG_ADMIN_START_LEVEL);
+    	
+    	final String cfgName = "org.apache.felix.configadmin";
+    	Bundle configAdmin = null;
+    	for(Bundle b : bundleContext.getBundles()) {
+    		if(b.getSymbolicName().equals(cfgName)) {
+    			configAdmin = b;
+    			break;
+    		}
+    	}
+    	assertNotNull(cfgName + " bundle must be found", configAdmin);
+    	waitForConfigAdmin(true);
     	
     	final OsgiController c = getService(OsgiController.class);
     	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
@@ -147,10 +153,11 @@ public class OsgiControllerTest {
     	assertNull("Config " + cfgPid + " must not be found right after scheduleInstall", findConfiguration(cfgPid));
     	
     	// Config installs must be deferred if ConfigAdmin service is stopped
-    	setStartLevel(NO_CONFIG_ADMIN_START_LEVEL);
+    	configAdmin.stop();
+    	waitForConfigAdmin(false);
     	c.executeScheduledOperations();
-    	setStartLevel(CONFIG_ADMIN_START_LEVEL);
-    	getService(ConfigurationAdmin.class);
+    	configAdmin.start();
+    	waitForConfigAdmin(true);
     	assertNull("Config " + cfgPid + " must not be installed if ConfigAdmin was stopped", findConfiguration(cfgPid));
     	
     	// with configadmin back, executeScheduledOperations must install deferred configs
@@ -248,8 +255,9 @@ public class OsgiControllerTest {
                 vmOption(vmOpt),
                 waitForFrameworkStartup(),
         		provision(
-        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.0.6"),
-        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin").startLevel(CONFIG_ADMIN_START_LEVEL),
+        				// TODO use latest scr?
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin"),
         	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log"),
         	        	mavenBundle("org.apache.sling", "org.apache.sling.osgi.installer", POM_VERSION)
         		)
