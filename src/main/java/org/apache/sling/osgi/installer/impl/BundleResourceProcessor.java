@@ -182,10 +182,11 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			}
 
 			if (b != null) {
-				// Existing bundle -> stop and update
+				// Existing bundle -> stop, update, restart
 			    log.debug("Calling Bundle.stop() and updating {}", uri);
 			    b.stop();
 			    b.update(data);
+			    b.start();
 			    updated = true;
 			    needsRefresh = true;
 			} else {
