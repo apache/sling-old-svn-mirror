@@ -42,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RecursionTooDeepException;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
@@ -636,6 +637,15 @@ public class RequestData implements BufferProvider {
         return activeServletName;
     }
 
+    /**
+     * Returns the <code>AdapterManager</code> instance bound to the
+     * {@link SlingMainServlet} of this request data instance. This may be
+     * <code>null</code> if no adapter manager is bound to the SlingMainServlet.
+     */
+    public AdapterManager getAdapterManager() {
+        return slingMainServlet.getAdapterManager();
+    }
+    
     // ---------- BufferProvider -----------------------------------------
 
     public BufferProvider getBufferProvider() {

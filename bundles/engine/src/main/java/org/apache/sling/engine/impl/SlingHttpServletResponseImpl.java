@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.servlets.ErrorHandler;
 
@@ -119,6 +120,20 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         return requestData;
     }
 
+    //---------- Adaptable interface
+    
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        AdapterManager adapterManager = getRequestData().getAdapterManager();
+        if (adapterManager != null) {
+            return adapterManager.getAdapter(this, type);
+        }
+        
+        // no adapter manager, nothing to adapt to
+        return null;
+    }
+    
+    //---------- SlingHttpServletResponse interface
+    
     @Override
     public void flushBuffer() throws IOException {
         getRequestData().getContentData().flushBuffer();
