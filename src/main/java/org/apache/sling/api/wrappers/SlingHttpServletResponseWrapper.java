@@ -47,4 +47,7 @@ public class SlingHttpServletResponseWrapper extends HttpServletResponseWrapper
         return (SlingHttpServletResponse) getResponse();
     }
 
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        return getSlingResponse().adaptTo(type);
+    }
 }

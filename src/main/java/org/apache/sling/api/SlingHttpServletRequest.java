@@ -26,6 +26,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
@@ -48,12 +49,15 @@ import org.apache.sling.api.resource.ResourceResolver;
  * {@link RequestParameter} instances.
  * <p>
  * In any case, the {@link #getReader()} and {@link #getInputStream()} methods
- * will throw an <code>IllegalStateException</code> if called after any
- * methods returning request parameters if the request content type is either
+ * will throw an <code>IllegalStateException</code> if called after any methods
+ * returning request parameters if the request content type is either
  * <i>application/x-www-form-urlencoded</i> or <i>multipart/form-data</i>
  * because the request data has already been processed.
+ * <p>
+ * Starting with Sling API 2.0.6, this interface als extends the
+ * {@link Adaptable} interface.
  */
-public interface SlingHttpServletRequest extends HttpServletRequest {
+public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
 
     /**
      * Returns the {@link Resource} object on whose behalf the servlet acts.
