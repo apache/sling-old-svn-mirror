@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
@@ -157,6 +158,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private RequestLogger requestLogger;
+    
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private AdapterManager adapterManager;
 
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
@@ -525,6 +529,14 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         ErrorHandler eh = errorHandler;
         return (eh != null) ? eh : this;
     }
+    
+    /**
+     * Returns the {@link AdapterManager} bound to this instance or
+     * <code>null</code> if no adapter manager is bound to this instance.
+     */
+    public AdapterManager getAdapterManager() {
+        return adapterManager;
+    }
 
     // ---------- Property Setter for SCR --------------------------------------
 
@@ -608,6 +620,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         }
     }
 
+    @SuppressWarnings("unused")
     protected void deactivate(ComponentContext componentContext) {
 
         // first of all, we have to unregister

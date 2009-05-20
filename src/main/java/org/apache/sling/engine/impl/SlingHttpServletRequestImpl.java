@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
@@ -81,6 +82,20 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     public final RequestData getRequestData() {
         return this.requestData;
     }
+
+    //---------- Adaptable interface
+    
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        AdapterManager adapterManager = getRequestData().getAdapterManager();
+        if (adapterManager != null) {
+            return adapterManager.getAdapter(this, type);
+        }
+        
+        // no adapter manager, nothing to adapt to
+        return null;
+    }
+    
+    //---------- SlingHttpServletRequest interface
 
     ParameterSupport getParameterSupport() {
         return this.getRequestData().getParameterSupport();
