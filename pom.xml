@@ -609,9 +609,8 @@ setting is not correct.
     <pluginRepositories>
         <pluginRepository>
             <id>apache.snapshots</id>
-            <url>
-                http://people.apache.org/repo/m2-snapshot-repository
-            </url>
+            <name>Apache Snapshot Repository</name>
+            <url>http://repository.apache.org/snapshots</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -646,9 +645,8 @@ setting is not correct.
         </repository>
         <repository>
             <id>apache.snapshots</id>
-            <url>
-                http://people.apache.org/repo/m2-snapshot-repository
-            </url>
+            <name>Apache Snapshot Repository</name>
+            <url>http://repository.apache.org/snapshots</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
