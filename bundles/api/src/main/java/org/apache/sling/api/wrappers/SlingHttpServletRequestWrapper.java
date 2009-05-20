@@ -117,4 +117,8 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
     public Enumeration<String> getResponseContentTypes() {
         return getSlingRequest().getResponseContentTypes();
     }
+    
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        return getSlingRequest().adaptTo(type);
+    }
 }
