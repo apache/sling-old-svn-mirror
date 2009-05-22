@@ -21,9 +21,9 @@
    xml:space="preserve"
    sodipodi:version="0.32"
    inkscape:version="0.46"
-   sodipodi:docname="Sling_neu.svg"
+   sodipodi:docname="Sling_new.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   inkscape:export-filename="/home/fmeschbe/src/sling/head/site/src/logo/Sling_neu.png"
+   inkscape:export-filename="/home/fmeschbe/src/sling/head/site/src/logo/Sling_new.png"
    inkscape:export-xdpi="51.470001"
    inkscape:export-ydpi="51.470001"><metadata
    id="metadata1251"><rdf:RDF><cc:Work
@@ -102,16 +102,12 @@
 	</g><rect
    style="fill:#00678c"
    y="0"
-   height="14"
-   width="270"
-   x="34"
-   id="T-Border_2_" /><rect
-   style="fill:#00678c"
-   y="0"
    height="59"
    width="14"
    x="290"
-   id="R-Border_2_" /><path
+   id="R-Border_2_"
+   inkscape:export-xdpi="51.470001"
+   inkscape:export-ydpi="51.470001" /><path
    style="fill:#00678c"
    d="M 234,172.98679 C 246.82,173.01729 250.655,172.98476 263.476,172.98069 C 263.662,172.98069 268,172.97967 268,172.97967 C 268,172.96544 268,158.77706 268,158.77503 C 268,158.76283 266.025,158.79536 265.96,158.79536 C 263.753,158.7852 261.545,158.76181 259.338,158.76995 C 258.149,158.77401 255.777,158.77808 255.777,158.77808 L 254.55,158.77808"
    id="G-tail_Stop_1_" />
@@ -21781,4 +21777,10 @@
 				</g>
 			</g>
 		</g>
-	</switch></svg>
+	</switch><rect
+   style="fill:#00678c"
+   y="-8.9650509e-15"
+   height="14"
+   width="270.94724"
+   x="33.052776"
+   id="T-Border_2_" /></svg>
