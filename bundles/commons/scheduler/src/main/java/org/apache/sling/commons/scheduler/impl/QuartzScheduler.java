@@ -102,7 +102,7 @@ public class QuartzScheduler implements Scheduler {
                 } catch (Exception e) {
                     // we don't want that one malicious service brings down the scheduler, so we just log
                     // the exception and continue
-                    this.logger.error("Exception during registering job service {}.", arr[1], e);
+                    this.logger.error("Exception during registering job service " + arr[1], e);
                 }
             }
             this.registeredJobs.clear();
