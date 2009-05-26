@@ -33,7 +33,14 @@ SlingAuthenticator config, via http://localhost:8888/system/console/configMgr
 
 HOW TO TEST
 -----------
-http://localhost:8888/content/espblog/*.html must display the "Sling ESP
+First, login by requesting
+
+  http://localhost:8888/?sling:authRequestLogin
+
+and using username=admin password=admin. This should display the "Welcome
+to the Sling Launchpad" index.html page.
+
+Then, http://localhost:8888/content/espblog/*.html should display the "Sling ESP
 blog sample" page, with the Home/Admin/New Post/... menu.
 
 If you get Sling's default HTML rendition instead ("Resource dumped by 
