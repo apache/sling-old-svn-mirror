@@ -18,7 +18,12 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.TestCase;
+
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 public class ResourceUtilTest extends TestCase {
 
@@ -147,11 +152,81 @@ public class ResourceUtilTest extends TestCase {
         assertEquals("b", ResourceUtil.getName("/b/c/.."));
         assertEquals("", ResourceUtil.getName("/b/c/../.."));
     }
-
-    public void testGetValueMap() {
-        // expect an empty ValueMap 
-        ValueMap valueMap = ResourceUtil.getValueMap(null);
+    
+    public void test_getValueMap_null_resource() {
+        final ValueMap valueMap = ResourceUtil.getValueMap(null);
         assertNotNull(valueMap);
         assertEquals(0, valueMap.size());
+        
+        final Object replaced = valueMap.put("sample", 1);
+        assertNull(replaced);
+        
+        assertEquals(1, valueMap.size());
+        assertEquals(1, valueMap.get("sample"));
+        assertEquals(Integer.valueOf(1), valueMap.get("sample", Integer.class));
+        assertEquals("1", valueMap.get("sample", String.class));
+    }
+    
+    public void test_getValueMap_direct() {
+        final ValueMap valueMap = new ValueMapDecorator(new HashMap<String, Object>());
+        valueMap.put("sample", true);
+        final Resource resource = new SyntheticResource(null, "/", "sample") {
+            @Override
+            @SuppressWarnings("unchecked")
+            public <Type> Type adaptTo(Class<Type> type) {
+                if (type == ValueMap.class) {
+                    return (Type) valueMap;
+                }
+                
+                return super.adaptTo(type);
+            }
+        };
+        
+        final ValueMap adapted = ResourceUtil.getValueMap(resource);
+        assertEquals(valueMap, adapted);
+        assertNotNull(adapted);
+        assertEquals(1, adapted.size());
+
+        assertEquals(true, adapted.get("sample"));
+        assertEquals(Boolean.valueOf(true), adapted.get("sample", Boolean.class));
+        assertEquals(Boolean.TRUE.toString(), adapted.get("sample", String.class));
+    }
+    
+    public void test_getValueMap_decorated_map() {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("sample", true);
+        final Resource resource = new SyntheticResource(null, "/", "sample") {
+            @Override
+            @SuppressWarnings("unchecked")
+            public <Type> Type adaptTo(Class<Type> type) {
+                if (type == Map.class) {
+                    return (Type) map;
+                }
+                
+                return super.adaptTo(type);
+            }
+        };
+        
+        final ValueMap adapted = ResourceUtil.getValueMap(resource);
+        assertNotNull(adapted);
+        assertEquals(1, adapted.size());
+
+        assertEquals(true, adapted.get("sample"));
+        assertEquals(Boolean.valueOf(true), adapted.get("sample", Boolean.class));
+        assertEquals(Boolean.TRUE.toString(), adapted.get("sample", String.class));
+    }
+
+    public void test_getValueMap_no_adapter() {
+        final ValueMap valueMap = ResourceUtil.getValueMap(null);
+        assertNotNull(valueMap);
+        assertEquals(0, valueMap.size());
+        
+        final Object replaced = valueMap.put("sample", 1);
+        assertNull(replaced);
+        
+        assertEquals(1, valueMap.size());
+        assertEquals(1, valueMap.get("sample"));
+        assertEquals(Integer.valueOf(1), valueMap.get("sample", Integer.class));
+        assertEquals("1", valueMap.get("sample", String.class));
     }
 }
