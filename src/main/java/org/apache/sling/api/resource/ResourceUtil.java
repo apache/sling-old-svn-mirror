@@ -285,11 +285,14 @@ public class ResourceUtil {
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
      */
+    @SuppressWarnings("unchecked")
     public static ValueMap getValueMap(final Resource res) {
-        ValueMap map = (res == null ? null : res.adaptTo(ValueMap.class));
-        if ( map == null ) {
+        ValueMap map = (res == null)
+                ? ValueMap.EMPTY
+                : res.adaptTo(ValueMap.class);
+        if (map == null) {
             Map m = res.adaptTo(Map.class);
-            if ( m != null ) {
+            if (m != null) {
                 map = new ValueMapDecorator(m);
             } else {
                 map = ValueMap.EMPTY;
