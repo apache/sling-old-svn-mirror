@@ -20,8 +20,6 @@ package org.apache.sling.api.scripting;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.SlingIOException;
-import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 
 /**

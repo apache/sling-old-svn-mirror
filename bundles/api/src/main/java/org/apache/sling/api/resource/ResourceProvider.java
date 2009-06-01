@@ -22,8 +22,6 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.SlingException;
-
 /**
  * API for providers of resources. Used by the {@link ResourceResolver} to
  * transparently access resources from different locations such as a JCR
