@@ -147,4 +147,11 @@ public class ResourceUtilTest extends TestCase {
         assertEquals("b", ResourceUtil.getName("/b/c/.."));
         assertEquals("", ResourceUtil.getName("/b/c/../.."));
     }
+
+    public void testGetValueMap() {
+        // expect an empty ValueMap 
+        ValueMap valueMap = ResourceUtil.getValueMap(null);
+        assertNotNull(valueMap);
+        assertEquals(0, valueMap.size());
+    }
 }
