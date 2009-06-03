@@ -254,9 +254,25 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
     //   - return absolute uri if possible
     public String map(final HttpServletRequest request, final String resourcePath) {
 
-        String mappedPath = resourcePath;
-        boolean mappedPathIsUrl = false;
-        String resolutionPathInfo;
+        // find a fragment or query
+        int fragmentQueryMark = resourcePath.indexOf('#');
+        if (fragmentQueryMark < 0) {
+            fragmentQueryMark = resourcePath.indexOf('?');
+        }
+        
+        // cut fragment or query off the resource path
+        String mappedPath;
+        final String fragmentQuery;
+        if (fragmentQueryMark >= 0) {
+            fragmentQuery = resourcePath.substring(fragmentQueryMark);
+            mappedPath = resourcePath.substring(0, fragmentQueryMark);
+            log.debug("map: Splitting resource path '{}' into '{}' and '{}'",
+                new Object[] { resourcePath, mappedPath, fragmentQuery });
+        } else {
+            fragmentQuery = null;
+            mappedPath = resourcePath;
+        }
+        
 
         // cut off scheme and host, if the same as requested
         String schemehostport;
@@ -274,6 +290,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
         }
 
+        String resolutionPathInfo;
         Resource res = resolveInternal(mappedPath);
         if (res != null) {
 
@@ -313,6 +330,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
         }
 
+        boolean mappedPathIsUrl = false;
         for (MapEntry mapEntry : resourceMapper.getMapMaps()) {
             String[] mappedPaths = mapEntry.replace(mappedPath);
             if (mappedPaths != null) {
@@ -393,9 +411,14 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             }
 
             log.debug(
-                "map: Returning path {} (after mangling, inlc. context) for {}",
+                "map: Returning path {} (after mangling, incl. context) for {}",
                 mappedPath, resourcePath);
 
+        }
+
+        // reappend fragment and/or query
+        if (fragmentQuery != null) {
+            mappedPath = mappedPath.concat(fragmentQuery);
         }
 
         return mappedPath;
@@ -735,23 +758,20 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
     private String mangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
-            final int queryPos = absPath.indexOf('?');
-            final String path = (queryPos == -1 ? absPath : absPath.substring(0, queryPos));
-
             Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
-            Matcher m = p.matcher(path);
+            Matcher m = p.matcher(absPath);
+            
             StringBuffer buf = new StringBuffer();
             while (m.find()) {
                 String replacement = MANGLE_NAMESPACE_IN_PREFIX + m.group(1) + MANGLE_NAMESPACE_IN_SUFFIX;
                 m.appendReplacement(buf, replacement);
             }
+            
             m.appendTail(buf);
-            if ( queryPos != -1 ) {
-                buf.append(absPath.substring(queryPos));
-            }
+            
             absPath = buf.toString();
         }
-
+        
         return absPath;
     }
 
