@@ -294,7 +294,7 @@ public class JobEventHandler
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     // we just ignore this
-                    e.printStackTrace();
+                    this.ignoreException(e);
                 }
             }
             final Iterator<StartedJobInfo> jobIter = restartJobs.iterator();
