@@ -1041,6 +1041,74 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        final String selExt = ".html/some/suffx.pdf";
+        path = "/child" + selExt;
+        mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapFragment() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        final String selExt = "#sec:1";
+        path = "/child" + selExt;
+        mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapQuery() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        final String selExt = "?a:b=2";
+        path = "/child" + selExt;
+        mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapFragmentQuery() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
+        
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        // absolute path, expect rootPath segment to be
+        // cut off the mapped path because we map the rootPath
+        // onto root
+        final String selExt = "#sec:1?a:b=1";
+        path = "/child" + selExt;
+        mapped = resResolver.map(child.getPath() + selExt);
+        assertEquals(path, mapped);
+    }
+    
+    public void testMapExtensionFragmentQuery() throws Exception {
+        String path = rootNode.getPath();
+        String mapped = resResolver.map(path);
+        assertEquals(path, mapped);
 
         Node child = rootNode.addNode("child");
         session.save();
@@ -1048,7 +1116,7 @@ public class JcrResourceResolver2Test extends RepositoryTestBase {
         // absolute path, expect rootPath segment to be
         // cut off the mapped path because we map the rootPath
         // onto root
-        final String selExt = ".html/some/suffx.pdf";
+        final String selExt = ".html#sec:1?a:b=1";
         path = "/child" + selExt;
         mapped = resResolver.map(child.getPath() + selExt);
         assertEquals(path, mapped);
