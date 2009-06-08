@@ -18,14 +18,10 @@ package org.apache.sling.rewriter.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
 import org.apache.sling.rewriter.ProcessorConfiguration;
-import org.osgi.service.component.ComponentInstance;
 import org.xml.sax.ContentHandler;
 
 /**
@@ -35,12 +31,10 @@ public class ProcessorWrapper implements Processor {
 
     private final Processor delegatee;
 
-    private final List<ComponentInstance> instances = new ArrayList<ComponentInstance>(1);
-
     public ProcessorWrapper(final ProcessorConfiguration config,
                             final FactoryCache factoryCache)
     throws IOException {
-        this.delegatee = factoryCache.getProcessor(config.getType(), this.instances);
+        this.delegatee = factoryCache.getProcessor(config.getType());
         if ( this.delegatee == null ) {
             throw new IOException("Unable to get processor component for type " + config.getType());
         }
@@ -50,14 +44,7 @@ public class ProcessorWrapper implements Processor {
      * @see org.apache.sling.rewriter.Processor#finished()
      */
     public void finished() throws IOException {
-        try {
-            delegatee.finished();
-        } finally {
-            final Iterator<ComponentInstance> instanceIter = this.instances.iterator();
-            while ( instanceIter.hasNext() ) {
-                instanceIter.next().dispose();
-            }
-        }
+        delegatee.finished();
     }
 
     /**

@@ -19,7 +19,6 @@ package org.apache.sling.rewriter.impl;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.rewriter.Generator;
@@ -34,7 +33,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentInstance;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +137,7 @@ public class FactoryCache {
      * @param type The processor type.
      * @return The processor or null if the processor is not available.
      */
-    public Processor getProcessor(final String type, final List<ComponentInstance> instanceList) {
+    public Processor getProcessor(final String type) {
         final ProcessorFactory factory = this.processorTracker.getFactory(type);
         if ( factory == null ) {
             LOGGER.debug("Requested processor factory for type '{}' not found.", type);
