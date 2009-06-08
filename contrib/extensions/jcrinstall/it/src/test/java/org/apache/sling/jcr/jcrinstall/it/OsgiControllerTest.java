@@ -238,18 +238,18 @@ public class OsgiControllerTest {
     	// Install two bundles, one started, one stopped
     	{
         	c.scheduleInstallOrUpdate("otherBundleA.jar", 
-        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-otherBundleA-1.0.jar")));
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testA-1.0.jar")));
         	c.executeScheduledOperations();
     	}
     	{
-        	c.scheduleInstallOrUpdate("otherBundleB.jar", 
-        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-otherBundleB-1.0.jar")));
+        	c.scheduleInstallOrUpdate("testB.jar", 
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testB-1.0.jar")));
         	c.executeScheduledOperations();
-        	findBundle("jcrinstall-otherbundleB").stop();
+        	findBundle("jcrinstall-testB").stop();
     	}
     	
-    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-otherbundleA").getState());
-    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-otherbundleB").getState());
+    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-testA").getState());
+    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-testB").getState());
     	
     	// Execute some OsgiController operations
     	final String symbolicName = "jcrinstall-testbundle";
@@ -270,8 +270,8 @@ public class OsgiControllerTest {
     	assertEquals("Version must be 1.2", "1.2", b.getHeaders().get(BUNDLE_VERSION));
     	
     	// And check that bundles A and B have kept their states
-    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-otherbundleA").getState());
-    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-otherbundleB").getState());
+    	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-testA").getState());
+    	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-testB").getState());
     }
 
     @org.ops4j.pax.exam.junit.Configuration
