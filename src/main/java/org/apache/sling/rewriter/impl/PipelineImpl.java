@@ -18,9 +18,6 @@ package org.apache.sling.rewriter.impl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.sling.rewriter.Generator;
 import org.apache.sling.rewriter.PipelineConfiguration;
@@ -30,7 +27,6 @@ import org.apache.sling.rewriter.Processor;
 import org.apache.sling.rewriter.ProcessorConfiguration;
 import org.apache.sling.rewriter.Serializer;
 import org.apache.sling.rewriter.Transformer;
-import org.osgi.service.component.ComponentInstance;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -42,9 +38,6 @@ public class PipelineImpl implements Processor {
 
     /** Empty array of transformers. */
     private static final Transformer[] EMPTY_TRANSFORMERS = new Transformer[0];
-
-    /** The used instances. */
-    private List<ComponentInstance> instances;
 
     /** The starting point of the pipeline. */
     private Generator generator;
@@ -70,9 +63,6 @@ public class PipelineImpl implements Processor {
     throws IOException {
         final PipelineConfiguration config = (PipelineConfiguration)c;
         final ProcessingComponentConfiguration[] transformerConfigs = config.getTransformerConfigurations();
-
-        final int pipelineSize = 5 + (transformerConfigs != null ? transformerConfigs.length : 0);
-        this.instances = new ArrayList<ComponentInstance>(pipelineSize);
 
         // create components and initialize them
 
@@ -134,13 +124,13 @@ public class PipelineImpl implements Processor {
     throws IOException {
         final ComponentType component;
         if ( typeClass == Generator.class ) {
-            component = (ComponentType)this.factoryCache.getGenerator(type, this.instances);
+            component = (ComponentType)this.factoryCache.getGenerator(type);
             // we keep the generator
             this.generator = (Generator)component;
         } else if ( typeClass == Transformer.class ) {
-            component = (ComponentType)this.factoryCache.getTransformer(type, this.instances);
+            component = (ComponentType)this.factoryCache.getTransformer(type);
         } else if ( typeClass == Serializer.class ) {
-            component = (ComponentType)this.factoryCache.getSerializer(type, this.instances);
+            component = (ComponentType)this.factoryCache.getSerializer(type);
         } else {
             component = null;
         }
@@ -179,11 +169,6 @@ public class PipelineImpl implements Processor {
             final IOException ioe = new IOException("Pipeline exception.");
             ioe.initCause(se);
             throw ioe;
-        } finally {
-            final Iterator<ComponentInstance> instanceIter = this.instances.iterator();
-            while ( instanceIter.hasNext() ) {
-                instanceIter.next().dispose();
-            }
         }
     }
 }

@@ -24,6 +24,9 @@ import org.xml.sax.SAXException;
 
 /**
  * The <code>Generator</code> interface defines the start of a rewriter pipeline.
+ * A generator is not a component managed by the container (OSGi). A
+ * {@link GeneratorFactory} is a service managed by the container which creates
+ * generator instances on demand.
  */
 public interface Generator {
 

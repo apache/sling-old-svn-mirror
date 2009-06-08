@@ -18,22 +18,22 @@ package org.apache.sling.rewriter;
 
 
 /**
- * The <code>RewriterTransformerFactory</code> is an optional component
- * which can be used to enhance the rewriting pipeline.
- * All available rewriting transformers with a service ranking below
- * zero are chained before the default link rewriter. All available
- * transformers with a service ranking higher or equal to zero are
- * chained after the default link rewriter. Therefore the property
- * "service.ranking" should be used for the factory.
+ * The <code>GeneratorFactory</code> is a service which creates
+ * {@link Generator}s on demand. The created generators are the
+ * starting point for the rewriter pipeline.
  *
- * The factories itself are not chained but the resulting transformers
+ * The factories itself are not chained but the resulting generators
  * are. On each pipeline call new instances are created.
+ *
+ * The factory is referenced using a service property named
+ * 'pipeline.type'. Each factory should have a unique value
+ * for this property.
  */
-public interface RewriterTransformerFactory {
+public interface GeneratorFactory {
 
     /**
-     * Create a new transformer for the pipeline.
-     * @return A new transformer.
+     * Create a new generator for the pipeline.
+     * @return A new generator.
      */
-    Transformer createTransformer();
+    Generator createGenerator();
 }
