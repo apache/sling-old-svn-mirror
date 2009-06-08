@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+    version="2.0">
+
+    <description>A supporting tab library for Apache Sling that creates Atom feeds with MediaRSS using Apache Adbera</description>
+    <tlib-version>1.0</tlib-version>
+    <short-name>media</short-name>
+    <uri>http://sling.apache.org/taglibs/mediarss/1.0</uri>
+
+
+    <tag>
+	    <name>group</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaGroupTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+
+    <tag>
+        <name>content</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaContentTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>url</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>fileSize</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>medium</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>isDefault</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>expression</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>bitrate</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>framerate</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>samplingrate</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>channels</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>duration</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>height</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>rating</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaRatingTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>scheme</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>title</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaTitleTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    
+    <tag>
+        <name>description</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaDescriptionTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>hash</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaHashTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>algo</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>category</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaCategoryTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>scheme</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>label</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>credit</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaCreditTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>role</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>scheme</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>copyright</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaCopyrightTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>url</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>text</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaTextTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>start</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>end</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>lang</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>restriction</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaRestrictionTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>relationship</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>player</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaPlayerTagHandler</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>url</name>
+            <required>true</required>
+            <rtexprvalue>false</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>height</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>thumbnail</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaThumbnailTagHandler</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>url</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>height</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>width</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>time</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>keywords</name>
+        <tag-class>org.apache.sling.atom.taglib.media.MediaKeywordsTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+
+</taglib>
