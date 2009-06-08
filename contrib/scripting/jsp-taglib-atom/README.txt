@@ -35,3 +35,10 @@ you can checkout the latest source using the following command:
 
 See the Subversion documentation for other source control features.
 
+Dependencies
+============
+
+This bundle depends on the Apache Abdera libraries being available in the OSGi
+framework. This may easiest be done by installing the Apache Abdera libraries
+as bundles. To do this you must grab a SNAPSHOT which includes the fixes for
+ABDERA-236.
