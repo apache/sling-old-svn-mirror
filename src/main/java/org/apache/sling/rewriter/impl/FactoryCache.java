@@ -156,7 +156,32 @@ public class FactoryCache {
      * all post transformers.
      */
     public Transformer[][] getRewriterTransformers() {
-        return this.transformerTracker.getTransformers();
+        final TransformerFactory[][] factories = this.transformerTracker.getTransformerFactories();
+        return createTransformers(factories);
+    }
+
+    protected Transformer[][] createTransformers(final TransformerFactory[][] factories) {
+        if ( factories == EMPTY_DOUBLE_ARRAY ) {
+            return FactoryCache.EMPTY_DOUBLE_ARRAY;
+        }
+        final Transformer[][] transformers = new Transformer[2][];
+        if ( factories[0].length == 0 ) {
+            transformers[0] = FactoryCache.EMPTY_ARRAY;
+        } else {
+            transformers[0] = new Transformer[factories[0].length];
+            for(int i=0; i < factories[0].length; i++) {
+                transformers[0][i] = factories[0][i].createTransformer();
+            }
+        }
+        if ( factories[1].length == 0 ) {
+            transformers[1] = FactoryCache.EMPTY_ARRAY;
+        } else {
+            transformers[1] = new Transformer[factories[1].length];
+            for(int i=0; i < factories[1].length; i++) {
+                transformers[1][i] = factories[1][i].createTransformer();
+            }
+        }
+        return transformers;
     }
 
     /**
@@ -168,7 +193,7 @@ public class FactoryCache {
         private final Map<String, T> services = new HashMap<String, T>();
 
         /** The bundle context. */
-        private final BundleContext context;
+        protected final BundleContext context;
 
         public HashingServiceTrackerCustomizer(final BundleContext bc, final String serviceClassName) {
             super(bc, serviceClassName, null);
@@ -235,13 +260,25 @@ public class FactoryCache {
         }
 
         /**
+         * Is this cache still valid?
+         */
+        public boolean isCacheValid() {
+            return this.cacheIsValid;
+        }
+
+        /**
          * @see org.osgi.util.tracker.ServiceTracker#addingService(org.osgi.framework.ServiceReference)
          */
         public Object addingService(ServiceReference reference) {
-            if ( isGlobal(reference) ) {
+            final boolean isGlobal = isGlobal(reference);
+            if ( isGlobal ) {
                 this.cacheIsValid = false;
             }
-            return super.addingService(reference);
+            Object obj = super.addingService(reference);
+            if ( obj == null && isGlobal ) {
+                obj = this.getService(reference);
+            }
+            return obj;
         }
 
         /**
@@ -254,7 +291,7 @@ public class FactoryCache {
             super.removedService(reference, service);
         }
 
-        private TransformerFactory[][] getTransformerFactories() {
+        public TransformerFactory[][] getTransformerFactories() {
             if ( !this.cacheIsValid ) {
                 synchronized ( this ) {
                     if ( !this.cacheIsValid ) {
@@ -306,31 +343,6 @@ public class FactoryCache {
                 }
             }
             return this.cached;
-        }
-
-        public Transformer[][] getTransformers() {
-            final TransformerFactory[][] factories = this.getTransformerFactories();
-            if ( factories == EMPTY_DOUBLE_ARRAY ) {
-                return FactoryCache.EMPTY_DOUBLE_ARRAY;
-            }
-            final Transformer[][] transformers = new Transformer[2][];
-            if ( factories[0].length == 0 ) {
-                transformers[0] = FactoryCache.EMPTY_ARRAY;
-            } else {
-                transformers[0] = new Transformer[factories[0].length];
-                for(int i=0; i < factories[0].length; i++) {
-                    transformers[0][i] = factories[0][i].createTransformer();
-                }
-            }
-            if ( factories[1].length == 0 ) {
-                transformers[1] = FactoryCache.EMPTY_ARRAY;
-            } else {
-                transformers[1] = new Transformer[factories[1].length];
-                for(int i=0; i < factories[1].length; i++) {
-                    transformers[1][i] = factories[1][i].createTransformer();
-                }
-            }
-            return transformers;
         }
     }
 

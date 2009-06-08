@@ -27,6 +27,8 @@ import org.apache.sling.rewriter.Processor;
 import org.apache.sling.rewriter.ProcessorConfiguration;
 import org.apache.sling.rewriter.Serializer;
 import org.apache.sling.rewriter.Transformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -35,6 +37,8 @@ import org.xml.sax.SAXException;
  * This contexts keeps track of the used pipeline components for later disposal.
  */
 public class PipelineImpl implements Processor {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(PipelineImpl.class);
 
     /** Empty array of transformers. */
     private static final Transformer[] EMPTY_TRANSFORMERS = new Transformer[0];
@@ -61,6 +65,7 @@ public class PipelineImpl implements Processor {
     public void init(ProcessingContext processingContext,
                      ProcessorConfiguration c)
     throws IOException {
+        LOGGER.debug("Setting up pipeline...");
         final PipelineConfiguration config = (PipelineConfiguration)c;
         final ProcessingComponentConfiguration[] transformerConfigs = config.getTransformerConfigurations();
 
@@ -71,6 +76,7 @@ public class PipelineImpl implements Processor {
 
         final ProcessingComponentConfiguration generatorConfig = config.getGeneratorConfiguration();
         final Generator generator = this.getPipelineComponent(Generator.class, generatorConfig.getType());
+        LOGGER.debug("Using generator type {}: {}.", generatorConfig.getType(), generator);
         generator.init(processingContext, generatorConfig);
 
         final int transformerCount = (transformerConfigs == null ? 0 : transformerConfigs.length) + rewriters[0].length + rewriters[1].length;
@@ -81,18 +87,21 @@ public class PipelineImpl implements Processor {
             int index = 0;
             for(int i=0; i< rewriters[0].length; i++) {
                 transformers[index] = rewriters[0][i];
+                LOGGER.debug("Using pre transformer: {}.", transformers[index]);
                 transformers[index].init(processingContext, ProcessingComponentConfigurationImpl.EMPTY);
                 index++;
             }
             if ( transformerConfigs != null ) {
                 for(int i=0; i< transformerConfigs.length;i++) {
                     transformers[index] = this.getPipelineComponent(Transformer.class, transformerConfigs[i].getType());
+                    LOGGER.debug("Using transformer type {}: {}.", transformerConfigs[i].getType(), transformers[index]);
                     transformers[index].init(processingContext, transformerConfigs[i]);
                     index++;
                 }
             }
             for(int i=0; i< rewriters[1].length; i++) {
                 transformers[index] = rewriters[1][i];
+                LOGGER.debug("Using post transformer: {}.", transformers[index]);
                 transformers[index].init(processingContext, ProcessingComponentConfigurationImpl.EMPTY);
                 index++;
             }
@@ -102,6 +111,7 @@ public class PipelineImpl implements Processor {
 
         final ProcessingComponentConfiguration serializerConfig = config.getSerializerConfiguration();
         final Serializer serializer = this.getPipelineComponent(Serializer.class, serializerConfig.getType());
+        LOGGER.debug("Using serializer type {}: {}.", serializerConfig.getType(), serializer);
         serializer.init(processingContext, serializerConfig);
 
         ContentHandler pipelineComponent = serializer;
@@ -113,6 +123,7 @@ public class PipelineImpl implements Processor {
 
         this.firstContentHandler = pipelineComponent;
         generator.setContentHandler(this.firstContentHandler);
+        LOGGER.debug("Finished pipeline setup.");
     }
 
     /**
