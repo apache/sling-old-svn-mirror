@@ -71,6 +71,7 @@
           <module>jcr/jackrabbit-api</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
+          <module>scripting/jsp-taglib-atom</module>
           <module>scripting/freemarker</module>
           <module>scripting/java</module>
           <module>scripting/jst</module>
@@ -79,9 +80,9 @@
           <module>scripting/scala/engine</module>
           <module>scripting/scala/interpreter</module>
           <module>scripting/velocity</module>
-		  <module>scripting/xproc</module>
+          <module>scripting/xproc</module>
           <module>launchpad/jcrapp</module>
-		  <module>launchpad/smx-kernel</module>
+	  <module>launchpad/smx-kernel</module>
     </modules>
     <profiles>
         <profile>
