@@ -84,7 +84,7 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
     /**
      * The name of the request attribute containing the AuthenticationHandler
      * which authenticated the current request. If the request is authenticated
-     * through a session, this is the handler, which iinitially authenticated
+     * through a session, this is the handler, which initially authenticated
      * the user.
      */
     public static final String REQUEST_ATTRIBUTE_HANDLER = "org.apache.sling.engine.impl.auth.authentication_handler";
@@ -495,11 +495,15 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
         return null;
     }
 
-    // TODO
+    /** Try to acquire an anonymous Session */
     private boolean getAnonymousSession(HttpServletRequest req,
             HttpServletResponse res) throws MissingRepositoryException {
-        // login anonymously, log the exact cause in case of failure
-        if (this.anonymousAllowed) {
+
+        final boolean isLoginPath = LoginServlet.LOGIN_SERVLET_PATH.equals(req.getPathInfo()); 
+          
+        // Get an anonymous session if allowed, or if we are handling
+        // a request for the login servlet
+        if (this.anonymousAllowed || isLoginPath) {
             try {
                 Session session = getRepository().login();
                 setAttributes(session, null, req);
@@ -509,18 +513,23 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
                 handleLoginFailure(req, res, re);
                 return false;
             }
-        }
+        } 
 
-        // request authentication now, and fail if not possible
-        log.debug("getAnonymousSession: Anonymous access not allowed by configuration");
-        login(req, res);
+        // If we get here, anonymous access is not allowed: redirect
+        // to the login servlet
+        log.debug("getAnonymousSession: Anonymous access not allowed by configuration - redirecting to login form");
+        try {
+          res.sendRedirect(req.getContextPath() + LoginServlet.LOGIN_SERVLET_PATH);
+        } catch(IOException ioe) {
+          handleLoginFailure(req, res, ioe);
+        }
 
         // fallback to no session
         return false;
     }
 
     private void handleLoginFailure(HttpServletRequest request,
-            HttpServletResponse response, RepositoryException reason) {
+            HttpServletResponse response, Exception reason) {
 
         if (reason instanceof TooManySessionsException) {
 

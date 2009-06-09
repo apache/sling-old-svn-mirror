@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.httpauth.impl;
+package org.apache.sling.engine.impl.auth;
 
 import java.io.IOException;
 
@@ -31,13 +31,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>LoginServlet</code> TODO
+ * The <code>LoginServlet</code> lets the Authenticator
+ * do the login.
  * 
  * @scr.component metatype="no"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="service.description" value="HTTP Header Login Servlet"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.paths" value="/system/sling/login"
  * @scr.property name="sling.servlet.methods" values.0="GET" values.1="POST"
  */
 public class LoginServlet extends SlingAllMethodsServlet {
@@ -50,6 +50,11 @@ public class LoginServlet extends SlingAllMethodsServlet {
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private Authenticator authenticator;
+
+    /** The servlet is registered on this path, and the authenticator allows
+     *  any requests to that path, without authentication
+     *  @scr.property name="sling.servlet.paths" */
+    public static final String LOGIN_SERVLET_PATH = "/system/sling/login";
 
     @Override
     protected void doGet(SlingHttpServletRequest request,
