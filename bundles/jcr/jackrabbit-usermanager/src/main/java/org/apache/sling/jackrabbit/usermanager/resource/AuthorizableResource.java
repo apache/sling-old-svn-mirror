@@ -49,9 +49,9 @@ public class AuthorizableResource extends SlingAdaptable implements Resource {
         this.authorizable = authorizable;
         this.path = path;
         if (authorizable.isGroup()) {
-            this.resourceType = "sling:group";
+            this.resourceType = "sling/group";
         } else {
-            this.resourceType = "sling:user";
+            this.resourceType = "sling/user";
         }
 
         this.metadata = new ResourceMetadata();

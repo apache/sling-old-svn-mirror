@@ -93,11 +93,11 @@ public class AuthorizableResourceProvider implements ResourceProvider {
         // handle resources for the virtual container resources
         if (path.equals(SYSTEM_USER_MANAGER_PATH)) {
             return new SyntheticResource(resourceResolver, path,
-                "sling:userManager");
+                "sling/userManager");
         } else if (path.equals(SYSTEM_USER_MANAGER_USER_PATH)) {
-            return new SyntheticResource(resourceResolver, path, "sling:users");
+            return new SyntheticResource(resourceResolver, path, "sling/users");
         } else if (path.equals(SYSTEM_USER_MANAGER_GROUP_PATH)) {
-            return new SyntheticResource(resourceResolver, path, "sling:groups");
+            return new SyntheticResource(resourceResolver, path, "sling/groups");
         }
 
         // the principalId should be the first segment after the prefix
