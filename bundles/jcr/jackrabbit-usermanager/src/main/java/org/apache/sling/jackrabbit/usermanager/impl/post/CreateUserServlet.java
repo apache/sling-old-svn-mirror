@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jackrabbit.usermanager.post;
+package org.apache.sling.jackrabbit.usermanager.impl.post;
 
 import java.util.Dictionary;
 import java.util.List;
@@ -28,8 +28,8 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
-import org.apache.sling.jackrabbit.usermanager.resource.AuthorizableResourceProvider;
+import org.apache.sling.jackrabbit.usermanager.impl.helper.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jackrabbit.usermanager.post;
+package org.apache.sling.jackrabbit.usermanager.impl.post;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.impl.helper.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jackrabbit.usermanager.post.impl;
+package org.apache.sling.jackrabbit.usermanager.impl.helper;
 
 import java.text.DateFormat;
 import java.text.ParseException;
