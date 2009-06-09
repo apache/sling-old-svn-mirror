@@ -45,10 +45,15 @@ import org.slf4j.LoggerFactory;
  */
 public class AuthorizableValueMap implements ValueMap {
     private Logger logger = LoggerFactory.getLogger(AuthorizableValueMap.class);
-    private Set<String> hiddenProperties = new HashSet<String>(Arrays.asList(new String[]{"rep:password", "jcr:uuid"}));
-	private boolean fullyRead;
+
+    private Set<String> hiddenProperties = new HashSet<String>(
+        Arrays.asList(new String[] { "rep:password", "jcr:uuid" }));
+
+    private boolean fullyRead;
+
     private final Map<String, Object> cache;
-	private Authorizable authorizable;
+
+    private Authorizable authorizable;
 
     public AuthorizableValueMap(Authorizable authorizable) {
         this.authorizable = authorizable;
@@ -56,17 +61,17 @@ public class AuthorizableValueMap implements ValueMap {
         this.fullyRead = false;
     }
 
-	@SuppressWarnings("unchecked")
-	public <T> T get(String name, Class<T> type) {
+    @SuppressWarnings("unchecked")
+    public <T> T get(String name, Class<T> type) {
         if (type == null) {
             return (T) get(name);
         }
 
         return convertToType(name, type);
-	}
+    }
 
-	@SuppressWarnings("unchecked")
-	public <T> T get(String name, T defaultValue) {
+    @SuppressWarnings("unchecked")
+    public <T> T get(String name, T defaultValue) {
         if (defaultValue == null) {
             return (T) get(name);
         }
@@ -81,51 +86,50 @@ public class AuthorizableValueMap implements ValueMap {
         }
 
         return value;
-	}
+    }
 
-	public boolean containsKey(Object key) {
+    public boolean containsKey(Object key) {
         return get(key) != null;
-	}
+    }
 
-	public boolean containsValue(Object value) {
+    public boolean containsValue(Object value) {
         readFully();
         return cache.containsValue(value);
-	}
+    }
 
-	public Set<java.util.Map.Entry<String, Object>> entrySet() {
+    public Set<java.util.Map.Entry<String, Object>> entrySet() {
         readFully();
         return cache.entrySet();
-	}
+    }
 
-	public Object get(Object key) {
+    public Object get(Object key) {
         Object value = cache.get(key);
         if (value == null) {
             value = read((String) key);
         }
 
         return value;
-	}
+    }
 
-
-	public Set<String> keySet() {
+    public Set<String> keySet() {
         readFully();
         return cache.keySet();
-	}
+    }
 
-	public int size() {
+    public int size() {
         readFully();
         return cache.size();
-	}
+    }
 
-	public boolean isEmpty() {
+    public boolean isEmpty() {
         return size() == 0;
-	}
+    }
 
-	public Collection<Object> values() {
+    public Collection<Object> values() {
         readFully();
         return cache.values();
-	}
-	
+    }
+
     protected Object read(String key) {
 
         // if the item has been completely read, we need not check
@@ -135,14 +139,14 @@ public class AuthorizableValueMap implements ValueMap {
         }
 
         if (hiddenProperties.contains(key)) {
-        	return null;
+            return null;
         }
-        
+
         try {
             if (authorizable.hasProperty(key)) {
                 Value[] property = authorizable.getProperty(key);
                 Object value = valuesToJavaObject(property);
-            	cache.put(key, value);
+                cache.put(key, value);
                 return value;
             }
         } catch (RepositoryException re) {
@@ -152,37 +156,38 @@ public class AuthorizableValueMap implements ValueMap {
         // property not found or some error accessing it
         return null;
     }
-    
-    protected Object valuesToJavaObject(Value [] values) throws RepositoryException {
+
+    protected Object valuesToJavaObject(Value[] values)
+            throws RepositoryException {
         if (values == null) {
-        	return null;
+            return null;
         } else if (values.length == 1) {
-        	return JcrResourceUtil.toJavaObject(values[0]);
+            return JcrResourceUtil.toJavaObject(values[0]);
         } else {
-        	Object [] valuesObjs = new Object[values.length];
-        	for (int i=0; i < values.length; i++) {
-        		valuesObjs[i] = JcrResourceUtil.toJavaObject(values[i]);
-        	}
-        	return valuesObjs;
+            Object[] valuesObjs = new Object[values.length];
+            for (int i = 0; i < values.length; i++) {
+                valuesObjs[i] = JcrResourceUtil.toJavaObject(values[i]);
+            }
+            return valuesObjs;
         }
     }
-	
+
     @SuppressWarnings("unchecked")
-	protected void readFully() {
+    protected void readFully() {
         if (!fullyRead) {
             try {
                 Iterator pi = authorizable.getPropertyNames();
                 while (pi.hasNext()) {
-                    String key = (String)pi.next();
+                    String key = (String) pi.next();
 
                     if (hiddenProperties.contains(key)) {
-                    	continue; //skip it.
+                        continue; // skip it.
                     }
 
                     if (!cache.containsKey(key)) {
-	                    Value[] property = authorizable.getProperty(key);
-	                    Object value = valuesToJavaObject(property);
-                    	cache.put(key, value);
+                        Value[] property = authorizable.getProperty(key);
+                        Object value = valuesToJavaObject(property);
+                        cache.put(key, value);
                     }
                 }
                 fullyRead = true;
@@ -191,24 +196,25 @@ public class AuthorizableValueMap implements ValueMap {
             }
         }
     }
-	
-    // ---------- Unsupported Modification methods
-	
-	public Object remove(Object arg0) {
-        throw new UnsupportedOperationException();
-	}
-	public void clear() {
-        throw new UnsupportedOperationException();
-	}
-	public Object put(String arg0, Object arg1) {
-        throw new UnsupportedOperationException();
-	}
 
-	public void putAll(Map<? extends String, ? extends Object> arg0) {
+    // ---------- Unsupported Modification methods
+
+    public Object remove(Object arg0) {
         throw new UnsupportedOperationException();
-	}	
-	
-	
+    }
+
+    public void clear() {
+        throw new UnsupportedOperationException();
+    }
+
+    public Object put(String arg0, Object arg1) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void putAll(Map<? extends String, ? extends Object> arg0) {
+        throw new UnsupportedOperationException();
+    }
+
     // ---------- Implementation helper
 
     @SuppressWarnings("unchecked")
@@ -220,9 +226,9 @@ public class AuthorizableValueMap implements ValueMap {
                 Value[] values = authorizable.getProperty(name);
 
                 if (values == null) {
-                	return null;
+                    return null;
                 }
-                
+
                 boolean multiValue = values.length > 1;
                 boolean array = type.isArray();
 
@@ -236,8 +242,8 @@ public class AuthorizableValueMap implements ValueMap {
                 } else {
                     Value value = values[0];
                     if (array) {
-                        result = (T) convertToArray(
-                            new Value[] { value }, type.getComponentType());
+                        result = (T) convertToArray(new Value[] { value },
+                            type.getComponentType());
                     } else {
                         result = convertToType(-1, value, type);
                     }
@@ -254,26 +260,26 @@ public class AuthorizableValueMap implements ValueMap {
         // fall back to nothing
         return result;
     }
-	
+
     private <T> T[] convertToArray(Value[] jcrValues, Class<T> type)
-    	throws ValueFormatException, RepositoryException {
-    	List<T> values = new ArrayList<T>();
-    	for (int i = 0; i < jcrValues.length; i++) {
-    		T value = convertToType(i, jcrValues[i], type);
-    		if (value != null) {
-    			values.add(value);
-    		}
-    	}
+            throws ValueFormatException, RepositoryException {
+        List<T> values = new ArrayList<T>();
+        for (int i = 0; i < jcrValues.length; i++) {
+            T value = convertToType(i, jcrValues[i], type);
+            if (value != null) {
+                values.add(value);
+            }
+        }
 
-    	@SuppressWarnings("unchecked")
-    	T[] result = (T[]) Array.newInstance(type, values.size());
+        @SuppressWarnings("unchecked")
+        T[] result = (T[]) Array.newInstance(type, values.size());
 
-    	return values.toArray(result);
+        return values.toArray(result);
     }
-    
+
     @SuppressWarnings("unchecked")
-    private <T> T convertToType(int index, Value jcrValue,
-            Class<T> type) throws ValueFormatException, RepositoryException {
+    private <T> T convertToType(int index, Value jcrValue, Class<T> type)
+            throws ValueFormatException, RepositoryException {
 
         if (String.class == type) {
             return (T) jcrValue.getString();
@@ -302,7 +308,7 @@ public class AuthorizableValueMap implements ValueMap {
         // fallback in case of unsupported type
         return null;
     }
-    
+
     private Class<?> normalizeClass(Class<?> type) {
         if (Calendar.class.isAssignableFrom(type)) {
             type = Calendar.class;
@@ -315,5 +321,5 @@ public class AuthorizableValueMap implements ValueMap {
         }
         return type;
     }
-	
+
 }

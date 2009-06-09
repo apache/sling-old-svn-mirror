@@ -26,30 +26,34 @@ import org.osgi.service.component.ComponentContext;
 /**
  * Base class for servlets manipulating users
  */
-public abstract class AbstractUserPostServlet extends AbstractAuthorizablePostServlet {
-	private static final long serialVersionUID = -8401210711297654453L;
+public abstract class AbstractUserPostServlet extends
+        AbstractAuthorizablePostServlet {
+    private static final long serialVersionUID = -8401210711297654453L;
 
-	/**
+    /**
      * To be used for the encryption. E.g. for passwords in
-     * {@link javax.jcr.SimpleCredentials#getPassword()}  SimpleCredentials} 
+     * {@link javax.jcr.SimpleCredentials#getPassword()} SimpleCredentials}
+     * 
      * @scr.property valueRef="DEFAULT_PASSWORD_DIGEST_ALGORITHM"
      */
     private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
+
     private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
+
     private String passwordDigestAlgoritm = null;
 
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
         super.activate(context);
-        
+
         Dictionary<?, ?> props = context.getProperties();
 
         Object propValue = props.get(PROP_PASSWORD_DIGEST_ALGORITHM);
         if (propValue instanceof String) {
-        	passwordDigestAlgoritm = (String)propValue;
+            passwordDigestAlgoritm = (String) propValue;
         } else {
-        	passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
+            passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
         }
     }
 
@@ -57,7 +61,7 @@ public abstract class AbstractUserPostServlet extends AbstractAuthorizablePostSe
         super.deactivate(context);
         passwordDigestAlgoritm = null;
     }
-    
+
     /**
      * Digest the given password using the configured digest algorithm
      * 
@@ -69,7 +73,8 @@ public abstract class AbstractUserPostServlet extends AbstractAuthorizablePostSe
         try {
             StringBuffer password = new StringBuffer();
             password.append("{").append(passwordDigestAlgoritm).append("}");
-            password.append(Text.digest(passwordDigestAlgoritm, pwd.getBytes("UTF-8")));
+            password.append(Text.digest(passwordDigestAlgoritm,
+                pwd.getBytes("UTF-8")));
             return password.toString();
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalArgumentException(e.toString());
@@ -77,5 +82,5 @@ public abstract class AbstractUserPostServlet extends AbstractAuthorizablePostSe
             throw new IllegalArgumentException(e.toString());
         }
     }
-    
+
 }

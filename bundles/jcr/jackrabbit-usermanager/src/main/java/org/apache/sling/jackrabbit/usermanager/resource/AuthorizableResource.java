@@ -16,7 +16,6 @@
  */
 package org.apache.sling.jackrabbit.usermanager.resource;
 
-
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -29,91 +28,102 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 
 /**
- * Resource implementation for Authorizable 
+ * Resource implementation for Authorizable
  */
 public class AuthorizableResource extends SlingAdaptable implements Resource {
-	private Authorizable authorizable = null;
-	private ResourceResolver resourceResolver = null;
-    private final String path;
-    private final String resourceType;
-    private final ResourceMetadata metadata;
-	
-	public AuthorizableResource(Authorizable authorizable,
-			ResourceResolver resourceResolver, String path) {
-		super();
+    private Authorizable authorizable = null;
 
-		this.resourceResolver = resourceResolver;
+    private ResourceResolver resourceResolver = null;
+
+    private final String path;
+
+    private final String resourceType;
+
+    private final ResourceMetadata metadata;
+
+    public AuthorizableResource(Authorizable authorizable,
+            ResourceResolver resourceResolver, String path) {
+        super();
+
+        this.resourceResolver = resourceResolver;
         this.authorizable = authorizable;
         this.path = path;
         if (authorizable.isGroup()) {
-        	this.resourceType = "sling:group";
+            this.resourceType = "sling:group";
         } else {
-        	this.resourceType = "sling:user";
+            this.resourceType = "sling:user";
         }
 
         this.metadata = new ResourceMetadata();
         metadata.setResolutionPath(path);
-	}
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.resource.Resource#getPath()
-	 */
-	public String getPath() {
-		return path;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
-	 */
-	public ResourceMetadata getResourceMetadata() {
-		return metadata;
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.api.resource.Resource#getPath()
+     */
+    public String getPath() {
+        return path;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.resource.Resource#getResourceResolver()
-	 */
-	public ResourceResolver getResourceResolver() {
-		return resourceResolver;
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+     */
+    public ResourceMetadata getResourceMetadata() {
+        return metadata;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
-	 */
-	public String getResourceSuperType() {
-		return null;
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+     */
+    public ResourceResolver getResourceResolver() {
+        return resourceResolver;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.resource.Resource#getResourceType()
-	 */
-	public String getResourceType() {
-		return resourceType;
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+     */
+    public String getResourceSuperType() {
+        return null;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
-	 */
-	@SuppressWarnings("unchecked")
-	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-		if (type == Map.class || type == ValueMap.class) {
-			return (AdapterType) new AuthorizableValueMap(authorizable); // unchecked cast
-		} else if (type == Authorizable.class) {
-			return (AdapterType)authorizable;
-		}
-		
-		return super.adaptTo(type);
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.api.resource.Resource#getResourceType()
+     */
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type == Map.class || type == ValueMap.class) {
+            return (AdapterType) new AuthorizableValueMap(authorizable); // unchecked
+                                                                         // cast
+        } else if (type == Authorizable.class) {
+            return (AdapterType) authorizable;
+        }
+
+        return super.adaptTo(type);
+    }
 
     public String toString() {
         String id = null;
         if (authorizable != null) {
             try {
-				id = authorizable.getID();
-			} catch (RepositoryException e) {
-				//ignore it.
-			}
+                id = authorizable.getID();
+            } catch (RepositoryException e) {
+                // ignore it.
+            }
         }
-        return getClass().getSimpleName() + ", id=" + id
-            + ", path=" + getPath();
+        return getClass().getSimpleName() + ", id=" + id + ", path="
+            + getPath();
     }
 }

@@ -31,55 +31,61 @@ import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating a group in the 
- * jackrabbit UserManager.
+ * Sling Post Operation implementation for updating a group in the jackrabbit
+ * UserManager.
  * 
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" values="sling/group"
- * @scr.property name="sling.servlet.methods" value="POST" 
- * @scr.property name="sling.servlet.selectors" value="update" 
+ * @scr.property name="sling.servlet.methods" value="POST"
+ * @scr.property name="sling.servlet.selectors" value="update"
  */
 public class UpdateGroupServlet extends AbstractGroupPostServlet {
-	private static final long serialVersionUID = -8292054361992488797L;
+    private static final long serialVersionUID = -8292054361992488797L;
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
-	 */
-	@Override
-	protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse htmlResponse, List<Modification> changes)
-			throws RepositoryException {
-		Authorizable authorizable = null;
-		Resource resource = request.getResource();
-		if (resource != null) {
-			authorizable = resource.adaptTo(Authorizable.class);
-		}
-		
-		//check that the group was located.
-		if (authorizable == null) {
-			throw new ResourceNotFoundException("Group to update could not be determined");
-		}
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet
+     * #handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+     * org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+     */
+    @Override
+    protected void handleOperation(SlingHttpServletRequest request,
+            HtmlResponse htmlResponse, List<Modification> changes)
+            throws RepositoryException {
+        Authorizable authorizable = null;
+        Resource resource = request.getResource();
+        if (resource != null) {
+            authorizable = resource.adaptTo(Authorizable.class);
+        }
 
-		Session session = request.getResourceResolver().adaptTo(Session.class);
-		if (session == null) {
-			throw new RepositoryException("JCR Session not found");
-		}
+        // check that the group was located.
+        if (authorizable == null) {
+            throw new ResourceNotFoundException(
+                "Group to update could not be determined");
+        }
 
-		Map<String, RequestProperty> reqProperties = collectContent(request, htmlResponse);
-		try {
-	        // cleanup any old content (@Delete parameters)
-	        processDeletes(authorizable, reqProperties, changes);
-				
-	        // write content from form
-	        writeContent(session, authorizable, reqProperties, changes);
-	        
-	        //update the group memberships
-			if (authorizable.isGroup()) {
-		        updateGroupMembership(request, authorizable, changes);
-			}
-		} catch (RepositoryException re) {
-			throw new RepositoryException("Failed to update group.", re);
-		}
-	}
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        if (session == null) {
+            throw new RepositoryException("JCR Session not found");
+        }
+
+        Map<String, RequestProperty> reqProperties = collectContent(request,
+            htmlResponse);
+        try {
+            // cleanup any old content (@Delete parameters)
+            processDeletes(authorizable, reqProperties, changes);
+
+            // write content from form
+            writeContent(session, authorizable, reqProperties, changes);
+
+            // update the group memberships
+            if (authorizable.isGroup()) {
+                updateGroupMembership(request, authorizable, changes);
+            }
+        } catch (RepositoryException re) {
+            throw new RepositoryException("Failed to update group.", re);
+        }
+    }
 }

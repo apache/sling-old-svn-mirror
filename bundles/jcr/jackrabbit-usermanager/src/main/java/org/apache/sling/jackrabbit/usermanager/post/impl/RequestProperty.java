@@ -21,10 +21,9 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * This is a copy of the class from 'org.apache.sling.servlets.post.impl.helper' which is not exported.
- * 
- * Encapsulates all infos from the respective request parameters that are needed
- * to create the repository property
+ * This is a copy of the class from 'org.apache.sling.servlets.post.impl.helper'
+ * which is not exported. Encapsulates all infos from the respective request
+ * parameters that are needed to create the repository property
  */
 public class RequestProperty {
 
@@ -74,7 +73,7 @@ public class RequestProperty {
     }
 
     public void setTypeHintValue(String typeHint) {
-        if ( typeHint != null && typeHint.endsWith("[]") ) {
+        if (typeHint != null && typeHint.endsWith("[]")) {
             this.typeHint = typeHint.substring(0, typeHint.length() - 2);
             this.hasMultiValueTypeHint = true;
         } else {
@@ -126,7 +125,7 @@ public class RequestProperty {
     /**
      * Checks if this property provides any values. this is the case if one of
      * the values is not empty or if the default handling is not 'ignore'
-     *
+     * 
      * @return <code>true</code> if this property provides values
      */
     public boolean providesValue() {
@@ -148,7 +147,7 @@ public class RequestProperty {
     /**
      * Returns the assembled string array out of the provided request values and
      * default values.
-     *
+     * 
      * @return a String array or <code>null</code> if the property needs to be
      *         removed.
      */
@@ -185,7 +184,7 @@ public class RequestProperty {
     /**
      * Specifies whether this property should be deleted before any new content
      * is to be set according to the values stored.
-     *
+     * 
      * @param isDelete <code>true</code> if the repository item described by
      *            this is to be deleted before any other operation.
      */
@@ -194,8 +193,8 @@ public class RequestProperty {
     }
 
     /**
-     * Returns <code>true</code> if the repository item described by this is
-     * to be deleted before setting new content to it.
+     * Returns <code>true</code> if the repository item described by this is to
+     * be deleted before setting new content to it.
      */
     public boolean isDelete() {
         return isDelete;
@@ -205,7 +204,7 @@ public class RequestProperty {
      * Sets the path of the repository item from which the content for this
      * property is to be copied or moved. The path may be relative in which case
      * it will be resolved relative to the absolute path of this property.
-     *
+     * 
      * @param sourcePath The path of the repository item to get the content from
      * @param isMove <code>true</code> if the source content is to be moved,
      *            otherwise the source content is copied from the repository
@@ -224,9 +223,9 @@ public class RequestProperty {
     }
 
     /**
-     * Returns <code>true</code> if the content of this property is to be set
-     * by moving content from another repository item.
-     *
+     * Returns <code>true</code> if the content of this property is to be set by
+     * moving content from another repository item.
+     * 
      * @see #getRepositorySource()
      */
     public boolean hasRepositoryMoveSource() {
@@ -234,9 +233,9 @@ public class RequestProperty {
     }
 
     /**
-     * Returns <code>true</code> if the content of this property is to be set
-     * by copying content from another repository item.
-     *
+     * Returns <code>true</code> if the content of this property is to be set by
+     * copying content from another repository item.
+     * 
      * @see #getRepositorySource()
      */
     public boolean hasRepositoryCopySource() {
@@ -246,7 +245,7 @@ public class RequestProperty {
     /**
      * Returns the absolute path of the repository item from which the content
      * for this property is to be copied or moved.
-     *
+     * 
      * @see #hasRepositoryCopySource()
      * @see #hasRepositoryMoveSource()
      * @see #setRepositorySource(String, boolean)

@@ -46,29 +46,31 @@ import org.slf4j.LoggerFactory;
  *                description="%createUser.post.operation.description"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/users"
- * @scr.property name="sling.servlet.methods" value="POST" 
- * @scr.property name="sling.servlet.selectors" value="create" 
+ * @scr.property name="sling.servlet.methods" value="POST"
+ * @scr.property name="sling.servlet.selectors" value="create"
  */
 public class CreateUserServlet extends AbstractUserPostServlet {
-	private static final long serialVersionUID = 6871481922737658675L;
+    private static final long serialVersionUID = 6871481922737658675L;
 
-	/**
+    /**
      * default log
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /** @scr.property label="%self.registration.enabled.name" 
-     * 					description="%self.registration.enabled.description" 
-     * 					valueRef="DEFAULT_SELF_REGISTRATION_ENABLED" 
+    /**
+     * @scr.property label="%self.registration.enabled.name"
+     *               description="%self.registration.enabled.description"
+     *               valueRef="DEFAULT_SELF_REGISTRATION_ENABLED"
      */
     private static final String PROP_SELF_REGISTRATION_ENABLED = "self.registration.enabled";
+
     private static final Boolean DEFAULT_SELF_REGISTRATION_ENABLED = Boolean.TRUE;
 
     private Boolean selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
 
     /**
      * The JCR Repository we access to resolve resources
-     *
+     * 
      * @scr.reference
      */
     private SlingRepository repository;
@@ -89,7 +91,7 @@ public class CreateUserServlet extends AbstractUserPostServlet {
      * Return the administrative session and close it.
      */
     private void ungetSession(final Session session) {
-        if ( session != null ) {
+        if (session != null) {
             try {
                 session.logout();
             } catch (Throwable t) {
@@ -102,83 +104,94 @@ public class CreateUserServlet extends AbstractUserPostServlet {
 
     /**
      * Activates this component.
-     *
+     * 
      * @param componentContext The OSGi <code>ComponentContext</code> of this
-     *      component.
+     *            component.
      */
     protected void activate(ComponentContext componentContext) {
-    	super.activate(componentContext);
+        super.activate(componentContext);
         Dictionary<?, ?> props = componentContext.getProperties();
         Object propValue = props.get(PROP_SELF_REGISTRATION_ENABLED);
         if (propValue instanceof String) {
-        	selfRegistrationEnabled = Boolean.parseBoolean((String)propValue);
+            selfRegistrationEnabled = Boolean.parseBoolean((String) propValue);
         } else {
-        	selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
+            selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
         }
     }
 
-    
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet
+     * #handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+     * org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+     */
+    @Override
+    protected void handleOperation(SlingHttpServletRequest request,
+            HtmlResponse response, List<Modification> changes)
+            throws RepositoryException {
+        // make sure user self-registration is enabled
+        if (!selfRegistrationEnabled) {
+            throw new RepositoryException(
+                "Sorry, registration of new users is not currently enabled.  Please try again later.");
+        }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
-	 */
-	@Override
-	protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse response, List<Modification> changes) throws RepositoryException {
-		//make sure user self-registration is enabled
-		if (!selfRegistrationEnabled) {
-			throw new RepositoryException("Sorry, registration of new users is not currently enabled.  Please try again later.");
-		}
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        if (session == null) {
+            throw new RepositoryException("JCR Session not found");
+        }
 
-		Session session = request.getResourceResolver().adaptTo(Session.class);
-		if (session == null) {
-			throw new RepositoryException("JCR Session not found");
-		}
-		
-		//check that the submitted parameter values have valid values.
-		String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-		if (principalName == null) {
-			throw new RepositoryException("User name was not submitted");
-		}
-		String pwd = request.getParameter("pwd");
-		if (pwd == null) {
-			throw new RepositoryException("Password was not submitted");
-		}
-		String pwdConfirm = request.getParameter("pwdConfirm");
-		if (!pwd.equals(pwdConfirm)) {
-			throw new RepositoryException("Password value does not match the confirmation password");
-		}
-		
-		Session selfRegSession = null;
-		try {
-			selfRegSession = getSession();
+        // check that the submitted parameter values have valid values.
+        String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
+        if (principalName == null) {
+            throw new RepositoryException("User name was not submitted");
+        }
+        String pwd = request.getParameter("pwd");
+        if (pwd == null) {
+            throw new RepositoryException("Password was not submitted");
+        }
+        String pwdConfirm = request.getParameter("pwdConfirm");
+        if (!pwd.equals(pwdConfirm)) {
+            throw new RepositoryException(
+                "Password value does not match the confirmation password");
+        }
 
-			UserManager userManager = AccessControlUtil.getUserManager(selfRegSession);
-			Authorizable authorizable = userManager.getAuthorizable(principalName);
-			
-			if (authorizable != null) {
-				//user already exists!
-				throw new RepositoryException("A principal already exists with the requested name: " + principalName);
-			} else {
-				Map<String, RequestProperty> reqProperties = collectContent(request, response);
+        Session selfRegSession = null;
+        try {
+            selfRegSession = getSession();
 
-				User user = userManager.createUser(principalName, digestPassword(pwd));
-				String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX + user.getID();
-				
-				response.setPath(userPath);
-				response.setLocation(externalizePath(request, userPath));
-				response.setParentLocation(externalizePath(request, AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));
-				changes.add(Modification.onCreated(userPath));
-				
-		        // write content from form
-		        writeContent(selfRegSession, user, reqProperties, changes);
-				
-				if (selfRegSession.hasPendingChanges()) {
-					selfRegSession.save();
-				}
-			}
-		} finally {
-			ungetSession(selfRegSession);
-		}
-	}
+            UserManager userManager = AccessControlUtil.getUserManager(selfRegSession);
+            Authorizable authorizable = userManager.getAuthorizable(principalName);
+
+            if (authorizable != null) {
+                // user already exists!
+                throw new RepositoryException(
+                    "A principal already exists with the requested name: "
+                        + principalName);
+            } else {
+                Map<String, RequestProperty> reqProperties = collectContent(
+                    request, response);
+
+                User user = userManager.createUser(principalName,
+                    digestPassword(pwd));
+                String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
+                    + user.getID();
+
+                response.setPath(userPath);
+                response.setLocation(externalizePath(request, userPath));
+                response.setParentLocation(externalizePath(request,
+                    AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));
+                changes.add(Modification.onCreated(userPath));
+
+                // write content from form
+                writeContent(selfRegSession, user, reqProperties, changes);
+
+                if (selfRegSession.hasPendingChanges()) {
+                    selfRegSession.save();
+                }
+            }
+        } finally {
+            ungetSession(selfRegSession);
+        }
+    }
 }

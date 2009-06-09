@@ -48,8 +48,9 @@ public class DateParser {
     private final List<DateFormat> formats = new LinkedList<DateFormat>();
 
     /**
-     * Registers a format string to the list of internally checked ones.
-     * Uses the {@link SimpleDateFormat}.
+     * Registers a format string to the list of internally checked ones. Uses
+     * the {@link SimpleDateFormat}.
+     * 
      * @param format format as in {@link SimpleDateFormat}
      * @throws IllegalArgumentException if the format is not valid.
      */
@@ -59,6 +60,7 @@ public class DateParser {
 
     /**
      * Registers a date format to the list of internally checked ones.
+     * 
      * @param format date format
      */
     public void register(DateFormat format) {
@@ -70,16 +72,17 @@ public class DateParser {
      * instance. If no format matches returns <code>null</code>.
      * <p/>
      * Note: method is synchronized because SimpleDateFormat is not.
-     *
+     * 
      * @param source date time source string
      * @return calendar representation of the source or <code>null</code>
      */
     public synchronized Calendar parse(String source) {
-        for (DateFormat fmt: formats) {
+        for (DateFormat fmt : formats) {
             try {
                 Date d = fmt.parse(source);
                 if (log.isDebugEnabled()) {
-                    log.debug("Parsed " + source + " using " + fmt + " into " + d);
+                    log.debug("Parsed " + source + " using " + fmt + " into "
+                        + d);
                 }
                 Calendar c = Calendar.getInstance();
                 c.setTime(d);
@@ -95,38 +98,38 @@ public class DateParser {
 
     /**
      * Parses the given source strings and returns the respective calendar
-     * instances. If no format matches for any of the sources
-     * returns <code>null</code>.
+     * instances. If no format matches for any of the sources returns
+     * <code>null</code>.
      * <p/>
      * Note: method is synchronized because SimpleDateFormat is not.
-     *
+     * 
      * @param sources date time source strings
      * @return calendar representations of the source or <code>null</code>
      */
     public synchronized Calendar[] parse(String sources[]) {
         Calendar ret[] = new Calendar[sources.length];
-        for (int i=0; i< sources.length; i++) {
+        for (int i = 0; i < sources.length; i++) {
             if ((ret[i] = parse(sources[i])) == null) {
                 return null;
             }
         }
         return ret;
     }
-    
+
     /**
      * Parses the given source strings and returns the respective jcr date value
-     * instances. If no format matches for any of the sources
-     * returns <code>null</code>.
+     * instances. If no format matches for any of the sources returns
+     * <code>null</code>.
      * <p/>
      * Note: method is synchronized because SimpleDateFormat is not.
-     *
+     * 
      * @param sources date time source strings
      * @param factory the value factory
      * @return jcr date value representations of the source or <code>null</code>
      */
     public synchronized Value[] parse(String sources[], ValueFactory factory) {
         Value ret[] = new Value[sources.length];
-        for (int i=0; i< sources.length; i++) {
+        for (int i = 0; i < sources.length; i++) {
             Calendar c = parse(sources[i]);
             if (c == null) {
                 return null;

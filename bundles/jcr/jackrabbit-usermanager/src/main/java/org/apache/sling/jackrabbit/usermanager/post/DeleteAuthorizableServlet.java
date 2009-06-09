@@ -33,34 +33,40 @@ import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * Sling Post Operation implementation for deleting one or more users and/or groups from the 
- * jackrabbit UserManager.
+ * Sling Post Operation implementation for deleting one or more users and/or
+ * groups from the jackrabbit UserManager.
  * 
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="sling.servlet.resourceTypes" values.0="sling/user" values.1="sling/group" values.2="sling/userManager"
- * @scr.property name="sling.servlet.methods" value="POST" 
- * @scr.property name="sling.servlet.selectors" value="delete" 
+ * @scr.property name="sling.servlet.resourceTypes" values.0="sling/user"
+ *               values.1="sling/group" values.2="sling/userManager"
+ * @scr.property name="sling.servlet.methods" value="POST"
+ * @scr.property name="sling.servlet.selectors" value="delete"
  */
 public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
-	private static final long serialVersionUID = 5874621724096106496L;
+    private static final long serialVersionUID = 5874621724096106496L;
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
-	 */
-	@Override
-	protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse htmlResponse, List<Modification> changes)
-			throws RepositoryException {
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet
+     * #handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+     * org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+     */
+    @Override
+    protected void handleOperation(SlingHttpServletRequest request,
+            HtmlResponse htmlResponse, List<Modification> changes)
+            throws RepositoryException {
 
         Iterator<Resource> res = getApplyToResources(request);
         if (res == null) {
             Resource resource = request.getResource();
             Authorizable item = resource.adaptTo(Authorizable.class);
             if (item == null) {
-  	            String msg = "Missing source " + resource.getPath() + " for delete";
-  	            htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND, msg);
-               	throw new ResourceNotFoundException(msg);
+                String msg = "Missing source " + resource.getPath()
+                    + " for delete";
+                htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND, msg);
+                throw new ResourceNotFoundException(msg);
             }
 
             item.remove();
@@ -75,17 +81,16 @@ public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
                 }
             }
         }
-	}
-	
-	
+    }
+
     /**
      * Returns an iterator on <code>Resource</code> instances addressed in the
      * {@link SlingPostConstants#RP_APPLY_TO} request parameter. If the request
-     * parameter is not set, <code>null</code> is returned. If the parameter
-     * is set with valid resources an empty iterator is returned. Any resources
+     * parameter is not set, <code>null</code> is returned. If the parameter is
+     * set with valid resources an empty iterator is returned. Any resources
      * addressed in the {@link SlingPostConstants#RP_APPLY_TO} parameter is
      * ignored.
-     *
+     * 
      * @param request The <code>SlingHttpServletRequest</code> object used to
      *            get the {@link SlingPostConstants#RP_APPLY_TO} parameter.
      * @return The iterator of resources listed in the parameter or
@@ -105,7 +110,9 @@ public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
     private static class ApplyToIterator implements Iterator<Resource> {
 
         private final ResourceResolver resolver;
+
         private final Resource baseResource;
+
         private final String[] paths;
 
         private int pathIndex;
@@ -155,5 +162,5 @@ public class DeleteAuthorizableServlet extends AbstractAuthorizablePostServlet {
             return null;
         }
     }
-	
+
 }
