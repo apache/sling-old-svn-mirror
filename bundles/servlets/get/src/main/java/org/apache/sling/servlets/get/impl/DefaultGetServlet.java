@@ -26,6 +26,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
- * 
+ *
  * @scr.component name="org.apache.sling.servlets.get.DefaultGetServlet"
  *                immediate="true" label="%servlet.get.name"
  *                description="%servlet.get.description"
@@ -156,17 +157,17 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
             setupServlet(rendererMap, PlainTextRendererServlet.EXT_TXT,
                 new PlainTextRendererServlet());
         }
-        
+
         if (enableJson) {
             setupServlet(rendererMap, JsonRendererServlet.EXT_JSON,
                 new JsonRendererServlet());
         }
-        
+
         if (enableXml) {
             setupServlet(rendererMap, XMLRendererServlet.EXT_XML,
                 new XMLRendererServlet());
         }
-        
+
         // use the servlet for rendering StreamRendererServlet.EXT_RES as the
         // streamer servlet
         streamerServlet = rendererMap.get(StreamRendererServlet.EXT_RES);
@@ -204,7 +205,7 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         // cannot handle the request for missing resources
         if (ResourceUtil.isNonExistingResource(request.getResource())) {
             throw new ResourceNotFoundException(
-                request.getResource().getPath(), "No Resource found");
+                request.getResource().getPath(), "No resource found");
         }
 
         Servlet rendererServlet;
@@ -218,7 +219,13 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
         // fail if we should not just stream or we cannot support the ext.
         if (rendererServlet == null) {
             request.getRequestProgressTracker().log(
-                "No Renderer for extension " + ext);
+                "No renderer for extension " + ext);
+            final boolean isIncluded = request.getAttribute(SlingConstants.ATTR_REQUEST_SERVLET) != null;
+            // if this is an included request, sendError() would fail
+            // as the response is already committed, in this case we throw an exception
+            if ( isIncluded ) {
+                throw new ServletException("No renderer found for extensions " + ext);
+            }
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
