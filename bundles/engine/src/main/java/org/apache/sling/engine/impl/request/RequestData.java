@@ -182,6 +182,10 @@ public class RequestData implements BufferProvider {
             servletResponse);
 
         this.requestProgressTracker = new SlingRequestProgressTracker();
+        this.requestProgressTracker.log(
+        		"Method=" +  this.slingRequest.getMethod()
+        		+ ", PathInfo=" + this.slingRequest.getPathInfo()
+        );
     }
 
     public Resource initResource(ResourceResolver resourceResolver) {

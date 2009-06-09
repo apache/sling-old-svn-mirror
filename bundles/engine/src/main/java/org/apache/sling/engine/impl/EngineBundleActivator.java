@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.engine.SlingSettingsService;
+import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -50,6 +51,7 @@ public class EngineBundleActivator implements BundleActivator {
         serviceRegistration = context.registerService(SlingSettingsService.class.getName(),
                                                       service,
                                                       props);
+        RequestHistoryConsolePlugin.initPlugin(context);
     }
 
     /**
@@ -60,5 +62,6 @@ public class EngineBundleActivator implements BundleActivator {
             serviceRegistration.unregister();
             serviceRegistration = null;
         }
+        RequestHistoryConsolePlugin.destroyPlugin();
     }
 }
