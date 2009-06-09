@@ -31,51 +31,57 @@ import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating a user in the 
- * jackrabbit UserManager.
+ * Sling Post Operation implementation for updating a user in the jackrabbit
+ * UserManager.
  * 
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
  * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
- * @scr.property name="sling.servlet.methods" value="POST" 
- * @scr.property name="sling.servlet.selectors" value="update" 
+ * @scr.property name="sling.servlet.methods" value="POST"
+ * @scr.property name="sling.servlet.selectors" value="update"
  */
 public class UpdateUserServlet extends AbstractUserPostServlet {
-	private static final long serialVersionUID = 5874621724096106496L;
+    private static final long serialVersionUID = 5874621724096106496L;
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet#handleOperation(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.servlets.HtmlResponse, java.util.List)
-	 */
-	@Override
-	protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse htmlResponse, List<Modification> changes)
-			throws RepositoryException {
-		Authorizable authorizable = null;
-		Resource resource = request.getResource();
-		if (resource != null) {
-			authorizable = resource.adaptTo(Authorizable.class);
-		}
-		
-		//check that the group was located.
-		if (authorizable == null) {
-			throw new ResourceNotFoundException("User to update could not be determined");
-		}
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.jackrabbit.usermanager.post.AbstractAuthorizablePostServlet
+     * #handleOperation(org.apache.sling.api.SlingHttpServletRequest,
+     * org.apache.sling.api.servlets.HtmlResponse, java.util.List)
+     */
+    @Override
+    protected void handleOperation(SlingHttpServletRequest request,
+            HtmlResponse htmlResponse, List<Modification> changes)
+            throws RepositoryException {
+        Authorizable authorizable = null;
+        Resource resource = request.getResource();
+        if (resource != null) {
+            authorizable = resource.adaptTo(Authorizable.class);
+        }
 
-		Session session = request.getResourceResolver().adaptTo(Session.class);
-		if (session == null) {
-			throw new RepositoryException("JCR Session not found");
-		}
+        // check that the group was located.
+        if (authorizable == null) {
+            throw new ResourceNotFoundException(
+                "User to update could not be determined");
+        }
 
-		Map<String, RequestProperty> reqProperties = collectContent(request, htmlResponse);
-		try {
-	        // cleanup any old content (@Delete parameters)
-	        processDeletes(authorizable, reqProperties, changes);
-				
-	        // write content from form
-	        writeContent(session, authorizable, reqProperties, changes);
+        Session session = request.getResourceResolver().adaptTo(Session.class);
+        if (session == null) {
+            throw new RepositoryException("JCR Session not found");
+        }
 
-		} catch (RepositoryException re) {
-			throw new RepositoryException("Failed to update user.", re);
-		}
-	}
+        Map<String, RequestProperty> reqProperties = collectContent(request,
+            htmlResponse);
+        try {
+            // cleanup any old content (@Delete parameters)
+            processDeletes(authorizable, reqProperties, changes);
+
+            // write content from form
+            writeContent(session, authorizable, reqProperties, changes);
+
+        } catch (RepositoryException re) {
+            throw new RepositoryException("Failed to update user.", re);
+        }
+    }
 }

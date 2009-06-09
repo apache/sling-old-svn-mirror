@@ -54,12 +54,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for all the POST servlets for the UserManager operations 
+ * Base class for all the POST servlets for the UserManager operations
  */
-public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsServlet {
-	private static final long serialVersionUID = -5918670409789895333L;
+public abstract class AbstractAuthorizablePostServlet extends
+        SlingAllMethodsServlet {
+    private static final long serialVersionUID = -5918670409789895333L;
 
-	/**
+    /**
      * default log
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -71,9 +72,9 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
      *               values.4="dd.MM.yyyy HH:mm:ss" values.5="dd.MM.yyyy"
      */
     private static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
-	
-	private DateParser dateParser;
-	
+
+    private DateParser dateParser;
+
     // ---------- SCR Integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
@@ -89,15 +90,18 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
     protected void deactivate(ComponentContext context) {
         dateParser = null;
     }
-	
-    
-	/* (non-Javadoc)
-	 * @see org.apache.sling.api.servlets.SlingAllMethodsServlet#doPost(org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
-	 */
-	@Override
-	protected void doPost(SlingHttpServletRequest request,
-			SlingHttpServletResponse httpResponse) throws ServletException,
-			IOException {
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.apache.sling.api.servlets.SlingAllMethodsServlet#doPost(org.apache
+     * .sling.api.SlingHttpServletRequest,
+     * org.apache.sling.api.SlingHttpServletResponse)
+     */
+    @Override
+    protected void doPost(SlingHttpServletRequest request,
+            SlingHttpServletResponse httpResponse) throws ServletException,
+            IOException {
         // prepare the response
         HtmlResponse htmlResponse = new HtmlResponse();
         htmlResponse.setReferer(request.getHeader("referer"));
@@ -112,30 +116,45 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
         // parent location
         path = ResourceUtil.getParent(path);
         if (path != null) {
-        	htmlResponse.setParentLocation(externalizePath(request, path));
+            htmlResponse.setParentLocation(externalizePath(request, path));
         }
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
         final List<Modification> changes = new ArrayList<Modification>();
-        
+
         try {
             handleOperation(request, htmlResponse, changes);
-            
-            //TODO: maybe handle SlingAuthorizablePostProcessor handlers here
-            
+
+            // TODO: maybe handle SlingAuthorizablePostProcessor handlers here
+
             // set changes on html response
-            for(Modification change : changes) {
-                switch ( change.getType() ) {
-                    case MODIFY : htmlResponse.onModified(change.getSource()); break;
-                    case DELETE : htmlResponse.onDeleted(change.getSource()); break;
-                    case MOVE :   htmlResponse.onMoved(change.getSource(), change.getDestination()); break;
-                    case COPY :   htmlResponse.onCopied(change.getSource(), change.getDestination()); break;
-                    case CREATE : htmlResponse.onCreated(change.getSource()); break;
-                    case ORDER : htmlResponse.onChange("ordered", change.getSource(), change.getDestination()); break;
+            for (Modification change : changes) {
+                switch (change.getType()) {
+                    case MODIFY:
+                        htmlResponse.onModified(change.getSource());
+                        break;
+                    case DELETE:
+                        htmlResponse.onDeleted(change.getSource());
+                        break;
+                    case MOVE:
+                        htmlResponse.onMoved(change.getSource(),
+                            change.getDestination());
+                        break;
+                    case COPY:
+                        htmlResponse.onCopied(change.getSource(),
+                            change.getDestination());
+                        break;
+                    case CREATE:
+                        htmlResponse.onCreated(change.getSource());
+                        break;
+                    case ORDER:
+                        htmlResponse.onChange("ordered", change.getSource(),
+                            change.getDestination());
+                        break;
                 }
             }
-            
+
             if (session.hasPendingChanges()) {
                 session.save();
             }
@@ -157,7 +176,7 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
                     e.getMessage(), e);
             }
         }
-        
+
         // check for redirect URL if processing succeeded
         if (htmlResponse.isSuccessful()) {
             String redirect = getRedirectUrl(request, htmlResponse);
@@ -169,22 +188,22 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
 
         // create a html response and send if unsuccessful or no redirect
         htmlResponse.send(httpResponse, isSetStatus(request));
-	}
+    }
 
-	/**
-	 * Extending Servlet should implement this operation to do the work
-	 * 
-	 * @param request the sling http request to process
-	 * @param htmlResponse the response 
-	 * @param changes 
-	 */
-	abstract protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse htmlResponse, List<Modification> changes) throws RepositoryException;
-	
-	
+    /**
+     * Extending Servlet should implement this operation to do the work
+     * 
+     * @param request the sling http request to process
+     * @param htmlResponse the response
+     * @param changes
+     */
+    abstract protected void handleOperation(SlingHttpServletRequest request,
+            HtmlResponse htmlResponse, List<Modification> changes)
+            throws RepositoryException;
+
     /**
      * compute redirect URL (SLING-126)
-     *
+     * 
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
@@ -255,17 +274,15 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
             SlingPostConstants.RP_STATUS);
         return true;
     }
-	
-    
-    
-    // ------ The methods below are based on the private methods from the ModifyOperation class -----
-    
+
+    // ------ The methods below are based on the private methods from the
+    // ModifyOperation class -----
+
     /**
      * Collects the properties that form the content to be written back to the
-     * repository. 
+     * repository. NOTE: In the returned map, the key is the property name not a
+     * path.
      * 
-     * NOTE: In the returned map, the key is the property name not a path.
-     *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
@@ -295,13 +312,14 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
             // ensure the paramName is an absolute property name
             String propPath;
             if (paramName.startsWith("./")) {
-            	propPath = paramName.substring(2);
+                propPath = paramName.substring(2);
             } else {
-            	propPath = paramName;
+                propPath = paramName;
             }
             if (propPath.indexOf('/') != -1) {
-            	//only one path segment is valid here, so this paramter can't be used.
-            	continue; //skip it.
+                // only one path segment is valid here, so this paramter can't
+                // be used.
+                continue; // skip it.
             }
 
             // @TypeHint example
@@ -374,7 +392,7 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
             // causes the JCR Text property to be set by moving the /tmp/path
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_MOVE_FROM)) {
-            	//don't support @MoveFrom here
+                // don't support @MoveFrom here
                 continue;
             }
 
@@ -384,7 +402,7 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
             // causes the JCR Text property to be set by copying the /tmp/path
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_COPY_FROM)) {
-            	//don't support @CopyFrom here
+                // don't support @CopyFrom here
                 continue;
             }
 
@@ -396,13 +414,12 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
 
         return reqProperties;
     }
-	
-	
+
     /**
      * Returns the request property for the given property path. If such a
      * request property does not exist yet it is created and stored in the
      * <code>props</code>.
-     *
+     * 
      * @param props The map of already seen request properties.
      * @param paramName The absolute path of the property including the
      *            <code>suffix</code> to be looked up.
@@ -425,14 +442,14 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
 
         return prop;
     }
-    
-    
+
     /**
      * Removes all properties listed as {@link RequestProperty#isDelete()} from
      * the authorizable.
-     *
-     * @param authorizable The <code>org.apache.jackrabbit.api.security.user.Authorizable</code> 
-     * 				that should have properties deleted.
+     * 
+     * @param authorizable The
+     *            <code>org.apache.jackrabbit.api.security.user.Authorizable</code>
+     *            that should have properties deleted.
      * @param reqProperties The map of request properties to check for
      *            properties to be removed.
      * @param response The <code>HtmlResponse</code> to be updated with
@@ -440,30 +457,29 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
      * @throws RepositoryException Is thrown if an error occurrs checking or
      *             removing properties.
      */
-    protected void processDeletes(Authorizable resource, 
+    protected void processDeletes(Authorizable resource,
             Map<String, RequestProperty> reqProperties,
             List<Modification> changes) throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.isDelete()) {
-            	if (resource.hasProperty(property.getName())) {
-            		resource.removeProperty(property.getName());
+                if (resource.hasProperty(property.getName())) {
+                    resource.removeProperty(property.getName());
                     changes.add(Modification.onDeleted(property.getPath()));
-            	}
+                }
             }
         }
     }
 
-    
     /**
      * Writes back the content
-     *
+     * 
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
     protected void writeContent(Session session, Authorizable authorizable,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes)
-            throws RepositoryException {
+            Map<String, RequestProperty> reqProperties,
+            List<Modification> changes) throws RepositoryException {
 
         for (RequestProperty prop : reqProperties.values()) {
             if (prop.hasValues()) {
@@ -474,45 +490,47 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
                 }
                 if (authorizable.isGroup()) {
                     if (prop.getName().equals("groupId")) {
-                    	//skip these
-                    	continue;
-                	}                	
+                        // skip these
+                        continue;
+                    }
                 } else {
-                    if (prop.getName().equals("userId") ||
-                    		prop.getName().equals("pwd") ||
-                    		prop.getName().equals("pwdConfirm")) {
-                    	//skip these
-                    	continue;
+                    if (prop.getName().equals("userId")
+                        || prop.getName().equals("pwd")
+                        || prop.getName().equals("pwdConfirm")) {
+                        // skip these
+                        continue;
                     }
                 }
                 if (prop.isFileUpload()) {
-                	//don't handle files for user properties for now.
-                	continue;
-                    //uploadHandler.setFile(parent, prop, changes);
+                    // don't handle files for user properties for now.
+                    continue;
+                    // uploadHandler.setFile(parent, prop, changes);
                 } else {
-                	setPropertyAsIs(session, authorizable, prop, changes);
+                    setPropertyAsIs(session, authorizable, prop, changes);
                 }
             }
         }
     }
-    
+
     /**
      * set property without processing, except for type hints
-     *
+     * 
      * @param parent the parent node
      * @param prop the request property
      * @throws RepositoryException if a repository error occurs.
      */
-    private void setPropertyAsIs(Session session, Authorizable parent, RequestProperty prop, List<Modification> changes)
+    private void setPropertyAsIs(Session session, Authorizable parent,
+            RequestProperty prop, List<Modification> changes)
             throws RepositoryException {
 
-    	String parentPath;
-    	if (parent.isGroup()) {
-    		parentPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX + parent.getID();
-    	} else {
-    		parentPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX + parent.getID();
-    	}
-
+        String parentPath;
+        if (parent.isGroup()) {
+            parentPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
+                + parent.getID();
+        } else {
+            parentPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
+                + parent.getID();
+        }
 
         // no explicit typehint
         int type = PropertyType.UNDEFINED;
@@ -525,29 +543,29 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
         }
 
         String[] values = prop.getStringValues();
-		if (values == null) {
+        if (values == null) {
             // remove property
-	        boolean removedProp = removePropertyIfExists(parent, prop.getName());
-	        if (removedProp) {
-	            changes.add(Modification.onDeleted(
-	            		parentPath + "/" + prop.getName()
-	            ));
-	        }
+            boolean removedProp = removePropertyIfExists(parent, prop.getName());
+            if (removedProp) {
+                changes.add(Modification.onDeleted(parentPath + "/"
+                    + prop.getName()));
+            }
         } else if (values.length == 0) {
             // do not create new prop here, but clear existing
             if (parent.hasProperty(prop.getName())) {
-            	Value val = session.getValueFactory().createValue("");
-            	parent.setProperty(prop.getName(), val);
-                changes.add(Modification.onModified(
-                	parentPath + "/" + prop.getName()
-                ));
+                Value val = session.getValueFactory().createValue("");
+                parent.setProperty(prop.getName(), val);
+                changes.add(Modification.onModified(parentPath + "/"
+                    + prop.getName()));
             }
         } else if (values.length == 1) {
             boolean removedProp = removePropertyIfExists(parent, prop.getName());
-            // if the provided value is the empty string, we don't have to do anything.
-            if ( values[0].length() == 0 ) {
-                if ( removedProp ) {
-                    changes.add(Modification.onDeleted(parentPath + "/" + prop.getName()));
+            // if the provided value is the empty string, we don't have to do
+            // anything.
+            if (values[0].length() == 0) {
+                if (removedProp) {
+                    changes.add(Modification.onDeleted(parentPath + "/"
+                        + prop.getName()));
                 }
             } else {
                 // modify property
@@ -555,38 +573,41 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
                     // try conversion
                     Calendar c = dateParser.parse(values[0]);
                     if (c != null) {
-                        if ( prop.hasMultiValueTypeHint() ) {
+                        if (prop.hasMultiValueTypeHint()) {
                             final Value[] array = new Value[1];
                             array[0] = session.getValueFactory().createValue(c);
                             parent.setProperty(prop.getName(), array);
-                            changes.add(Modification.onModified(
-                                parentPath + "/" + prop.getName()
-                            ));
+                            changes.add(Modification.onModified(parentPath
+                                + "/" + prop.getName()));
                         } else {
-                        	Value cVal = session.getValueFactory().createValue(c);
-                        	parent.setProperty(prop.getName(), cVal);
-                            changes.add(Modification.onModified(
-                                    parentPath + "/" + prop.getName()
-                                ));
+                            Value cVal = session.getValueFactory().createValue(
+                                c);
+                            parent.setProperty(prop.getName(), cVal);
+                            changes.add(Modification.onModified(parentPath
+                                + "/" + prop.getName()));
                         }
                         return;
                     }
                     // fall back to default behaviour
                 }
-                if ( type == PropertyType.UNDEFINED ) {
-                	Value val = session.getValueFactory().createValue(values[0], PropertyType.STRING);
-                	parent.setProperty(prop.getName(), val);
+                if (type == PropertyType.UNDEFINED) {
+                    Value val = session.getValueFactory().createValue(
+                        values[0], PropertyType.STRING);
+                    parent.setProperty(prop.getName(), val);
                 } else {
-                    if ( prop.hasMultiValueTypeHint() ) {
+                    if (prop.hasMultiValueTypeHint()) {
                         final Value[] array = new Value[1];
-                        array[0] = session.getValueFactory().createValue(values[0], type);
+                        array[0] = session.getValueFactory().createValue(
+                            values[0], type);
                         parent.setProperty(prop.getName(), array);
                     } else {
-                    	Value val = session.getValueFactory().createValue(values[0], type);
+                        Value val = session.getValueFactory().createValue(
+                            values[0], type);
                         parent.setProperty(prop.getName(), val);
                     }
                 }
-                changes.add(Modification.onModified(parentPath + "/" + prop.getName()));
+                changes.add(Modification.onModified(parentPath + "/"
+                    + prop.getName()));
             }
         } else {
             removePropertyIfExists(parent, prop.getName());
@@ -595,51 +616,52 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
                 ValueFactory valFac = session.getValueFactory();
                 Value[] c = dateParser.parse(values, valFac);
                 if (c != null) {
-                	parent.setProperty(prop.getName(), c);
-                    changes.add(Modification.onModified(
-                    		parentPath + "/" + prop.getName()
-                    ));
+                    parent.setProperty(prop.getName(), c);
+                    changes.add(Modification.onModified(parentPath + "/"
+                        + prop.getName()));
                     return;
                 }
                 // fall back to default behaviour
             }
 
-            Value [] vals = new Value[values.length];
-            if ( type == PropertyType.UNDEFINED ) {
-            	for(int i=0; i < values.length; i++) {
-            		vals[i] = session.getValueFactory().createValue(values[i]);
-            	}
+            Value[] vals = new Value[values.length];
+            if (type == PropertyType.UNDEFINED) {
+                for (int i = 0; i < values.length; i++) {
+                    vals[i] = session.getValueFactory().createValue(values[i]);
+                }
             } else {
-            	for(int i=0; i < values.length; i++) {
-            		vals[i] = session.getValueFactory().createValue(values[i], type);
-            	}
+                for (int i = 0; i < values.length; i++) {
+                    vals[i] = session.getValueFactory().createValue(values[i],
+                        type);
+                }
             }
-        	parent.setProperty(prop.getName(), vals);
-            changes.add(Modification.onModified(parentPath + "/" + prop.getName()));
+            parent.setProperty(prop.getName(), vals);
+            changes.add(Modification.onModified(parentPath + "/"
+                + prop.getName()));
         }
-    
+
     }
 
     /**
      * Removes the property with the given name from the parent resource if it
      * exists.
-     *
+     * 
      * @param parent the parent resource
      * @param name the name of the property to remove
-     * @return path of the property that was removed or <code>null</code> if
-     *         it was not removed
+     * @return path of the property that was removed or <code>null</code> if it
+     *         was not removed
      * @throws RepositoryException if a repository error occurs.
      */
-	private boolean removePropertyIfExists(Authorizable resource, String name) throws RepositoryException {
-    	if (resource.getProperty(name) != null) {
-    		resource.removeProperty(name);
-    		return true;
-    	}
-    	return false;
-	}
+    private boolean removePropertyIfExists(Authorizable resource, String name)
+            throws RepositoryException {
+        if (resource.getProperty(name) != null) {
+            resource.removeProperty(name);
+            return true;
+        }
+        return false;
+    }
 
-	
-	// ------ These methods were copied from AbstractSlingPostOperation ------
+    // ------ These methods were copied from AbstractSlingPostOperation ------
 
     /**
      * Returns the path of the resource of the request as the item path.
@@ -654,7 +676,7 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
     /**
      * Returns an external form of the given path prepending the context path
      * and appending a display extension.
-     *
+     * 
      * @param path the path to externalize
      * @return the url
      */
@@ -675,20 +697,20 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
 
         return ret.toString();
     }
-	
+
     /**
-     * Returns <code>true</code> if the <code>name</code> starts with either
-     * of the prefixes
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>},
-     * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT <code>../</code>}
-     * and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE <code>/</code>}.
+     * Returns <code>true</code> if the <code>name</code> starts with either of
+     * the prefixes {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT
+     * <code>./</code>}, {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_PARENT
+     * <code>../</code>} and {@link SlingPostConstants#ITEM_PREFIX_ABSOLUTE
+     * <code>/</code>}.
      */
     protected boolean hasItemPathPrefix(String name) {
         return name.startsWith(SlingPostConstants.ITEM_PREFIX_ABSOLUTE)
             || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_CURRENT)
             || name.startsWith(SlingPostConstants.ITEM_PREFIX_RELATIVE_PARENT);
     }
-    
+
     /**
      * Returns true if any of the request parameters starts with
      * {@link SlingPostConstants#ITEM_PREFIX_RELATIVE_CURRENT <code>./</code>}.
@@ -713,5 +735,5 @@ public abstract class AbstractAuthorizablePostServlet extends SlingAllMethodsSer
 
         return requirePrefix;
     }
-    
+
 }
