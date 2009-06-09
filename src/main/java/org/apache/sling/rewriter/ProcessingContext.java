@@ -28,8 +28,14 @@ import org.apache.sling.api.SlingHttpServletResponse;
  */
 public interface ProcessingContext {
 
+    /**
+     * The current request.
+     */
     SlingHttpServletRequest getRequest();
 
+    /**
+     * The current response.
+     */
     SlingHttpServletResponse getResponse();
 
     /**

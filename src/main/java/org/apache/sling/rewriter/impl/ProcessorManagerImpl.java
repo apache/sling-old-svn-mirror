@@ -52,8 +52,8 @@ import org.slf4j.LoggerFactory;
 /**
  * This manager keeps track of configured processors.
  *
- * @scrs.component metatype="no"
- * @scrs.service interface="ProcessorManager"
+ * @scr.component metatype="no" abstract="true"
+ * @scr.service interface="ProcessorManager"
  */
 public class ProcessorManagerImpl implements ProcessorManager {
 

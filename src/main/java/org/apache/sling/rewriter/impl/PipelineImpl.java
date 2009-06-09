@@ -33,8 +33,9 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
- * Context for a pipeline invocation.
- * This contexts keeps track of the used pipeline components for later disposal.
+ * The <code>PipelineImpl</code> is the heart of the pipeline
+ * processing. It uses the configured pipeline components,
+ * assembles a pipeline and runs the pipeline.
  */
 public class PipelineImpl implements Processor {
 
@@ -55,7 +56,7 @@ public class PipelineImpl implements Processor {
     /**
      * Setup this pipeline.
      */
-    public PipelineImpl(final FactoryCache   factoryCache) {
+    public PipelineImpl(final FactoryCache factoryCache) {
         this.factoryCache = factoryCache;
     }
 

@@ -276,7 +276,7 @@ public class FactoryCache {
             }
             Object obj = super.addingService(reference);
             if ( obj == null && isGlobal ) {
-                obj = this.getService(reference);
+                obj = this.context.getService(reference);
             }
             return obj;
         }
