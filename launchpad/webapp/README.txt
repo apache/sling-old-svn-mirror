@@ -64,10 +64,10 @@ To create a node with curl:
 
 	 curl -D - -Ftitle=something http://admin:admin@localhost:8888/testing/this
 	 
-Then, http://admin:admin@localhost:8888/testing/this should display a default HTML
-representation, including the value of the "title" property.
+Then, http://admin:admin@localhost:8888/testing/this.html should display a default 
+HTML representation, including the value of the "title" property.
 
-Add a txt or json extension to see other output formats.
+Use a txt or json extension instead of html to see other output formats.
 
 For more info see the Sling website at http://incubator.apache.org/sling, and the
 "Sling in 15 minutes" tutorial 
