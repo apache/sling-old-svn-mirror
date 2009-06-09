@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jackrabbit.usermanager.post;
+package org.apache.sling.jackrabbit.usermanager.impl.post;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,9 +44,9 @@ import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.jackrabbit.usermanager.post.impl.DateParser;
-import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
-import org.apache.sling.jackrabbit.usermanager.resource.AuthorizableResourceProvider;
+import org.apache.sling.jackrabbit.usermanager.impl.helper.DateParser;
+import org.apache.sling.jackrabbit.usermanager.impl.helper.RequestProperty;
+import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.osgi.service.component.ComponentContext;

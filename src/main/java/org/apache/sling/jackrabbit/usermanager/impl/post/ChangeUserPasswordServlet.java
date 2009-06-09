@@ -14,34 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.jackrabbit.usermanager.post;
+package org.apache.sling.jackrabbit.usermanager.impl.post;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.jackrabbit.usermanager.post.impl.RequestProperty;
 import org.apache.sling.servlets.post.Modification;
 
 /**
- * Sling Post Operation implementation for updating a group in the jackrabbit
- * UserManager.
+ * Sling Post Operation implementation for updating the password of a user in
+ * the jackrabbit UserManager.
  * 
  * @scr.component metatype="no" immediate="true"
  * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="sling.servlet.resourceTypes" values="sling/group"
+ * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
  * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="update"
+ * @scr.property name="sling.servlet.selectors" value="changePassword"
  */
-public class UpdateGroupServlet extends AbstractGroupPostServlet {
-    private static final long serialVersionUID = -8292054361992488797L;
+public class ChangeUserPasswordServlet extends AbstractUserPostServlet {
+    private static final long serialVersionUID = 1923614318474654502L;
 
     /*
      * (non-Javadoc)
@@ -60,10 +60,15 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet {
             authorizable = resource.adaptTo(Authorizable.class);
         }
 
-        // check that the group was located.
-        if (authorizable == null) {
+        // check that the user was located.
+        if (authorizable == null || authorizable.isGroup()) {
             throw new ResourceNotFoundException(
-                "Group to update could not be determined");
+                "User to update could not be determined.");
+        }
+
+        if ("anonymous".equals(authorizable.getID())) {
+            throw new RepositoryException(
+                "Can not change the password of the anonymous user.");
         }
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
@@ -71,21 +76,38 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet {
             throw new RepositoryException("JCR Session not found");
         }
 
-        Map<String, RequestProperty> reqProperties = collectContent(request,
-            htmlResponse);
+        // check that the submitted parameter values have valid values.
+        String oldPwd = request.getParameter("oldPwd");
+        if (oldPwd == null || oldPwd.length() == 0) {
+            throw new RepositoryException("Old Password was not submitted");
+        }
+        String newPwd = request.getParameter("newPwd");
+        if (newPwd == null || newPwd.length() == 0) {
+            throw new RepositoryException("New Password was not submitted");
+        }
+        String newPwdConfirm = request.getParameter("newPwdConfirm");
+        if (!newPwd.equals(newPwdConfirm)) {
+            throw new RepositoryException(
+                "New Password does not match the confirmation password");
+        }
+
         try {
-            // cleanup any old content (@Delete parameters)
-            processDeletes(authorizable, reqProperties, changes);
-
-            // write content from form
-            writeContent(session, authorizable, reqProperties, changes);
-
-            // update the group memberships
-            if (authorizable.isGroup()) {
-                updateGroupMembership(request, authorizable, changes);
+            String digestedOldPwd = digestPassword(oldPwd);
+            Value[] pwdProperty = ((User) authorizable).getProperty("rep:password");
+            if (pwdProperty != null && pwdProperty.length > 0) {
+                String repPasswordValue = pwdProperty[0].getString();
+                if (!digestedOldPwd.equals(repPasswordValue)) {
+                    // submitted oldPwd value is not correct.
+                    throw new RepositoryException("Old Password does not match");
+                }
             }
+
+            ((User) authorizable).changePassword(digestPassword(newPwd));
+
+            changes.add(Modification.onModified(resource.getPath()
+                + "/rep:password"));
         } catch (RepositoryException re) {
-            throw new RepositoryException("Failed to update group.", re);
+            throw new RepositoryException("Failed to change user password.", re);
         }
     }
 }
