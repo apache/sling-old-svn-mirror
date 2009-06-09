@@ -45,6 +45,7 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
 
   public static final String LABEL = "requests";
   public static final String INDEX = "index";
+  public static final String CLEAR = "clear";
   private static RequestHistoryConsolePlugin instance;
   private ServiceRegistration serviceRegistration;
 
@@ -69,6 +70,13 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
     }
     requests[index] = r;
     lastRequestIndex = index;
+  }
+  
+  private synchronized void clear() {
+    for(int i=0; i < requests.length; i++) {
+      requests[i] = null;
+    }
+    lastRequestIndex = -1;
   }
 
   public static void initPlugin(BundleContext context) {
@@ -126,6 +134,13 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
   protected void renderContent(HttpServletRequest req, HttpServletResponse res)
       throws ServletException, IOException {
 
+    // If so requested, clear our data
+    if(req.getParameter(CLEAR) != null) {
+      clear();
+      res.sendRedirect(LABEL);
+      return;
+    }
+    
     // Select request to display
     int index = 0;
     final String tmp = req.getParameter(INDEX);
@@ -157,7 +172,9 @@ public class RequestHistoryConsolePlugin extends AbstractWebConsolePlugin {
     // Links to other requests
     pw.println("<thead>");
     pw.println("<tr class='content'>");
-    pw.println("<th colspan='2'class='content container'>Recent Requests</th>");
+    pw.println("<th colspan='2'class='content container'>Recent Requests");
+    pw.println(" (<a href='" + LABEL + "?clear=clear'>Clear</a>)");
+    pw.println("</th>");
     pw.println("</thead>");
     pw.println("<tbody>");
     pw.println("<tr class='content'><td>");
