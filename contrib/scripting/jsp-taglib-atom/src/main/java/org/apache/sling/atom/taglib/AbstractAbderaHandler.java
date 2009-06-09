@@ -18,18 +18,19 @@
  */
 package org.apache.sling.atom.taglib;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.abdera.Abdera;
-import org.apache.abdera.ext.media.MediaExtensionFactory;
-import org.apache.abdera.ext.opensearch.model.OpenSearchExtensionFactory;
-import org.apache.abdera.factory.Factory;
 import org.apache.abdera.model.Entry;
 import org.apache.abdera.model.Feed;
-import org.apache.abdera.parser.stax.FOMFactory;
 
 public class AbstractAbderaHandler extends BodyTagSupport {
+
+    public static final String ABDERA_ATTRIBUTE = "org.apache.abdera.Abdera";
 
     private static final long serialVersionUID = 1L;
 
@@ -37,42 +38,23 @@ public class AbstractAbderaHandler extends BodyTagSupport {
         super();
     }
 
-    protected Abdera getAbdera() {
-        final ServletRequest request = pageContext.getRequest();
-        return getAbdera(request);
+    protected Abdera getAbdera() throws JspException {
+        return getAbdera(pageContext);
     }
 
-    protected Abdera getAbdera(ServletRequest request) {
-        Abdera abdera;
-        if (request.getAttribute("abdera") != null
-            && (request.getAttribute("abdera") instanceof Abdera)) {
-            abdera = (Abdera) request.getAttribute("abdera");
-        } else {
+    protected Abdera getAbdera(PageContext pageContexxt) throws JspException {
+        ServletContext context = pageContext.getServletContext();
 
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            ClassLoader osgiClassloader = getClass().getClassLoader();
-
-            Thread.currentThread().setContextClassLoader(osgiClassloader);
-
-            abdera = new Abdera();
-            new FOMFactory();
-            Factory f = abdera.getFactory();
-            if (f instanceof FOMFactory) {
-                FOMFactory ff = (FOMFactory) f;
-                // I know this sucks, but due to the OSGi-fication Abdera does
-                // not pick up extension factories automatically.
-                ff.registerExtension(new MediaExtensionFactory());
-                ff.registerExtension(new OpenSearchExtensionFactory());
-            }
-
-            Thread.currentThread().setContextClassLoader(classLoader);
-
-            request.setAttribute("abdera", abdera);
+        Object obj = context.getAttribute(ABDERA_ATTRIBUTE);
+        if (obj instanceof Abdera) {
+            return (Abdera) obj;
         }
-        return abdera;
+
+        // fallback to failure !!
+        throw new JspException("Abdera not available");
     }
 
-    protected Feed getFeed(ServletRequest request) {
+    protected Feed getFeed(ServletRequest request) throws JspException {
         Feed feed;
         if (request.getAttribute("feed") != null
             && (request.getAttribute("feed") instanceof Feed)) {
@@ -84,7 +66,7 @@ public class AbstractAbderaHandler extends BodyTagSupport {
         return feed;
     }
 
-    protected Feed getFeed() {
+    protected Feed getFeed() throws JspException {
         final ServletRequest request = pageContext.getRequest();
         return getFeed(request);
     }

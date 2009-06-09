@@ -124,7 +124,7 @@ public class FeedTagHandler extends AbstractAbderaHandler {
     }
 
     @Override
-    public int doStartTag() {
+    public int doStartTag() throws JspException {
         final ServletRequest request = pageContext.getRequest();
         // create a feed
         Feed feed = getFeed(request);

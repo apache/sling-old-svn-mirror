@@ -54,7 +54,7 @@ public class EntryTagHandler extends AbstractAbderaHandler {
     }
 
     @Override
-    public int doStartTag() {
+    public int doStartTag() throws JspException {
         Entry entry = getFeed().addEntry();
 
         setEntry(entry);

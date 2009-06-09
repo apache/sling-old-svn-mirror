@@ -39,7 +39,7 @@ public class MediaGroupTagHandler extends AbstractAbderaHandler {
     }
 
     @Override
-    public int doStartTag() {
+    public int doStartTag() throws JspException {
         Entry entry = getEntry();
         // create the group element
 
