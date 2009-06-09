@@ -105,7 +105,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     public ResourceBundle getResourceBundle(Locale locale) {
         return null;
     }
-    
+
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         return null;
     }
@@ -338,4 +338,8 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     }
 
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
