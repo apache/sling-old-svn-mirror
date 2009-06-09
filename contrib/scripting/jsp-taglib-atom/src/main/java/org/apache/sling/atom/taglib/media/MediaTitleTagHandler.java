@@ -18,6 +18,7 @@
  */
 package org.apache.sling.atom.taglib.media;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
 import org.apache.abdera.ext.media.MediaConstants;
@@ -27,9 +28,7 @@ import org.apache.abdera.ext.media.MediaTitle;
 import org.apache.abdera.ext.media.MediaConstants.Type;
 import org.apache.abdera.model.Entry;
 import org.apache.abdera.model.Feed;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.atom.taglib.AbstractAbderaHandler;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 public class MediaTitleTagHandler extends AbstractAbderaHandler {
 
@@ -39,7 +38,7 @@ public class MediaTitleTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doEndTag() throws JspException {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
 
         MediaTitle title;
 

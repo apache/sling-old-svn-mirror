@@ -18,13 +18,12 @@
  */
 package org.apache.sling.atom.taglib.media;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
 import org.apache.abdera.ext.media.MediaConstants;
 import org.apache.abdera.model.Entry;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.atom.taglib.AbstractAbderaHandler;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 public class MediaGroupTagHandler extends AbstractAbderaHandler {
 
@@ -32,7 +31,7 @@ public class MediaGroupTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doEndTag() throws JspException {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         // clear out the group
         request.setAttribute("group", null);
 
@@ -46,7 +45,7 @@ public class MediaGroupTagHandler extends AbstractAbderaHandler {
 
         getAbdera().getConfiguration().getExtensionFactories();
         Object group = entry.addExtension(MediaConstants.GROUP);
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         request.setAttribute("group", group);
 
         return EVAL_BODY_INCLUDE;

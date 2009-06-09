@@ -18,6 +18,7 @@
  */
 package org.apache.sling.atom.taglib.media;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
 import org.apache.abdera.ext.media.MediaConstants;
@@ -26,9 +27,7 @@ import org.apache.abdera.ext.media.MediaGroup;
 import org.apache.abdera.ext.media.MediaConstants.Expression;
 import org.apache.abdera.ext.media.MediaConstants.Medium;
 import org.apache.abdera.model.Entry;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.atom.taglib.AbstractAbderaHandler;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 public class MediaContentTagHandler extends AbstractAbderaHandler {
 
@@ -62,7 +61,7 @@ public class MediaContentTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doEndTag() throws JspException {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         // clear out the group
         request.setAttribute("content", null);
 
@@ -71,7 +70,7 @@ public class MediaContentTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doStartTag() {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
 
         MediaContent content;
         if (request.getAttribute("group") instanceof MediaGroup) {

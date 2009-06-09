@@ -21,12 +21,11 @@ package org.apache.sling.atom.taglib;
 import java.io.IOException;
 import java.util.Date;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.jsp.JspException;
 
 import org.apache.abdera.model.Feed;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 public class FeedTagHandler extends AbstractAbderaHandler {
 
@@ -94,8 +93,8 @@ public class FeedTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doEndTag() throws JspException {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
-        final SlingHttpServletResponse response = TagUtil.getResponse(pageContext);
+        final ServletRequest request = pageContext.getRequest();
+        final ServletResponse response = pageContext.getResponse();
         // get the current feed
         Feed feed = getFeed(request);
 
@@ -126,7 +125,7 @@ public class FeedTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doStartTag() {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         // create a feed
         Feed feed = getFeed(request);
 

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.atom.taglib;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.abdera.Abdera;
@@ -27,8 +28,6 @@ import org.apache.abdera.factory.Factory;
 import org.apache.abdera.model.Entry;
 import org.apache.abdera.model.Feed;
 import org.apache.abdera.parser.stax.FOMFactory;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 public class AbstractAbderaHandler extends BodyTagSupport {
 
@@ -39,11 +38,11 @@ public class AbstractAbderaHandler extends BodyTagSupport {
     }
 
     protected Abdera getAbdera() {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         return getAbdera(request);
     }
 
-    protected Abdera getAbdera(SlingHttpServletRequest request) {
+    protected Abdera getAbdera(ServletRequest request) {
         Abdera abdera;
         if (request.getAttribute("abdera") != null
             && (request.getAttribute("abdera") instanceof Abdera)) {
@@ -73,7 +72,7 @@ public class AbstractAbderaHandler extends BodyTagSupport {
         return abdera;
     }
 
-    protected Feed getFeed(SlingHttpServletRequest request) {
+    protected Feed getFeed(ServletRequest request) {
         Feed feed;
         if (request.getAttribute("feed") != null
             && (request.getAttribute("feed") instanceof Feed)) {
@@ -86,12 +85,12 @@ public class AbstractAbderaHandler extends BodyTagSupport {
     }
 
     protected Feed getFeed() {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         return getFeed(request);
     }
 
     protected Entry getEntry() {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         if (request.getAttribute("entry") instanceof Entry) {
             return (Entry) request.getAttribute("entry");
         }
@@ -99,7 +98,7 @@ public class AbstractAbderaHandler extends BodyTagSupport {
     }
 
     protected void setEntry(Entry entry) {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
         request.setAttribute("entry", entry);
     }
 

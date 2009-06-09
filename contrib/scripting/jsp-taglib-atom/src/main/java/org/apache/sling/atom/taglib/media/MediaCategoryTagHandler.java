@@ -18,6 +18,7 @@
  */
 package org.apache.sling.atom.taglib.media;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.jsp.JspException;
 
 import org.apache.abdera.ext.media.MediaCategory;
@@ -26,9 +27,7 @@ import org.apache.abdera.ext.media.MediaContent;
 import org.apache.abdera.ext.media.MediaGroup;
 import org.apache.abdera.model.Entry;
 import org.apache.abdera.model.Feed;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.atom.taglib.AbstractAbderaHandler;
-import org.apache.sling.scripting.jsp.util.TagUtil;
 
 public class MediaCategoryTagHandler extends AbstractAbderaHandler {
 
@@ -40,7 +39,7 @@ public class MediaCategoryTagHandler extends AbstractAbderaHandler {
 
     @Override
     public int doEndTag() throws JspException {
-        final SlingHttpServletRequest request = TagUtil.getRequest(pageContext);
+        final ServletRequest request = pageContext.getRequest();
 
         MediaCategory category;
 
