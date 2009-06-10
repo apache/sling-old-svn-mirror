@@ -69,12 +69,12 @@ public class RewriterFilter implements Filter {
         final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) request;
         final SlingHttpServletResponse slingResponse = (SlingHttpServletResponse) response;
 
-        final RewriterResponse linkCheckerResponse =
+        final RewriterResponse rewriterResponse =
                 new RewriterResponse(slingRequest, slingResponse, this.pipelineManager);
         try {
-            chain.doFilter(request, linkCheckerResponse);
+            chain.doFilter(request, rewriterResponse);
         } finally {
-            linkCheckerResponse.finished();
+            rewriterResponse.finished();
         }
 	}
 }

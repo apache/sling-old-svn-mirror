@@ -26,15 +26,23 @@ import org.apache.sling.rewriter.ProcessingComponentConfiguration;
  */
 public class ProcessingComponentConfigurationImpl implements ProcessingComponentConfiguration {
 
-    /** For which paths should this pipeline be applied. */
-    private final String type;
-
-    private final Map<String, Object> configuration;
-
+    /** Empty configuration map. */
     public static final Map<String, Object> EMPTY_CONFIG = new HashMap<String, Object>();
 
+    /** Empty configuration. */
     public static final ProcessingComponentConfiguration EMPTY = new ProcessingComponentConfigurationImpl("<empty>", null);
 
+    /** The type of the component. */
+    private final String type;
+
+    /** The configuration map. */
+    private final Map<String, Object> configuration;
+
+    /**
+     * Create a new configuration.
+     * @param type The type of the component.
+     * @param config The configuration or null if no config is available.
+     */
     public ProcessingComponentConfigurationImpl(final String type, final Map<String, Object> config) {
         this.type = type;
         this.configuration = (config == null ? EMPTY_CONFIG : config);

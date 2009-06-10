@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
@@ -36,8 +35,7 @@ import org.xml.sax.ContentHandler;
  * This response is used to pass the output through the rewriter pipeline.
  */
 class RewriterResponse
-    extends SlingHttpServletResponseWrapper
-    implements Adaptable {
+    extends SlingHttpServletResponseWrapper {
 
     /** The current request. */
     private final SlingHttpServletRequest request;
@@ -175,6 +173,6 @@ class RewriterResponse
                 return object;
             }
         }
-        return null;
+        return super.adaptTo(type);
     }
 }
