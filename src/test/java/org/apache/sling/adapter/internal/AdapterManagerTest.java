@@ -18,60 +18,121 @@
  */
 package org.apache.sling.adapter.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.adapter.SlingAdaptable;
-import org.apache.sling.adapter.mock.MockBundle;
-import org.apache.sling.adapter.mock.MockComponentContext;
-import org.apache.sling.adapter.mock.MockServiceReference;
+import org.apache.sling.adapter.mock.MockAdapterFactory;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
-public class AdapterManagerTest extends TestCase {
+@RunWith(JMock.class)
+public class AdapterManagerTest {
 
     private AdapterManagerImpl am;
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        
+
+    protected final Mockery context = new JUnit4Mockery();
+
+    @org.junit.Before public void setUp() {
         am = new AdapterManagerImpl();
     }
-    
-    @Override
-    protected void tearDown() throws Exception {
+
+    @org.junit.After public void tearDown() {
         if (AdapterManagerImpl.getInstance() == am) {
             am.deactivate(null); // not correct, but argument unused
         }
-        
-        super.tearDown();
     }
-    
-    public void testUnitialized() {
+
+    /**
+     * Helper method to create a mock bundle
+     */
+    protected Bundle createBundle() {
+        final Bundle bundle = this.context.mock(Bundle.class);
+        this.context.checking(new Expectations() {{
+            allowing(bundle).getBundleId();
+            will(returnValue(1L));
+        }});
+        return bundle;
+    }
+
+    /**
+     * Helper method to create a mock component context
+     */
+    protected ComponentContext createComponentContext() {
+        final ComponentContext ctx = this.context.mock(ComponentContext.class);
+        this.context.checking(new Expectations() {{
+            allowing(ctx).locateService(with(any(String.class)), with(any(ServiceReference.class)));
+            will(returnValue(new MockAdapterFactory()));
+        }});
+        return ctx;
+    }
+
+    /**
+     * Helper method to create a mock service reference
+     */
+    protected ServiceReference createServiceReference() {
+        final Bundle bundle = this.createBundle();
+        final ServiceReference ref = this.context.mock(ServiceReference.class);
+        this.context.checking(new Expectations() {{
+            allowing(ref).getProperty(Constants.SERVICE_ID);
+            will(returnValue(1L));
+            allowing(ref).getProperty(AdapterFactory.ADAPTABLE_CLASSES);
+            will(returnValue(new String[]{ TestSlingAdaptable.class.getName() }));
+            allowing(ref).getProperty(AdapterFactory.ADAPTER_CLASSES);
+            will(returnValue(ITestAdapter.class.getName()));
+            allowing(ref).getBundle();
+            will(returnValue(bundle));
+        }});
+        return ref;
+    }
+
+    /**
+     * Helper method to create a mock service reference
+     */
+    protected ServiceReference createServiceReference2() {
+        final Bundle bundle = this.createBundle();
+        final ServiceReference ref = this.context.mock(ServiceReference.class);
+        this.context.checking(new Expectations() {{
+            allowing(ref).getProperty(Constants.SERVICE_ID);
+            will(returnValue(2L));
+            allowing(ref).getProperty(AdapterFactory.ADAPTABLE_CLASSES);
+            will(returnValue(new String[]{ TestSlingAdaptable2.class.getName() }));
+            allowing(ref).getProperty(AdapterFactory.ADAPTER_CLASSES);
+            will(returnValue(TestAdapter.class.getName()));
+            allowing(ref).getBundle();
+            will(returnValue(bundle));
+        }});
+        return ref;
+    }
+
+    @org.junit.Test public void testUnitialized() {
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
     }
 
-    public void testInitialized() {
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
+    @org.junit.Test public void testInitialized() {
+        am.activate(this.createComponentContext());
 
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
     }
 
-    public void testBindBeforeActivate() {
-        Bundle bundle = new MockBundle(1L);
-        MockServiceReference ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 1L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, ITestAdapter.class.getName());
+    @org.junit.Test public void testBindBeforeActivate() {
+        final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
         // no cache and no factories yet
@@ -79,9 +140,7 @@ public class AdapterManagerTest extends TestCase {
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
 
-        // this should register the factory
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
+        am.activate(this.createComponentContext());
 
         // expect the factory, but cache is empty
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
@@ -89,20 +148,15 @@ public class AdapterManagerTest extends TestCase {
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
     }
 
-    public void testBindAfterActivate() {
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
+    @org.junit.Test public void testBindAfterActivate() {
+        am.activate(this.createComponentContext());
 
         // no cache and no factories yet
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
 
-        Bundle bundle = new MockBundle(1L);
-        MockServiceReference ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 1L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, ITestAdapter.class.getName());
+        final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
         // expect the factory, but cache is empty
@@ -124,19 +178,13 @@ public class AdapterManagerTest extends TestCase {
         assertNull(f.get(TestSlingAdaptable2.class.getName()));
     }
 
-    public void testAdaptBase() {
-
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
+    @org.junit.Test public void testAdaptBase() {
+        am.activate(this.createComponentContext());
 
         TestSlingAdaptable data = new TestSlingAdaptable();
         assertNull("Expect no adapter", am.getAdapter(data, ITestAdapter.class));
 
-        Bundle bundle = new MockBundle(1L);
-        MockServiceReference ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 1L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, ITestAdapter.class.getName());
+        final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
         Object adapter = am.getAdapter(data, ITestAdapter.class);
@@ -144,19 +192,13 @@ public class AdapterManagerTest extends TestCase {
         assertTrue(adapter instanceof ITestAdapter);
     }
 
-    public void testAdaptExtended() {
-
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
+    @org.junit.Test public void testAdaptExtended() {
+        am.activate(this.createComponentContext());
 
         TestSlingAdaptable2 data = new TestSlingAdaptable2();
         assertNull("Expect no adapter", am.getAdapter(data, ITestAdapter.class));
 
-        Bundle bundle = new MockBundle(1L);
-        MockServiceReference ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 1L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, ITestAdapter.class.getName());
+        final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
         Object adapter = am.getAdapter(data, ITestAdapter.class);
@@ -164,49 +206,31 @@ public class AdapterManagerTest extends TestCase {
         assertTrue(adapter instanceof ITestAdapter);
     }
 
-    public void testAdaptBase2() {
-
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
+    @org.junit.Test public void testAdaptBase2() {
+        am.activate(this.createComponentContext());
 
         TestSlingAdaptable data = new TestSlingAdaptable();
         assertNull("Expect no adapter", am.getAdapter(data, ITestAdapter.class));
 
-        Bundle bundle = new MockBundle(1L);
-        MockServiceReference ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 1L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, ITestAdapter.class.getName());
+        final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
-        ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 2L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable2.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, TestAdapter.class.getName());
-        am.bindAdapterFactory(ref);
+        final ServiceReference ref2 = createServiceReference2();
+        am.bindAdapterFactory(ref2);
 
         Object adapter = am.getAdapter(data, ITestAdapter.class);
         assertNotNull(adapter);
         assertTrue(adapter instanceof ITestAdapter);
     }
 
-    public void testAdaptExtended2() {
+    @org.junit.Test public void testAdaptExtended2() {
+        am.activate(this.createComponentContext());
 
-        ComponentContext cc = new MockComponentContext();
-        am.activate(cc);
-
-        Bundle bundle = new MockBundle(1L);
-        MockServiceReference ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 1L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, ITestAdapter.class.getName());
+        final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
-        ref = new MockServiceReference(bundle);
-        ref.setProperty(Constants.SERVICE_ID, 2L);
-        ref.setProperty(AdapterFactory.ADAPTABLE_CLASSES, new String[]{ TestSlingAdaptable2.class.getName() });
-        ref.setProperty(AdapterFactory.ADAPTER_CLASSES, TestAdapter.class.getName());
-        am.bindAdapterFactory(ref);
+        final ServiceReference ref2 = createServiceReference2();
+        am.bindAdapterFactory(ref2);
 
         TestSlingAdaptable data = new TestSlingAdaptable();
         Object adapter = am.getAdapter(data, ITestAdapter.class);
