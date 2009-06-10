@@ -33,15 +33,20 @@ public class StopAndRestartTest extends JcrinstallTestBase {
 			installed.add(installClonedBundle(null, null));
 		}
 		
+    enableJcrinstallService(true);
 		assertActiveBundleCount("after adding bundles", 
 				activeBeforeTest + nBundles, defaultBundlesTimeout);
-		
+
+		// Bundles stay active if disabling jcrinstall,
+		// startlevel manipulations have been removed
 		enableJcrinstallService(false);
+		sleep(1000L);
 		
 		assertActiveBundleCount("after disabling jcrinstall", 
-				activeBeforeTest, defaultBundlesTimeout);
+				activeBeforeTest + nBundles, defaultBundlesTimeout);
 		
 		enableJcrinstallService(true);
+    sleep(1000L);
 		
 		assertActiveBundleCount("after re-enabling jcrinstall", 
 				activeBeforeTest + nBundles, defaultBundlesTimeout);

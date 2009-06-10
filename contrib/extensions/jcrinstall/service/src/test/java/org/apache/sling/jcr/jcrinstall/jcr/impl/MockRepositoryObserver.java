@@ -42,7 +42,6 @@ public class MockRepositoryObserver extends RepositoryObserver {
         osgiController = c;
         scanDelayMsec = 0;
         this.serviceDataFile = serviceDataFile;
-        startLevel = new MockStartLevel();
     }
     
     public void run() {

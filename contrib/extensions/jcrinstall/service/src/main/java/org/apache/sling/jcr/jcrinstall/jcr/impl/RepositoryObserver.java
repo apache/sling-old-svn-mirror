@@ -41,11 +41,8 @@ import org.apache.sling.jcr.jcrinstall.jcr.NodeConverter;
 import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.apache.sling.runmode.RunMode;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +64,7 @@ import org.slf4j.LoggerFactory;
  *      name="service.vendor" 
  *      value="The Apache Software Foundation"
  */
-public class RepositoryObserver implements Runnable, FrameworkListener, JcrInstallService {
+public class RepositoryObserver implements Runnable, JcrInstallService {
 
     private final SortedSet<WatchedFolder> folders = new TreeSet<WatchedFolder>();
     private RunModeRegexpFilter folderNameFilter;
@@ -87,12 +84,8 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     protected SlingRepository repository;
     
-    /** @scr.reference */
-    protected StartLevel startLevel;
-    
     private Session session;
     private File serviceDataFile;
-    private int startLevelToSetAtStartup;
     
     private final List<NodeConverter> converters = new ArrayList<NodeConverter>();
     
@@ -121,26 +114,6 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     protected void activate(ComponentContext context) throws Exception {
         componentContext = context;
 
-        // Context can be null in automated tests, to make them simpler
-        if(context != null) {
-            context.getBundleContext().addFrameworkListener(this);
-        }
-        
-        // Check start levels
-        if(context != null) {
-            final int myLevel = startLevel.getBundleStartLevel(context.getBundleContext().getBundle());
-            final int initialBundleStartLevel = startLevel.getInitialBundleStartLevel();
-            if(initialBundleStartLevel < myLevel) {
-                // Running at a lower start level than the bundles that we install
-                // allows us to stop them if the repository goes away (SLING-747)
-                log.warn(
-                        "The configured start level for installed bundles  ({})"
-                        + " should be higher than the jcrinstall start level ({})",
-                        initialBundleStartLevel, myLevel
-                );
-            }
-        }
-        
         // Call startup() if we already have a repository, else that will be called
         // by the bind method
         if(repository != null) {
@@ -202,16 +175,8 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
         
         // Handle initial uninstalls and installs
         observationCycleActive = true;
-        final int myStartLevel = startLevel.getStartLevel();
         handleInitialUninstalls();
         runOneCycle();
-        
-        // Restore start level if we brought it down due to the repository going away
-        if(startLevelToSetAtStartup > 0 && startLevelToSetAtStartup != myStartLevel) {
-            log.info("startup(): resetting start level to {}", startLevelToSetAtStartup);
-            startLevel.setStartLevel(startLevelToSetAtStartup);
-            startLevelToSetAtStartup = 0;
-        }
         
         // start queue processing
         final Thread t = new Thread(this, getClass().getSimpleName() + "_" + System.currentTimeMillis());
@@ -234,17 +199,13 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     
     protected void deactivate(ComponentContext context) {
         log.debug("deactivate()");
-        shutdown(false);
-        if(context != null) {
-            context.getBundleContext().removeFrameworkListener(this);
-        }
+        shutdown();
         activated = false;
         componentContext = null;
-        startLevelToSetAtStartup = 0;
     }
     
     /** Called at deactivation time, or when repository stops being available */
-    protected void shutdown(boolean allowStartLevelChange) {
+    protected void shutdown() {
         log.debug("shutdown()");
         
         observationCycleActive = false;
@@ -267,16 +228,8 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     	}
     	
     	listeners.clear();
-        folders.clear();
+    	folders.clear();
         
-        if(componentContext != null && allowStartLevelChange)  {
-            final int currentStartLevel = startLevel.getStartLevel();
-            final int myStartLevel = startLevel.getBundleStartLevel(componentContext.getBundleContext().getBundle());
-            if(currentStartLevel > myStartLevel) {
-                log.info("shutdown(): changing start level from {} to the jcrinstall start level of {}", currentStartLevel, myStartLevel);
-                startLevel.setStartLevel(myStartLevel);
-            }
-        }
     }
     
     /** Add WatchedFolders that have been discovered by our WatchedFolderCreationListeners, if any */
@@ -463,18 +416,10 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
     protected void unbindSlingRepository(SlingRepository r) {
         // Store current start level: shutdown() will bring it down and we want
         // to go back to it if repository comes back
-        startLevelToSetAtStartup = startLevel.getStartLevel();
-        log.debug("unbindSlingRepository() called at start level {}", startLevelToSetAtStartup);
-        shutdown(true);
+        shutdown();
         repository = null;
     }
 
-    public void frameworkEvent(FrameworkEvent e) {
-        if(e.getType() == FrameworkEvent.STARTLEVEL_CHANGED) {
-            log.info("FrameworkEvent.STARTLEVEL_CHANGED, start level={}", startLevel.getStartLevel());
-        }
-    }  
-    
     protected Set<WatchedFolder> getWatchedFolders() {
         return folders;
     }
@@ -510,4 +455,4 @@ public class RepositoryObserver implements Runnable, FrameworkListener, JcrInsta
 	public boolean isEnabled() {
 		return repository != null;
 	}
- }
+}

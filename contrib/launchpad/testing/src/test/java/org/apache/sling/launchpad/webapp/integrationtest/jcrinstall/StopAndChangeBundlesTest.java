@@ -22,7 +22,7 @@ import java.util.List;
 /** Test replacing bundles while jcrinstall is disabled
  */
 public class StopAndChangeBundlesTest extends JcrinstallTestBase {
-	
+
 	public void testStopAndRestart() throws Exception {
 		final int activeBeforeTest = getActiveBundlesCount();
 		final List<String> installed = new LinkedList<String>();
@@ -30,6 +30,7 @@ public class StopAndChangeBundlesTest extends JcrinstallTestBase {
 		final int nBundlesA = 7 * scaleFactor;
 		final int nBundlesB = 13 * scaleFactor;
 		
+    enableJcrinstallService(true);
 		assertActiveBundleCount("before adding bundles", 
 				activeBeforeTest, defaultBundlesTimeout);
 		
@@ -55,10 +56,11 @@ public class StopAndChangeBundlesTest extends JcrinstallTestBase {
 			installed.add(installClonedBundle(null, null));
 		}
 		
-		// Before reactivating, bundles count must be the initial count,
-		// as jcrinstall brings the start level down
+		// Before reactivating, bundles count must be the same as
+		// before deactivating, as jcrinstall does not manipulate
+		// start levels anymore
 		assertActiveBundleCount("after replacing bundles", 
-				activeBeforeTest, defaultBundlesTimeout);
+				activeBeforeTest + nBundlesA, defaultBundlesTimeout);
 		
 		// Re-enable and verify that only original bundles + set B are active
 		enableJcrinstallService(true);
