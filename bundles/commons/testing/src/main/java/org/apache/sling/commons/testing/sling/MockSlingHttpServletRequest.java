@@ -379,4 +379,8 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     public void setCharacterEncoding(String env) {
 
     }
+
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        return null;
+    }
 }
