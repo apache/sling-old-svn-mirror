@@ -48,7 +48,7 @@ public class EventingThreadPool implements ThreadPool {
 
     private static final int DEFAULT_MIN_POOL_SIZE = 20; // this is sufficient for all threads + approx 10 job queues
     private static final int DEFAULT_MAX_POOL_SIZE = 30;
-    private static final int DEFAULT_QUEUE_SIZE = 50; // queue upto 50 threads
+    private static final int DEFAULT_QUEUE_SIZE = -1; // infinite
 
     /**
      * Activate this component.
