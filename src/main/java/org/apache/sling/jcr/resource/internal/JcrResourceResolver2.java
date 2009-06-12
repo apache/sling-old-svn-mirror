@@ -290,12 +290,11 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
 
         }
 
-        String resolutionPathInfo;
         Resource res = resolveInternal(mappedPath);
         if (res != null) {
 
             // keep, what we might have cut off in internal resolution
-            resolutionPathInfo = res.getResourceMetadata().getResolutionPathInfo();
+            final String resolutionPathInfo = res.getResourceMetadata().getResolutionPathInfo();
 
             log.debug("map: Path maps to resource {} with path info {}", res,
                 resolutionPathInfo);
@@ -319,14 +318,16 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 buf.append('/');
                 buf.append(names.removeLast());
             }
+            
+            // reappend the resolutionPathInfo
+            if (resolutionPathInfo != null) {
+                buf.append(resolutionPathInfo);
+            }
+            
+            // and then we have the mapped path to work on
             mappedPath = buf.toString();
 
             log.debug("map: Alias mapping resolves to path {}", mappedPath);
-
-        } else {
-
-            // we have no resource, hence no resolution path info
-            resolutionPathInfo = null;
 
         }
 
@@ -364,11 +365,6 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         // this should not be the case, since mappedPath is primed
         if (mappedPath == null) {
             mappedPath = resourcePath;
-        }
-
-        // append resolution path info, which might have been cut off above
-        if (resolutionPathInfo != null) {
-            mappedPath = mappedPath.concat(resolutionPathInfo);
         }
 
         if (mappedPathIsUrl) {
