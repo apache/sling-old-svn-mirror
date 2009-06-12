@@ -112,6 +112,7 @@
         <module>bundles/extensions/httpauth</module>
         <module>bundles/extensions/openidauth</module>
         <module>bundles/extensions/threaddump</module>
+        <module>bundles/extensions/systemstatus</module>
 
         <!-- Launchpad -->
         <module>launchpad/base</module>
