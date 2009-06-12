@@ -60,6 +60,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.ResponseUtil;
+import org.apache.sling.engine.SystemStatus;
 import org.apache.sling.engine.impl.auth.MissingRepositoryException;
 import org.apache.sling.engine.impl.auth.SlingAuthenticator;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
@@ -94,6 +95,7 @@ import org.slf4j.LoggerFactory;
  * @scr.reference name="Filter" interface="javax.servlet.Filter"
  *                cardinality="0..n" policy="dynamic"
  */
+@SuppressWarnings("serial")
 public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         HttpContext {
 
@@ -105,7 +107,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
-
+    
     /**
      * The registration path for the SlingMainServlet is hard wired to always
      * be the root, aka "<code>/</code>" (value is "/").
@@ -161,6 +163,9 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
     
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private AdapterManager adapterManager;
+    
+    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    private SystemStatus systemStatus;
 
     private SlingFilterChainHelper requestFilterChain = new SlingFilterChainHelper();
 
@@ -244,8 +249,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         // setting the Sling request and response
         final RequestData requestData = new RequestData(this, servletRequest,
             servletResponse);
-        SlingHttpServletRequest request = requestData.getSlingRequest();
-        SlingHttpServletResponse response = requestData.getSlingResponse();
+        final SlingHttpServletRequest request = requestData.getSlingRequest();
+        final SlingHttpServletResponse response = requestData.getSlingResponse();
 
         // request entry log
         if (requestLogger != null) {
@@ -255,34 +260,46 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         Session session = null;
         try {
             // check that we have all required services
-            String missing = null;
+            String errorMessage = null;
+            final String serviceMissingSuffix =  " service missing, cannot service requests";
             if (getResourceResolverFactory() == null) {
-                missing = "ResourceResolverFactory";
+                errorMessage = "ResourceResolverFactory" + serviceMissingSuffix;
             } else if (getServletResolver() == null) {
-                missing = "ServletResolver";
+                errorMessage = "ServletResolver" + serviceMissingSuffix;
             } else if (mimeTypeService == null) {
-                missing = "MimeTypeService";
-            }
-
-            if (missing != null) {
-                final String err = missing
-                    + " service missing, cannot service requests";
-                final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE;
-                log.error("{} , sending status {}", err, status);
-                sendError(status, err, null, servletRequest, servletResponse);
-                return;
+                errorMessage = "MimeTypeService" + serviceMissingSuffix;
+            } else if(systemStatus == null) {
+                errorMessage = "SystemStatus" + serviceMissingSuffix;
             }
 
             // get JCR Session
             session = (Session) servletRequest.getAttribute(SESSION);
             if (session == null) {
-                log.error("service: Cannot handle request: Missing JCR Session");
-                sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Missing JCR Session", null, servletRequest,
-                    servletResponse);
+                errorMessage = "Missing JCR Session";
+            }
+
+            // system ready?
+            if(errorMessage == null) {
+                try {
+                    systemStatus.checkSystemReady();
+                } catch(Exception e) {
+                    errorMessage = e.toString();
+                }
+            }
+          
+            if (errorMessage != null) {
+                final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE;
+                log.error("{} , sending status {}", errorMessage, status);
+                sendError(status, errorMessage, null, servletRequest, servletResponse);
                 return;
             }
 
+            // status request?
+            if(SystemStatus.STATUS_PATH.equals(request.getPathInfo())) {
+                systemStatus.doGet(request, response);
+                return;
+            }
+            
             // initialize the request data - resolve resource and servlet
             ResourceResolver resolver = getResourceResolverFactory().getResourceResolver(
                 session);
@@ -620,7 +637,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         }
     }
 
-    @SuppressWarnings("unused")
     protected void deactivate(ComponentContext componentContext) {
 
         // first of all, we have to unregister
