@@ -29,6 +29,7 @@ import javax.servlet.ServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestProgressTracker;
+import org.apache.sling.engine.impl.request.RequestData;
 
 public abstract class AbstractSlingFilterChain implements FilterChain {
 
@@ -41,27 +42,59 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
         this.current = -1;
     }
 
-    /**
-     * @see javax.servlet.FilterChain#doFilter(javax.servlet.ServletRequest,
-     *      javax.servlet.ServletResponse)
-     */
     public void doFilter(ServletRequest request, ServletResponse response)
             throws ServletException, IOException {
         this.current++;
 
         if (this.current < this.filters.length) {
-            
-            RequestProgressTracker tracker = ((SlingHttpServletRequest) request).getRequestProgressTracker();
-            tracker.log("Calling filter: {0}", this.filters[this.current].getClass().getName());
-            
-            this.filters[this.current].doFilter(request, response, this);
+
+            // continue filtering with the next filter
+            Filter filter = this.filters[this.current];
+            trackFilter(request, filter);
+            filter.doFilter(request, response, this);
+
         } else {
-            this.render((SlingHttpServletRequest) request,
-                (SlingHttpServletResponse) response);
+
+            // end of chain, a filter may have wrapped a plain ServletRequest
+            // and we must ensure it is a Sling request again
+            SlingHttpServletRequest slingRequest = toSlingRequest(request);
+            SlingHttpServletResponse slingResponse = toSlingResponse(response);
+
+            this.render(slingRequest, slingResponse);
+
         }
     }
 
     protected abstract void render(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws IOException,
             ServletException;
+
+    // ---------- internal helper
+
+    private void trackFilter(ServletRequest request, Filter filter) {
+        RequestData data = RequestData.getRequestData(request);
+        if (data != null) {
+            RequestProgressTracker tracker = data.getRequestProgressTracker();
+            tracker.log("Calling filter: {0}",
+                this.filters[this.current].getClass().getName());
+        }
+    }
+
+    private SlingHttpServletRequest toSlingRequest(ServletRequest request) {
+        if (request instanceof SlingHttpServletRequest) {
+            return (SlingHttpServletRequest) request;
+        }
+
+        // wrap
+        return RequestData.toSlingHttpServletRequest(request);
+    }
+
+    private SlingHttpServletResponse toSlingResponse(ServletResponse response) {
+        if (response instanceof SlingHttpServletResponse) {
+            return (SlingHttpServletResponse) response;
+        }
+
+        // wrap
+        return RequestData.toSlingHttpServletResponse(response);
+    }
 }
