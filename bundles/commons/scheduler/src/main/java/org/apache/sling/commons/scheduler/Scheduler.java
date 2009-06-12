@@ -29,7 +29,8 @@ import java.util.NoSuchElementException;
  */
 public interface Scheduler {
 
-    /** Name of the configuration property to define the period for a job. */
+    /** Name of the configuration property to define the period for a job.
+     * The period is expressed in seconds.*/
     String PROPERTY_SCHEDULER_PERIOD = "scheduler.period";
 
     /** Name of the configuration property to define the cron expression for a job. */
