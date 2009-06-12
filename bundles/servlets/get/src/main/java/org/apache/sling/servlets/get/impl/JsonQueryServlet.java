@@ -20,13 +20,12 @@ package org.apache.sling.servlets.get.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.query.Query;
 
 import org.apache.sling.api.SlingException;
@@ -35,10 +34,10 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +57,9 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="sling.servlet.selectors" value="query"
  */
 public class JsonQueryServlet extends SlingSafeMethodsServlet {
+
+    private static final long serialVersionUID = 1L;
+
     private final Logger log = LoggerFactory.getLogger(JsonQueryServlet.class);
 
     /** Search clause */
@@ -183,35 +185,33 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
             return;
         }
 
-
-        ResourceResolver resolver = nodeRes.getResourceResolver();
+        // get the properties of the resource, nothing todo if none
+        ValueMap props = nodeRes.adaptTo(ValueMap.class);
+        if (props == null) {
+            return;
+        }
+        
+        // get the actual properties now into the JSON output
         for (String property : properties) {
-            Resource prop = resolver.getResource(nodeRes, property);
-            if (prop != null) {
-                String strValue;
-                Value value = prop.adaptTo(Value.class);
-                if (value != null) {
-                    strValue = formatValue(value);
-                } else {
-                    strValue = prop.adaptTo(String.class);
-                    if (strValue == null) {
-                        strValue = "";
-                    }
-                }
+            Object value = props.get(property);
+            if (value != null) {
                 w.key(property);
-                w.value(strValue);
+
+                if (value.getClass().isArray()) {
+
+                    w.array();
+                    for (int i = 0; i < Array.getLength(value); i++) {
+                        w.value(formatValue(Array.get(value, i)));
+                    }
+                    w.endArray();
+
+                } else {
+
+                    w.value(formatValue(value));
+
+                }
             }
         }
-
-    }
-
-    private String formatValue(Value value) {
-        try {
-            return formatValue(JcrResourceUtil.toJavaObject(value));
-        } catch (RepositoryException re) {
-            // might log
-        }
-        return "";
     }
 
     private String formatValue(Object value) {
