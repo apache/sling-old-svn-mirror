@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.systemstatus</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.5-incubator-SNAPSHOT</version>
+    <version>0.9.0-incubator-SNAPSHOT</version>
 
     <name>Apache Sling System Status Service</name>
     <description>
