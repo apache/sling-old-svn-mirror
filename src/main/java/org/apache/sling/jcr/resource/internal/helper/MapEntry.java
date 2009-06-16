@@ -39,13 +39,21 @@ import org.apache.sling.jcr.resource.internal.JcrResourceResolver2;
  */
 public class MapEntry implements Comparable<MapEntry> {
 
+    private static final Pattern[] URL_WITH_PORT_MATCH = {
+        Pattern.compile("http/([^/]+)(\\.[^\\d/]+)(/.*)?$"),
+        Pattern.compile("https/([^/]+)(\\.[^\\d/]+)(/.*)?$") };
+
+    private static final String[] URL_WITH_PORT_REPLACEMENT = {
+        "http/$1$2.80$3", "https/$1$2.443$3" };
+
     private static final Pattern[] PATH_TO_URL_MATCH = {
         Pattern.compile("http/([^/]+)\\.80(/.*)?$"),
         Pattern.compile("https/([^/]+)\\.443(/.*)?$"),
-        Pattern.compile("([^/]+)/([^/]+)\\.(\\d+)(/.*)?$") };
+        Pattern.compile("([^/]+)/([^/]+)\\.(\\d+)(/.*)?$"),
+        Pattern.compile("([^/]+)/([^/]+)(/.*)?$") };
 
     private static final String[] PATH_TO_URL_REPLACEMENT = { "http://$1$2",
-        "https://$1$2", "$1://$2:$3$4" };
+        "https://$1$2", "$1://$2:$3$4", "$1://$2$3" };
 
     private final Pattern urlPattern;
 
@@ -86,6 +94,17 @@ public class MapEntry implements Comparable<MapEntry> {
         return sb.toString();
     }
 
+    public static String fixUriPath(String uriPath) {
+        for (int i = 0; i < URL_WITH_PORT_MATCH.length; i++) {
+            Matcher m = URL_WITH_PORT_MATCH[i].matcher(uriPath);
+            if (m.find()) {
+                return m.replaceAll(URL_WITH_PORT_REPLACEMENT[i]);
+            }
+        }
+
+        return uriPath;
+    }
+
     public static URI toURI(String uriPath) {
         for (int i = 0; i < PATH_TO_URL_MATCH.length; i++) {
             Matcher m = PATH_TO_URL_MATCH[i].matcher(uriPath);
@@ -106,6 +125,10 @@ public class MapEntry implements Comparable<MapEntry> {
             boolean trailingSlash) {
         ValueMap props = resource.adaptTo(ValueMap.class);
         if (props != null) {
+
+            // ensure the url contains a port number (if possible)
+            url = fixUriPath(url);
+
             String redirect = props.get(
                 JcrResourceResolver2.PROP_REDIRECT_EXTERNAL, String.class);
             if (redirect != null) {
@@ -141,7 +164,7 @@ public class MapEntry implements Comparable<MapEntry> {
                 endHook = "$";
                 url = url.substring(0, url.length()-1);
             }
-            
+
             String[] internalRedirect = props.get(
                 JcrResourceResolver2.PROP_REDIRECT_INTERNAL, String[].class);
             if (internalRedirect != null) {
