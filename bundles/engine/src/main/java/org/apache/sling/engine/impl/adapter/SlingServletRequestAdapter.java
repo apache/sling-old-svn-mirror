@@ -293,6 +293,15 @@ public class SlingServletRequestAdapter extends SlingHttpServletRequestWrapper {
     }
 
     @Override
+    public SlingHttpServletRequest getSlingRequest() {
+        // overwrite base class getSlingRequest since that method
+        // calls getRequest which is overwritten here to return the
+        // HttpServletRequest - we have to get the actual underlying
+        // request object which is available from the base class
+        return (SlingHttpServletRequest) super.getRequest();
+    }
+
+    @Override
     public RequestDispatcher getRequestDispatcher(String path) {
         return request.getRequestDispatcher(path);
     }
