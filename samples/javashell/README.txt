@@ -22,7 +22,7 @@ needed that for an interactive JCR presentation.
 To test this bundle:
 
 1. Install the org.apache.sling.scripting.java bundle, found under
-   sling/scripting/java.
+   sling/contrib/scripting/java.
    
 2. Install this bundle and navigate to
 
