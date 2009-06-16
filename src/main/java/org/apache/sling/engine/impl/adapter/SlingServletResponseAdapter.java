@@ -179,6 +179,16 @@ public class SlingServletResponseAdapter extends
         return response;
     }
 
+
+    @Override
+    public SlingHttpServletResponse getSlingResponse() {
+        // overwrite base class getSlingResponse since that method
+        // calls getResponse which is overwritten here to return the
+        // HttpServletResponse - we have to get the actual underlying
+        // response object which is available from the base class
+        return (SlingHttpServletResponse) super.getResponse();
+    }
+
     @Override
     public PrintWriter getWriter() throws IOException {
         return response.getWriter();
