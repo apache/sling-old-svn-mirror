@@ -268,8 +268,6 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 errorMessage = "ServletResolver" + serviceMissingSuffix;
             } else if (mimeTypeService == null) {
                 errorMessage = "MimeTypeService" + serviceMissingSuffix;
-            } else if(systemStatus == null) {
-                errorMessage = "SystemStatus" + serviceMissingSuffix;
             }
 
             // get JCR Session
@@ -279,7 +277,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             }
 
             // system ready?
-            if(errorMessage == null) {
+            if(errorMessage == null && systemStatus != null) {
                 try {
                     systemStatus.checkSystemReady();
                 } catch(Exception e) {
@@ -295,7 +293,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
             }
 
             // status request?
-            if(SystemStatus.STATUS_PATH.equals(request.getPathInfo())) {
+            if(SystemStatus.STATUS_PATH.equals(request.getPathInfo()) && systemStatus != null) {
                 systemStatus.doGet(request, response);
                 return;
             }
