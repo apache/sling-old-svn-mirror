@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>4</version>
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <packaging>pom</packaging>
+    <version>3-incubator</version>
+
+    <name>Sling (Parent)</name>
+    <description>The parent project for Apache Sling</description>
+    <inceptionYear>2007</inceptionYear>
+
+    <url>http://incubator.apache.org/sling</url>
+
+    <prerequisites>
+        <maven>2.0.7</maven>
+    </prerequisites>
+
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://issues.apache.org/jira/browse/SLING</url>
+    </issueManagement>
+
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/tags/sling-3-incubator</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/tags/sling-3-incubator</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/tags/sling-3-incubator</url>
+    </scm>
+
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <stylesheet>maven</stylesheet>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+
+    <build>
+        <plugins>
+
+            <!-- Require Java 5 or higher for building -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0-alpha-3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <message>
+                                        Sling must be compiled with Java
+                                        5 or higher
+                                    </message>
+                                    <version>1.5.0</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Attach sources for all builds -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- warn for SLING-443 -->
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-antrun-plugin</artifactId>
+              <executions>
+                <execution>
+                  <phase>process-resources</phase>
+                  <configuration>
+                    <tasks>
+                      <echo>
+********************** WARNING (SLING-443) **********************************
+On most platforms, building Sling currently requires setting 
+MAVEN_OPTS="-Xmx256M", see https://issues.apache.org/jira/browse/SLING-443
+You might get a "java.lang.OutOfMemoryError: Java heap space" if that
+setting is not correct.
+*****************************************************************************
+                      </echo>
+                    </tasks>
+                  </configuration>
+                  <goals>
+                    <goal>run</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-scr-plugin</artifactId>
+                    <version>1.0.5</version>
+                    <executions>
+                        <execution>
+                            <id>generate-scr-scrdescriptor</id>
+                            <goals>
+                                <goal>scr</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Compile for Java 5 and higher -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.5</source>
+                        <target>1.5</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>1.4.1</version>
+                    <inherited>true</inherited>
+                    <configuration>
+                        <instructions>
+                            <Bundle-Category>sling</Bundle-Category>
+                            <Bundle-DocURL>
+                                http://incubator.apache.org/sling
+                            </Bundle-DocURL>
+                            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+                            <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                        </instructions>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.0-beta-7</version>
+                    <configuration>
+                        <tagBase>
+                            https://svn.apache.org/repos/asf/incubator/sling/tags
+                        </tagBase>
+                        <goals>deploy</goals>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>2.3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.0-alpha-4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2-beta-2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+  <profiles>
+    <profile>
+      <!-- 
+        Use this profile to install the OSGi bundle 
+        automatically, during development
+      -->
+      <id>autoInstallBundle</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>maven-sling-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>install-bundle</id>
+                <goals>
+                  <goal>install</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+               </goals>
+             </execution>
+           </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+              <descriptorRefs>
+                <descriptorRef>bin</descriptorRef>
+                <descriptorRef>project</descriptorRef>
+              </descriptorRefs>
+            </configuration>
+            <executions>
+              <execution>
+                <id>make-assembly</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attached</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+    <mailingLists>
+        <mailingList>
+            <name>Sling Development List</name>
+            <subscribe>
+                sling-dev-subscribe@incubator.apache.org
+            </subscribe>
+            <unsubscribe>
+                sling-dev-unsubscribe@incubator.apache.org
+            </unsubscribe>
+            <post>sling-dev at incubator.apache.org</post>
+            <archive>
+                http://mail-archives.apache.org/mod_mbox/incubator-sling-dev/
+            </archive>
+            <otherArchives>
+                <otherArchive>
+                    http://www.mail-archive.com/sling-dev@incubator.apache.org/
+                </otherArchive>
+            </otherArchives>
+        </mailingList>
+        <mailingList>
+            <name>Sling Source Control List</name>
+            <subscribe>
+                sling-commits-subscribe@incubator.apache.org
+            </subscribe>
+            <unsubscribe>
+                sling-commits-unsubscribe@incubator.apache.org
+            </unsubscribe>
+            <archive>
+                http://mail-archives.apache.org/mod_mbox/incubator-sling-commits/
+            </archive>
+            <otherArchives>
+                <otherArchive>
+                    http://www.mail-archive.com/sling-commits@incubator.apache.org/
+                </otherArchive>
+            </otherArchives>
+        </mailingList>
+    </mailingLists>
+
+
+    <developers>
+        <developer>
+            <name>Felix Meschberger</name>
+            <id>fmeschbe</id>
+            <email />
+            <organization>Day Software</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Carsten Ziegeler</name>
+            <id>cziegeler</id>
+            <email />
+            <organization>Day Software</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Bertrand Delacretaz</name>
+            <id>bdelacretaz</id>
+            <email />
+            <organization>Day Software</organization>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Christophe Lombart</name>
+            <id>clombart</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Juan José Vázquez Delgado</name>
+            <id>juanjo</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone />
+        </developer>
+        <developer>
+            <name>Karl Pauls</name>
+            <id>pauls</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Alexandru Popescu</name>
+            <id>apopescu</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Jukka Zitting</name>
+            <id>jukka</id>
+            <email />
+            <organization>Day Software</organization>
+            <roles>
+                <role>Champion</role>
+                <role>Mentor</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Gianugo Rabellino</name>
+            <id>gianugo</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Mentor</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>J Aaron Farr</name>
+            <id>farra</id>
+            <email />
+            <organization />
+            <roles>
+                <role>Mentor</role>
+            </roles>
+            <timezone />
+        </developer>
+    </developers>
+
+
+    <contributors />
+
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.osgi.core</artifactId>
+                <version>1.0.1</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.osgi.compendium</artifactId>
+                <version>1.0.1</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>javax.servlet</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.4</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.equinox.http</groupId>
+                <artifactId>servlet</artifactId>
+                <version>1.0.0-v20070606</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-configuration</groupId>
+                <artifactId>commons-configuration</artifactId>
+                <version>1.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>3.2.1</version>
+                <scope>provided</scope>
+            </dependency>
+	        <dependency>
+	            <groupId>commons-httpclient</groupId>
+	            <artifactId>commons-httpclient</artifactId>
+	            <version>3.1</version>
+	            <scope>provided</scope>
+	            <exclusions>
+	                <!-- 
+	                    Same problem as JCR-683: commons-httpclient depends on commons-logging. Since 
+	                    this webapp uses log4j (see the slf4j-log4j12 dependency below), we need to
+	                    override this dependency with jcl-over-sflf4j, found below
+	                -->
+	                <exclusion>
+	                    <groupId>commons-logging</groupId>
+	                    <artifactId>commons-logging</artifactId>
+	                </exclusion>
+	            </exclusions>
+	        </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>1.4</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>2.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-digester</groupId>
+                <artifactId>commons-digester</artifactId>
+                <version>1.8</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-fileupload</groupId>
+                <artifactId>commons-fileupload</artifactId>
+                <version>1.1.1</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Real JCR and Jackrabbit libraries -->
+            <dependency>
+                <groupId>javax.jcr</groupId>
+                <artifactId>jcr</artifactId>
+                <version>1.0</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-api</artifactId>
+                <version>1.4</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-jcr-commons</artifactId>
+                <version>1.4.2</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-core</artifactId>
+                <version>1.4.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-jcr-rmi</artifactId>
+                <version>1.4.1</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-classloader</artifactId>
+                <version>1.4</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jackrabbit</groupId>
+                <artifactId>jackrabbit-ocm</artifactId>
+                <version>1.4</version>
+                <!-- <scope>compile</scope> -->
+            </dependency>
+
+            <dependency>
+                <groupId>net.sf.kxml</groupId>
+                <artifactId>kxml2</artifactId>
+                <version>2.2.2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>xmlpull</groupId>
+                        <artifactId>xmlpull</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+              <groupId>rhino</groupId>
+              <artifactId>js</artifactId>
+              <version>1.6R6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>1.5.2</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>1.5.2</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>1.5.2</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>log4j-over-slf4j</artifactId>
+                <version>1.5.2</version>
+                <scope>provided</scope>
+            </dependency>
+	        <dependency>
+	            <groupId>org.slf4j</groupId>
+	            <artifactId>slf4j-log4j12</artifactId>
+                <version>1.5.2</version>
+                <scope>provided</scope>
+	        </dependency>
+
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.3</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jmock</groupId>
+                <artifactId>jmock-junit4</artifactId>
+                <version>2.2.0</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.bundlerepository</artifactId>
+                <version>1.0.3</version>
+                <scope>provided</scope>
+            </dependency>
+    
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework</artifactId>
+                <version>1.0.4</version>
+                <scope>provided</scope>
+            </dependency>
+   
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.eventadmin</artifactId>
+                <version>1.0.0</version>
+                <scope>provided</scope>
+            </dependency>
+        
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.scr</artifactId>
+                <version>1.0.2</version>
+                <scope>provided</scope>
+            </dependency>
+        
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.configadmin</artifactId>
+                <version>1.0.1</version>
+                <scope>provided</scope>
+            </dependency>
+           
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.metatype</artifactId>
+                <version>1.0.0</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- HttpService implementation: embedded Jetty -->
+            <dependency>
+                <groupId>org.ops4j.pax.web</groupId>
+                <artifactId>pax-web-service</artifactId>
+                <version>0.2.3</version>
+            </dependency>
+        </dependencies>
+        
+    </dependencyManagement>
+
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>apache Snapshots</id>
+            <url>
+                http://people.apache.org/repo/m2-snapshot-repository
+            </url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
+
+
+    <distributionManagement>
+        <!-- place our releases in the incubator's repository -->
+        <repository>
+            <id>apache.incubating</id>
+            <name>Apache Incubating Repository</name>
+            <url>
+                scp://people.apache.org/www/people.apache.org/repo/m2-incubating-repository
+            </url>
+        </repository>
+        <site>
+            <id>apache.sling.site</id>
+            <url>
+                scp://people.apache.org/www/incubator.apache.org/sling
+            </url>
+        </site>
+    </distributionManagement>
+</project>
