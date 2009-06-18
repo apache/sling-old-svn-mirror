@@ -1,0 +1,133 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+
+#
+# A simple, old format, mime.types file
+#
+application/andrew-inset       ez
+application/compress           z
+application/java-archive       jar
+application/java-serialized-object ser
+application/java-vm            class
+application/json               json
+application/mac-binhex40       hqx
+application/mac-compactpro     cpt
+application/msexcel            xls xlsx
+application/msword             doc docx
+application/mspowerpoint       ppt pptx
+application/octet-stream       bin class dms exe lha lzh msi
+application/oda                oda
+application/pdf                pdf
+application/photoshop          psd
+application/postscript         ps ai eps
+application/rtf                rtf
+application/smil               smi smil
+application/vnd.mif            mif
+application/vnd.wap.wmlc       wmlc
+application/vnd.wap.wmlscriptc wmlsc
+application/vnd.wap.wtls-ca-certificate wtls-ca-certificate
+application/x-bcpio            bcpio
+application/x-bzip2            bz2
+application/x-cdlink           vcd
+application/x-chess-pgn        pgn
+application/x-cpio             cpio
+application/x-csh              csh
+application/x-director         dcr dir dxr
+application/x-dvi              dvi
+application/x-futuresplash     spl
+application/x-gtar             gtar
+application/x-gzip             gz tgz
+application/x-hdf              hdf
+application/x-java-jnlp-file   jnlp
+application/x-javascript       js
+application/x-koan             skd skm skp skt
+application/x-latex            latex
+application/x-netcdf           cdf nc
+application/x-quark-express    qxd
+application/x-rpm              rpm
+application/x-shar             shar
+application/x-shockwave-flash  swf
+application/x-sh               sh
+application/x-stuffit          sit
+application/x-sv4cpio          sv4cpio
+application/x-sv4crc           sv4crc
+application/x-tar              tar
+application/x-tcl              tcl
+application/x-texinfo          texinfo texi
+application/x-tex              tex
+application/x-troff-man        man
+application/x-troff-me         me
+application/x-troff-ms         ms
+application/x-troff            tr t roff
+application/x-ustar            ustar
+application/x-wais-source      src
+application/x-x509-ca-cert     crt
+application/zip                zip
+audio/basic                    au snd
+audio/midi                     midi kar mid
+audio/mpeg                     mp3 mp2 mpga
+audio/x-aifc                   aifc
+audio/x-aiff                   aif aiff
+audio/x-mpeg                   mpeg mpg
+audio/x-pn-realaudio           ram rm
+audio/x-realaudio              ra
+audio/x-vorbis                 ogg
+audio/x-wav                    wav
+chemical/x-mdl-molfile         mol
+chemical/x-pdb                 pdb xyz
+image/bmp                      bmp
+image/gif                      gif
+image/ief                      ief
+image/jpeg                     jpeg jpg jpe
+image/pict                     pict
+image/png                      png
+image/tiff                     tiff tif
+image/vnd.wap.wbmp             wbmp
+image/x-cmu-raster             ras
+image/x-portable-anymap        pnm
+image/x-portable-bitmap        pbm
+image/x-portable-graymap       pgm
+image/x-portable-pixmap        ppm
+image/x-rgb                    rgb
+image/x-xbitmap                xbm
+image/x-xpixmap                xpm
+image/x-xwindowdump            xwd
+model/iges                     iges igs
+model/mesh                     mesh msh silo
+model/vrml                     vrml wrl
+text/any                       any
+text/css                       css
+text/html                      html htm
+text/plain                     txt asc log text apt esp ecma jsp
+text/richtext                  rtx
+text/rtf                       rtf
+text/sgml                      sgml sgm
+text/tab-separated-values      tsv
+text/vnd.wap.wml               wml
+text/vnd.wap.wmlscript         wmls
+text/xml                       xml
+text/x-java-source             java
+text/x-setext                  etx
+video/mpeg                     mpeg mpg mpe
+video/quicktime                qt mov
+video/x.ms.asf                 asf
+video/x.ms.asx                 asx
+video/x-msvideo                avi
+video/x-sgi-movie              movie
+x-conference/x-cooltalk        ice
