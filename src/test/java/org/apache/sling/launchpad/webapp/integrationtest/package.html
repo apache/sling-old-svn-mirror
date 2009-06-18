@@ -1,0 +1,20 @@
+<html>
+<body>
+  <p>
+    The tests found in and under this package are used in the 
+    "integration-test" build phase (SLING-82), they are not run 
+    as part of the normal "test" build phase. 
+  </p>
+  <p>
+    To debug the integration tests, however, it is useful to run
+    them as part of the normal test phase, after starting a separate
+    Sling instance that they can talk to.
+  </p>
+  <p>
+    This is implemented using Maven profiles: to run the integration
+    tests during the normal test phase, disable the "disableIntegrationTestsInTestPhase"
+    Maven profile, for example using <code>mvn -P nullUslingProfile test</code>.
+    See pom.xml for more details.
+  </p>
+</body>
+</html>
