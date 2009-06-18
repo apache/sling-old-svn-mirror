@@ -1,0 +1,156 @@
+<%
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+%>
+
+<% /*
+	Webloader GET request processing
+	Display a form to create new jobs, or, if a selector is given, display 
+	the status of that job
+*/ %>
+
+<%  
+  // get job ID from selectors, for example webloader.5.html displays status of job 5
+  var jobId = null;
+  var selectors = request.getRequestPathInfo().getSelectors();
+  if(selectors.length > 0) {
+    jobId = selectors[0];
+  }
+  
+  var loader = sling.getService(Packages.org.apache.sling.samples.webloader.Webloader);
+  var status = loader.getJobStatus(jobId);
+  var running = status!=null && status.isRunning();
+%>
+
+<%
+function showForm() {
+  %>
+  <hr/>
+  <h2>Create a new webloader job</h2>
+  <form method="POST">
+    <table>
+      <tr>
+        <td>
+        	Web query to use to select documents:
+        </td>
+        <td>
+        	<input type="text" name="webQuery" size="60" value="drums"/>
+        </td>
+      </tr>
+      <tr>
+        <td>
+        	Storage path for retrieved documents:
+        </td>
+        <td>
+        	<input type="text" name="storagePath" size="60" value="/webloader"/>
+        </td>
+      </tr>
+      <tr>
+        <td>
+        	Maximum number of documents to retrieve:
+        </td>
+        <td>
+        	<input type="text" name="maxDocsToRetrieve" value="25"/>
+        </td>
+      </tr>
+      <tr>
+        <td>
+        	Maximum size of a single document in kilobytes:
+        </td>
+        <td>
+        	<input type="text" name="maxDocSize" value="512"/>
+        </td>
+      </tr>
+      <tr>
+        <td>
+        	Comma-separated list of file types to consider (empty=default):
+        </td>
+        <td>
+        	<input type="text" name="fileTypes" size="60" value="pdf, rtf, ppt, doc, xls"/>
+        </td>
+      </tr>
+    </table>
+    <input type="submit"/>
+  </form>
+  <%
+}
+%>
+
+<%
+function showStatus() {
+  if(status==null) {
+    response.sendError(404, "Webloader status not available (or not anymore) for job " + jobId);
+  }
+  var statusString = status.isRunning() ? "running" : "done";
+  %>
+  <hr/>
+  <h2>Webloader job <%= jobId + " " + statusString %></h2>
+  
+  <p>
+    Job info: <b><%= status %></b>.
+  </p>
+  <p>
+  	  <b><%= status.statusInfo %></b>
+  	  ,
+  	  <em><%= status.statusDetails %></em>
+  </p>
+  <p>
+    <b><%= status.numberOfDocumentsLoaded %></b> documents have been loaded.
+  </p>
+  <%
+}
+%>
+
+<%
+  var autoRefresh = status!=null && status.isRunning(); 
+%>
+
+<html>
+  <head>
+    <link type="text/css" rel="stylesheet" href="/sling/res/ui/admin.css">
+    <% if(autoRefresh) { %>
+      <meta http-equiv="refresh" content="1"/>
+    <% } %>
+  </head>
+  <body>
+    <div id="main">
+      <h1>Sling Webloader</h1>
+      
+      <% if(autoRefresh) { %>
+      <p>
+      	This page <b>reloads itself</b> automatically every second, while the webloader job is running.
+      </p>
+      <% } %>
+      
+      <p>
+      	This example application retrieves documents from the Web using
+      	a Google query, and loads them in the repository. It is based on the
+      	the Jackrabbit <em>populate.jsp</em> example, ported to Sling.
+      </p>
+      
+	    <%
+		  if(status!=null) {
+		    showStatus();
+		  }
+		  
+		  if(!running) {
+		    showForm();
+		  }
+		%>
+    </div>
+  </body>
+</html> 

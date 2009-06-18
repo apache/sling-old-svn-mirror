@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<sv:node xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:rep="internal" xmlns:crx="http://www.day.com/crx/1.0" xmlns:vlt="http://www.day.com/jcr/vault/1.0"
+  xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+  xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:fn_old="http://www.w3.org/2004/10/xpath-functions" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  sv:name="code-templates">
+  <sv:property sv:name="jcr:primaryType" sv:type="Name">
+    <sv:value>nt:unstructured</sv:value>
+  </sv:property>
+  <sv:property sv:name="code" sv:type="String">
+    <sv:value>
+    package _SERVLET_PACKAGE_; 
+    import java.io.IOException; 
+    import java.io.PrintWriter; 
+    import javax.servlet.ServletException; 
+    import org.apache.sling.api.SlingHttpServletRequest; 
+    import org.apache.sling.api.SlingHttpServletResponse; 
+    import org.apache.sling.api.servlets.SlingSafeMethodsServlet; 
+    import javax.jcr.*; 
+    import javax.jcr.lock.*; 
+    import javax.jcr.nodetype.*; 
+    import javax.jcr.observation.*; 
+    import javax.jcr.query.*; 
+    import javax.jcr.util.*; 
+    import javax.jcr.version.*; 
+    
+    /** Servlet template for javashell - make sure to keep the _MARKERS_ 
+     *  (package, class name, user code location) if modifying this template.
+     */     
+    public class _SERVLET_CLASS_ extends SlingSafeMethodsServlet { 
+      private static int counter;
+
+      protected String getRequestParameter(SlingHttpServletRequest request, String name, String defaultValue) {
+        String result = request.getParameter(name);
+        if(result == null || result.trim().length() == 0) {
+          result = defaultValue;
+        }
+        return result;
+      }
+      
+      protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+      throws ServletException, IOException {
+        response.setContentType("text/html"); 
+        final PrintWriter out = new PrintWriter(response.getWriter(), true); 
+        try {
+          // Provide a session and a newly created test root node for the user code 
+          Session session = request.getResource().adaptTo(Node.class).getSession();
+          final String testRootName = "testroot-" + System.currentTimeMillis() + "-" + (counter++); 
+          final Node testRoot = ((Node)session.getItem("/content/javashell/testroot")).addNode(testRootName); 
+          // _USER_CODE_ 
+        } catch(Exception e) { 
+          throw new ServletException("Exception in javashell servlet:" + e, e); 
+        } 
+      }
+    }
+    </sv:value>
+  </sv:property>
+</sv:node>

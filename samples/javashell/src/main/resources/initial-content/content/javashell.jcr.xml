@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<sv:node xmlns:nt="http://www.jcp.org/jcr/nt/1.0" xmlns:rep="internal" xmlns:crx="http://www.day.com/crx/1.0" xmlns:vlt="http://www.day.com/jcr/vault/1.0"
+  xmlns:sv="http://www.jcp.org/jcr/sv/1.0" xmlns:mix="http://www.jcp.org/jcr/mix/1.0" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+  xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:fn_old="http://www.w3.org/2004/10/xpath-functions" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  sv:name="javashell">
+  <sv:property sv:name="jcr:primaryType" sv:type="Name">
+    <sv:value>nt:unstructured</sv:value>
+  </sv:property>
+  <sv:property sv:name="jcr:mixinTypes" sv:type="Name">
+    <sv:value>mix:lockable</sv:value>
+  </sv:property>
+  <sv:node sv:name="scripts">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name">
+      <sv:value>nt:unstructured</sv:value>
+    </sv:property>
+    <sv:node sv:name="first_example">
+      <sv:property sv:name="jcr:primaryType" sv:type="Name">
+        <sv:value>nt:unstructured</sv:value>
+      </sv:property>
+      <sv:property sv:name="code" sv:type="String">
+        <sv:value> 
+// Our entry point into to the JCR Repository is the "session"
+// object provided by javashell, which is a JCR Session.
+String nodePath = getRequestParameter(request, "path", "/");
+Node n = (Node)session.getItem(nodePath);
+
+out.println("List of property names of the " + n.getPath() + " Node:");
+PropertyIterator pi = n.getProperties();
+while(pi.hasNext()) { 
+  Property p = pi.nextProperty(); 
+  out.println(p.getName()); 
+}
+
+out.println("\nList of child nodes of the " + n.getPath() + " Node:");
+NodeIterator ni = n.getNodes();
+while(ni.hasNext()) {
+  Node kid = ni.nextNode();
+  out.println(kid.getPath() 
+    + " is of type " + kid.getPrimaryNodeType().getName()
+    + " and has " + kid.getNodes().getSize() + " child nodes."
+  );
+}
+</sv:value>
+      </sv:property>
+      <sv:property sv:name="sling:resourceType" sv:type="String">
+        <sv:value>javashell</sv:value>
+      </sv:property>
+      <sv:property sv:name="title" sv:type="String">
+        <sv:value>First example</sv:value>
+      </sv:property>
+    </sv:node>
+    <sv:node sv:name="add_and_retrieve_nodes">
+      <sv:property sv:name="jcr:primaryType" sv:type="Name">
+        <sv:value>nt:unstructured</sv:value>
+      </sv:property>
+      <sv:property sv:name="code" sv:type="String">
+        <sv:value>
+// The testRoot node is available for our tests, unique for each request
+out.println("Test root node is at " + testRoot.getPath()); 
+out.println("Adding child nodes to testRoot");
+for(int i=0; i &lt; 5; i++) {
+  Node n = testRoot.addNode("node_" + i);
+  n.setProperty("title", "title_" + i);
+}
+
+// Without this, testRoot won't be saved, but the example still works
+// as data is read from the transient space.
+session.save();
+
+out.println("Retrieving child nodes of testRoot...");
+NodeIterator it = testRoot.getNodes();
+while(it.hasNext()) {
+  Node n = it.nextNode();
+  out.println(n.getPath() + " (" + n.getProperty("title").getString() + ")");
+}
+
+out.println("testRoot node has " + testRoot.getNodes().getSize() + " child nodes, deleting them...");
+it = testRoot.getNodes();
+while(it.hasNext()) {
+  it.nextNode().remove();
+}
+
+out.println("testRoot node now has " + testRoot.getNodes().getSize() + " child nodes");
+</sv:value>
+</sv:property>
+<sv:property sv:name="title" sv:type="String">
+  <sv:value>Add/retrieve/delete</sv:value>
+</sv:property>
+
+</sv:node>
+  <sv:node sv:name="simple_sql_search">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name">
+      <sv:value>nt:unstructured</sv:value>
+    </sv:property>
+    <sv:property sv:name="code" sv:type="String">
+      <sv:value>// javashell provides a JCR Session, use that to get the QueryManager
+QueryManager qm = session.getWorkspace().getQueryManager(); 
+
+// SQL query
+String statement = "select * from nt:unstructured where jcr:path like '/content/%/scripts/%'";
+String language = "sql";
+
+// Uncomment these two statements to use XPath instead
+// statement = "//content//scripts/element(*, nt:unstructured)";
+// language = "xpath";
+
+// Execute query and display results
+Query q = qm.createQuery(statement, language); 
+NodeIterator it = q.execute().getNodes(); 
+out.println(it.getSize() + " nodes found");
+while(it.hasNext()) { 
+  Node n = it.nextNode();
+  out.println(n.getPath());
+}</sv:value>
+    </sv:property>
+    <sv:property sv:name="sling:resourceType" sv:type="String">
+      <sv:value>javashell</sv:value>
+    </sv:property>
+    <sv:property sv:name="title" sv:type="String">
+      <sv:value>Simple SQL or XPath search</sv:value>
+    </sv:property>
+  </sv:node>
+
+  <sv:node sv:name="versioning">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name">
+      <sv:value>nt:unstructured</sv:value>
+    </sv:property>
+    <sv:property sv:name="code" sv:type="String">
+      <sv:value>
+// Create versionable node, save and create version
+Node n = testRoot.addNode("childNode", "nt:unstructured");
+n.addMixin("mix:versionable");
+n.setProperty("phase", "one");
+session.save();
+Version firstVersion = n.checkin();
+
+// Add another version
+Node child = testRoot.getNode("childNode");
+child.checkout();
+child.setProperty("phase", "two");
+session.save();
+child.checkin();
+
+// Print version history
+VersionHistory history = child.getVersionHistory();
+for (VersionIterator it = history.getAllVersions(); it.hasNext();) {
+  Version version = (Version) it.next();
+  out.println("Version with timestamp " + version.getCreated().getTime().getTime()
+    + " has " + version.getPredecessors().length + " predecessors"
+    + " and " + version.getSuccessors().length + " successors"
+  );
+}
+          
+// Restore firstVersion
+child.checkout();
+out.println("before restore, child phase=" + child.getProperty("phase").getString());
+child.restore(firstVersion, true);         
+out.println("after restore, child phase=" + child.getProperty("phase").getString());
+</sv:value>
+    </sv:property>
+    <sv:property sv:name="sling:resourceType" sv:type="String">
+      <sv:value>javashell</sv:value>
+    </sv:property>
+    <sv:property sv:name="title" sv:type="String">
+      <sv:value>Versioning</sv:value>
+    </sv:property>
+  </sv:node>
+
+  <sv:node sv:name="tagging">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name">
+      <sv:value>nt:unstructured</sv:value>
+    </sv:property>
+    <sv:property sv:name="code" sv:type="String">
+      <sv:value>
+// Find nt:file nodes and add a multi-value "tag" property 
+String dataPath = "/content/javashell/data";
+String [] possibleTags = { "culture", "sports", "news", "finance" };
+QueryManager qm = session.getWorkspace().getQueryManager(); 
+Query q = qm.createQuery("/" + dataPath + "//element(*, nt:file)", "xpath"); 
+NodeIterator it = q.execute().getNodes(); 
+if(it.getSize() == 0) {
+  out.println("Please add some files under " + dataPath + " for this example");
+} else {
+  int tagIndex = 0;
+  while(it.hasNext()) {
+    Node file = it.nextNode();
+    Node content = file.getNode("jcr:content");
+    if(content.hasProperty("tags")) {
+      out.print("File " + file.getPath() + " has tags ");
+      Value [] v = content.getProperty("tags").getValues();
+      for(int i=0; i &lt; v.length; i++) {
+        if(i > 0) out.print(",");
+        out.print(v[i].getString());
+      }
+      out.println();
+    } else {
+      String mime = content.getProperty("jcr:mimeType").getString();
+      String mimePrefix = mime.split("/")[0];
+      String [] tags = { possibleTags[tagIndex], mimePrefix };
+      content.setProperty("tags", tags);
+      out.println("file " + file.getPath() + " tagged with " + tags[0] + "," + tags[1]);
+      tagIndex++; if(tagIndex >= possibleTags.length) tagIndex=0;
+    }
+  }
+}
+
+// Indexing happens only on save, and asynchronously
+// So sleeping is really a hack for this test
+session.save();
+Thread.sleep(1000L);
+
+// Find tagged files
+String tag = getRequestParameter(request, "tag", possibleTags[0]);
+String statement = "/" + dataPath + "//element(*, nt:file)[jcr:content/@tags='" + tag + "']";
+out.println("Searching for tag '" + tag + "', " + statement);
+q = qm.createQuery(statement, "xpath");
+it = q.execute().getNodes(); 
+while(it.hasNext()) {
+  Node file = it.nextNode();
+  out.println("Found file " + file.getPath());
+}
+</sv:value>
+    </sv:property>
+    <sv:property sv:name="sling:resourceType" sv:type="String">
+      <sv:value>javashell</sv:value>
+    </sv:property>
+    <sv:property sv:name="title" sv:type="String">
+      <sv:value>Tagging files</sv:value>
+    </sv:property>
+  </sv:node>
+
+  <sv:node sv:name="observation">
+    <sv:property sv:name="jcr:primaryType" sv:type="Name">
+      <sv:value>nt:unstructured</sv:value>
+    </sv:property>
+    <sv:property sv:name="code" sv:type="String">
+      <sv:value>
+final ObservationManager m = session.getWorkspace().getObservationManager();
+
+// Creating an active EventListener is a bit involved here as
+// this code snippet runs in the javashell servlet's doGet()
+// method and so needs a separate Thread to display events. In
+// real life you'd just add the EventListener interface and 
+// onEvent() method to the appropriate class.
+class Observer extends Thread implements EventListener {
+  int eventsToDisplay = 20;
+  String eventsPath = "/";
+  int eventTypes = Event.NODE_ADDED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED;
+
+  /** Called by JCR when a Repository event occurs according to
+   *  filters specified in the ObservationManager.addEventListener() call
+   */
+  public void onEvent(EventIterator events) {
+    while(events.hasNext()) {
+      eventsToDisplay--;
+      try {
+        Event e = events.nextEvent();
+        out.println("Event type " + e.getType() + " at " + e.getPath());
+      } catch(Exception e) {
+        e.printStackTrace(out);
+      }
+    }
+  }
+
+  public void run() {
+    try {
+      // Setup this class as en EventListener
+      m.addEventListener(this, eventTypes, eventsPath, true, null, null, true);
+      out.println("Will display at least " + eventsToDisplay + " Events...");
+      while(eventsToDisplay > 0) {
+        Thread.sleep(1000L);
+      }
+    } catch(Exception e) {
+      e.printStackTrace(out);
+    } finally {
+      try {
+        m.removeEventListener(this);
+      } catch(Exception e) {
+        e.printStackTrace(out);
+      }
+    }
+  }
+};
+
+// Create the observer thread and start it
+out.println("Starting EventListener thread");
+out.println("Please make some changes to the repository: drop files via WebDAV, run a JCR sample in "
+  + "another browser window, etc.");
+Observer o = new Observer();
+o.setDaemon(true); o.start(); o.join();
+out.println("EventListener thread ended");
+</sv:value>
+    </sv:property>
+    <sv:property sv:name="sling:resourceType" sv:type="String">
+      <sv:value>javashell</sv:value>
+    </sv:property>
+    <sv:property sv:name="title" sv:type="String">
+      <sv:value>Observation</sv:value>
+    </sv:property>
+  </sv:node>
+
+</sv:node><sv:node sv:name="testroot"><sv:property sv:name="jcr:primaryType" sv:type="Name"><sv:value>nt:unstructured</sv:value></sv:property><sv:property sv:name="jcr:mixinTypes" sv:type="Name"><sv:value>mix:lockable</sv:value></sv:property></sv:node>
+</sv:node>

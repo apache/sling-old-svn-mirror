@@ -1,0 +1,77 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  This file is a demo of multiple dojo.data aware widgets using different datastore implementations for displaying data.
+-->
+<html>
+<head>
+	<title>Demo of Multiple Widgets using the �jax Data Store</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+    @import "../../../dojox/grid/_grid/tundraGrid.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true, usePlainJson: true, debugAtAllCosts: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.Tree");
+		dojo.require("dojox.data.SlingNodeStore");
+    dojo.require("dojox.data.SlingPropertyStore");
+    dojo.require("dojox.grid._data.model");
+    dojo.require("dojox.grid.Grid");
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		DEMO:  �jax Data Store
+	</h1>
+
+  <!-- the data store -->
+  <div dojoType="dojox.data.SlingNodeStore" url="/dojo/dojo" jsId="propertyStore">
+  </div>
+  
+
+  
+  <h3>
+		Widgets using �jaxStore:
+	</h3>
+  
+    <!-- the data model (for the grid) -->
+  <div dojoType="dojox.grid.data.DojoData" jsId="propertyModel" 
+    store="propertyStore" clientSort="true" query="{ level: 2 }"> 
+  </div>
+  
+  <script type="text/javascript">
+  var tableview = {
+    cells: [
+      [
+        {name: "URI", field: "sling:uri", width:"200px" },
+        {name: "Created", field: "jcr:created", width:"200px" },
+        {name: "Primary Type", field: "jcr:primaryType", width:"200px" }
+      ]
+    ]
+  };
+  
+  var tablestructure = [ tableview ];
+  </script>
+  
+  <div id="grid" dojoType="dojox.Grid" model="propertyModel" structure="tablestructure"></div>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!-- 
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+ -->
+<html>
+<head>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+		@import "../../../dojox/grid/resources/tundraGrid.css";
+		@import "../../../dojox/grid/resources/Grid.css";
+		
+		.dojoxGrid table {
+			margin: 0;
+		}
+
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true, usePlainJson: true"></script>
+	<script type="text/javascript">
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.form.TextBox");
+		dojo.require("dijit.form.FilteringSelect");
+		dojo.require("dijit.Tree");
+		dojo.require("dojox.data.SlingPropertyStore");
+		dojo.require("dojox.data.SlingNodeStore");
+		dojo.require("dojox.grid.DataGrid");
+		dojo.require("dijit.layout.StackContainer");
+		dojo.require("dijit.layout.TabContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.layout.BorderContainer");
+		
+		var nodeLayout = [
+			[
+				{ field: "name", name: "Name", width: 20 },
+				{ field: "value", name: "Value", width: 40, editable: true}
+		    ]
+		];
+
+	</script>
+</head>
+<body class="tundra">
+  <!-- the data stores -->
+  <div dojoType="dojox.data.SlingPropertyStore" url="/samplenodes" jsId="propertyStore"></div>
+  <div dojoType="dojox.data.SlingNodeStore" url="/samplenodes" jsId="nodeStore"></div>
+  <div dojoType="dojox.data.SlingNodeStore" url="/samplenodes" jsId="nodeStoreLevel2" overrideDepth="{depth: 2}"></div>
+  <div dojoType="dojox.data.SlingNodeStore" url="/samplenodes" jsId="nodeStoreLevel2NotDeep" overrideDepth="{depth: 2}" overrideDeep="{deep: false}"></div>
+  <div dojoType="dojox.data.SlingNodeStore" url="/samplenodes" jsId="nodeStoreAll3" overrideDeep="{deep: true}" overrideDepth="{depth: 3}"></div>
+  <div dojoType="dojox.data.SlingNodeStore" url="/" statement="//*[sling:resourceType='sample/node']" searchprops="['title','jcr:created']" jsId="nodeStoreSearch"></div>
+  <div dojoType="dojox.data.SlingNodeStore" url="/samplenodes" jsId="nodeStoreTreeLimit" overrideDepth="{treeDepth: 3}"></div>
+  
+  <!-- Models for the Trees -->
+  <div dojoType="dijit.tree.TreeStoreModel" jsId="treeModel" store="nodeStore"></div>
+  <div dojoType="dijit.tree.ForestStoreModel" jsId="forestModel" store="nodeStoreLevel2" rootId="fakeRoot" rootLabel="Fake Root"></div>
+  <div dojoType="dijit.tree.TreeStoreModel" jsId="treeModelLimit" store="nodeStoreTreeLimit"></div>
+  
+  <!--<div dojoType="dijit.layout.StackController" containerId="demoStack"></div>-->
+  <div dojoType="dijit.layout.TabContainer" id="demoStack" style="height: 100%">
+	<div title="Tree 1" dojoType="dijit.layout.ContentPane">
+		<h4>Tree of /samplenodes, all defaults</h4>
+		<div dojoType="dijit.Tree" model="treeModel" persist="false"></div>
+	</div>
+	<div title="Tree 2" dojoType="dijit.layout.ContentPane">
+		<h4>Tree of /samplenodes, depth=2, using forest model</h4>
+		<div dojoType="dijit.Tree" model="forestModel" persist="false"></div>
+	</div>
+	<div title="Tree 3" dojoType="dijit.layout.ContentPane">
+		<h4>Tree of /samplenodes, treedepth=3</h4>
+		<div dojoType="dijit.Tree" model="treeModelLimit" persist="false"></div>
+	</div>
+	<div title="ComboBox 1" dojoType="dijit.layout.ContentPane">
+		<h4>ComboBox of /samplenodes, all defaults</h4>
+		<div dojoType="dijit.form.ComboBox" store="nodeStore" searchAttr="title"></div>
+	</div>
+	<div title="ComboBox 2" dojoType="dijit.layout.ContentPane">
+		<h4>ComboBox of /samplenodes, depth=2</h4>
+		<div dojoType="dijit.form.ComboBox" store="nodeStoreLevel2" searchAttr="title"></div>
+	</div>
+	<div title="ComboBox 3" dojoType="dijit.layout.ContentPane">
+		<h4>ComboBox of /samplenodes, depth=2, deep=false</h4>
+		<div dojoType="dijit.form.ComboBox" store="nodeStoreLevel2NotDeep" searchAttr="title"></div>
+	</div>
+	<div title="FilteringSelect 1" dojoType="dijit.layout.ContentPane">
+		<h4>FilteringSelect of /samplenodes, using search statement: //*[sling:resourceType='sample/node']</h4>
+		<div dojoType="dijit.form.FilteringSelect" store="nodeStoreSearch" searchAttr="title"></div>
+	</div>
+	<div title="Complete" dojoType="dijit.layout.ContentPane">
+		<div dojoType="dijit.layout.BorderContainer" design="sidebar" gutters="true" liveSplitters="true" id="borderContainer">
+			<div dojoType="dijit.layout.ContentPane" splitter="true" region="leading" style="width: 20%;">
+				<div dojoType="dijit.Tree" model="treeModel" persist="false">
+					<script type="dojo/connect" event="onClick" args="nodeItem,nodeWidget">
+						propertyStore.setUrl(nodeItem.uri);
+						dijit.byId("nodePropGrid").setStore(propertyStore);
+					</script>
+				</div>
+			</div>
+			<div id="propGrid" dojoType="dijit.layout.ContentPane" region="center">
+				<div dojoType="dijit.layout.BorderContainer" gutters="true" liveSplitters="true" id="propContainer">
+					<div dojoType="dijit.layout.ContentPane" region="top">
+						<input id="newPropertyName" dojoType="dijit.form.TextBox" value=""/>
+						<input id="newPropertyValue" dojoType="dijit.form.TextBox" value=""/>
+						<div dojoType="dijit.form.Button" label="Add Property">
+							<script type="dojo/connect" event="onClick">
+								var newItem= {name: dijit.byId('newPropertyName').getValue(),value: dijit.byId('newPropertyValue').getValue()};
+								propertyStore.newItem(newItem);
+								dijit.byId("nodePropGrid").setStore(propertyStore);
+							</script>
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" region="center">
+						<div id="nodePropGrid"
+							    dojoType="dojox.grid.DataGrid"
+								store="propertyStore"
+								structure="nodeLayout"
+							    rowsPerPage="40">
+							<script type="dojo/connect" event="onApplyCellEdit">
+								// necessary because v1.2.3 grid keeps internal item cache & fetchItemByIdentity returns new item not ref to existing
+								dijit.byId("nodePropGrid").setStore(propertyStore);
+							</script>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
+

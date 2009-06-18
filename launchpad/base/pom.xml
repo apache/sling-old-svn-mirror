@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>5-incubator</version>
+        <relativePath>../../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>org.apache.sling.launchpad.base</artifactId>
+    <version>2.0.5-incubator-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Apache Sling Launchpad Base</name>
+    <description>
+        This module contains the common classes and configuration files used
+        by the various launchpad modules..
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/base</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/launchpad/base</developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/launchpad/base</url>
+    </scm>
+
+    <build>
+        <plugins>
+            <plugin>
+
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>1.4.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Category>
+                            sling
+                        </Bundle-Category>
+                        <Bundle-SymbolicName>
+                            system.bundle
+                        </Bundle-SymbolicName>
+                        <Bundle-DocURL>
+                            http://cwiki.apache.org/SLING/the-sling-launchpad.html
+                        </Bundle-DocURL>
+                        <Private-Package>
+                            <!-- External (app, webapp) components -->
+                            !org.apache.sling.launchpad.app.*,
+                            !org.apache.sling.launchpad.base.shared.*,
+                            !org.apache.sling.launchpad.webapp.*,
+                            *
+                        </Private-Package>
+                        <Import-Package>!*</Import-Package>
+                        <DynamicImport-Package>*</DynamicImport-Package>
+                        <Embed-Dependency>
+                            org.apache.felix.framework;inline=org/**,
+                            org.osgi.core;inline=org/osgi/service/condpermadmin/**|
+                                org/osgi/service/permissionadmin/**,
+                            org.osgi.compendium;inline=org/osgi/service/log/**|
+                                org/osgi/service/http/**|
+                                org/osgi/service/device/**|
+                                org/osgi/service/cm/**|
+                                org/osgi/service/metatype/**|
+                                org/osgi/service/prefs/**|
+                                org/osgi/service/useradmin/**|
+                                org/osgi/service/wireadmin/**|
+                                org/osgi/service/io/**|
+                                org/osgi/service/provisioning/**|
+                                org/osgi/service/upnp/**|
+                                org/osgi/service/component/**|
+                                org/osgi/service/event/**|
+                                org/osgi/service/deploymentadmin/**|
+                                org/osgi/service/deploymentadmin/spi/**|
+                                org/osgi/service/application/**|
+                                info/dmtree/**| info/dmtree/notification/**|
+                                info/dmtree/notification/spi/**|
+                                info/dmtree/registry/**|
+                                info/dmtree/security/**| info/dmtree/spi/**|
+                                org/osgi/service/monitor/**|
+                                org/osgi/application/**|
+                                org/osgi/util/xml/**|
+                                org/osgi/util/position/**|
+                                org/osgi/util/measurement/**,
+                            servlet-api;inline=javax/servlet/**,
+                            servlet;inline=org/eclipse/**
+                        </Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>base-app</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>
+                                        org.apache.sling.launchpad.app.Main
+                                    </mainClass>
+                                    <addDefaultImplementationEntries>
+                                        true
+                                    </addDefaultImplementationEntries>
+                                </manifest>
+                            </archive>
+                            <classifier>app</classifier>
+                            <includes>
+                                <include>org/apache/sling/launchpad/base/shared/**</include>
+                                <include>org/apache/sling/launchpad/app/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>base-webapp</id>
+                        <goals>
+                            <goal>war</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addDefaultImplementationEntries>
+                                        true
+                                    </addDefaultImplementationEntries>
+                                </manifest>
+                            </archive>
+                            <classifier>webapp</classifier>
+                            <packagingExcludes>
+                                WEB-INF/classes/*,
+                                WEB-INF/classes/META-INF/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/app/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/app/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/impl/**,
+                                WEB-INF/classes/org/apache/sling/launchpad/base/webapp/**
+                            </packagingExcludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!-- No javadocs -->
+                    <excludePackageNames>
+                        org.apache.sling
+                    </excludePackageNames>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>1.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <version>1.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.equinox.http</groupId>
+            <artifactId>servlet</artifactId>
+            <version>1.0.0-v20070606</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
+

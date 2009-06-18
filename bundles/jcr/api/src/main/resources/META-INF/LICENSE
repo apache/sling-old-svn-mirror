@@ -1,0 +1,355 @@
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+APACHE SLING SUBCOMPONENTS:
+
+Apache Sling includes subcomponents with separate copyright notices and
+license terms. Your use of these subcomponents is subject to the terms
+and conditions of the following licenses.
+
+JCR 1.0 API
+
+   Day Management AG ("Licensor") is willing to license this specification
+   to you ONLY UPON THE CONDITION THAT YOU ACCEPT ALL OF THE TERMS CONTAINED
+   IN THIS LICENSE AGREEMENT ("Agreement"). Please read the terms and
+   conditions of this Agreement carefully.
+
+   Content Repository for JavaTM Technology API Specification ("Specification")
+   Version: 1.0
+   Status: FCS
+   Release: 11 May 2005
+
+   Copyright 2005 Day Management AG
+   Barfusserplatz 6, 4001 Basel, Switzerland.
+   All rights reserved.
+
+   NOTICE; LIMITED LICENSE GRANTS
+
+   1. License for Purposes of Evaluation and Developing Applications. Licensor
+   hereby grants you a fully-paid, non-exclusive, non-transferable, worldwide,
+   limited license (without the right to sublicense), under Licensor's
+   applicable intellectual property rights to view, download, use and
+   reproduce the Specification only for the purpose of internal evaluation.
+   This includes developing applications intended to run on an implementation
+   of the Specification provided that such applications do not themselves
+   implement any portion(s) of the Specification.
+
+   2. License for the Distribution of Compliant Implementations. Licensor also
+   grants you a perpetual, non-exclusive, non-transferable, worldwide, fully
+   paid-up, royalty free, limited license (without the right to sublicense)
+   under any applicable copyrights or, subject to the provisions of subsection
+   4 below, patent rights it may have covering the Specification to create
+   and/or distribute an Independent Implementation of the Specification that:
+   (a) fully implements the Specification including all its required
+   interfaces and functionality; (b) does not modify, subset, superset or
+   otherwise extend the Licensor Name Space, or include any public or
+   protected packages, classes, Java interfaces, fields or methods within
+   the Licensor Name Space other than those required/authorized by the
+   Specification or Specifications being implemented; and (c) passes the
+   Technology Compatibility Kit (including satisfying the requirements of the
+   applicable TCK Users Guide) for such Specification ("Compliant
+   Implementation"). In addition, the foregoing license is expressly
+   conditioned on your not acting outside its scope. No license is granted
+   hereunder for any other purpose (including, for example, modifying the
+   Specification, other than to the extent of your fair use rights, or
+   distributing the Specification to third parties).
+
+   3. Pass-through Conditions. You need not include limitations (a)-(c) from
+   the previous paragraph or any other particular "pass through" requirements
+   in any license You grant concerning the use of your Independent
+   Implementation or products derived from it. However, except with respect
+   to Independent Implementations (and products derived from them) that
+   satisfy limitations (a)-(c) from the previous paragraph, You may neither:
+   (a) grant or otherwise pass through to your licensees any licenses under
+   Licensor's applicable intellectual property rights; nor (b) authorize your
+   licensees to make any claims concerning their implementation's compliance
+   with the Specification.
+
+   4. Reciprocity Concerning Patent Licenses. With respect to any patent
+   claims covered by the license granted under subparagraph 2 above that
+   would be infringed by all technically feasible implementations of the
+   Specification, such license is conditioned upon your offering on fair,
+   reasonable and non-discriminatory terms, to any party seeking it from You,
+   a perpetual, non-exclusive, non-transferable, worldwide license under Your
+   patent rights that are or would be infringed by all technically feasible
+   implementations of the Specification to develop, distribute and use a
+   Compliant Implementation.
+
+   5. Definitions. For the purposes of this Agreement: "Independent
+   Implementation" shall mean an implementation of the Specification that
+   neither derives from any of Licensor's source code or binary code materials
+   nor, except with an appropriate and separate license from Licensor,
+   includes any of Licensor's source code or binary code materials; "Licensor
+   Name Space" shall mean the public class or interface declarations whose
+   names begin with "java", "javax", "javax.jcr" or their equivalents in any
+   subsequent naming convention adopted by Licensor through the Java Community
+   Process, or any recognized successors or replacements thereof; and
+   "Technology Compatibility Kit" or "TCK" shall mean the test suite and
+   accompanying TCK User's Guide provided by Licensor which corresponds to
+   the particular version of the Specification being tested.
+
+   6. Termination. This Agreement will terminate immediately without notice
+   from Licensor if you fail to comply with any material provision of or act
+   outside the scope of the licenses granted above.
+
+   7. Trademarks. No right, title, or interest in or to any trademarks,
+   service marks, or trade names of Licensor is granted hereunder. Java is
+   a registered trademark of Sun Microsystems, Inc. in the United States and
+   other countries.
+
+   8. Disclaimer of Warranties. The Specification is provided "AS IS".
+   LICENSOR MAKES NO REPRESENTATIONS OR WARRANTIES, EITHER EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT (INCLUDING AS A
+   CONSEQUENCE OF ANY PRACTICE OR IMPLEMENTATION OF THE SPECIFICATION),
+   OR THAT THE CONTENTS OF THE SPECIFICATION ARE SUITABLE FOR ANY PURPOSE.
+   This document does not represent any commitment to release or implement
+   any portion of the Specification in any product.
+
+   The Specification could include technical inaccuracies or typographical
+   errors. Changes are periodically added to the information therein; these
+   changes will be incorporated into new versions of the Specification, if
+   any. Licensor may make improvements and/or changes to the product(s)
+   and/or the program(s) described in the Specification at any time. Any use
+   of such changes in the Specification will be governed by the then-current
+   license for the applicable version of the Specification.
+
+   9. Limitation of Liability. TO THE EXTENT NOT PROHIBITED BY LAW, IN NO
+   EVENT WILL LICENSOR BE LIABLE FOR ANY DAMAGES, INCLUDING WITHOUT
+   LIMITATION, LOST REVENUE, PROFITS OR DATA, OR FOR SPECIAL, INDIRECT,
+   CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND
+   REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF OR RELATED TO ANY
+   FURNISHING, PRACTICING, MODIFYING OR ANY USE OF THE SPECIFICATION, EVEN
+   IF LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+   10. Report. If you provide Licensor with any comments or suggestions in
+   connection with your use of the Specification ("Feedback"), you hereby:
+   (i) agree that such Feedback is provided on a non-proprietary and
+   non-confidential basis, and (ii) grant Licensor a perpetual, non-exclusive,
+   worldwide, fully paid-up, irrevocable license, with the right to sublicense
+   through multiple levels of sublicensees, to incorporate, disclose, and use
+   without limitation the Feedback for any purpose related to the
+   Specification and future versions, implementations, and test suites thereof.
+
+
+JCR 1.0 API Additional Terms
+
+	In addition to the permissions granted under the Specification
+	License, Day Management AG hereby grants to You a perpetual,
+	worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+	license to reproduce, publicly display, publicly perform,
+	sublicense, and distribute unmodified copies of the Content
+	Repository for Java Technology API (JCR 1.0) Java Archive (JAR)
+	file ("jcr-1.0.jar") and to make, have made, use, offer to sell,
+	sell, import, and otherwise transfer said file on its own or
+	as part of a larger work that makes use of the JCR API.
+	
+	With respect to any patent claims covered by this license
+	that would be infringed by all technically feasible implementations
+	of the Specification, such license is conditioned upon your
+	offering on fair, reasonable and non-discriminatory terms,
+	to any party seeking it from You, a perpetual, non-exclusive,
+	non-transferable, worldwide license under Your patent rights
+	that are or would be infringed by all technically feasible
+	implementations of the Specification to develop, distribute
+	and use a Compliant Implementation.

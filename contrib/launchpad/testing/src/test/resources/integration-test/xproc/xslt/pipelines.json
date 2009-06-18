@@ -1,0 +1,16 @@
+{	
+	"title": "pipelines",
+	"jcr:primaryType":"nt:unstructured",
+	"dynamic_xml": {
+		"title": "dynamic_xml",
+		"sling:resourceType": "sling/xpl/sample",
+		"sling:resourceSuperType": "sling/xpl"
+	},
+	"static_xml": {
+		"sling:resourceType": "sling/xpl"
+	},
+	"no_xml": {
+		"title": "no_xml",
+		"sling:resourceType": "sling/xpl"
+	}
+}

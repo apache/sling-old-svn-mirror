@@ -1,0 +1,5 @@
+<%
+// SLING-760: test an error message with characters that must
+// be escaped 
+throw("This string contains <characters/> that must be filtered & escaped");
+%>

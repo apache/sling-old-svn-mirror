@@ -1,0 +1,154 @@
+<html>
+
+<!--
+	   Licensed to the Apache Software Foundation (ASF) under one or more
+	   contributor license agreements.  See the NOTICE file distributed with
+	   this work for additional information regarding copyright ownership.
+	   The ASF licenses this file to You under the Apache License, Version 2.0
+	   (the "License"); you may not use this file except in compliance with
+	   the License.  You may obtain a copy of the License at
+	
+	       http://www.apache.org/licenses/LICENSE-2.0
+	
+	   Unless required by applicable law or agreed to in writing, software
+	   distributed under the License is distributed on an "AS IS" BASIS,
+	   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	   See the License for the specific language governing permissions and
+	   limitations under the License.
+-->
+
+<head>
+	<title>Sling client library test page</title>
+	
+	<script src="/system/sling.js"></script>
+	<script src="assert.js"></script>
+	
+	<style type="text/css">
+	.output {
+		background-color: #FFFF99;
+		border: solid #FF9900 1px;
+		padding: 2px;
+	}
+	.warning {
+		border: solid yellow 1px;
+		background-color: red;
+		color: white;
+		padding: 0.5em;
+		font-weight: bold;
+	}
+	</style>
+</head>
+
+<body onload="runTests()">
+
+<h1>Automated Sling client library tests</h1>
+<p>Loading this page executes some simple automated javascript tests
+of the Sling client library.</p>
+
+<p>
+Note that, in Sling revision 669215, <b>the tests fail</b> unless the 
+<em>Allow Anonymous Access</em> parameter of the <em>Sling Request Authenticator</em>
+component is set to false, see <a href="https://issues.apache.org/jira/browse/SLING-322">SLING-322</a>.
+</p>
+
+<h2>Test results</h2>
+<p>If all goes well, the paragraph styled <span class="output">like
+this</span> below should say "Done running tests".</p>
+<p>Tests run quickly, this might have happened already.</p>
+<p>To run the tests again click <a href="javascript:runTests()">here</a>.
+</p>
+<div id="output" class="output" style="padding: 1em;">Tests are
+running...</div>
+
+<h2>More info</h2>
+<p>After running the tests at least once, <a
+	href="/test-data/sling-test/testhtml-nodes.infinity.json">/sling-test/testhtml-nodes.json</a>
+should show the JSON data of the nodes created by the test cases.</p>
+<p>See the source code of this page for details.</p>
+
+
+<script language="javascript">
+	  function slingPost(url,params) {
+	    var httpcon = Sling.getXHR();
+	    httpcon.open("POST", url, false);
+	    httpcon.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	    httpcon.setRequestHeader("Content-length", params.length);
+	    httpcon.setRequestHeader("Connection", "close");
+	    httpcon.send(params);
+	    return httpcon;
+	  }
+	  
+	  function uniqueId() {
+	    return new Date().getTime();
+	  }
+	    
+	  var passes = 0;
+	  var baseTestPath = "/test-data/sling-test/testhtml-nodes";
+	  var testPath = baseTestPath + "/test-" + uniqueId();
+	  var testTime = uniqueId();
+	  
+	  function testPost() {
+	    var path = testPath + "/" + uniqueId();
+	    var c = slingPost(path,"title=hello&created=&empty=&time=" + testTime);
+	    assert("testPost(): Expected 201 status for POST, got " + c.status,c.status == 201);
+	    return path;
+	  }
+	  
+	  function verifyPostedElement(path) {
+	    var data = Sling.getContent(path,1);
+	    assertNotNull("data",data);
+	    assertEquals("verifyPostedElement: title matches","hello",data.title);
+	    assertEquals("verifyPostedElement: time matches",testTime,data.time);
+	    assertEquals("verifyPostedElement: created property is a string","string",typeof(data.created));
+        // TODO implement 'created' autoset property
+	    // assert("created property is not empty",data.created.length > 0);
+	    assertEquals("verifyPostedElement: empty property is not stored","undefined",typeof(data.dummy));
+	  }
+	  
+	  function testGetSessionInfo() {
+	    var session = Sling.getSessionInfo();
+	    assertNotNull("testGetSessionInfo: Sling.getSessionInfo()", session);
+	    assertEquals("testGetSessionInfo: session.userID is a string","string",typeof(session.userID));
+        assertEquals("testGetSessionInfo: session.userID == 'admin'","admin",session.userID);
+	    assertEquals("testGetSessionInfo: session.workspace is a string","string",typeof(session.workspace));
+	    assert("testGetSessionInfo: session.workspace contains 'default'",session.workspace.indexOf('default') >= 0);
+	  }
+	  
+	  function testRemoveContent() {
+		var deletePath = baseTestPath + "/sling-test/testhtml-nodes/delete-" + uniqueId();
+	    var c = slingPost(deletePath,"title=hello&created=&dummy=&time=" + uniqueId());
+	    assert("testRemoveContent: Expected 201 status for POST, got " + c.status,c.status == 201);
+	    
+	    var data = Sling.getContent(deletePath,1);
+	    assertNotNull("testRemoveContent: data must be found before removeContent",data);
+	    
+	    var d = Sling.removeContent(deletePath);
+	    assert("testRemoveContent: Expected 200 status for removeContent, got " + d.status,d.status == 200);
+	    data = Sling.getContent(deletePath,1);
+	    assertNull("testRemoveContent: data should be gone after deletePath (" + deletePath + ")",data);
+	  }
+	  
+	  function testJsonLevels() {
+	    var c = slingPost(baseTestPath + "/json-levels", "title=JsonLevelsTest");
+	    var data0 = Sling.getContent(baseTestPath,0);
+	    var data1 = Sling.getContent(baseTestPath,1);
+	    assert("testJsonLevels: Level 0 must not provide child", typeof data0['json-levels'] == "undefined");
+	    assert("testJsonLevels: Level 1 must provide child", typeof data1['json-levels'] == "object");
+	    assert("testJsonLevels: Level 1 must provide child title", data1['json-levels'].title == "JsonLevelsTest");
+	  }
+	  
+	  function runTests() {
+	    var out = document.getElementById("output");
+	    out.innerHTML = "Tests are running...";
+	    assert(null,2 + 2 == 4);
+	    var path = testPost();
+	    verifyPostedElement(path);
+	    testGetSessionInfo();
+	    testRemoveContent();
+	    testJsonLevels();
+	    out.innerHTML = "<b>Done running tests, pass " + (++passes) + "</b>";
+	  }
+	</script>
+
+</body>
+</html>

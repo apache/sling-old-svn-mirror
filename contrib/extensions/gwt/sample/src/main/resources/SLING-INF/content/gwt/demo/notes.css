@@ -1,0 +1,83 @@
+body, td, a, div, .p {
+    font-family: arial, sans-serif;
+}
+
+div, td {
+    color: #000000;
+}
+
+a:link, .w, .w a:link {
+    color: #0000cc;
+}
+
+a:visited {
+    color: #551a8b;
+}
+
+a:active {
+    color: #ff0000;
+}
+
+.displayPanel {
+    width: 500px;
+    padding: 10px;
+    background-color: #d1cfcf;
+    border: 1px solid #999999;
+}
+
+.entryPanel {
+    width: 300px;
+    padding: 10px;
+    background-color: #918e8e;
+    border: 1px solid #999999;
+}
+
+.displayTitle {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.entryTitle {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.formPanel {
+    padding: 10px;
+}
+
+.formField {
+    margin-bottom: 5px;
+    padding: 2px;
+}
+
+.button {
+    margin-right: 5px;
+}
+
+.noteEntry {
+    width: 478px;
+    border: 1px solid #999999;
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: #ffff00;
+}
+
+.noteTitle {
+    font-family: Courier, serif;
+    font-size: 12pt;
+    width: 175px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.noteText {
+    padding-right: 10px;
+    font-family: Courier, serif;
+    font-size: 12pt;
+    width: 208px;
+}
+
+.noteControls {
+    width: 75px;
+}

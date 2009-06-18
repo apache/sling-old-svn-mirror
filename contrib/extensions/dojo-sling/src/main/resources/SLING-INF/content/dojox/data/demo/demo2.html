@@ -1,0 +1,161 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+ 
+       http://www.apache.org/licenses/LICENSE-2.0
+ 
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  This file is a demo of multiple dojo.data aware widgets using different datastore implementations for displaying data.
+-->
+<html>
+<head>
+	<title>Demo of Multiple Widgets using the �jax Data Store</title>
+	<style type="text/css">
+		@import "../../../dijit/themes/tundra/tundra.css";
+		@import "../../../dojo/resources/dojo.css";
+		@import "../../../dijit/tests/css/dijitTests.css";
+    @import "../../../dojox/grid/_grid/tundraGrid.css";
+	</style>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js" djConfig="isDebug: true, parseOnLoad: true, debugAtAllCosts: true, usePlainJson: true"></script>
+	<script type="text/javascript">
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.ComboBox");
+		dojo.require("dijit.Tree");
+		dojo.require("dojox.data.SlingNodeStore");
+    dojo.require("dojox.data.SlingPropertyStore");
+    dojo.require("dojox.grid._data.model");
+    dojo.require("dojox.grid.Grid");
+    dojo.require("dojox.grid._data.editors");
+    dojo.require("dijit.form.Form");
+    dojo.require("dijit.layout.LayoutContainer");
+    dojo.require("dijit.layout.ContentPane");
+    dojo.require("dijit.layout.SplitContainer");
+	</script>
+</head>
+
+<body class="tundra">
+	<h1>
+		DEMO:  �jax Data Store
+	</h1>
+
+  <div dojoType="dojox.data.SlingNodeStore" url="/" jsId="nodeStore"></div>
+  
+    <!-- the data store -->
+  <div dojoType="dojox.data.SlingPropertyStore" url="/test" jsId="propertyStore">
+  </div>
+  
+      <div dojoType="dojox.grid.data.DojoData" jsId="model"
+        rowsPerPage="20" store="propertyStore" query="{ namespace: '*' }"
+        clientSort="true">
+    </div>
+    
+    <div dojoType="dojox.grid.data.DojoData" jsId="childmodel"
+        rowsPerPage="20" store="nodeStore" query="{ level: 1 }"
+        clientSort="true">
+    </div>
+
+    
+<div dojoType="dijit.layout.LayoutContainer" style="width: 100%; height: 100%; padding: 0; margin: 0; border: 0;">
+   <div dojoType="dijit.layout.ContentPane" layoutAlign="top" style="margin:5px;">
+        <form action="/test" method="POST" dojoType="dijit.form.Form" onSubmit="alert(this);">
+          <script type="dojo/method" event="execute">
+            propertyStore.newItem(this.getValues());
+            thisGrid.refresh();
+            return false;
+          </script>
+          <input name="name" dojoType="dijit.form.TextBox" value=""><input name="value" dojoType="dijit.form.TextBox" value="">
+          <input type="submit" value="Add Property">
+       </form>
+        
+        </div>
+   <div dojoType="dijit.layout.ContentPane" layoutAlign="left" 
+        style="width: 300px;overflow:auto;">
+  <div dojoType="dijit.Tree" id="tree3" store="nodeStore">
+    <script type="dojo/connect" event="onClick" args="item,node">
+    //update the store
+    propertyStore = new dojox.data.SlingPropertyStore({url: item.uri});
+    //update the model
+    model = new dojox.grid.data.DojoData(null, null, {store: propertyStore});
+    //model.setData(propertyStore);
+    
+    //update the grid?
+    thisGrid.setModel(model);
+    thisGrid.refresh();
+    </script>
+  </div>
+    </div>
+    <div dojoType="dijit.layout.ContentPane" layoutAlign="client">
+    
+    <div dojoType="dijit.layout.SplitContainer"
+                orientation="vertical"
+                sizerWidth="7"
+                activeSizing="true">
+      <div dojoType="dijit.layout.ContentPane" title="Properties">
+              
+      <div id="grid" elasticView="2" dojoType="dojox.Grid" model="model" autoWidth="true" autoHeight="true"
+        jsId="thisGrid">
+        <script type="dojo/method">
+            var view1 = {
+                cells: [[
+                    /*{name: 'URI', field:0},*/
+                    {name: 'Property', field:1, width:"30em"},
+                    {name: 'Value', field:2, width:"30em", editor:dojox.grid.editors.Input}
+                  ]
+                ]
+            };
+            var rowbar = {
+               type: 'dojox.GridRowView', width: '20px'
+            };
+           
+            // When you initialize inside the dojo/method script, you must set the
+            // structure manually.
+            var layout = [ rowbar, view1 ];
+            thisGrid.setStructure(layout);
+        </script>
+       </div>
+      
+      </div>
+      
+      <div dojoType="dijit.layout.ContentPane" title="Child Nodes">
+              
+       <div id="childgrid" jsId="childGrid" dojoType="dojox.Grid" model="childmodel" autoWidth="true" autoHeight="true">
+  
+  <script type="dojo/method">
+  var tableview = {
+    cells: [
+      [
+        {name: "URI", field: "sling:uri", width:"200px" },
+        {name: "Created", field: "jcr:created", width:"200px" },
+        {name: "Primary Type", field: "jcr:primaryType", width:"200px" }
+      ]
+    ]
+  };
+  
+  childGrid.setStructure([tableview]);
+  </script>
+  
+  </div>
+      
+      </div>
+    </div>
+    
+    
+          
+    
+    
+ 
+    </div>
+</div>
+
+</body>
+</html>

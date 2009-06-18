@@ -1,0 +1,18 @@
+{
+    "jcr:primaryType":"nt:unstructured",
+    "note" : {
+        "jcr:primaryType":"nt:unstructured",
+        "noteTitle":"People to call...",
+        "noteText":"Andrea, Philipp, Mom (again),..."
+    },
+    "note1" : {
+        "jcr:primaryType":"nt:unstructured",
+        "noteTitle":"Shopping list",
+        "noteText":"MacBook Pro, Toothpaste, ..."
+    },
+    "note2" : {
+        "jcr:primaryType":"nt:unstructured",
+        "noteTitle":"Books to Read",
+        "noteText":"1984, A New Earth, Matter, ..."
+    }
+}

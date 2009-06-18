@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+    version="2.0">
+
+    <description>A supporting tab library for Apache Sling that creates Atom feeds using Apache Adbera</description>
+    <tlib-version>1.0</tlib-version>
+    <short-name>atom</short-name>
+    <uri>http://sling.apache.org/taglibs/atom/1.0</uri>
+
+
+    <tag>
+        <name>category</name>
+        <tag-class>org.apache.sling.atom.taglib.CategoryTagHandler</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>term</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>label</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>scheme</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+
+    <tag>
+        <name>author</name>
+        <tag-class>org.apache.sling.atom.taglib.AuthorTagHandler</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>email</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>uri</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>title</name>
+        <tag-class>org.apache.sling.atom.taglib.TitleTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+    
+    <tag>
+        <name>subtitle</name>
+        <tag-class>org.apache.sling.atom.taglib.SubtitleTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+    
+    <tag>
+        <name>summary</name>
+        <tag-class>org.apache.sling.atom.taglib.SummaryTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+    
+    <tag>
+        <name>content</name>
+        <tag-class>org.apache.sling.atom.taglib.ContentTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+    
+    <tag>
+        <name>rights</name>
+        <tag-class>org.apache.sling.atom.taglib.SubtitleTagHandler</tag-class>
+        <body-content>JSP</body-content>
+    </tag>
+    
+    <tag>
+        <name>generator</name>
+        <tag-class>org.apache.sling.atom.taglib.GeneratorTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>uri</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>version</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>entry</name>
+        <tag-class>org.apache.sling.atom.taglib.EntryTagHandler</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>draft</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>edited</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>id</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>published</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>updated</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>link</name>
+        <tag-class>org.apache.sling.atom.taglib.LinkTagHandler</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>href</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>rel</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>hreflang</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>length</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <name>contributor</name>
+        <tag-class>org.apache.sling.atom.taglib.ContributorTagHandler</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <name>name</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>email</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>uri</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <description>
+            Creates a feed
+        </description>
+        <name>feed</name>
+        <tag-class>
+            org.apache.sling.atom.taglib.FeedTagHandler
+        </tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <name>baseUri</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>icon</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>id</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>language</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>logo</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>updated</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+
+</taglib>

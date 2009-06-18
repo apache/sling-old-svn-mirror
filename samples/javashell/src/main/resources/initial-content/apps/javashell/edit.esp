@@ -1,0 +1,78 @@
+<% /*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+*/ %>
+
+<%
+// A resource path ending with /* indicates that
+// we are creating a new node, an not editing an
+// existing one
+var path = resource.getPath();
+var creating = path.match("/\\*" + "$") == "/*";
+
+// Get current node values for editing
+var title = currentNode.title ? currentNode.title : "";
+var code = currentNode.code ? currentNode.code : ""; 
+var pageTitle = creating ? "Create a new javashell script" : "Editing: " + title;
+
+// Default values, if creating a new node
+if(creating) {
+	code = 'out.println("Hello, javashell world!");';
+}
+%>
+
+<html>
+<head>
+  <title><%= pageTitle %></title>
+  <link rel="stylesheet" type="text/css" href="/apps/javashell/javashell.css"/>
+</head>
+<body>
+
+<div class="title">
+  <div class="logo">
+    <a href="http://incubator.apache.org/sling">
+      <img border="0" src="/apps/javashell/sling-logo.png"/>
+    </a>
+  </div>
+</div>
+
+<div class="menu">
+  <ul>
+    <% if(!creating) { load("siblings.esp"); } %>
+  </ul>
+</div>                  
+  
+<div class="main">
+<h1><%= pageTitle %></h1>
+<form method="POST">
+<input type="submit" value="Save and execute"/>
+<br/>
+Title:
+<br/>
+<input type="text" size="80" style="width:100%" name="title" value="<%= title %>"/>
+<br/>
+Code:
+<br/>
+<textarea rows="30" cols="80" name="code" style="width:100%"><%= code %></textarea>
+<br/>
+<input type="submit" value="Save and execute"/>
+<input type="hidden" name=":redirect" value="*.html"/>
+</form>
+
+</div>
+</body>
+</html>
