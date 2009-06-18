@@ -35,9 +35,9 @@
     <description>Commons OSGi</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/osgi</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/commons/osgi</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/commons/osgi</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/osgi</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/osgi</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/osgi</url>
     </scm>
 
     <build>
