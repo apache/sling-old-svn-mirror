@@ -1,0 +1,70 @@
+//
+//  Licensed to the Apache Software Foundation (ASF) under one
+//  or more contributor license agreements.  See the NOTICE file
+//  distributed with this work for additional information
+//  regarding copyright ownership.  The ASF licenses this file
+//  to you under the Apache License, Version 2.0 (the
+//  "License"); you may not use this file except in compliance
+//  with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing,
+//  software distributed under the License is distributed on an
+//  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+//  KIND, either express or implied.  See the License for the
+//  specific language governing permissions and limitations
+//  under the License.
+//
+
+// for more details on this resource type refer to
+//    http://cwiki.apache.org/SLING/flexible-resource-resolution.html
+
+<sling = 'http://sling.apache.org/jcr/sling/1.0'>
+
+//-----------------------------------------------------------------------------
+// Mixin node type to enable setting an alias on a resource
+[sling:ResourceAlias]
+    mixin
+  
+    // alias name(s) for the node (single or multi-value)
+  - sling:alias (string)
+  - sling:alias (string) multiple
+
+
+//-----------------------------------------------------------------------------
+// Mixin node type to allow building the /etc/map configuration
+[sling:MappingSpec]
+    mixin
+  
+    // optional regular expression used to match the request. If
+    // this property is not set, the node's name is used for matching
+    // this regular expression should only be used to match a single
+    // segment, thus it should not contain any slashes 
+  - sling:match (string)
+  
+    // Location header value for response
+  - sling:redirect (string)
+  
+    // status code for redirect, defaults to 302 if not defined
+  - sling:status (long)
+  
+    // internal redirect for further processing
+  - sling:internalRedirect (string)
+  - sling:internalRedirect (string) multiple
+
+
+//-----------------------------------------------------------------------------
+// Primary node type to allow building the /etc/map configuration
+//   * sling:MappingSpec  -> define properties for redirects
+//   * sling:Resource     -> allow setting the resource type
+//   * nt:hierarchyNode   -> allow placing below nt:folder
+[sling:Mapping] > sling:MappingSpec, sling:Resource, nt:hierarchyNode
+
+    // child node order is significant in the resolution process
+    // so allow for custom child node ordering
+    orderable
+    
+    // allow any child node, but prefer sling:Mapping nodes
+  + * (nt:base) = sling:Mapping version
+  
