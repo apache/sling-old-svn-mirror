@@ -46,12 +46,12 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib
         </developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib</url>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib</url>
     </scm>
 
 

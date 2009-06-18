@@ -26,9 +26,9 @@
   </description>
   
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/samples/espblog</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/samples/espblog</developerConnection>
-    <url>http://svn.apache.org/viewvc/incubator/sling/trunk/samples/espblog</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/samples/espblog</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/samples/espblog</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/samples/espblog</url>
   </scm>
   
   <build>

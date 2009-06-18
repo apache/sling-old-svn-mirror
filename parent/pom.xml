@@ -54,9 +54,9 @@
     
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/parent</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/parent</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/parent</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/parent</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/parent</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/parent</url>
     </scm>
 
 
@@ -249,7 +249,7 @@ setting is not correct.
                     <artifactId>maven-release-plugin</artifactId>
                     <configuration>
                         <tagBase>
-                            https://svn.apache.org/repos/asf/incubator/sling/tags
+                            https://svn.apache.org/repos/asf/sling/tags
                         </tagBase>
                     </configuration>
                 </plugin>

@@ -47,12 +47,12 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk
         </developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk</url>
+        <url>http://svn.apache.org/viewvc/sling/trunk</url>
     </scm>
 
     <!-- List modules to be included in the build here ! -->

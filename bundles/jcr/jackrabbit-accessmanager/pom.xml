@@ -37,13 +37,13 @@
 
 	<scm>
 		<connection>
-			scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+			scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jackrabbit-accessmanager
 		</connection>
 		<developerConnection>
-			scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+			scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jackrabbit-accessmanager
 		</developerConnection>
 		<url>
-			http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/jcr/jackrabbit-accessmanager
+			http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/jackrabbit-accessmanager
 		</url>
 	</scm>
 

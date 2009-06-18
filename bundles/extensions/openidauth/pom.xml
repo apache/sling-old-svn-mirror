@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/openidauth</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/bundles/extensions/openidauth</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/bundles/extensions/openidauth</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/openidauth</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/openidauth</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/openidauth</url>
     </scm>
 
     <build>

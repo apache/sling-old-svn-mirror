@@ -45,9 +45,9 @@
     </repositories>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/testing</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/testing</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/launchpad/testing</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/testing</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/testing</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/launchpad/testing</url>
     </scm>
 
     <properties>

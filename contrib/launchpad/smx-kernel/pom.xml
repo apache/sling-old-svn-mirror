@@ -43,13 +43,13 @@
 	
 	<scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/smx-kernel
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/smx-kernel
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/launchpad/smx-kernel
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/smx-kernel
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/launchpad/smx-kernel
+            http://svn.apache.org/viewvc/sling/trunk/contrib/launchpad/smx-kernel
         </url>
     </scm>
 
