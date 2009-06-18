@@ -1,0 +1,5 @@
+{
+    "jcr:mixinTypes": [ "sling:Redirect" ],
+    "sling:resourceType": "sling:redirect",
+    "sling:target": "/index.html"
+}

@@ -1,0 +1,117 @@
+<%
+   var privilegesInfo = new Packages.org.apache.sling.jcr.jackrabbit.accessmanager.PrivilegesInfo();
+   if (!privilegesInfo.canReadAccessControl(currentNode)) {
+      //no rights to view the access control of the node, so just return a 404 status
+      response.sendError(404);
+   } else {
+      var principalId = request.getParameter("pid");
+      var isUser = false;
+      var isValidPrincipal = false;
+      if (principalId != null && principalId != "") {
+         var userManager = Packages.org.apache.sling.jcr.base.util.AccessControlUtil.getUserManager(currentNode.session);
+         if (userManager != null) {
+            var authorizable = userManager.getAuthorizable(principalId);
+            if (authorizable != null) {
+               isUser = !authorizable.isGroup();
+               isValidPrincipal = true;
+            } else {
+               //no user/group matches the supplied principal id
+            }
+         }
+      }
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+>
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+   <title>Access Control Entry : <%=currentNode.name%></title>
+   
+   <style TYPE="text/css">
+   <!--
+      ul.error-msg {
+         list-style-position: inside;
+         list-style-type: none;
+      }
+      li.error-msg {
+         color: #c00;
+         background-color: #fee;
+         border: 1px solid #c00;
+         margin: 3px;
+         padding: 4px;
+         line-height: 18px;
+         font-weight: bold;
+      }
+   -->
+   </style>
+</head>
+<body>
+   <%
+      if (!isValidPrincipal) {
+   %>
+      <ul class="error-msg">
+         <li class="error-msg">Invalid principal name: "<%=principalId%>"</li>
+      </ul>
+   <%
+      } else  {
+         //principal is valid
+         var accessRights = privilegesInfo.getDeclaredAccessRightsForPrincipal(currentNode, principalId);
+         var granted = accessRights.getGranted();
+         var denied = accessRights.getDenied();
+         var supported = privilegesInfo.getSupportedPrivileges(currentNode);
+         var canModify = privilegesInfo.canModifyAccessControl(currentNode);
+   %>
+
+      <h1>Modify Access Control Entry For: <%=principalId%></h1>
+   
+      <form method="POST" action="<%=request.contextPath%><%=currentNode.path%>.modifyAce.html" >
+         <input type="hidden" name=":redirect" value="<%=request.contextPath%><%=currentNode.path%>.acl.html" />
+         <input type="hidden" name="principalId" value="<%=principalId%>" />
+      
+         <table width="100%">
+            <thead>
+               <tr>
+                  <th align="left" width="<%=isUser ? '70%' : '55%'%>">Privilege</th>
+                  <th align="center" width="15%">Ignored</th>
+                  <th align="center" width="15%">Granted</th>
+                  <% if (isUser) { %>
+                  <th align="center" width="15%">Denied</th>
+                  <% } %>
+               </tr>
+            </thead>
+            <tbody>
+            <%
+               for (i=0; i < supported.length; i++) {
+                  var p = supported[i];
+            %>
+            <tr>
+               <td align="left" width="<%=isUser ? '70%' : '55%'%>"><%=p.getName()%></td>
+               <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="" <%=granted.contains(p) || denied.contains(p) ? "" : "checked"%> /></td>
+               <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="granted" <%=granted.contains(p) ? "checked" : ""%> /></td>
+               <% if (isUser) { %>
+               <td align="center" width="15%"><input type="radio" name="privilege@<%=p.getName()%>" value="denied" <%=denied.contains(p) ? "checked" : ""%> /></td>
+               <% } %>
+            </tr>      
+            <%      
+               }
+            %>
+            </tbody>
+            <tfoot>
+               <tr>
+                  <td colspan="<%=isUser ? '3' : '2'%>"></td>
+                  <td align="center" width="15%">
+                     <button accesskey="a" id="applyButton" class="form-button" type="submit">Apply</button>
+                  </td>
+               </tr>
+            </tfoot>
+         </table>
+      </form>
+   <%
+      } //end-if isValidPrincipal
+   %>      
+</body>
+</html>
+<%
+   }
+%>
