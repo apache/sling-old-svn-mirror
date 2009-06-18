@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/samples/path-based-rtp</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/samples/path-based-rtp</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/samples/path-based-rtp</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/samples/path-based-rtp</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/samples/path-based-rtp</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/samples/path-based-rtp</url>
     </scm>
 
     <build>
