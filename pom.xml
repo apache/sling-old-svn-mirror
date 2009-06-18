@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling-builder</artifactId>
+    <packaging>pom</packaging>
+    <version>4-incubator</version>
+
+    <name>Sling (Builder)</name>
+    <description>
+        Pseudo project to build the complete Sling project
+    </description>
+
+    <inceptionYear>2007</inceptionYear>
+
+    <prerequisites>
+        <maven>2.0.7</maven>
+    </prerequisites>
+
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>http://issues.apache.org/jira/browse/SLING</url>
+    </issueManagement>
+
+
+    <scm>
+        <connection>
+            scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk
+        </connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk
+        </developerConnection>
+        <url>http://svn.apache.org/viewvc/incubator/sling/trunk</url>
+    </scm>
+
+
+    <!-- List modules to be included in the build here ! -->
+    <modules>
+        <!-- The real Sling Parent Project -->
+        <module>parent</module>
+
+        <!-- The Maven Plugins -->
+        <module>maven/maven-jcrocm-plugin</module>
+        <module>maven/maven-jspc-plugin</module>
+        <module>maven/maven-sling-plugin</module>
+
+        <!-- The Sling API -->
+        <module>api</module>
+
+        <!-- The commons sub project -->
+        <module>commons/json</module>
+        <module>commons/log</module>
+        <module>commons/mime</module>
+        <module>commons/osgi</module>
+        <module>commons/scheduler</module>
+        <module>commons/testing</module>
+        <module>commons/threads</module>
+        
+        <!-- The Sling Engine -->
+        <module>engine</module>
+        
+        <!-- The JCR sub project -->
+        <module>jcr/api</module>
+        <module>jcr/base</module>
+        <module>jcr/classloader</module>
+        <module>jcr/contentloader</module>
+        <module>jcr/jackrabbit-api</module>
+        <module>jcr/jackrabbit-client</module>
+        <module>jcr/jackrabbit-server</module>
+        <module>jcr/ocm</module>
+        <module>jcr/resource</module>
+        <module>jcr/webdav</module>
+        
+        <!-- Servlets -->
+        <module>servlets/resolver</module>
+        <module>servlets/get</module>
+        <module>servlets/post</module>
+
+        <!-- Scripting Support -->
+        <module>scripting/api</module>
+        <module>scripting/core</module>
+        <module>scripting/javascript</module>
+        <module>scripting/jsp</module>
+        <module>scripting/jsp-taglib</module>
+        
+        <!-- Extensions -->
+        <module>extensions/adapter</module>
+        <module>extensions/bundleresource</module>
+        <module>extensions/event</module>
+        <module>extensions/httpauth</module>
+        <module>extensions/apt/parser</module>
+        <module>extensions/apt/servlet</module>
+
+        <!-- Samples -->
+        <module>samples/simple-demo</module>
+        <module>samples/path-based-rtp</module>
+        <module>samples/webloader/service</module>
+        <module>samples/webloader/ui</module>
+
+        <!-- Launchpad -->
+        <module>launchpad/base</module>
+        <module>launchpad/content</module>
+        <module>launchpad/app</module>
+
+    </modules>
+    <distributionManagement>
+        <!-- place our releases in the incubator's repository -->
+        <snapshotRepository>
+            <uniqueVersion>false</uniqueVersion>
+            <id>apache.incubating</id>
+            <name>Apache Incubating Repository</name>
+            <url>
+                scp://people.apache.org/www/people.apache.org/repo/m2-incubating-repository
+            </url>
+        </snapshotRepository>
+        <repository>
+            <id>apache.incubating</id>
+            <name>Apache Incubating Repository</name>
+            <url>
+                scp://people.apache.org/www/people.apache.org/repo/m2-incubating-repository
+            </url>
+        </repository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+	        <!--
+	          Launchpad build is relatively slow when integration tests
+	          run - having it here makes it possible to disable it.
+	        -->
+            <id>launchpadBuild</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>launchpad/webapp</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>allModules</id>
+            <modules>
+                <module>extensions/i18n</module>
+                <module>scripting/freemarker</module>
+                <module>scripting/jst</module>
+                <module>scripting/ruby</module>
+                <module>scripting/velocity</module>
+                <module>extensions/dojo</module>
+                <module>extensions/dojo-sling</module>
+                <module>launchpad/jcrapp</module>
+            </modules>
+        </profile>
+    </profiles>
+
+</project>
