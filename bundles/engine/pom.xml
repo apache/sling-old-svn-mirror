@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.engine</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.5-incubator-SNAPSHOT</version>
+    <version>2.0.5-SNAPSHOT</version>
 
     <name>Apache Sling Engine Implementation</name>
     <description>
@@ -99,7 +99,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.0.5-incubator-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

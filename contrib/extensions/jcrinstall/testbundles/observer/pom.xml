@@ -20,14 +20,14 @@
 	<parent>
 		<groupId>org.apache.sling</groupId>
 		<artifactId>org.apache.sling.jcr.jcrinstall.parent</artifactId>
-		<version>2.0.3-incubator-SNAPSHOT</version>
+		<version>2.0.3-SNAPSHOT</version>
 		<relativePath>../../</relativePath>
 	</parent>
 	
 	<groupId>org.apache.sling</groupId>
 	<artifactId>org.apache.sling.jcr.jcrinstall.testbundles.observer</artifactId>
 	<packaging>bundle</packaging>
-	<version>2.0.3-incubator-SNAPSHOT</version>
+	<version>2.0.3-SNAPSHOT</version>
 	<name>Apache Sling Jcrinstall Observer Test Bundle</name>
 	<description> Bundle used in jcrinstall automated tests. </description>
 	

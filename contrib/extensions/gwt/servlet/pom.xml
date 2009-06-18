@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.extensions.gwt.servlet</artifactId>
-    <version>1.4.60-incubator-SNAPSHOT</version>
+    <version>1.4.60-SNAPSHOT</version>
 
     <modelVersion>4.0.0</modelVersion>
 

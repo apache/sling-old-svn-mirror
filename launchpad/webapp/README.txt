@@ -3,18 +3,8 @@ Apache Sling Launchpad Webapp
 This webapp contains the necessary bundles to run launchpad.
 
 See also the "Discover Sling in 15 minutes" page at
-http://incubator.apache.org/sling/site/discover-sling-in-15-minutes.html
+http://sling.apache.org/site/discover-sling-in-15-minutes.html
 
-
-Disclaimer
-==========
-Apache Sling is an effort undergoing incubation at The Apache Software Foundation (ASF),
-sponsored by the Apache Jackrabbit PMC. Incubation is required of all newly accepted
-projects until a further review indicates that the infrastructure, communications,
-and decision making process have stabilized in a manner consistent with other
-successful ASF projects. While incubation status is not necessarily a reflection of
-the completeness or stability of the code, it does indicate that the project has yet
-to be fully endorsed by the ASF.
 
 Getting Started
 ===============
@@ -69,6 +59,6 @@ HTML representation, including the value of the "title" property.
 
 Use a txt or json extension instead of html to see other output formats.
 
-For more info see the Sling website at http://incubator.apache.org/sling, and the
+For more info see the Sling website at http://sling.apache.org, and the
 "Sling in 15 minutes" tutorial 
-at http://incubator.apache.org/sling/site/discover-sling-in-15-minutes.html
+at http://sling.apache.org/site/discover-sling-in-15-minutes.html

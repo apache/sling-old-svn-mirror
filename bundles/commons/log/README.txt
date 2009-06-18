@@ -23,25 +23,15 @@ be set to start at start level 1. This ensures the Logging bundle is
 loaded as early as possible thus providing services to the framework
 and preparing logging.
 
-See the Apache Sling web site (http://incubator.apache.org/sling) for
+See the Apache Sling web site (http://sling.apache.org) for
 documentation and other information. You are welcome to join the
-Sling mailing lists (http://incubator.apache.org/sling/site/project-information.html)
+Sling mailing lists (http://sling.apache.org/site/project-information.html)
 to discuss this component and to use the Sling issue tracker
 (http://issues.apache.org/jira/browse/SLING) to report issues or request
 new features.
 
 Apache Sling is a project of the Apache Software Foundation
 (http://www.apache.org).
-
-Disclaimer
-==========
-Apache Sling is an effort undergoing incubation at The Apache Software Foundation (ASF),
-sponsored by the Apache Jackrabbit PMC. Incubation is required of all newly accepted
-projects until a further review indicates that the infrastructure, communications,
-and decision making process have stabilized in a manner consistent with other
-successful ASF projects. While incubation status is not necessarily a reflection of
-the completeness or stability of the code, it does indicate that the project has yet
-to be fully endorsed by the ASF.
 
 License (see also LICENSE)
 ==========================

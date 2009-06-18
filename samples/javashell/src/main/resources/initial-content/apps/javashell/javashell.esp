@@ -70,7 +70,7 @@ scriptFolderNode.save();
 
 <div class="title">
   <div class="logo">
-    <a href="http://incubator.apache.org/sling">
+    <a href="http://sling.apache.org">
       <img border="0" src="/apps/javashell/sling-logo.png"/>
     </a>
   </div>

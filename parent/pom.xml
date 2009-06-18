@@ -27,13 +27,13 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>6-incubator-SNAPSHOT</version>
+    <version>6-SNAPSHOT</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
     <inceptionYear>2007</inceptionYear>
 
-    <url>http://incubator.apache.org/sling</url>
+    <url>http://sling.apache.org</url>
 
     <prerequisites>
         <maven>2.0.7</maven>
@@ -49,7 +49,7 @@
     <properties>
         <site.jira.version.id>12313945</site.jira.version.id>
         <site.javadoc.exclude />
-        <organization.logo>http://incubator.apache.org/sling/site/media.data/logo.png</organization.logo>
+        <organization.logo>http://sling.apache.org/site/media.data/logo.png</organization.logo>
     </properties>
     
 
@@ -237,7 +237,7 @@ setting is not correct.
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
-                                http://incubator.apache.org/sling
+                                http://sling.apache.org
                             </Bundle-DocURL>
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
@@ -633,7 +633,7 @@ setting is not correct.
         <site>
             <id>apache.sling.site</id>
             <url>
-                scp://people.apache.org/www/incubator.apache.org/sling/generated
+                scp://people.apache.org/www/sling.apache.org/generated
             </url>
         </site>
     </distributionManagement>

@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.openidauth</artifactId>
     <packaging>bundle</packaging>
-    <version>0.9.1-incubator-SNAPSHOT</version>
+    <version>0.9.1-SNAPSHOT</version>
 
     <name>Apache Sling OpenID Authentication</name>
     <description>

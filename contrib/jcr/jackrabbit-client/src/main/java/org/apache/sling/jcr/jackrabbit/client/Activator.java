@@ -76,7 +76,7 @@ public class Activator implements BundleActivator, ServiceListener {
     protected void initDefaultConfig(Hashtable<String, String> props) {
         props.put(SLING_CONTEXT, slingContext);
         props.put(SlingClientRepository.REPOSITORY_NAME, "jackrabbit");
-        props.put(Context.PROVIDER_URL, "http://incubator.apache.org/sling");
+        props.put(Context.PROVIDER_URL, "http://sling.apache.org");
         props.put(Context.INITIAL_CONTEXT_FACTORY,
             "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
     }

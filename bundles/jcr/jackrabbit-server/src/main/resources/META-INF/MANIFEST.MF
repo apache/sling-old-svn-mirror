@@ -9,7 +9,7 @@ Bundle-Description: Bundle providing support to embed Jackrabbit Repos
 Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-Category: sling,jcr,jackrabbit
 Bundle-Vendor: The Apache Software Foundation
-Bundle-DocURL: http://incubator.apache.org/sling
+Bundle-DocURL: http://sling.apache.org
 Bundle-Activator: org.apache.sling.jcr.jackrabbit.server.impl.Activator
 Bundle-ClassPath: .,nekohtml-1.9.7.jar,lucene-core-2.3.2.jar,jackrabbi
  t-spi-commons-1.5.0.jar,jackrabbit-jcr-commons-1.5.0.jar,jempbox-0.2.

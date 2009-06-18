@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.scripting.scala.interpreter</artifactId>
-    <version>0.9.0-incubator-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Scripting Scala Interpreter</name>

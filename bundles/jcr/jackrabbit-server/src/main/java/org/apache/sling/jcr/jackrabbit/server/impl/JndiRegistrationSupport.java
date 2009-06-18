@@ -52,7 +52,7 @@ import org.osgi.service.log.LogService;
  *               value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"
  *               label="%jndi.factory.name"
  *               description="%jndi.factory.description"
- * @scr.property name="java.naming.provider.url" value="http://incubator.apache.org/sling"
+ * @scr.property name="java.naming.provider.url" value="http://sling.apache.org"
  *               label="%jndi.providerurl.name"
  *               description="%jndi.providerurl.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"

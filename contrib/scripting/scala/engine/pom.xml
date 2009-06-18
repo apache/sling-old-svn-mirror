@@ -29,7 +29,7 @@
     </parent>
 
     <artifactId>org.apache.sling.scripting.scala</artifactId>
-    <version>0.9.0-incubator-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Scala Support</name>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.scala.interpreter</artifactId>
-            <version>0.9.0-incubator-SNAPSHOT</version>
+            <version>0.9.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

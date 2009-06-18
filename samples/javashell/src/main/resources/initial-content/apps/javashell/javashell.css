@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-/* @override http://incubator.apache.org/sling/site/media.data/site.css */
+/* @override http://sling.apache.org/site/media.data/site.css */
 
 body { background-color: #ffffff; color: #3b3b3b; font-family: Tahoma, Arial, sans-serif; font-size: 10pt; line-height: 140% }
 h1, h2, h3, h4, h5, h6 { font-weight: normal; color: #000000; line-height: 100%; }
@@ -28,7 +28,7 @@ h6 { font-size: 120% }
 a { color: #1980af }
 a:visited { color: #1980af }
 a:hover { color: #1faae9 }
-.title { position: absolute; left: 1px; right: 1px; top:25px; height: 81px; background: url(http://incubator.apache.org/sling/site/media.data/gradient.png) repeat-x; background-position: bottom; }
+.title { position: absolute; left: 1px; right: 1px; top:25px; height: 81px; background: url(http://sling.apache.org/site/media.data/gradient.png) repeat-x; background-position: bottom; }
 .logo { position: absolute; width: 15em; height: 81px; text-align: center; }
 .header { text-align: right; margin-right: 20pt; }
 .menu { border-top: 10px solid #f9bb00; position: absolute; top: 107px; left: 1px; width: 15em; bottom: 0px; padding: 0px; background-color: #fcfcfc }

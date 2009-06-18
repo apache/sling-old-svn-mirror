@@ -40,7 +40,7 @@ import org.osgi.service.log.LogService;
  *
  * @scr.property name="java.naming.factory.initial"
  *               value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"
- * @scr.property name="java.naming.provider.url" value="http://incubator.apache.org/sling"
+ * @scr.property name="java.naming.provider.url" value="http://sling.apache.org"
  */
 public class SlingClientRepository extends AbstractSlingRepository
         implements Repository, SlingRepository {
