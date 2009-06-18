@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/jcr/compiler</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/jcr/compiler</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/trunk/contrib/jcr/compiler</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/jcr/compiler</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/jcr/compiler</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/jcr/compiler</url>
     </scm>
 
     <build>
