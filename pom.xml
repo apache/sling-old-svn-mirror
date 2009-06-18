@@ -41,9 +41,9 @@
   </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/it</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/sling/trunk/contrib/extensions/jcrinstall/it</developerConnection>
-        <url>http://svn.apache.org/viewvc/incubator/sling/whiteboard/jcrinstall</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/jcrinstall/it</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/jcrinstall/it</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/whiteboard/jcrinstall</url>
     </scm>
 
     <repositories>
