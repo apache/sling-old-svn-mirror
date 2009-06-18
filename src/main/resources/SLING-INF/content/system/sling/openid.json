@@ -1,0 +1,14 @@
+{
+	"loginform": {
+		"sling:resourceType": "openid/auth/login"
+	},
+	"logout": {
+		"sling:resourceType": "openid/auth/logout"
+	},
+	"authsuccess": {
+		"sling:resourceType": "openid/auth/success"
+	},
+	"authfail": {
+		"sling:resourceType": "openid/auth/fail"
+	}
+}
