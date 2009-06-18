@@ -31,8 +31,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>ResourceCollector</code> class provides a single public method -
@@ -50,9 +48,6 @@ public class ResourceCollector {
      * <code>Integer.MIN_VALUE</code>).
      */
     protected static final int WEIGHT_NO_MATCH = Integer.MIN_VALUE;
-
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     // the request method name used to indicate the script name
     private final String methodName;
