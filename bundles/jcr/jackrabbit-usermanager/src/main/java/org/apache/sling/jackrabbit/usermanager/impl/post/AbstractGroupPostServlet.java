@@ -19,13 +19,16 @@ package org.apache.sling.jackrabbit.usermanager.impl.post;
 import java.util.List;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
+import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -56,19 +59,19 @@ public abstract class AbstractGroupPostServlet extends
             ResourceResolver resolver = request.getResourceResolver();
             Resource baseResource = request.getResource();
             boolean changed = false;
+            
+            UserManager userManager = AccessControlUtil.getUserManager(resolver.adaptTo(Session.class));
 
             // first remove any members posted as ":member@Delete"
             String[] membersToDelete = request.getParameterValues(SlingPostConstants.RP_PREFIX
                 + "member" + SlingPostConstants.SUFFIX_DELETE);
             if (membersToDelete != null) {
                 for (String member : membersToDelete) {
-                    Resource res = resolver.getResource(baseResource, member);
-                    if (res != null) {
-                        Authorizable memberAuthorizable = res.adaptTo(Authorizable.class);
-                        if (memberAuthorizable != null) {
-                            group.removeMember(memberAuthorizable);
-                            changed = true;
-                        }
+                    
+                    Authorizable memberAuthorizable = getAuthorizable(baseResource, member,userManager,resolver);
+                    if (memberAuthorizable != null) {
+                        group.removeMember(memberAuthorizable);
+                        changed = true;
                     }
 
                 }
@@ -79,13 +82,10 @@ public abstract class AbstractGroupPostServlet extends
                 + "member");
             if (membersToAdd != null) {
                 for (String member : membersToAdd) {
-                    Resource res = resolver.getResource(baseResource, member);
-                    if (res != null) {
-                        Authorizable memberAuthorizable = res.adaptTo(Authorizable.class);
-                        if (memberAuthorizable != null) {
-                            group.addMember(memberAuthorizable);
-                            changed = true;
-                        }
+                    Authorizable memberAuthorizable = getAuthorizable(baseResource, member,userManager,resolver);
+                    if (memberAuthorizable != null) {
+                        group.addMember(memberAuthorizable);
+                        changed = true;
                     }
                 }
             }
@@ -96,6 +96,30 @@ public abstract class AbstractGroupPostServlet extends
                 changes.add(Modification.onModified(groupPath + "/members"));
             }
         }
+    }
+
+    /**
+     * Gets the member, assuming its a principal name, failing that it assumes it a path to the resource.
+     * @param member the token pointing to the member, either a name or a uri
+     * @param userManager the user manager for this request.
+     * @param resolver the resource resolver for this request.
+     * @return the authorizable, or null if no authorizable was found.
+     */
+    private Authorizable getAuthorizable(Resource baseResource, String member, UserManager userManager,
+        ResourceResolver resolver) {
+      Authorizable memberAuthorizable = null;
+      try {
+        memberAuthorizable = userManager.getAuthorizable(member);
+      } catch (RepositoryException e) {
+        // if we can't find the members then it may be resolvable as a resource.
+      }
+      if ( memberAuthorizable == null ) {
+          Resource res = resolver.getResource(baseResource, member);
+          if (res != null) {
+              memberAuthorizable = res.adaptTo(Authorizable.class);
+          }
+      }
+      return memberAuthorizable;
     }
 
 }
