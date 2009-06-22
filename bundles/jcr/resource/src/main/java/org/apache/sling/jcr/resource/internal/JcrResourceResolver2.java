@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -259,7 +258,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         if (fragmentQueryMark < 0) {
             fragmentQueryMark = resourcePath.indexOf('?');
         }
-        
+
         // cut fragment or query off the resource path
         String mappedPath;
         final String fragmentQuery;
@@ -272,7 +271,7 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
             fragmentQuery = null;
             mappedPath = resourcePath;
         }
-        
+
 
         // cut off scheme and host, if the same as requested
         String schemehostport;
@@ -318,12 +317,12 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                 buf.append('/');
                 buf.append(names.removeLast());
             }
-            
+
             // reappend the resolutionPathInfo
             if (resolutionPathInfo != null) {
                 buf.append(resolutionPathInfo);
             }
-            
+
             // and then we have the mapped path to work on
             mappedPath = buf.toString();
 
@@ -756,18 +755,18 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
             Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
             Matcher m = p.matcher(absPath);
-            
+
             StringBuffer buf = new StringBuffer();
             while (m.find()) {
                 String replacement = MANGLE_NAMESPACE_IN_PREFIX + m.group(1) + MANGLE_NAMESPACE_IN_SUFFIX;
                 m.appendReplacement(buf, replacement);
             }
-            
+
             m.appendTail(buf);
-            
+
             absPath = buf.toString();
         }
-        
+
         return absPath;
     }
 
@@ -783,24 +782,24 @@ public class JcrResourceResolver2 extends SlingAdaptable implements
                     // throws if "namespace" is not a registered
                     // namespace prefix
                     getSession().getNamespaceURI(namespace);
-                    
+
                     String replacement = MANGLE_NAMESPACE_OUT_PREFIX
                         + namespace + MANGLE_NAMESPACE_OUT_SUFFIX;
                     m.appendReplacement(buf, replacement);
-                    
+
                 } catch (NamespaceException ne) {
-                    
+
                     // not a valid prefix
                     log.debug(
                         "unmangleNamespaces: '{}' is not a prefix, not unmangling",
                         namespace);
-                    
+
                 } catch (RepositoryException re) {
-                    
+
                     log.warn(
                         "unmangleNamespaces: Problem checking namespace '{}'",
                         namespace, re);
-                    
+
                 }
             }
             m.appendTail(buf);
