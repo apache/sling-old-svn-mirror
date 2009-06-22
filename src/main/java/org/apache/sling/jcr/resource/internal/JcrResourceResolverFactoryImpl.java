@@ -149,9 +149,14 @@ public class JcrResourceResolverFactoryImpl implements
     private SlingRepository repository;
 
     /**
-     * The (optional) resource type providers.
+     * The (optional) resource type providers, working copy.
      */
     protected final List<JcrResourceTypeProviderEntry> jcrResourceTypeProviders = new ArrayList<JcrResourceTypeProviderEntry>();
+
+    /**
+     * An array of the above, updates when changes are created.
+     */
+    private JcrResourceTypeProvider[] jcrResourceTypeProvidersArray;
 
     /**
      * List of ResourceProvider services bound before activation of the
@@ -164,6 +169,7 @@ public class JcrResourceResolverFactoryImpl implements
      * component.
      */
     protected List<ServiceReference> delayedJcrResourceTypeProviders = new LinkedList<ServiceReference>();
+
 
     protected ComponentContext componentContext;
 
@@ -187,6 +193,7 @@ public class JcrResourceResolverFactoryImpl implements
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
 
+
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
     }
@@ -205,18 +212,7 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     protected JcrResourceTypeProvider[] getJcrResourceTypeProviders() {
-        JcrResourceTypeProvider[] providers = null;
-        synchronized (this.jcrResourceTypeProviders) {
-            if (this.jcrResourceTypeProviders.size() > 0) {
-                providers = new JcrResourceTypeProvider[this.jcrResourceTypeProviders.size()];
-                int index = 0;
-                final Iterator<JcrResourceTypeProviderEntry> i = this.jcrResourceTypeProviders.iterator();
-                while (i.hasNext()) {
-                    providers[index] = i.next().provider;
-                }
-            }
-        }
-        return providers;
+        return jcrResourceTypeProvidersArray;
     }
 
     // ---------- Implementation helpers --------------------------------------
@@ -362,30 +358,14 @@ public class JcrResourceResolverFactoryImpl implements
         this.componentContext = null;
     }
 
-    private ResourcePattern[] getResourcePatterns(String[] patternList) {
-        // regexps
-        List<ResourcePattern> patterns = new ArrayList<ResourcePattern>();
-        if (patternList != null) {
-            for (final String p : patternList) {
-                int pos = p.lastIndexOf('|');
-                if (pos == -1) {
-                    log.error("Invalid regexp: {}", p);
-                } else {
-                    final String replString = p.substring(pos + 1);
-                    final Pattern pat = Pattern.compile(p.substring(0, pos));
-                    patterns.add(new ResourcePattern(pat, replString));
-                }
-            }
-        }
-        return patterns.toArray(new ResourcePattern[patterns.size()]);
-    }
-
     protected void processDelayedJcrResourceTypeProviders() {
         synchronized (this.jcrResourceTypeProviders) {
             for (ServiceReference reference : delayedJcrResourceTypeProviders) {
                 this.addJcrResourceTypeProvider(reference);
             }
             delayedJcrResourceTypeProviders.clear();
+            updateJcrResourceTypeProvidersArray();
+
         }
     }
 
@@ -422,9 +402,9 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     protected void bindResourceProvider(ServiceReference reference) {
-        
+
         String serviceName = getServiceName(reference);
-        
+
         if (componentContext == null) {
 
             log.debug("bindResourceProvider: Delaying {}", serviceName);
@@ -433,9 +413,9 @@ public class JcrResourceResolverFactoryImpl implements
             delayedResourceProviders.add(reference);
 
         } else {
-            
+
             log.debug("bindResourceProvider: Binding {}", serviceName);
-            
+
             String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
             if (roots != null && roots.length > 0) {
 
@@ -443,7 +423,7 @@ public class JcrResourceResolverFactoryImpl implements
                     "ResourceProvider", reference);
 
                 // synchronized insertion of new resource providers into
-                // the tree to not inadvertandly loose an entry
+                // the tree to not inadvertently loose an entry
                 synchronized (this) {
 
                     for (String root : roots) {
@@ -467,7 +447,7 @@ public class JcrResourceResolverFactoryImpl implements
                     }
                 }
             }
-            
+
             log.debug("bindResourceProvider: Bound {}", serviceName);
         }
     }
@@ -475,14 +455,14 @@ public class JcrResourceResolverFactoryImpl implements
     protected void unbindResourceProvider(ServiceReference reference) {
 
         String serviceName = getServiceName(reference);
-        
+
         log.debug("unbindResourceProvider: Unbinding {}", serviceName);
 
         String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
         if (roots != null && roots.length > 0) {
 
             // synchronized insertion of new resource providers into
-            // the tree to not inadvertandly loose an entry
+            // the tree to not inadvertently loose an entry
             synchronized (this) {
 
                 for (String root : roots) {
@@ -495,13 +475,13 @@ public class JcrResourceResolverFactoryImpl implements
                     // owns it. This may be the case if adding the provider
                     // yielded an ResourceProviderEntryException
                     rootProviderEntry.removeResourceProvider(root);
-                    
+
                     log.debug("unbindResourceProvider: root={} ({})", root,
                         serviceName);
                 }
             }
         }
-        
+
         log.debug("unbindResourceProvider: Unbound {}", serviceName);
     }
 
@@ -511,6 +491,7 @@ public class JcrResourceResolverFactoryImpl implements
                 delayedJcrResourceTypeProviders.add(reference);
             } else {
                 this.addJcrResourceTypeProvider(reference);
+                updateJcrResourceTypeProvidersArray();
             }
         }
     }
@@ -526,7 +507,26 @@ public class JcrResourceResolverFactoryImpl implements
                     i.remove();
                 }
             }
+            updateJcrResourceTypeProvidersArray();
         }
+    }
+
+    /**
+     * Updates the JcrResourceTypeProviders array, this method is not thread safe and should only be
+     * called from a synchronized block.
+     */
+    protected void updateJcrResourceTypeProvidersArray() {
+        JcrResourceTypeProvider[] providers = null;
+        if (this.jcrResourceTypeProviders.size() > 0) {
+            providers = new JcrResourceTypeProvider[this.jcrResourceTypeProviders.size()];
+            int index = 0;
+            final Iterator<JcrResourceTypeProviderEntry> i = this.jcrResourceTypeProviders.iterator();
+            while (i.hasNext()) {
+                providers[index] = i.next().provider;
+                index++;
+            }
+        }
+        jcrResourceTypeProvidersArray = providers;
     }
 
     // ---------- internal helper ----------------------------------------------
@@ -550,7 +550,7 @@ public class JcrResourceResolverFactoryImpl implements
             this.provider = p;
         }
     }
-    
+
     private String getServiceName(ServiceReference reference) {
         if (log.isDebugEnabled()) {
             StringBuilder snBuilder = new StringBuilder(64);
