@@ -62,15 +62,14 @@ public class BundleResourceProcessorTest {
     }
 
     @org.junit.Test public void testNothing() {
-    	
+
     }
-    
+
     /** Disabled for now - too complex, gets in the way of osgiworker changes */
     public void TODO_DISABLED_testInstall() throws Exception {
 
-        final OsgiControllerImpl c = new OsgiControllerImpl();
         final BundleContext bc = mockery.mock(BundleContext.class);
-        Utilities.setField(c, "bundleContext", bc);
+        final OsgiControllerImpl c = new OsgiControllerImpl(bc,  null, null, null);
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
         final TestStorage s = new TestStorage(Utilities.getTestFile());
         Utilities.setStorage(c, s);
@@ -102,7 +101,7 @@ public class BundleResourceProcessorTest {
             will(returnValue(getDataFile()));
 
             one(bc).installBundle(
-            		with(equal(OsgiControllerImpl.getResourceLocation(uri))), 
+            		with(equal(OsgiControllerImpl.getResourceLocation(uri))),
             		with(any(InputStream.class)));
             inSequence(sequence);
             will(returnValue(b));
@@ -113,7 +112,7 @@ public class BundleResourceProcessorTest {
 
             one(b).stop();
             inSequence(sequence);
-            
+
             one(b).update(with(any(InputStream.class)));
             inSequence(sequence);
 
@@ -128,8 +127,8 @@ public class BundleResourceProcessorTest {
         proc.add(p);
         Utilities.setField(c, "processors", proc);
         assertFalse("Before install, uri must not be in list", c.getInstalledUris().contains(uri));
-        
-        // Need to send framework events to p 
+
+        // Need to send framework events to p
         // TODO: this test is getting too complicated... ;-)
         class FEThread extends Thread {
         	boolean active = true;
@@ -149,7 +148,7 @@ public class BundleResourceProcessorTest {
         	}
         };
         FEThread t = new FEThread();
-        
+
         // do the actual testing
         c.scheduleInstallOrUpdate(uri, data);
         c.executeScheduledOperations();
@@ -175,7 +174,7 @@ public class BundleResourceProcessorTest {
         mockery.assertIsSatisfied();
         t.active = false;
     }
-    
+
     static File getDataFile() throws IOException {
         return File.createTempFile(BundleResourceProcessor.class.getSimpleName() + (++counter),".tmp");
     }

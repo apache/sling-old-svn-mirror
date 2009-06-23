@@ -29,32 +29,34 @@ import org.slf4j.LoggerFactory;
 class OsgiControllerTaskExecutor {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     static int counter;
-    
+
 	/** Execute the given tasks in a new thread, return when done */
-    List<OsgiControllerTask >execute(final List<OsgiControllerTask> tasks, final OsgiControllerTask.Context context) 
-    throws InterruptedException {
-    	final List<OsgiControllerTask> remainingTasks = new LinkedList<OsgiControllerTask>(); 
+    List<OsgiControllerTask >execute(final List<OsgiControllerTask> tasks, final OsgiControllerTask.Context context) {
+    	final List<OsgiControllerTask> remainingTasks = new LinkedList<OsgiControllerTask>();
 		final String threadName = getClass().getSimpleName() + " #" + (++counter);
-		final Thread executor = new Thread(threadName) {
-			@Override
-			public void run() {
-				while(!tasks.isEmpty()) {
-					final OsgiControllerTask t = tasks.remove(0);
-					try {
-						t.execute(context);
-						log.debug("Task execution successful: " + t);
-					} catch(MissingServiceException mse) {
-						log.info("Task execution deferred due to " + mse + ", task=" + t);
-						remainingTasks.add(t);
-					} catch(Exception e) {
-						log.warn("Task execution failed: " + t, e);
-					}
+		final String oldThreadName = Thread.currentThread().getName();
+		Thread.currentThread().setName(threadName);
+		try {
+		    log.info("Starting controller task executor.");
+			while(!tasks.isEmpty()) {
+				final OsgiControllerTask t = tasks.remove(0);
+				try {
+                    log.info("Executing task: " + t);
+					t.execute(context);
+					log.info("Task execution successful: " + t);
+				} catch(MissingServiceException mse) {
+					log.info("Task execution deferred due to " + mse + ", task=" + t);
+					remainingTasks.add(t);
+				} catch(Throwable e) {
+					log.warn("Task execution failed: " + t, e);
+                    remainingTasks.add(t);
 				}
 			}
-		};
-		executor.setDaemon(true);
-		executor.start();
-		executor.join();
+            log.info("Finishing controller task executor.");
+		} finally {
+		    Thread.currentThread().setName(oldThreadName);
+		}
+
 		return remainingTasks;
 	}
 }

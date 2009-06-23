@@ -18,14 +18,12 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import static org.apache.sling.osgi.installer.InstallResultCode.INSTALLED;
-import static org.apache.sling.osgi.installer.InstallResultCode.UPDATED;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
+import org.apache.sling.osgi.installer.InstallResultCode;
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
@@ -45,47 +43,45 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final DictionaryReader reader = new DictionaryReader();
     private final OsgiControllerServices serviceProxy;
-    
+
     ConfigResourceProcessor(OsgiControllerServices sp) {
         serviceProxy = sp;
     }
-    
+
     public void dispose() {
         // nothing to do
     }
-    
+
     public boolean canProcess(String uri, InstallableData data) {
-    	final boolean isDict = data == null ? false : data.adaptTo(Dictionary.class) != null; 
+    	final boolean isDict = data == null ? false : data.adaptTo(Dictionary.class) != null;
         return uri.endsWith(CONFIG_EXTENSION) || isDict;
     }
 
     @SuppressWarnings("unchecked")
-    public int installOrUpdate(String uri, Map<String, Object> attributes, 
+    public InstallResultCode installOrUpdate(String uri, Map<String, Object> attributes,
     		InstallableData installableData) throws Exception {
-        
+
     	// Convert data to a configuration Dictionary
     	Dictionary dict = installableData.adaptTo(Dictionary.class);
     	if(dict == null) {
 	    	InputStream data = installableData.adaptTo(InputStream.class);
-	    	if(data == null) {
+	    	if (data == null) {
 	    		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
 	    	}
 	    	try {
 	    		dict = reader.load(data);
 	    	} finally {
-	    		if(data != null) {
-	    			data.close();
-	    		}
+	    	    data.close();
 	    	}
     	}
-    	
-    	if(dict == null) {
+
+    	if (dict == null) {
     		throw new JcrInstallException("Null Dictionary for uri=" + uri);
     	}
-    	
+
     	// Add pseudo-properties
     	dict.put(CONFIG_PATH_KEY, uri);
-        
+
         // Get pids from node name
         final ConfigurationPid pid = new ConfigurationPid(uri);
         log.debug("{} created for uri {}", pid, uri);
@@ -95,20 +91,20 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
         }
 
         // get or create configuration
-        int result = UPDATED;
+        InstallResultCode result = InstallResultCode.UPDATED;
         Configuration config = getConfiguration(pid, false);
         if(config == null) {
-            result = INSTALLED;
+            result = InstallResultCode.INSTALLED;
             config = getConfiguration(pid, true);
         }
         if (config.getBundleLocation() != null) {
             config.setBundleLocation(null);
         }
         config.update(dict);
-        log.info("Configuration {} {}", config.getPid(), (result == UPDATED ? "updated" : "created"));
+        log.info("Configuration {} {}", config.getPid(), (result == InstallResultCode.UPDATED ? "updated" : "created"));
         return result;
     }
-    
+
     public void processResourceQueue() throws Exception {
         // TODO might need to retry installing configs, as
         // we do for bundles
@@ -126,16 +122,16 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
     }
 
     /** Get or create configuration */
-    Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded) 
-    throws IOException, InvalidSyntaxException, MissingServiceException 
+    Configuration getConfiguration(ConfigurationPid cp, boolean createIfNeeded)
+    throws IOException, InvalidSyntaxException, MissingServiceException
     {
     	final ConfigurationAdmin configurationAdmin = serviceProxy.getConfigurationAdmin();
     	if(configurationAdmin == null) {
     		throw new MissingServiceException(ConfigurationAdmin.class);
     	}
-    	
+
         Configuration result = null;
-        
+
         if (cp.getFactoryPid() == null) {
             result = configurationAdmin.getConfiguration(cp.getConfigPid(), null);
         } else {
@@ -143,7 +139,7 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
                 "(|(" + ALIAS_KEY
                 + "=" + cp.getFactoryPid() + ")(.alias_factory_pid=" + cp.getFactoryPid()
                 + "))");
-            
+
             if (configs == null || configs.length == 0) {
                 if(createIfNeeded) {
                     result = configurationAdmin.createFactoryConfiguration(cp.getConfigPid(), null);
@@ -152,7 +148,7 @@ public class ConfigResourceProcessor implements OsgiResourceProcessor {
                 result = configs[0];
             }
         }
-        
+
         return result;
     }
 
