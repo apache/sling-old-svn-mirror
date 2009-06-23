@@ -21,19 +21,18 @@ package org.apache.sling.osgi.installer;
 import java.io.IOException;
 import java.util.Set;
 
-/** jcrinstall component that installs/updates/removes 
+/** jcrinstall component that installs/updates/removes
  *  OSGi resources (bundles, deployment packages, configs)
  *  in the OSGi framework.
  */
 public interface OsgiController {
-    
-    /** Schedule installation or update of supplied resource 
+
+    /** Schedule installation or update of supplied resource
      *  @param uri Unique identifier for the resource
      *  @param data The data to install
-     *  @return one of the {@link InstallResultCode} result codes. 
      */
     void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException;
-    
+
     /** Schedule uninstallation of resource that was installed via given uri.
      *  Might be called several times for the same URI - needless calls should
      *  be ignored.
@@ -42,21 +41,21 @@ public interface OsgiController {
      *      removed after calling this method
      */
     void scheduleUninstall(String uri) throws IOException, JcrInstallException;
-    
-    /** Return the list of uri for resources that have been installed 
+
+    /** Return the list of uri for resources that have been installed
      *  by this controller.
      */
     Set<String> getInstalledUris();
-    
+
     /** Get the lastModified value for given uri, assuming the resource pointed
      *  to by that uri was installed.
      *  @return -1 if we don't have info for given uri
      */
     String getDigest(String uri);
-    
+
     /** Optionally set ResourceOverrideRules */
     void setResourceOverrideRules(ResourceOverrideRules r);
-    
+
     /** Do the actual installs/uninistalls which were scheduled by the other methods */
     void executeScheduledOperations() throws Exception;
 }

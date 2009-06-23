@@ -18,9 +18,6 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import static org.apache.sling.osgi.installer.InstallResultCode.IGNORED;
-import static org.apache.sling.osgi.installer.InstallResultCode.UPDATED;
-import static org.apache.sling.osgi.installer.InstallResultCode.INSTALLED;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,6 +30,7 @@ import java.util.TreeSet;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
+import org.apache.sling.osgi.installer.InstallResultCode;
 import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 import org.osgi.framework.Bundle;
@@ -55,7 +53,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
     /** {@link Storage} key for the bundle ID */
     public static final String KEY_BUNDLE_ID = "bundle.id";
-    
+
     /** Max time allowed to refresh packages (TODO configurable??) */
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
@@ -72,7 +70,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * them in the next round.
      */
     private final Set<Long> activeBundles;
-    
+
     /**
      * The list of bundles which have been updated or installed and which need
      * to be started in the next round. Bundles from this list, which fail
@@ -80,7 +78,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * started in the next round.
      */
     private final List<Long> installedBundles;
-    
+
     /**
      * Flag set by {@link #installOrUpdate(String, Map, InputStream)} of a
      * bundle has been updated and by {@link #uninstall(String, Map)} if a
@@ -89,10 +87,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * @see #processResourceQueue()
      */
     private boolean needsRefresh;
-    
+
     /** Flag used to avoid reentrant {@link @startBundles()} calls */
     private boolean startingBundles;
-    
+
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin, StartLevel startLevel) {
@@ -118,7 +116,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * the PackageAdmin.refreshPackages has finished its work of refreshing
      * the packages. When packages have been refreshed all bundles which are
      * expected to be active (those active before refreshing the packages and
-     * newly installed or updated bundles) are started. 
+     * newly installed or updated bundles) are started.
      */
     public void frameworkEvent(FrameworkEvent event) {
         if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
@@ -130,24 +128,22 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     // ---------- OsgiResourceProcessor
 
     /**
-     * @throws BundleException
-     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#installOrUpdate(java.lang.String,
-     *      java.util.Map, java.io.InputStream)
+     * @see org.apache.sling.osgi.installer.OsgiResourceProcessor#installOrUpdate(java.lang.String, java.util.Map, org.apache.sling.osgi.installer.InstallableData)
      */
-    public int installOrUpdate(String uri, Map<String, Object> attributes,
+    public InstallResultCode installOrUpdate(String uri, Map<String, Object> attributes,
             InstallableData installableData) throws BundleException, IOException {
-    	
+
     	// Check that we have bundle data and manifest
     	InputStream data = installableData.adaptTo(InputStream.class);
     	if(data == null) {
     		throw new IOException("InstallableData does not adapt to an InputStream: " + uri);
     	}
-    	
+
 		final Manifest m = getManifest(installableData);
 		if(m == null) {
 			throw new IOException("Manifest not found for InstallableData " + uri);
 		}
-		
+
         // Update if we already have a bundle id, else install
 		Bundle b;
 		boolean updated;
@@ -166,18 +162,18 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			if (b == null) {
 			    b = getMatchingBundle(m);
 			}
-			
+
 			// If the bundle (or one with the same symbolic name) is
 			// already installed, ignore the new one if it's a lower
 			// version
-			if(b != null && m!= null) {
+			if (b != null ) {
 				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
 				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
 				if (newBundleVersion.compareTo(installedVersion) <= 0) {
 		            log.debug(
 		                "Ignore update of bundle {} from {} as the installed version is equal or higher.",
 		                b.getSymbolicName(), uri);
-		            return IGNORED;
+		            return InstallResultCode.IGNORED;
 			    }
 			}
 
@@ -219,12 +215,11 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
             installedBundles.add(b.getBundleId());
         }
 
-        return updated ? UPDATED : INSTALLED;
+        return updated ? InstallResultCode.UPDATED : InstallResultCode.INSTALLED;
     }
 
     /**
-     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#uninstall(java.lang.String,
-     *      java.util.Map)
+     * @see org.apache.sling.osgi.installer.OsgiResourceProcessor#uninstall(java.lang.String, java.util.Map)
      */
     public void uninstall(String uri, Map<String, Object> attributes)
             throws BundleException {
@@ -250,12 +245,12 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
     }
 
     /**
-     * @see org.apache.sling.jcr.jcrinstall.osgi.OsgiResourceProcessor#canProcess(java.lang.String)
+     * @see org.apache.sling.osgi.installer.OsgiResourceProcessor#canProcess(java.lang.String, org.apache.sling.osgi.installer.InstallableData)
      */
     public boolean canProcess(String uri, InstallableData data) {
         return uri.endsWith(BUNDLE_EXTENSION);
     }
-    
+
     /** Execute a PackageAdmin.refreshPackages call and wait for the corresponding
      *  framework event. Used to execute this call "synchronously" to make things
      *  more sequential when installing/updating/removing bundles.
@@ -264,13 +259,13 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
         final int targetEventCount = packageRefreshEventsCount + 1;
         final long start = System.currentTimeMillis();
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
-        
+
         // It seems like (at least with Felix 1.0.4) we won't get a FrameworkEvent.PACKAGES_REFRESHED
         // if one happened very recently and there's nothing to refresh
         packageAdmin.refreshPackages(bundles);
         while(true) {
             if(System.currentTimeMillis() > timeout) {
-                log.warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {} seconds after refresh", 
+                log.warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {} seconds after refresh",
                         MAX_REFRESH_PACKAGES_WAIT_SECONDS);
                 break;
             }
@@ -296,10 +291,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      */
     public void processResourceQueue() {
         if (needsRefresh) {
-        	
+
             // reset the flag
             needsRefresh = false;
-            
+
             // gather bundles currently active
             for (Bundle bundle : ctx.getBundles()) {
                 if (bundle.getState() == Bundle.ACTIVE) {
@@ -309,10 +304,10 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 }
             }
 
-        	log.debug("Processing resource queue in REFRESH mode, {} active bundles found, refreshing packages", 
+        	log.debug("Processing resource queue in REFRESH mode, {} active bundles found, refreshing packages",
         			activeBundles.size());
         	refreshPackagesSynchronously(null);
-            
+
         } else {
             startBundles();
         }
@@ -328,7 +323,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      * <p>
      * This method gets its own input stream from the installable data object
      * and closes it after haing read the manifest file.
-     * 
+     *
      * @param installableData The installable data providing the bundle jar file
      *            from the input stream.
      * @return The installed bundle with the same symbolic name as the bundle
@@ -349,7 +344,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 }
             }
         }
-        
+
     	return null;
     }
 
@@ -360,7 +355,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
         if (ins == null) {
         	return null;
        	}
-       	
+
         JarInputStream jis = null;
         try {
             jis = new JarInputStream(ins);
@@ -384,7 +379,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -411,23 +406,23 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
             }
         }
     }
-    
+
     /**
      * Starts all bundles whose bundle ID is contained in the
      * <code>bundleCollection</code>. If a bundle fails to start, its bundle
      * ID is added to the list of active bundles again for the bundle to
      * be started next time the packages are refreshed or the resource queue is
      * processed.
-     * 
+     *
      * @param bundleIdCollection The IDs of bundles to be started.
      */
     private void startBundles(Collection<Long> bundleIdCollection, String collectionName) {
-        
+
         if(bundleIdCollection.size() > 0) {
-        	log.debug("startBundles({}): {} bundles to process", 
+        	log.debug("startBundles({}): {} bundles to process",
         			collectionName, bundleIdCollection.size());
         }
-    	
+
         // get the bundle ids and remove them from the collection
         Long[] bundleIds;
         synchronized (bundleIdCollection) {
@@ -448,7 +443,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                     final long delta = System.currentTimeMillis() - start;
                     log.info("bundle.start() call took {} msec for bundle {}", delta, bundle.getSymbolicName());
                 } catch (BundleException be) {
-                    log.info("Failed to start Bundle " 
+                    log.info("Failed to start Bundle "
                         + bundle.getSymbolicName() + "/" + bundle.getBundleId()
                         + ", rescheduling for start"
                         ,be);
@@ -461,7 +456,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
                 }
             }
         }
-        
+
         if(startupFailed.size() > 0) {
             log.info("Finished starting {} bundles, failed: {}", toStart + " " + collectionName, startupFailed);
         } else {

@@ -32,21 +32,21 @@ import org.osgi.framework.BundleContext;
 
 /** Wraps InstallableData instances that provide an InputStream
  * 	so that their data comes from our BundleContext's storage.
- * 
+ *
  * 	Needed as InstallableData will be provided by a separate bundle,
  *  with InputStreams that might not be available anymore once
  *  the data is actually installed, for example if that data comes
  *  from a JCR repository that's deactivated due to bundle updates.
  */
 class InstallableDataWrapper implements InstallableData {
-	
+
 	private InstallableData wrapped;
 	private final File dataFile;
 	private static int fileCounter;
-	
+
 	InstallableDataWrapper(InstallableData d, BundleContext bc) throws IOException {
 		wrapped = d;
-		
+
 		// If d adapts to an input stream, save its content in
 		// our BundleContext storage
 		final InputStream is = wrapped.adaptTo(InputStream.class);
@@ -60,7 +60,7 @@ class InstallableDataWrapper implements InstallableData {
 					filename += "." + (++fileCounter);
 				}
 				dataFile = bc.getDataFile(filename);
-				
+
 				os = new BufferedOutputStream(new FileOutputStream(dataFile));
 				final byte[] buffer = new byte[16384];
 				int count = 0;
@@ -80,7 +80,7 @@ class InstallableDataWrapper implements InstallableData {
 	public int getBundleStartLevel() {
 		return wrapped.getBundleStartLevel();
 	}
-	
+
 	/** Adapt the underlying data to the provided type.
 	 *	@return null if cannot be adapted */
 	@SuppressWarnings("unchecked")
@@ -92,15 +92,14 @@ class InstallableDataWrapper implements InstallableData {
 			} catch(IOException ioe) {
 				throw new IllegalStateException("Unable to open data file " + dataFile.getAbsolutePath());
 			}
-		} else {
-			return wrapped.adaptTo(type);
-		}
+        }
+		return wrapped.adaptTo(type);
 	}
 
 	public String getDigest() {
 		return wrapped.getDigest();
 	}
-	
+
 	void cleanup() {
 		if(dataFile != null) {
 			dataFile.delete();

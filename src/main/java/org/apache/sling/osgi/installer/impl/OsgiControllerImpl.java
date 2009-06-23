@@ -31,33 +31,24 @@ import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 
-/** OsgiController service
+/**
+ * OsgiController service
  *
- *  @scr.service
- *  @scr.component
- *      immediate="true"
- *      metatype="no"
- *  @scr.property
- *      name="service.description"
- *      value="Sling jcrinstall OsgiController Service"
- *  @scr.property
- *      name="service.vendor"
- *      value="The Apache Software Foundation"
-*/
-public class OsgiControllerImpl implements OsgiController, SynchronousBundleListener, OsgiControllerServices, OsgiControllerTask.Context {
+ */
+public class OsgiControllerImpl
+    implements OsgiController,
+               OsgiControllerServices,
+               OsgiControllerTask.Context {
 
-	private BundleContext bundleContext;
-    private Storage storage;
-    private OsgiResourceProcessorList processors;
+	private final BundleContext bundleContext;
+    private final Storage storage;
+    private final OsgiResourceProcessorList processors;
     private ResourceOverrideRules roRules;
     private final List<OsgiControllerTask> tasks = new LinkedList<OsgiControllerTask>();
     private final OsgiControllerTaskExecutor executor = new OsgiControllerTaskExecutor();
@@ -67,52 +58,49 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
     /** Storage key: digest of an InstallableData */
     public static final String KEY_DIGEST = "data.digest";
 
-    /** @scr.reference */
-    private PackageAdmin packageAdmin;
+    private final PackageAdmin packageAdmin;
 
-    /** @scr.reference */
-    protected StartLevel startLevel;
-    
-    /** @scr.reference */
-    protected LogService logService;
-    
+    protected final StartLevel startLevel;
+
+    protected final LogService logService;
+
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
 
-    protected void activate(ComponentContext context) throws IOException {
-    	bundleContext = context.getBundleContext();
-        processors = new OsgiResourceProcessorList(context.getBundleContext(), packageAdmin, startLevel, this);
-        storage = new Storage(context.getBundleContext().getDataFile(STORAGE_FILENAME));
+    public OsgiControllerImpl(final BundleContext bc,
+                              final PackageAdmin pa,
+                              final StartLevel sl,
+                              final LogService ls)
+    throws IOException {
+        this.bundleContext = bc;
+        this.packageAdmin = pa;
+        this.startLevel = sl;
+        this.logService = ls;
+        processors = new OsgiResourceProcessorList(bc, packageAdmin, startLevel, this);
+        storage = new Storage(bc.getDataFile(STORAGE_FILENAME));
     }
 
-    protected void deactivate(ComponentContext oldContext) {
-    	if(logService != null) {
-    		logService.log(LogService.LOG_WARNING, 
-    				OsgiController.class.getName() 
-    				+ " service deactivated - this warning can be ignored if system is shutting down");
-    	}
-    	
-    	bundleContext = null;
-        if(storage != null) {
-            try {
-                storage.saveToFile();
-            } catch(IOException ioe) {
-            	if(logService != null) {
-            		logService.log(LogService.LOG_WARNING, "IOException in Storage.saveToFile()", ioe);
-            	}
-            }
+    public void deactivate() {
+        try {
+            storage.saveToFile();
+        } catch(IOException ioe) {
+        	if (logService != null) {
+        		logService.log(LogService.LOG_WARNING, "IOException in Storage.saveToFile()", ioe);
+        	}
         }
-        
-        if (processors != null) {
-            for (OsgiResourceProcessor processor : processors) {
-                processor.dispose();
-            }
+
+        for (OsgiResourceProcessor processor : processors) {
+            processor.dispose();
         }
-        
-        storage = null;
-        processors = null;
+
+        if(logService != null) {
+            logService.log(LogService.LOG_WARNING,
+                    OsgiController.class.getName()
+                    + " service deactivated - this warning can be ignored if system is shutting down");
+        }
+
     }
-    
+
     public void scheduleInstallOrUpdate(String uri, InstallableData data) throws IOException, JcrInstallException {
     	synchronized (tasks) {
         	tasks.add(new OsgiResourceTask(uri, data, bundleContext));
@@ -146,14 +134,9 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
         return "jcrinstall://" + uri;
     }
 
-    /** Schedule our next scan sooner if anything happens to bundles */
-    public void bundleChanged(BundleEvent e) {
-        //loopDelay = 0;
-    }
-
     /** {@inheritDoc} */
     public void executeScheduledOperations() throws Exception {
-    	
+
     	// Ready to work?
         if(processors == null) {
         	if(logService != null) {
@@ -161,31 +144,33 @@ public class OsgiControllerImpl implements OsgiController, SynchronousBundleList
         	}
             return;
         }
-        
+
         // Anything to do?
         if(tasks.isEmpty()) {
         	return;
         }
-        
+
         synchronized (tasks) {
             // Add tasks for our processors to execute their own operations,
             // after our own tasks are executed
             for(OsgiResourceProcessor p : processors) {
             	tasks.add(new ResourceQueueTask(p));
             }
-            
+
             // Now execute all our tasks in a separate thread
         	if(logService != null) {
-                logService.log(LogService.LOG_DEBUG, "Executing " + tasks.size() + " queued tasks");
+                logService.log(LogService.LOG_INFO, "Executing " + tasks.size() + " queued tasks");
         	}
             final long start = System.currentTimeMillis();
-            
+
             // execute returns the list of tasks that could not be executed but should be retried later
             // and those have been removed from the tasks list
-            tasks.addAll(executor.execute(tasks, this));
-            
+            final List<OsgiControllerTask> remainingTasks = executor.execute(tasks, this);
+            tasks.clear();
+            tasks.addAll(remainingTasks);
+
         	if(logService != null) {
-                logService.log(LogService.LOG_DEBUG, 
+                logService.log(LogService.LOG_INFO,
                 		"Done executing queued tasks (" + (System.currentTimeMillis() - start) + " msec)");
         	}
 		}

@@ -25,19 +25,19 @@ import java.util.Map;
  *  that is bundles, deployment packages, configs, etc.
  */
 public interface OsgiResourceProcessor {
-    
+
     /** True if this processor can process the given data */
     boolean canProcess(String uri, InstallableData data);
-    
-    /** Install or update supplied resource 
+
+    /** Install or update supplied resource
      *  @param uri Unique identifier for the resource
      *  @param attributes metadata stored by the OsgiController, can be used to
      *      store additional information
      *  @param data The data to install
-     *  @return one of the {@link InstallResultCode} result codes. 
+     *  @return one of the {@link InstallResultCode} result codes.
      */
-    int installOrUpdate(String uri, Map<String, Object> attributes, InstallableData data) throws Exception;
-    
+    InstallResultCode installOrUpdate(String uri, Map<String, Object> attributes, InstallableData data) throws Exception;
+
     /** Uninstall the resource that was installed via given uri. Calling this with an uri
      *  that is not installed is not an error.
      *  @param uri Unique identifier for the resource
@@ -45,12 +45,12 @@ public interface OsgiResourceProcessor {
      *      removed after calling this method
      */
     void uninstall(String uri, Map<String, Object> attributes) throws Exception;
-    
+
     /** Process our installer queue, if needed, for example by trying
      *  to start outstanding bundles.
      */
     void processResourceQueue() throws Exception;
-    
+
     /**
      * Called to cleanup the resource processor when it is not needed anymore.
      */

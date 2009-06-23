@@ -33,27 +33,27 @@ import org.slf4j.LoggerFactory;
  * 	by the OsgiController worker thread.
  */
 class OsgiResourceTask implements OsgiControllerTask {
-	
+
 	private final String uri;
 	private final InstallableData data;
-	
+
     private static final Logger log = LoggerFactory.getLogger(OsgiResourceTask.class);
 
     /** Create a task that will install, update or uninstall a resource.
      * @param data if not null, operation is install or update, else uninstall
      */
 	OsgiResourceTask(
-			String uri, 
+			String uri,
 			InstallableData data,
 			BundleContext bc) throws IOException
 	{
 		this.uri = uri;
 		this.data = (data == null ? null : new InstallableDataWrapper(data, bc));
 	}
-	
+
 	@Override
 	public String toString() {
-		return 
+		return
 			getClass().getSimpleName()
 			+ ", "
 			+ (isInstallOrUpdate() ? "install/update" : "uninstall")
@@ -62,7 +62,7 @@ class OsgiResourceTask implements OsgiControllerTask {
 		;
 	}
 
-	
+
 	public void execute(OsgiControllerTask.Context context) throws Exception {
 		// TODO Auto-generated method stub
 		if(isInstallOrUpdate()) {
@@ -70,7 +70,7 @@ class OsgiResourceTask implements OsgiControllerTask {
 		} else {
 			executeUninstall(context);
 		}
-		
+
 		// Cleanup InstallableDataWrapper
 		if(data instanceof InstallableDataWrapper) {
 			((InstallableDataWrapper)data).cleanup();
@@ -82,6 +82,7 @@ class OsgiResourceTask implements OsgiControllerTask {
 	}
 
 	private void executeUninstall(OsgiControllerTask.Context context) throws Exception {
+	    log.info("Execute uninstall " + this);
         // If a corresponding higher priority resource is installed, ignore this request
         if(context.getResourceOverrideRules() != null) {
             for(String r : context.getResourceOverrideRules().getHigherPriorityResources(uri)) {
@@ -92,18 +93,19 @@ class OsgiResourceTask implements OsgiControllerTask {
                 }
             }
         }
-        
+
         // let each processor try to uninstall, one of them
     	// should know how that handle uri
     	for(OsgiResourceProcessor p : context.getProcessors()) {
-                p.uninstall(uri, context.getStorage().getMap(uri));
+            p.uninstall(uri, context.getStorage().getMap(uri));
     	}
-    	
+
     	context.getStorage().remove(uri);
     	context.getStorage().saveToFile();
 	}
 
 	private void executeInstallOrUpdate(OsgiControllerTask.Context context) throws Exception {
+        log.info("Execute install or update " + this);
         // If a corresponding higher priority resource is already installed, ignore this one
         if(context.getResourceOverrideRules() != null) {
             for(String r : context.getResourceOverrideRules().getHigherPriorityResources(uri)) {
@@ -114,7 +116,7 @@ class OsgiResourceTask implements OsgiControllerTask {
                 }
             }
         }
-        
+
         // If a corresponding lower priority resource is installed, uninstall it first
         if(context.getResourceOverrideRules() != null) {
             for(String r : context.getResourceOverrideRules().getLowerPriorityResources(uri)) {
@@ -125,7 +127,7 @@ class OsgiResourceTask implements OsgiControllerTask {
                 }
             }
         }
-        
+
         // let suitable OsgiResourceProcessor process install
         final OsgiResourceProcessor p = context.getProcessors().getProcessor(uri, data);
         if (p != null) {
@@ -136,6 +138,5 @@ class OsgiResourceTask implements OsgiControllerTask {
             context.getStorage().saveToFile();
         }
         return;
-		
 	}
 }

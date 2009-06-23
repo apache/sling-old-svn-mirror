@@ -19,13 +19,13 @@
 package org.apache.sling.osgi.installer;
 
 /** Result codes for resource installation operations */
-public class InstallResultCode {
+public enum InstallResultCode {
     /** Result code for installOrUpdate: resource was ignored */
-    public static final int IGNORED = 0;
+    IGNORED,
 
     /** Result code for installOrUpdate: resource was installed */
-    public static final int INSTALLED = 1;
-    
+    INSTALLED,
+
     /** Result code for installOrUpdate: resource was updated */
-    public static final int UPDATED = 2;
+    UPDATED;
 }
