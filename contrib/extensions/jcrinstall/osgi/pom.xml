@@ -47,14 +47,13 @@
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
-        <artifactId>maven-scr-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
         <configuration>
             <instructions>
+                <Bundle-Activator>
+                    org.apache.sling.osgi.installer.impl.Activator
+                </Bundle-Activator>
                 <Export-Package>
                     org.apache.sling.osgi.installer
                 </Export-Package>
