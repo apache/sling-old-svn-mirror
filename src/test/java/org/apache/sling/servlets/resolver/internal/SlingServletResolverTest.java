@@ -18,14 +18,16 @@
  */
 package org.apache.sling.servlets.resolver.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
-
-import junit.framework.TestCase;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -39,11 +41,23 @@ import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.engine.EngineConstants;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.resolver.internal.resource.MockServletResource;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.osgi.framework.Constants;
 
-public class SlingServletResolverTest extends TestCase {
+@RunWith(JMock.class)
+public class SlingServletResolverTest {
+
+    protected final Mockery context = new JUnit4Mockery();
+
     private Servlet servlet;
 
     private SlingServletResolver servletResolver;
@@ -56,8 +70,7 @@ public class SlingServletResolverTest extends TestCase {
 
     private MockResourceResolver mockResourceResolver;
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         mockResourceResolver = new MockResourceResolver();
         mockResourceResolver.setSearchPath("/");
 
@@ -70,7 +83,21 @@ public class SlingServletResolverTest extends TestCase {
 
         servlet = new MockSlingRequestHandlerServlet();
         servletResolver = new SlingServletResolver();
-        servletResolver.bindResourceResolverFactory(factory);
+        // set resource resolver factory
+        final Field resolverField = servletResolver.getClass().getDeclaredField("resourceResolverFactory");
+        resolverField.setAccessible(true);
+        resolverField.set(servletResolver, factory);
+        // set sling repository
+        final SlingRepository repository = this.context.mock(SlingRepository.class);
+        final Session session = this.context.mock(Session.class);
+        this.context.checking(new Expectations() {{
+            allowing(repository).loginAdministrative(with(aNull(String.class)));
+            will(returnValue(session));
+        }});
+
+        final Field repositoryField = servletResolver.getClass().getDeclaredField("repository");
+        repositoryField.setAccessible(true);
+        repositoryField.set(servletResolver, repository);
 
         MockBundle bundle = new MockBundle(1L);
         MockComponentContext mockComponentContext = new MockComponentContext(
@@ -107,7 +134,7 @@ public class SlingServletResolverTest extends TestCase {
         mockResourceResolver.addChildren(parent, childRes);
     }
 
-    public void testAcceptsRequest() {
+    @Test public void testAcceptsRequest() {
         MockSlingHttpServletRequest secureRequest = new MockSlingHttpServletRequest(
             SERVLET_PATH, null, SERVLET_EXTENSION, null, null);
         secureRequest.setResourceResolver(mockResourceResolver);
@@ -116,7 +143,7 @@ public class SlingServletResolverTest extends TestCase {
         assertEquals("Did not resolve to correct servlet", servlet, result);
     }
 
-    public void testIgnoreRequest() {
+    @Test public void testIgnoreRequest() {
         MockSlingHttpServletRequest insecureRequest = new MockSlingHttpServletRequest(
             SERVLET_PATH, null, SERVLET_EXTENSION, null, null);
         insecureRequest.setResourceResolver(mockResourceResolver);

@@ -33,6 +33,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -55,6 +57,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.engine.RequestUtil;
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
@@ -70,7 +73,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingServletResolver</code> TODO
+ * The <code>SlingServletResolver</code> has two functions:
+ * It resolves scripts by implementing the {@link SlingScriptResolver} interface
+ * and it resolves a servlet for a request by implementing the {@link ServletResolver}
+ * interface.
+ *
+ * The resolver uses an own session to find the scripts.
  *
  * @scr.component name="org.apache.sling.servlets.resolver.SlingServletResolver"
  *                label="%servletresolver.name"
@@ -104,10 +112,20 @@ public class SlingServletResolver implements ServletResolver,
     /** @scr.reference */
     private JcrResourceResolverFactory resourceResolverFactory;
 
+    /** @scr.reference */
+    private SlingRepository repository;
+
+    /** The session used for script resolution. */
+    private Session scriptSession;
+
+    /** The resource resolver used for script resolution. */
+    private ResourceResolver scriptResolver;
+
     private Map<ServiceReference, ServiceRegistration> servletsByReference = new HashMap<ServiceReference, ServiceRegistration>();
 
     private List<ServiceReference> pendingServlets = new ArrayList<ServiceReference>();
 
+    /** The component context. */
     private ComponentContext context;
 
     private ServletResourceProviderFactory servletResourceProviderFactory;
@@ -122,47 +140,50 @@ public class SlingServletResolver implements ServletResolver,
 
     // ---------- ServletResolver interface -----------------------------------
 
+    /**
+     * @see org.apache.sling.api.servlets.ServletResolver#resolveServlet(org.apache.sling.api.SlingHttpServletRequest)
+     */
     public Servlet resolveServlet(SlingHttpServletRequest request) {
-        Resource resource = request.getResource();
+        final Resource resource = request.getResource();
 
         // start tracking servlet resolution
-        RequestProgressTracker tracker = request.getRequestProgressTracker();
-        String timerName = "resolverServlet(" + resource + ")";
+        final RequestProgressTracker tracker = request.getRequestProgressTracker();
+        final String timerName = "resolveServlet(" + resource + ")";
         tracker.startTimer(timerName);
 
         Servlet servlet = null;
 
         final String type = resource.getResourceType();
         if(log.isDebugEnabled()) {
-        	log.debug("resolveServlet called for Resource {}", request.getResource());
+        	log.debug("resolveServlet called for resource {}", resource);
         }
 
         // first check whether the type of a resource is the absolute
         // path of a servlet (or script)
         if (type.charAt(0) == '/') {
-            Resource res = request.getResourceResolver().getResource(type);
+            final Resource res = this.scriptResolver.getResource(type);
             if (res != null) {
                 servlet = res.adaptTo(Servlet.class);
             }
-            if(servlet!=null && log.isDebugEnabled()) {
+            if (servlet!=null && log.isDebugEnabled()) {
             	log.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet), type);
             }
         }
 
         // the resource type is not absolute, so lets go for the deep search
         if (servlet == null) {
-            ResourceCollector locationUtil = ResourceCollector.create(request);
-            servlet = getServlet(locationUtil, request, resource.getResourceResolver());
+            final ResourceCollector locationUtil = ResourceCollector.create(request);
+            servlet = getServlet(locationUtil, request);
 
-            if(log.isDebugEnabled()) {
-            	log.debug("getServlet returns Servlet {}", RequestUtil.getServletName(servlet));
+            if (log.isDebugEnabled()) {
+            	log.debug("getServlet returns servlet {}", RequestUtil.getServletName(servlet));
             }
         }
 
         // last resort, use the core bundle default servlet
         if (servlet == null) {
             if(log.isDebugEnabled()) {
-            	log.debug("No specific Servlet found, trying default");
+            	log.debug("No specific servlet found, trying default");
             }
             servlet = getDefaultServlet();
         }
@@ -170,20 +191,20 @@ public class SlingServletResolver implements ServletResolver,
         // track servlet resolution termination
         if (servlet == null) {
             tracker.logTimer(timerName,
-                "Servlet Resolution failed. See log for details");
+                "Servlet resolution failed. See log for details");
         } else {
-            tracker.logTimer(timerName, "Using Servlet {0}",
+            tracker.logTimer(timerName, "Using servlet {0}",
                 RequestUtil.getServletName(servlet));
         }
 
         // log the servlet found
         if (log.isDebugEnabled()) {
             if (servlet != null) {
-                log.info("Servlet {} found for Resource={}",
-                    RequestUtil.getServletName(servlet), request.getResource());
+                log.info("Servlet {} found for resource={}",
+                    RequestUtil.getServletName(servlet), resource);
             } else {
-                log.debug("No servlet found for Resource={}",
-                    request.getResource());
+                log.debug("No servlet found for resource={}",
+                    resource);
             }
         }
 
@@ -262,7 +283,7 @@ public class SlingServletResolver implements ServletResolver,
                 String.valueOf(status),
                 ServletResolverConstants.ERROR_HANDLER_PATH,
                 resource);
-            Servlet servlet = getServlet(locationUtil, request, resource.getResourceResolver());
+            Servlet servlet = getServlet(locationUtil, request);
 
             // fall back to default servlet if none
             if (servlet == null) {
@@ -324,7 +345,7 @@ public class SlingServletResolver implements ServletResolver,
                     tClass.getSimpleName(),
                     ServletResolverConstants.ERROR_HANDLER_PATH,
                     resource);
-                servlet = getServlet(locationUtil, request, resource.getResourceResolver());
+                servlet = getServlet(locationUtil, request);
 
                 // go to the base class
                 tClass = tClass.getSuperclass();
@@ -396,15 +417,15 @@ public class SlingServletResolver implements ServletResolver,
      * @return a servlet for handling the request or <code>null</code> if no
      *         such servlet willing to handle the request could be found.
      */
-    private Servlet getServlet(ResourceCollector locationUtil,
-            SlingHttpServletRequest request, ResourceResolver resolver) {
-        final Collection<Resource> candidates = locationUtil.getServlets(resolver);
+    private Servlet getServlet(final ResourceCollector locationUtil,
+            final SlingHttpServletRequest request) {
+        final Collection<Resource> candidates = locationUtil.getServlets(this.scriptResolver);
 
-    	if(log.isDebugEnabled()) {
+    	if (log.isDebugEnabled()) {
     		if(candidates.isEmpty()) {
-        		log.debug("No Servlet candidates found");
+        		log.debug("No servlet candidates found");
     		} else {
-        		log.debug("Ordered list of Servlet candidates follows");
+        		log.debug("Ordered list of servlet candidates follows");
                 for (Resource candidateResource : candidates) {
                 	log.debug("Servlet candidate: {}", candidateResource.getPath());
                 }
@@ -414,7 +435,7 @@ public class SlingServletResolver implements ServletResolver,
     	boolean hasOptingServlet = false;
         for (Resource candidateResource : candidates) {
         	if(log.isDebugEnabled()) {
-        		log.debug("Checking if candidate Resource {} adapts to Servlet and accepts request",
+        		log.debug("Checking if candidate resource {} adapts to servlet and accepts request",
         				candidateResource.getPath());
         	}
             Servlet candidate = candidateResource.adaptTo(Servlet.class);
@@ -433,7 +454,7 @@ public class SlingServletResolver implements ServletResolver,
             	}
             } else {
                 if(log.isDebugEnabled()) {
-                	log.debug("Candidate {} does not adapt to a Servlet, ignored", candidateResource.getPath());
+                	log.debug("Candidate {} does not adapt to a servlet, ignored", candidateResource.getPath());
                 }
             }
         }
@@ -455,7 +476,7 @@ public class SlingServletResolver implements ServletResolver,
                     "Sling Core Default Servlet"));
                 defaultServlet = servlet;
             } catch (ServletException se) {
-                log.error("Failed to initiliaze Servlet", se);
+                log.error("Failed to initialize default servlet", se);
             }
         }
 
@@ -477,7 +498,7 @@ public class SlingServletResolver implements ServletResolver,
                     "Sling Default Error Handler Servlet"));
                 defaultErrorServlet = servlet;
             } catch (ServletException se) {
-                log.error("Failed to initiliaze Servlet", se);
+                log.error("Failed to initialize error servlet", se);
             }
         }
 
@@ -522,6 +543,14 @@ public class SlingServletResolver implements ServletResolver,
             servletRoot = DEFAULT_SERVLET_ROOT;
         }
 
+        // create the script session
+        try {
+            this.scriptSession = this.repository.loginAdministrative(null);
+        } catch (RepositoryException e) {
+            throw new SlingException("Unable to create new admin session.", e);
+        }
+        this.scriptResolver = this.resourceResolverFactory.getResourceResolver(this.scriptSession);
+
         Collection<ServiceReference> refs;
         synchronized (this) {
 
@@ -549,6 +578,10 @@ public class SlingServletResolver implements ServletResolver,
 
         // destroy all servlets
         destroyAllServlets(refs);
+        if ( this.scriptSession != null ) {
+            this.scriptSession.logout();
+            this.scriptSession = null;
+        }
         this.context = null;
         this.servletResourceProviderFactory = null;
     }
@@ -668,16 +701,6 @@ public class SlingServletResolver implements ServletResolver,
                             + name, t);
                 }
             }
-        }
-    }
-
-    protected void bindResourceResolverFactory(JcrResourceResolverFactory factory) {
-        this.resourceResolverFactory = factory;
-    }
-
-    protected void unbindResourceResolverFactory(JcrResourceResolverFactory factory) {
-        if ( this.resourceResolverFactory == factory) {
-            this.resourceResolverFactory = null;
         }
     }
 }
