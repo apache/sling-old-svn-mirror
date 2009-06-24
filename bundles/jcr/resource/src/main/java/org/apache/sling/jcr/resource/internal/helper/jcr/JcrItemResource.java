@@ -18,8 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import static org.apache.sling.jcr.resource.JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY;
-
 import java.util.Iterator;
 
 import javax.jcr.Node;
@@ -29,13 +27,14 @@ import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
     /** marker value for the resourceSupertType before trying to evaluate */
-    private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
+    protected static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
     private final ResourceResolver resourceResolver;
 
@@ -43,7 +42,7 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
     private final ResourceMetadata metadata;
 
-    private String resourceSuperType;
+    protected String resourceSuperType;
 
     protected final JcrResourceTypeProvider[] resourceTypeProviders;
 
@@ -71,7 +70,7 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
     public String getResourceSuperType() {
         if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-            resourceSuperType = JcrResourceUtil.getResourceSuperType(this);
+            resourceSuperType = ResourceUtil.getResourceSuperType(this);
         }
         return resourceSuperType;
     }
@@ -89,8 +88,8 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
             throws RepositoryException {
         String result = null;
 
-        if (node.hasProperty(SLING_RESOURCE_TYPE_PROPERTY)) {
-            result = node.getProperty(SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
+        if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY)) {
+            result = node.getProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
         }
 
         if (result == null && this.resourceTypeProviders != null) {

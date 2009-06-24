@@ -45,6 +45,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,22 @@ public class JcrNodeResource extends JcrItemResource {
 
     public String getResourceType() {
         return resourceType;
+    }
+
+    public String getResourceSuperType() {
+        if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
+            try {
+                if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
+                    resourceSuperType = node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
+                }
+            } catch (RepositoryException re) {
+                // we ignore this
+            }
+            if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
+                return super.getResourceSuperType();
+            }
+        }
+        return resourceSuperType;
     }
 
     @SuppressWarnings("unchecked")

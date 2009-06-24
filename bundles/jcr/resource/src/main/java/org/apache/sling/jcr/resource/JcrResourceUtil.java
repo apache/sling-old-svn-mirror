@@ -35,6 +35,7 @@ import javax.jcr.query.QueryResult;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.internal.helper.LazyInputStream;
 
 /**
@@ -166,7 +167,9 @@ public class JcrResourceUtil {
      *
      * @param type The resource type to be converted into a path
      * @return The resource type as a path.
+     * @deprecated Use {@link ResourceUtil#resourceTypeToPath(String)}
      */
+    @Deprecated
     public static String resourceTypeToPath(String type) {
         return type.replaceAll("\\:", "/");
     }
@@ -191,20 +194,12 @@ public class JcrResourceUtil {
      *         resource
      *         {@link JcrResourceConstants#SLING_RESOURCE_SUPER_TYPE_PROPERTY}
      *         adapting to a string.
+     * @deprecated Use {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
      */
+    @Deprecated
     public static String getResourceSuperType(
             ResourceResolver resourceResolver, String resourceType) {
-        // normalize resource type to a path string
-        String rtPath = resourceTypeToPath(resourceType);
-
-        // create the path to the resource containing the super type
-        rtPath += "/" + JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY;
-
-        // get a resource for the resource supert type
-        Resource rtResource = resourceResolver.getResource(rtPath);
-
-        // get the resource super type from the resource
-        return (rtResource != null) ? rtResource.adaptTo(String.class) : null;
+        return ResourceUtil.getResourceSuperType(resourceResolver, resourceType);
     }
 
     /**
@@ -223,7 +218,10 @@ public class JcrResourceUtil {
      *            requested.
      * @return The resource super type or <code>null</code> if the algorithm
      *         described above does not yield a resource super type.
+     * @deprecated Call {@link Resource#getResourceSuperType()} and if
+     * that returns <code>null</code> {@link ResourceUtil#getResourceSuperType(Resource)}
      */
+    @Deprecated
     public static String getResourceSuperType(Resource resource) {
         ResourceResolver resolver = resource.getResourceResolver();
 
