@@ -25,9 +25,9 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 /** Used to provide the equivalent of an empty Node for GET requests
  *  to *.something (SLING-344)
@@ -102,12 +102,12 @@ public class StarResource extends SyntheticResource {
     }
 
     /**
-     * Calls {@link JcrResourceUtil#getResourceSuperType(Resource)} method
+     * Calls {@link ResourceUtil#getResourceSuperType(Resource)} method
      * to dynamically resolve the resource super type of this star resource.
      */
     public String getResourceSuperType() {
         if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-            resourceSuperType = JcrResourceUtil.getResourceSuperType(this);
+            resourceSuperType = ResourceUtil.getResourceSuperType(this);
         }
         return resourceSuperType;
     }
