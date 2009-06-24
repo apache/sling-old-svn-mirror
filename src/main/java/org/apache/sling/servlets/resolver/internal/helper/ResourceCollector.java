@@ -30,11 +30,12 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 
 /**
  * The <code>ResourceCollector</code> class provides a single public method -
- * {@link #getServlets(Resource)} - which is used to find an ordered collection
+ * {@link #getServlets(ResourceResolver)} - which is used to find an ordered collection
  * of <code>Resource</code> instances which may be used to find a servlet or
  * script to handle a request to the given resource.
  */
@@ -72,6 +73,12 @@ public class ResourceCollector {
     // request is GET or HEAD and extension is html
     private final boolean isHtml;
 
+    private final int hashCode;
+
+    private final String resourceType;
+
+    private final String resourceSuperType;
+
     /**
      * Creates a <code>ResourceCollector</code> for the given
      * <code>request</code>. If the request is a GET or HEAD request, a
@@ -100,15 +107,22 @@ public class ResourceCollector {
      *            default value
      *            {@link org.apache.sling.servlets.resolver.internal.ServletResolverConstants#DEFAULT_SERVLET_NAME}
      *            is assumed.
+     * @param resource the resource to invoke, the resource type and resource super type are taken from this resource.
      */
-    public ResourceCollector(String methodName, String baseResourceType) {
+    public ResourceCollector(String methodName, String baseResourceType, Resource resource) {
         this.methodName = methodName;
-        this.baseResourceType = baseResourceType;
+        this.baseResourceType = (baseResourceType != null ? baseResourceType : ServletResolverConstants.DEFAULT_SERVLET_NAME);
         this.requestSelectors = new String[0];
         this.numRequestSelectors = 0;
         this.extension = null;
         this.isGet = false;
         this.isHtml = false;
+        this.resourceType = resource.getResourceType();
+        this.resourceSuperType = resource.getResourceSuperType();
+        // create the hash code once
+        final String key = methodName + ':' + baseResourceType + ':' + extension + "::" +
+            (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType);
+        this.hashCode = key.hashCode();
     }
 
     /**
@@ -125,7 +139,9 @@ public class ResourceCollector {
      */
     private ResourceCollector(SlingHttpServletRequest request) {
         this.methodName = request.getMethod();
-        this.baseResourceType = null;
+        this.baseResourceType = ServletResolverConstants.DEFAULT_SERVLET_NAME;
+        this.resourceType = request.getResource().getResourceType();
+        this.resourceSuperType = request.getResource().getResourceSuperType();
 
         RequestPathInfo requestpaInfo = request.getRequestPathInfo();
 
@@ -135,15 +151,18 @@ public class ResourceCollector {
 
         isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
         isHtml = isGet && "html".equals(extension);
+        // create the hash code once
+        final String key = methodName + ':' + baseResourceType + ':' + extension + ':' + requestpaInfo.getSelectorString() + ':' +
+            (this.resourceType == null ? "" : this.resourceType)+ ':' + (this.resourceSuperType == null ? "" : this.resourceSuperType);
+        this.hashCode = key.hashCode();
     }
 
-    public final Collection<Resource> getServlets(Resource resource) {
+    public final Collection<Resource> getServlets(ResourceResolver resolver) {
 
         SortedSet<Resource> resources = new TreeSet<Resource>();
 
-        ResourceResolver resolver = resource.getResourceResolver();
-        Iterator<String> locations = new LocationIterator(resource,
-            baseResourceType);
+        Iterator<String> locations = new LocationIterator(resourceType, resourceSuperType,
+            baseResourceType, resolver);
         while (locations.hasNext()) {
             String location = locations.next();
 
@@ -311,5 +330,51 @@ public class ResourceCollector {
         }
 
         return res;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if ( !(obj instanceof ResourceCollector) ) {
+            return false;
+        }
+        if ( obj == this ) {
+            return true;
+        }
+        final ResourceCollector o = (ResourceCollector)obj;
+        if ( isGet == o.isGet
+             && isHtml == o.isHtml
+             && numRequestSelectors == o.numRequestSelectors
+             && stringEquals(methodName, o.methodName)
+             && stringEquals(baseResourceType, o.baseResourceType)
+             && stringEquals(resourceType, o.resourceType)
+             && stringEquals(resourceSuperType, o.resourceSuperType)
+             && stringEquals(extension, o.extension) ) {
+            // now compare selectors
+            for(int i=0;i<numRequestSelectors;i++) {
+                if ( !stringEquals(requestSelectors[i], o.requestSelectors[i]) ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.hashCode;
+    }
+
+    /**
+     * Helper method to compare two strings which can possibly be <code>null</code>
+     */
+    private boolean stringEquals(final String s1, final String s2) {
+        if ( s1 == null && s2 == null ) {
+            return true;
+        }
+        if ( s1 == null || s2 == null ) {
+            return false;
+        }
+        return s1.equals(s2);
     }
 }

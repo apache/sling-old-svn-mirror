@@ -155,7 +155,7 @@ public class ResourceCollectorGetServletsTest extends HelperTestBase {
         }
 
         ResourceCollector lu = ResourceCollector.create(request);
-        Collection<Resource> res = lu.getServlets(request.getResource());
+        Collection<Resource> res = lu.getServlets(request.getResource().getResourceResolver());
         Iterator<Resource> rIter = res.iterator();
 
         for (int index : indices) {

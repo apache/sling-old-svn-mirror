@@ -20,10 +20,10 @@ package org.apache.sling.servlets.resolver.internal.helper;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public abstract class HelperTestBase extends TestCase {
 
@@ -51,18 +51,18 @@ public abstract class HelperTestBase extends TestCase {
         resourceResolver.setSearchPath("/apps", "/libs");
 
         resourceType = "foo:bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
 
         resourcePath = "/content/page";
         resource = new MockResource(resourceResolver, resourcePath,
             resourceType);
         resourceResolver.addResource(resource);
 
-        request = makeRequest("GET", "print.a4", "html"); 
+        request = makeRequest("GET", "print.a4", "html");
     }
-    
+
     protected MockSlingHttpServletRequest makeRequest(String method, String selectors, String extension) {
-        final MockSlingHttpServletRequest result = 
+        final MockSlingHttpServletRequest result =
             new MockSlingHttpServletRequest(resourcePath, selectors, extension, null, null);
         result.setMethod(method);
         result.setResourceResolver(resourceResolver);
@@ -78,5 +78,5 @@ public abstract class HelperTestBase extends TestCase {
         request = null;
         resource = null;
     }
-    
+
 }

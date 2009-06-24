@@ -123,7 +123,6 @@ public class SlingServletResolver implements ServletResolver,
     // ---------- ServletResolver interface -----------------------------------
 
     public Servlet resolveServlet(SlingHttpServletRequest request) {
-
         Resource resource = request.getResource();
 
         // start tracking servlet resolution
@@ -153,7 +152,7 @@ public class SlingServletResolver implements ServletResolver,
         // the resource type is not absolute, so lets go for the deep search
         if (servlet == null) {
             ResourceCollector locationUtil = ResourceCollector.create(request);
-            servlet = getServlet(locationUtil, request, resource);
+            servlet = getServlet(locationUtil, request, resource.getResourceResolver());
 
             if(log.isDebugEnabled()) {
             	log.debug("getServlet returns Servlet {}", RequestUtil.getServletName(servlet));
@@ -261,8 +260,9 @@ public class SlingServletResolver implements ServletResolver,
             // find a servlet for the status as the method name
             ResourceCollector locationUtil = new ResourceCollector(
                 String.valueOf(status),
-                ServletResolverConstants.ERROR_HANDLER_PATH);
-            Servlet servlet = getServlet(locationUtil, request, resource);
+                ServletResolverConstants.ERROR_HANDLER_PATH,
+                resource);
+            Servlet servlet = getServlet(locationUtil, request, resource.getResourceResolver());
 
             // fall back to default servlet if none
             if (servlet == null) {
@@ -322,8 +322,9 @@ public class SlingServletResolver implements ServletResolver,
                 // find a servlet for the simple class name as the method name
                 ResourceCollector locationUtil = new ResourceCollector(
                     tClass.getSimpleName(),
-                    ServletResolverConstants.ERROR_HANDLER_PATH);
-                servlet = getServlet(locationUtil, request, resource);
+                    ServletResolverConstants.ERROR_HANDLER_PATH,
+                    resource);
+                servlet = getServlet(locationUtil, request, resource.getResourceResolver());
 
                 // go to the base class
                 tClass = tClass.getSuperclass();
@@ -396,8 +397,8 @@ public class SlingServletResolver implements ServletResolver,
      *         such servlet willing to handle the request could be found.
      */
     private Servlet getServlet(ResourceCollector locationUtil,
-            SlingHttpServletRequest request, Resource resource) {
-        Collection<Resource> candidates = locationUtil.getServlets(resource);
+            SlingHttpServletRequest request, ResourceResolver resolver) {
+        final Collection<Resource> candidates = locationUtil.getServlets(resolver);
 
     	if(log.isDebugEnabled()) {
     		if(candidates.isEmpty()) {
@@ -410,6 +411,7 @@ public class SlingServletResolver implements ServletResolver,
     		}
     	}
 
+    	boolean hasOptingServlet = false;
         for (Resource candidateResource : candidates) {
         	if(log.isDebugEnabled()) {
         		log.debug("Checking if candidate Resource {} adapts to Servlet and accepts request",
@@ -417,10 +419,14 @@ public class SlingServletResolver implements ServletResolver,
         	}
             Servlet candidate = candidateResource.adaptTo(Servlet.class);
             if (candidate != null) {
-                boolean servletAcceptsRequest = !(candidate instanceof OptingServlet)
+                final boolean isOptingServlet = candidate instanceof OptingServlet;
+                boolean servletAcceptsRequest = !isOptingServlet
                     || ((OptingServlet) candidate).accepts(request);
                 if (servletAcceptsRequest) {
                     return candidate;
+                }
+                if ( isOptingServlet ) {
+                    hasOptingServlet = true;
                 }
             	if(log.isDebugEnabled()) {
             		log.debug("Candidate {} does not accept request, ignored", candidateResource.getPath());
