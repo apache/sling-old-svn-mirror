@@ -132,6 +132,12 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
      */
     public InstallResultCode installOrUpdate(String uri, Map<String, Object> attributes,
             InstallableData installableData) throws BundleException, IOException {
+        int retryCount = 0;
+        if ( attributes.get("RETRY_COUNT") != null ) {
+            retryCount = (Integer)attributes.get("RETRY_COUNT");
+        }
+        retryCount++;
+        attributes.put("RETRY_COUNT", retryCount);
 
     	// Check that we have bundle data and manifest
     	InputStream data = installableData.adaptTo(InputStream.class);
@@ -166,7 +172,7 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			// If the bundle (or one with the same symbolic name) is
 			// already installed, ignore the new one if it's a lower
 			// version
-			if (b != null ) {
+			if (b != null && retryCount == 1) {
 				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
 				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
 				if (newBundleVersion.compareTo(installedVersion) <= 0) {
@@ -179,10 +185,15 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
 			if (b != null) {
 				// Existing bundle -> stop, update, restart
-			    log.debug("Calling Bundle.stop() and updating {}", uri);
-			    b.stop();
-			    b.update(data);
-			    b.start();
+			    if ( retryCount == 1 ) {
+			        log.debug("Calling Bundle.stop() and updating {}", uri);
+			        b.stop();
+			        b.update(data);
+	                b.start();
+			    } else {
+                    log.debug("Calling Bundle.start {}", uri);
+	                b.start();
+			    }
 			    updated = true;
 			    needsRefresh = true;
 			} else {
@@ -308,9 +319,8 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
         			activeBundles.size());
         	refreshPackagesSynchronously(null);
 
-        } else {
-            startBundles();
         }
+        startBundles();
     }
 
     /**
