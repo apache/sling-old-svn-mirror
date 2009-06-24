@@ -28,9 +28,9 @@ import static org.apache.sling.servlets.resolver.internal.ServletResolverConstan
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
@@ -258,7 +258,7 @@ public class ServletResourceProviderFactory {
         for (String type : types) {
 
             // ensure namespace prefixes are converted to slashes
-            type = JcrResourceUtil.resourceTypeToPath(type);
+            type = ResourceUtil.resourceTypeToPath(type);
 
             // make absolute if relative
             if (!type.startsWith("/")) {

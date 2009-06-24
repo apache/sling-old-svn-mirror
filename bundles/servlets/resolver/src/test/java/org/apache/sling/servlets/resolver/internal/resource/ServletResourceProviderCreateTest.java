@@ -28,9 +28,9 @@ import javax.servlet.ServletResponse;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
 
 public class ServletResourceProviderCreateTest extends TestCase {
@@ -45,7 +45,7 @@ public class ServletResourceProviderCreateTest extends TestCase {
 
     private static final String RES_TYPE = "sling:sample";
 
-    private static final String RES_TYPE_PATH = JcrResourceUtil.resourceTypeToPath(RES_TYPE);
+    private static final String RES_TYPE_PATH = ResourceUtil.resourceTypeToPath(RES_TYPE);
 
     private ServletResourceProviderFactory factory = new ServletResourceProviderFactory(
         ROOT, new String[] {"/apps/"});

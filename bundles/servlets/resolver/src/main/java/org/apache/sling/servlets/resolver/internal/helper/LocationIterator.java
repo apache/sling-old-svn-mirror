@@ -21,10 +21,8 @@ package org.apache.sling.servlets.resolver.internal.helper;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
+import org.apache.sling.api.resource.ResourceUtil;
 
 /**
  * The <code>LocationIterator</code> provides access to an ordered collection
@@ -49,7 +47,7 @@ public class LocationIterator implements Iterator<String> {
 
     // The resource for which this iterator is created. This resource
     // gives the initial resource type and the first resource super type
-    private final Resource resource;
+    //private final Resource resource;
 
     // The resource resolver used to find resource super types of
     // resource types
@@ -69,6 +67,12 @@ public class LocationIterator implements Iterator<String> {
     // The resource type to use for the next iteration loop
     private String resourceType;
 
+    // The first resource type to use
+    private final String firstResourceType;
+
+    // The first resource super type to use
+    private final String firstResourceSuperType;
+
     // The current relative path generated from the resource type
     private String relPath;
 
@@ -80,19 +84,15 @@ public class LocationIterator implements Iterator<String> {
      * Creates an instance of this iterator starting with a location built from
      * the resource type of the <code>resource</code> and ending with the
      * given <code>baseResourceType</code>.
-     * 
-     * @param resource The <code>Resource</code> used to define the initial
-     *            resource type and resource super type.
-     * @param baseResourceType The base resource type. If this is
-     *            <code>null</code> the
-     *            {@link ServletResolverConstants#DEFAULT_SERVLET_NAME} is used.
+     *
+     * @param resourceType the initial resource type.
+     * @param resourceSuperType the initial resource super type.
+     * @param baseResourceType The base resource type.
+     * @param resolver The resource resolver
      */
-    public LocationIterator(Resource resource, String baseResourceType) {
-        this.resource = resource;
-        this.resolver = resource.getResourceResolver();
-        this.baseResourceType = (baseResourceType != null)
-                ? baseResourceType
-                : ServletResolverConstants.DEFAULT_SERVLET_NAME;
+    public LocationIterator(String resourceType, String resourceSuperType, String baseResourceType, ResourceResolver resolver) {
+        this.resolver = resolver;
+        this.baseResourceType = baseResourceType;
 
         String[] tmpPath = resolver.getSearchPath();
         if (tmpPath == null || tmpPath.length == 0) {
@@ -100,7 +100,10 @@ public class LocationIterator implements Iterator<String> {
         }
         searchPath = tmpPath;
 
-        resourceType = resource.getResourceType();
+        this.firstResourceType = resourceType;
+        this.firstResourceSuperType = resourceSuperType;
+        // we start with the first resource type
+        this.resourceType = firstResourceType;
 
         nextLocation = seek();
     }
@@ -114,7 +117,7 @@ public class LocationIterator implements Iterator<String> {
 
     /**
      * Returns the next entry of this iterator.
-     * 
+     *
      * @throws NoSuchElementException if {@link #hasNext()} returns
      *             <code>false</code>.
      */
@@ -143,7 +146,7 @@ public class LocationIterator implements Iterator<String> {
                 return null;
             }
 
-            String typePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+            String typePath = ResourceUtil.resourceTypeToPath(resourceType);
             if (typePath.startsWith("/")) {
                 resourceType = getResourceSuperType(resourceType);
                 return typePath;
@@ -185,10 +188,10 @@ public class LocationIterator implements Iterator<String> {
 
         // get the super type of the current resource type
         String superType;
-        if (resourceType.equals(resource.getResourceType())) {
-            superType = resource.getResourceSuperType();
+        if (resourceType.equals(this.firstResourceType)) {
+            superType = this.firstResourceSuperType;
         } else {
-            superType = JcrResourceUtil.getResourceSuperType(resolver,
+            superType = ResourceUtil.getResourceSuperType(resolver,
                 resourceType);
         }
 

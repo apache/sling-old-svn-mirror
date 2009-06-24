@@ -20,7 +20,8 @@ package org.apache.sling.servlets.resolver.internal.helper;
 
 import static org.apache.sling.servlets.resolver.internal.ServletResolverConstants.DEFAULT_SERVLET_NAME;
 
-import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 
 public class LocationIteratorTest extends HelperTestBase {
 
@@ -28,8 +29,11 @@ public class LocationIteratorTest extends HelperTestBase {
         // expect path gets { "/" }
         resourceResolver.setSearchPath((String[]) null);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -47,8 +51,11 @@ public class LocationIteratorTest extends HelperTestBase {
         String root0 = "/apps";
         resourceResolver.setSearchPath(root0);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /apps/foo/bar
         assertTrue(li.hasNext());
@@ -67,8 +74,11 @@ public class LocationIteratorTest extends HelperTestBase {
         String root1 = "/libs";
         resourceResolver.setSearchPath(root0, root1);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /apps/foo/bar
         assertTrue(li.hasNext());
@@ -96,11 +106,14 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // absolute resource type
         resourceType = "/foo/bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
         resource.setResourceType(resourceType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -120,11 +133,14 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // absolute resource type
         resourceType = "/foo/bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
         resource.setResourceType(resourceType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -145,11 +161,14 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // absolute resource type
         resourceType = "/foo/bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
         resource.setResourceType(resourceType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -173,11 +192,14 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // set resource super type
         resourceSuperType = "foo:superBar";
-        resourceSuperTypePath = JcrResourceUtil.resourceTypeToPath(resourceSuperType);
+        resourceSuperTypePath = ResourceUtil.resourceTypeToPath(resourceSuperType);
         resource.setResourceSuperType(resourceSuperType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -201,11 +223,14 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // set resource super type
         resourceSuperType = "foo:superBar";
-        resourceSuperTypePath = JcrResourceUtil.resourceTypeToPath(resourceSuperType);
+        resourceSuperTypePath = ResourceUtil.resourceTypeToPath(resourceSuperType);
         resource.setResourceSuperType(resourceSuperType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /apps/foo/bar
         assertTrue(li.hasNext());
@@ -230,11 +255,14 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // set resource super type
         resourceSuperType = "foo:superBar";
-        resourceSuperTypePath = JcrResourceUtil.resourceTypeToPath(resourceSuperType);
+        resourceSuperTypePath = ResourceUtil.resourceTypeToPath(resourceSuperType);
         resource.setResourceSuperType(resourceSuperType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /apps/foo/bar
         assertTrue(li.hasNext());
@@ -270,16 +298,19 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // absolute resource type
         resourceType = "/foo/bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
         resource.setResourceType(resourceType);
 
         // set resource super type
         resourceSuperType = "foo:superBar";
-        resourceSuperTypePath = JcrResourceUtil.resourceTypeToPath(resourceSuperType);
+        resourceSuperTypePath = ResourceUtil.resourceTypeToPath(resourceSuperType);
         resource.setResourceSuperType(resourceSuperType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -303,16 +334,19 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // absolute resource type
         resourceType = "/foo/bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
         resource.setResourceType(resourceType);
 
         // set resource super type
         resourceSuperType = "foo:superBar";
-        resourceSuperTypePath = JcrResourceUtil.resourceTypeToPath(resourceSuperType);
+        resourceSuperTypePath = ResourceUtil.resourceTypeToPath(resourceSuperType);
         resource.setResourceSuperType(resourceSuperType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
@@ -337,16 +371,19 @@ public class LocationIteratorTest extends HelperTestBase {
 
         // absolute resource type
         resourceType = "/foo/bar";
-        resourceTypePath = JcrResourceUtil.resourceTypeToPath(resourceType);
+        resourceTypePath = ResourceUtil.resourceTypeToPath(resourceType);
         resource.setResourceType(resourceType);
 
         // set resource super type
         resourceSuperType = "foo:superBar";
-        resourceSuperTypePath = JcrResourceUtil.resourceTypeToPath(resourceSuperType);
+        resourceSuperTypePath = ResourceUtil.resourceTypeToPath(resourceSuperType);
         resource.setResourceSuperType(resourceSuperType);
 
-        LocationIterator li = new LocationIterator(request.getResource(),
-            DEFAULT_SERVLET_NAME);
+        final Resource r = request.getResource();
+        LocationIterator li = new LocationIterator(r.getResourceType(),
+                r.getResourceSuperType(),
+                DEFAULT_SERVLET_NAME,
+                resourceResolver);
 
         // 1. /foo/bar
         assertTrue(li.hasNext());
