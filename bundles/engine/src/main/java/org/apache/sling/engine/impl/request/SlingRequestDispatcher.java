@@ -29,8 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,7 +203,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         @Override
         public String getResourceSuperType() {
             if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-                resourceSuperType = JcrResourceUtil.getResourceSuperType(this);
+                resourceSuperType = ResourceUtil.getResourceSuperType(this);
             }
             return resourceSuperType;
         }
