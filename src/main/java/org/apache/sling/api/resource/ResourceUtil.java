@@ -291,21 +291,81 @@ public class ResourceUtil {
         // adapt to ValueMap if resource is not null
         ValueMap valueMap = (res != null)?
             res.adaptTo(ValueMap.class) : null;
-        
+
         // if no resource or no ValueMap adapter, check Map
         if (valueMap == null) {
-            
+
             Map map = (res != null) ? res.adaptTo(Map.class) : null;
 
             // if not even adapting to map, assume an empty map
             if (map == null) {
                 map = new HashMap<String, Object>();
             }
-            
+
             // .. and decorate the plain map
             valueMap = new ValueMapDecorator(map);
         }
-        
+
         return valueMap;
+    }
+    /**
+     * Helper method, which returns the given resource type as returned from the
+     * {@link org.apache.sling.api.resource.Resource#getResourceType()} as a
+     * relative path.
+     *
+     * @param type The resource type to be converted into a path
+     * @return The resource type as a path.
+     * @since 2.0.6
+     */
+    public static String resourceTypeToPath(final String type) {
+        return type.replaceAll("\\:", "/");
+    }
+
+    /**
+     * Returns the super type of the given resource type.
+     * This method converts the resource type to a resource path
+     * by calling {@link #resourceTypeToPath(String)} and uses
+     * the <code>resourceResolver</code> to get the corresponding
+     * resource. If the resource exists, the {@link Resource#getResourceSuperType()}
+     * metod is called.
+     *
+     * @param resourceResolver The <code>ResourceResolver</code> used to
+     *            access the resource whose path (relative or absolute) is given
+     *            by the <code>resourceType</code> parameter.
+     * @param resourceType The resource type whose super type is to be returned.
+     *            This type is turned into a path by calling the
+     *            {@link #resourceTypeToPath(String)} method before trying to
+     *            get the resource through the <code>resourceResolver</code>.
+     * @return the super type of the <code>resourceType</code> or
+     *         <code>null</code> if the resource type does not exists
+     *         or returns <code>null</code> for its super type.
+     * @since 2.0.6
+     */
+    public static String getResourceSuperType(final ResourceResolver resourceResolver,
+                                              final String resourceType) {
+        // normalize resource type to a path string
+        final String rtPath = resourceTypeToPath(resourceType);
+        // get the resource type resource
+        final Resource rtResource = resourceResolver.getResource(rtPath);
+        return (rtResource == null ? null : rtResource.getResourceSuperType());
+    }
+
+    /**
+     * Returns the resource super type of the resource type of the given resource.
+     * This method simply calls {@link #getResourceSuperType(ResourceResolver, String)}
+     * with the resource type of the <code>resource</code>
+     *
+     * @param resource The <code>Resource</code> whose resource super type is
+     *            requested.
+     * @return The resource super type or <code>null</code> if the algorithm
+     *         described above does not yield a resource super type.
+     * @since 2.0.6
+     */
+    public static String getResourceSuperType(final Resource resource) {
+        if ( resource == null ) {
+            return null;
+        }
+        return getResourceSuperType(resource.getResourceResolver(),
+                resource.getResourceType());
     }
 }

@@ -18,16 +18,28 @@
  */
 package org.apache.sling.api.resource;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class ResourceUtilTest extends TestCase {
+@RunWith(JMock.class)
+public class ResourceUtilTest {
 
-    public void testResolveRelativeSegments() {
+    protected final Mockery context = new JUnit4Mockery();
+
+    @Test public void testResolveRelativeSegments() {
 
         assertEquals("/", ResourceUtil.normalize("/"));
         assertEquals("/", ResourceUtil.normalize("///"));
@@ -107,7 +119,7 @@ public class ResourceUtilTest extends TestCase {
         }
     }
 
-    public void testResolveRelativeSegmentsRelative() {
+    @Test public void testResolveRelativeSegmentsRelative() {
         assertEquals("a/b", ResourceUtil.normalize("a/b"));
         assertEquals("a", ResourceUtil.normalize("a/b/.."));
 
@@ -123,7 +135,7 @@ public class ResourceUtilTest extends TestCase {
         assertEquals("", ResourceUtil.normalize(""));
     }
 
-    public void testGetParent() {
+    @Test public void testGetParent() {
         assertNull(ResourceUtil.getParent("/"));
         assertNull(ResourceUtil.getParent("/.."));
 
@@ -135,7 +147,7 @@ public class ResourceUtilTest extends TestCase {
         assertNull(ResourceUtil.getParent("/b/.."));
     }
 
-    public void testGetName() {
+    @Test public void testGetName() {
         assertEquals("", ResourceUtil.getName("/"));
         assertEquals("", ResourceUtil.getName("/a/.."));
 
@@ -152,22 +164,22 @@ public class ResourceUtilTest extends TestCase {
         assertEquals("b", ResourceUtil.getName("/b/c/.."));
         assertEquals("", ResourceUtil.getName("/b/c/../.."));
     }
-    
-    public void test_getValueMap_null_resource() {
+
+    @Test public void test_getValueMap_null_resource() {
         final ValueMap valueMap = ResourceUtil.getValueMap(null);
         assertNotNull(valueMap);
         assertEquals(0, valueMap.size());
-        
+
         final Object replaced = valueMap.put("sample", 1);
         assertNull(replaced);
-        
+
         assertEquals(1, valueMap.size());
         assertEquals(1, valueMap.get("sample"));
         assertEquals(Integer.valueOf(1), valueMap.get("sample", Integer.class));
         assertEquals("1", valueMap.get("sample", String.class));
     }
-    
-    public void test_getValueMap_direct() {
+
+    @Test public void test_getValueMap_direct() {
         final ValueMap valueMap = new ValueMapDecorator(new HashMap<String, Object>());
         valueMap.put("sample", true);
         final Resource resource = new SyntheticResource(null, "/", "sample") {
@@ -177,11 +189,11 @@ public class ResourceUtilTest extends TestCase {
                 if (type == ValueMap.class) {
                     return (Type) valueMap;
                 }
-                
+
                 return super.adaptTo(type);
             }
         };
-        
+
         final ValueMap adapted = ResourceUtil.getValueMap(resource);
         assertEquals(valueMap, adapted);
         assertNotNull(adapted);
@@ -191,8 +203,8 @@ public class ResourceUtilTest extends TestCase {
         assertEquals(Boolean.valueOf(true), adapted.get("sample", Boolean.class));
         assertEquals(Boolean.TRUE.toString(), adapted.get("sample", String.class));
     }
-    
-    public void test_getValueMap_decorated_map() {
+
+    @Test public void test_getValueMap_decorated_map() {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sample", true);
         final Resource resource = new SyntheticResource(null, "/", "sample") {
@@ -202,11 +214,11 @@ public class ResourceUtilTest extends TestCase {
                 if (type == Map.class) {
                     return (Type) map;
                 }
-                
+
                 return super.adaptTo(type);
             }
         };
-        
+
         final ValueMap adapted = ResourceUtil.getValueMap(resource);
         assertNotNull(adapted);
         assertEquals(1, adapted.size());
@@ -216,17 +228,50 @@ public class ResourceUtilTest extends TestCase {
         assertEquals(Boolean.TRUE.toString(), adapted.get("sample", String.class));
     }
 
-    public void test_getValueMap_no_adapter() {
+    @Test public void test_getValueMap_no_adapter() {
         final ValueMap valueMap = ResourceUtil.getValueMap(null);
         assertNotNull(valueMap);
         assertEquals(0, valueMap.size());
-        
+
         final Object replaced = valueMap.put("sample", 1);
         assertNull(replaced);
-        
+
         assertEquals(1, valueMap.size());
         assertEquals(1, valueMap.get("sample"));
         assertEquals(Integer.valueOf(1), valueMap.get("sample", Integer.class));
         assertEquals("1", valueMap.get("sample", String.class));
+    }
+
+    @Test public void test_resourceTypeToPath() {
+        assertEquals("a/b", ResourceUtil.resourceTypeToPath("a:b"));
+    }
+
+    @Test public void test_getResourceSuperType() {
+        // the resource resolver
+        final ResourceResolver resolver = this.context.mock(ResourceResolver.class);
+        // the resource to test
+        final Resource r = this.context.mock(Resource.class);
+        final Resource r2 = this.context.mock(Resource.class);
+        final Resource typeResource = this.context.mock(Resource.class);
+        this.context.checking(new Expectations() {{
+            allowing(r).getResourceType(); will(returnValue("a:b"));
+            allowing(r).getResourceResolver(); will(returnValue(resolver));
+
+            allowing(r2).getResourceType(); will(returnValue("a:c"));
+            allowing(r2).getResourceResolver(); will(returnValue(resolver));
+
+            allowing(typeResource).getResourceSuperType();
+            will(returnValue("t:c"));
+
+            allowing(resolver).getResource("/a");
+            will(returnValue(r));
+            allowing(resolver).getResource("a/b");
+            will(returnValue(typeResource));
+            allowing(resolver).getResource("a/c");
+            will(returnValue(null));
+        }});
+        assertEquals("t:c", ResourceUtil.getResourceSuperType(r));
+        assertNull(ResourceUtil.getResourceSuperType(null));
+        assertNull(ResourceUtil.getResourceSuperType(r2));
     }
 }
