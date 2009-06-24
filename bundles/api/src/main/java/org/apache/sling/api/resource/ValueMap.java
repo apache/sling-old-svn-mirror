@@ -32,14 +32,14 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 public interface ValueMap extends Map<String, Object> {
 
     /**
-     * Empty value map
+     * Empty immutable value map.
      */
     final ValueMap EMPTY = new ValueMapDecorator(
         Collections.<String, Object> emptyMap());
 
     /**
      * Get a named property and convert it into the given type.
-     * 
+     *
      * @param name The name of the property
      * @param type The class of the type
      * @return Return named value converted to type T or <code>null</code> if
@@ -49,7 +49,7 @@ public interface ValueMap extends Map<String, Object> {
 
     /**
      * Get a named property and convert it into the given type.
-     * 
+     *
      * @param name The name of the property
      * @param defaultValue The default value to use if the named property does
      *            not exist or cannot be converted to the requested type. The

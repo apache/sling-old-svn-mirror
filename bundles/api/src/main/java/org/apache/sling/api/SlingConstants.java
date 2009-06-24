@@ -145,5 +145,4 @@ public class SlingConstants {
      * The type of the attribute value is <code>java.lang.Integer</code>.
      */
     public static final String ERROR_STATUS = "javax.servlet.error.status_code";
-
 }
