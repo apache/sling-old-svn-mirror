@@ -17,12 +17,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<parent>
-		<groupId>org.apache.sling</groupId>
-		<artifactId>org.apache.sling.jcr.jcrinstall.parent</artifactId>
-		<version>2.0.3-SNAPSHOT</version>
-		<relativePath>../../</relativePath>
-	</parent>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>5-incubator</version>
+        <relativePath>../../../../parent/pom.xml</relativePath>
+    </parent>
 	
 	<groupId>org.apache.sling</groupId>
 	<artifactId>org.apache.sling.jcr.jcrinstall.testbundles.observer</artifactId>
