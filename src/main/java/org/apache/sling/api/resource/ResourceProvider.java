@@ -22,6 +22,8 @@ import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.SlingException;
+
 /**
  * API for providers of resources. Used by the {@link ResourceResolver} to
  * transparently access resources from different locations such as a JCR
@@ -51,7 +53,7 @@ public interface ResourceProvider {
      * {@link #listChildren(Resource)} method to enable traversing the resource
      * tree down to a deeply nested provided resource which has no concrete
      * parent hierarchy (value is"sling:syntheticResourceProviderResource").
-     * 
+     *
      * @see #listChildren(Resource)
      */
     static final String RESOURCE_TYPE_SYNTHETIC = "sling:syntheticResourceProviderResource";
@@ -66,12 +68,12 @@ public interface ResourceProvider {
      * parametrize the resource resolution. An example of such parametrization
      * is support for a JSR-311 style resource provider to support the
      * parametrized URL patterns.
-     * 
+     *
      * @param resourceResolver The {@link ResourceResolver} to which the
      *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
-     * @throws SlingException may be thrown in case of any problem creating the
+     * @throws org.apache.sling.api.SlingException may be thrown in case of any problem creating the
      *             <code>Resource</code> instance.
      */
     Resource getResource(ResourceResolver resourceResolver,
@@ -81,12 +83,12 @@ public interface ResourceProvider {
      * Returns a resource from this resource provider or <code>null</code> if
      * the resource provider cannot find it. The path should have one of the
      * {@link #ROOTS} strings as its prefix.
-     * 
+     *
      * @param resourceResolver The {@link ResourceResolver} to which the
      *            returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
      *         the path.
-     * @throws SlingException may be thrown in case of any problem creating the
+     * @throws org.apache.sling.api.SlingException may be thrown in case of any problem creating the
      *             <code>Resource</code> instance.
      */
     Resource getResource(ResourceResolver resourceResolver, String path);
@@ -106,7 +108,7 @@ public interface ResourceProvider {
      * exist but are required to traverse the resource tree. Such resources
      * SHOULD be {@link SyntheticResource} objects whose resource type MUST be
      * set to {@link #RESOURCE_TYPE_SYNTHETIC}.
-     * 
+     *
      * @param parent The {@link Resource Resource} whose children are requested.
      * @return An <code>Iterator</code> of {@link Resource} objects or
      *         <code>null</code> if the resource provider has no children for
