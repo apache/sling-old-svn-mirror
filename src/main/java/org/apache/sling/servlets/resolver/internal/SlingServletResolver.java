@@ -33,8 +33,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -54,6 +56,7 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
+import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.RequestUtil;
 import org.apache.sling.engine.servlets.AbstractServiceReferenceConfig;
 import org.apache.sling.engine.servlets.ErrorHandler;
@@ -100,6 +103,11 @@ public class SlingServletResolver implements ServletResolver,
      * @scr.property valueRef="DEFAULT_SERVLET_ROOT"
      */
     public static final String PROP_SERVLET_ROOT = "servletresolver.servletRoot";
+
+    /**
+     * @scr.property
+     */
+    public static final String PROP_SCRIPT_USER = "servletresolver.scriptUser";
 
     /** The default servlet root is the first search path (which is usally /apps) */
     public static final String DEFAULT_SERVLET_ROOT = "0";
@@ -548,6 +556,16 @@ public class SlingServletResolver implements ServletResolver,
             this.scriptSession = this.repository.loginAdministrative(null);
         } catch (RepositoryException e) {
             throw new SlingException("Unable to create new admin session.", e);
+        }
+        // if a script user is configured we use this user to read the scripts
+        final String scriptUser = OsgiUtil.toString(properties.get(PROP_SCRIPT_USER), null);
+        if ( scriptUser != null && scriptUser.length() > 0 ) {
+            Credentials creds = new SimpleCredentials(scriptUser, new char[0]);
+            try {
+                this.scriptSession = this.scriptSession.impersonate(creds);
+            } catch (RepositoryException e) {
+                throw new SlingException("Unable to impersonate to script user: " + scriptUser, e);
+            }
         }
         this.scriptResolver = this.resourceResolverFactory.getResourceResolver(this.scriptSession);
 
