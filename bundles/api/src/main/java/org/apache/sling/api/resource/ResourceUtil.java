@@ -347,7 +347,13 @@ public class ResourceUtil {
         final String rtPath = resourceTypeToPath(resourceType);
         // get the resource type resource
         final Resource rtResource = resourceResolver.getResource(rtPath);
-        return (rtResource == null ? null : rtResource.getResourceSuperType());
+        // check for endless recursion
+        if ( rtResource != null ) {
+            if ( !resourceType.equals(rtResource.getResourceType()) ) {
+                return rtResource.getResourceSuperType();
+            }
+        }
+        return null;
     }
 
     /**

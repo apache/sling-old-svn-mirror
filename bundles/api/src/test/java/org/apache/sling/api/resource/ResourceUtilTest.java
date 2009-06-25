@@ -260,6 +260,8 @@ public class ResourceUtilTest {
             allowing(r2).getResourceType(); will(returnValue("a:c"));
             allowing(r2).getResourceResolver(); will(returnValue(resolver));
 
+            allowing(typeResource).getResourceType();
+            will(returnValue("x:y"));
             allowing(typeResource).getResourceSuperType();
             will(returnValue("t:c"));
 
