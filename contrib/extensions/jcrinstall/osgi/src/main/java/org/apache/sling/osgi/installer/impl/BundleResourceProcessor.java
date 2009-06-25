@@ -53,6 +53,8 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
     /** {@link Storage} key for the bundle ID */
     public static final String KEY_BUNDLE_ID = "bundle.id";
+    
+    public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
     /** Max time allowed to refresh packages (TODO configurable??) */
     public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
@@ -175,12 +177,9 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			if (b != null && retryCount == 1) {
 				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
 				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
-				if (newBundleVersion.compareTo(installedVersion) <= 0) {
-		            log.debug(
-		                "Ignore update of bundle {} from {} as the installed version is equal or higher.",
-		                b.getSymbolicName(), uri);
+				if(ignoreNewBundle(b.getSymbolicName(), uri, installedVersion, newBundleVersion)) {
 		            return InstallResultCode.IGNORED;
-			    }
+				}
 			}
 
 			if (b != null) {
@@ -225,8 +224,38 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
         synchronized (activeBundles) {
             installedBundles.add(b.getBundleId());
         }
+        
+        // Successful - reset retry count
+        retryCount = 0;
+        attributes.put("RETRY_COUNT", retryCount);
 
         return updated ? InstallResultCode.UPDATED : InstallResultCode.INSTALLED;
+    }
+    
+    /** Decide if new bundle musg be ignored, based on the supplied Versions */
+    boolean ignoreNewBundle(String symbolicName, String uri, Version installedVersion, Version newBundleVersion) {
+    	
+    	boolean ignore = false;
+    	final int comparison = newBundleVersion.compareTo(installedVersion);
+    	
+    	// Same version but snapshots - do not ignore
+    	if(comparison == 0  && installedVersion.toString().contains(MAVEN_SNAPSHOT_MARKER)) {
+    		if(log.isDebugEnabled()) {
+        		log.debug("Bundle " + symbolicName + " (" + uri + ") "
+        				+ " has same version (" + installedVersion + ") than installed bundle, but version contains "
+        				+ MAVEN_SNAPSHOT_MARKER + ", will be updated");
+    		}
+    		
+    	} else if (comparison <= 0) {
+			ignore = true;
+			if(log.isDebugEnabled()) {
+				log.debug("Ignoring update of bundle " + symbolicName + " (" + uri
+						+ ") as installed version (" + installedVersion + ") is equal or higher than " + newBundleVersion
+						);
+			}
+	    }
+		
+		return ignore;
     }
 
     /**
