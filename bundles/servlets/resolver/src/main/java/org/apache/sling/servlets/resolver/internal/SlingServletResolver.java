@@ -440,7 +440,6 @@ public class SlingServletResolver implements ServletResolver,
     		}
     	}
 
-    	boolean hasOptingServlet = false;
         for (Resource candidateResource : candidates) {
         	if(log.isDebugEnabled()) {
         		log.debug("Checking if candidate resource {} adapts to servlet and accepts request",
@@ -453,9 +452,6 @@ public class SlingServletResolver implements ServletResolver,
                     || ((OptingServlet) candidate).accepts(request);
                 if (servletAcceptsRequest) {
                     return candidate;
-                }
-                if ( isOptingServlet ) {
-                    hasOptingServlet = true;
                 }
             	if(log.isDebugEnabled()) {
             		log.debug("Candidate {} does not accept request, ignored", candidateResource.getPath());

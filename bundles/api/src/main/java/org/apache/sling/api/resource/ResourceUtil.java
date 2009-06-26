@@ -349,29 +349,8 @@ public class ResourceUtil {
         final Resource rtResource = resourceResolver.getResource(rtPath);
         // check for endless recursion
         if ( rtResource != null ) {
-            if ( !resourceType.equals(rtResource.getResourceType()) ) {
-                return rtResource.getResourceSuperType();
-            }
+            return rtResource.getResourceSuperType();
         }
         return null;
-    }
-
-    /**
-     * Returns the resource super type of the resource type of the given resource.
-     * This method simply calls {@link #getResourceSuperType(ResourceResolver, String)}
-     * with the resource type of the <code>resource</code>
-     *
-     * @param resource The <code>Resource</code> whose resource super type is
-     *            requested.
-     * @return The resource super type or <code>null</code> if the algorithm
-     *         described above does not yield a resource super type.
-     * @since 2.0.6
-     */
-    public static String getResourceSuperType(final Resource resource) {
-        if ( resource == null ) {
-            return null;
-        }
-        return getResourceSuperType(resource.getResourceResolver(),
-                resource.getResourceType());
     }
 }

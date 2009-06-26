@@ -188,7 +188,8 @@ public class LocationIterator implements Iterator<String> {
 
         // get the super type of the current resource type
         String superType;
-        if (resourceType.equals(this.firstResourceType)) {
+        if (resourceType.equals(this.firstResourceType)
+                && this.firstResourceSuperType != null ) {
             superType = this.firstResourceSuperType;
         } else {
             superType = ResourceUtil.getResourceSuperType(resolver,

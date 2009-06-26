@@ -272,8 +272,7 @@ public class ResourceUtilTest {
             allowing(resolver).getResource("a/c");
             will(returnValue(null));
         }});
-        assertEquals("t:c", ResourceUtil.getResourceSuperType(r));
-        assertNull(ResourceUtil.getResourceSuperType(null));
-        assertNull(ResourceUtil.getResourceSuperType(r2));
+        assertEquals("t:c", ResourceUtil.getResourceSuperType(r.getResourceResolver(), r.getResourceType()));
+        assertNull(ResourceUtil.getResourceSuperType(r2.getResourceResolver(), r2.getResourceType()));
     }
 }
