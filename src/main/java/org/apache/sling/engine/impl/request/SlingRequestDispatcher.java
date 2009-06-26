@@ -203,7 +203,8 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         @Override
         public String getResourceSuperType() {
             if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-                resourceSuperType = ResourceUtil.getResourceSuperType(this);
+                resourceSuperType = ResourceUtil.getResourceSuperType(this.getResourceResolver(),
+                        this.resourceType);
             }
             return resourceSuperType;
         }
