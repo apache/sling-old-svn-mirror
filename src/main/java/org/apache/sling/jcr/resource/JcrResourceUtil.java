@@ -219,24 +219,17 @@ public class JcrResourceUtil {
      * @return The resource super type or <code>null</code> if the algorithm
      *         described above does not yield a resource super type.
      * @deprecated Call {@link Resource#getResourceSuperType()} and if
-     * that returns <code>null</code> {@link ResourceUtil#getResourceSuperType(Resource)}
+     * that returns <code>null</code> {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
      */
     @Deprecated
     public static String getResourceSuperType(Resource resource) {
-        ResourceResolver resolver = resource.getResourceResolver();
+        String resourceSuperType = resource.getResourceSuperType();
+        if ( resourceSuperType == null ) {
+            final ResourceResolver resolver = resource.getResourceResolver();
 
-        // try local resourceSuperType "property"
-        String resourceSuperType = null;
-        Resource typeResource = resolver.getResource(resource,
-            JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY);
-        if (typeResource != null) {
-            resourceSuperType = typeResource.adaptTo(String.class);
-        }
-
-        // try explicit resourceSuperType resource
-        if (resourceSuperType == null) {
-            String resourceType = resource.getResourceType();
-            resourceSuperType = getResourceSuperType(resolver, resourceType);
+            // try explicit resourceSuperType resource
+            final String resourceType = resource.getResourceType();
+            resourceSuperType = ResourceUtil.getResourceSuperType(resolver, resourceType);
         }
 
         return resourceSuperType;

@@ -53,6 +53,9 @@ import org.slf4j.LoggerFactory;
 /** A Resource that wraps a JCR Node */
 public class JcrNodeResource extends JcrItemResource {
 
+    /** marker value for the resourceSupertType before trying to evaluate */
+    private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
+
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -60,12 +63,15 @@ public class JcrNodeResource extends JcrItemResource {
 
     private final String resourceType;
 
+    protected String resourceSuperType;
+
     public JcrNodeResource(ResourceResolver resourceResolver, Node node,
             JcrResourceTypeProvider[] resourceTypeProviders)
             throws RepositoryException {
         super(resourceResolver, node.getPath(), resourceTypeProviders);
         this.node = node;
         resourceType = getResourceTypeForNode(node);
+        resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
 
         // check for nt:file metadata
         setMetaData(node, getResourceMetadata());
@@ -85,7 +91,7 @@ public class JcrNodeResource extends JcrItemResource {
                 // we ignore this
             }
             if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
-                return super.getResourceSuperType();
+                resourceSuperType = null;
             }
         }
         return resourceSuperType;

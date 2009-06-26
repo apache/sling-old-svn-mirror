@@ -27,22 +27,16 @@ import org.apache.sling.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceTypeProvider;
 
 abstract class JcrItemResource extends SlingAdaptable implements Resource {
-
-    /** marker value for the resourceSupertType before trying to evaluate */
-    protected static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
     private final ResourceResolver resourceResolver;
 
     private final String path;
 
     private final ResourceMetadata metadata;
-
-    protected String resourceSuperType;
 
     protected final JcrResourceTypeProvider[] resourceTypeProviders;
 
@@ -56,8 +50,6 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
         metadata = new ResourceMetadata();
         metadata.setResolutionPath(path);
-
-        resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
     public ResourceResolver getResourceResolver() {
@@ -66,13 +58,6 @@ abstract class JcrItemResource extends SlingAdaptable implements Resource {
 
     public String getPath() {
         return path;
-    }
-
-    public String getResourceSuperType() {
-        if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-            resourceSuperType = ResourceUtil.getResourceSuperType(this);
-        }
-        return resourceSuperType;
     }
 
     public ResourceMetadata getResourceMetadata() {

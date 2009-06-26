@@ -31,6 +31,7 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
@@ -129,8 +130,8 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         Resource jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
 
-        // default super type is super type of node type
-        assertEquals(null, jnr.getResourceSuperType());
+        // default super type is null
+        assertNull(jnr.getResourceSuperType());
 
         String superTypeName = "supertype";
         Node typeNode = rootNode.addNode(typeNodeName, JcrConstants.NT_UNSTRUCTURED);
@@ -139,7 +140,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
         jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
-        assertEquals(superTypeName, jnr.getResourceSuperType());
+        assertEquals(superTypeName, JcrResourceUtil.getResourceSuperType(jnr));
 
         // overwrite super type with direct property
         String otherSuperTypeName = "othersupertype";
@@ -170,21 +171,21 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         JcrNodeResource jnr = new JcrNodeResource(null, res, null);
 
         final Map<?, ?> props = jnr.adaptTo(Map.class);
-        
+
         // assert we have properties at all, only fails if property
         // retrieval fails for any reason
         assertNotNull(props);
         assertFalse(props.isEmpty());
-        
+
         // assert all properties set up
         assertEquals(TEST_MODIFIED, props.get(JcrConstants.JCR_LASTMODIFIED));
         assertEquals(TEST_TYPE, props.get(JcrConstants.JCR_MIMETYPE));
         assertEquals(TEST_ENCODING, props.get(JcrConstants.JCR_ENCODING));
         assertEquals(TEST_DATA, (InputStream) props.get(JcrConstants.JCR_DATA));
-        
+
         // assert JCR managed properties
         assertEquals(JcrConstants.NT_UNSTRUCTURED, props.get(JcrConstants.JCR_PRIMARYTYPE));
-        
+
         // assert we have nothing else left
         final Set<String> existingKeys = new HashSet<String>();
         existingKeys.add(JcrConstants.JCR_LASTMODIFIED);
@@ -198,21 +199,21 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
         // call a second time, ensure the map contains the same data again
         final Map<?, ?> propsSecond = jnr.adaptTo(Map.class);
-        
+
         // assert we have properties at all, only fails if property
         // retrieval fails for any reason
         assertNotNull(propsSecond);
         assertFalse(propsSecond.isEmpty());
-        
+
         // assert all properties set up
         assertEquals(TEST_MODIFIED, propsSecond.get(JcrConstants.JCR_LASTMODIFIED));
         assertEquals(TEST_TYPE, propsSecond.get(JcrConstants.JCR_MIMETYPE));
         assertEquals(TEST_ENCODING, propsSecond.get(JcrConstants.JCR_ENCODING));
         assertEquals(TEST_DATA, (InputStream) propsSecond.get(JcrConstants.JCR_DATA));
-        
+
         // assert JCR managed properties
         assertEquals(JcrConstants.NT_UNSTRUCTURED, propsSecond.get(JcrConstants.JCR_PRIMARYTYPE));
-        
+
         // assert we have nothing else left
         final Set<Object> crossCheck2 = new HashSet<Object>(propsSecond.keySet());
         crossCheck2.removeAll(existingKeys);
@@ -238,7 +239,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
     private void assertProperty(Object expected, Object actual) {
         if (expected != null) {
             assertNotNull(actual);
-            
+
             assertEquals(expected, actual);
         } else {
             assertNull(actual);

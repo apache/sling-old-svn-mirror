@@ -60,6 +60,10 @@ public class JcrPropertyResource extends JcrItemResource {
         return resourceType;
     }
 
+    public String getResourceSuperType() {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 
