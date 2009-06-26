@@ -157,7 +157,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
 
         jnr = new JcrNodeResource(resourceResolver, node, null);
         assertEquals(typeName, jnr.getResourceType());
-        assertEquals(superTypeName, jnr.getResourceSuperType());
+        assertNull(jnr.getResourceSuperType());
     }
 
     public void testAdaptToMap() throws Exception {
