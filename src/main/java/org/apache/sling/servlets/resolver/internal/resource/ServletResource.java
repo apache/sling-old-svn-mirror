@@ -60,9 +60,10 @@ class ServletResource extends SlingAdaptable implements Resource {
         return resourceType;
     }
 
-    /** Servlet Resources have no super type */
+    /** Servlet Resources always returns "sling/bundle/resource" as
+     * the super type. */
     public String getResourceSuperType() {
-        return null;
+        return "sling/bundle/resource";
     }
 
     public String getPath() {
