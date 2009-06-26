@@ -344,11 +344,11 @@ public class ResourceCollector {
         if ( isGet == o.isGet
              && isHtml == o.isHtml
              && numRequestSelectors == o.numRequestSelectors
-             && stringEquals(methodName, o.methodName)
-             && stringEquals(baseResourceType, o.baseResourceType)
              && stringEquals(resourceType, o.resourceType)
              && stringEquals(resourceSuperType, o.resourceSuperType)
-             && stringEquals(extension, o.extension) ) {
+             && stringEquals(extension, o.extension)
+             && stringEquals(baseResourceType, o.baseResourceType)
+             && stringEquals(methodName, o.methodName) ) {
             // now compare selectors
             for(int i=0;i<numRequestSelectors;i++) {
                 if ( !stringEquals(requestSelectors[i], o.requestSelectors[i]) ) {
