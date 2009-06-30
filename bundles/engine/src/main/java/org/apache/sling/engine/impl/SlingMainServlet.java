@@ -87,7 +87,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingMainServlet</code> TODO
- * 
+ *
  * @scr.component immediate="true" label="%sling.name"
  *                description="%sling.description"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
@@ -100,14 +100,14 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         HttpContext {
 
     /** @scr.property valueRef="RequestData.DEFAULT_MAX_CALL_COUNTER" */
-    public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls"; 
+    public static final String PROP_MAX_CALL_COUNTER = "sling.max.calls";
 
     /** @scr.property valueRef="RequestData.DEFAULT_MAX_INCLUSION_COUNTER" */
-    public static final String PROP_MAX_INCLUSION_COUNTER = "sling.max.inclusions"; 
-    
+    public static final String PROP_MAX_INCLUSION_COUNTER = "sling.max.inclusions";
+
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
-    
+
     /**
      * The registration path for the SlingMainServlet is hard wired to always
      * be the root, aka "<code>/</code>" (value is "/").
@@ -160,10 +160,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private RequestLogger requestLogger;
-    
+
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private AdapterManager adapterManager;
-    
+
     /** @scr.reference cardinality="0..1" policy="dynamic" */
     private SystemStatus systemStatus;
 
@@ -284,7 +284,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                     errorMessage = e.toString();
                 }
             }
-          
+
             if (errorMessage != null) {
                 final int status = HttpServletResponse.SC_SERVICE_UNAVAILABLE;
                 log.error("{} , sending status {}", errorMessage, status);
@@ -297,7 +297,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
                 systemStatus.doGet(request, response);
                 return;
             }
-            
+
             // initialize the request data - resolve resource and servlet
             ResourceResolver resolver = getResourceResolverFactory().getResourceResolver(
                 session);
@@ -544,7 +544,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         ErrorHandler eh = errorHandler;
         return (eh != null) ? eh : this;
     }
-    
+
     /**
      * Returns the {@link AdapterManager} bound to this instance or
      * <code>null</code> if no adapter manager is bound to this instance.
@@ -593,9 +593,8 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         RequestData.setMaxCallCounter(OsgiUtil.toInteger(
             componentConfig.get(PROP_MAX_CALL_COUNTER),
             RequestData.DEFAULT_MAX_CALL_COUNTER));
-        
+
         // setup servlet request processing helpers
-        SlingServletContext tmpServletContext = new SlingServletContext(this);
         slingAuthenticator = new SlingAuthenticator(bundleContext);
 
         // register the servlet and resources
@@ -610,6 +609,10 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
         } catch (Exception e) {
             log.error("Cannot register " + this.getServerInfo(), e);
         }
+
+        // now that the sling main servlet is registered with the HttpService
+        // and initialized we can register the servlet context
+        SlingServletContext tmpServletContext = new SlingServletContext(this);
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet
@@ -637,20 +640,26 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
 
     protected void deactivate(ComponentContext componentContext) {
 
-        // first of all, we have to unregister
-        httpService.unregister(SLING_ROOT);
+        // this reverses the activation setup
 
+        // first destroy the filters
         destroyFilters(innerFilterChain);
         destroyFilters(requestFilterChain);
 
-        if (slingAuthenticator != null) {
-            slingAuthenticator.dispose();
-            slingAuthenticator = null;
-        }
-
+        // second unregister the servlet context *before* unregistering
+        // and destroying the the sling main servlet
         if (slingServletContext != null) {
             slingServletContext.dispose();
             slingServletContext = null;
+        }
+
+        // third unregister and destroy the sling main servlet
+        httpService.unregister(SLING_ROOT);
+
+        // fourth dispose off the authenticator
+        if (slingAuthenticator != null) {
+            slingAuthenticator.dispose();
+            slingAuthenticator = null;
         }
 
         this.osgiComponentContext = null;
@@ -845,7 +854,7 @@ public class SlingMainServlet extends GenericServlet implements ErrorHandler,
      * Sets the name of the current thread to the IP address of the remote
      * client with the current system time and the first request line consisting
      * of the method, path and protocol.
-     * 
+     *
      * @param request The request to extract the remote IP address, method,
      *            request URL and protocol from.
      * @return The name of the current thread before setting the new name.
