@@ -145,4 +145,65 @@ public class SlingConstants {
      * The type of the attribute value is <code>java.lang.Integer</code>.
      */
     public static final String ERROR_STATUS = "javax.servlet.error.status_code";
+
+    /**
+     * The topic for the OSGi event which is sent when a resource has been added
+     * to the resource tree.
+     * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
+     * and {@link #PROPERTY_RESOURCE_TYPE} poperties.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_RESOURCE_ADDED = "org/apache/sling/api/resource/Resource/ADDED";
+
+    /**
+     * The topic for the OSGi event which is sent when a resource has been removed
+     * from the resource tree.
+     * The event contains at least the {@link #PROPERTY_PATH}.As the resource has already been removed
+     * no further information like resource type etc. might be available.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_RESOURCE_REMOVED = "org/apache/sling/api/resource/Resource/REMOVED";
+
+    /**
+     * The topic for the OSGi event which is sent when a resource has been changed
+     * in the resource tree.
+     * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
+     * and {@link #PROPERTY_RESOURCE_TYPE} poperties.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_RESOURCE_CHANGED = "org/apache/sling/api/resource/Resource/CHANGED";
+
+    /**
+     * The topic for the OSGi event which is sent when a resource provider has been
+     * added to the resource tree.
+     * The event contains at least the {@link #PROPERTY_PATH} property.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_RESOURCE_PROVIDER_ADDED = "org/apache/sling/api/resource/ResourceProvider/ADDED";
+
+    /**
+     * The topic for the OSGi event which is sent when a resource provider has been
+     * removed from the resource tree.
+     * The event contains at least the {@link #PROPERTY_PATH} property.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_RESOURCE_PROVIDER_REMOVED = "org/apache/sling/api/resource/ResourceProvider/REMOVED";
+
+    /**
+     * The name of the event property holding the resource path.
+     * @since 2.0.6
+     */
+    public static final String PROPERTY_PATH = "path";
+
+    /**
+     * The name of the event property holding the resource type.
+     * @since 2.0.6
+     */
+    public static final String PROPERTY_RESOURCE_TYPE = "resourceType";
+
+    /**
+     * The name of the event property holding the resource super type.
+     * @since 2.0.6
+     */
+    public static final String PROPERTY_RESOURCE_SUPER_TYPE = "resourceSuperType";
 }
