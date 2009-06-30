@@ -92,7 +92,9 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.description" value="Sling Servlet Resolver and
  *               Error Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service
+ * @scr.service interface="ServletResolver"
+ * @scr.service interface="SlingScriptResolver"
+ * @scr.service interface="ErrorHandler"
  * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
  *                cardinality="0..n" policy="dynamic"
  * @scr.property name="event.topics" value="org/apache/sling/api/resource/*"
@@ -161,6 +163,8 @@ public class SlingServletResolver implements ServletResolver,
 
     private Map<ResourceCollector, Servlet> cache;
 
+    private ServiceRegistration eventHandlerReg;
+
     // ---------- ServletResolver interface -----------------------------------
 
     /**
@@ -177,7 +181,7 @@ public class SlingServletResolver implements ServletResolver,
         Servlet servlet = null;
 
         final String type = resource.getResourceType();
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
         	log.debug("resolveServlet called for resource {}", resource);
         }
 
@@ -612,9 +616,18 @@ public class SlingServletResolver implements ServletResolver,
             this.cache = new ConcurrentHashMap<ResourceCollector, Servlet>(cacheSize);
         }
         createAllServlets(refs);
+
+        // and finally register as event listener
+        this.eventHandlerReg = this.context.getBundleContext().registerService(EventHandler.class.getName(),
+                this, properties);
     }
 
     protected void deactivate(ComponentContext context) {
+        // unregister event handler
+        if ( this.eventHandlerReg != null ) {
+            this.eventHandlerReg.unregister();
+            this.eventHandlerReg = null;
+        }
 
         // Copy the list of servlets first, to minimize the need for synchronization
         Collection<ServiceReference> refs;
