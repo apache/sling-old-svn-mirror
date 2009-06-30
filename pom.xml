@@ -385,41 +385,41 @@ setting is not correct.
         <mailingList>
             <name>Apache Sling Development List</name>
             <subscribe>
-                sling-dev-subscribe@incubator.apache.org
+                dev-subscribe@sling.apache.org
             </subscribe>
             <unsubscribe>
-                sling-dev-unsubscribe@incubator.apache.org
+                dev-unsubscribe@sling.apache.org
             </unsubscribe>
-            <post>sling-dev at incubator.apache.org</post>
+            <post>dev at sling.apache.org</post>
             <archive>
-                http://mail-archives.apache.org/mod_mbox/incubator-sling-dev/
+                http://mail-archives.apache.org/mod_mbox/sling-dev/
             </archive>
             <otherArchives>
                 <otherArchive>
                     http://sling-dev.markmail.org/
                 </otherArchive>
                 <otherArchive>
-                    http://www.mail-archive.com/sling-dev@incubator.apache.org/
+                    http://www.mail-archive.com/dev@sling.apache.org/
                 </otherArchive>
             </otherArchives>
         </mailingList>
         <mailingList>
             <name>Apache Sling Source Control List</name>
             <subscribe>
-                sling-commits-subscribe@incubator.apache.org
+                commits-subscribe@sling.apache.org
             </subscribe>
             <unsubscribe>
-                sling-commits-unsubscribe@incubator.apache.org
+                commits-unsubscribe@sling.apache.org
             </unsubscribe>
             <archive>
-                http://mail-archives.apache.org/mod_mbox/incubator-sling-commits/
+                http://mail-archives.apache.org/mod_mbox/sling-commits/
             </archive>
             <otherArchives>
                 <otherArchive>
                     http://sling-commits.markmail.org/
                 </otherArchive>
                 <otherArchive>
-                    http://www.mail-archive.com/sling-commits@incubator.apache.org/
+                    http://www.mail-archive.com/commits@sling.apache.org/
                 </otherArchive>
             </otherArchives>
         </mailingList>
