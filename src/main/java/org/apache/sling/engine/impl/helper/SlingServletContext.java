@@ -73,14 +73,22 @@ public class SlingServletContext implements ServletContext {
     /** The {@link SlingMainServlet} to which some calls are delegated */
     private final SlingMainServlet slingMainServlet;
 
-    /** The service registration of this service as a ManagedService */
+    /**
+     * The service registration of this service as ServletContext
+     * @see #SlingServletContext(SlingMainServlet)ling
+     * @see #dispose()
+     */
     private final ServiceRegistration registration;
 
     /**
      * Creates an instance of this class delegating some methods to the given
      * {@link SlingMainServlet}. In addition the new instance is registered as
-     * a <code>ManagedService</code> and <code>ServletContext</code> to
-     * receive configuration information.
+     * a<code>ServletContext</code>.
+     * <p>
+     * This method must only be called <b>after</b> the sling main servlet
+     * has been fully initialized. Otherwise the {@link #getServletContext()}
+     * method may cause a {@link NullPointerException} !
+     * @see #dispose()
      */
     public SlingServletContext(SlingMainServlet slingMainServlet) {
         this.slingMainServlet = slingMainServlet;
@@ -94,7 +102,12 @@ public class SlingServletContext implements ServletContext {
     }
 
     /**
-     * Disposes of this servlet context by just unregistering as a service.
+     * Unregisters this servlet context as a service (if registered at all)
+     * <p>
+     * This method must be called <b>before</b> the sling main servlet
+     * is destroyed. Otherwise the {@link #getServletContext()} method may
+     * cause a {@link NullPointerException} !
+     * @see #SlingServletContext(SlingMainServlet)
      */
     public void dispose() {
         if (registration != null) {
