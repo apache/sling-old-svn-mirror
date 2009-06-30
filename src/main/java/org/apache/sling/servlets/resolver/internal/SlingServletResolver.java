@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -72,6 +73,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,9 +95,11 @@ import org.slf4j.LoggerFactory;
  * @scr.service
  * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
  *                cardinality="0..n" policy="dynamic"
+ * @scr.property name="event.topics" value="org/apache/sling/api/resource/*"
+ *               private="true"
  */
 public class SlingServletResolver implements ServletResolver,
-        SlingScriptResolver, ErrorHandler {
+        SlingScriptResolver, ErrorHandler, EventHandler {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -109,8 +114,16 @@ public class SlingServletResolver implements ServletResolver,
      */
     public static final String PROP_SCRIPT_USER = "servletresolver.scriptUser";
 
+    /**
+     * @scr.property valueRef="DEFAULT_CACHE_SIZE"
+     */
+    public static final String PROP_CACHE_SIZE = "servletresolver.cacheSize";
+
     /** The default servlet root is the first search path (which is usally /apps) */
     public static final String DEFAULT_SERVLET_ROOT = "0";
+
+    /** The default cache size for the script resolution. */
+    public static final Integer DEFAULT_CACHE_SIZE = 200;
 
     private static final String REF_SERVLET = "Servlet";
 
@@ -145,6 +158,8 @@ public class SlingServletResolver implements ServletResolver,
     // the default error handler servlet if no other error servlet applies for
     // a request. This field is set on demand by getDefaultErrorServlet()
     private Servlet defaultErrorServlet;
+
+    private Map<ResourceCollector, Servlet> cache;
 
     // ---------- ServletResolver interface -----------------------------------
 
@@ -427,6 +442,11 @@ public class SlingServletResolver implements ServletResolver,
      */
     private Servlet getServlet(final ResourceCollector locationUtil,
             final SlingHttpServletRequest request) {
+        final Servlet scriptServlet = (this.cache != null ? this.cache.get(locationUtil) : null);
+        if ( scriptServlet != null ) {
+            return scriptServlet;
+        }
+
         final Collection<Resource> candidates = locationUtil.getServlets(this.scriptResolver);
 
     	if (log.isDebugEnabled()) {
@@ -440,6 +460,7 @@ public class SlingServletResolver implements ServletResolver,
     		}
     	}
 
+    	boolean hasOptingServlet = false;
         for (Resource candidateResource : candidates) {
         	if(log.isDebugEnabled()) {
         		log.debug("Checking if candidate resource {} adapts to servlet and accepts request",
@@ -451,7 +472,13 @@ public class SlingServletResolver implements ServletResolver,
                 boolean servletAcceptsRequest = !isOptingServlet
                     || ((OptingServlet) candidate).accepts(request);
                 if (servletAcceptsRequest) {
+                    if ( !hasOptingServlet && !isOptingServlet && this.cache != null ) {
+                        this.cache.put(locationUtil, candidate);
+                    }
                     return candidate;
+                }
+                if ( isOptingServlet ) {
+                    hasOptingServlet = true;
                 }
             	if(log.isDebugEnabled()) {
             		log.debug("Candidate {} does not accept request, ignored", candidateResource.getPath());
@@ -579,6 +606,11 @@ public class SlingServletResolver implements ServletResolver,
 
         }
 
+        // create cache - if a cache size is configured
+        final int cacheSize = OsgiUtil.toInteger(properties.get(PROP_CACHE_SIZE), DEFAULT_CACHE_SIZE);
+        if ( cacheSize > 5 ) {
+            this.cache = new ConcurrentHashMap<ResourceCollector, Servlet>(cacheSize);
+        }
         createAllServlets(refs);
     }
 
@@ -597,6 +629,7 @@ public class SlingServletResolver implements ServletResolver,
             this.scriptSession = null;
         }
         this.context = null;
+        this.cache = null;
         this.servletResourceProviderFactory = null;
     }
 
@@ -714,6 +747,29 @@ public class SlingServletResolver implements ServletResolver,
                         "unbindServlet: Unexpected problem destroying servlet "
                             + name, t);
                 }
+            }
+        }
+    }
+
+    /**
+     * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
+     */
+    public void handleEvent(Event event) {
+        if ( this.cache != null ) {
+            // if the path of the event is a sub path of a search path
+            // we flush the whole cache
+            boolean flushCache = false;
+            final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+            final String[] searchPaths = this.scriptResolver.getSearchPath();
+            int index = 0;
+            while ( !flushCache && index < searchPaths.length ) {
+                if ( path.startsWith(searchPaths[index]) ) {
+                    flushCache = true;
+                }
+                index++;
+            }
+            if ( flushCache ) {
+                this.cache.clear();
             }
         }
     }
