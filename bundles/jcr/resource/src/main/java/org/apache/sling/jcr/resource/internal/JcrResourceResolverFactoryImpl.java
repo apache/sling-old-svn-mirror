@@ -471,17 +471,17 @@ public class JcrResourceResolverFactoryImpl implements
 
                             log.debug("bindResourceProvider: {}={} ({})",
                                 new Object[] { root, provider, serviceName });
+                            if ( localEA != null ) {
+                                final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                                props.put(SlingConstants.PROPERTY_PATH, root);
+                                localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
+                                        props));
+                            }
                         } catch (ResourceProviderEntryException rpee) {
                             log.error(
                                 "bindResourceProvider: Cannot register ResourceProvider {} for {}: ResourceProvider {} is already registered",
                                 new Object[] { provider, root,
                                     rpee.getExisting().getResourceProvider() });
-                        }
-                        if ( localEA != null ) {
-                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                            props.put(SlingConstants.PROPERTY_PATH, root);
-                            localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
-                                    props));
                         }
                     }
                 }
