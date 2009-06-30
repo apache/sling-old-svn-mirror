@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +32,7 @@ import javax.jcr.Session;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -45,6 +47,9 @@ import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntr
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,6 +198,12 @@ public class JcrResourceResolverFactoryImpl implements
     // whether to mangle paths with namespaces or not
     private boolean mangleNamespacePrefixes;
 
+    /** The resource listenr for the observation events. */
+    private JcrResourceListener resourceListener;
+
+    /** The service tracker for the event admin
+     */
+    private ServiceTracker eventAdminTracker;
 
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new ResourceProviderEntry("/", null, null);
@@ -270,6 +281,11 @@ public class JcrResourceResolverFactoryImpl implements
 
     /** Activates this component, called by SCR before registering as a service */
     protected void activate(ComponentContext componentContext) {
+        // setup tracker first as this is used in the bind/unbind methods
+        this.eventAdminTracker = new ServiceTracker(componentContext.getBundleContext(),
+                EventAdmin.class.getName(), null);
+        this.eventAdminTracker.open();
+
         this.componentContext = componentContext;
 
         Dictionary<?, ?> properties = componentContext.getProperties();
@@ -339,6 +355,15 @@ public class JcrResourceResolverFactoryImpl implements
                 "activate: Cannot access repository, failed setting up Mapping Support",
                 e);
         }
+
+        // start observation listener
+        try {
+            this.resourceListener = new JcrResourceListener(this.repository, this, "/", "/", this.eventAdminTracker);
+        } catch (Exception e) {
+            log.error(
+                "activate: Cannot create resource listener; resource events for JCR resources will be disabled.",
+                e);
+        }
     }
 
     private JcrResourceResolverWebConsolePlugin plugin;
@@ -354,7 +379,14 @@ public class JcrResourceResolverFactoryImpl implements
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
         }
-
+        if ( this.eventAdminTracker != null ) {
+            this.eventAdminTracker.close();
+            this.eventAdminTracker = null;
+        }
+        if ( this.resourceListener != null ) {
+            this.resourceListener.dispose();
+            this.resourceListener = null;
+        }
         this.componentContext = null;
     }
 
@@ -418,6 +450,7 @@ public class JcrResourceResolverFactoryImpl implements
 
             String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
             if (roots != null && roots.length > 0) {
+                final EventAdmin localEA = (EventAdmin) this.eventAdminTracker.getService();
 
                 ResourceProvider provider = (ResourceProvider) componentContext.locateService(
                     "ResourceProvider", reference);
@@ -444,6 +477,12 @@ public class JcrResourceResolverFactoryImpl implements
                                 new Object[] { provider, root,
                                     rpee.getExisting().getResourceProvider() });
                         }
+                        if ( localEA != null ) {
+                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                            props.put(SlingConstants.PROPERTY_PATH, root);
+                            localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_ADDED,
+                                    props));
+                        }
                     }
                 }
             }
@@ -460,6 +499,8 @@ public class JcrResourceResolverFactoryImpl implements
 
         String[] roots = OsgiUtil.toStringArray(reference.getProperty(ResourceProvider.ROOTS));
         if (roots != null && roots.length > 0) {
+
+            final EventAdmin localEA = (EventAdmin) ( this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
 
             // synchronized insertion of new resource providers into
             // the tree to not inadvertently loose an entry
@@ -478,6 +519,12 @@ public class JcrResourceResolverFactoryImpl implements
 
                     log.debug("unbindResourceProvider: root={} ({})", root,
                         serviceName);
+                    if ( localEA != null ) {
+                        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                        props.put(SlingConstants.PROPERTY_PATH, root);
+                        localEA.postEvent(new Event(SlingConstants.TOPIC_RESOURCE_PROVIDER_REMOVED,
+                                props));
+                    }
                 }
             }
         }
