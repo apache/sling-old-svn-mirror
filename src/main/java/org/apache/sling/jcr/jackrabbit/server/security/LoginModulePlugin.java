@@ -18,10 +18,12 @@ package org.apache.sling.jcr.jackrabbit.server.security;
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
@@ -56,6 +58,7 @@ public interface LoginModulePlugin {
     /**
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#doInit
      */
+    @SuppressWarnings("unchecked")
     public void doInit(CallbackHandler callbackHandler, Session session,
             Map options) throws LoginException;
 
@@ -69,7 +72,16 @@ public interface LoginModulePlugin {
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#getPrincipal
      */
     public Principal getPrincipal(Credentials credentials);
-
+    
+    /**
+     * Enables to add additional {@link Principal} objects, such as groups or 
+     * roles, to the {@link Subject}. 
+     * 
+     * @param principals original collection of principals
+     */
+    @SuppressWarnings("unchecked")
+    public void addPrincipals(Set principals);
+    
     /**
      * Return a PluggableAuthentication object that can authenticate the give
      * Principal and Credentials. If null is returned, and no other

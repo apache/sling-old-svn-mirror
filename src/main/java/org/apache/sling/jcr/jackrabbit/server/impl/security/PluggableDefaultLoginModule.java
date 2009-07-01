@@ -18,6 +18,7 @@ package org.apache.sling.jcr.jackrabbit.server.impl.security;
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -31,8 +32,6 @@ import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
 import org.apache.sling.jcr.jackrabbit.server.impl.Activator;
 import org.apache.sling.jcr.jackrabbit.server.security.AuthenticationPlugin;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Extends
@@ -47,6 +46,7 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
     /**
      * @see org.apache.jackrabbit.core.security.authentication.DefaultLoginModule#doInit
      */
+    @SuppressWarnings("unchecked")
     protected void doInit(CallbackHandler callbackHandler, Session session,
             Map options) throws LoginException {
         LoginModulePlugin[] modules = Activator.getLoginModules();
@@ -72,6 +72,20 @@ public class PluggableDefaultLoginModule extends DefaultLoginModule {
         }
 
         return super.getPrincipal(creds);
+    }
+    
+    /**
+     * @see org.apache.jackrabbit.core.security.authentication.AbstractLoginModule#getPrincipals
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Set getPrincipals() {
+        Set principals = super.getPrincipals();
+        LoginModulePlugin[] modules = Activator.getLoginModules();
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].addPrincipals(principals);
+        }
+        return principals;
     }
 
     /**
