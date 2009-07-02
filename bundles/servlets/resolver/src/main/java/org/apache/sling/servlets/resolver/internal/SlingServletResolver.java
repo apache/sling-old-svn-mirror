@@ -97,7 +97,9 @@ import org.slf4j.LoggerFactory;
  * @scr.service interface="ErrorHandler"
  * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
  *                cardinality="0..n" policy="dynamic"
- * @scr.property name="event.topics" value="org/apache/sling/api/resource/*"
+ * @scr.property name="event.topics" values.1="org/apache/sling/api/resource/*"
+ *                                   values.2="javax/script/ScriptEngineFactory/*"
+ *                                   values.3="org/apache/sling/api/adapter/AdapterFactory/*"
  *               private="true"
  */
 public class SlingServletResolver implements ServletResolver,
@@ -769,17 +771,31 @@ public class SlingServletResolver implements ServletResolver,
      */
     public void handleEvent(Event event) {
         if ( this.cache != null ) {
-            // if the path of the event is a sub path of a search path
-            // we flush the whole cache
             boolean flushCache = false;
-            final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-            final String[] searchPaths = this.scriptResolver.getSearchPath();
-            int index = 0;
-            while ( !flushCache && index < searchPaths.length ) {
-                if ( path.startsWith(searchPaths[index]) ) {
-                    flushCache = true;
+
+            // we may receive different events
+            final String topic = event.getTopic();
+            if ( topic.startsWith("javax/script/ScriptEngineFactory/") ) {
+                // script engine factory added or removed: we always flush
+                flushCache = true;
+            } else if ( topic.startsWith("org/apache/sling/api/adapter/AdapterFactory/") ) {
+                // adapter factory added or removed: we always flush
+                // as adapting might be transitive
+                flushCache = true;
+            } else {
+                // this is a resource event
+
+                // if the path of the event is a sub path of a search path
+                // we flush the whole cache
+                final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+                final String[] searchPaths = this.scriptResolver.getSearchPath();
+                int index = 0;
+                while ( !flushCache && index < searchPaths.length ) {
+                    if ( path.startsWith(searchPaths[index]) ) {
+                        flushCache = true;
+                    }
+                    index++;
                 }
-                index++;
             }
             if ( flushCache ) {
                 this.cache.clear();
