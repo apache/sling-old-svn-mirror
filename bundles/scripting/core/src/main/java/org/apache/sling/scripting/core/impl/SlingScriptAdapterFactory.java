@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
@@ -31,6 +33,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.mime.MimeTypeProvider;
@@ -40,13 +43,16 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * AdapterFactory that adapts Resources to the DefaultSlingScript servlet, which
  * executes the Resources as scripts.
- * 
+ *
  * @scr.component metatype="no" immediate="true"
  * @scr.property name="service.vendor" value="The Apache Software Foundation"
  * @scr.property name="service.description" value="Default SlingScriptResolver"
@@ -81,6 +87,10 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
     private List<ScriptEngineFactory> engineSpiServices = new LinkedList<ScriptEngineFactory>();
 
     private BundleContext bundleContext;
+
+    /** The service tracker for the event admin
+     */
+    private ServiceTracker eventAdminTracker;
 
     // ---------- AdapterFactory -----------------------------------------------
 
@@ -215,7 +225,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
      * name. If no ScriptEngineFactory is registered for the given extension or
      * the registered ScriptEngineFactory is not registered for a MIME type,
      * this method returns <code>null</code>.
-     * 
+     *
      * @param name The name whose extension is to be mapped to a MIME type. The
      *            extension is the string after the last dot in the name. If the
      *            name contains no dot, the entire name is considered the
@@ -240,7 +250,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
      * ScriptEngineFactory is registered for the given MIME type or the
      * registered ScriptEngineFactory is not registered for an extensions, this
      * method returns <code>null</code>.
-     * 
+     *
      * @param mimeType The MIME type to be mapped to an extension.
      */
     public String getExtension(String mimeType) {
@@ -258,6 +268,11 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
+        // setup tracker first as this is used in the bind/unbind methods
+        this.eventAdminTracker = new ServiceTracker(context.getBundleContext(),
+                EventAdmin.class.getName(), null);
+        this.eventAdminTracker.open();
+
         this.bundleContext = context.getBundleContext();
         this.bundleContext.addBundleListener(this);
 
@@ -290,19 +305,54 @@ public class SlingScriptAdapterFactory implements AdapterFactory,
         engineSpiBundles.clear();
         engineSpiServices.clear();
         scriptEngineManager = null;
+        if ( this.eventAdminTracker != null ) {
+            this.eventAdminTracker.close();
+            this.eventAdminTracker = null;
+        }
         this.bundleContext = null;
+    }
+
+    /**
+     * Get the event admin.
+     * @return The event admin or <code>null</code>
+     */
+    private EventAdmin getEventAdmin() {
+        return (EventAdmin) (this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private String[] toArray(List list) {
+        return (String[])list.toArray(new String[list.size()]);
+    }
+
+    private void postEvent(final String topic, final ScriptEngineFactory scriptEngineFactory) {
+        final EventAdmin localEA = this.getEventAdmin();
+        if ( localEA != null ) {
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_NAME, scriptEngineFactory.getEngineName());
+            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_VERSION, scriptEngineFactory.getEngineVersion());
+            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_EXTENSIONS, toArray(scriptEngineFactory.getExtensions()));
+            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_NAME, scriptEngineFactory.getLanguageName());
+            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_LANGUAGE_VERSION, scriptEngineFactory.getLanguageVersion());
+            props.put(SlingConstants.PROPERTY_SCRIPT_ENGINE_FACTORY_MIME_TYPES, toArray(scriptEngineFactory.getMimeTypes()));
+            localEA.postEvent(new Event(topic, props));
+        }
     }
 
     protected void bindScriptEngineFactory(
             ScriptEngineFactory scriptEngineFactory) {
         engineSpiServices.add(scriptEngineFactory);
         scriptEngineManager = null;
+        // send event
+        postEvent(SlingConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
     }
 
     protected void unbindScriptEngineFactory(
             ScriptEngineFactory scriptEngineFactory) {
         engineSpiServices.remove(scriptEngineFactory);
         scriptEngineManager = null;
+        // send event
+        postEvent(SlingConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
     }
 
 }
