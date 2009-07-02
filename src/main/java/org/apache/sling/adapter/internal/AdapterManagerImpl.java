@@ -340,7 +340,7 @@ public class AdapterManagerImpl implements AdapterManager {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
             props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
-            localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_ADDED,
+            localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_REMOVED,
                     props));
         }
     }
