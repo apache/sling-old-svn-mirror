@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
  * @scr.property name="jasper.checkInterval" value="300" type="Integer"
  * @scr.property name="jasper.classdebuginfo" value="true" type="Boolean"
- * @scr.property name="jasper.development" value="true" type="Boolean"
+ * @scr.property name="jasper.development" value="false" type="Boolean"
  * @scr.property name="jasper.enablePooling" value="true" type="Boolean"
  * @scr.property name="jasper.ieClassId"
  *               value="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"
@@ -129,6 +129,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
      * @throws SlingServletException
      * @throws SlingIOException
      */
+    @SuppressWarnings("unchecked")
     private void callJsp(Bindings bindings, SlingScriptHelper scriptHelper) {
 
         ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
@@ -341,7 +342,7 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
             Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
             SlingScriptHelper scriptHelper = (SlingScriptHelper) props.get(SLING);
             if (scriptHelper != null) {
-                
+
                 // set the current class loader as the thread context loader for
                 // the compilation and execution of the JSP script
                 ClassLoader old = Thread.currentThread().getContextClassLoader();
@@ -360,21 +361,20 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
                         // but only a Exception, so we have to wrap it with a dummy Exception in Throwable cases
                         if (rootCause instanceof Exception) {
                             throw new BetterScriptException(rootCause.toString(), (Exception) rootCause);
-                        } else {
-                            throw new BetterScriptException(rootCause.toString(),
-                                    new Exception("Wrapping Throwable: " + rootCause.toString(), rootCause));
                         }
+                        throw new BetterScriptException(rootCause.toString(),
+                                new Exception("Wrapping Throwable: " + rootCause.toString(), rootCause));
                     }
-                    
+
                     // fallback to standard behaviour
                     throw new BetterScriptException(e.getMessage(), e);
-                    
+
                 } catch (Exception e) {
-                    
+
                     throw new BetterScriptException(e.getMessage(), e);
-                    
+
                 } finally {
-                    
+
                     // make sure the context loader is reset after setting up the
                     // JSP runtime context
                     Thread.currentThread().setContextClassLoader(old);
