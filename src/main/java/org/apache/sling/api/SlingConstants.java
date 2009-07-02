@@ -206,4 +206,36 @@ public class SlingConstants {
      * @since 2.0.6
      */
     public static final String PROPERTY_RESOURCE_SUPER_TYPE = "resourceSuperType";
+
+    /**
+     * The topic for the OSGi event which is sent when an adapter factory has been added.
+     * The event contains at least the {@link #PROPERTY_ADAPTABLE_CLASSES},
+     * and {@link #PROPERTY_ADAPTER_CLASSES} poperties.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_ADAPTER_FACTORY_ADDED = "org/apache/sling/api/adapter/AdapterFactory/ADDED";
+
+    /**
+     * The topic for the OSGi event which is sent when an adapter factory has been removed.
+     * The event contains at least the {@link #PROPERTY_ADAPTABLE_CLASSES},
+     * and {@link #PROPERTY_ADAPTER_CLASSES} poperties.
+     * @since 2.0.6
+     */
+    public static final String TOPIC_ADAPTER_FACTORY_REMOVED = "org/apache/sling/api/adapter/AdapterFactory/REMOVED";
+
+    /**
+     * The event property listing the fully qualified names of
+     * classes which can be adapted by this adapter factory (value is
+     * "adaptables"). The type of the value is a string array.
+     * @since 2.0.6
+     */
+    public static final String PROPERTY_ADAPTABLE_CLASSES = "adaptables";
+
+    /**
+     * The event property listing the fully qualified names of
+     * classes to which this factory can adapt adaptables (value is "adapters").
+     * The type of the value is a string array.
+     * @since 2.0.6
+     */
+    public static final String PROPERTY_ADAPTER_CLASSES = "adapters";
 }

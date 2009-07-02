@@ -34,7 +34,7 @@ public interface AdapterFactory {
      * interface as services (value is
      * "org.apache.sling.osgi.commons.AdapterFactory").
      */
-    static final String SERVICE_NAME = AdapterFactory.class.getName();
+    String SERVICE_NAME = AdapterFactory.class.getName();
 
     /**
      * The service registration property listing the fully qualified names of
@@ -43,13 +43,13 @@ public interface AdapterFactory {
      * {@link #getAdapter(Object, Class)} method must be an instance of any of
      * these classes for this factory to be able to adapt the object.
      */
-    static final String ADAPTABLE_CLASSES = "adaptables";
+    String ADAPTABLE_CLASSES = "adaptables";
 
     /**
      * The service registration property listing the fully qualified names of
      * classes to which this factory can adapt adaptables (value is "adapters").
      */
-    static final String ADAPTER_CLASSES = "adapters";
+    String ADAPTER_CLASSES = "adapters";
 
     /**
      * Adapt the given object to the adaptable type. The adaptable object is
@@ -67,7 +67,7 @@ public interface AdapterFactory {
      * the <code>Adaptable</code> interface, though most of the time this method
      * is called by means of calling the {@link Adaptable#adaptTo(Class)}
      * method.
-     * 
+     *
      * @param <AdapterType> The generic type of the adapter (target) type.
      * @param adaptable The object to adapt to the adapter type.
      * @param type The type to which the object is to be adapted.
