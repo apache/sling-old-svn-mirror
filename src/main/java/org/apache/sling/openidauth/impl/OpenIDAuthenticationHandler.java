@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -611,6 +612,11 @@ public class OpenIDAuthenticationHandler implements
 		}
 		return null;
 	}
+	
+	@SuppressWarnings("unchecked")
+    public void addPrincipals(Set principals) {
+        // Nothing to do
+    }
 
 	public int impersonate(Principal principal, Credentials credentials)
 			throws RepositoryException, FailedLoginException {
