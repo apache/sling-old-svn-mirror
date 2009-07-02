@@ -21,17 +21,23 @@ package org.apache.sling.adapter.internal;
 import static org.apache.sling.api.adapter.AdapterFactory.ADAPTABLE_CLASSES;
 import static org.apache.sling.api.adapter.AdapterFactory.ADAPTER_CLASSES;
 
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.log.LogService;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The <code>AdapterManagerImpl</code> class implements the
@@ -103,6 +109,10 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     private Map<String, Map<String, AdapterFactory>> factoryCache;
 
+    /** The service tracker for the event admin
+     */
+    private ServiceTracker eventAdminTracker;
+
     // ---------- AdapterManager interface -------------------------------------
 
     /**
@@ -140,6 +150,10 @@ public class AdapterManagerImpl implements AdapterManager {
     // ----------- SCR integration ---------------------------------------------
 
     protected synchronized void activate(ComponentContext context) {
+        // setup tracker first as this is used in the bind/unbind methods
+        this.eventAdminTracker = new ServiceTracker(context.getBundleContext(),
+                EventAdmin.class.getName(), null);
+        this.eventAdminTracker.open();
         this.context = context;
 
         // register all adapter factories bound before activation
@@ -173,7 +187,10 @@ public class AdapterManagerImpl implements AdapterManager {
                 "Not clearing instance field: Set to another manager "
                     + AdapterManagerImpl.INSTANCE, null);
         }
-
+        if ( this.eventAdminTracker != null ) {
+            this.eventAdminTracker.close();
+            this.eventAdminTracker = null;
+        }
         this.context = null;
     }
 
@@ -226,13 +243,21 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     /**
+     * Get the event admin.
+     * @return The event admin or <code>null</code>
+     */
+    private EventAdmin getEventAdmin() {
+        return (EventAdmin) (this.eventAdminTracker != null ? this.eventAdminTracker.getService() : null);
+    }
+
+    /**
      * Unregisters the {@link AdapterFactory} referred to by the service
      * <code>reference</code> from the registry.
      */
     private void registerAdapterFactory(ComponentContext context,
             ServiceReference reference) {
-        String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
-        String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
+        final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
             || adapters.length == 0) {
@@ -260,6 +285,16 @@ public class AdapterManagerImpl implements AdapterManager {
 
         // clear the factory cache to force rebuild on next access
         factoryCache = null;
+
+        // send event
+        final EventAdmin localEA = this.getEventAdmin();
+        if ( localEA != null ) {
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
+            props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
+            localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_ADDED,
+                    props));
+        }
     }
 
     /**
@@ -269,9 +304,11 @@ public class AdapterManagerImpl implements AdapterManager {
     private void unregisterAdapterFactory(ServiceReference reference) {
         boundAdapterFactories.remove(reference);
 
-        String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
-        if (adaptables == null || adaptables.length == 0) {
+        if (adaptables == null || adaptables.length == 0 || adapters == null
+            || adapters.length == 0) {
             return;
         }
 
@@ -295,6 +332,16 @@ public class AdapterManagerImpl implements AdapterManager {
         // removed
         if (factoriesModified) {
             factoryCache = null;
+        }
+
+        // send event
+        final EventAdmin localEA = this.getEventAdmin();
+        if ( localEA != null ) {
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(SlingConstants.PROPERTY_ADAPTABLE_CLASSES, adaptables);
+            props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
+            localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_ADDED,
+                    props));
         }
     }
 

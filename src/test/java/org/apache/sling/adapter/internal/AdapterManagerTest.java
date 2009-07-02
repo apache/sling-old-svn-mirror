@@ -34,7 +34,10 @@ import org.jmock.integration.junit4.JMock;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
@@ -70,11 +73,21 @@ public class AdapterManagerTest {
     /**
      * Helper method to create a mock component context
      */
-    protected ComponentContext createComponentContext() {
+    protected ComponentContext createComponentContext() throws Exception {
+        final BundleContext bundleCtx = this.context.mock(BundleContext.class);
+        final Filter filter = this.context.mock(Filter.class);
         final ComponentContext ctx = this.context.mock(ComponentContext.class);
         this.context.checking(new Expectations() {{
             allowing(ctx).locateService(with(any(String.class)), with(any(ServiceReference.class)));
             will(returnValue(new MockAdapterFactory()));
+            allowing(ctx).getBundleContext();
+            will(returnValue(bundleCtx));
+            allowing(bundleCtx).createFilter(with(any(String.class)));
+            will(returnValue(filter));
+            allowing(bundleCtx).addServiceListener(with(any(ServiceListener.class)), with(any(String.class)));
+            allowing(bundleCtx).getServiceReferences(with(any(String.class)), with(any(String.class)));
+            will(returnValue(null));
+            allowing(bundleCtx).removeServiceListener(with(any(ServiceListener.class)));
         }});
         return ctx;
     }
@@ -123,7 +136,7 @@ public class AdapterManagerTest {
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
     }
 
-    @org.junit.Test public void testInitialized() {
+    @org.junit.Test public void testInitialized() throws Exception {
         am.activate(this.createComponentContext());
 
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
@@ -131,7 +144,7 @@ public class AdapterManagerTest {
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
     }
 
-    @org.junit.Test public void testBindBeforeActivate() {
+    @org.junit.Test public void testBindBeforeActivate() throws Exception {
         final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
 
@@ -148,7 +161,7 @@ public class AdapterManagerTest {
         assertNull("AdapterFactory cache must be null", am.getFactoryCache());
     }
 
-    @org.junit.Test public void testBindAfterActivate() {
+    @org.junit.Test public void testBindAfterActivate() throws Exception {
         am.activate(this.createComponentContext());
 
         // no cache and no factories yet
@@ -178,7 +191,7 @@ public class AdapterManagerTest {
         assertNull(f.get(TestSlingAdaptable2.class.getName()));
     }
 
-    @org.junit.Test public void testAdaptBase() {
+    @org.junit.Test public void testAdaptBase() throws Exception {
         am.activate(this.createComponentContext());
 
         TestSlingAdaptable data = new TestSlingAdaptable();
@@ -192,7 +205,7 @@ public class AdapterManagerTest {
         assertTrue(adapter instanceof ITestAdapter);
     }
 
-    @org.junit.Test public void testAdaptExtended() {
+    @org.junit.Test public void testAdaptExtended() throws Exception {
         am.activate(this.createComponentContext());
 
         TestSlingAdaptable2 data = new TestSlingAdaptable2();
@@ -206,7 +219,7 @@ public class AdapterManagerTest {
         assertTrue(adapter instanceof ITestAdapter);
     }
 
-    @org.junit.Test public void testAdaptBase2() {
+    @org.junit.Test public void testAdaptBase2() throws Exception {
         am.activate(this.createComponentContext());
 
         TestSlingAdaptable data = new TestSlingAdaptable();
@@ -223,7 +236,7 @@ public class AdapterManagerTest {
         assertTrue(adapter instanceof ITestAdapter);
     }
 
-    @org.junit.Test public void testAdaptExtended2() {
+    @org.junit.Test public void testAdaptExtended2() throws Exception {
         am.activate(this.createComponentContext());
 
         final ServiceReference ref = createServiceReference();
