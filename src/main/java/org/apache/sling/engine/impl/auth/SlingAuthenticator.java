@@ -254,7 +254,7 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
         if (response.isCommitted()) {
             throw new IllegalStateException("Response already committed");
         }
-        
+
         AuthenticationHandlerInfo[] handlerInfos = findApplicableAuthenticationHandlers(request);
         boolean done = false;
         for (int i = 0; !done && i < handlerInfos.length; i++) {
@@ -499,8 +499,8 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
     private boolean getAnonymousSession(HttpServletRequest req,
             HttpServletResponse res) throws MissingRepositoryException {
 
-        final boolean isLoginPath = LoginServlet.LOGIN_SERVLET_PATH.equals(req.getPathInfo()); 
-          
+        final boolean isLoginPath = LoginServlet.LOGIN_SERVLET_PATH.equals(req.getPathInfo());
+
         // Get an anonymous session if allowed, or if we are handling
         // a request for the login servlet
         if (this.anonymousAllowed || isLoginPath) {
@@ -513,16 +513,12 @@ public class SlingAuthenticator implements ManagedService, Authenticator {
                 handleLoginFailure(req, res, re);
                 return false;
             }
-        } 
+        }
 
         // If we get here, anonymous access is not allowed: redirect
         // to the login servlet
-        log.debug("getAnonymousSession: Anonymous access not allowed by configuration - redirecting to login form");
-        try {
-          res.sendRedirect(req.getContextPath() + LoginServlet.LOGIN_SERVLET_PATH);
-        } catch(IOException ioe) {
-          handleLoginFailure(req, res, ioe);
-        }
+        log.info("getAnonymousSession: Anonymous access not allowed by configuration - redirecting to login");
+        login(req, res);
 
         // fallback to no session
         return false;
