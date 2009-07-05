@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>5-incubator</version>
+        <version>6</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -43,10 +43,21 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/base</url>
     </scm>
 
+    <properties>
+        <!-- where the remote resources plugin should place the legalize stuff -->
+        <remote.res.tmp>${project.build.directory}/remote-resources</remote.res.tmp>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
-
+                <!-- overwrite the default location -->
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <configuration>
+                    <outputDirectory>${remote.res.tmp}</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>1.4.3</version>
@@ -162,6 +173,14 @@
                                 WEB-INF/classes/org/apache/sling/launchpad/base/impl/**,
                                 WEB-INF/classes/org/apache/sling/launchpad/base/webapp/**
                             </packagingExcludes>
+                            <!-- ensure the legalize stuff is in the war -->
+                            <webResources>
+                                <webResource>
+                                    <targetPath></targetPath>
+                                    <filtering>false</filtering>
+                                    <directory>${remote.res.tmp}</directory>
+                                </webResource>
+                            </webResources>
                         </configuration>
                     </execution>
                 </executions>
