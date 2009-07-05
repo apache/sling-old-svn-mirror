@@ -134,9 +134,15 @@ public class JcrResourceListener implements EventListener {
             final Resource resource = this.resolver.getResource(path);
             if ( resource != null ) {
                 final Dictionary<String, String> properties = new Hashtable<String, String>();
-                properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
-                properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-                properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                properties.put(SlingConstants.PROPERTY_PATH, path);
+                final String resourceType = resource.getResourceType();
+                final String resourceSuperType = resource.getResourceSuperType();
+                if ( resourceType != null ) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+                }
+                if ( resourceSuperType != null ) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                }
 
                 localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_ADDED, properties));
             }
@@ -145,9 +151,15 @@ public class JcrResourceListener implements EventListener {
             final Resource resource = this.resolver.getResource(path);
             if ( resource != null ) {
                 final Dictionary<String, String> properties = new Hashtable<String, String>();
-                properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
-                properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-                properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                properties.put(SlingConstants.PROPERTY_PATH, path);
+                final String resourceType = resource.getResourceType();
+                final String resourceSuperType = resource.getResourceSuperType();
+                if ( resourceType != null ) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+                }
+                if ( resourceSuperType != null ) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                }
 
                 localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_CHANGED, properties));
             }
