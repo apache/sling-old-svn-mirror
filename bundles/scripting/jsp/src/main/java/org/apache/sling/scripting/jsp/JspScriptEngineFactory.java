@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * @scr.component label="%jsphandler.name" description="%jsphandler.description"
  * @scr.property name="service.description" value="JSP Script Handler"
  * @scr.property name="service.vendor" value="The Apache Software Foundation" *
- * @scr.property name="jasper.development" value="false" type="Boolean"
+ * @scr.property name="jasper.development" value="true" type="Boolean"
  * @scr.property name="jasper.modificationTestInterval" value="4" type="Integer"
  * @scr.property name="jasper.classdebuginfo" value="true" type="Boolean"
  * @scr.property name="jasper.enablePooling" value="true" type="Boolean"
