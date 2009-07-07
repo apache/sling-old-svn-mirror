@@ -20,6 +20,7 @@ package org.apache.sling.osgi.installer.impl;
 
 import java.util.Hashtable;
 
+import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.framework.BundleActivator;
@@ -62,14 +63,25 @@ public class Activator implements BundleActivator {
         final Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        
+        // Assume PackageAdmin is available before this bundle is started.
+        // That's the case when using Felix OSGi, not sure about other frameworks.
         this.service = new OsgiControllerImpl(context,
-                (PackageAdmin)this.packageAdminTracker.getService(),
-                (LogService)this.logServiceTracker.getService());
+                (PackageAdmin)checkNotNull(this.packageAdminTracker.getService(), "PackageAdmin"),
+                logServiceTracker);
         final String [] serviceInterfaces = {
         		OsgiController.class.getName(),
         		OsgiControllerServices.class.getName()
         };
         serviceReg = context.registerService(serviceInterfaces, service, props);
+    }
+    
+    /** Complain if value is null */
+    static Object checkNotNull(Object value, String what) throws JcrInstallException {
+    	if(value == null) {
+    		throw new JcrInstallException(what + " is null, cannot activate");
+    	}
+    	return value;
     }
 
     /**

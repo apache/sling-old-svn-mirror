@@ -35,6 +35,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * OsgiController service
@@ -51,6 +52,7 @@ public class OsgiControllerImpl
     private ResourceOverrideRules roRules;
     private final List<OsgiControllerTask> tasks = new LinkedList<OsgiControllerTask>();
     private final OsgiControllerTaskExecutor executor = new OsgiControllerTaskExecutor();
+    private final ServiceTracker logServiceTracker;
 
     public static final String STORAGE_FILENAME = "controller.storage";
 
@@ -59,18 +61,16 @@ public class OsgiControllerImpl
 
     private final PackageAdmin packageAdmin;
 
-    protected final LogService logService;
-
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
 
     public OsgiControllerImpl(final BundleContext bc,
                               final PackageAdmin pa,
-                              final LogService ls)
+                              final ServiceTracker logServiceTracker)
     throws IOException {
         this.bundleContext = bc;
         this.packageAdmin = pa;
-        this.logService = ls;
+        this.logServiceTracker = logServiceTracker;
         processors = new OsgiResourceProcessorList(bc, packageAdmin, this);
         storage = new Storage(bc.getDataFile(STORAGE_FILENAME));
     }
@@ -79,8 +79,8 @@ public class OsgiControllerImpl
         try {
             storage.saveToFile();
         } catch(IOException ioe) {
-        	if (logService != null) {
-        		logService.log(LogService.LOG_WARNING, "IOException in Storage.saveToFile()", ioe);
+        	if (getLogService() != null) {
+        		getLogService().log(LogService.LOG_WARNING, "IOException in Storage.saveToFile()", ioe);
         	}
         }
 
@@ -88,8 +88,8 @@ public class OsgiControllerImpl
             processor.dispose();
         }
 
-        if(logService != null) {
-            logService.log(LogService.LOG_WARNING,
+        if(getLogService() != null) {
+            getLogService().log(LogService.LOG_WARNING,
                     OsgiController.class.getName()
                     + " service deactivated - this warning can be ignored if system is shutting down");
         }
@@ -134,8 +134,8 @@ public class OsgiControllerImpl
 
     	// Ready to work?
         if(processors == null) {
-        	if(logService != null) {
-                logService.log(LogService.LOG_INFO, "Not activated yet, cannot executeScheduledOperations");
+        	if(getLogService() != null) {
+                getLogService().log(LogService.LOG_INFO, "Not activated yet, cannot executeScheduledOperations");
         	}
             return;
         }
@@ -153,8 +153,8 @@ public class OsgiControllerImpl
             }
 
             // Now execute all our tasks in a separate thread
-        	if(logService != null) {
-                logService.log(LogService.LOG_INFO, "Executing " + tasks.size() + " queued tasks");
+        	if(getLogService() != null) {
+                getLogService().log(LogService.LOG_INFO, "Executing " + tasks.size() + " queued tasks");
         	}
             final long start = System.currentTimeMillis();
 
@@ -164,8 +164,8 @@ public class OsgiControllerImpl
             tasks.clear();
             tasks.addAll(remainingTasks);
 
-        	if(logService != null) {
-                logService.log(LogService.LOG_INFO,
+        	if(getLogService() != null) {
+                getLogService().log(LogService.LOG_INFO,
                 		"Done executing queued tasks (" + (System.currentTimeMillis() - start) + " msec)");
         	}
 		}
@@ -197,5 +197,9 @@ public class OsgiControllerImpl
 
 	public Storage getStorage() {
 		return storage;
+	}
+	
+	public LogService getLogService() {
+		return (LogService)logServiceTracker.getService();
 	}
 }
