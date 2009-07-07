@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -46,10 +47,17 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
-/** Test the OsgiController running in the OSGi framework */
+/** Test the OsgiController running in the OSGi framework
+ *  
+ * 	This is a rather big test class, as Pax Exam currently starts
+ *  the framework for each test class - having all tests here
+ *  (as long as it's practical) allows them to run faster.
+ *   
+ */
 @RunWith(JUnit4TestRunner.class)
 public class OsgiControllerTest {
 	public final static String POM_VERSION = System.getProperty("jcrinstall.pom.version");
+	public final static String JAR_EXT = ".jar";
 	
     @Inject
     protected BundleContext bundleContext;
@@ -170,7 +178,7 @@ public class OsgiControllerTest {
     @Test
     public void testInstallUpgradeDowngradeBundle() throws Exception {
     	final String symbolicName = "jcrinstall-testbundle";
-    	final String uri = symbolicName + ".jar";
+    	final String uri = symbolicName + JAR_EXT;
     	final String BUNDLE_VERSION = "Bundle-Version";
     	
     	assertNull("Test bundle must not be present before test", findBundle(symbolicName));
@@ -253,7 +261,7 @@ public class OsgiControllerTest {
     	
     	// Execute some OsgiController operations
     	final String symbolicName = "jcrinstall-testbundle";
-    	final String uri = symbolicName + ".jar";
+    	final String uri = symbolicName + JAR_EXT;
     	final String BUNDLE_VERSION = "Bundle-Version";
     	c.scheduleInstallOrUpdate(uri, 
     			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.1.jar")));
@@ -272,6 +280,46 @@ public class OsgiControllerTest {
     	// And check that bundles A and B have kept their states
     	assertEquals("Bundle A must be started", Bundle.ACTIVE, findBundle("jcrinstall-testA").getState());
     	assertEquals("Bundle B must be stopped", Bundle.RESOLVED, findBundle("jcrinstall-testB").getState());
+    }
+    
+    /** needsB bundle requires testB, try loading needsB first,
+     *	then testB, and verify that in the end needsB is started 	
+     */
+    @Test
+    public void testBundleDependencies() throws Exception {
+    	final OsgiController c = getService(OsgiController.class);
+    	
+    	final String testB = "jcrinstall-testB";
+    	final String needsB = "jcrinstall-needsB";
+    	
+    	{
+        	final Bundle b = findBundle(testB);
+        	if(b != null) {
+        		c.scheduleUninstall(testB + JAR_EXT);
+        		c.executeScheduledOperations();
+        	}
+        	assertNull(testB + " bundle must not be installed before test", findBundle(testB));
+    	}
+    	
+    	// without testB, needsB must not start
+    	{
+        	c.scheduleInstallOrUpdate(needsB + JAR_EXT,
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-needsB.jar")));
+        	c.executeScheduledOperations();
+        	final Bundle b = findBundle(needsB);
+        	assertNotNull(needsB + " must be installed", b);
+        	assertFalse(needsB + " must not be started, testB not present", b.getState() == Bundle.ACTIVE);
+    	}
+    	
+    	// now install testB -> needsB must start
+    	{
+        	c.scheduleInstallOrUpdate(testB + JAR_EXT,
+        			new SimpleFileInstallableData(getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testB-1.0.jar")));
+        	c.executeScheduledOperations();
+        	final Bundle b = findBundle(needsB);
+        	assertNotNull(needsB + " must be installed", b);
+        	assertTrue(needsB + " must be started now that testB is installed", b.getState() == Bundle.ACTIVE);
+    	}
     }
 
     @org.ops4j.pax.exam.junit.Configuration

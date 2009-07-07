@@ -194,12 +194,40 @@
                         </goals>
                         <configuration>
                             <classifier>testB-1.0</classifier>
+                            <includes>
+                                <include>**/a/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
                             <archive>
                                 <manifestEntries>
                                     <Manifest-Version>2</Manifest-Version>
                                     <Bundle-Name>JCRinstall test bundle</Bundle-Name>
                                     <Bundle-SymbolicName>jcrinstall-testB</Bundle-SymbolicName>
                                     <Bundle-Version>1.0</Bundle-Version>
+                                    <Export-Package>org.apache.sling.jcr.jcrinstall.it.a;version="1.0"</Export-Package>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>needsB-1.0</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>needsB</classifier>
+                            <includes>
+                                <include>**/b/**</include>
+                                <include>META-INF/**</include>
+                            </includes>
+                            <archive>
+                                <manifestEntries>
+                                    <Manifest-Version>2</Manifest-Version>
+                                    <Bundle-Name>JCRinstall test bundle</Bundle-Name>
+                                    <Bundle-SymbolicName>jcrinstall-needsB</Bundle-SymbolicName>
+                                    <Bundle-Version>1.0</Bundle-Version>
+                                    <Import-Package>org.apache.sling.jcr.jcrinstall.it.a;version="1.0"</Import-Package>
                                 </manifestEntries>
                             </archive>
                         </configuration>
