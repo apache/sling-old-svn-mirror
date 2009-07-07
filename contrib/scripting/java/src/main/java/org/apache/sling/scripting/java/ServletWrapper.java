@@ -217,6 +217,8 @@ public class ServletWrapper {
                 logger.error("Java servlet source not found." +
                        ex.getMessage(), ex);
             }
+        } catch (SlingException ex) {
+            throw ex;
         } catch (ServletException ex) {
             throw ex;
         } catch (IOException ex) {
@@ -252,6 +254,8 @@ public class ServletWrapper {
             response.sendError
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
+        } catch (SlingException ex) {
+            throw ex;
         } catch (ServletException ex) {
             throw ex;
         } catch (IOException ex) {
