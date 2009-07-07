@@ -28,6 +28,7 @@ import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
 
 public class ConfigResourceProcessorTest {
     
@@ -45,6 +46,9 @@ public class ConfigResourceProcessorTest {
         final OsgiControllerServices sp = new OsgiControllerServices() {
 			public ConfigurationAdmin getConfigurationAdmin() {
 				return ca;
+			}
+			public LogService getLogService() {
+				return null;
 			}
         };
         final ConfigResourceProcessor p = new ConfigResourceProcessor(sp);

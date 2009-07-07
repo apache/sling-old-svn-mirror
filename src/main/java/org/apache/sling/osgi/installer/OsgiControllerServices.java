@@ -19,6 +19,7 @@
 package org.apache.sling.osgi.installer;
 
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
 
 /** Proxy for services that might not be always available, allows
  * 	classes which are not OSGi services to access such services easily.
@@ -27,4 +28,5 @@ import org.osgi.service.cm.ConfigurationAdmin;
  */
 public interface OsgiControllerServices {
 	ConfigurationAdmin getConfigurationAdmin();
+	LogService getLogService();
 }
