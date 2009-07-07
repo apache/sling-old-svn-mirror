@@ -18,8 +18,8 @@ package org.apache.sling.rewriter.impl;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.rewriter.Generator;
 import org.apache.sling.rewriter.GeneratorFactory;
@@ -190,7 +190,7 @@ public class FactoryCache {
     protected static class HashingServiceTrackerCustomizer<T> extends ServiceTracker {
 
         /** The services hashed by their name property. */
-        private final Map<String, T> services = new HashMap<String, T>();
+        private final Map<String, T> services = new ConcurrentHashMap<String, T>();
 
         /** The bundle context. */
         protected final BundleContext context;
