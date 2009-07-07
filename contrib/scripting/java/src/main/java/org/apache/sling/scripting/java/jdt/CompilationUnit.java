@@ -265,12 +265,14 @@ public class CompilationUnit
                 }
             }
         } catch (IOException exc) {
-            exc.printStackTrace();
+            handleError(-1, -1, exc.getLocalizedMessage());
         }
     }
 
     private void handleError(int line, int column, Object errorMessage) {
-        if (column < 0) column = 0;
+        if (column < 0) {
+            column = 0;
+        }
         errors.add(new CompilerError(this.sourceFile,
                                      true,
                                      line,
