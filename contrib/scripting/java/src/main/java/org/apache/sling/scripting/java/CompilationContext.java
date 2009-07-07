@@ -196,12 +196,13 @@ public class CompilationContext {
      */
     public Class load()
     throws ServletException, FileNotFoundException {
+        final String name = this.getClassFilePath().substring(1).replace('/', '.');
         try {
-            servletClass = this.options.getClassLoader().loadClass(this.getClassFilePath().substring(1).replace('/', '.'));
+            servletClass = this.options.getClassLoader().loadClass(name);
         } catch (ClassNotFoundException cex) {
-            throw new ServletException("Unable to load servlet class.", cex);
+            throw new ServletException("Servlet class not found: " + name, cex);
         } catch (Exception ex) {
-            throw new ServletException("Unable to compile servlet.", ex);
+            throw new ServletException("Unable to compile servlet: " + name, ex);
         }
         removed = 0;
         return servletClass;
