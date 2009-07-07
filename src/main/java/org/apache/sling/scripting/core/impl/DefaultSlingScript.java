@@ -230,7 +230,11 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             logScriptError(request, see);
 
             throw see;
+        } catch (SlingException e) {
+            // log in the request progress tracker
+            logScriptError(request, e);
 
+            throw e;
         } catch (Exception e) {
 
             // log in the request progress tracker
