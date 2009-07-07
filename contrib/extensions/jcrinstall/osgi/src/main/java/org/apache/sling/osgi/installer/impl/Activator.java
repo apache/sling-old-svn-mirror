@@ -21,6 +21,7 @@ package org.apache.sling.osgi.installer.impl;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.OsgiController;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -65,7 +66,11 @@ public class Activator implements BundleActivator {
                 (PackageAdmin)this.packageAdminTracker.getService(),
                 (StartLevel)this.startLevelTracker.getService(),
                 (LogService)this.logServiceTracker.getService());
-        serviceReg = context.registerService(new String[] {OsgiController.class.getName()}, service, props);
+        final String [] serviceInterfaces = {
+        		OsgiController.class.getName(),
+        		OsgiControllerServices.class.getName()
+        };
+        serviceReg = context.registerService(serviceInterfaces, service, props);
     }
 
     /**
