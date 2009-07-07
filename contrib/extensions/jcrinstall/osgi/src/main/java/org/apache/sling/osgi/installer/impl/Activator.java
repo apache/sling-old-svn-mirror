@@ -64,7 +64,6 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.service = new OsgiControllerImpl(context,
                 (PackageAdmin)this.packageAdminTracker.getService(),
-                (StartLevel)this.startLevelTracker.getService(),
                 (LogService)this.logServiceTracker.getService());
         final String [] serviceInterfaces = {
         		OsgiController.class.getName(),

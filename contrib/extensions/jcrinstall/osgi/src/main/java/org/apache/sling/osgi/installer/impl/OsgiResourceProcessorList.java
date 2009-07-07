@@ -25,7 +25,6 @@ import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.OsgiResourceProcessor;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +35,8 @@ import org.slf4j.LoggerFactory;
 class OsgiResourceProcessorList extends LinkedList<OsgiResourceProcessor> {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-	OsgiResourceProcessorList(BundleContext ctx, PackageAdmin pa, StartLevel sa, OsgiControllerServices sp) {
-        add(new BundleResourceProcessor(ctx, pa, sa));
+	OsgiResourceProcessorList(BundleContext ctx, PackageAdmin pa, OsgiControllerServices sp) {
+        add(new BundleResourceProcessor(ctx, pa));
         add(new ConfigResourceProcessor(sp));
 	}
 	

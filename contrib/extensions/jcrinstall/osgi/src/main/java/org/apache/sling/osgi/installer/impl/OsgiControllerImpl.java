@@ -35,7 +35,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 
 /**
  * OsgiController service
@@ -60,8 +59,6 @@ public class OsgiControllerImpl
 
     private final PackageAdmin packageAdmin;
 
-    protected final StartLevel startLevel;
-
     protected final LogService logService;
 
     /** Default value for getLastModified() */
@@ -69,14 +66,12 @@ public class OsgiControllerImpl
 
     public OsgiControllerImpl(final BundleContext bc,
                               final PackageAdmin pa,
-                              final StartLevel sl,
                               final LogService ls)
     throws IOException {
         this.bundleContext = bc;
         this.packageAdmin = pa;
-        this.startLevel = sl;
         this.logService = ls;
-        processors = new OsgiResourceProcessorList(bc, packageAdmin, startLevel, this);
+        processors = new OsgiResourceProcessorList(bc, packageAdmin, this);
         storage = new Storage(bc.getDataFile(STORAGE_FILENAME));
     }
 
