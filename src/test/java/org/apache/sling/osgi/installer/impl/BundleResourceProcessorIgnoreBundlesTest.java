@@ -18,15 +18,15 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 /** Test ignoring bundle updates based on Versions (SLING-1001) */
 public class BundleResourceProcessorIgnoreBundlesTest {
@@ -40,13 +40,12 @@ public class BundleResourceProcessorIgnoreBundlesTest {
         mockery = new Mockery();
         final BundleContext bc = mockery.mock(BundleContext.class);
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
-        final StartLevel s = new MockStartLevel();
         
         mockery.checking(new Expectations() {{
             allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
         }});
         
-        brp = new BundleResourceProcessor(bc, pa, s);
+        brp = new BundleResourceProcessor(bc, pa);
     }
 
 	@org.junit.Test public void testLowerVersion() {

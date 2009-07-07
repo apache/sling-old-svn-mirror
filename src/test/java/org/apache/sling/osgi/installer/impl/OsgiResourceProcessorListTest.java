@@ -39,7 +39,7 @@ public class OsgiResourceProcessorListTest {
         mockery.checking(new Expectations() {{
         	allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
         }});
-        final OsgiResourceProcessorList c = new OsgiResourceProcessorList(bc, null, null, null);
+        final OsgiResourceProcessorList c = new OsgiResourceProcessorList(bc, null, null);
         c.clear();
         assertNull("OsgiResourceProcessorList must return null processor for null uri", c.getProcessor(null, null));
         assertNull("OsgiResourceProcessorList must return null processor for TEST uri", c.getProcessor("TEST", null));
@@ -58,7 +58,7 @@ public class OsgiResourceProcessorListTest {
             allowing(p2).canProcess("bar", null) ; will(returnValue(true));
         }});
         
-        final OsgiResourceProcessorList c = new OsgiResourceProcessorList(bc, null, null, null); 
+        final OsgiResourceProcessorList c = new OsgiResourceProcessorList(bc, null, null); 
         c.clear();
         c.add(p1);
         c.add(p2);

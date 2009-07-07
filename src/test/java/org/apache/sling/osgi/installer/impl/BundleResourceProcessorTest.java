@@ -69,7 +69,7 @@ public class BundleResourceProcessorTest {
     public void TODO_DISABLED_testInstall() throws Exception {
 
         final BundleContext bc = mockery.mock(BundleContext.class);
-        final OsgiControllerImpl c = new OsgiControllerImpl(bc,  null, null, null);
+        final OsgiControllerImpl c = new OsgiControllerImpl(bc,  null, null);
         final PackageAdmin pa = mockery.mock(PackageAdmin.class);
         final TestStorage s = new TestStorage(Utilities.getTestFile());
         Utilities.setStorage(c, s);
@@ -121,8 +121,8 @@ public class BundleResourceProcessorTest {
         }});
 
         // Do the calls and check some stuff on the way
-        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa, new MockStartLevel());
-        final OsgiResourceProcessorList proc = new OsgiResourceProcessorList(bc, null, null, null);
+        final BundleResourceProcessor p = new BundleResourceProcessor(bc, pa);
+        final OsgiResourceProcessorList proc = new OsgiResourceProcessorList(bc, null, null);
         proc.clear();
         proc.add(p);
         Utilities.setField(c, "processors", proc);

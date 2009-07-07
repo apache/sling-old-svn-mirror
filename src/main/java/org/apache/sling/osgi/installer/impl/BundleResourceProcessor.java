@@ -41,7 +41,6 @@ import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +60,6 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
     private final BundleContext ctx;
     private final PackageAdmin packageAdmin;
-    private final StartLevel startLevel;
     private int packageRefreshEventsCount;
 
     /**
@@ -95,10 +93,9 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin, StartLevel startLevel) {
+    BundleResourceProcessor(BundleContext ctx, PackageAdmin packageAdmin) {
         this.ctx = ctx;
         this.packageAdmin = packageAdmin;
-        this.startLevel = startLevel;
         this.activeBundles = new HashSet<Long>();
         this.installedBundles = new ArrayList<Long>();
 
@@ -201,12 +198,9 @@ public class BundleResourceProcessor implements OsgiResourceProcessor,
 			    int level = installableData.getBundleStartLevel();
 			    b = ctx.installBundle(uri, data);
 			    if(level > 0) {
-			        startLevel.setBundleStartLevel(b, level);
-	                log.debug("No matching Bundle for uri {}, installed with start level {}", uri, level);
-			    } else {
-			        level = startLevel.getBundleStartLevel(b);
-	                log.debug("No matching Bundle for uri {}, installing with current default start level {}", uri, level);
+			    	throw new BundleException("Non-zero start level is not supported anymore (" + level + ")");
 			    }
+                log.debug("No matching Bundle for uri {}, bundle installed");
 			}
 		} finally {
 		    // data is never null here
