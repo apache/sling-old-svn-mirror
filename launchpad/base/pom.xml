@@ -43,20 +43,8 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/base</url>
     </scm>
 
-    <properties>
-        <!-- where the remote resources plugin should place the legalize stuff -->
-        <remote.res.tmp>${project.build.directory}/remote-resources</remote.res.tmp>
-    </properties>
-
     <build>
         <plugins>
-            <plugin>
-                <!-- overwrite the default location -->
-                <artifactId>maven-remote-resources-plugin</artifactId>
-                <configuration>
-                    <outputDirectory>${remote.res.tmp}</outputDirectory>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -178,7 +166,7 @@
                                 <webResource>
                                     <targetPath></targetPath>
                                     <filtering>false</filtering>
-                                    <directory>${remote.res.tmp}</directory>
+                                    <directory>${project.build.directory}/maven-shared-archive-resources</directory>
                                 </webResource>
                             </webResources>
                         </configuration>
