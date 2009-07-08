@@ -16,30 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
-/** Base class for tasks that can be executed by the OsgiController */ 
-public abstract class OsgiControllerTask implements Comparable<OsgiControllerTask> {
-	/** Execute this task */
-	public abstract void execute(OsgiControllerTaskContext ctx) throws Exception;
-	
-	/** Tasks are sorted according to this key */
-	public abstract String getSortKey();
-
-	public final int compareTo(OsgiControllerTask o) {
-		return getSortKey().compareTo(o.getSortKey());
-	}
-
-	@Override
-	public final boolean equals(Object o) {
-		if(o instanceof OsgiControllerTask) {
-			return getSortKey().equals(((OsgiControllerTask)o).getSortKey());
-		}
-		return false;
-	}
-
-	@Override
-	public final int hashCode() {
-		return getSortKey().hashCode();
-	}
+/** Define the basic ordering of tasks */
+class TaskOrder {
+	static final String CONFIG_UNINSTALL_ORDER = "10-";
+	static final String CONFIG_INSTALL_ORDER = "20-";
+	static final String BUNDLE_UNINSTALL_ORDER = "30-";
+	static final String BUNDLE_INSTALL_ORDER = "40-";
+	static final String BUNDLE_START_ORDER = "50-";
+	static final String REFRESH_PACKAGES_ORDER = "60-";
 }

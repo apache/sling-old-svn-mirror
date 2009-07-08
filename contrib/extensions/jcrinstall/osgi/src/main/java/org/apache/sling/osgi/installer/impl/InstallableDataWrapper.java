@@ -38,7 +38,7 @@ import org.osgi.framework.BundleContext;
  *  the data is actually installed, for example if that data comes
  *  from a JCR repository that's deactivated due to bundle updates.
  */
-class InstallableDataWrapper implements InstallableData {
+public class InstallableDataWrapper implements InstallableData {
 
 	private InstallableData wrapped;
 	private final File dataFile;
@@ -100,7 +100,7 @@ class InstallableDataWrapper implements InstallableData {
 		return wrapped.getDigest();
 	}
 
-	void cleanup() {
+	public void cleanup() {
 		if(dataFile != null) {
 			dataFile.delete();
 		}

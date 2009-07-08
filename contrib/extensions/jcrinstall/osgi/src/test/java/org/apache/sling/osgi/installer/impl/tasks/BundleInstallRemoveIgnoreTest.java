@@ -16,77 +16,76 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkListener;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
 
 /** Test ignoring bundle updates based on Versions (SLING-1001) */
-public class BundleResourceProcessorIgnoreBundlesTest {
+public class BundleInstallRemoveIgnoreTest {
 
 	private final String symbolicName = "testbundle";
 	private final String uri = "testuri";
-	private BundleResourceProcessor brp;
-	private Mockery mockery;
+	private BundleInstallRemoveTask task;
 	
     @org.junit.Before public void setup() {
-        mockery = new Mockery();
-        final BundleContext bc = mockery.mock(BundleContext.class);
-        final PackageAdmin pa = mockery.mock(PackageAdmin.class);
-        
-        mockery.checking(new Expectations() {{
-            allowing(bc).addFrameworkListener(with(any(FrameworkListener.class)));
-        }});
-        
-        brp = new BundleResourceProcessor(bc, pa);
+    	OsgiControllerServices s = new OsgiControllerServices() {
+			public LogService getLogService() {
+				return null;
+			}
+			
+			public ConfigurationAdmin getConfigurationAdmin() {
+				return null;
+			}
+		};
+		
+        task = new BundleInstallRemoveTask(null, null, null, s);
     }
 
 	@org.junit.Test public void testLowerVersion() {
 		final Version installedVersion = new Version("1.1");
 		final Version newVersion = new Version("1.0");
 		assertTrue("Lower version must be ignored",
-				brp.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
+				task.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
 	}
 
 	@org.junit.Test public void testHigherVersion() {
 		final Version installedVersion = new Version("1.1");
 		final Version newVersion = new Version("1.2");
 		assertFalse("Higher version must not be ignored",
-				brp.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
+				task.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
 	}
 
 	@org.junit.Test public void testSameVersion() {
 		final Version installedVersion = new Version("1.1");
 		final Version newVersion = new Version("1.1");
 		assertTrue("Same version must be ignored",
-				brp.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
+				task.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
 	}
 
 	@org.junit.Test public void testSameVersionSnapshot() {
 		final Version installedVersion = new Version("2.0.5.incubator-SNAPSHOT");
 		final Version newVersion = new Version("2.0.5.incubator-SNAPSHOT");
 		assertFalse("Same version snapshot must not be ignored",
-				brp.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
+				task.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
 	}
 
 	@org.junit.Test public void testLowerVersionSnapshot() {
 		final Version installedVersion = new Version("2.0.5.incubator-SNAPSHOT");
 		final Version newVersion = new Version("2.0.4.incubator-SNAPSHOT");
 		assertTrue("Lower version snapshot must be ignored",
-				brp.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
+				task.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
 	}
 
 	@org.junit.Test public void testHigherVersionSnapshot() {
 		final Version installedVersion = new Version("2.0.5.incubator-SNAPSHOT");
 		final Version newVersion = new Version("2.0.6.incubator-SNAPSHOT");
 		assertFalse("Higher version snapshot must not be ignored",
-				brp.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
+				task.ignoreNewBundle(symbolicName, uri, installedVersion, newVersion));
 	}
 }
