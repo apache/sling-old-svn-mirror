@@ -40,11 +40,9 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
     static final String CONFIG_EXTENSION = ".cfg";
     
     private final DictionaryReader reader = new DictionaryReader();
-    private final OsgiControllerServices ocs;
     
 	public ConfigInstallRemoveTask(String uri, InstallableData data, OsgiControllerServices ocs) {
-		super(uri, data);
-		this.ocs = ocs;
+		super(uri, data, ocs);
 	}
 	
 	@Override

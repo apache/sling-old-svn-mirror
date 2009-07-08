@@ -40,14 +40,12 @@ import org.osgi.service.log.LogService;
 public class BundleInstallRemoveTask extends InstallRemoveTask {
 
 	private final BundleContext bundleContext;
-	private final OsgiControllerServices ocs;
 	
     public static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
     public BundleInstallRemoveTask(String uri, InstallableData data, BundleContext ctx, OsgiControllerServices ocs) {
-    	super(uri, data);
+    	super(uri, data, ocs);
     	this.bundleContext = ctx;
-    	this.ocs = ocs;
     }
     
 	@Override
