@@ -53,20 +53,20 @@ public class OsgiControllerImpl
 	private final BundleContext bundleContext;
     private final Storage storage;
     private ResourceOverrideRules roRules;
+    
+    // The data type of the "tasks" member must be consistent with the {@link TaskOrderingTest} class
     private final Set<OsgiControllerTask> tasks = new TreeSet<OsgiControllerTask>();
     private final Set<OsgiControllerTask> tasksForNextCycle = new TreeSet<OsgiControllerTask>();
     private final Set<OsgiControllerTask> tasksForThisCycle = new TreeSet<OsgiControllerTask>();
     private final ServiceTracker logServiceTracker;
     private int threadCounter;
+    private final PackageAdmin packageAdmin;
 
     public static final String BUNDLE_EXTENSION = ".jar";
     public static final String STORAGE_FILENAME = "controller.storage";
 
     /** Storage key: digest of an InstallableData */
     public static final String KEY_DIGEST = "data.digest";
-
-    // TODO unused?
-    private final PackageAdmin packageAdmin;
 
     /** Default value for getLastModified() */
     public static final long LAST_MODIFIED_NOT_FOUND = -1;
