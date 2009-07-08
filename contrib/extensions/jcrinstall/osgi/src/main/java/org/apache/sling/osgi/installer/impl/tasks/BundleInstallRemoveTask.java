@@ -85,12 +85,6 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 
 	@Override
 	protected InstallResultCode doInstallOrUpdate(OsgiControllerTaskContext tctx, Map<String, Object> attributes) throws Exception {
-        int retryCount = 0;
-        if ( attributes.get("RETRY_COUNT") != null ) {
-            retryCount = (Integer)attributes.get("RETRY_COUNT");
-        }
-        retryCount++;
-        attributes.put("RETRY_COUNT", retryCount);
 
     	// Check that we have bundle data and manifest
     	InputStream is = data.adaptTo(InputStream.class);
@@ -125,7 +119,7 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 			// If the bundle (or one with the same symbolic name) is
 			// already installed, ignore the new one if it's a lower
 			// version
-			if (b != null && retryCount == 1) {
+			if (b != null) {
 				final Version installedVersion = new Version((String)(b.getHeaders().get(Constants.BUNDLE_VERSION)));
 				final Version newBundleVersion = new Version(m.getMainAttributes().getValue(Constants.BUNDLE_VERSION));
 				if(ignoreNewBundle(b.getSymbolicName(), uri, installedVersion, newBundleVersion)) {
@@ -135,21 +129,15 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 
 			if (b != null) {
 				// Existing bundle -> stop, update, restart
-			    if ( retryCount == 1 ) {
-			    	if(ocs.getLogService() != null) {
-			    		ocs.getLogService().log(LogService.LOG_DEBUG, "Calling Bundle.stop() and updating " + uri);
-			    	}
-			        b.stop();
-			        b.update(is);
-	                b.start();
-			    } else {
-			    	if(ocs.getLogService() != null) {
-			    		ocs.getLogService().log(LogService.LOG_DEBUG, "Calling Bundle.start " + uri);
-			    	}
-	                b.start();
-			    }
+		    	if(ocs.getLogService() != null) {
+		    		ocs.getLogService().log(LogService.LOG_INFO, 
+		    				"Bundle " + b.getBundleId() + " already present, calling Bundle.stop() and updating " + uri);
+		    	}
+		        b.stop();
+		        b.update(is);
 			    updated = true;
 			    tctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask());
+			    tctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
 			} else {
 				// New bundle -> install
 			    final String fullUri = OsgiControllerImpl.getResourceLocation(uri);
@@ -159,8 +147,9 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 			    }
 			    b = bundleContext.installBundle(fullUri, is);
 		    	if(ocs.getLogService() != null) {
-		    		ocs.getLogService().log(LogService.LOG_DEBUG, "No matching Bundle, installed " + fullUri);
+		    		ocs.getLogService().log(LogService.LOG_INFO, "Bundle was not present, installed " + fullUri);
 		    	}
+			    tctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
 			}
 		} finally {
 		    // data is never null here
@@ -174,14 +163,6 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
         // in simple update situations, but is required for installations
         // and updates where there are no attributes yet
         attributes.put(Storage.KEY_BUNDLE_ID, b.getBundleId());
-
-        // start bundle
-        tctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
-        
-        // TODO - remove retry
-        // Successful - reset retry count
-        retryCount = 0;
-        attributes.put("RETRY_COUNT", retryCount);
 
         return updated ? InstallResultCode.UPDATED : InstallResultCode.INSTALLED;
 	}

@@ -23,6 +23,7 @@ import java.text.DecimalFormat;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 import org.osgi.service.log.LogService;
 
 /** Task that starts a bundle */
@@ -46,9 +47,9 @@ public class BundleStartTask extends OsgiControllerTask {
 		return getClass().getSimpleName() + " (bundle " + bundleId + ")";
 	}
 
-	public void execute(OsgiControllerTaskContext ctx) throws Exception {
-		final Bundle b = ctx.getBundleContext().getBundle(bundleId);
-		final LogService log = ctx.getOsgiControllerServices().getLogService();
+	public void execute(OsgiControllerTaskContext tctx) throws Exception {
+		final Bundle b = tctx.getBundleContext().getBundle(bundleId);
+		final LogService log = tctx.getOsgiControllerServices().getLogService();
 		
 		if(b == null) {
 			if(log != null) {
@@ -62,10 +63,19 @@ public class BundleStartTask extends OsgiControllerTask {
 				log.log(LogService.LOG_DEBUG, "Bundle already started, no action taken:" + bundleId + "/" + b.getSymbolicName());
 			}
 		} else {
-			if(log != null) {
-				log.log(LogService.LOG_INFO, "Starting bundle:" + bundleId + "/" + b.getSymbolicName());
+			try {
+				b.start();
+				if(log != null) {
+					log.log(LogService.LOG_INFO, "Bundle started:" + bundleId + "/" + b.getSymbolicName());
+				}
+			} catch(BundleException e) {
+				if(log != null) {
+					log.log(LogService.LOG_INFO, 
+							"Could not start bundle (" + e + "), will retry: " + bundleId + "/" + b.getSymbolicName());
+				}
+				tctx.addTaskToNextCycle(this);
 			}
-			b.start();
+			
 		}
 	}
 }
