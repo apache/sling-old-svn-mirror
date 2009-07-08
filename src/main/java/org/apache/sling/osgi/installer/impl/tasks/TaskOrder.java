@@ -24,6 +24,6 @@ class TaskOrder {
 	static final String CONFIG_INSTALL_ORDER = "20-";
 	static final String BUNDLE_UNINSTALL_ORDER = "30-";
 	static final String BUNDLE_INSTALL_ORDER = "40-";
-	static final String BUNDLE_START_ORDER = "50-";
-	static final String REFRESH_PACKAGES_ORDER = "60-";
+	static final String REFRESH_PACKAGES_ORDER = "50-";
+	static final String BUNDLE_START_ORDER = "60-";
 }
