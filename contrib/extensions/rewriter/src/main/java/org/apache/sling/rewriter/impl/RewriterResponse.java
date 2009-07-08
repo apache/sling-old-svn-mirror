@@ -22,6 +22,7 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
@@ -163,9 +164,7 @@ class RewriterResponse
                     }
                 }
             } catch (IOException e) {
-                // we ignore this here - this will be handled, when getWriter is called
-                // again
-                return null;
+                throw new SlingException("Unable to setup pipeline: " + e.getMessage(), e);
             }
             if ( this.processor != null ) {
                 @SuppressWarnings("unchecked")
