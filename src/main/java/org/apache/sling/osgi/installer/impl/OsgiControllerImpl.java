@@ -78,7 +78,7 @@ public class OsgiControllerImpl
         this.bundleContext = bc;
         this.packageAdmin = pa;
         this.logServiceTracker = logServiceTracker;
-        storage = new Storage(bc.getDataFile(STORAGE_FILENAME));
+        storage = new Storage(bc.getDataFile(STORAGE_FILENAME), this);
     }
 
     public void deactivate() {

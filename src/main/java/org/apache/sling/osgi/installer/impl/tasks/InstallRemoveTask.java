@@ -24,12 +24,12 @@ import java.util.Map;
 
 import org.apache.sling.osgi.installer.InstallResultCode;
 import org.apache.sling.osgi.installer.InstallableData;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.impl.InstallableDataWrapper;
 import org.apache.sling.osgi.installer.impl.OsgiControllerImpl;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.osgi.service.log.LogService;
 
 /** Base class for OsgiControllerTasks that install or
  * 	remove OSGi bundles or configs (or deployment packages, etc.)
@@ -38,12 +38,12 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
 
 	protected final String uri;
 	protected final InstallableData data;
+	protected final OsgiControllerServices ocs;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    protected InstallRemoveTask(String uri, InstallableData data) {
+    protected InstallRemoveTask(String uri, InstallableData data, OsgiControllerServices ocs) {
     	this.uri = uri;
     	this.data = data;
+    	this.ocs = ocs;
     }
     
 	@Override
@@ -82,8 +82,10 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
         if(context.getResourceOverrideRules() != null) {
             for(String r : context.getResourceOverrideRules().getHigherPriorityResources(uri)) {
                 if(context.getStorage().contains(r)) {
-                    log.info("Resource {} ignored, overridden by {} which has higher priority",
-                            uri, r);
+                	if(ocs.getLogService() != null) {
+                		ocs.getLogService().log(LogService.LOG_INFO, 
+                				"Resource " + uri + " ignored, overridden by " + r + " which has higher priority");
+                	}
                     return;
                 }
             }
@@ -93,8 +95,10 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
         if(context.getResourceOverrideRules() != null) {
             for(String r : context.getResourceOverrideRules().getLowerPriorityResources(uri)) {
                 if(context.getStorage().contains(r)) {
-                    log.info("Resource {} overrides {}, uninstalling the latter",
-                            uri, r);
+                	if(ocs.getLogService() != null) {
+                		ocs.getLogService().log(LogService.LOG_INFO, 
+                				"Resource " + uri + " overrides " + r + ", uninstalling the latter");
+                	}
                     executeUninstall(context);
                 }
             }
@@ -109,13 +113,14 @@ abstract class InstallRemoveTask extends OsgiControllerTask {
 	}
 	
 	protected final void executeUninstall(OsgiControllerTaskContext context) throws Exception {
-	    log.info("Execute uninstall " + this);
         // If a corresponding higher priority resource is installed, ignore this request
         if(context.getResourceOverrideRules() != null) {
             for(String r : context.getResourceOverrideRules().getHigherPriorityResources(uri)) {
                 if(context.getStorage().contains(r)) {
-                    log.info("Resource {} won't be uninstalled, overridden by {} which has higher priority",
-                            uri, r);
+                	if(ocs.getLogService() != null) {
+                		ocs.getLogService().log(LogService.LOG_INFO,
+                				"Resource " + uri + " won't be uninstalled, overridden by " + r + " which has higher priority");
+                	}
                     return;
                 }
             }

@@ -30,8 +30,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.osgi.service.log.LogService;
 
 /** Storage for the OSGi controller, stores Maps for the resources
  *  managed by the controller.
@@ -39,8 +39,7 @@ import org.slf4j.LoggerFactory;
 public class Storage {
     private final File dataFile;
     private final Map<String, Map<String, Object>> data;
-    
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final OsgiControllerServices ocs;
     
     /** {@link Storage} key for the bundle ID */
     public static final String KEY_BUNDLE_ID = "bundle.id";
@@ -48,8 +47,9 @@ public class Storage {
     /** Create Storage that uses dataFile for persistence, and
      *  read the current status from that file */
     @SuppressWarnings("unchecked")
-    Storage(File dataFile) throws IOException {
+    Storage(File dataFile, OsgiControllerServices ocs) throws IOException {
         this.dataFile = dataFile;
+        this.ocs = ocs;
         ObjectInputStream ois = null;
         Map<String, Map<String, Object>> loadedData = null;
         Throwable loadException = null;
@@ -59,7 +59,9 @@ public class Storage {
                 ois = new ObjectInputStream(new FileInputStream(dataFile));
                 loadedData = (Map<String, Map<String, Object>>)ois.readObject();
             } else {
-                log.debug("Data file does not exist, will use empty data");
+            	if(ocs.getLogService() != null) {
+            		ocs.getLogService().log(LogService.LOG_DEBUG, "Data file does not exist, will use empty data");
+            	}
             }
         } catch(EOFException eof) {
             loadException = eof;
@@ -72,7 +74,10 @@ public class Storage {
         }
         
         if(loadException != null) {
-            log.debug("Unable to retrieve data from data file, will use empty data", loadException);
+        	if(ocs.getLogService() != null) {
+        		ocs.getLogService().log(LogService.LOG_DEBUG,
+        				"Unable to retrieve data from data file, will use empty data", loadException);
+        	}
         }
         if(loadedData == null) {
             loadedData = new HashMap<String, Map<String, Object>>();

@@ -21,13 +21,28 @@ package org.apache.sling.osgi.installer.impl;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.log.LogService;
+
 import static org.junit.Assert.*;
 
 /** Test the Storage class */
 public class StorageTest {
 
+	private final OsgiControllerServices ocs = new OsgiControllerServices() {
+		
+		public LogService getLogService() {
+			return null;
+		}
+		
+		public ConfigurationAdmin getConfigurationAdmin() {
+			return null;
+		}
+	};
+	
     @org.junit.Test public void testEmptyDataFile() throws Exception {
-        final Storage s = new Storage(Utilities.getTestFile());
+        final Storage s = new Storage(Utilities.getTestFile(), ocs);
         assertEquals("Storage is initially empty", 0, s.getKeys().size());
     }
     
@@ -39,13 +54,13 @@ public class StorageTest {
         f.delete();
         
         {
-            final Storage s = new Storage(f);
+            final Storage s = new Storage(f, ocs);
             s.getMap("one").put("two", "twodata");
             s.saveToFile();
         }
         
         {
-            final Storage s = new Storage(f);
+            final Storage s = new Storage(f, ocs);
             assertTrue("Retrieved Map contains 'two'", s.getMap("one").containsKey("two"));
         }
     }
@@ -56,7 +71,7 @@ public class StorageTest {
         final String [] keys = { "one", "two" };
         
         {
-            final Storage s = new Storage(f);
+            final Storage s = new Storage(f, ocs);
             
             for(String key : keys) {
                 final Map<String, Object> m = s.getMap(key);
@@ -67,7 +82,7 @@ public class StorageTest {
         }
         
         {
-            final Storage s = new Storage(f);
+            final Storage s = new Storage(f, ocs);
             assertEquals("After retrieving, number of keys in storage matches", keys.length, s.getKeys().size());
             for(String key : keys) {
                 final Map<String, Object> m = s.getMap(key);
@@ -81,7 +96,7 @@ public class StorageTest {
     }
     
     @org.junit.Test public void testContains() throws Exception {
-        final Storage s = new Storage(Utilities.getTestFile());
+        final Storage s = new Storage(Utilities.getTestFile(), ocs);
         final String uri = "TEST_URI";
         assertFalse("Storage must initially be empty", s.contains(uri));
         s.contains(uri);
@@ -93,7 +108,7 @@ public class StorageTest {
     @org.junit.Test public void testRemove() throws Exception {
         final File f = Utilities.getTestFile();
         {
-            final Storage s = new Storage(f);
+            final Storage s = new Storage(f, ocs);
             s.getMap("one");
             assertEquals("After adding one entry, size is 1", 1, s.getKeys().size());
             s.remove("one");
@@ -102,7 +117,7 @@ public class StorageTest {
         }
         
         {
-            final Storage s = new Storage(f);
+            final Storage s = new Storage(f, ocs);
             assertEquals("After save/restore, size is 0", 0, s.getKeys().size());
         }
     }
