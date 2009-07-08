@@ -18,22 +18,24 @@
  */
 package org.apache.sling.osgi.installer.impl;
 
-import org.apache.sling.osgi.installer.OsgiResourceProcessor;
+import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.ResourceOverrideRules;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.packageadmin.PackageAdmin;
 
-/** Callable that processes the resource queue of an OsgiResourceProcessor */
-class ResourceQueueTask implements OsgiControllerTask {
-	private final OsgiResourceProcessor p;
+/** Context for OsgiControllerTask */
+public interface OsgiControllerTaskContext {
+	ResourceOverrideRules getResourceOverrideRules();
+	Storage getStorage();
+	BundleContext getBundleContext();
+	PackageAdmin getPackageAdmin();
+	OsgiControllerServices getOsgiControllerServices();
 	
-	ResourceQueueTask(OsgiResourceProcessor p) {
-		this.p = p;
-	}
+	/** Schedule a task for execution in the current OsgiController cycle */
+	void addTaskToCurrentCycle(OsgiControllerTask t);
 	
-	public String toString() {
-		return getClass().getSimpleName() + ": " + p.getClass().getSimpleName()+ ".processResourceQueue()";
-	}
-	
-	
-	public void execute(Context ctx) throws Exception {
-		p.processResourceQueue();
-	}
+	/** Schedule a task for execution in the next OsgiController cycle, 
+	 * 	usually to indicate that a task must be retried 
+	 */
+	void addTaskToNextCycle(OsgiControllerTask t);
 }

@@ -22,8 +22,8 @@ package org.apache.sling.osgi.installer.impl;
  * 	in which case the task can be retried later
  */
 @SuppressWarnings("serial")
-class MissingServiceException extends Exception {
-	MissingServiceException(Class<?> serviceClass) {
+public class MissingServiceException extends Exception {
+	public MissingServiceException(Class<?> serviceClass) {
 		super(serviceClass.getName());
 	}
 }

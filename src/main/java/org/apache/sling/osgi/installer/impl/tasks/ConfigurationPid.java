@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.osgi.installer.impl;
+package org.apache.sling.osgi.installer.impl.tasks;
 
 /** Builds configration PIDs out of filenames, examples:
  *      o.a.s.foo.bar.cfg -> pid = o.a.s.foo.bar
@@ -35,7 +35,7 @@ class ConfigurationPid {
         }
         
         // cut off extension if it's .cfg
-        if(pid.endsWith(ConfigResourceProcessor.CONFIG_EXTENSION)) {
+        if(pid.endsWith(ConfigInstallRemoveTask.CONFIG_EXTENSION)) {
             final int lastDot = pid.lastIndexOf('.');
             if(lastDot >= 0) {
                 pid = pid.substring(0, lastDot);

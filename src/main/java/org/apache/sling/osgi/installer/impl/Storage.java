@@ -36,11 +36,14 @@ import org.slf4j.LoggerFactory;
 /** Storage for the OSGi controller, stores Maps for the resources
  *  managed by the controller.
  */
-class Storage {
+public class Storage {
     private final File dataFile;
     private final Map<String, Map<String, Object>> data;
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    
+    /** {@link Storage} key for the bundle ID */
+    public static final String KEY_BUNDLE_ID = "bundle.id";
     
     /** Create Storage that uses dataFile for persistence, and
      *  read the current status from that file */
@@ -79,7 +82,7 @@ class Storage {
     }
     
     /** Persist our data to our data file */
-    protected void saveToFile() throws IOException {
+    public void saveToFile() throws IOException {
         ObjectOutputStream oos = null;
         try {
             synchronized(data) {
@@ -95,7 +98,7 @@ class Storage {
     }
     
     /** True if our data contains give key */
-    boolean contains(String key) {
+    public boolean contains(String key) {
         return data.containsKey(key);
     }
     
@@ -103,7 +106,7 @@ class Storage {
      *  If we don't have it yet, and empty map is
      *  created, but saveData is not called.  
      */
-    Map<String, Object>getMap(String key) {
+    public Map<String, Object>getMap(String key) {
         Map<String, Object> result = data.get(key);
         synchronized(data) {
             if(result == null) {
@@ -115,7 +118,7 @@ class Storage {
     }
     
     /** Remove given key from our storage */
-    void remove(String key) {
+    public void remove(String key) {
         synchronized(data) {
             data.remove(key);
         }
