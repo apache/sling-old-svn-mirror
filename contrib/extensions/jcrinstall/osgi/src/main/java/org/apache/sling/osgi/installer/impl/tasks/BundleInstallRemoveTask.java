@@ -145,7 +145,8 @@ public class BundleInstallRemoveTask extends InstallRemoveTask {
 			    }
 			    b = bundleContext.installBundle(fullUri, is);
 		    	if(ocs.getLogService() != null) {
-		    		ocs.getLogService().log(LogService.LOG_INFO, "Bundle was not present, installed " + fullUri);
+		    		ocs.getLogService().log(LogService.LOG_INFO, 
+		    				"Bundle was not present, installed " + b.getBundleId() + "/" + fullUri);
 		    	}
 			    tctx.addTaskToCurrentCycle(new BundleStartTask(b.getBundleId()));
 			}
