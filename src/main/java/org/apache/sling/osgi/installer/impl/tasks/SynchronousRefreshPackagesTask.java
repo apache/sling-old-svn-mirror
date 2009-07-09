@@ -21,6 +21,7 @@ package org.apache.sling.osgi.installer.impl.tasks;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTask;
 import org.apache.sling.osgi.installer.impl.OsgiControllerTaskContext;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.service.log.LogService;
@@ -66,6 +67,20 @@ public class SynchronousRefreshPackagesTask extends OsgiControllerTask implement
         final long start = System.currentTimeMillis();
         final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
         ocs = ctx.getOsgiControllerServices();
+
+        // Refreshing packages might cause some bundles to be stopped,
+        // make sure all currently active ones are restarted after
+        // this task executes
+    	for(Bundle b : ctx.getBundleContext().getBundles()) {
+    		if(b.getState() == Bundle.ACTIVE) {
+    			final OsgiControllerTask t = new BundleStartTask(b.getBundleId());
+    			ctx.addTaskToCurrentCycle(t);
+            	if(ctx.getOsgiControllerServices().getLogService() != null) {
+            		ctx.getOsgiControllerServices().getLogService().log(LogService.LOG_DEBUG, 
+            				"Added " + t + " to restart bundle if needed after refreshing packages"); 
+            	}
+    		}
+    	}
 
         // It seems like (at least with Felix 1.0.4) we won't get a FrameworkEvent.PACKAGES_REFRESHED
         // if one happened very recently and there's nothing to refresh
