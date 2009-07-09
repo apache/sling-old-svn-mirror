@@ -31,9 +31,7 @@ import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
 import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallRemoveTask;
-import org.apache.sling.osgi.installer.impl.tasks.BundleStartTask;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallRemoveTask;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -152,20 +150,9 @@ public class OsgiControllerImpl
     	}
     	
         synchronized (tasks) {
-        	// Add start bundle tasks for all active bundles
-        	// so that they are restarted once we're done
-        	for(Bundle b : bundleContext.getBundles()) {
-        		if(b.getState() == Bundle.ACTIVE) {
-        			final OsgiControllerTask t = new BundleStartTask(b.getBundleId()); 
-        			tasks.add(t);
-                	if(getLogService() != null) {
-                        getLogService().log(LogService.LOG_DEBUG, "Added " + t); 
-                	}
-        		}
-        	}
-
         	if(getLogService() != null) {
-                getLogService().log(LogService.LOG_INFO, "Executing " + tasks.size() + " queued tasks");
+                getLogService().log(LogService.LOG_INFO, "Executing " + tasks.size() 
+                		+ " queued tasks (more might be created during execution cycle)");
         	}
             final long start = System.currentTimeMillis();
             
