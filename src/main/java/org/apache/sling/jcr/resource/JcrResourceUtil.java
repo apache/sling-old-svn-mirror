@@ -218,8 +218,7 @@ public class JcrResourceUtil {
      *            requested.
      * @return The resource super type or <code>null</code> if the algorithm
      *         described above does not yield a resource super type.
-     * @deprecated Call {@link Resource#getResourceSuperType()} and if
-     * that returns <code>null</code> {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
+     * @deprecated Call {@link ResourceUtil#findResourceSuperType(Resource)}
      */
     @Deprecated
     public static String getResourceSuperType(Resource resource) {
