@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /** Convert a Node that is a file to a FileInstallableData */ 
  public class FileNodeConverter implements NodeConverter {
     // regexp for filenames that we accept
-    public static final String FILENAME_REGEXP = "[a-zA-Z0-9].*\\.[a-zA-Z][a-zA-Z][a-zA-Z]?";
+    public static final String FILENAME_REGEXP = "[a-zA-Z0-9].*\\.(jar|cfg|properties)";
     
     private final RegexpFilter filenameFilter = new RegexpFilter(FILENAME_REGEXP);
     private final Logger log = LoggerFactory.getLogger(getClass());

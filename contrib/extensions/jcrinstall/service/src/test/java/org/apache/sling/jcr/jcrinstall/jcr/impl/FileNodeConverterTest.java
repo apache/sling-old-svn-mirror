@@ -24,9 +24,11 @@ public class FileNodeConverterTest extends TestCase {
     public void testAcceptedFilenames() {
         final String [] filenames = {
                 "a.cfg",
+                "a.jar",
+                "a.properties",
                 "longername.cfg",
+                "someproperties.properties",
                 "longername-with_various.things-And-CASES-9123456789.cfg",
-                "a.js",
                 "abc.cfg",
                 "a.b.c.cfg",
                 "1-2-3.cfg"
@@ -39,12 +41,14 @@ public class FileNodeConverterTest extends TestCase {
     
     public void testRejectedFilenames() {
         final String [] filenames = {
+                "a.js",
+                "a.config",
+                "a.sh",
+                "a.bat",
+                ".DS_Store",
+                ".DS_Store.cfg",
+                ".something.cfg",
                 "noextension",
-                "toolongextension.1234",
-                "toolongextension..properties",
-                "numericextension.123",
-                "numericextension.12",
-                "tooshortextension.a"
         };
         
         for(String f : filenames) {

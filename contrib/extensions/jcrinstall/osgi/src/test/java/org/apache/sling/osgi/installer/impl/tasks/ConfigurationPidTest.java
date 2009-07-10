@@ -30,11 +30,17 @@ public class ConfigurationPidTest {
     
     @org.junit.Test public void testNonFactory() {
         assertPid("o.a.s.foo.bar.cfg", "o.a.s.foo.bar", null);
+        assertPid("o.a.s.foo.bar.properties", "o.a.s.foo.bar", null);
+        assertPid("o.a.s.foo.bar.cfg.properties", "o.a.s.foo.bar.cfg", null);
+        assertPid("o.a.s.foo.bar.properties.cfg", "o.a.s.foo.bar.properties", null);
         assertPid("/somepath/o.a.s.foo.bar.cfg", "o.a.s.foo.bar", null);
+        assertPid("/somepath/o.a.s.foo.bar.properties", "o.a.s.foo.bar", null);
     }
 
     @org.junit.Test public void testFactory() {
         assertPid("o.a.s.foo.bar-a.cfg", "o.a.s.foo.bar", "a");
+        assertPid("o.a.s.foo.bar-a.properties", "o.a.s.foo.bar", "a");
         assertPid("/somepath/o.a.s.foo.bar-a.cfg", "o.a.s.foo.bar", "a");
+        assertPid("/somepath/o.a.s.foo.bar-a.properties", "o.a.s.foo.bar", "a");
     }
 }

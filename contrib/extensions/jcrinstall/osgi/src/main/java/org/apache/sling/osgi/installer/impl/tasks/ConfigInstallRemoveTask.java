@@ -37,7 +37,7 @@ public class ConfigInstallRemoveTask extends InstallRemoveTask {
 
     static final String ALIAS_KEY = "_alias_factory_pid";
     static final String CONFIG_PATH_KEY = "_jcr_config_path";
-    static final String CONFIG_EXTENSION = ".cfg";
+    static final String [] CONFIG_EXTENSIONS = { ".cfg", ".properties" };
     
     private final DictionaryReader reader = new DictionaryReader();
     
