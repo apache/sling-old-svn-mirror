@@ -79,7 +79,12 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
 
     private void printProlog(PrintWriter pw, boolean isIncluded) {
         if ( !isIncluded ) {
-            pw.println("<html><body>");
+            pw.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            pw.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"");
+            pw.println("    \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">");
+            pw.println("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">");
+            pw.println("<head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" /></head>");
+            pw.println("<body>");
         }
     }
 
@@ -99,12 +104,14 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
     @SuppressWarnings("unchecked")
     private void render(PrintWriter pw, Resource r, Map map) {
         pw.println("<h2>Resource properties</h2>");
+        pw.println("<p>");
         final Iterator<Map.Entry> pi = map.entrySet().iterator();
         while ( pi.hasNext() ) {
             final Map.Entry p = pi.next();
             printPropertyValue(pw, p.getKey().toString(), p.getValue());
             pw.println();
         }
+        pw.println("</p>");
     }
 
     private void render(PrintWriter pw, Resource r, String value) {
@@ -129,7 +136,7 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
             pw.print(value.toString());
         }
 
-        pw.print("</b><br/>");
+        pw.print("</b><br />");
     }
 
 }
