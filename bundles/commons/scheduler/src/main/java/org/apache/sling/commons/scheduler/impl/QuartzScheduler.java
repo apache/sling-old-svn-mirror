@@ -63,6 +63,8 @@ public class QuartzScheduler implements Scheduler {
 
     protected static final String THREAD_POOL_NAME = "SLING_SCHEDULER";
 
+    protected static final String PREFIX = "Apache Sling Quartz Scheduler ";
+
     protected static final String QUARTZ_SCHEDULER_NAME = "ApacheSling";
 
     /** Map key for the job object */
@@ -80,10 +82,13 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the concurrent handler */
     static final String DATA_MAP_CONCURRENT_HANDLER = "QuartzJobExecutor.ConcurrentHandler";
 
+    /** Theq quartz scheduler. */
     protected org.quartz.Scheduler scheduler;
 
-    protected final List<Object[]> registeredJobs = new ArrayList<Object[]>();
+    /** List of registrations while this service is not activated yet. */
+    protected final List<Registration> registeredJobs = new ArrayList<Registration>();
 
+    /** The component context. */
     protected ComponentContext context;
 
     /** @scr.reference */
@@ -95,20 +100,24 @@ public class QuartzScheduler implements Scheduler {
      * @param ctx The component context.
      * @throws Exception
      */
-    protected void activate(ComponentContext ctx) throws Exception {
+    protected void activate(final ComponentContext ctx) throws Exception {
         this.context = ctx;
+        // start scheduler
+        this.scheduler = this.init();
+
+        final Registration[] regs;
         synchronized ( this.registeredJobs ) {
-            this.init();
-            for( Object[] arr : this.registeredJobs ) {
-                try {
-                    this.register((String)arr[0], (ServiceReference)arr[1]);
-                } catch (Exception e) {
-                    // we don't want that one malicious service brings down the scheduler, so we just log
-                    // the exception and continue
-                    this.logger.error("Exception during registering job service " + arr[1], e);
-                }
-            }
+            regs = this.registeredJobs.toArray(new Registration[this.registeredJobs.size()]);
             this.registeredJobs.clear();
+        }
+        for( final Registration reg : regs ) {
+            try {
+                this.register(reg.componentName, reg.reference);
+            } catch (Exception e) {
+                // we don't want that one malicious service brings down the scheduler, so we just log
+                // the exception and continue
+                this.logger.error("Exception during registering " + reg.componentName + " service " + reg.reference, e);
+            }
         }
     }
 
@@ -117,19 +126,25 @@ public class QuartzScheduler implements Scheduler {
      * Stop the scheduler.
      * @param ctx The component context.
      */
-    protected void deactivate(ComponentContext ctx) {
-        synchronized (this.registeredJobs ) {
-            this.dispose();
-        }
+    protected void deactivate(final ComponentContext ctx) {
+        final org.quartz.Scheduler s = this.scheduler;
+        this.scheduler = null;
+        this.dispose(s);
         this.context = null;
     }
 
-    protected void init() throws SchedulerException {
+    /**
+     * Initialize the quartz scheduler
+     * @return Return the new scheduler instance.
+     * @throws SchedulerException
+     */
+    protected org.quartz.Scheduler init() throws SchedulerException {
         // if we don't have a thread pool manager, we use the default thread pool
         final ThreadPoolManager tpm = this.threadPoolManager;
+        org.quartz.Scheduler s;
         if ( tpm == null ) {
             final SchedulerFactory factory = new StdSchedulerFactory();
-            this.scheduler = factory.getScheduler();
+            s = factory.getScheduler();
         } else {
             // create the pool
             final ThreadPool pool = tpm.get(THREAD_POOL_NAME);
@@ -142,35 +157,39 @@ public class QuartzScheduler implements Scheduler {
             // quartz does not provide a way to get the scheduler by name AND runID, so we have to iterate!
             @SuppressWarnings("unchecked")
             final Iterator<org.quartz.Scheduler> allSchedulersIter = factory.getAllSchedulers().iterator();
-            this.scheduler = null;
-            while ( this.scheduler == null && allSchedulersIter.hasNext() ) {
+            s = null;
+            while ( s == null && allSchedulersIter.hasNext() ) {
                 final org.quartz.Scheduler current = allSchedulersIter.next();
                 if ( QUARTZ_SCHEDULER_NAME.equals(current.getSchedulerName())
                      && runID.equals(current.getSchedulerInstanceId()) ) {
-                    this.scheduler = current;
+                    s = current;
                 }
             }
-            if ( this.scheduler == null ) {
+            if ( s == null ) {
                 throw new SchedulerException("Unable to find new scheduler with name " + QUARTZ_SCHEDULER_NAME + " and run ID " + runID);
             }
         }
-        this.scheduler.start();
+        s.start();
         if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Scheduler started.");
+            this.logger.debug(PREFIX + "started.");
         }
+        return s;
     }
 
-    protected void dispose() {
-        if ( this.scheduler != null ) {
+    /**
+     * Dispose the quartz scheduler
+     * @param s The scheduler.
+     */
+    protected void dispose(final org.quartz.Scheduler s) {
+        if ( s != null ) {
             try {
-                this.scheduler.shutdown();
+                s.shutdown();
             } catch (SchedulerException e) {
                 this.logger.debug("Exception during shutdown of scheduler.", e);
             }
             if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Scheduler stopped.");
+                this.logger.debug(PREFIX + "stopped.");
             }
-            this.scheduler = null;
         }
     }
 
@@ -203,7 +222,7 @@ public class QuartzScheduler implements Scheduler {
             } catch (final SchedulerException ignored) {
             }
         } else {
-            name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
+            name = PREFIX + UUID.randomUUID().toString();
         }
 
         // create the data map
@@ -291,7 +310,7 @@ public class QuartzScheduler implements Scheduler {
     throws Exception {
         final long ms = period * 1000;
         if ( name == null ) {
-            name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
+            name = PREFIX + UUID.randomUUID().toString();
         }
         final SimpleTrigger timeEntry =
             new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, new Date(System.currentTimeMillis() + ms), null,
@@ -320,7 +339,7 @@ public class QuartzScheduler implements Scheduler {
      */
     public void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date) throws Exception {
         if ( name == null ) {
-            name = "Sling Quartz Scheduler " + UUID.randomUUID().toString();
+            name = PREFIX + UUID.randomUUID().toString();
         }
         final SimpleTrigger trigger = new SimpleTrigger(name, DEFAULT_QUARTZ_JOB_GROUP, date);
         this.scheduleJob(name, job, config, trigger, true);
@@ -357,6 +376,12 @@ public class QuartzScheduler implements Scheduler {
         return name;
     }
 
+    /**
+     * Register a job or task
+     * @param type The type (job or task)
+     * @param ref The service reference
+     * @throws Exception If the registration can't be performed
+     */
     private void register(String type, ServiceReference ref)
     throws Exception {
         final Object job = this.context.locateService(type, ref);
@@ -376,6 +401,10 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
+    /**
+     * Unregister a service.
+     * @param ref The service reference.
+     */
     private void unregister(ServiceReference ref) {
         final String name = getServiceIdentifier(ref);
         this.removeJob(name);
@@ -388,11 +417,11 @@ public class QuartzScheduler implements Scheduler {
      */
     protected void bindJob(ServiceReference ref)
     throws Exception {
-        synchronized ( this.registeredJobs ) {
-            if ( this.scheduler != null ) {
-                this.register("job", ref);
-            } else {
-                this.registeredJobs.add(new Object[] {"job", ref});
+        if ( this.scheduler != null ) {
+            this.register(Registration.JOB, ref);
+        } else {
+            synchronized ( this.registeredJobs ) {
+                this.registeredJobs.add(new Registration(ref, Registration.JOB));
             }
         }
     }
@@ -402,45 +431,79 @@ public class QuartzScheduler implements Scheduler {
      * @param ref
      */
     protected void unbindJob(ServiceReference ref) {
-        synchronized ( this.registeredJobs ) {
-            if ( this.scheduler != null ) {
-                this.unregister(ref);
+        if ( this.scheduler != null ) {
+            this.unregister(ref);
+        } else {
+            synchronized ( this.registeredJobs ) {
+                this.registeredJobs.remove(new Registration(ref, Registration.JOB));
             }
         }
     }
 
     /**
-     * Bind a new job.
+     * Bind a new task.
      * @param ref
      * @throws Exception
      */
     protected void bindTask(ServiceReference ref)
     throws Exception {
-        synchronized ( this.registeredJobs ) {
-            if ( this.scheduler != null ) {
-                this.register("task", ref);
-            } else {
-                this.registeredJobs.add(new Object[] {"task", ref});
+        if ( this.scheduler != null ) {
+            this.register(Registration.TASK, ref);
+        } else {
+            synchronized ( this.registeredJobs ) {
+                this.registeredJobs.add(new Registration(ref, Registration.TASK));
             }
         }
     }
 
     /**
-     * Unbind a job.
+     * Unbind a task.
      * @param ref
      */
     protected void unbindTask(ServiceReference ref) {
-        synchronized ( this.registeredJobs ) {
-            if ( this.scheduler != null ) {
-                this.unregister(ref);
+        if ( this.scheduler != null ) {
+            this.unregister(ref);
+        } else {
+            synchronized ( this.registeredJobs ) {
+                this.registeredJobs.remove(new Registration(ref, Registration.TASK));
             }
         }
     }
 
-    private static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
+    /**
+     * Helper class holding a registration if this service is not active yet.
+     */
+    private static final class Registration {
+        public static final String JOB = "job";
+        public static final String TASK = "task";
 
-        /** Default log. */
-        protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+        public final ServiceReference reference;
+        public final String componentName;
+
+        public Registration(final ServiceReference r, final String name) {
+            this.reference = r;
+            this.componentName = name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if ( !(obj instanceof Registration) ) {
+                return false;
+            }
+            if ( obj == this ) {
+                return true;
+            }
+            return this.reference.equals(((Registration)obj).reference);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.reference.hashCode();
+        }
+    }
+
+
+    private static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
 
         /** Our executor thread pool */
         private ThreadPool executor;
