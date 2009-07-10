@@ -34,11 +34,14 @@ class ConfigurationPid {
             pid = path.substring(lastSlash + 1);
         }
         
-        // cut off extension if it's .cfg
-        if(pid.endsWith(ConfigInstallRemoveTask.CONFIG_EXTENSION)) {
-            final int lastDot = pid.lastIndexOf('.');
-            if(lastDot >= 0) {
-                pid = pid.substring(0, lastDot);
+        // cut off extension if it's one of our config extensions
+        for(String ext : ConfigInstallRemoveTask.CONFIG_EXTENSIONS) {
+            if(pid.endsWith(ext)) {
+                final int lastDot = pid.lastIndexOf('.');
+                if(lastDot >= 0) {
+                    pid = pid.substring(0, lastDot);
+                }
+                break;
             }
         }
 
