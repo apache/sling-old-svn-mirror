@@ -53,6 +53,8 @@ public interface Scheduler {
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      * @param schedulingExpression The time specification using a scheduling expression.
      * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
+     * @throws IllegalArgumentException If the scheduling expression can't be parsed or if the job has not the correct type.
+     * @throws Exception If the job can't be scheduled.
      */
     void addJob(String name, Object job, Map<String, Serializable> config, String schedulingExpression, boolean canRunConcurrently)
     throws Exception;
@@ -68,6 +70,8 @@ public interface Scheduler {
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      * @param period Every period seconds this job is started.
      * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
+     * @throws IllegalArgumentException If the job has not the correct type.
+     * @throws Exception If the job can't be scheduled.
      */
     void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
     throws Exception;
@@ -77,6 +81,8 @@ public interface Scheduler {
      *
      * @param job The job to execute (either {@link Job} or {@link Runnable}).
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @throws IllegalArgumentException If the job has not the correct type.
+     * @throws Exception If the job can't be scheduled.
      */
     void fireJob(Object job, Map<String, Serializable> config)
     throws Exception;
@@ -90,6 +96,8 @@ public interface Scheduler {
      * @param job The job to execute (either {@link Job} or {@link Runnable}).
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      * @param date The date this job should be run.
+     * @throws IllegalArgumentException If the job has not the correct type.
+     * @throws Exception If the job can't be scheduled.
      */
     void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date)
     throws Exception;
@@ -98,6 +106,7 @@ public interface Scheduler {
      * Remove a scheduled job by name.
      *
      * @param name The name of the job.
+     * @throws NoSuchElementException If the job is not scheduled.
      */
     void removeJob(String name)
     throws NoSuchElementException;

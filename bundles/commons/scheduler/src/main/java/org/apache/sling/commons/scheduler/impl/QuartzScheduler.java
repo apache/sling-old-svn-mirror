@@ -89,7 +89,7 @@ public class QuartzScheduler implements Scheduler {
     protected final List<Registration> registeredJobs = new ArrayList<Registration>();
 
     /** The component context. */
-    protected ComponentContext context;
+    protected volatile ComponentContext context;
 
     /** @scr.reference */
     protected ThreadPoolManager threadPoolManager;
@@ -201,21 +201,28 @@ public class QuartzScheduler implements Scheduler {
      * @param trigger a Trigger
      * @param canRunConcurrently whether this job can be run concurrently
      *
-     * @throws Exception thrown in case of errors
+     * @throws SchedulerException thrown in case of errors
      */
     protected void scheduleJob(String name,
                                final Object job,
                                final Map<String, Serializable>    config,
                                final Trigger trigger,
                                final boolean canRunConcurrently)
-    throws Exception {
+    throws SchedulerException {
+        // this method is also called from bind - as deactivate might have been
+        // called in the meantime, we just check
+        final org.quartz.Scheduler s = this.scheduler;
+        if ( s == null ) {
+            throw new IllegalStateException("Scheduler is not available anymore.");
+        }
+
         // check if the supplied object is valid
         this.checkJob(job);
 
         // if there is already a job with the name, remove it first
         if ( name != null ) {
             try {
-                final JobDetail jobdetail = this.scheduler.getJobDetail(name, DEFAULT_QUARTZ_JOB_GROUP);
+                final JobDetail jobdetail = s.getJobDetail(name, DEFAULT_QUARTZ_JOB_GROUP);
                 if (jobdetail != null) {
                     this.removeJob(name);
                 }
@@ -231,7 +238,7 @@ public class QuartzScheduler implements Scheduler {
         final JobDetail detail = this.createJobDetail(name, jobDataMap);
 
         this.logger.debug("Scheduling job {} with name {} and trigger {}", new Object[] {job, name, trigger});
-        this.scheduler.scheduleJob(detail, trigger);
+        s.scheduleJob(detail, trigger);
     }
 
     /**
@@ -278,9 +285,9 @@ public class QuartzScheduler implements Scheduler {
      * Check the job object, either runnable or job is allowed
      */
     protected void checkJob(Object job)
-    throws Exception {
+    throws IllegalArgumentException {
         if (!(job instanceof Runnable) && !(job instanceof Job)) {
-            throw new Exception("Job object is neither an instance of " + Runnable.class.getName() + " nor " + Job.class.getName());
+            throw new IllegalArgumentException("Job object is neither an instance of " + Runnable.class.getName() + " nor " + Job.class.getName());
         }
     }
 
@@ -292,13 +299,13 @@ public class QuartzScheduler implements Scheduler {
                        Map<String, Serializable>    config,
                        String schedulingExpression,
                        boolean canRunConcurrently)
-    throws Exception {
+    throws SchedulerException {
         final CronTrigger cronJobEntry = new CronTrigger(name, DEFAULT_QUARTZ_JOB_GROUP);
 
         try {
             cronJobEntry.setCronExpression(schedulingExpression);
         } catch (final ParseException pe) {
-            throw new Exception(pe.getMessage(), pe);
+            throw new IllegalArgumentException("Error during parsing of cron '" + schedulingExpression + "' : " + pe.getMessage(), pe);
         }
         this.scheduleJob(name, job, config, cronJobEntry, canRunConcurrently);
     }
@@ -307,7 +314,7 @@ public class QuartzScheduler implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean)
      */
     public void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
-    throws Exception {
+    throws SchedulerException {
         final long ms = period * 1000;
         if ( name == null ) {
             name = PREFIX + UUID.randomUUID().toString();
@@ -323,7 +330,7 @@ public class QuartzScheduler implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJob(java.lang.Object, java.util.Map)
      */
     public void fireJob(Object job, Map<String, Serializable> config)
-    throws Exception {
+    throws SchedulerException {
         this.checkJob(job);
         final String name = job.getClass().getName();
         final JobDataMap dataMap = this.initDataMap(name, job, config, true);
@@ -337,7 +344,8 @@ public class QuartzScheduler implements Scheduler {
     /**
      * @see org.apache.sling.commons.scheduler.Scheduler#fireJobAt(java.lang.String, java.lang.Object, java.util.Map, java.util.Date)
      */
-    public void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date) throws Exception {
+    public void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date)
+    throws SchedulerException {
         if ( name == null ) {
             name = PREFIX + UUID.randomUUID().toString();
         }
@@ -349,11 +357,16 @@ public class QuartzScheduler implements Scheduler {
      * @see org.apache.sling.commons.scheduler.Scheduler#removeJob(java.lang.String)
      */
     public void removeJob(String name) throws NoSuchElementException {
-        try {
-            this.scheduler.deleteJob(name, DEFAULT_QUARTZ_JOB_GROUP);
-            this.logger.debug("Unscheduling job with name {}", name);
-        } catch (final SchedulerException se) {
-            throw new NoSuchElementException(se.getMessage());
+        // as this method might be called from unbind and during
+        // unbind a deactivate could happen, we check the scheduler first
+        final org.quartz.Scheduler s = this.scheduler;
+        if ( s != null ) {
+            try {
+                this.scheduler.deleteJob(name, DEFAULT_QUARTZ_JOB_GROUP);
+                this.logger.debug("Unscheduling job with name {}", name);
+            } catch (final SchedulerException se) {
+                throw new NoSuchElementException(se.getMessage());
+            }
         }
     }
 
@@ -380,23 +393,32 @@ public class QuartzScheduler implements Scheduler {
      * Register a job or task
      * @param type The type (job or task)
      * @param ref The service reference
-     * @throws Exception If the registration can't be performed
      */
-    private void register(String type, ServiceReference ref)
-    throws Exception {
-        final Object job = this.context.locateService(type, ref);
-        if ( ref != null ) {
-            this.checkJob(job);
-            final String name = getServiceIdentifier(ref);
-            final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
-            final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
-            if ( expression != null ) {
-                this.addJob(name, job, null, expression, (concurrent != null ? concurrent : true));
-            } else {
-                final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
-                if ( period != null ) {
-                    this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
+    private void register(String type, ServiceReference ref) {
+        // we called from bind, it might be that deactivate has been
+        // called in the meantime
+        final ComponentContext ctx = this.context;
+        if ( ctx != null ) {
+            try {
+                final Object job = ctx.locateService(type, ref);
+                if ( ref != null ) {
+                    this.checkJob(job);
+                    final String name = getServiceIdentifier(ref);
+                    final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
+                    final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
+                    if ( expression != null ) {
+                        this.addJob(name, job, null, expression, (concurrent != null ? concurrent : true));
+                    } else {
+                        final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
+                        if ( period != null ) {
+                            this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
+                        }
+                    }
                 }
+            } catch (IllegalStateException e) {
+                // this can happen if deactivate has been called - therefore ignoring
+            } catch (SchedulerException e) {
+                // this can happen if deactivate has been called - therefore ignoring
             }
         }
     }
@@ -406,8 +428,12 @@ public class QuartzScheduler implements Scheduler {
      * @param ref The service reference.
      */
     private void unregister(ServiceReference ref) {
-        final String name = getServiceIdentifier(ref);
-        this.removeJob(name);
+        try {
+            final String name = getServiceIdentifier(ref);
+            this.removeJob(name);
+        } catch (NoSuchElementException nsee) {
+            // we ignore this
+        }
     }
 
     /**
@@ -415,8 +441,7 @@ public class QuartzScheduler implements Scheduler {
      * @param ref
      * @throws Exception
      */
-    protected void bindJob(ServiceReference ref)
-    throws Exception {
+    protected void bindJob(ServiceReference ref) {
         if ( this.scheduler != null ) {
             this.register(Registration.JOB, ref);
         } else {
@@ -445,8 +470,7 @@ public class QuartzScheduler implements Scheduler {
      * @param ref
      * @throws Exception
      */
-    protected void bindTask(ServiceReference ref)
-    throws Exception {
+    protected void bindTask(ServiceReference ref) {
         if ( this.scheduler != null ) {
             this.register(Registration.TASK, ref);
         } else {
