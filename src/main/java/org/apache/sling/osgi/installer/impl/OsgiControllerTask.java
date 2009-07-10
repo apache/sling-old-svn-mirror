@@ -26,8 +26,14 @@ public abstract class OsgiControllerTask implements Comparable<OsgiControllerTas
 	/** Tasks are sorted according to this key */
 	public abstract String getSortKey();
 
+	/** All comparisons are based on getSortKey() */
 	public final int compareTo(OsgiControllerTask o) {
 		return getSortKey().compareTo(o.getSortKey());
+	}
+	
+	/** Is it worth executing this task now? */
+	public boolean isExecutable(OsgiControllerTaskContext ctx) throws Exception {
+	    return true;
 	}
 
 	@Override
