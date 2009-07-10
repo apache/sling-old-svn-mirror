@@ -29,6 +29,7 @@ import org.apache.sling.osgi.installer.InstallableData;
 import org.apache.sling.osgi.installer.JcrInstallException;
 import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.OsgiControllerStatistics;
 import org.apache.sling.osgi.installer.ResourceOverrideRules;
 import org.apache.sling.osgi.installer.impl.tasks.BundleInstallRemoveTask;
 import org.apache.sling.osgi.installer.impl.tasks.ConfigInstallRemoveTask;
@@ -46,7 +47,8 @@ import org.osgi.util.tracker.ServiceTracker;
 public class OsgiControllerImpl
     implements OsgiController,
                OsgiControllerServices,
-               OsgiControllerTaskContext {
+               OsgiControllerTaskContext,
+               OsgiControllerStatistics {
 
 	private final BundleContext bundleContext;
     private final Storage storage;
@@ -59,6 +61,7 @@ public class OsgiControllerImpl
     private final ServiceTracker logServiceTracker;
     private int threadCounter;
     private final PackageAdmin packageAdmin;
+    private int executedTasksCount;
 
     public static final String BUNDLE_EXTENSION = ".jar";
     public static final String STORAGE_FILENAME = "controller.storage";
@@ -144,9 +147,28 @@ public class OsgiControllerImpl
         if(tasks.isEmpty()) {
         	return;
         }
-
+        
+        // No executable tasks?
+        boolean exec = false;
+        synchronized (tasks) {
+            for(OsgiControllerTask t : tasks) {
+                if(t.isExecutable(this)) {
+                    exec = true;
+                    break;
+                }
+            }
+        }
+        
     	if(getLogService() != null) {
-    		getLogService().log(LogService.LOG_INFO, "executeScheduledOperations() starts");
+    	    if(exec) {
+                getLogService().log(LogService.LOG_INFO, "executeScheduledOperations() starts");
+    	    } else {
+                getLogService().log(LogService.LOG_DEBUG, "No executable tasks, nothing to do");
+    	    }
+    	}
+    	
+    	if(!exec) {
+    	    return;
     	}
     	
         synchronized (tasks) {
@@ -199,6 +221,7 @@ public class OsgiControllerImpl
 					final List<OsgiControllerTask> toRemove = new LinkedList<OsgiControllerTask>();
 					for(OsgiControllerTask t : tasks) {
 						toRemove.add(t);
+						executedTasksCount++;
 						executeTask(t);
 						if(!tasksForThisCycle.isEmpty()) {
 							break;
@@ -272,4 +295,7 @@ public class OsgiControllerImpl
 		return this;
 	}
 
+	public long getExecutedTasksCount() {
+	    return executedTasksCount;
+	}
 }

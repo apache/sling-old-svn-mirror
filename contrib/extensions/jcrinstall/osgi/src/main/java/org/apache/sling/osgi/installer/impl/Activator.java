@@ -39,14 +39,12 @@ public class Activator implements BundleActivator {
     private static String LOG_SERVICE_NAME = LogService.class.getName();
 
     private ServiceTracker startLevelTracker;
-
     private ServiceTracker packageAdminTracker;
-
     private ServiceTracker logServiceTracker;
-
-    private OsgiControllerImpl service;
-
-    private ServiceRegistration serviceReg;
+    private OsgiControllerImpl osgiControllerService;
+    private ServiceRegistration osgiControllerServiceReg;
+    private EventsCounterImpl eventsCounter;
+    private ServiceRegistration eventsCounterServiceReg;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -59,21 +57,36 @@ public class Activator implements BundleActivator {
         this.packageAdminTracker.open();
         this.logServiceTracker.open();
 
-        // register service
-        final Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        // register OsgiController service        
+        {
+            final Hashtable<String, String> props = new Hashtable<String, String>();
+            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Install Controller Service");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            
+            // Assume PackageAdmin is available before this bundle is started.
+            // That's the case when using Felix OSGi, not sure about other frameworks.
+            this.osgiControllerService = new OsgiControllerImpl(context,
+                    (PackageAdmin)checkNotNull(this.packageAdminTracker.getService(), "PackageAdmin"),
+                    logServiceTracker);
+            final String [] serviceInterfaces = {
+                    OsgiController.class.getName(),
+                    OsgiControllerServices.class.getName()
+            };
+            osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
+        }
         
-        // Assume PackageAdmin is available before this bundle is started.
-        // That's the case when using Felix OSGi, not sure about other frameworks.
-        this.service = new OsgiControllerImpl(context,
-                (PackageAdmin)checkNotNull(this.packageAdminTracker.getService(), "PackageAdmin"),
-                logServiceTracker);
-        final String [] serviceInterfaces = {
-        		OsgiController.class.getName(),
-        		OsgiControllerServices.class.getName()
-        };
-        serviceReg = context.registerService(serviceInterfaces, service, props);
+        // register EventsCounter service        
+        {
+            final Hashtable<String, String> props = new Hashtable<String, String>();
+            props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling EventsCounter Service");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            
+            this.eventsCounter = new EventsCounterImpl(context);
+            final String [] serviceInterfaces = {
+                    EventsCounter.class.getName()
+            };
+            eventsCounterServiceReg = context.registerService(serviceInterfaces, eventsCounter, props);
+        }
     }
     
     /** Complain if value is null */
@@ -88,13 +101,21 @@ public class Activator implements BundleActivator {
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(BundleContext context) throws Exception {
-        if ( this.serviceReg != null ) {
-            this.serviceReg.unregister();
-            this.serviceReg = null;
+        if( this.eventsCounterServiceReg != null) {
+            this.eventsCounterServiceReg.unregister();
+            this.eventsCounterServiceReg = null;
         }
-        if ( this.service != null ) {
-            this.service.deactivate();
-            this.service = null;
+        if( this.eventsCounter != null) {
+            this.eventsCounter.deactivate();
+            this.eventsCounter = null;
+        }
+        if ( this.osgiControllerServiceReg != null ) {
+            this.osgiControllerServiceReg.unregister();
+            this.osgiControllerServiceReg = null;
+        }
+        if ( this.osgiControllerService != null ) {
+            this.osgiControllerService.deactivate();
+            this.osgiControllerService = null;
         }
         if ( this.startLevelTracker != null ) {
             this.startLevelTracker.close();
