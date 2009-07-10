@@ -30,12 +30,15 @@ import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.osgi.installer.DictionaryInstallableData;
 import org.apache.sling.osgi.installer.OsgiController;
 import org.apache.sling.osgi.installer.OsgiControllerServices;
+import org.apache.sling.osgi.installer.OsgiControllerStatistics;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Inject;
@@ -43,9 +46,12 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 /** Test the OsgiController running in the OSGi framework
  *  
@@ -55,9 +61,10 @@ import org.osgi.service.cm.ConfigurationAdmin;
  *   
  */
 @RunWith(JUnit4TestRunner.class)
-public class OsgiControllerTest {
+public class OsgiControllerTest implements FrameworkListener {
 	public final static String POM_VERSION = System.getProperty("jcrinstall.pom.version");
 	public final static String JAR_EXT = ".jar";
+	private int packageRefreshEventsCount;
 	
     @Inject
     protected BundleContext bundleContext;
@@ -69,6 +76,61 @@ public class OsgiControllerTest {
     	final T result = (T)(bundleContext.getService(ref));
     	assertNotNull("getService(" + clazz.getName() + ") must find service", result);
     	return result;
+    }
+    
+    protected void generateBundleEvent() throws Exception {
+        // install a bundle manually to generate a bundle event
+        final File f = getTestBundle("org.apache.sling.jcr.jcrinstall.it-" + POM_VERSION + "-testbundle-1.0.jar");
+        final InputStream is = new FileInputStream(f);
+        Bundle b = null;
+        try {
+            b = bundleContext.installBundle(getClass().getName(), is);
+            b.start();
+            final long timeout = System.currentTimeMillis() + 2000L;
+            while(b.getState() != Bundle.ACTIVE && System.currentTimeMillis() < timeout) {
+                Thread.sleep(10L);
+            }
+        } finally {
+            if(is != null) {
+                is.close();
+            }
+            if(b != null) {
+                b.uninstall();
+            }
+        }
+    }
+    
+    public void frameworkEvent(FrameworkEvent event) {
+        if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
+            packageRefreshEventsCount++;
+        }
+    }
+    
+    protected void refreshPackages() {
+        bundleContext.addFrameworkListener(this);
+        final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 5;
+        final int targetEventCount = packageRefreshEventsCount + 1;
+        final long timeout = System.currentTimeMillis() + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000L;
+        
+        final PackageAdmin pa = getService(PackageAdmin.class);
+        pa.refreshPackages(null);
+        
+        try {
+            while(true) {
+                if(System.currentTimeMillis() > timeout) {
+                    break;
+                }
+                if(packageRefreshEventsCount >= targetEventCount) {
+                    break;
+                }
+                try {
+                    Thread.sleep(250L);
+                } catch(InterruptedException ignore) {
+                }
+            }
+        } finally {
+            bundleContext.removeFrameworkListener(this);
+        }
     }
     
     protected Configuration findConfiguration(String pid) throws Exception {
@@ -311,6 +373,50 @@ public class OsgiControllerTest {
         	assertFalse(needsB + " must not be started, testB not present", b.getState() == Bundle.ACTIVE);
     	}
     	
+    	// Check SLING-1042 retry rules
+    	assertTrue("OsgiController must implement OsgiControllerStatistics", c instanceof OsgiControllerStatistics);
+    	final OsgiControllerStatistics stats = (OsgiControllerStatistics)c;
+    	
+    	{
+    	    long n = stats.getExecutedTasksCount();
+    	    c.executeScheduledOperations();
+            assertTrue("First retry must not wait for an event", stats.getExecutedTasksCount() > n);
+            n = stats.getExecutedTasksCount();
+            c.executeScheduledOperations();
+    	    assertEquals("Retrying before a bundle event happens must not execute any OsgiControllerTask", n, stats.getExecutedTasksCount());
+    	    
+            n = stats.getExecutedTasksCount();
+    	    generateBundleEvent();
+            c.executeScheduledOperations();
+            assertTrue("Retrying after a bundle event must execute at least one OsgiControllerTask", stats.getExecutedTasksCount() > n);
+    	}
+    	
+    	{
+    	    // wait until no more events are received
+            final long timeout = System.currentTimeMillis() + 2000L;
+            while(System.currentTimeMillis() < timeout) {
+                final long n = stats.getExecutedTasksCount();
+                c.executeScheduledOperations();
+                if(n == stats.getExecutedTasksCount()) {
+                    break;
+                }
+                Thread.sleep(10L);
+            }
+            
+            if(System.currentTimeMillis() >= timeout) {
+                fail("Retries did not stop within specified time");
+            }
+    	}
+    	
+        {
+            long n = stats.getExecutedTasksCount();
+            c.executeScheduledOperations();
+            assertEquals("Retrying before a framework event happens must not execute any OsgiControllerTask", n, stats.getExecutedTasksCount());
+            refreshPackages();
+            c.executeScheduledOperations();
+            assertTrue("Retrying after framework event must execute at least one OsgiControllerTask", stats.getExecutedTasksCount() > n);
+        }
+        
     	// now install testB -> needsB must start
     	{
         	c.scheduleInstallOrUpdate(testB + JAR_EXT,
