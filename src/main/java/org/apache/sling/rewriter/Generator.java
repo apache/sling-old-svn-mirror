@@ -55,4 +55,13 @@ public interface Generator {
      * Notify the generator that parsing is finished.
      */
     void finished() throws IOException, SAXException;
+
+    /**
+     * Dispose the generator.
+     * This method is always invoked by the rewriter in order to
+     * allow the generator to release any resources etc. After
+     * this method has been called the instance is considered
+     * unusable.
+     */
+    void dispose();
 }

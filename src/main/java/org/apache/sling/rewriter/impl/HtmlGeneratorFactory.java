@@ -673,5 +673,12 @@ public class HtmlGeneratorFactory implements GeneratorFactory {
             ioe.initCause(se);
             return ioe;
         }
+
+        /**
+         * @see org.apache.sling.rewriter.Generator#dispose()
+         */
+        public void dispose() {
+            // nothing to do
+        }
     }
 }
