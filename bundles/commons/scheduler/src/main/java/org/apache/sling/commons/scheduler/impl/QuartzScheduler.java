@@ -83,7 +83,7 @@ public class QuartzScheduler implements Scheduler {
     static final String DATA_MAP_CONCURRENT_HANDLER = "QuartzJobExecutor.ConcurrentHandler";
 
     /** Theq quartz scheduler. */
-    protected org.quartz.Scheduler scheduler;
+    protected volatile org.quartz.Scheduler scheduler;
 
     /** List of registrations while this service is not activated yet. */
     protected final List<Registration> registeredJobs = new ArrayList<Registration>();
