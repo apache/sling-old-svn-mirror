@@ -210,5 +210,12 @@ public class HtmlSerializerFactory implements SerializerFactory {
                 throws SAXException {
             // not used atm
         }
+
+        /**
+         * @see org.apache.sling.rewriter.Serializer#dispose()
+         */
+        public void dispose() {
+            // nothing to do
+        }
     }
 }

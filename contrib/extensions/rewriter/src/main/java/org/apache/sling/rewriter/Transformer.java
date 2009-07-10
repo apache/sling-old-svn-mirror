@@ -38,4 +38,13 @@ public interface Transformer extends ContentHandler {
      * @param handler Another transformer or a serializer.
      */
     void setContentHandler(ContentHandler handler);
+
+    /**
+     * Dispose the transformer.
+     * This method is always invoked by the rewriter in order to
+     * allow the transformer to release any resources etc. After
+     * this method has been called the instance is considered
+     * unusable.
+     */
+    void dispose();
 }

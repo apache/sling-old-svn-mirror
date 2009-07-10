@@ -32,4 +32,13 @@ public interface Serializer extends ContentHandler {
      */
     void init(ProcessingContext context, ProcessingComponentConfiguration config)
     throws IOException;
+
+    /**
+     * Dispose the serializer.
+     * This method is always invoked by the rewriter in order to
+     * allow the serializer to release any resources etc. After
+     * this method has been called the instance is considered
+     * unusable.
+     */
+    void dispose();
 }

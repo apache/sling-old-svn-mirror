@@ -47,6 +47,12 @@ public class PipelineImpl implements Processor {
     /** The starting point of the pipeline. */
     private Generator generator;
 
+    /** The transformers. */
+    private Transformer[] transformers;
+
+    /** The end point. */
+    private Serializer serializer;
+
     /** The first component in the pipeline after the generator */
     private ContentHandler firstContentHandler;
 
@@ -76,12 +82,11 @@ public class PipelineImpl implements Processor {
         final Transformer[][] rewriters = this.factoryCache.getRewriterTransformers();
 
         final ProcessingComponentConfiguration generatorConfig = config.getGeneratorConfiguration();
-        final Generator generator = this.getPipelineComponent(Generator.class, generatorConfig.getType());
+        this.generator = this.getPipelineComponent(Generator.class, generatorConfig.getType());
         LOGGER.debug("Using generator type {}: {}.", generatorConfig.getType(), generator);
         generator.init(processingContext, generatorConfig);
 
         final int transformerCount = (transformerConfigs == null ? 0 : transformerConfigs.length) + rewriters[0].length + rewriters[1].length;
-        final Transformer[] transformers;
         if ( transformerCount > 0 ) {
             // add all pre rewriter transformers
             transformers = new Transformer[transformerCount];
@@ -111,7 +116,7 @@ public class PipelineImpl implements Processor {
         }
 
         final ProcessingComponentConfiguration serializerConfig = config.getSerializerConfiguration();
-        final Serializer serializer = this.getPipelineComponent(Serializer.class, serializerConfig.getType());
+        this.serializer = this.getPipelineComponent(Serializer.class, serializerConfig.getType());
         LOGGER.debug("Using serializer type {}: {}.", serializerConfig.getType(), serializer);
         serializer.init(processingContext, serializerConfig);
 
@@ -137,8 +142,6 @@ public class PipelineImpl implements Processor {
         final ComponentType component;
         if ( typeClass == Generator.class ) {
             component = (ComponentType)this.factoryCache.getGenerator(type);
-            // we keep the generator
-            this.generator = (Generator)component;
         } else if ( typeClass == Transformer.class ) {
             component = (ComponentType)this.factoryCache.getTransformer(type);
         } else if ( typeClass == Serializer.class ) {
@@ -172,14 +175,30 @@ public class PipelineImpl implements Processor {
      * @see org.apache.sling.rewriter.Processor#finished()
      */
     public void finished() throws IOException {
+        IOException ioe = null;
         try {
             this.generator.finished();
         } catch (SAXException se) {
             if ( se.getCause() != null && se.getCause() instanceof IOException ) {
-                throw (IOException)se.getCause();
+                ioe = (IOException)se.getCause();
+            } else {
+                ioe = new IOException("Pipeline exception: " + se.getMessage());
+                ioe.initCause(se);
             }
-            final IOException ioe = new IOException("Pipeline exception.");
-            ioe.initCause(se);
+        }
+        // now dispose component
+        if ( this.generator != null ) {
+            this.generator.dispose();
+        }
+        if ( this.transformers != null ) {
+            for(final Transformer transformer : this.transformers ) {
+                transformer.dispose();
+            }
+        }
+        if ( this.serializer != null ) {
+            this.serializer.dispose();
+        }
+        if ( ioe != null ) {
             throw ioe;
         }
     }
