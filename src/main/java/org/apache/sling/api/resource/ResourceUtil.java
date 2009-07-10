@@ -353,4 +353,24 @@ public class ResourceUtil {
         }
         return null;
     }
+
+    /**
+     * Returns the super type of the given resource.
+     * This method checks first if the resource itself knows its super type
+     * by calling {@link Resource#getResourceSuperType()}. If that returns
+     * <code>null</code> {@link #getResourceSuperType(ResourceResolver, String)}
+     * is invoked with the resource type of the resource.
+     *
+     * @param resource The resource to return the resource super type for.
+     * @return the super type of the <code>resource</code> or
+     *         <code>null</code> if no super type could be computed.
+     * @since 2.0.6
+     */
+    public static String findResourceSuperType(final Resource resource) {
+        String resourceSuperType = resource.getResourceSuperType();
+        if ( resourceSuperType == null ) {
+            resourceSuperType = getResourceSuperType(resource.getResourceResolver(), resource.getResourceType());
+        }
+        return resourceSuperType;
+    }
 }
