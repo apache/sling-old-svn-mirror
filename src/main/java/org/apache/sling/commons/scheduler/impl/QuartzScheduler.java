@@ -362,7 +362,7 @@ public class QuartzScheduler implements Scheduler {
         final org.quartz.Scheduler s = this.scheduler;
         if ( s != null ) {
             try {
-                this.scheduler.deleteJob(name, DEFAULT_QUARTZ_JOB_GROUP);
+                s.deleteJob(name, DEFAULT_QUARTZ_JOB_GROUP);
                 this.logger.debug("Unscheduling job with name {}", name);
             } catch (final SchedulerException se) {
                 throw new NoSuchElementException(se.getMessage());
