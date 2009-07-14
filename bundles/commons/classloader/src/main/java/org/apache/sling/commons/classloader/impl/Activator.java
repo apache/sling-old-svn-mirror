@@ -20,6 +20,7 @@ package org.apache.sling.commons.classloader.impl;
 
 import java.util.Hashtable;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -57,7 +58,7 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.service = new DynamicClassLoaderManagerImpl(context,
                 (PackageAdmin)this.packageAdminTracker.getService());
-        this.serviceReg = context.registerService(new String[] {DynamicClassLoaderManagerImpl.class.getName()}, service, props);
+        this.serviceReg = context.registerService(new String[] {DynamicClassLoaderManager.class.getName()}, service, props);
     }
 
     /**
