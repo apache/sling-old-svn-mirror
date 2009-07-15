@@ -29,6 +29,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.event.EventPropertiesMap;
@@ -78,13 +79,16 @@ public abstract class AbstractRepositoryEventHandler
     protected String repositoryPath;
 
     /** Is the background task still running? */
-    protected boolean running;
+    protected volatile boolean running;
 
     /** A local queue for serialising the event processing. */
     protected final BlockingQueue<EventInfo> queue = new LinkedBlockingQueue<EventInfo>();
 
     /** A local queue for writing received events into the repository. */
     protected final BlockingQueue<Event> writeQueue = new LinkedBlockingQueue<Event>();
+
+    /** @scr.reference */
+    protected DynamicClassLoaderManager classLoaderManager;
 
     /**
      * Our thread pool.
@@ -288,20 +292,26 @@ public abstract class AbstractRepositoryEventHandler
      */
     protected Event readEvent(Node eventNode)
     throws RepositoryException, ClassNotFoundException {
-        final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
-        final EventPropertiesMap eventProps = EventUtil.readProperties(eventNode,
-                EventHelper.NODE_PROPERTY_PROPERTIES,
-                IGNORE_PREFIXES);
-
-        eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
-        this.addEventProperties(eventNode, eventProps);
+        final ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
         try {
-            final Event event = new Event(topic, eventProps);
-            return event;
-        } catch (IllegalArgumentException iae) {
-            // this exception occurs if the topic is not correct (it should never happen,
-            // but you never know)
-            throw new RepositoryException("Unable to read event: " + iae.getMessage(), iae);
+            Thread.currentThread().setContextClassLoader(this.classLoaderManager.getDynamicClassLoader());
+            final String topic = eventNode.getProperty(EventHelper.NODE_PROPERTY_TOPIC).getString();
+            final EventPropertiesMap eventProps = EventUtil.readProperties(eventNode,
+                    EventHelper.NODE_PROPERTY_PROPERTIES,
+                    IGNORE_PREFIXES);
+
+            eventProps.put(JobStatusProvider.PROPERTY_EVENT_ID, eventNode.getPath());
+            this.addEventProperties(eventNode, eventProps);
+            try {
+                final Event event = new Event(topic, eventProps);
+                return event;
+            } catch (IllegalArgumentException iae) {
+                // this exception occurs if the topic is not correct (it should never happen,
+                // but you never know)
+                throw new RepositoryException("Unable to read event: " + iae.getMessage(), iae);
+            }
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldCL);
         }
     }
 

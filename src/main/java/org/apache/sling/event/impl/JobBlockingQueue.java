@@ -28,20 +28,20 @@ import org.apache.sling.event.impl.AbstractRepositoryEventHandler.EventInfo;
  */
 public final class JobBlockingQueue extends LinkedBlockingQueue<EventInfo> {
 
-    private EventInfo eventInfo;
+    private volatile EventInfo eventInfo;
 
     private final Object lock = new Object();
 
-    private boolean isWaiting = false;
+    private volatile boolean isWaiting = false;
 
-    private boolean markForCleanUp = false;
+    private volatile boolean markForCleanUp = false;
 
-    private boolean finished = false;
+    private volatile boolean finished = false;
 
-    private boolean isSleeping = false;
+    private volatile boolean isSleeping = false;
 
-    private String schedulerJobName;
-    private Thread sleepingThread;
+    private volatile String schedulerJobName;
+    private volatile Thread sleepingThread;
 
     public EventInfo waitForFinish() throws InterruptedException {
         this.isWaiting = true;

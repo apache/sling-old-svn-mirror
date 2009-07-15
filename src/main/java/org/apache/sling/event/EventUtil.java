@@ -21,7 +21,7 @@ package org.apache.sling.event;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -611,5 +611,30 @@ public abstract class EventUtil {
         }
         buffer.append("]");
         return buffer.toString();
+    }
+
+    /**
+     * This is an extended version of the object input stream which uses the
+     * thread context class loader.
+     */
+    private static class ObjectInputStream extends java.io.ObjectInputStream {
+
+        private ClassLoader classloader;
+
+        public ObjectInputStream(InputStream in) throws IOException {
+            super(in);
+            this.classloader = Thread.currentThread().getContextClassLoader();
+        }
+
+        /**
+         * @see java.io.ObjectInputStream#resolveClass(java.io.ObjectStreamClass)
+         */
+        @Override
+        protected Class<?> resolveClass(java.io.ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
+            if ( this.classloader != null ) {
+                return Class.forName(classDesc.getName(), true, this.classloader);
+            }
+            return super.resolveClass(classDesc);
+        }
     }
 }
