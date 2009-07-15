@@ -45,7 +45,7 @@ class PackageAdminClassLoader extends ClassLoader {
 
     private String getPackageFromResource(final String resource) {
         final int lastSlash = resource.lastIndexOf('/');
-        final String pckName = resource.substring(0, lastSlash).replace('/', '.');
+        final String pckName = (lastSlash == -1 ? "" : resource.substring(0, lastSlash).replace('/', '.'));
         return pckName;
     }
 
