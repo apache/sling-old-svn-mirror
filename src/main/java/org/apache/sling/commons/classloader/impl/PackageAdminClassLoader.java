@@ -46,12 +46,17 @@ class PackageAdminClassLoader extends ClassLoader {
         return (exportedPackage == null ? null : exportedPackage.getExportingBundle());
     }
 
+    private String getPackageFromResource(final String resource) {
+        final int lastSlash = resource.lastIndexOf('/');
+        String pck = resource.substring(0, lastSlash + 1).replace('/', '.');
+        return pck + "Dummy";
+    }
     /**
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getResources(String name) throws IOException {
-        final Bundle bundle = this.findBundleForClassOrResource(name);
+        final Bundle bundle = this.findBundleForClassOrResource(getPackageFromResource(name));
         if ( bundle == null ) {
             return super.getResources(name);
         }
@@ -62,7 +67,7 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
     public URL findResource(String name) {
-        final Bundle bundle = this.findBundleForClassOrResource(name);
+        final Bundle bundle = this.findBundleForClassOrResource(getPackageFromResource(name));
         if ( bundle == null ) {
             return super.findResource(name);
         }
