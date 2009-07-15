@@ -27,6 +27,7 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
+import org.apache.sling.commons.classloader.DynamicClassLoaderProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
 import org.osgi.framework.Bundle;
@@ -43,7 +44,7 @@ import org.osgi.service.component.ComponentContext;
  * @scr.service servicefactory="true"
  */
 public class RepositoryClassLoaderProviderImpl
-        implements RepositoryClassLoaderProvider {
+        implements RepositoryClassLoaderProvider, DynamicClassLoaderProvider {
 
     /**
      * @scr.property values0="/var/classes"
@@ -113,6 +114,13 @@ public class RepositoryClassLoaderProviderImpl
         } finally {
             admin.logout();
         }
+    }
+
+    /**
+     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader()
+     */
+    public ClassLoader getClassLoader() {
+        return this.getClassLoader(null);
     }
 
     //---------- SCR Integration ----------------------------------------------
