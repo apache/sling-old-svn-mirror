@@ -38,25 +38,29 @@ class PackageAdminClassLoader extends ClassLoader {
         this.packageAdmin = pckAdmin;
     }
 
-    private Bundle findBundleForClassOrResource(final String name) {
-        final int lastDot = name.lastIndexOf('.');
-        final String pckName = (lastDot == -1 ? "" : name.substring(0, lastDot));
-
+    private Bundle findBundleForPackage(final String pckName) {
         final ExportedPackage exportedPackage = this.packageAdmin.getExportedPackage(pckName);
         return (exportedPackage == null ? null : exportedPackage.getExportingBundle());
     }
 
     private String getPackageFromResource(final String resource) {
         final int lastSlash = resource.lastIndexOf('/');
-        String pck = resource.substring(0, lastSlash + 1).replace('/', '.');
-        return pck + "Dummy";
+        final String pckName = resource.substring(0, lastSlash).replace('/', '.');
+        return pckName;
     }
+
+    private String getPackageFromClassName(final String name) {
+        final int lastDot = name.lastIndexOf('.');
+        final String pckName = (lastDot == -1 ? "" : name.substring(0, lastDot));
+        return pckName;
+    }
+
     /**
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getResources(String name) throws IOException {
-        final Bundle bundle = this.findBundleForClassOrResource(getPackageFromResource(name));
+        final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
         if ( bundle == null ) {
             return super.getResources(name);
         }
@@ -67,7 +71,7 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
     public URL findResource(String name) {
-        final Bundle bundle = this.findBundleForClassOrResource(getPackageFromResource(name));
+        final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
         if ( bundle == null ) {
             return super.findResource(name);
         }
@@ -78,7 +82,7 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#findClass(java.lang.String)
      */
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        final Bundle bundle = this.findBundleForClassOrResource(name);
+        final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
         if ( bundle == null ) {
             return super.findClass(name);
         }
@@ -89,7 +93,7 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
      */
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        final Bundle bundle = this.findBundleForClassOrResource(name);
+        final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
         if ( bundle == null ) {
             return super.loadClass(name, resolve);
         }

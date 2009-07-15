@@ -50,14 +50,16 @@ public class DynamicClassLoaderManagerImpl
 
     /**
      * Create a new service instance
-     * @param ctx The bundle context.
+     * @param ctx The bundle context of the class loader bundle
      * @param pckAdmin The package admin.
+     * @param parent The parent class loader.
      */
     public DynamicClassLoaderManagerImpl(final BundleContext ctx,
-            final PackageAdmin pckAdmin) {
+            final PackageAdmin pckAdmin,
+            final ClassLoader parent) {
         super(ctx, DynamicClassLoaderProvider.class.getName(), null);
         this.context = ctx;
-        this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, this.getClass().getClassLoader());
+        this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, parent);
         this.cache = new ClassLoader[] {this.pckAdminCL};
         this.open();
         this.facade = new ClassLoaderFacade(this);
