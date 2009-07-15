@@ -61,8 +61,6 @@
                             org.apache.sling.event.impl,
                             org.apache.jackrabbit.util
                         </Private-Package>
-                        <!-- We need the dynamic import as events can contain any classes -->
-                        <DynamicImport-Package>*</DynamicImport-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/event.cnd
                         </Sling-Nodetypes>
@@ -129,6 +127,11 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.threads</artifactId>
             <version>2.0.2-incubator</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.classloader</artifactId>
+            <version>0.9.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
