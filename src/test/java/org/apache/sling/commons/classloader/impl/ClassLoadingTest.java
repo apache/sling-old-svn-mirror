@@ -68,7 +68,7 @@ public class ClassLoadingTest {
             one(bundle).loadClass("org.apache.sling.test.A"); inSequence(sequence);
             will(returnValue(java.util.ArrayList.class));
         }});
-        DynamicClassLoaderManagerImpl manager = new DynamicClassLoaderManagerImpl(bundleContext, packageAdmin);
+        DynamicClassLoaderManagerImpl manager = new DynamicClassLoaderManagerImpl(bundleContext, packageAdmin, null);
         final ClassLoader cl = manager.getDynamicClassLoader();
         final Class c1 = cl.loadClass("org.apache.sling.test.A");
         Assert.assertEquals("java.util.Map", c1.getName());
