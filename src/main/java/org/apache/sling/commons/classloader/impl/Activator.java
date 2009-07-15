@@ -42,8 +42,8 @@ public class Activator implements BundleActivator {
     /** The service registration for the dynamic class loader manager. */
     private ServiceRegistration serviceReg;
 
-    /** The dynamic class loader service. */
-    private DynamicClassLoaderManagerImpl service;
+    /** The dynamic class loader service factory. */
+    private DynamicClassLoaderManagerFactory service;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -56,7 +56,7 @@ public class Activator implements BundleActivator {
         final Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Dynamic Class Loader Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        this.service = new DynamicClassLoaderManagerImpl(context,
+        this.service = new DynamicClassLoaderManagerFactory(context,
                 (PackageAdmin)this.packageAdminTracker.getService());
         this.serviceReg = context.registerService(new String[] {DynamicClassLoaderManager.class.getName()}, service, props);
     }
@@ -70,7 +70,6 @@ public class Activator implements BundleActivator {
             this.serviceReg = null;
         }
         if ( this.service != null ) {
-            this.service.deactivate();
             this.service = null;
         }
         if ( this.packageAdminTracker != null ) {
