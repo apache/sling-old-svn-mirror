@@ -21,8 +21,12 @@ package org.apache.sling.jcr.classloader;
 import javax.jcr.RepositoryException;
 
 /**
- * The <code>RepositoryClassLoaderProvider</code> TODO
+ * The <code>RepositoryClassLoaderProvider</code>
+ *
+ * @deprecated Use the {@link org.apache.sling.commons.classloader.DynamicClassLoaderManager}
+ * instead.
  */
+@Deprecated
 public interface RepositoryClassLoaderProvider {
 
     ClassLoader getClassLoader(String owner) throws RepositoryException;

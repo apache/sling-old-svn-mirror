@@ -49,7 +49,8 @@ import org.osgi.framework.Bundle;
     // at least Java 5 you can prevent the occurence of duplicate boot classloader
     // resources by overriding ClassLoader.getResources(...) instead of
     // ClassLoader.findResources(...).
-    public Enumeration findResources(String name) throws IOException {
+    @SuppressWarnings("unchecked")
+    public Enumeration<URL> findResources(String name) throws IOException {
         return this.bundle.getResources(name);
     }
 
@@ -57,7 +58,7 @@ import org.osgi.framework.Bundle;
         return this.bundle.getResource(name);
     }
 
-    public Class findClass(String name) throws ClassNotFoundException {
+    public Class<?> findClass(String name) throws ClassNotFoundException {
         return this.bundle.loadClass(name);
     }
 
@@ -65,11 +66,11 @@ import org.osgi.framework.Bundle;
         return (this.parent == null) ? this.findResource(name) : super.getResource(name);
     }
 
-    protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        Class clazz = (this.parent == null) ? this.findClass(name) : super.loadClass(name, false);
-        if (resolve)
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        Class<?> clazz = (this.parent == null) ? this.findClass(name) : super.loadClass(name, false);
+        if (resolve) {
             super.resolveClass(clazz);
-
+        }
         return clazz;
     }
 }

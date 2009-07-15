@@ -100,7 +100,7 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
         }
     }
 
-    protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         try {
             return this.getDelegateClassLoader().loadClass(name);
         } catch (RepositoryException re) {
@@ -118,7 +118,7 @@ class RepositoryClassLoaderFacade extends URLClassLoader {
         }
     }
 
-    public Enumeration findResources(String name) throws IOException {
+    public Enumeration<URL> findResources(String name) throws IOException {
         try {
             return this.getDelegateClassLoader().getResources(name);
         } catch (RepositoryException re) {
