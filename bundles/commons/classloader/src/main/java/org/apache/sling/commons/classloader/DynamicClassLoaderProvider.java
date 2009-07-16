@@ -29,7 +29,12 @@ public interface DynamicClassLoaderProvider {
 
     /**
      * Return the class loader used for dynamic class loading.
+     * The returned class loader should use the provided parent class loader
+     * as one of its parent class loaders. This ensures that the returned
+     * class loader has access to all dynamically loaded classes that
+     * are not part of this class loader.
+     * @param parent The parent class loader for this dynamic class loader.
      * @return The class loader.
      */
-    ClassLoader getClassLoader();
+    ClassLoader getClassLoader(ClassLoader parent);
 }
