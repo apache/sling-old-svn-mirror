@@ -20,7 +20,6 @@ import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.Reader;
 
-import javax.jcr.RepositoryException;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -34,8 +33,7 @@ import org.apache.sling.api.SlingServletException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.classloader.RepositoryClassLoaderProvider;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.osgi.service.component.ComponentContext;
@@ -60,18 +58,13 @@ import org.slf4j.LoggerFactory;
  */
 public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
 
-    private static final String CLASSLOADER_NAME = "admin";
-
     /** default logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    /** @scr.reference */
-    private SlingRepository repository;
 
     /**
      * @scr.reference
      */
-    private RepositoryClassLoaderProvider repoCLProvider;
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     /**
      * The class loader
@@ -127,7 +120,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * @param componentContext
      */
     protected void activate(ComponentContext componentContext) {
-        this.ioProvider = new SlingIOProvider(repository);
+        this.ioProvider = new SlingIOProvider();
         this.servletCache = new ServletCache();
 
         this.javaServletContext = new JavaServletContext(ioProvider,
@@ -166,7 +159,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      */
     private void callServlet(Bindings bindings, SlingScriptHelper scriptHelper) {
 
-        ioProvider.setRequestResourceResolver(scriptHelper.getRequest().getResourceResolver());
+        ioProvider.setRequestResourceResolver(scriptHelper.getScript().getScriptResource().getResourceResolver());
         try {
             ServletWrapper servlet = getWrapperAdapter(scriptHelper);
             // create a SlingBindings object
@@ -206,7 +199,7 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * Bind the class load provider.
      * @param repositoryClassLoaderProvider the new provider
      */
-    protected void bindRepositoryClassLoaderProvider(RepositoryClassLoaderProvider rclp) {
+    protected void bindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
         if ( this.javaClassLoader != null ) {
             this.ungetClassLoader();
         }
@@ -217,8 +210,8 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
      * Unbind the class loader provider.
      * @param repositoryClassLoaderProvider the old provider
      */
-    protected void unbindRepositoryClassLoaderProvider(RepositoryClassLoaderProvider rclp) {
-        if ( this.repoCLProvider == rclp ) {
+    protected void unbindDynamicClassLoaderManager(DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoaderManager == rclp ) {
             this.ungetClassLoader();
         }
     }
@@ -226,26 +219,17 @@ public class JavaScriptEngineFactory extends AbstractScriptEngineFactory {
     /**
      * Get the class loader
      */
-    private void getClassLoader(RepositoryClassLoaderProvider rclp) {
-        try {
-            this.repoCLProvider = rclp;
-            this.javaClassLoader = rclp.getClassLoader(CLASSLOADER_NAME);
-        } catch (RepositoryException re) {
-            log.error("Cannot get Java class loader", re);
-        }
+    private void getClassLoader(DynamicClassLoaderManager rclp) {
+        this.dynamicClassLoaderManager = rclp;
+        this.javaClassLoader = rclp.getDynamicClassLoader();
     }
 
     /**
      * Unget the class loader
      */
     private void ungetClassLoader() {
-        if ( this.repoCLProvider != null ) {
-            if ( this.javaClassLoader != null ) {
-                this.repoCLProvider.ungetClassLoader(this.javaClassLoader);
-                this.javaClassLoader = null;
-            }
-            this.repoCLProvider = null;
-        }
+        this.dynamicClassLoaderManager = null;
+        this.javaClassLoader = null;
     }
     // ---------- Internal -----------------------------------------------------
 

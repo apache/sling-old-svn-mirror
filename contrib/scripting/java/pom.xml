@@ -60,7 +60,6 @@
                             org.apache.sling.scripting.java.jdt,
                             org.eclipse.jdt.*
                         </Private-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
 
                         <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
@@ -106,8 +105,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.classloader</artifactId>
-            <version>2.0.2-incubator</version>
+            <artifactId>org.apache.sling.commons.classloader</artifactId>
+            <version>0.9.0-SNAPSHOT</version>
         </dependency>
 
      <!-- We use the same eclipse jdt as the jsp bundle -->
