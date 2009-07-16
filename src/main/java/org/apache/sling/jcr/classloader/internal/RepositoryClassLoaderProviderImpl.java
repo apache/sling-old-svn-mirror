@@ -117,10 +117,23 @@ public class RepositoryClassLoaderProviderImpl
     }
 
     /**
-     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader()
+     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader(ClassLoader)
      */
-    public ClassLoader getClassLoader() {
-        return this.getClassLoader(null);
+    public ClassLoader getClassLoader(final ClassLoader parent) {
+        // we just make up a unique identifier
+        final String classLoaderOwner = "DynamicClassLoaderProvider:" + parent.hashCode();
+        RepositoryClassLoaderFacade loader =
+            (RepositoryClassLoaderFacade) this.loaders.get(classLoaderOwner);
+        if (loader == null) {
+            loader = new RepositoryClassLoaderFacade(this, parent,
+                    OWNER_DEFAULT, this.classPath);
+            this.loaders.put(classLoaderOwner, loader);
+        }
+
+        // extend reference counter
+        loader.ref();
+
+        return loader;
     }
 
     //---------- SCR Integration ----------------------------------------------
