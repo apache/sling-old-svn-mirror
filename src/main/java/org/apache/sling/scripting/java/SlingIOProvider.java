@@ -38,7 +38,6 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,17 +49,10 @@ public class SlingIOProvider  {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
 
-    private final SlingRepository repository;
-
     private ThreadLocal<ResourceResolver> requestResourceResolver;
 
-    // private session for write access
-    private ThreadLocal<Session> privateSession;
-
-    SlingIOProvider(SlingRepository repository) {
-        this.repository = repository;
+    SlingIOProvider() {
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
-        this.privateSession = new ThreadLocal<Session>();
     }
 
     void setRequestResourceResolver(ResourceResolver resolver) {
@@ -69,15 +61,6 @@ public class SlingIOProvider  {
 
     void resetRequestResourceResolver() {
         requestResourceResolver.remove();
-
-        // at the same time logout this thread's session
-        Session session = privateSession.get();
-        if (session != null) {
-            if (session.isLive()) {
-                session.logout();
-            }
-            privateSession.remove();
-        }
     }
 
     // ---------- IOProvider interface -----------------------------------------
@@ -210,13 +193,7 @@ public class SlingIOProvider  {
     // ---------- internal -----------------------------------------------------
 
     private Session getPrivateSession() throws RepositoryException {
-        Session session = privateSession.get();
-        if (session == null) {
-            session = repository.loginAdministrative(null);
-            privateSession.set(session);
-        }
-
-        return session;
+        return requestResourceResolver.get().adaptTo(Session.class);
     }
 
     private static void checkNode(Node node, String path) {
