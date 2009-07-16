@@ -89,7 +89,9 @@ public class DynamicClassLoaderManagerImpl
             int index = 1;
             for(final ServiceReference ref : refs) {
                 final DynamicClassLoaderProvider provider = (DynamicClassLoaderProvider)this.getService(ref);
-                loaders[index] = provider.getClassLoader();
+                if ( provider != null ) {
+                    loaders[index] = provider.getClassLoader(this.pckAdminCL);
+                }
                 index++;
             }
             // and now use new array

@@ -42,9 +42,11 @@ public class ClassLoaderFacade extends ClassLoader {
     public URL getResource(String name) {
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
-            final URL u = cl.getResource(name);
-            if ( u != null ) {
-                return u;
+            if ( cl != null ) {
+                final URL u = cl.getResource(name);
+                if ( u != null ) {
+                    return u;
+                }
             }
         }
         return null;
@@ -56,9 +58,11 @@ public class ClassLoaderFacade extends ClassLoader {
     public InputStream getResourceAsStream(String name) {
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
-            final InputStream i = cl.getResourceAsStream(name);
-            if ( i != null ) {
-                return i;
+            if ( cl != null ) {
+                final InputStream i = cl.getResourceAsStream(name);
+                if ( i != null ) {
+                    return i;
+                }
             }
         }
         return null;
@@ -70,9 +74,11 @@ public class ClassLoaderFacade extends ClassLoader {
     public Enumeration<URL> getResources(String name) throws IOException {
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
-            final Enumeration<URL> e = cl.getResources(name);
-            if ( e != null && e.hasMoreElements() ) {
-                return e;
+            if ( cl != null ) {
+                final Enumeration<URL> e = cl.getResources(name);
+                if ( e != null && e.hasMoreElements() ) {
+                    return e;
+                }
             }
         }
         return null;
@@ -84,11 +90,13 @@ public class ClassLoaderFacade extends ClassLoader {
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         final ClassLoader[] loaders = manager.getDynamicClassLoaders();
         for(final ClassLoader cl : loaders) {
-            try {
-                final Class<?> c = cl.loadClass(name);
-                return c;
-            } catch (Exception cnfe) {
-                // we just ignore this and try the next class loader
+            if ( cl != null ) {
+                try {
+                    final Class<?> c = cl.loadClass(name);
+                    return c;
+                } catch (Exception cnfe) {
+                    // we just ignore this and try the next class loader
+                }
             }
         }
         throw new ClassNotFoundException("Class not found: " + name);
