@@ -50,34 +50,37 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 /**
- * This reader reads an xml file defining the content.
- * The xml format should have this format:
- * <node>
- *   <name>the name of the node</name>
- *   <primaryNodeType>type</primaryNodeType>
- *   <mixinNodeTypes>
- *     <mixinNodeType>mixtype1</mixinNodeType>
- *     <mixinNodeType>mixtype2</mixinNodeType>
- *   </mixingNodeTypes>
- *   <properties>
- *     <property>
- *       <name>propName</name>
- *       <value>propValue</value>
+ * This reader reads an xml file defining the content. The xml format should have this
+ * format:
+ * 
+ * <pre>
+ * &lt;node&gt;
+ *   &lt;name&gt;the name of the node&lt;/name&gt;
+ *   &lt;primaryNodeType&gt;type&lt;/primaryNodeType&gt;
+ *   &lt;mixinNodeTypes&gt;
+ *     &lt;mixinNodeType&gt;mixtype1&lt;/mixinNodeType&gt;
+ *     &lt;mixinNodeType&gt;mixtype2&lt;/mixinNodeType&gt;
+ *   &lt;/mixingNodeTypes&gt;
+ *   &lt;properties&gt;
+ *     &lt;property&gt;
+ *       &lt;name&gt;propName&lt;/name&gt;
+ *       &lt;value&gt;propValue&lt;/value&gt;
  *           or
- *       <values>
- *         <value/> for multi value properties
- *       </values>
- *       <type>propType</type>
- *     </property>
- *     <!-- more properties -->
- *   </properties>
- *   <nodes>
- *     <!-- child nodes -->
- *     <node>
+ *       &lt;values&gt;
+ *         &lt;value/&gt; for multi value properties
+ *       &lt;/values&gt;
+ *       &lt;type&gt;propType&lt;/type&gt;
+ *     &lt;/property&gt;
+ *     &lt;!-- more properties --&gt;
+ *   &lt;/properties&gt;
+ *   &lt;nodes&gt;
+ *     &lt;!-- child nodes --&gt;
+ *     &lt;node&gt;
  *       ..
- *     </node>
- *   </nodes>
- * </node>
+ *     &lt;/node&gt;
+ *   &lt;/nodes&gt;
+ * &lt;/node&gt;
+ * </pre>
  */
 public class XmlReader implements ContentReader {
 

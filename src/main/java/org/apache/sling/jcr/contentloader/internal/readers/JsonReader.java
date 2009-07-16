@@ -37,9 +37,54 @@ import org.apache.sling.jcr.contentloader.internal.ContentCreator;
 import org.apache.sling.jcr.contentloader.internal.ContentReader;
 import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 
-
 /**
- * The <code>JsonReader</code> TODO
+ * The <code>JsonReader</code> Parses a Json document on content load and creates the
+ * corresponding node structure with properties. Will not update protected nodes and
+ * properties like rep:Policy and children.
+ * 
+ * <pre>
+ * Nodes, Properties and in fact complete subtrees may be described in JSON files
+ * using the following skeleton structure (see http://www.json.org for information
+ * on the syntax of JSON) :
+ * 
+ * # the name of the node is taken from the name of the file without the .json ext.
+ *   {
+ *   
+ *     # optional primary node type, default &quot;nt:unstructured&quot;
+ *     &quot;jcr:primaryType&quot;:&quot;sling:ScriptedComponent&quot;,
+ *     # optional mixin node types as array
+ *     &quot;jcr:mixinTypes&quot;: [ ],
+ *     
+ *       
+ *       # &quot;properties&quot; are added as key value pairs, the name of the key being the name
+ *       # of the property. The value is either the string property value, array for 
+ *       # multi-values or an object whose value[s] property denotes the property 
+ *       # value(s) and whose type property denotes the property type
+ *       &quot;sling:contentClass&quot;: &quot;com.day.sling.jcr.test.Test&quot;,
+ *       &quot;sampleMulti&quot;: [ &quot;v1&quot;, &quot;v2&quot; ],
+ *       &quot;sampleStruct&quot;: 1,
+ *       &quot;sampleStructMulti&quot;: [ 1, 2, 3 ],
+ *       
+ *       # reference properties start with jcr:reference
+ *       &quot;jcr:reference:sampleReference&quot;: &quot;/test/content&quot;,
+ *       
+ *       # path propertie start with jcr:path
+ *       &quot;jcr:path:sampleReference&quot;: &quot;/test/path&quot;,
+ *         
+ *       # nested nodes are added as nested maps. 
+ *     &quot;sling:scripts&quot;:  {
+ *               
+ *         &quot;jcr:primaryType&quot;: &quot;sling:ScriptList&quot;,
+ *         &quot;script1&quot; :{
+ *             &quot;primaryNodeType&quot;: &quot;sling:Script&quot;,
+ *               &quot;sling:name&quot;: &quot;/test/content/jsp/start.jsp&quot;,
+ *             &quot;sling:type&quot;: &quot;jsp&quot;,
+ *             &quot;sling:glob&quot;: &quot;*&quot;
+ *         }
+ *     }
+ *   }
+ * 
+ * </pre>
  */
 public class JsonReader implements ContentReader {
 
