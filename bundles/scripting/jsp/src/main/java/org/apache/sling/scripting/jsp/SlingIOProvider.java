@@ -50,20 +50,13 @@ class SlingIOProvider implements IOProvider {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(SlingIOProvider.class);
 
-    //private final SlingRepository repository;
-
     private final ThreadLocal<ResourceResolver> requestResourceResolver;
-
-    // private session for write access
-    //private final ThreadLocal<Session> privateSession;
 
     // used to find out about the mime type for created files
     private final ServletContext servletContext;
 
     SlingIOProvider(ServletContext servletContext) {
-        //this.repository = repository;
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
-        //this.privateSession = new ThreadLocal<Session>();
         this.servletContext = servletContext;
     }
 

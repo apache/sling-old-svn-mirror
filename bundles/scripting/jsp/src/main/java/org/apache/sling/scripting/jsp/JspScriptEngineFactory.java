@@ -35,7 +35,6 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -75,9 +74,6 @@ public class JspScriptEngineFactory extends AbstractScriptEngineFactory {
     private static final Logger log = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
     ComponentContext componentContext;
-
-    /** @scr.reference */
-    private SlingRepository repository;
 
     /** @scr.reference */
     private ServletContext slingServletContext;

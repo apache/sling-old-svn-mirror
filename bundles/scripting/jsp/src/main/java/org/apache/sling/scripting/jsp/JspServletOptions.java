@@ -609,7 +609,6 @@ public class JspServletOptions implements Options {
 
         String dir = getProperty("scratchdir");
         this.scratchDir = (dir != null) ? dir : "/var/classes";
-        //ioProvider.mkdirs(this.scratchDir);
 
         String compilerTargetVM = getProperty("compilerTargetVM");
         if (compilerTargetVM != null) {
